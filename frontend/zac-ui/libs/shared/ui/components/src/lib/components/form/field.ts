@@ -74,6 +74,9 @@ export interface FieldConfiguration {
 
   /** @type {Function} Function to call when multiselect searches for value. */
   onSearch?: Function
+
+  /** @type {string} Specifies the widget type. */
+  widgetType?: string
 }
 
 /**
@@ -111,7 +114,7 @@ export class Field {
   constructor(fieldConfiguration: FieldConfiguration) {
     Object.assign(this, fieldConfiguration);
 
-    const label = fieldConfiguration.label || fieldConfiguration.name;
+    const label = (typeof fieldConfiguration.label !== 'undefined') ? fieldConfiguration.label : fieldConfiguration.name;
     this.label = label.charAt(0).toUpperCase() + label.slice(1)
     this.name = new FormService().getNameFromFieldConfiguration(fieldConfiguration);
     this.required = (typeof fieldConfiguration.required === 'boolean') ? fieldConfiguration.required : true;
@@ -124,6 +127,10 @@ export class Field {
    * @return {string}
    */
   getWidgetType(fieldConfiguration: FieldConfiguration) {
+    if (fieldConfiguration.widgetType) {
+      return fieldConfiguration.widgetType;
+    }
+
     if (fieldConfiguration.type === 'document') {
       return 'document'
     }

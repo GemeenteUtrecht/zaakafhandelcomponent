@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse, reverse_lazy
 
 from rest_framework import status
@@ -137,3 +138,14 @@ class RoleAPITests(APITestCase):
             response.json(),
             {"permissions": [['"some permission" is een ongeldige keuze.']]},
         )
+
+    def test_destroy_role(self):
+        role = RoleFactory.create(name="some-name", permissions=[zaken_inzien.name])
+        url = reverse("role-detail", args=[role.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        with self.assertRaises(ObjectDoesNotExist):
+            role.refresh_from_db()

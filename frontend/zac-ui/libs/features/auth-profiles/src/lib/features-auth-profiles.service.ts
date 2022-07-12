@@ -115,6 +115,27 @@ export class FeaturesAuthProfilesService {
   }
 
   /**
+   * Updates role.
+   * @param {Role} role
+   * @param {Object} data
+   * @return {Observable}
+   */
+  updateRole(role: Role, data): Observable<Role> {
+    const endpoint = encodeURI(`/api/accounts/roles/${role.id}`);
+    return this.http.Put<Role>(endpoint, data);
+  }
+
+  /**
+   * Delets role.
+   * @param {Role} role
+   * @return {Observable}
+   */
+  deleteRole(role: Role): Observable<any> {
+    const endpoint = encodeURI(`/api/accounts/roles/${role.id}`);
+    return this.http.Delete(endpoint);
+  }
+
+  /**
    * Request the permissions from API.
    */
   getPermissions(): Observable<Permission[]> {

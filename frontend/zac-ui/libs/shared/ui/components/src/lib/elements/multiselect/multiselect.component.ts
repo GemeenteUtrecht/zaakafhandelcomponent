@@ -1,4 +1,4 @@
-import {AfterContentInit, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {AfterContentInit, Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormControl} from '@angular/forms';
 
 /**
@@ -14,7 +14,8 @@ import {FormBuilder, FormControl} from '@angular/forms';
  * Takes multiple: Allow multiple selections
  * Takes placeholder: Placeholder for the field
  * Takes required: Sets required for form
- * Takes searchable: Allow user to type and search
+ * Takes searchable: Allow user
+ * to type and search
  * Takes selectedValue: Pre selected values
  * Takes label: Label of the input field
  * Takes appendTo: HTML class to append the dropdown to
@@ -28,7 +29,7 @@ import {FormBuilder, FormControl} from '@angular/forms';
   templateUrl: './multiselect.component.html',
   styleUrls: ['./multiselect.component.scss'],
 })
-export class MultiselectComponent implements OnInit, AfterContentInit {
+export class MultiselectComponent implements OnInit, OnChanges {
   @Input() control: FormControl;
   @Input() items = [];
 
@@ -93,10 +94,10 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
   }
 
   /**
-   * A lifecycle hook that is called after Angular has fully initialized all content of a directive. Define an
-   * ngAfterContentInit() method to handle any additional initialization tasks.
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
    */
-  ngAfterContentInit(): void {
+  ngOnChanges(): void {
     if (this.selectedValue) {
       this.selectedItems = this.selectedValue
     }
@@ -127,11 +128,18 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
    * @param {Event} event
    */
   onCheckboxGroupChange(event: Event) {
+    event.stopPropagation();
+
     const groupElement = event.currentTarget as HTMLElement;
     const selectedCheckboxes = groupElement.querySelectorAll('input:checked');
-    this.selectedItems = Array.from(selectedCheckboxes).map((checkbox: HTMLInputElement) => checkbox.value);
+
+    this.selectedItems = Array.from(selectedCheckboxes)
+      .filter((checkbox: HTMLInputElement) => !checkbox.classList.contains('multiselect__select-all'))
+      .map((checkbox: HTMLInputElement) => checkbox.value);
+
     const value = this.items.filter((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
-    event.stopPropagation();
+    this.control.setValue(this.selectedItems)
+
     this.onChange(value);
   }
 
@@ -144,7 +152,9 @@ export class MultiselectComponent implements OnInit, AfterContentInit {
     } else {
       this.selectedItems = this.items.map((item) => item[this.bindValue]);
     }
-    const value = this.items;
+    const value = this.items.filter((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
+    this.control.setValue(this.selectedItems)
+
     this.onChange(value);
   }
 }

@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from zac.core.api.pagination import BffPagination
-from zac.utils.mixins import PatchModelMixin, UpdateModelMixin
+from zac.utils.mixins import PatchModelMixin
 
 from ..constants import AccessRequestResult
 from ..email import send_email_to_requester
@@ -235,11 +235,10 @@ class AuthProfileViewSet(viewsets.ModelViewSet):
     retrieve=extend_schema(summary=_("Retrieve role.")),
     create=extend_schema(summary=_("Create role.")),
     update=extend_schema(summary=_("Update role.")),
+    destroy=extend_schema(summary=_("Destroy role.")),
 )
 class RoleViewSet(
-    mixins.CreateModelMixin,
-    UpdateModelMixin,
-    viewsets.ReadOnlyModelViewSet,
+    viewsets.ModelViewSet,
 ):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
