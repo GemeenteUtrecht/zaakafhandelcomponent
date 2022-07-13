@@ -82,6 +82,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   showOverlay: boolean;
   showActions: boolean;
 
+  closeCaseTask: Task;
+
   constructor(
     public ketenProcessenService: KetenProcessenService,
     private zaakService: ZaakService,
@@ -89,7 +91,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     private modalService: ModalService,
     private userService: UserService,
     private route: ActivatedRoute,
-    private cdRef: ChangeDetectorRef
   ) {
   }
 
@@ -109,8 +110,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       }
     });
 
-    this.showOverlay = !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
-    this.showActions = !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+    this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
+    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
   }
 
   /**
@@ -205,6 +206,14 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
+   * Set task that is responsible for closing the case.
+   * @param {Task[]} data
+   */
+  setCloseCaseTask(data: Task[]) {
+    this.closeCaseTask = data.find(({formKey}) => formKey === 'resultaatZetten');
+  }
+
+  /**
    * Fetch all the related processes from the zaak.
    * @param {boolean} [openTask=false] Whether to automatically execute a newly created task (task not already known).
    */
@@ -278,6 +287,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     // Update data.
     this.data = data;
     this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
+    this.setCloseCaseTask(this.allTaskData);
 
     // Process instance ID for API calls
     this.processInstanceId = data.length > 0 ? data[0].id : null;

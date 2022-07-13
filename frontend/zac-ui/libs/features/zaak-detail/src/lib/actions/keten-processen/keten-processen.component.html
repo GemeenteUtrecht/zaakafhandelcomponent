@@ -1,5 +1,4 @@
 <div class="processen card">
-
   <!-- First time loading  -->
   <ng-container *ngIf="isLoading && !zaak.resultaat">
     <gu-loading-indicator></gu-loading-indicator>
@@ -7,40 +6,25 @@
 
   <div class="processen__acties" [ngClass]="{'processen__acties--disabled': showOverlay}">
     <h2 class="d-inline-block mr-1">Acties</h2>
+    <p *ngIf="!(!!data && data.length === 0 && !isLoading) && !zaak.resultaat">Deze acties zijn noodzakelijk voor het afronden van de zaak.</p>
 
     <!-- Result set -->
     <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
 
     <!-- Loaded -->
     <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
-
-      <!-- Action buttons -->
-      <div class="processen__msg-btns-container" *ngIf="showActions">
-        <ng-container *ngFor="let message of data[0].messages; let i = index">
-          <button gu-button
-                  (click)="sendMessage(message)"
-                  buttonStyle="action-link"
-                  class="mr-2 mb-3">
-            {{message}}
-          </button>
-        </ng-container>
-      </div>
-
-
       <!-- Task lists -->
       <div class="processen__taken">
         <div class="row">
 
           <!-- Tasks for current user -->
           <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
-            <h4 *ngIf="allTaskData?.length > 0">Zelf doen</h4>
+            <h4 *ngIf="allTaskData?.length > 0">Mijn acties</h4>
             <ng-container *ngFor="let task of allTaskData">
-              <div class="taak d-flex justify-content-between"
-                   *ngIf="task.assignee?.username === currentUser.username || currentUser.groups.includes(task.assignee?.name)"
-              >
+              <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForCurrentUser(currentUser, task)">
                 <!-- Description -->
                 <div class="taak__detail mr-md-2">
-                  <p class="m-0 p--bold">{{task.name | capitalize}}</p>
+                  <p class="m-0 p--bold p--primary">{{task.name | capitalize}}</p>
 
                   <!-- Double click shows id. -->
                   <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
@@ -80,12 +64,12 @@
 
           <!-- Task for others -->
           <div class="col-md-6">
-            <h4 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Wacht op anderen</h4>
+            <h4 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Acties voor anderen</h4>
             <ng-container *ngFor="let task of allTaskData">
-              <div class="taak d-flex justify-content-between" *ngIf="task.assignee?.username !== currentUser.username && !currentUser.groups.includes(task.assignee?.name)">
+              <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForOtherUser(currentUser, task)">
                 <!-- Description -->
                 <div class="taak__detail mr-md-2">
-                  <p class="m-0 p--bold" *ngIf="task.name">{{task.name | capitalize}}</p>
+                  <p class="m-0 p--bold p--primary" *ngIf="task.name">{{task.name | capitalize}}</p>
 
                   <!-- Double click shows id. -->
                   <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
@@ -154,6 +138,31 @@
       Proces opstarten
     </button>
   </div>
+
+</div>
+<div class="acties card mt-4" *ngIf="!!data && data?.length > 0 && showActions">
+  <h2>Optionele acties</h2>
+  <p>Acties die niet nodig zijn om het proces af te ronden.</p>
+  <!-- Action buttons -->
+  <div class="processen__msg-btns-container">
+    <ng-container *ngFor="let message of data[0].messages; let i = index">
+      <button gu-button
+              (click)="sendMessage(message)"
+              buttonStyle="action-link"
+              class="mr-2 mb-3">
+        {{message}}
+      </button>
+    </ng-container>
+  </div>
+  <button *ngIf="closeCaseTask"
+          gu-button
+          buttonStyle="primary"
+          buttonType="danger"
+          icon="dangerous"
+          (click)="executeTask(closeCaseTask.id, 0)"
+  >
+    Zaak afsluiten
+  </button>
 </div>
 
 <!-- BPMN modal -->

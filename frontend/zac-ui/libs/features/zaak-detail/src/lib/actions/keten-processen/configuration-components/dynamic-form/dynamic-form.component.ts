@@ -38,6 +38,7 @@ export class DynamicFormComponent implements OnChanges {
   submitSuccess: boolean;
   submitHasError: boolean;
   submitErrorMessage: string;
+  showCloseCaseConfirmation = false;
 
   constructor(
     private http: ApplicationHttpClient,
@@ -88,10 +89,19 @@ export class DynamicFormComponent implements OnChanges {
     this.formattedEnumItems[name] = formattedEnumArray;
   }
 
+  checkSubmitForm() {
+    if (this.taskContextData.task.formKey === 'resultaatZetten') {
+      this.showCloseCaseConfirmation = true;
+    } else {
+      this.submitForm();
+    }
+  }
+
   /**
    * Format the form data to fit the API.
+   *  @param reloadPage
    */
-  submitForm() {
+  submitForm(reloadPage?: boolean) {
     this.isSubmitting = true;
 
     const formData = {
@@ -108,20 +118,24 @@ export class DynamicFormComponent implements OnChanges {
       }
       formData[control] = value;
     })
-    this.putForm(formData);
+    this.putForm(formData, reloadPage);
   }
 
   /**
    * PUT request.
    * @param formData
+   * @param reloadPage
    */
-  putForm(formData) {
+  putForm(formData, reloadPage?) {
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
 
       this.modalService.close('ketenprocessenModal');
+      if (reloadPage) {
+        document.location.reload()
+      }
     }, res => {
       this.isSubmitting = false;
       this.submitErrorMessage = res.error.detail ? res.error.detail : "Er is een fout opgetreden";

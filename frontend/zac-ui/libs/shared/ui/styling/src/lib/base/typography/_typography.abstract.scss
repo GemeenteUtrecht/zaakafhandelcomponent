@@ -9,24 +9,24 @@ $line-height-s: 1.2 !default;
 $line-height-m: 1.5 !default;
 $line-height-l: 1.7 !default;
 
-$h1-font-size-xs: 24px !default;
-$h1-font-size-s: 24px !default;
-$h1-font-size-m: 24px !default;
-$h1-font: 24px;
+$h1-font-size-xs: 26px !default;
+$h1-font-size-s: 26px !default;
+$h1-font-size-m: 26px !default;
+$h1-font: 26px;
 
-$h2-font-size-xs: 24px !default;
-$h2-font-size-s: 24px !default;
-$h2-font-size-m: 24px !default;
-$h2-font: 24px !default;
+$h2-font-size-xs: 22px !default;
+$h2-font-size-s: 22px !default;
+$h2-font-size-m: 22px !default;
+$h2-font: 22px !default;
 
-$h3-font-size-xs: 24px !default;
-$h3-font-size-s: 24px !default;
-$h3-font-size-m: 24px !default;
-$h3-font: 24px !default;
+$h3-font-size-xs: 20px !default;
+$h3-font-size-s: 20px !default;
+$h3-font-size-m: 20px !default;
+$h3-font: 20px !default;
 
-$h4-font-size-xs: 16px !default;
-$h4-font-size-s: 16px !default;
-$h4-font-size-m: 16px !default;
+$h4-font-size-xs: 18px !default;
+$h4-font-size-s: 18px !default;
+$h4-font-size-m: 18px !default;
 
 @mixin heading {
   color: $color-text;
