@@ -10,6 +10,8 @@ import {AdviserenAccorderenComponent} from "./actions/adviseren-accorderen/advis
 import {StatusComponent} from './actions/status/status.component';
 import {ActivatedRoute} from '@angular/router';
 import {UserPermissionsComponent} from './overview/user-permissions/user-permissions.component';
+import {BetrokkenenComponent} from './overview/betrokkenen/betrokkenen.component';
+import {DocumentenComponent} from './documenten/documenten.component';
 
 
 /**
@@ -38,6 +40,8 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
   @ViewChild(AdviserenAccorderenComponent) adviserenAccorderenComponent: AdviserenAccorderenComponent;
   @ViewChild(StatusComponent) statusComponent: StatusComponent;
   @ViewChild(UserPermissionsComponent) UserPermissionsComponent: UserPermissionsComponent;
+  @ViewChild(BetrokkenenComponent) betrokkenenComponent: BetrokkenenComponent;
+  @ViewChild(DocumentenComponent) documentenComponent: DocumentenComponent;
 
   /** @type {string} Message to show when access request is successfully submitted. */
   readonly accessRequestSuccessMessage: string = 'Je aanvraag is verstuurd.';
@@ -200,6 +204,10 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
     this.canRequestAccess = false
     this.isLoading = true;
 
+    this.fetchCaseDetails();
+  }
+
+  fetchCaseDetails() {
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie)
       .subscribe( res => {
         this.zaakData = res;
@@ -285,8 +293,11 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
    * @param event
    */
   ketenProcessenUpdate(event) {
+    this.fetchCaseDetails();
     this.adviserenAccorderenComponent.update();
     this.statusComponent.update();
+    this.betrokkenenComponent.update();
+    this.documentenComponent.update();
   }
 
   /**

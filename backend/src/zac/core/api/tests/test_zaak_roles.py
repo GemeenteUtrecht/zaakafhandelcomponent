@@ -168,9 +168,13 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         rol = generate_oas_component(
             "zrc",
             "schemas/Rol",
-            betrokkene_identificatie={"identificatie": self.user.username},
-            betrokkene_type="medewerker",
+            betrokkeneIdentificatie={"identificatie": self.user.username},
+            betrokkeneType="medewerker",
             roltype=self.roltype["url"],
+            betrokkene="",
+            indicatieMachtiging="gemachtigde",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/fb498b0b-e4c7-44f1-8e39-a55d9f55ebb8",
         )
         m.post(f"{ZAKEN_ROOT}rollen", json=rol, status_code=201)
         response = self.client.post(
@@ -179,7 +183,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkene_type": "medewerker",
                 "betrokkene_identificatie": {"identificatie": self.user.username},
                 "roltype": self.roltype["url"],
-                "indicatie_machtiging": "",
+                "indicatie_machtiging": "gemachtigde",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -194,10 +198,11 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "voorvoegselAchternaam": "",
                 },
                 "betrokkeneType": "medewerker",
-                "indicatieMachtiging": "",
+                "indicatieMachtiging": "gemachtigde",
                 "roltoelichting": self.roltype["omschrijving"],
                 "roltype": self.roltype["url"],
                 "zaak": self.zaak["url"],
+                "url": rol["url"],
             },
         )
         self.assertEqual(
@@ -211,7 +216,71 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "voorvoegsel_achternaam": "",
                 },
                 "betrokkene_type": "medewerker",
-                "indicatie_machtiging": "",
+                "indicatie_machtiging": "gemachtigde",
+                "roltoelichting": self.roltype["omschrijving"],
+                "roltype": self.roltype["url"],
+                "zaak": self.zaak["url"],
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_create_rol_empty_betrokkene_identificatie(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.roltype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.roltype]),
+        )
+
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            betrokkene="",
+            betrokkeneIdentificatie={"identificatie": "some-identificatie"},
+            betrokkeneType="organisatorische_eenheid",
+            roltype=self.roltype["url"],
+            indicatieMachtiging="gemachtigde",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/fb498b0b-e4c7-44f1-8e39-a55d9f55ebb8",
+        )
+        m.post(f"{ZAKEN_ROOT}rollen", json=rol, status_code=201)
+        response = self.client.post(
+            self.endpoint,
+            {
+                "betrokkene_type": "organisatorische_eenheid",
+                "betrokkene_identificatie": {},
+                "roltype": self.roltype["url"],
+                "indicatie_machtiging": "gemachtigde",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.json(),
+            {
+                "betrokkene": "",
+                "betrokkeneIdentificatie": {"identificatie": "some-identificatie"},
+                "betrokkeneType": "organisatorische_eenheid",
+                "indicatieMachtiging": "gemachtigde",
+                "roltoelichting": self.roltype["omschrijving"],
+                "roltype": self.roltype["url"],
+                "zaak": self.zaak["url"],
+                "url": rol["url"],
+            },
+        )
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "betrokkene": "",
+                "betrokkene_identificatie": {},
+                "betrokkene_type": "organisatorische_eenheid",
+                "indicatie_machtiging": "gemachtigde",
                 "roltoelichting": self.roltype["omschrijving"],
                 "roltype": self.roltype["url"],
                 "zaak": self.zaak["url"],
@@ -241,7 +310,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -273,7 +342,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -312,7 +381,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -333,7 +402,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                     "betrokkene_type": "",
                     "betrokkene_identificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -368,7 +437,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 {
                     "betrokkene_type": "medewerker",
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -640,14 +709,14 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        with patch("zac.core.api.views.create_rol", return_value=[]):
+        with patch("zac.core.api.views.create_rol", return_value=None):
             response = self.client.post(
                 self.endpoint,
                 {
                     "betrokkene_type": "medewerker",
                     "betrokkene_identificatie": {"identificatie": user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "",
+                    "indicatie_machtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

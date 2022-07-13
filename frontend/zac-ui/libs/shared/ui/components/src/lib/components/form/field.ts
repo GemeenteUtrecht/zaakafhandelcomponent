@@ -2,11 +2,11 @@ import {AbstractControl, FormGroup} from '@angular/forms';
 import {FormService} from './form.service';
 
 /**
- * Choices of a select field.
+ * Choices of a select field. The type of the return value can be different.
  */
 export interface Choice {
   label: string,
-  value: string | number,
+  value: string | number | object,
 }
 
 /**
@@ -63,8 +63,8 @@ export interface FieldConfiguration {
   /** @type {string} The type attribute for the field. */
   type?: string;
 
-  /** @type {string} */
-  value?: string | string[] | number;
+  /** @type {string | string[] | number | object} The type of the form group value that will be registered on input */
+  value?: string | string[] | number | object;
 
   /** @type {boolean} Whether a select takes multiple values. */
   multiple?: boolean;

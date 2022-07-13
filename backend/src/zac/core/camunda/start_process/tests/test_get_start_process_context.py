@@ -174,6 +174,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             camunda_start_process=camunda_start_process,
             eigenschapnaam=cls.eigenschap["naam"],
             label="some-eigenschap",
+            required=False,
         )
         ProcessEigenschapChoiceFactory.create(
             process_eigenschap=process_eigenschap,
@@ -185,12 +186,14 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             informatieobjecttype_omschrijving=cls.informatieobjecttype["omschrijving"],
             label="some-doc",
             allow_multiple=True,
+            required=False,
         )
         ProcessRolFactory.create(
             camunda_start_process=camunda_start_process,
             roltype_omschrijving=cls.roltype["omschrijving"],
             label="some-rol",
             betrokkene_type="natuurlijk_persoon",
+            required=False,
         )
 
     def setUp(self):
@@ -248,6 +251,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                     "assigneeType": "",
                     "canCancelTask": False,
                     "assignee": None,
+                    "formKey": "zac:startProcessForm",
                 },
                 "context": {
                     "benodigdeBijlagen": [
@@ -326,6 +330,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                     "assigneeType": "",
                     "canCancelTask": False,
                     "assignee": None,
+                    "formKey": "zac:startProcessForm",
                 },
                 "context": {
                     "benodigdeBijlagen": [
@@ -349,6 +354,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             "label": "some-rol",
                             "betrokkeneType": "natuurlijk_persoon",
                             "choices": [],
+                            "required": False,
                         }
                     ],
                     "benodigdeZaakeigenschappen": [
@@ -373,6 +379,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             },
                             "label": "some-eigenschap",
                             "default": "",
+                            "required": False,
                         }
                     ],
                 },

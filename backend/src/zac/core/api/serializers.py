@@ -1,5 +1,6 @@
 import pathlib
-from datetime import date, datetime
+from concurrent.futures import as_completed
+from datetime import datetime
 from decimal import ROUND_05UP
 from typing import Optional
 
@@ -8,7 +9,7 @@ from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 
-from django_camunda.utils import serialize_variable
+from django_camunda.api import get_process_instance_variable
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from rest_framework.utils import formatting
@@ -16,6 +17,7 @@ from zds_client import ClientError
 from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
+    Catalogus,
     Eigenschap,
     EigenschapSpecificatie,
     InformatieObjectType,
@@ -31,6 +33,7 @@ from zgw_consumers.api_models.constants import (
 )
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
@@ -38,8 +41,10 @@ from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
 from zac.api.proxy import ProxySerializer
 from zac.camunda.api.utils import get_bptl_app_id_variable
+from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.core.camunda.start_process.models import CamundaStartProcess
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_rol,
@@ -51,6 +56,7 @@ from zac.core.services import (
     get_roltypen,
     get_statustypen,
     get_zaak,
+    get_zaaktypen,
 )
 from zgw.models.zrc import Zaak
 
@@ -335,6 +341,15 @@ class AddZaakRelationSerializer(serializers.Serializer):
         return data
 
 
+class CreateZaakDetailsSerializer(serializers.Serializer):
+    omschrijving = serializers.CharField(
+        required=True, help_text=_("A short summary of the ZAAK.")
+    )
+    toelichting = serializers.CharField(
+        help_text=_("A comment on the ZAAK."), default="", allow_blank=True
+    )
+
+
 class CreateZaakSerializer(serializers.Serializer):
     organisatie_rsin = serializers.CharField(
         help_text=_(
@@ -350,39 +365,40 @@ class CreateZaakSerializer(serializers.Serializer):
             )
         ],
     )
-    zaaktype = serializers.URLField(
+    zaaktype_omschrijving = serializers.CharField(
         required=True,
-        help_text=_("URL-reference to the ZAAKTYPE (in the Catalogi API)."),
+        help_text=_("`omschrijving` of ZAAKTYPE."),
     )
-    omschrijving = serializers.CharField(
-        required=True, help_text=_("A short summary of the ZAAK.")
+    zaaktype_catalogus = serializers.URLField(
+        required=True,
+        help_text=_("URL-reference to the CATALOGUS of ZAAKTYPE."),
     )
-    toelichting = serializers.CharField(
-        help_text=_("A comment on the ZAAK."), default=""
-    )
-    startdatum = serializers.DateField(
-        default=date.today(), help_text=_("The date the ZAAK begins.")
+    zaaktype = serializers.HiddenField(default="")
+    zaak_details = CreateZaakDetailsSerializer(
+        help_text=_("Relevant details pertaining to the ZAAK.")
     )
 
-    def validate_zaaktype(self, zaaktype):
-        try:
-            fetch_zaaktype(zaaktype)
-        except ClientError:
+    def validate(self, data):
+        validated_data = super().validate(data)
+        zt_omschrijving = validated_data["zaaktype_omschrijving"]
+        zt_catalogus = validated_data["zaaktype_catalogus"]
+        zaaktypen = get_zaaktypen(catalogus=zt_catalogus, omschrijving=zt_omschrijving)
+        if not zaaktypen:
             raise serializers.ValidationError(
-                _("ZAAKTYPE can not be found for URL {zaaktype}.").format(
-                    zaaktype=zaaktype
-                )
+                _(
+                    "ZAAKTYPE {zt_omschrijving} can not be found in {zt_catalogus}."
+                ).format(zt_omschrijving=zt_omschrijving, zt_catalogus=zt_catalogus)
             )
-        return zaaktype
+        max_date = max([zt.versiedatum for zt in zaaktypen])
+        zaaktype = [zt for zt in zaaktypen if zt.versiedatum == max_date][0]
+        validated_data["zaaktype"] = zaaktype.url
+        return validated_data
 
     def to_internal_value(self, data):
         serialized_data = {
             **super().to_internal_value(data),
             **get_bptl_app_id_variable(),
         }
-        for key, value in serialized_data.items():
-            serialized_data[key] = serialize_variable(value)
-
         organisatie_rsin = serialized_data.pop("organisatie_rsin")
         serialized_data["organisatieRSIN"] = organisatie_rsin
         return serialized_data
@@ -438,6 +454,17 @@ class ZaakDetailSerializer(APIModelSerializer):
     kan_geforceerd_bijwerken = serializers.SerializerMethodField(
         help_text=_("A boolean flag whether a user can force edit the ZAAK or not."),
     )
+    has_process = serializers.SerializerMethodField(
+        help_text=_("A boolean flag whether the ZAAK has a process or not.")
+    )
+    is_static = serializers.SerializerMethodField(
+        help_text=_("A boolean flag whether the ZAAK is stationary or not.")
+    )
+    is_configured = serializers.SerializerMethodField(
+        help_text=_(
+            "A boolean flag whether the ZAAK has already been configured or not."
+        )
+    )
 
     class Meta:
         model = Zaak
@@ -459,12 +486,52 @@ class ZaakDetailSerializer(APIModelSerializer):
             "deadline_progress",
             "resultaat",
             "kan_geforceerd_bijwerken",
+            "has_process",
+            "is_static",
+            "is_configured",
         )
 
     def get_kan_geforceerd_bijwerken(self, obj) -> bool:
         return CanForceEditClosedZaak().check_for_any_permission(
             self.context["request"], obj
         )
+
+    def get_has_process(self, obj) -> bool:
+        process_instances = get_top_level_process_instances(obj.url)
+        # Filter out the process instance that started the zaak
+        process_instances = [
+            pi
+            for pi in process_instances
+            if pi.definition.key != settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        ]
+        return bool(process_instances)
+
+    def get_is_static(self, obj) -> bool:
+        zaaktype_catalogus = obj.zaaktype.catalogus
+        zaaktype_identificatie = obj.zaaktype.identificatie
+        objs = CamundaStartProcess.objects.filter(
+            zaaktype_catalogus=zaaktype_catalogus,
+            zaaktype_identificatie=zaaktype_identificatie,
+        )
+        return not objs.exists()
+
+    def get_is_configured(self, obj) -> bool:
+        process_instances = get_top_level_process_instances(obj.url)
+        is_configured = False
+        with parallel() as executor:
+            futures = [
+                executor.submit(get_process_instance_variable, pid.id, "isConfigured")
+                for pid in process_instances
+            ]
+            for future in as_completed(futures):
+                # catch 404 errors - the variable is not found but we only care about
+                # the variable that is found.
+                try:
+                    is_configured = future.result()
+                    executor.executor.shutdown(wait=False, cancel_futures=True)
+                except HTTPError:
+                    continue
+        return is_configured
 
 
 class UpdateZaakDetailSerializer(APIModelSerializer):
@@ -771,9 +838,12 @@ def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> Serial
         betrokkene_identificatie = serializer_cls(
             label=_("Betrokkene identificatie"),
             help_text=_(
-                "The `betrokkene_identificatie` of the ROL."
-                "The shape of the `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL."
-                "Mutually exclusive with `betrokkene`."
+                """The `betrokkene_identificatie` of the ROL. 
+                The shape of the `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL. 
+                Mutually exclusive with `betrokkene`. 
+                
+                Data validation for `betrokkene_identificatie` is done at the source (in this case: Open Zaak).
+                """
             ),
         )
 
@@ -781,8 +851,14 @@ def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> Serial
     return type(name, (IdentificatieSerializer,), {})
 
 
+class PassDataInternalValue:
+    def to_internal_value(self, data: dict):
+        extra = super().to_representation(data)
+        return {**data, **extra}
+
+
 @betrokkene_identificatie_serializer
-class RolNatuurlijkPersoonSerializer(ProxySerializer):
+class RolNatuurlijkPersoonSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -792,7 +868,7 @@ class RolNatuurlijkPersoonSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
+class RolNietNatuurlijkPersoonSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -802,7 +878,7 @@ class RolNietNatuurlijkPersoonSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolVestigingSerializer(ProxySerializer):
+class RolVestigingSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -812,7 +888,7 @@ class RolVestigingSerializer(ProxySerializer):
 
 
 @betrokkene_identificatie_serializer
-class RolOrganisatorischeEenheidSerializer(ProxySerializer):
+class RolOrganisatorischeEenheidSerializer(PassDataInternalValue, ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "components",
@@ -882,8 +958,7 @@ class RolSerializer(PolymorphicSerializer):
         allow_blank=True,
     )
     indicatie_machtiging = serializers.ChoiceField(
-        choices=["gemachtigde", "machtiginggever"],
-        allow_blank=True,
+        choices=["gemachtigde", "machtiginggever"], default="gemachtigde"
     )
     roltoelichting = serializers.SerializerMethodField(
         help_text=_(
@@ -921,11 +996,11 @@ class RolSerializer(PolymorphicSerializer):
                     rt=data["roltype"], zt=zaaktype.url
                 )
             )
-        if data["betrokkene"] and data["betrokkene_type"]:
+        if data.get("betrokkene") and data["betrokkene_type"]:
             raise serializers.ValidationError(
                 _("`betrokkene` and `betrokkene_type` are mutually exclusive.")
             )
-        if data["betrokkene"] and data["betrokkene_identificatie"]:
+        if data.get("betrokkene") and data["betrokkene_identificatie"]:
             raise serializers.ValidationError(
                 _("`betrokkene` and `betrokkene_identificatie` are mutually exclusive.")
             )
@@ -972,13 +1047,25 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
         fields = ("object_type", "label", "items")
 
 
-class ZaakTypeAggregateSerializer(serializers.Serializer):
-    omschrijving = serializers.CharField(
-        help_text=_(
-            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
-        )
-    )
-    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS"))
+class CatalogusSerializer(APIModelSerializer):
+    class Meta:
+        model = Catalogus
+        fields = ("domein", "url")
+
+
+class ZaakTypeAggregateSerializer(APIModelSerializer):
+    catalogus = CatalogusSerializer(help_text=_("CATALOGUS that ZAAKTYPE belongs to."))
+
+    class Meta:
+        model = ZaakType
+        fields = ("catalogus", "omschrijving")
+        extra_kwargs = {
+            "omschrijving": {
+                "help_text": _(
+                    "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+                )
+            }
+        }
 
 
 class SearchEigenschapSpecificatieSerializer(serializers.Serializer):

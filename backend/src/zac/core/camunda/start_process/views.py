@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
@@ -20,6 +21,7 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
     def get_serializer(self, *args, **kwargs):
         return CreatedProcessInstanceSerializer(*args, **kwargs)
 
+    @extend_schema(summary=_("Start camunda process for ZAAK."))
     def post(
         self, request: Request, bronorganisatie: str, identificatie: str
     ) -> Response:

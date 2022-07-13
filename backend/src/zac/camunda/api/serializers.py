@@ -59,6 +59,7 @@ class TaskSerializer(PolymorphicSerializer):
         help_text=_("The `assigneeType` of the user task."),
     )
     can_cancel_task = serializers.SerializerMethodField()
+    form_key = serializers.CharField(max_length=255, allow_null=True, allow_blank=True)
 
     def get_can_cancel_task(self, obj) -> bool:
         return obj.name in self.context.get("killable_tasks", [])

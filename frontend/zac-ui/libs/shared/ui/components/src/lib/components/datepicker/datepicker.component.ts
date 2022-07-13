@@ -69,13 +69,5 @@ export class DatepickerComponent implements OnInit, OnChanges {
   clearValue() {
     this.control.patchValue(null)
   }
-
-  /**
-   * Creates input label.
-   * @returns {string}
-   */
-  getLabel() {
-    return this.required ? this.label : (this.label + ' (niet verplicht)')
-  }
 }
 

@@ -196,7 +196,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * Fetches zaak typen
    */
   getCaseTypes() {
-    this.fService.getCaseTypes().subscribe(
+    this.metaService.getCaseTypes().subscribe(
       (data) => this.caseTypes = data,
       this.reportError.bind(this)
     );

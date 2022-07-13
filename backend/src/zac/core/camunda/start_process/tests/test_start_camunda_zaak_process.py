@@ -4,9 +4,9 @@ from django.urls import reverse
 
 import requests_mock
 from django_camunda.models import CamundaConfig
-from requests.exceptions import HTTPError
+from django_camunda.utils import serialize_variable
 from rest_framework import status
-from rest_framework.test import APITestCase, APITransactionTestCase
+from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -19,7 +19,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.permissions import zaakprocess_starten, zaken_inzien
+from zac.core.permissions import zaakprocess_starten
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
@@ -189,12 +189,14 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
                 "businessKey": "",
                 "withVariablesInReturn": False,
                 "variables": {
-                    "zaakUrl": self.zaak["url"],
-                    "zaakIdentificatie": self.zaak["identificatie"],
-                    "zaakDetails": {
-                        "omschrijving": self.zaak["omschrijving"],
-                        "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
-                    },
+                    "zaakUrl": serialize_variable(self.zaak["url"]),
+                    "zaakIdentificatie": serialize_variable(self.zaak["identificatie"]),
+                    "zaakDetails": serialize_variable(
+                        {
+                            "omschrijving": self.zaak["omschrijving"],
+                            "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
+                        }
+                    ),
                 },
             },
         )

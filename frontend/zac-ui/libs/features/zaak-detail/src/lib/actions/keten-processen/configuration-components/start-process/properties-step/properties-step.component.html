@@ -1,0 +1,44 @@
+<div class="start-process__properties-step pt-4" *ngIf="startProcessPropertyForm">
+  <ng-container [formGroup]="startProcessPropertyForm">
+    <div class="row" formArrayName="properties" *ngFor="let property of propertiesControl.controls; let i = index">
+      <!-- Free user input  -->
+      <gu-input
+        *ngIf="getPropertiesContext(i).choices.length === 0"
+        [control]="propertyControl(i)"
+        type="text"
+        [label]="getPropertiesContext(i).label"
+        [required]="getPropertiesContext(i).required"
+        autocomplete="off"
+        class="col-8"
+      ></gu-input>
+
+      <!-- If choices are available -->
+      <gu-multiselect
+        *ngIf="getPropertiesContext(i).choices.length > 0"
+        [control]="propertyControl(i)"
+        [items]="getPropertiesContext(i).choices"
+        [label]="getPropertiesContext(i).label"
+        [multiple]="false"
+        [required]="getPropertiesContext(i).required"
+        bindLabel="label"
+        bindValue="value"
+        appendTo="body"
+        class="mb-4 col-8"
+      ></gu-multiselect>
+
+      <!-- Only show this button if the form is not yet submitted -->
+      <button *ngIf="!isSubmittedProperty(i)"
+              gu-button
+              class="start-process__submit-button ml-3"
+              buttonStyle="primary"
+              size="small"
+              [disabled]="!propertyControl(i).value || submittingProperties.indexOf(i) !== -1"
+              [loading]="submittingProperties.indexOf(i) !== -1"
+              (click)="submitProperty(i)">
+        Opslaan
+      </button>
+
+      <gu-icon class="start-process__submitted-check-icon" *ngIf="isSubmittedProperty(i)">check_circle</gu-icon>
+    </div>
+  </ng-container>
+</div>

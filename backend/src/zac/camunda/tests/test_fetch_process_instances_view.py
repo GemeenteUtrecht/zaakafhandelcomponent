@@ -216,6 +216,7 @@ class ProcessInstanceTests(APITransactionTestCase):
                                 },
                                 "assigneeType": "user",
                                 "canCancelTask": False,
+                                "formKey": "zac:doRedirect",
                             },
                             {
                                 "id": task_data[1][1]["id"],
@@ -229,6 +230,7 @@ class ProcessInstanceTests(APITransactionTestCase):
                                 },
                                 "assigneeType": "group",
                                 "canCancelTask": False,
+                                "formKey": "zac:doRedirect",
                             },
                             {
                                 "id": task_data[1][2]["id"],
@@ -238,6 +240,7 @@ class ProcessInstanceTests(APITransactionTestCase):
                                 "assignee": "",
                                 "assigneeType": "",
                                 "canCancelTask": False,
+                                "formKey": "zac:doRedirect",
                             },
                         ],
                         "subProcesses": [

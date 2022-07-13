@@ -143,6 +143,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
                         "hasForm": False,
                         "id": TASK_DATA["id"],
                         "canCancelTask": False,
+                        "formKey": "",
                     },
                     "zaak": {
                         "bronorganisatie": self.zaak["bronorganisatie"],
@@ -188,6 +189,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
                         "hasForm": False,
                         "id": TASK_DATA["id"],
                         "canCancelTask": False,
+                        "formKey": "",
                     },
                     "zaak": {
                         "bronorganisatie": self.zaak["bronorganisatie"],

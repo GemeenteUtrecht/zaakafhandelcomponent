@@ -43,6 +43,7 @@ export class MultiselectComponent implements OnInit, OnChanges {
   @Input() label: string;
   @Input() appendTo: string;
   @Input() clearable = true;
+  @Input() disabled: boolean;
   @Input() widgetType: 'checkboxGroup' | 'select' = 'select';
 
   @Output() search: EventEmitter<any> = new EventEmitter<any>();

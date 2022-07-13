@@ -8,19 +8,19 @@ const menuItems: MenuItem[] = [
     to: '/',
   },
   {
-    icon: 'dashboard',
-    label: 'Dashboard',
-    to: '/dashboard',
-  },
-  {
     icon: 'search',
     label: 'Zoeken',
     to: '/zoeken',
   },
   {
     icon: 'feed',
-    label: 'Formulieren',
-    to: '/formulieren',
+    label: 'Zaak starten',
+    to: '/zaak-starten',
+  },
+  {
+    icon: 'dashboard',
+    label: 'Dashboard',
+    to: '/dashboard',
   },
   {
     icon: 'summarize',

@@ -1,9 +1,8 @@
 <mat-form-field
   appearance="outline"
-  [hideRequiredMarker]="true"
   [floatLabel]="'always'"
 >
-  <mat-label *ngIf="label">{{getLabel()}}</mat-label>
+  <mat-label *ngIf="label">{{label}}</mat-label>
   <textarea matInput
             [placeholder]="placeholder"
             [value]="value"

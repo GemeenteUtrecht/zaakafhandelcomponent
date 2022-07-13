@@ -28,7 +28,7 @@
         "libs/features/contezza-document-search/src/index.ts"
       ],
       "@gu/dashboard": ["libs/features/dashboard/src/index.ts"],
-      "@gu/forms": ["libs/features/forms/src/index.ts"],
+      "@gu/start-case": ["libs/features/start-case/src/index.ts"],
       "@gu/kownsl": ["libs/features/kownsl/src/index.ts"],
       "@gu/models": ["libs/shared/data-access/models/index.ts"],
       "@gu/reports": ["libs/features/reports/src/index.ts"],

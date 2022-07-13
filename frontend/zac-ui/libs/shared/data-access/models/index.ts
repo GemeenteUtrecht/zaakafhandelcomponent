@@ -1,6 +1,10 @@
 // Activities
 export * from './activities/activity';
 
+// Camunda
+export * from './camunda/process-instance'
+export * from './camunda/process-instance-case'
+
 // Checklists
 export * from './checklists/checklist';
 export * from './checklists/checklist_question';
@@ -43,6 +47,9 @@ export * from './accounts/user-search';
 
 // Zaken
 export * from './zaken/assignee'
+export * from './zaken/create-case'
+export * from './zaken/create-case-document'
+export * from './zaken/create-role'
 export * from './zaken/document'
 export * from './zaken/related-case'
 export * from './zaken/zaak-permission'

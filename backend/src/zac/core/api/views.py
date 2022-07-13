@@ -15,7 +15,15 @@ from django.views.decorators.csrf import csrf_protect
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import authentication, exceptions, permissions, status, views
+from rest_framework import (
+    authentication,
+    exceptions,
+    generics,
+    permissions,
+    serializers,
+    status,
+    views,
+)
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
@@ -58,6 +66,7 @@ from ..services import (
     fetch_zaak_object,
     fetch_zaaktype,
     find_zaak,
+    get_catalogi,
     get_document,
     get_documenten,
     get_eigenschap,
@@ -593,7 +602,16 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         data = {**request.data, "zaak": zaak.url}
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        create_rol(serializer.data)
+        try:
+            rol = create_rol(serializer.data)
+        except Exception as exc:
+            if exc.args[0].get("status") == 400:
+                raise serializers.ValidationError(
+                    exc.args[0].get("invalidParams", "Something went wrong.")
+                )
+            raise exc
+
+        serializer = self.get_serializer(instance=rol)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
@@ -925,18 +943,28 @@ class ZaakTypenView(ListAPIView):
         zaaktypen = get_zaaktypen(self.request.user)
 
         # aggregate
-        zaaktypen_data = [
-            {
-                "catalogus": zaaktype.catalogus,
-                "omschrijving": zaaktype.omschrijving,
-            }
-            for zaaktype in zaaktypen
-        ]
-        zaaktypen_aggregated = {
-            frozenset(zaaktype.items()): zaaktype for zaaktype in zaaktypen_data
-        }.values()
+        zaaktypen_aggregated = []
+        for zt in zaaktypen:
+            omschrijving_found = zt.omschrijving in [
+                _zt.omschrijving for _zt in zaaktypen_aggregated
+            ]
+            catalogus_found = zt.catalogus in [
+                _zt.catalogus
+                for _zt in zaaktypen_aggregated
+                if _zt.omschrijving == zt.omschrijving
+            ]
+
+            if not omschrijving_found or (omschrijving_found and not catalogus_found):
+                zaaktypen_aggregated.append(zt)
+
+        # resolve catalogus
+        catalogi = {cat.url: cat for cat in get_catalogi()}
+        for zt in zaaktypen_aggregated:
+            zt.catalogus = catalogi[zt.catalogus]
+
         zaaktypen_aggregated = sorted(
-            zaaktypen_aggregated, key=lambda z: (z["catalogus"], z["omschrijving"])
+            sorted(zaaktypen_aggregated, key=lambda zt: zt.catalogus.domein),
+            key=lambda zt: zt.omschrijving,
         )
         return zaaktypen_aggregated
 

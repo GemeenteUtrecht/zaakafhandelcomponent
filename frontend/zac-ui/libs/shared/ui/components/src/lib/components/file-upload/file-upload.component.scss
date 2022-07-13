@@ -1,6 +1,9 @@
 @import '../../elements/button/button.component';
 
 .file-upload {
+  > span {
+    font-size: 10px;
+  }
   &__upload-button {
     position: relative;
     @include button;
@@ -22,7 +25,7 @@
   ::-webkit-file-upload-button { cursor:pointer; }
   &__selected-file {
     font-size: 0.75rem;
-    margin-top: 0.625rem;
+    margin-top: 5px;
     display: flex;
     align-items: center;
     .mat-icon {

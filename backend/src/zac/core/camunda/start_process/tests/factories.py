@@ -1,4 +1,5 @@
 import factory
+import factory.fuzzy
 from zgw_consumers.api_models.constants import RolTypes
 
 

@@ -1,6 +1,5 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { ApplicationHttpClient } from '@gu/services';
-import { Observable } from 'rxjs';
+import { ZaakService } from '@gu/services';
 
 @Component({
   selector: 'gu-betrokkenen',
@@ -17,11 +16,27 @@ export class BetrokkenenComponent implements OnChanges {
   isLoading = true;
   isExpanded: boolean;
 
-  constructor(private http: ApplicationHttpClient) { }
+  constructor(
+    private zaakService: ZaakService
+  ) { }
 
   ngOnChanges(): void {
+    this.getContextData();
+  }
+
+  /**
+   * Updates the component using a public interface.
+   */
+  public update() {
+    this.getContextData();
+  }
+
+  /**
+   * Get context data
+   */
+  getContextData() {
     this.isLoading = true;
-    this.getRoles().subscribe(data => {
+    this.zaakService.getCaseRoles(this.bronorganisatie, this.identificatie).subscribe(data => {
       this.allRoleData = data;
       this.hiddenRoleData = data.slice(0, -3);
       this.alwaysVisibleRoleData = data.slice(-3)
@@ -32,11 +47,10 @@ export class BetrokkenenComponent implements OnChanges {
     })
   }
 
-  getRoles(): Observable<any> {
-    const endpoint = encodeURI(`/api/core/cases/${this.bronorganisatie}/${this.identificatie}/roles`);
-    return this.http.Get<any>(endpoint);
-  }
-
+  /**
+   * Slice roles for visibility
+   * @param data
+   */
   formatRoles(data) {
     this.alwaysVisibleRoleData = data.slice(-3)
   }

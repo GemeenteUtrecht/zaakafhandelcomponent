@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
 import { AuthProfile, MetaZaaktype, Role, UserAuthProfile, UserAuthProfiles } from '@gu/models';
+import { MetaService } from '@gu/services';
 
 /**
  * Displays the retrieved authorisation profiles with its roles and policies.
@@ -29,7 +30,8 @@ export class AuthProfilesComponent implements OnInit {
   constructor(
     private fService: FeaturesAuthProfilesService,
     private modalService: ModalService,
-    private snackbarService: SnackbarService
+    private snackbarService: SnackbarService,
+    private metaService: MetaService
   ) { }
 
   ngOnInit(): void {
@@ -145,7 +147,7 @@ export class AuthProfilesComponent implements OnInit {
    * Fetches zaaktypen.
    */
   getCaseTypes() {
-    this.fService.getCaseTypes().subscribe(
+    this.metaService.getCaseTypes().subscribe(
       (data) => this.caseTypes = data,
       (error) => console.error(error),
     );

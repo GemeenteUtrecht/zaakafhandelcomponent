@@ -1,12 +1,12 @@
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {FeaturesFormsComponent} from "./features-forms.component";
+import {FeaturesStartCaseComponent} from "./features-start-case.component";
 import {SharedUiComponentsModule} from "@gu/components";
 
 @NgModule({
   imports: [CommonModule, SharedUiComponentsModule],
-  exports: [FeaturesFormsComponent],
-  declarations: [FeaturesFormsComponent],
+  exports: [FeaturesStartCaseComponent],
+  declarations: [FeaturesStartCaseComponent],
 })
-export class FeaturesFormsModule {
+export class FeaturesStartCaseModule {
 }

@@ -1,4 +1,5 @@
 from io import StringIO
+from unittest.mock import patch
 
 from django.conf import settings
 from django.core.management import call_command
@@ -91,7 +92,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
         )
         m.get(zaaktype["url"], json=zaaktype)
-        call_command("index_zaken", stdout=StringIO())
+        with patch(
+            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            return_value=[],
+        ):
+            call_command("index_zaken", stdout=StringIO())
         self.refresh_index()
         zaken = Index(settings.ES_INDEX_ZAKEN)
         self.assertEqual(zaken.search().count(), 2)

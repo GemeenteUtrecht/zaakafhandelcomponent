@@ -1,9 +1,8 @@
 <mat-form-field
   [appearance]="appearance"
-  [hideRequiredMarker]="true"
   [floatLabel]="'always'"
 >
-  <mat-label *ngIf="label">{{getLabel()}}</mat-label>
+  <mat-label *ngIf="label">{{label}}</mat-label>
   <input #inputRef
          matInput
          (input)="input.emit($event)"

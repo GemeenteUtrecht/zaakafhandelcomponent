@@ -1,5 +1,5 @@
 <ng-container *ngIf="widgetType==='select'">
-  <label class="has-float-label">
+  <span class="has-float-label">
     <ng-select
       [items]="items"
       (search)="onSearch($event)"
@@ -16,10 +16,14 @@
       [searchable]="searchable"
       [appendTo]="appendTo || 'body'"
       [clearable]="clearable"
+      [disabled]="disabled"
     >
     </ng-select>
-    <span>{{label}}</span>
-  </label>
+    <label>
+      {{label}}
+      <span class="multiselect-required-marker" *ngIf="required">*</span>
+    </label>
+  </span>
 </ng-container>
 
 <ng-container *ngIf="widgetType==='checkboxGroup'">

@@ -1,0 +1,86 @@
+<div class="start-process" *ngIf="taskContextData">
+  <h2>{{taskContextData.task.name}}</h2>
+  <p>
+    Het proces heeft de onderstaande gegevens nodig om opgestart te kunnen worden.
+    <br>
+    Vul de velden in en druk op de knop <strong>"Opslaan"</strong> om de gegevens op te slaan.
+  </p>
+  <p>
+    Alleen als alle vereiste gegevens zijn opgeslagen, kan het configuratieproces afgerond worden.
+  </p>
+  <div class="start-process__steps mb-4">
+    <mat-stepper orientation="vertical" [linear]="false" #stepper>
+      <!-- Step 1: Case roles -->
+      <ng-template matStepperIcon="group">
+        <mat-icon>group</mat-icon>
+      </ng-template>
+
+      <mat-step state="group"
+                [completed]="rolesFields?.submitted === rolesFields?.total"
+      >
+        <ng-template matStepLabel>Betrokkenen: {{rolesCount}}</ng-template>
+        <gu-role-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="rolesFields = $event" (updateComponents)="updateComponents.emit()"></gu-role-step>
+        <button gu-button
+                matStepperNext
+                buttonStyle="tertiary"
+                size="small">
+          Volgende stap
+        </button>
+      </mat-step>
+
+      <!-- Step 2: Case properties -->
+      <ng-template matStepperIcon="list">
+        <mat-icon>list</mat-icon>
+      </ng-template>
+
+      <mat-step state="list" [completed]="propertiesFields?.submitted === propertiesFields?.total">
+        <ng-template matStepLabel>Eigenschappen: {{propertiesCount}}</ng-template>
+        <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="propertiesFields = $event" (updateComponents)="updateComponents.emit()"></gu-properties-step>
+        <button gu-button
+                matStepperNext
+                buttonStyle="tertiary"
+                size="small">
+          Volgende stap
+        </button>
+      </mat-step>
+
+      <!-- Step 3: Documents -->
+      <ng-template matStepperIcon="upload_file">
+        <mat-icon>upload_file</mat-icon>
+      </ng-template>
+
+      <mat-step state="upload_file" [completed]="documentsFields?.submitted === documentsFields?.total">
+        <ng-template matStepLabel>Documenten: {{documentsCount}}</ng-template>
+        <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="documentsFields = $event" (updateComponents)="updateComponents.emit()"></gu-documents-step>
+        <button gu-button
+                matStepperNext
+                buttonStyle="tertiary"
+                size="small">
+          Volgende stap
+        </button>
+      </mat-step>
+
+      <!-- Step 4: Finish user task -->
+      <ng-template matStepperIcon="arrow_forward">
+        <mat-icon>arrow_forward</mat-icon>
+      </ng-template>
+
+      <mat-step state="arrow_forward" [completed]="false" [editable]='false'>
+        <ng-template matStepLabel>Configuratieproces afronden</ng-template>
+        <p class="mt-4">
+          * Vereiste velden
+          <br>
+          Let op! Het configuratieproces kan alleen afgerond worden indien alle vereiste velden zijn opgeslagen.
+        </p>
+        <button gu-button
+                buttonStyle="primary"
+                size="small"
+                [disabled]="isSubmitting || !rolesFields.hasValidForm || !propertiesFields.hasValidForm || !documentsFields.hasValidForm"
+                [loading]="isSubmitting"
+                (click)="submitTask()">
+          Versturen
+        </button>
+      </mat-step>
+    </mat-stepper>
+  </div>
+</div>

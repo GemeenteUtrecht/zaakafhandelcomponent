@@ -12,9 +12,8 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import {Zaak, TableSort, ZaaktypeEigenschap} from '@gu/models';
+import { Zaak, TableSort, ZaaktypeEigenschap, MetaZaaktypeResult } from '@gu/models';
 import { Search } from '../../../models/search';
-import { Result } from '../../../models/zaaktype';
 import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
 import { PageEvent } from '@angular/material/paginator';
@@ -43,7 +42,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   searchForm: FormGroup
   search: Search;
 
-  zaaktypenData: Result[];
+  zaaktypenData: MetaZaaktypeResult[];
   zaaktypeEigenschappenData: ZaaktypeEigenschap[] = [];
 
   selectedPropertyValue: ZaaktypeEigenschap;
@@ -96,7 +95,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   fetchZaaktypen() {
     this.isLoading = true;
     this.hasError = false;
-    this.searchService.getZaaktypen().subscribe(res => {
+    this.metaService.getCaseTypes().subscribe(res => {
       this.zaaktypenData = res.results;
       this.isLoading = false;
       this.cdRef.detectChanges();
@@ -109,9 +108,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   /**
    * Fetch the properties of a case type based on the selection.
-   * @param {Result} zaaktype
+   * @param {MetaZaaktypeResult} zaaktype
    */
-  onZaaktypeSelect(zaaktype: Result) {
+  onZaaktypeSelect(zaaktype: MetaZaaktypeResult) {
     if (zaaktype) {
       this.isLoading = true;
       this.hasError = false;

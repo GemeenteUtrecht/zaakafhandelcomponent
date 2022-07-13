@@ -28,9 +28,9 @@ const routes: Routes = [
       import('./components/search/search.module').then((m) => m.SearchModule),
   },
   {
-    path: 'formulieren',
+    path: 'zaak-starten',
     loadChildren: () =>
-      import('./components/forms/forms.module').then((m) => m.FormsModule),
+      import('./components/start-case/start-case.module').then((m) => m.StartCaseModule),
   },
   {
     path: 'rapportages',

@@ -6,15 +6,15 @@ import {
   AfterViewInit,
   EventEmitter,
   OnDestroy,
-  ViewEncapsulation
+  ViewEncapsulation, ChangeDetectorRef, SimpleChanges
 } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../../models/task-context';
 import {KetenProcessenService} from './keten-processen.service';
-import {BpmnXml, KetenProcessen} from '../../../models/keten-processen';
+import {KetenProcessen} from '../../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
-import {UserService} from '@gu/services';
+import {UserService, ZaakService} from '@gu/services';
 
 
 /**
@@ -70,6 +70,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   isLoadingContext: boolean;
   contextHasError: boolean;
   contextErrorMessage: string;
+  isStatic: boolean;
+  hasProcess: boolean;
 
   // Tabs
   selectedTabIndex = null;
@@ -77,12 +79,17 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   // Links
   doRedirectTarget: '_blank' | '_self';
 
+  showOverlay: boolean;
+  showActions: boolean;
+
   constructor(
-    private snackbarService: SnackbarService,
     public ketenProcessenService: KetenProcessenService,
+    private zaakService: ZaakService,
+    private snackbarService: SnackbarService,
     private modalService: ModalService,
     private userService: UserService,
     private route: ActivatedRoute,
+    private cdRef: ChangeDetectorRef
   ) {
   }
 
@@ -90,7 +97,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Detect a change in the url to get the current url params.
    * Updated data will be fetched if the params change.
    */
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
     this.route.params.subscribe(params => {
       this.bronorganisatie = params['bronorganisatie'];
       this.identificatie = params['identificatie'];
@@ -101,6 +108,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         this.fetchProcesses();
       }
     });
+
+    this.showOverlay = !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
+    this.showActions = !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
   }
 
   /**
@@ -135,7 +145,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   /**
    * Poll tasks every 5 seconds.
    */
-  pollProcesses() {
+  startPollingProcesses() {
     this.isPolling = true;
     this.fetchPollProcesses();
   }
@@ -156,6 +166,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
         // Reset fail counter
         this.nPollingFails = 0;
+
+        this.isLoading = false;
       }, () => {
         // Add to fail counter
         this.nPollingFails += 1;
@@ -223,7 +235,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
         // Start polling
         setTimeout(() => {
-          this.pollProcesses();
+          this.startPollingProcesses();
         }, this.pollingInterval)
       }, errorRes => {
         this.isLoading = false;
@@ -283,7 +295,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * @param {number} [tabIndex]
    */
   executeTask(taskId: string, tabIndex: number = null): void {
-
     this.cancelPolling() // stop polling data;
 
     this.selectedTabIndex = tabIndex;
@@ -321,17 +332,20 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     })
   }
 
-  /**
-   * Closes modal and reloads services.
-   */
-  closeModal(): void {
-    this.modalService.close('ketenprocessenModal');
-    this.fetchProcesses();
-  }
-
   //
   // Events.
   //
+
+  initiateCamundaProcess() {
+    this.isLoading = true;
+    this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
+      this.showOverlay = false;
+    }, err => {
+      this.isLoading = false;
+      this.errorMessage = "Het opstarten van het proces is mislukt. Probeer het nog eens."
+      this.reportError(err);
+    })
+  }
 
   /**
    * Gets called when a task date label is double clicked.
@@ -351,6 +365,24 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   openModal(id: string): void {
     this.modalService.open(id);
+  }
+
+  /**
+   * Closes modal and reloads services.
+   */
+  closeModal(): void {
+    this.modalService.close('ketenprocessenModal');
+    this.fetchProcesses();
+  }
+
+  /**
+   * Force update of other components.
+   */
+  handleStartProcessSuccess(): void {
+    this.isLoading = true;
+    this.update.emit();
+    this.showActions = true;
+    this.closeModal();
   }
 
   //

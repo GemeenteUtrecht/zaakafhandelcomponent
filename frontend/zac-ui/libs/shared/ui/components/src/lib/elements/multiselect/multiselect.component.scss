@@ -4,11 +4,17 @@
 :host {
   display: block;
 }
+.multiselect {
+  &-required-marker {
+    font-size: 14px;
+    line-height: 0;
+  }
+}
 ::ng-deep {
   .ng-select {
     font-size: 0.875rem;
     .ng-select-container {
-      border-color: $color-secondary;
+      border-color: $color-border-input;
       border-radius: 5px;
       &:hover {
         transition: border-color 0.3s ease-out;
@@ -34,9 +40,22 @@
     &.ng-select-focused {
       box-shadow: none;
       caret-color: $color-secondary;
+      &.ng-invalid.ng-touched.is-required {
+        caret-color: $color-danger;
+      }
       &:not(.ng-select-opened) > .ng-select-container {
         border-color: $color-secondary !important;
         box-shadow: inset 0 0 0 1px $color-secondary;
+      }
+      &:not(.ng-select-opened).ng-invalid.ng-touched.is-required > .ng-select-container {
+        border-color: $color-danger !important;
+        box-shadow: unset;
+      }
+      + label {
+        color: $color-secondary;
+        .multiselect-required-marker {
+          color: $color-danger
+        }
       }
     }
     .ng-clear-wrapper {
@@ -52,10 +71,34 @@
       padding-top: 3px !important;
     }
   }
-}
 
-.ng-select-opened + span, .ng-select-focused + span {
-  color: $color-secondary;
+  .ng-select-opened + span, .ng-select-focused + span {
+    color: $color-secondary;
+  }
+
+  /* Border Color */
+  .ng-select.ng-invalid.ng-touched.is-required .ng-select-container{
+    border-color: $color-danger;
+    border-width: 2px;
+    box-shadow: unset;
+    &:hover {
+      box-sizing: border-box;
+      border-color: $color-danger;
+    }
+  }
+  /* Arrow Color */
+  .ng-select.ng-invalid.ng-touched.is-required .ng-arrow-wrapper .ng-arrow{
+    border-color: $color-danger transparent transparent
+  }
+  /* Placeholder Color */
+  .ng-select.ng-invalid.ng-touched.is-required .ng-select-container .ng-placeholder{
+    color: $color-danger;
+  }
+
+  /* Placeholder Color */
+  .ng-select.ng-invalid.ng-touched.is-required + label{
+    color: $color-danger;
+  }
 }
 
 body .ng-dropdown-panel.ng-select-bottom {
