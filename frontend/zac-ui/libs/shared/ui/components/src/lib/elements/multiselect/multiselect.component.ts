@@ -158,4 +158,14 @@ export class MultiselectComponent implements OnInit, OnChanges {
 
     this.onChange(value);
   }
+
+  /**
+   * Allows the use of objects as bindValue
+   * @param item
+   * @param selected
+   * @returns {boolean}
+   */
+  compareWith(item, selected) {
+    return item.value.omschrijving === selected.omschrijving;
+  }
 }
