@@ -106,9 +106,12 @@ export class KetenProcessenService {
     }
 
     const subTasksArray = [];
+    console.log(ketenProcessenData);
     ketenProcessenData[0].subProcesses.forEach( subProcess => {
       subProcess.tasks.forEach( task => subTasksArray.push(task))
     })
+
+    console.log(subTasksArray);
 
     return ketenProcessenData[0].tasks
       .concat(subTasksArray)

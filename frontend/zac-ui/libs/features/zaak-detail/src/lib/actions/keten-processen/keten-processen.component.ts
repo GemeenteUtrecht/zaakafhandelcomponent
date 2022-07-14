@@ -52,6 +52,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
   data: KetenProcessen[];
   allTaskData: Task[];
+  nVisibleTaskData: number;
   processInstanceId: string;
 
   debugTask: Task = null;
@@ -286,17 +287,20 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   updateProcessData(data) {
     // Update data.
     this.data = data;
+    console.log(data);
     this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
+    console.log(this.allTaskData);
     this.setCloseCaseTask(this.allTaskData);
 
     // Process instance ID for API calls
     this.processInstanceId = data.length > 0 ? data[0].id : null;
 
+    // Emit number of tasks
+    this.nVisibleTaskData = this.closeCaseTask ? this.allTaskData.length - 1 : this.allTaskData.length
+    this.nTaskDataEvent.emit(this.nVisibleTaskData);
+
     // Trigger update in parent
     this.update.emit(data);
-
-    // Emit number of tasks
-    this.nTaskDataEvent.emit(this.allTaskData.length);
   }
 
   /**

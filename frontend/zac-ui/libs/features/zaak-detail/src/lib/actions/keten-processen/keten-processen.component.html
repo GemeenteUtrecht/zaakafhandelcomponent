@@ -6,7 +6,7 @@
 
   <div class="processen__acties" [ngClass]="{'processen__acties--disabled': showOverlay}">
     <h2 class="d-inline-block mr-1">Acties</h2>
-    <p *ngIf="!(!!data && data.length === 0 && !isLoading) && !zaak.resultaat">Deze acties zijn noodzakelijk voor het afronden van de zaak.</p>
+    <p *ngIf="!(!!data && data.length === 0 && !isLoading) && !zaak.resultaat">Dit zijn acties die uitgevoerd moeten worden om de zaak af te ronden.</p>
 
     <!-- Result set -->
     <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
@@ -14,12 +14,16 @@
     <!-- Loaded -->
     <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
       <!-- Task lists -->
-      <div class="processen__taken">
-        <div class="row">
+      <div *ngIf="allTaskData" class="processen__taken">
 
+        <!-- When there are no actions for the user -->
+        <p *ngIf="nVisibleTaskData === 0">Er zijn nog geen acties beschikbaar.</p>
+
+        <!-- When there are actions available -->
+        <div *ngIf="nVisibleTaskData > 0" class="row">
           <!-- Tasks for current user -->
-          <div *ngIf="allTaskData" class="col-md-6 mb-4 mb-md-0">
-            <h4 *ngIf="allTaskData?.length > 0">Mijn acties</h4>
+          <div class="col-md-6 mb-4 mb-md-0">
+            <h4>Mijn acties</h4>
             <ng-container *ngFor="let task of allTaskData">
               <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForCurrentUser(currentUser, task)">
                 <!-- Description -->
@@ -64,7 +68,7 @@
 
           <!-- Task for others -->
           <div class="col-md-6">
-            <h4 *ngIf="data[0]?.tasks.length > 0 || data[0]?.subProcesses.length > 0">Acties voor anderen</h4>
+            <h4>Acties voor anderen</h4>
             <ng-container *ngFor="let task of allTaskData">
               <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForOtherUser(currentUser, task)">
                 <!-- Description -->
@@ -140,9 +144,10 @@
   </div>
 
 </div>
+
 <div class="acties card mt-4" *ngIf="!!data && data?.length > 0 && showActions">
   <h2>Optionele acties</h2>
-  <p>Acties die niet nodig zijn om het proces af te ronden.</p>
+  <p>Dit zijn acties die op elk moment tijdens de zaak uitgevoerd kunnen worden.</p>
   <!-- Action buttons -->
   <div class="processen__msg-btns-container">
     <ng-container *ngFor="let message of data[0].messages; let i = index">
