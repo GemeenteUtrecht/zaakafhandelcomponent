@@ -323,10 +323,8 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                     _(
                         "ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}`, needs to have a `waarde` chosen from: {choices}."
                     ).format(
-                        eigenschapnaam=required_zei,
-                        choices=sorted(
-                            list(required_zaakeigenschappen[required_zei].keys())
-                        ),
+                        eigenschapnaam=naam,
+                        choices=sorted(list(multiple_choice_zaakeigenschappen[naam])),
                     )
                 )
         return zaakeigenschappen

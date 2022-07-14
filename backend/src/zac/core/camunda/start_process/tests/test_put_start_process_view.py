@@ -192,6 +192,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             camunda_start_process=camunda_start_process,
             eigenschapnaam=cls.eigenschap["naam"],
             label="some-eigenschap",
+            required=True,
         )
         ProcessEigenschapChoiceFactory.create(
             process_eigenschap=process_eigenschap,
@@ -532,7 +533,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "zaakeigenschappen": [
-                    "ZAAKEIGENCHAP with `naam`: `some-property`, needs to have a `waarde` chosen from: ['some-choice-1']."
+                    "ZAAKEIGENCHAP with `naam`: `some-property`, needs to have a `waarde` chosen from: ['some-value-1']."
                 ]
             },
         )
