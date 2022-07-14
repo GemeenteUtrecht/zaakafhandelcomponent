@@ -292,12 +292,18 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
 
     def validate_zaakeigenschappen(self, zaakeigenschappen) -> List[ZaakEigenschap]:
         # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
-        required_zaakeigenschappen = {
-            ei.eigenschapnaam: {
-                pec.label: pec.value for pec in ei.processeigenschapchoice_set.all()
-            }
-            for ei in self.camunda_start_process.processeigenschap_set.all()
-        }
+        required_zaakeigenschappen = {}
+        multiple_choice_zaakeigenschappen = {}
+        for ei in self.camunda_start_process.processeigenschap_set.all():
+            if ei.required:
+                required_zaakeigenschappen[ei.eigenschapnaam] = {
+                    pec.label: pec.value for pec in ei.processeigenschapchoice_set.all()
+                }
+            if ei.is_multiple_choice:
+                multiple_choice_zaakeigenschappen[
+                    ei.eigenschapnaam
+                ] = ei.valid_choice_values
+
         found_zaakeigenschapnaamwaarden = {
             zei.naam: zei.waarde for zei in zaakeigenschappen
         }
@@ -308,21 +314,19 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                         "A ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}` is required."
                     ).format(eigenschapnaam=required_zei)
                 )
-            else:
-                if (
-                    found_zaakeigenschapnaamwaarden[required_zei]
-                    not in required_zaakeigenschappen[required_zei].values()
-                ):
-                    raise serializers.ValidationError(
-                        _(
-                            "ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}`, needs to have a `waarde` chosen from: {choices}."
-                        ).format(
-                            eigenschapnaam=required_zei,
-                            choices=sorted(
-                                list(required_zaakeigenschappen[required_zei].keys())
-                            ),
-                        )
+
+        for naam, waarde in found_zaakeigenschapnaamwaarden.items():
+            if (naam in multiple_choice_zaakeigenschappen) and (
+                waarde not in multiple_choice_zaakeigenschappen[naam]
+            ):
+                raise serializers.ValidationError(
+                    _(
+                        "ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}`, needs to have a `waarde` chosen from: {choices}."
+                    ).format(
+                        eigenschapnaam=naam,
+                        choices=sorted(list(multiple_choice_zaakeigenschappen[naam])),
                     )
+                )
         return zaakeigenschappen
 
     def on_task_submission(self) -> None:
