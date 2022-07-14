@@ -355,8 +355,6 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
 
         return {
             "bijlagen": self.validated_data["bijlagen"],
-            "eigenschappen": self.validated_data["zaakeigenschappen"],
-            "rollen": self.validated_data["rollen"],
             **{
                 ei["eigenschap"]["naam"]: ei["waarde"]
                 for ei in self.validated_data["zaakeigenschappen"]
@@ -365,7 +363,15 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 f"bijlage{i+1}": bijlage
                 for i, bijlage in enumerate(self.validated_data["bijlagen"])
             },
-            **{rol["roltoelichting"]: rol for rol in self.validated_data["rollen"]},
+            **{
+                rol["roltoelichting"]: {
+                    "betrokkene_type": rol["betrokkene_type"],
+                    "identificatie": rol["identificatie"],
+                    "name": rol["name"],
+                    "omschrijving": rol["omschrijving"],
+                }
+                for rol in self.validated_data["rollen"]
+            },
         }
 
 

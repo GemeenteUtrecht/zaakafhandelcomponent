@@ -272,14 +272,6 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
                         "type": "Json",
                         "value": '["http://documents.nl/api/v1/informatieobject/e82ae0d6-d442-436e-be55-cf5b827dfeec"]',
                     },
-                    "eigenschappen": {
-                        "type": "Json",
-                        "value": '[{"url": "http://zaken.nl/api/v1/zaakeigenschappen/cc20d728-145b-4309-b797-9743826b220d", "formaat": "tekst", "eigenschap": {"url": "http://catalogus.nl/api/v1/eigenschappen/3941cb76-afc6-47d5-aa5d-6a9bfba963f6", "naam": "some-property", "toelichting": "some-toelichting", "specificatie": {"groep": "dummy", "formaat": "tekst", "lengte": "3", "kardinaliteit": "1", "waardenverzameling": ["aaa", "bbb"]}}, "waarde": "some-value-1"}]',
-                    },
-                    "rollen": {
-                        "type": "Json",
-                        "value": '[{"url": "http://zaken.nl/api/v1/rollen/5c2b8bf8-29a2-40bf-8c6c-7028aef896d4", "betrokkene_type": "medewerker", "betrokkene_type_display": "Medewerker", "omschrijving": "some-rol-omschrijving", "omschrijving_generiek": "klantcontacter", "roltoelichting": "some-roltype-omschrijving", "registratiedatum": "2004-06-23T01:52:50Z", "name": "W. van Orange", "identificatie": "some-username"}]',
-                    },
                     "some-property": {"type": "String", "value": "some-value-1"},
                     "bijlage1": {
                         "type": "String",
@@ -287,7 +279,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
                     },
                     "some-roltype-omschrijving": {
                         "type": "Json",
-                        "value": '{"url": "http://zaken.nl/api/v1/rollen/5c2b8bf8-29a2-40bf-8c6c-7028aef896d4", "betrokkene_type": "medewerker", "betrokkene_type_display": "Medewerker", "omschrijving": "some-rol-omschrijving", "omschrijving_generiek": "klantcontacter", "roltoelichting": "some-roltype-omschrijving", "registratiedatum": "2004-06-23T01:52:50Z", "name": "W. van Orange", "identificatie": "some-username"}',
+                        "value": '{"betrokkene_type": "medewerker", "identificatie": "some-username", "name": "W. van Orange", "omschrijving": "some-rol-omschrijving"}',
                     },
                 }
             },
