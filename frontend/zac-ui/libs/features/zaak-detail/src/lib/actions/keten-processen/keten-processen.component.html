@@ -208,6 +208,8 @@
 
           <gu-start-process *ngSwitchCase="'zac:startProcessForm'" [zaak]="zaak" [taskContextData]="taskContextData" (updateComponents)="update.emit()" (successReload)="handleStartProcessSuccess()"></gu-start-process>
 
+          <gu-set-result *ngSwitchCase="'zac:zetResultaat'" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-set-result>
+
           <gu-dynamic-form *ngSwitchDefault [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-dynamic-form>
         </div>
       </gu-tab>

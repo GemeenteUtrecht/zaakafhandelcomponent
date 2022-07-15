@@ -55,30 +55,12 @@
         </ng-container>
       </div>
     </div>
-    <div class="d-flex justify-content-start">
-      <button *ngIf="!showCloseCaseConfirmation"
-              gu-button
-              (click)="checkSubmitForm()"
-              [disabled]="!dynamicForm.valid || isSubmitting"
-              [loading]="isSubmitting">
-        Voltooien
-      </button>
-    </div>
-    <ng-container *ngIf="showCloseCaseConfirmation">
-      <p>Weet je zeker dat je deze zaak wilt afsluiten? Alle openstaande acties en activiteiten worden beëindigd.</p>
-      <div class="d-inline">
-        <button gu-button buttonStyle="secondary" size="small" class="mr-2" (click)="showCloseCaseConfirmation = false">Annuleren</button>
-        <button gu-button
-                buttonStyle="primary"
-                size="small"
-                (click)="submitForm(true)"
-                [disabled]="isSubmitting"
-                [loading]="isSubmitting"
-        >
-          Bevestigen
-        </button>
-      </div>
-    </ng-container>
+    <button gu-button
+            (click)="submitForm()"
+            [disabled]="!dynamicForm.valid || isSubmitting"
+            [loading]="isSubmitting">
+      Voltooien
+    </button>
   </form>
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
   </gu-message>

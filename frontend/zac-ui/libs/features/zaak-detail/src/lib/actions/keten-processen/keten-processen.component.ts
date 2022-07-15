@@ -211,7 +211,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * @param {Task[]} data
    */
   setCloseCaseTask(data: Task[]) {
-    this.closeCaseTask = data.find(({formKey}) => formKey === 'resultaatZetten');
+    this.closeCaseTask = data.find(({formKey}) => formKey === 'zac:zetResultaat');
   }
 
   /**

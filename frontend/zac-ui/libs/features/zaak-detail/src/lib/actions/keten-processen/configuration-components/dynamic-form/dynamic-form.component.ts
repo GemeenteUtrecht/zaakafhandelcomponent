@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { FormField, TaskContextData } from '../../../../../models/task-context';
-import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { DatePipe } from '@angular/common';
 import { ModalService } from '@gu/components';
@@ -41,7 +40,6 @@ export class DynamicFormComponent implements OnChanges {
   showCloseCaseConfirmation = false;
 
   constructor(
-    private http: ApplicationHttpClient,
     private fb: FormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private modalService: ModalService,
@@ -89,19 +87,10 @@ export class DynamicFormComponent implements OnChanges {
     this.formattedEnumItems[name] = formattedEnumArray;
   }
 
-  checkSubmitForm() {
-    if (this.taskContextData.task.formKey === 'resultaatZetten') {
-      this.showCloseCaseConfirmation = true;
-    } else {
-      this.submitForm();
-    }
-  }
-
   /**
    * Format the form data to fit the API.
-   *  @param reloadPage
    */
-  submitForm(reloadPage?: boolean) {
+  submitForm() {
     this.isSubmitting = true;
 
     const formData = {
@@ -118,24 +107,20 @@ export class DynamicFormComponent implements OnChanges {
       }
       formData[control] = value;
     })
-    this.putForm(formData, reloadPage);
+    this.putForm(formData);
   }
 
   /**
    * PUT request.
    * @param formData
-   * @param reloadPage
    */
-  putForm(formData, reloadPage?) {
+  putForm(formData) {
     this.ketenProcessenService.putTaskData(this.taskContextData.task.id, formData).subscribe(() => {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
 
       this.modalService.close('ketenprocessenModal');
-      if (reloadPage) {
-        document.location.reload()
-      }
     }, res => {
       this.isSubmitting = false;
       this.submitErrorMessage = res.error.detail ? res.error.detail : "Er is een fout opgetreden";

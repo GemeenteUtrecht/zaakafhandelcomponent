@@ -26,6 +26,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
 
 @mixin button--primary {
   background-color: $color-secondary;
+  border: 1px solid $color-secondary;
 }
 @mixin button--secondary {
   background-color: $color-background-white;
@@ -54,6 +55,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
       &:disabled,
       &[disabled] {
         background-color: $color-disabled;
+        border-color: $color-disabled;
       }
     }
 
@@ -96,6 +98,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
 
     &--danger {
       background-color: $color-danger;
+      border-color: $color-danger;
     }
 
 

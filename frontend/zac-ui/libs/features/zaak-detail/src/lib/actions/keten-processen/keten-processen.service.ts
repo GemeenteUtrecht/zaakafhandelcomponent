@@ -26,7 +26,7 @@ export class KetenProcessenService {
    * @returns {boolean}
    */
   isTaskForCurrentUser(user: User, task: Task): boolean {
-    return (task.assignee?.username === user.username || user.groups.includes(task.assignee?.name)) && task.formKey !== 'resultaatZetten';
+    return (task.assignee?.username === user.username || user.groups.includes(task.assignee?.name)) && task.formKey !== 'zac:zetResultaat';
   }
 
   /**
@@ -36,7 +36,7 @@ export class KetenProcessenService {
    * @returns {boolean}
    */
   isTaskForOtherUser(user: User, task: Task): boolean {
-    return (task.assignee?.username !== user.username && !user.groups.includes(task.assignee?.name)) && task.formKey !== 'resultaatZetten'
+    return (task.assignee?.username !== user.username && !user.groups.includes(task.assignee?.name)) && task.formKey !== 'zac:zetResultaat'
   }
 
   /**
@@ -92,7 +92,7 @@ export class KetenProcessenService {
     if(['Accorderen', 'Adviseren'].indexOf(task.name) > -1) {
       return user.username && !task.assignee
     }
-    return task.formKey !== 'resultaatZetten';
+    return task.formKey !== 'zac:zetResultaat';
   }
 
   /**
