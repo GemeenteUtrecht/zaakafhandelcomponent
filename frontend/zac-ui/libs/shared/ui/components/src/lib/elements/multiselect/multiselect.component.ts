@@ -166,6 +166,6 @@ export class MultiselectComponent implements OnInit, OnChanges {
    * @returns {boolean}
    */
   compareWith(item, selected) {
-    return item.value.omschrijving === selected.omschrijving;
+    return item.value?.omschrijving ? item.value.omschrijving === selected.omschrijving : false;
   }
 }
