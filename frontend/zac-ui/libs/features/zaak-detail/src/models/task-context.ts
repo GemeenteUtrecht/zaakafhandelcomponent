@@ -51,13 +51,11 @@ export interface BenodigdeRol {
 }
 
 interface Specificatie {
-  specificatie: {
-    groep: string,
-    formaat: string,
-    lengte: string,
-    kardinaliteit: string,
-    waardenverzameling: string[]
-  }
+  groep: string,
+  formaat: string,
+  lengte: string,
+  kardinaliteit: string,
+  waardenverzameling: string[]
 }
 
 interface Eigenschap {

@@ -4,6 +4,7 @@ import { BenodigdeZaakeigenschap, TaskContextData } from '../../../../../../mode
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
+import { DatePipe } from '@angular/common';
 
 /**
  * This component allows the user to configure
@@ -28,6 +29,7 @@ export class PropertiesStepComponent implements OnChanges {
   submittingProperties: number[] = [];
 
   constructor(
+    private datePipe: DatePipe,
     private fb: FormBuilder,
     private zaakService: ZaakService,
     private accountsService: AccountsService,
@@ -113,12 +115,16 @@ export class PropertiesStepComponent implements OnChanges {
    * @param i
    */
   submitProperty(i) {
-    const selectedProperty = this.getPropertiesContext(i);
     this.submittingProperties.push(i);
+
+    const selectedProperty = this.getPropertiesContext(i);
+    const selectedValue = selectedProperty.eigenschap.specificatie.formaat === ('datum' || 'datum_tijd')
+      ? this.datePipe.transform(this.propertyControl(i).value, "yyyy-MM-dd")
+      : this.propertyControl(i).value;
 
     const newCaseProperty: NieuweEigenschap = {
       naam: selectedProperty.eigenschap.naam,
-      waarde: this.propertyControl(i).value,
+      waarde: selectedValue,
       zaakUrl: this.zaak.url
     };
 

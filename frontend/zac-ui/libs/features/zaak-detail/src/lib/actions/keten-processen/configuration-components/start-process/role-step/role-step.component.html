@@ -32,7 +32,7 @@
                       [items]="users"
                       [multiple]="false"
                       [control]="roleControl(i)"
-                      label="Medewerker"
+                      [label]="getRolesContext(i).label"
                       bindLabel="fullName"
                       bindValue="username"
                       [required]="getRolesContext(i).required"
