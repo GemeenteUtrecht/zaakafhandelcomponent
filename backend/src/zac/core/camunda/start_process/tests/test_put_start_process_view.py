@@ -533,7 +533,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "zaakeigenschappen": [
-                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` hebben uit: `['some-choice-1']`."
+                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` hebben uit: `['some-value-1']`."
                 ]
             },
         )
