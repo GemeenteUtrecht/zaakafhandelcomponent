@@ -9,3 +9,7 @@ mat-form-field.mat-form-field {
   width: 100%;
   font-size: 14px;
 }
+
+::ng-deep .mat-error {
+  font-size: 12px;
+}

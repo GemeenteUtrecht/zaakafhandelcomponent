@@ -150,7 +150,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
         users: [[]],
         userGroups: [[]],
       }, { validators: [this.atLeastOneAssignee]}),
-      emailNotification: [false],
+      emailNotification: [true],
       extraStep: ['']
     })
   }

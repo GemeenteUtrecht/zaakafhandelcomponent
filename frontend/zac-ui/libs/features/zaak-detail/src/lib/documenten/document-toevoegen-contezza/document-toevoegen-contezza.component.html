@@ -1,4 +1,7 @@
-<mat-tab-group [@.disabled]="true" [selectedIndex]="0" class="gu-document-toevoegen-contezza-mat-tab-group">
+<mat-tab-group [@.disabled]="true"
+               [selectedIndex]="tabIndex"
+               (selectedTabChange)="setQueryParam($event)"
+               class="gu-document-toevoegen-contezza-mat-tab-group">
   <mat-tab label="Document uploaden">
     <div class="pt-4">
       <gu-document-toevoegen [zaak]="zaak"
@@ -6,7 +9,7 @@
                              (reload)="reload.emit(true)">
       </gu-document-toevoegen>
     </div>
-</mat-tab>
+  </mat-tab>
 
   <mat-tab label="Alfresco documenten">
     <ng-template matTabContent>

@@ -1,5 +1,6 @@
-import {Component, EventEmitter, Input, Output, ViewEncapsulation} from '@angular/core';
+import { AfterContentInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { Zaak } from '@gu/models';
+import { ActivatedRoute, Router } from '@angular/router';
 
 /**
  * Wrapper component that contains the document upload of this application
@@ -19,10 +20,45 @@ import { Zaak } from '@gu/models';
   styleUrls: ['./document-toevoegen-contezza.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class DocumentToevoegenContezzaComponent {
+export class DocumentToevoegenContezzaComponent implements AfterContentInit {
   @Input() zaak: Zaak;
 
   @Output() reload = new EventEmitter<boolean>();
   @Output() closeModal = new EventEmitter<boolean>();
+
+  tabIndex = 0;
+
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+  ) {
+  }
+
+  ngAfterContentInit() {
+    this.handleQueryParam();
+  }
+
+  /**
+   * Open modal according to query param
+   */
+  handleQueryParam() {
+    this.activatedRoute.queryParams.subscribe(queryParams => {
+      const tabParam = queryParams['tab'];
+      if (tabParam) {
+        this.tabIndex = tabParam;
+      }
+    });
+  }
+
+  setQueryParam(event) {
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: { tab: event.index },
+        queryParamsHandling: 'merge'
+      }
+    );
+  }
 
 }
