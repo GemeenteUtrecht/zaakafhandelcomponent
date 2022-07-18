@@ -38,7 +38,11 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
 from zac.accounts.models import User
-from zac.api.polymorphism import PolymorphicSerializer, SerializerCls
+from zac.api.polymorphism import (
+    GroupPolymorphicSerializer,
+    PolymorphicSerializer,
+    SerializerCls,
+)
 from zac.api.proxy import ProxySerializer
 from zac.camunda.api.utils import get_bptl_app_id_variable
 from zac.camunda.processes import get_top_level_process_instances
@@ -1062,67 +1066,80 @@ class ZaakTypeAggregateSerializer(APIModelSerializer):
         extra_kwargs = {
             "omschrijving": {
                 "help_text": _(
-                    "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE"
+                    "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
                 )
             }
         }
 
 
-class SearchEigenschapSpecificatieSerializer(serializers.Serializer):
+class BaseEnumSerializer(serializers.Serializer):
+    label = serializers.CharField(help_text=_("The label of the enum choice."))
+
+
+class StringEnumSerializer(BaseEnumSerializer):
+    value = serializers.CharField(
+        help_text=_("The value of the enum choice as a `string`.")
+    )
+
+
+class NumberEnumSerializer(BaseEnumSerializer):
+    value = serializers.FloatField(
+        help_text=_("The value of the enum choice as an `integer` or a `float`.")
+    )
+
+    def to_representation(self, instance):
+        integer = False
+        if type(instance["value"]) == int:
+            integer = True
+
+        ret = super().to_representation(instance)
+        if integer:
+            ret["value"] = int(ret["value"])
+        return ret
+
+
+class SearchEigenschapSpecificatieSerializer(GroupPolymorphicSerializer):
+    serializer_mapping = {
+        TypeChoices.string: StringEnumSerializer,
+        TypeChoices.number: NumberEnumSerializer,
+    }
+    discriminator_field = "type"
+    group_field = "enum"
+    group_field_kwargs = {
+        "help_text": _("An array of possible values."),
+        "required": False,
+        "many": True,
+    }
+
     type = serializers.ChoiceField(
         choices=TypeChoices.choices,
-        help_text=_("According to JSON schema date values have `string` type"),
+        help_text=_("According to JSON schema date values have `string` type."),
     )
     format = serializers.CharField(
         required=False,
         help_text=_(
-            "Used to differentiate `date` and `date-time` values from other strings"
+            "Used to differentiate `date` and `date-time` values from other strings."
         ),
     )
     min_length = serializers.IntegerField(
-        required=False, help_text=_("Only for strings")
+        required=False, help_text=_("Only for strings.")
     )
     max_length = serializers.IntegerField(
-        required=False, help_text=_("Only for strings")
+        required=False, help_text=_("Only for strings.")
     )
-    enum = serializers.ListField(
-        required=False, help_text=_("An array of possible values")
-    )
-
-    def get_enum_child_field(self, instance):
-        enum = instance.get("enum")
-
-        if not enum:
-            return serializers.CharField()
-
-        if instance["type"] == "string":
-            return serializers.CharField()
-
-        for el in enum:
-            if not isinstance(el, int):
-                return serializers.FloatField()
-
-        return serializers.IntegerField()
-
-    def to_representation(self, instance):
-        self.fields["enum"].child = self.get_enum_child_field(instance)
-
-        result = super().to_representation(instance)
-
-        return result
 
 
 class SearchEigenschapSerializer(serializers.Serializer):
     name = serializers.CharField(help_text=_("Name of EIGENSCHAP"))
     spec = SearchEigenschapSpecificatieSerializer(
         label=_("property definition"),
-        help_text=_("JSON schema-ish specification of related ZAAK-EIGENSCHAP values"),
+        help_text=_("JSON schema-ish specification of related ZAAK-EIGENSCHAP values."),
     )
 
 
 class VertrouwelijkheidsAanduidingSerializer(APIModelSerializer):
-    label = serializers.CharField(help_text=_("Human readable label of classication"))
-    value = serializers.CharField(help_text=_("Value of classication"))
+    label = serializers.CharField(help_text=_("Human readable label of classication."))
+    value = serializers.CharField(help_text=_("Value of classication."))
 
     class Meta:
         model = VertrouwelijkheidsAanduidingData
@@ -1133,7 +1150,7 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
     permissions = AtomicPermissionSerializer(
         many=True,
         source="zaak_atomic_permissions",
-        help_text=_("Atomic permissions for the ZAAK"),
+        help_text=_("Atomic permissions for the ZAAK."),
     )
 
     class Meta:

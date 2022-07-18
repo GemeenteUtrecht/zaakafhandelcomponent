@@ -11,8 +11,8 @@ paths:
   /api/_health/:
     get:
       operationId: _health_retrieve
-      description: Returns the health check status.
-      summary: Retrieve health check.
+      description: Geeft de gezondsheidscheckstatus terug.
+      summary: Gezondheidscheck opvragen.
       tags:
       - _health
       requestBody:
@@ -272,7 +272,7 @@ paths:
           description: ''
     delete:
       operationId: accounts_auth_profiles_destroy
-      summary: Delete authorization profile.
+      summary: Verwijder autorisatieprofiel.
       parameters:
       - in: path
         name: uuid
@@ -546,8 +546,8 @@ paths:
   /api/accounts/logout:
     post:
       operationId: accounts_logout_create
-      description: Logs the current user out.
-      summary: Logout user.
+      description: Meldt de huidige gebruiker af.
+      summary: Meld gebruiker af.
       tags:
       - accounts
       requestBody:
@@ -568,7 +568,8 @@ paths:
   /api/accounts/permissions:
     get:
       operationId: accounts_permissions_list
-      description: Returns all available permissions for the user and their description.
+      description: Geeft alle beschikbare rechten en hun beschrijving terug voor de
+        gebruiker.
       summary: Alle rechten opvragen.
       tags:
       - accounts
@@ -721,10 +722,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/Role'
           description: ''
+    patch:
+      operationId: accounts_roles_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this rol.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRole'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRole'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRole'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    delete:
+      operationId: accounts_roles_destroy
+      summary: Vernietig rol.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this rol.
+        required: true
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/accounts/user-auth-profiles:
     get:
       operationId: accounts_user_auth_profiles_list
-      summary: List user authorization profiles.
+      summary: Alle gebruikersautorisatieprofielen opvragen.
       parameters:
       - name: ordering
         required: false
@@ -759,7 +816,7 @@ paths:
           description: ''
     post:
       operationId: accounts_user_auth_profiles_create
-      summary: Create user authorization profile.
+      summary: Maak een gebruikersautorisatieprofiel aan.
       tags:
       - accounts
       requestBody:
@@ -794,7 +851,7 @@ paths:
   /api/accounts/user-auth-profiles/{id}:
     get:
       operationId: accounts_user_auth_profiles_retrieve
-      summary: Retrieve user authorization profile.
+      summary: Een specifieke gebruikersautorisatieprofiel opvragen.
       parameters:
       - in: path
         name: id
@@ -823,7 +880,7 @@ paths:
           description: ''
     put:
       operationId: accounts_user_auth_profiles_update
-      summary: Update user authorization profile.
+      summary: Werk een gebruikersautorisatieprofiel in zijn geheel bij.
       parameters:
       - in: path
         name: id
@@ -864,7 +921,7 @@ paths:
           description: ''
     patch:
       operationId: accounts_user_auth_profiles_partial_update
-      summary: Partially update user authorization profile.
+      summary: Werk een gebruikersautorisatieprofiel bij.
       parameters:
       - in: path
         name: id
@@ -904,7 +961,7 @@ paths:
           description: ''
     delete:
       operationId: accounts_user_auth_profiles_destroy
-      summary: Delete user authorization profile.
+      summary: Verwijder gebruikersautorisatieprofiel.
       parameters:
       - in: path
         name: id
@@ -1091,7 +1148,7 @@ paths:
         schema:
           type: string
           format: uri
-        description: URL-referentie van de ZAAK gerelateerd aan de activiteiten.
+        description: URL-referentie naar de ZAAK gerelateerd aan de activiteiten.
         required: true
       tags:
       - activities
@@ -1309,9 +1366,9 @@ paths:
   /api/camunda/cancel-task:
     post:
       operationId: camunda_cancel_task_create
-      description: Allows a user to cancel the camunda task after it has been (accidentally)
-        created.
-      summary: Cancel a camunda user task of the ZAAK.
+      description: Laat een gebruiker toe een camundataak te annuleren nadat het (per
+        ongeluk) aangemaakt is.
+      summary: Annuleer een camunda gebruikerstaak van de ZAAK.
       tags:
       - camunda
       requestBody:
@@ -1343,7 +1400,7 @@ paths:
   /api/camunda/claim-task:
     post:
       operationId: camunda_claim_task_create
-      summary: Stel de aangewezene of gedelegeerde in voor de taak.
+      summary: Stel de begunstigde of gedelegeerde in voor de taak.
       tags:
       - camunda
       requestBody:
@@ -1733,14 +1790,15 @@ paths:
   /api/checklists/checklisttypes:
     get:
       operationId: checklists_checklisttypes_list
-      summary: List checklisttype and related questions.
+      summary: Alle checklisttypes en gerelateerde vragen.
       parameters:
       - in: query
         name: zaak
         schema:
           type: string
           format: uri
-        description: URL-reference of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: URL-referentie naar de ZAAK met ZAAKTYPE gerelateerd aan het
+          checklisttype.
         required: true
       tags:
       - checklists
@@ -1766,7 +1824,7 @@ paths:
           description: ''
     post:
       operationId: checklists_checklisttypes_create
-      summary: Create checklisttype and related questions.
+      summary: Maak checklisttype en gerelateerde vragen aan.
       tags:
       - checklists
       requestBody:
@@ -1802,14 +1860,14 @@ paths:
   /api/checklists/checklisttypes/{uuid}:
     get:
       operationId: checklists_checklisttypes_retrieve
-      summary: Retrieve checklisttype and related questions.
+      summary: Checklisttype en gerelateerde vragen opvragen.
       parameters:
       - in: path
         name: uuid
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this checklist type.
+        description: A UUID string identifying this checklisttype.
         required: true
       tags:
       - checklists
@@ -1833,14 +1891,14 @@ paths:
           description: ''
     put:
       operationId: checklists_checklisttypes_update
-      summary: Update checklisttype and related questions.
+      summary: Werk checklisttype en gerelateerde vragen bij.
       parameters:
       - in: path
         name: uuid
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this checklist type.
+        description: A UUID string identifying this checklisttype.
         required: true
       tags:
       - checklists
@@ -1877,19 +1935,20 @@ paths:
   /api/checklists/zaak-checklists/{bronorganisatie}/{identificatie}:
     get:
       operationId: checklists_zaak_checklists_retrieve
-      summary: Retrieve checklist and related answers.
+      summary: Checklist en gerelateerde antwoorden opvragen.
       parameters:
       - in: path
         name: bronorganisatie
         schema:
           type: string
-        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Bronorganisatie van de ZAAK met ZAAKTYPE gerelateerd aan het
+          checklisttype.
         required: true
       - in: path
         name: identificatie
         schema:
           type: string
-        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Identificatie van de ZAAK met ZAAKTYPE gerelateerd aan het checklisttype.
         required: true
       tags:
       - checklists
@@ -1913,19 +1972,20 @@ paths:
           description: ''
     post:
       operationId: checklists_zaak_checklists_create
-      summary: Create checklist and related answers.
+      summary: Maak checklist en gerelateerde antwoorden aan.
       parameters:
       - in: path
         name: bronorganisatie
         schema:
           type: string
-        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Bronorganisatie van de ZAAK met ZAAKTYPE gerelateerd aan het
+          checklisttype.
         required: true
       - in: path
         name: identificatie
         schema:
           type: string
-        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Identificatie van de ZAAK met ZAAKTYPE gerelateerd aan het checklisttype.
         required: true
       tags:
       - checklists
@@ -1961,19 +2021,20 @@ paths:
           description: ''
     put:
       operationId: checklists_zaak_checklists_update
-      summary: Update checklist and related answers.
+      summary: Werk checklist en gerelateerde antwoorden bij.
       parameters:
       - in: path
         name: bronorganisatie
         schema:
           type: string
-        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Bronorganisatie van de ZAAK met ZAAKTYPE gerelateerd aan het
+          checklisttype.
         required: true
       - in: path
         name: identificatie
         schema:
           type: string
-        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Identificatie van de ZAAK met ZAAKTYPE gerelateerd aan het checklisttype.
         required: true
       tags:
       - checklists
@@ -2010,19 +2071,20 @@ paths:
   /api/checklists/zaak-checklisttypes/{bronorganisatie}/{identificatie}:
     get:
       operationId: checklists_zaak_checklisttypes_retrieve
-      summary: Retrieve checklisttype and related questions for ZAAK.
+      summary: Checklisttype en gerelateerde vragen opvragen voor ZAAK.
       parameters:
       - in: path
         name: bronorganisatie
         schema:
           type: string
-        description: Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Bronorganisatie van de ZAAK met ZAAKTYPE gerelateerd aan het
+          checklisttype.
         required: true
       - in: path
         name: identificatie
         schema:
           type: string
-        description: Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype.
+        description: Identificatie van de ZAAK met ZAAKTYPE gerelateerd aan het checklisttype.
         required: true
       tags:
       - checklists
@@ -2047,7 +2109,7 @@ paths:
   /api/core/cases:
     post:
       operationId: core_cases_create
-      summary: Let users create a ZAAK.
+      summary: Laat gebruikers een ZAAK aanmaken.
       tags:
       - core
       requestBody:
@@ -2393,7 +2455,7 @@ paths:
           description: ''
     post:
       operationId: core_cases_roles_create
-      summary: Add ROL to ZAAK.
+      summary: Voeg ROL toe aan ZAAK.
       parameters:
       - in: path
         name: bronorganisatie
@@ -2435,9 +2497,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/Rol'
           description: ''
+    delete:
+      operationId: core_cases_roles_destroy
+      summary: Vernietig ROL van ZAAK.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      tags:
+      - core
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/core/cases/{bronorganisatie}/{identificatie}/start-process:
     post:
       operationId: core_cases_start_process_create
+      summary: Start camunda proces voor ZAAK.
       parameters:
       - in: path
         name: bronorganisatie
@@ -2803,6 +2887,12 @@ paths:
         and returns the eigenschappen available for the aggregated set of zaaktype versions.
         Note that only the zaaktypen that the authenticated user has read-permissions for
         are considered.
+
+
+        #TODO Move away from camunda process forms to define EIGENSCHAP waardeverzameling
+
+
+        #TODO Move towards object(type)s APIs to define EIGENSCHAP waardeverzameling
       summary: Alle EIGENSCHAPpen voor een ZAAKTYPE opvragen.
       parameters:
       - in: query
@@ -2810,23 +2900,23 @@ paths:
         schema:
           type: string
           format: uri
-          description: URL-referentie van gerelateerde CATALOGUS
-        description: URL-referentie van gerelateerde CATALOGUS
+          description: URL-referentie naar gerelateerde CATALOGUS
+        description: URL-referentie naar gerelateerde CATALOGUS
       - in: query
         name: zaaktype
         schema:
           type: string
           format: uri
-          description: URL-referentie van de gerelateerde ZAAKTYPE
-        description: URL-referentie van de gerelateerde ZAAKTYPE
+          description: URL-referentie naar de gerelateerde ZAAKTYPE
+        description: URL-referentie naar de gerelateerde ZAAKTYPE
       - in: query
-        name: zaaktype_omschrijving
+        name: zaaktype_identificatie
         schema:
           type: string
           description: Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator
-            voor de verschillende versies van ZAAKTYPE
+            voor de verschillende versies van ZAAKTYPE.
         description: Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator
-          voor de verschillende versies van ZAAKTYPE
+          voor de verschillende versies van ZAAKTYPE.
       tags:
       - meta
       security:
@@ -2948,14 +3038,14 @@ paths:
     get:
       operationId: core_roltypes_retrieve
       description: List the available ROLTYPEs for the zaak.
-      summary: List ROLTYPEs for a ZAAK.
+      summary: Alle ROLTYPES voor een ZAAK opvragen.
       parameters:
       - in: query
         name: zaak
         schema:
           type: string
           format: uri
-        description: ZAAK to list available ROLTYPEs for.
+        description: ZAAK waar de beschikbare ROLTYPEs voor opgehaald moeten worden.
         required: true
       tags:
       - meta
@@ -3204,12 +3294,12 @@ paths:
         name: object
         schema:
           type: string
-        description: URL-referentie van het OBJECT
+        description: URL-referentie naar het OBJECT
       - in: query
         name: zaak_url
         schema:
           type: string
-        description: URL-referentie van de ZAAK
+        description: URL-referentie naar de ZAAK
       tags:
       - dashboard
       security:
@@ -3522,7 +3612,7 @@ paths:
 
         Once users have retrieved the `id` of an address from the PDOK locatieserver, they can use the `id` to fetch a pand from the BAG API.
         Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
-      summary: Find pand in the BAG API.
+      summary: Vind pand in de BAG API.
       parameters:
       - in: query
         name: id
@@ -3634,13 +3724,13 @@ paths:
         This endpoint allows users to get `nummeraanduidingen` based on the `nummeraanduidingidentificatie`.
 
         Please see https://github.com/lvbag/BAG-API for further documentation on the BAG API.
-      summary: Retrieve nummeraanduiding from BAG API.
+      summary: Nummeraanduiding van BAG API opvragen.
       parameters:
       - in: path
         name: nummeraanduidingidentificatie
         schema:
           type: string
-        description: The `nummeraanduidingidentificatie` of the nummeraanduiding object.
+        description: De `nummeraanduidingidentificatie` van het nummeraanduiding object.
         required: true
       tags:
       - kadaster
@@ -3675,7 +3765,7 @@ paths:
         name: pandidentificatie
         schema:
           type: string
-        description: The `pandidentificatie` of the pand object.
+        description: De `pandidentificatie` van het pand object.
         required: true
       tags:
       - kadaster
@@ -3711,7 +3801,7 @@ paths:
         name: assignee
         schema:
           type: string
-        description: Aangewezene van de gebruikerstaak in camunda.
+        description: Begunstigde van de gebruikerstaak in camunda.
         required: true
       - in: path
         name: request_uuid
@@ -3752,7 +3842,7 @@ paths:
         name: assignee
         schema:
           type: string
-        description: Aangewezene van de gebruikerstaak in camunda.
+        description: Begunstigde van de gebruikerstaak in camunda.
         required: true
       - in: path
         name: request_uuid
@@ -3799,7 +3889,7 @@ paths:
         name: assignee
         schema:
           type: string
-        description: Aangewezene van de gebruikerstaak in camunda.
+        description: Begunstigde van de gebruikerstaak in camunda.
         required: true
       - in: path
         name: request_uuid
@@ -3840,7 +3930,7 @@ paths:
         name: assignee
         schema:
           type: string
-        description: Aangewezene van de gebruikerstaak in camunda.
+        description: Begunstigde van de gebruikerstaak in camunda.
         required: true
       - in: path
         name: request_uuid
@@ -3941,7 +4031,7 @@ paths:
           description: ''
     patch:
       operationId: kownsl_zaak_review_requests_detail_partial_update
-      summary: Lock review request.
+      summary: Zet verzoek op slot.
       parameters:
       - in: path
         name: request_uuid
@@ -4294,6 +4384,7 @@ paths:
               $ref: '#/components/schemas/Search'
       security:
       - cookieAuth: []
+      - tokenAuth: []
       responses:
         '200':
           headers:
@@ -4313,7 +4404,7 @@ paths:
     get:
       operationId: search_zaken_autocomplete_list
       description: Retrieve a list of zaken based on autocomplete search.
-      summary: Autocomplete search ZAAKen.
+      summary: Autocomplete ZAAKen zoeken.
       parameters:
       - in: query
         name: identificatie
@@ -4455,7 +4546,7 @@ paths:
   /api/workstack/checklists:
     get:
       operationId: workstack_checklists_list
-      summary: List checklist questions for logged in user.
+      summary: Alle checklistvragen voor ingelogde gebruiker opvragen.
       tags:
       - workstack
       security:
@@ -4505,7 +4596,7 @@ paths:
   /api/workstack/group-checklists:
     get:
       operationId: workstack_group_checklists_list
-      summary: List checklist questions for groups of logged in user.
+      summary: Alle checklistvragen voor groepen van ingelogde gebruiker opvragen.
       tags:
       - workstack
       security:
@@ -4595,7 +4686,7 @@ components:
           readOnly: true
         requester:
           type: string
-          description: Username of access requester/grantee
+          description: '`username` van de toegangsvrager/gever'
       required:
       - id
       - requester
@@ -4658,12 +4749,12 @@ components:
         informatieobjecttype:
           type: string
           format: uri
-          description: URL-referentie van het INFORMATIEOBJECTTYPE in de CATALOGI
+          description: URL-referentie naar het INFORMATIEOBJECTTYPE in de CATALOGI
             API. Vereist als `file` niet leeg is
         url:
           type: string
           format: uri
-          description: URL-referentie van DOCUMENT in DOCUMENTEN API. Elkaar uitsluitend
+          description: URL-referentie naar DOCUMENT in DOCUMENTEN API. Elkaar uitsluitend
             met `file` attribuut
         zaak:
           type: string
@@ -4737,6 +4828,7 @@ components:
         created:
           type: string
           format: date-time
+          description: Date review request was created.
         author:
           allOf:
           - $ref: '#/components/schemas/Author'
@@ -4744,6 +4836,7 @@ components:
           description: Verzoeksauteur.
         advice:
           type: string
+          description: Advice given for review request.
         documents:
           type: array
           items:
@@ -4752,6 +4845,7 @@ components:
           description: Relevante documenten voor het advies.
         group:
           type: string
+          description: Group that advice was given by.
       required:
       - advice
       - author
@@ -4787,8 +4881,8 @@ components:
           nullable: true
           title: Gebruikerstaak context
           description: De vorm van de taakcontext hangt af van het `form` eigenschap.
-            De waarde is`null` als de backend de `formKey` van de gebruikerstaak niet
-            kent.
+            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
+            niet kent.
       required:
       - context
       title: AdviceApprovalTaskData
@@ -4888,7 +4982,7 @@ components:
         zaak:
           type: string
           format: uri
-          description: URL-referentie van de ZAAK waar dit recht op slaat
+          description: URL-referentie naar de ZAAK waar dit recht op slaat
           maxLength: 1000
         startDate:
           type: string
@@ -5129,7 +5223,7 @@ components:
         object:
           type: string
           format: uri
-          description: URL-referentie van het OBJECT in 1 van de gerelateerde ZGW
+          description: URL-referentie naar het OBJECT in 1 van de gerelateerde ZGW
             APIs
           maxLength: 200
         board:
@@ -5183,17 +5277,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProcessInformatieObject'
-          description: These INFORMATIEOBJECTen need to be set to start the process.
+          description: Deze INFORMATIEOBJECTen moeten worden gegeven om het proces
+            te starten.
         benodigdeRollen:
           type: array
           items:
             $ref: '#/components/schemas/ProcessRol'
-          description: These ROLlen need to be set to start the process.
+          description: Deze ROLlen moeten worden gegeven om het proces te starten.
         benodigdeZaakeigenschappen:
           type: array
           items:
             $ref: '#/components/schemas/ProcessEigenschap'
-          description: These ZAAKEIGENSCHAPpen need to be set to start the process.
+          description: Deze ZAAKEIGENSCHAPpen moeten worden gegeven om het proces
+            te starten.
       title: CamundaZaakProcessContext
     CamundaZaakProcessTaskData:
       type: object
@@ -5204,8 +5300,8 @@ components:
           nullable: true
           title: Gebruikerstaak context
           description: De vorm van de taakcontext hangt af van het `form` eigenschap.
-            De waarde is`null` als de backend de `formKey` van de gebruikerstaak niet
-            kent.
+            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
+            niet kent.
       required:
       - context
       title: CamundaZaakProcessTaskData
@@ -5215,10 +5311,21 @@ components:
         task:
           type: string
           format: uuid
-          description: The UUID of the task that is to be canceled.
+          description: De UUID van de taak die geannuleerd wordt.
       required:
       - task
       title: CancelTask
+    Catalogus:
+      type: object
+      properties:
+        domein:
+          type: string
+        url:
+          type: string
+      required:
+      - domein
+      - url
+      title: Catalogus
     CharValue:
       type: object
       properties:
@@ -5233,8 +5340,8 @@ components:
       properties:
         question:
           type: string
-          title: Text of the question
-          description: Question for user to answer.
+          title: Vraagtekst
+          description: Vraag aan gebruiker.
           maxLength: 1000
           minLength: 1
         order:
@@ -5267,6 +5374,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Aangepast
         questions:
           type: array
           items:
@@ -5282,7 +5390,7 @@ components:
           type: string
           format: uri
           readOnly: true
-          title: CATALOGUS of ZAAKTYPE
+          title: CATALOGUS van ZAAKTYPE
           description: URL-referentie naar de CATALOGUS van het ZAAKTYPE.
         zaaktypeOmschrijving:
           type: string
@@ -5420,26 +5528,35 @@ components:
             to be a valid `RSIN` of 9 digits and comply to https://nl.wikipedia.org/wiki/Burgerservicenummer#11-proef.
           pattern: ^[0-9]{9}$
           maxLength: 9
-        zaaktype:
+        zaaktypeOmschrijving:
+          type: string
+          description: '`omschrijving` van ZAAKTYPE.'
+        zaaktypeCatalogus:
           type: string
           format: uri
-          description: URL-reference to the ZAAKTYPE (in the Catalogi API).
+          description: URL-referentie naar de CATALOGUS van het ZAAKTYPE.
+        zaakDetails:
+          allOf:
+          - $ref: '#/components/schemas/CreateZaakDetails'
+          description: Relevante details over de ZAAK.
+      required:
+      - zaakDetails
+      - zaaktypeCatalogus
+      - zaaktypeOmschrijving
+      title: CreateZaak
+    CreateZaakDetails:
+      type: object
+      properties:
         omschrijving:
           type: string
-          description: A short summary of the ZAAK.
+          description: Korte samenvatting van de ZAAK.
         toelichting:
           type: string
           default: ''
-          description: A comment on the ZAAK.
-        startdatum:
-          type: string
-          format: date
-          default: '2022-06-15'
-          description: The date the ZAAK begins.
+          description: Toelichting op de ZAAK.
       required:
       - omschrijving
-      - zaaktype
-      title: CreateZaak
+      title: CreateZaakDetails
     CreateZaakEigenschap:
       type: object
       properties:
@@ -5467,12 +5584,12 @@ components:
           type: string
           format: uuid
           readOnly: true
-          description: The UUID of the process instance.
+          description: De UUID van de process instance.
         instanceUrl:
           type: string
           format: uri
           readOnly: true
-          description: The URL of the process instance.
+          description: De URL van de process instance.
       required:
       - instanceId
       - instanceUrl
@@ -5578,8 +5695,8 @@ components:
           nullable: true
           title: Gebruikerstaak context
           description: De vorm van de taakcontext hangt af van het `form` eigenschap.
-            De waarde is`null` als de backend de `formKey` van de gebruikerstaak niet
-            kent.
+            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
+            niet kent.
       required:
       - context
       title: DocumentSelectTaskData
@@ -5651,8 +5768,8 @@ components:
           nullable: true
           title: Gebruikerstaak context
           description: De vorm van de taakcontext hangt af van het `form` eigenschap.
-            De waarde is`null` als de backend de `formKey` van de gebruikerstaak niet
-            kent.
+            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
+            niet kent.
       required:
       - context
       title: DynamicFormTaskData
@@ -5743,6 +5860,24 @@ components:
       - enum
       - value
       title: Enum
+    EnumNumberEnum:
+      type: object
+      properties:
+        enum:
+          type: array
+          items:
+            $ref: '#/components/schemas/NumberEnum'
+          description: Een array van verschillende waardes.
+      title: EnumNumberEnum
+    EnumStringEnum:
+      type: object
+      properties:
+        enum:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringEnum'
+          description: Een array van verschillende waardes.
+      title: EnumStringEnum
     Error:
       type: object
       properties:
@@ -5841,6 +5976,7 @@ components:
       enum:
       - zac:doRedirect
       - zac:documentSelectie
+      - zac:zetResultaat
       - zac:configureAdviceRequest
       - zac:configureApprovalRequest
       - zac:validSign:configurePackage
@@ -5849,11 +5985,11 @@ components:
       title: FormEnum
     FormField:
       oneOf:
-      - $ref: '#/components/schemas/FormFieldInt'
-      - $ref: '#/components/schemas/FormFieldBoolean'
-      - $ref: '#/components/schemas/FormFieldString'
       - $ref: '#/components/schemas/FormFieldEnum'
+      - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldInt'
       - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldBoolean'
       discriminator:
         propertyName: inputType
         mapping:
@@ -5999,7 +6135,7 @@ components:
         zaak:
           type: string
           format: uri
-          description: URL-referentie van de ZAAK waar dit recht op slaat
+          description: URL-referentie naar de ZAAK waar dit recht op slaat
           maxLength: 1000
         startDate:
           type: string
@@ -6050,8 +6186,8 @@ components:
       title: Group
     GroupBlueprint:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       discriminator:
         propertyName: objectType
         mapping:
@@ -6099,11 +6235,11 @@ components:
         requester:
           type: string
           readOnly: true
-          description: Username of access requester/grantee
+          description: '`username` van de toegangsvrager/gever'
         handler:
           type: string
           readOnly: true
-          description: Username of access handler/granter
+          description: '`username` van de toegangsbehandelaar/gever'
         result:
           allOf:
           - $ref: '#/components/schemas/ResultEnum'
@@ -6126,7 +6262,8 @@ components:
             type: string
             description: Naam van het recht
             maxLength: 255
-          description: List of permissions to be granted to user for ZAAK.
+          description: Alle rechten die gegeven kunnen worden aan de gebruiker voor
+            een ZAAK.
       required:
       - handler
       - permissions
@@ -6162,7 +6299,7 @@ components:
         assignee:
           allOf:
           - $ref: '#/components/schemas/User'
-          description: Aangewezen gebruiker voor de gebruikerstaak
+          description: Toegewezen gebruiker voor de gebruikerstaak
         completed:
           type: string
           format: date-time
@@ -6251,9 +6388,10 @@ components:
         betrokkeneIdentificatie:
           type: object
           additionalProperties: {}
-          description: The `betrokkene_identificatie` of the ROL.The shape of the
-            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
-            exclusive with `betrokkene`.
+          description: "De `betrokkene_identificatie` van de ROL. De vorm van de `betrokkene_identificatie`\
+            \ hangt af van de `betrokkene_type` van de ROL. Elkaar uitsluitend met\
+            \ `betrokkene`.\nData validatie for `betrokkene_identificatie` wordt gedaan\
+            \ bij de bron (in dit geval Open Zaak).\n                "
       required:
       - betrokkeneIdentificatie
       title: JSONFieldTaskData
@@ -6320,6 +6458,20 @@ components:
       enum:
       - null
       title: NullEnum
+    NumberEnum:
+      type: object
+      properties:
+        label:
+          type: string
+          description: De label van de enum keuze.
+        value:
+          type: number
+          format: float
+          description: The value of the enum choice as an `integer` or a `float`.
+      required:
+      - label
+      - value
+      title: NumberEnum
     NumberValue:
       type: object
       properties:
@@ -6540,7 +6692,7 @@ components:
         object:
           type: string
           format: uri
-          description: URL-referentie van het OBJECT in 1 van de gerelateerde ZGW
+          description: URL-referentie naar het OBJECT in 1 van de gerelateerde ZGW
             APIs
           maxLength: 200
         board:
@@ -6621,11 +6773,11 @@ components:
         requester:
           type: string
           readOnly: true
-          description: Username of access requester/grantee
+          description: '`username` van de toegangsvrager/gever'
         handler:
           type: string
           readOnly: true
-          description: Username of access handler/granter
+          description: '`username` van de toegangsbehandelaar/gever'
         result:
           allOf:
           - $ref: '#/components/schemas/ResultEnum'
@@ -6648,7 +6800,8 @@ components:
             type: string
             description: Naam van het recht
             maxLength: 255
-          description: List of permissions to be granted to user for ZAAK.
+          description: Alle rechten die gegeven kunnen worden aan de gebruiker voor
+            een ZAAK.
       title: PatchedHandleAccessRequest
     PatchedLockReviewRequest:
       type: object
@@ -6656,7 +6809,7 @@ components:
         lockReason:
           type: string
       title: PatchedLockReviewRequest
-    PatchedSearchReport:
+    PatchedRole:
       type: object
       properties:
         id:
@@ -6665,6 +6818,25 @@ components:
         name:
           type: string
           title: Naam
+          description: Naam van de rol
+          maxLength: 100
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionsEnum'
+          description: Lijst van de rechten
+      title: PatchedRole
+    PatchedSearchReport:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: Id of search report.
+        name:
+          type: string
+          title: Naam
+          description: Name of search report.
           maxLength: 100
         query:
           $ref: '#/components/schemas/Search'
@@ -6692,7 +6864,7 @@ components:
         vertrouwelijkheidaanduiding:
           allOf:
           - $ref: '#/components/schemas/VertrouwelijkheidaanduidingEnum'
-          description: The confidentiality level of the ZAAK.
+          description: De vertrouwelijkheidaanduiding van de ZAAK.
         zaakgeometrie:
           type: object
           additionalProperties: {}
@@ -6713,7 +6885,7 @@ components:
         url:
           type: string
           format: uri
-          description: URL-reference of DOCUMENT
+          description: URL-referentie naar DOCUMENT
         vertrouwelijkheidaanduiding:
           allOf:
           - $ref: '#/components/schemas/VertrouwelijkheidaanduidingEnum'
@@ -6721,18 +6893,18 @@ components:
         zaak:
           type: string
           format: uri
-          description: URL-referentie van de ZAAK
+          description: URL-referentie naar de ZAAK
         bestandsnaam:
           type: string
-          description: Filename without extension.
+          description: Bestandsnaam zonder extensie.
       title: PatchedUpdateZaakDocument
     PatchedUpdateZaakEigenschapWaarde:
       type: object
       properties:
         waarde:
           type: string
-          description: Value of ZAAKEIGENSCHAP. Must be formatted as defined by the
-            EIGENSCHAP spec.
+          description: Waarde van ZAAKEIGENSCHAP. Moet in staat zijn te worden geformatteerd
+            zoals gedefinieerd in de EIGENSCHAP spec.
       title: PatchedUpdateZaakEigenschapWaarde
     PatchedUserAuthorizationProfile:
       type: object
@@ -6772,7 +6944,7 @@ components:
       properties:
         canRequestAccess:
           type: boolean
-          description: Boolean die laat zien of de gebruiker toegang kan aanvragen
+          description: Booleaan die laat zien of de gebruiker toegang kan aanvragen
             voor de ZAAK
         reason:
           type: string
@@ -6837,64 +7009,71 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProcessEigenschapChoice'
-          description: Possible choices related to the EIGENSCHAP.
+          description: Mogelijke keuzes voor EIGENSCHAP.
         eigenschap:
           allOf:
           - $ref: '#/components/schemas/Eigenschap'
-          description: The EIGENSCHAP related to the ZAAKEIGENSCHAP.
+          description: De EIGENSCHAP toebehorend aan ZAAKEIGENSCHAP.
         label:
           type: string
-          description: The label that will be shown.
+          description: Het label dat vertoond wordt.
           maxLength: 100
         default:
           type: string
-          description: The default value of the ZAAKEIGENSCHAP.
+          title: Standaardwaarde
+          description: De standaardwaarde van het ZAAKEIGENSCHAP.
           maxLength: 255
+        required:
+          type: boolean
+          title: Vereist
+          description: Een booleaan die laat zien of een waarde vereist is.
       required:
       - eigenschap
-      - label
       title: ProcessEigenschap
     ProcessEigenschapChoice:
       type: object
       properties:
         label:
           type: string
-          description: The label that will be shown.
+          description: Het label dat vertoond wordt.
           maxLength: 100
         value:
           type: string
-          description: The value that will be used internally.
+          title: Waarde
+          description: De waarde die intern gebruikt wordt.
           maxLength: 100
       required:
-      - label
       - value
       title: ProcessEigenschapChoice
     ProcessInformatieObject:
       type: object
       properties:
-        informatieobjecttype:
-          allOf:
-          - $ref: '#/components/schemas/InformatieObjectType'
-          nullable: true
-          description: The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.
         alreadyUploadedInformatieobjecten:
           type: array
           items:
             type: string
             format: uri
-          description: URL-references of already uploaded documents.
+          description: URL-referenties naar de reeds beschikbare documenten.
         allowMultiple:
           type: boolean
-          title: Allow multiple documents
-          description: A boolean flag to indicate whether a user is allowed to add
-            more than 1 document.
+          title: Laat meerdere documenten toe
+          description: Een booleaan die laat zien of een gebruiker is toegelaten meer
+            dan 1 document toe te voegen.
+        informatieobjecttype:
+          allOf:
+          - $ref: '#/components/schemas/InformatieObjectType'
+          nullable: true
+          description: De INFORMATIEOBJECTTYPE toebehorend aan het ZAAKINFORMATIEOBJECT.
         label:
           type: string
-          description: The label that will be shown.
+          description: Het label dat vertoond wordt.
           maxLength: 100
+        required:
+          type: boolean
+          title: Vereist
+          description: Een booleaan die laat zien of een document vereist is of niet.
       required:
       - informatieobjecttype
-      - label
       title: ProcessInformatieObject
     ProcessInstance:
       type: object
@@ -6927,40 +7106,59 @@ components:
     ProcessRol:
       type: object
       properties:
-        roltype:
-          allOf:
-          - $ref: '#/components/schemas/RolType'
-          description: The ROLTYPE related to the ROL.
-        label:
-          type: string
-          description: The label that will be shown.
-          maxLength: 100
         betrokkeneType:
           allOf:
           - $ref: '#/components/schemas/BetrokkeneTypeEnum'
-          description: Betrokkene type of ROL.
-        default:
+          description: Betrokkene type van de ROL.
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessRolChoice'
+          description: Mogelijke keuzes voor de ROL.
+        label:
           type: string
-          description: A default value of the ROL betrokkene.
-          maxLength: 255
+          description: Het label dat vertoond wordt.
+          maxLength: 100
+        roltype:
+          allOf:
+          - $ref: '#/components/schemas/RolType'
+          description: De ROLTYPE toebehorend aan de ROL.
+        required:
+          type: boolean
+          title: Vereist
+          description: Een booleaan die laat zien of een waarde vereist is.
       required:
       - betrokkeneType
-      - label
       - roltype
       title: ProcessRol
+    ProcessRolChoice:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Het label dat vertoond wordt.
+          maxLength: 100
+        value:
+          type: string
+          title: Waarde
+          description: De waarde die intern gebruikt wordt.
+          maxLength: 100
+      required:
+      - value
+      title: ProcessRolChoice
     QuestionChoice:
       type: object
       properties:
         name:
           type: string
-          title: Human readable name of choice
-          description: Name of choice.
+          title: Leesbare naam van keuze.
+          description: Naam van keuze.
           maxLength: 100
           minLength: 1
         value:
           type: string
-          title: Value of choice
-          description: Value of choice.
+          title: Waarde van keuze
+          description: Waarde van keuze.
           maxLength: 100
           minLength: 1
       required:
@@ -6989,7 +7187,7 @@ components:
         groupAssignee:
           allOf:
           - $ref: '#/components/schemas/Group'
-          description: Groep aangewezen aan de activiteit.
+          description: Groep toegewezen aan de activiteit.
         id:
           type: integer
           readOnly: true
@@ -7005,7 +7203,7 @@ components:
         userAssignee:
           allOf:
           - $ref: '#/components/schemas/User'
-          description: Gebruiker aangewezen aan de activiteit.
+          description: Gebruiker toegewezen aan de activiteit.
         zaak:
           type: string
           format: uri
@@ -7045,14 +7243,14 @@ components:
       properties:
         question:
           type: string
-          title: Related question
-          description: The question related to the answer.
+          title: Gerelateerde vraag
+          description: De vraag gerelateerd aan het antwoord.
           maxLength: 1000
           minLength: 1
         answer:
           type: string
-          title: Answer to the question
-          description: Answer to the question.
+          title: Antwoord op de vraag
+          description: Antwoord op de vraag.
           minLength: 0
         created:
           type: string
@@ -7063,26 +7261,27 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Aangepast
         remarks:
           type: string
           title: Opmerkingen
-          description: Remarks in addition to the answer.
+          description: Opmerkingen als aanvulling op het antwoord.
           minLength: 0
         document:
           type: string
           format: uri
           title: Document-URL
-          description: URL-reference to document related to answer.
+          description: URL-referentie naar document gerelateerd aan antwoord.
           maxLength: 1000
           minLength: 1
         groupAssignee:
           allOf:
           - $ref: '#/components/schemas/Group'
-          description: Group assigned to answer.
+          description: Groep toegewezen aan het antwoord.
         userAssignee:
           allOf:
           - $ref: '#/components/schemas/User'
-          description: User assigned to answer.
+          description: Gebruiker toegewezen om te antwoorden.
       required:
       - answer
       - created
@@ -7133,11 +7332,11 @@ components:
         user:
           allOf:
           - $ref: '#/components/schemas/User'
-          description: User related to the authorization profile.
+          description: Gebruiker gerelateerd aan het autorisatieprofiel.
         authProfile:
           allOf:
           - $ref: '#/components/schemas/AuthProfile'
-          description: Authorization profile related to the user.
+          description: Autorisatieprofielen gerelateerd aan de gebruiker.
         start:
           type: string
           format: date-time
@@ -7181,8 +7380,8 @@ components:
           nullable: true
           title: Gebruikerstaak context
           description: De vorm van de taakcontext hangt af van het `form` eigenschap.
-            De waarde is`null` als de backend de `formKey` van de gebruikerstaak niet
-            kent.
+            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
+            niet kent.
       required:
       - context
       title: RedirectTaskData
@@ -7250,6 +7449,19 @@ components:
           type: boolean
           readOnly: true
           description: A boolean flag whether a user can force edit the ZAAK or not.
+        hasProcess:
+          type: boolean
+          readOnly: true
+          description: Een booleaan die laat zien of de ZAAK een proces heeft of niet.
+        isStatic:
+          type: boolean
+          readOnly: true
+          description: Een booleaan die laat zien of een ZAAK stationair is of niet.
+        isConfigured:
+          type: boolean
+          readOnly: true
+          description: Een booleaan die laat zien of een ZAAK al geconfigureerd is
+            of niet.
         status:
           $ref: '#/components/schemas/ZaakStatus'
       required:
@@ -7258,7 +7470,10 @@ components:
       - deadlineProgress
       - einddatum
       - einddatumGepland
+      - hasProcess
       - identificatie
+      - isConfigured
+      - isStatic
       - kanGeforceerdBijwerken
       - omschrijving
       - registratiedatum
@@ -7311,11 +7526,11 @@ components:
     Rol:
       oneOf:
       - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
       - $ref: '#/components/schemas/RolRolVestigingTaskData'
+      - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
       - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
       - $ref: '#/components/schemas/RolJSONFieldTaskData'
-      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
-      - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -7333,7 +7548,7 @@ components:
         url:
           type: string
           format: uri
-          description: URL-reference of the ROL in Zaken API.
+          description: URL-referentie naar de ROL in de ZAKEN API
         betrokkeneType:
           type: string
           description: '`betrokkeneType` van de ROL.'
@@ -7359,18 +7574,18 @@ components:
         voorletters:
           type: string
           readOnly: true
-          description: Initials of medewerker.
+          description: Initialen van medewerker.
         achternaam:
           type: string
           readOnly: true
-          description: '`last_name` of medewerker.'
+          description: '`last_name` van de gebruiker.'
         identificatie:
           type: string
-          description: '`username` of medewerker.'
+          description: '`username` van de gebruiker.'
         voorvoegselAchternaam:
           type: string
           default: ''
-          description: Last name prefix of medewerker.
+          description: Voorzetsel van achternaam van medewerker.
       required:
       - achternaam
       - identificatie
@@ -7382,9 +7597,10 @@ components:
         betrokkeneIdentificatie:
           allOf:
           - $ref: '#/components/schemas/RolMedewerker'
-          description: The `betrokkene_identificatie` of the ROL.The shape of the
-            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
-            exclusive with `betrokkene`.
+          description: "De `betrokkene_identificatie` van de ROL. De vorm van de `betrokkene_identificatie`\
+            \ hangt af van de `betrokkene_type` van de ROL. Elkaar uitsluitend met\
+            \ `betrokkene`.\nData validatie for `betrokkene_identificatie` wordt gedaan\
+            \ bij de bron (in dit geval Open Zaak).\n                "
       required:
       - betrokkeneIdentificatie
       title: RolMedewerkerTaskData
@@ -7402,9 +7618,10 @@ components:
         betrokkeneIdentificatie:
           allOf:
           - $ref: '#/components/schemas/RolNatuurlijkPersoon'
-          description: The `betrokkene_identificatie` of the ROL.The shape of the
-            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
-            exclusive with `betrokkene`.
+          description: "De `betrokkene_identificatie` van de ROL. De vorm van de `betrokkene_identificatie`\
+            \ hangt af van de `betrokkene_type` van de ROL. Elkaar uitsluitend met\
+            \ `betrokkene`.\nData validatie for `betrokkene_identificatie` wordt gedaan\
+            \ bij de bron (in dit geval Open Zaak).\n                "
       required:
       - betrokkeneIdentificatie
       title: RolNatuurlijkPersoonTaskData
@@ -7422,9 +7639,10 @@ components:
         betrokkeneIdentificatie:
           allOf:
           - $ref: '#/components/schemas/RolNietNatuurlijkPersoon'
-          description: The `betrokkene_identificatie` of the ROL.The shape of the
-            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
-            exclusive with `betrokkene`.
+          description: "De `betrokkene_identificatie` van de ROL. De vorm van de `betrokkene_identificatie`\
+            \ hangt af van de `betrokkene_type` van de ROL. Elkaar uitsluitend met\
+            \ `betrokkene`.\nData validatie for `betrokkene_identificatie` wordt gedaan\
+            \ bij de bron (in dit geval Open Zaak).\n                "
       required:
       - betrokkeneIdentificatie
       title: RolNietNatuurlijkPersoonTaskData
@@ -7442,9 +7660,10 @@ components:
         betrokkeneIdentificatie:
           allOf:
           - $ref: '#/components/schemas/RolOrganisatorischeEenheid'
-          description: The `betrokkene_identificatie` of the ROL.The shape of the
-            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
-            exclusive with `betrokkene`.
+          description: "De `betrokkene_identificatie` van de ROL. De vorm van de `betrokkene_identificatie`\
+            \ hangt af van de `betrokkene_type` van de ROL. Elkaar uitsluitend met\
+            \ `betrokkene`.\nData validatie for `betrokkene_identificatie` wordt gedaan\
+            \ bij de bron (in dit geval Open Zaak).\n                "
       required:
       - betrokkeneIdentificatie
       title: RolOrganisatorischeEenheidTaskData
@@ -7480,38 +7699,37 @@ components:
           type: string
           format: uri
           default: ''
-          description: URL-reference to betrokkene of ROL. Mutually exclusive with
-            `betrokkene_type`.
+          description: URL-referentie naar betrokkene van ROL. Elkaar uitsluitend
+            met `betrokkene_type`.
         betrokkeneType:
-          description: Betrokkene type of ROL. Mutually exclusive with `betrokkene`.
+          description: Betrokkene type van ROL. Elkaar uitsluitend met `betrokkene`.
           oneOf:
           - $ref: '#/components/schemas/BetrokkeneTypeEnum'
           - $ref: '#/components/schemas/BlankEnum'
         indicatieMachtiging:
-          oneOf:
+          allOf:
           - $ref: '#/components/schemas/IndicatieMachtigingEnum'
-          - $ref: '#/components/schemas/BlankEnum'
+          default: gemachtigde
         roltoelichting:
           type: string
           readOnly: true
-          description: Comment related to the ROL. Usually it is the `omschrijving`
-            of ROLTYPE of ROL.
+          description: Toelichting toebehorend aan de ROL. Meestal is het de `omschrijving`
+            van ROLTYPE van ROL.
         roltype:
           type: string
           format: uri
-          description: URL-reference to ROLTYPE of ROL.
+          description: URL-referentie naar ROLTYPE van ROL.
         url:
           type: string
           format: uri
           readOnly: true
-          description: URL-reference to ROL itself.
+          description: URL-referentie naar de ROL zelf.
         zaak:
           type: string
           format: uri
-          description: URL-reference to ZAAK of ROL.
+          description: URL-referentie naar ZAAK van ROL.
       required:
       - betrokkeneType
-      - indicatieMachtiging
       - roltoelichting
       - roltype
       - url
@@ -7545,9 +7763,10 @@ components:
         betrokkeneIdentificatie:
           allOf:
           - $ref: '#/components/schemas/RolVestiging'
-          description: The `betrokkene_identificatie` of the ROL.The shape of the
-            `betrokkene_identificatie` depends on the `betrokkene_type` of the ROL.Mutually
-            exclusive with `betrokkene`.
+          description: "De `betrokkene_identificatie` van de ROL. De vorm van de `betrokkene_identificatie`\
+            \ hangt af van de `betrokkene_type` van de ROL. Elkaar uitsluitend met\
+            \ `betrokkene`.\nData validatie for `betrokkene_identificatie` wordt gedaan\
+            \ bij de bron (in dit geval Open Zaak).\n                "
       required:
       - betrokkeneIdentificatie
       title: RolVestigingTaskData
@@ -7577,23 +7796,23 @@ components:
       properties:
         identificatie:
           type: string
-          description: Unieke identificatie van ZAAK binnen `bronorganisatie`
+          description: Unieke identificatie van ZAAK binnen `bronorganisatie`.
         zaaktype:
           allOf:
           - $ref: '#/components/schemas/SearchZaaktype'
-          description: Eigenschappen om ZAAKTYPEn te identificeren
+          description: Eigenschappen om ZAAKTYPEn te identificeren.
         omschrijving:
           type: string
-          description: Korte omschrijving van ZAAK
+          description: Korte omschrijving van ZAAK.
         eigenschappen:
           type: object
           additionalProperties: {}
           description: 'ZAAK-EIGENSCHAPpen in formaat `<property name>:{''value'':
-            <property value>}`'
+            <property value>}`.'
         object:
           type: string
           format: uri
-          description: URL-referentie van OBJECT
+          description: URL-referentie naar OBJECT.
         fields:
           type: array
           items:
@@ -7624,12 +7843,12 @@ components:
           - zaaktype.catalogus
           - zaaktype.omschrijving
           - zaaktype.url
-          description: Fields that will be returned with the search results. Default
-            returns all fields. Will always include <identificatie>.
+          description: Velden die worden teruggegeven met de zoekresultaten. Geeft
+            standaard alle velden terug. `identificatie` wordt altijd teruggegeven.
         includeClosed:
           type: boolean
           default: false
-          description: Include closed ZAKEN.
+          description: Neem gesloten ZAAKen ook mee.
       title: Search
     SearchEigenschap:
       type: object
@@ -7640,45 +7859,65 @@ components:
         spec:
           allOf:
           - $ref: '#/components/schemas/SearchEigenschapSpecificatie'
-          title: property definition
-          description: JSON schema-ish specification of related ZAAK-EIGENSCHAP values
+          title: eigenschapsdefinitie
+          description: JSON schema-achtige specificatie van gerelateerde ZAAK-EIGENSCHAP
+            waardes.
       required:
       - name
       - spec
       title: SearchEigenschap
     SearchEigenschapSpecificatie:
+      oneOf:
+      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumNumberEnum'
+      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumStringEnum'
+      discriminator:
+        propertyName: type
+        mapping:
+          string: '#/components/schemas/SearchEigenschapSpecificatieEnumStringEnum'
+          number: '#/components/schemas/SearchEigenschapSpecificatieEnumNumberEnum'
+      title: SearchEigenschapSpecificatie
+    SearchEigenschapSpecificatieEnumNumberEnum:
+      allOf:
+      - $ref: '#/components/schemas/SearchEigenschapSpecificatieShared'
+      - $ref: '#/components/schemas/EnumNumberEnum'
+      title: SearchEigenschapSpecificatieEnumNumberEnum
+    SearchEigenschapSpecificatieEnumStringEnum:
+      allOf:
+      - $ref: '#/components/schemas/SearchEigenschapSpecificatieShared'
+      - $ref: '#/components/schemas/EnumStringEnum'
+      title: SearchEigenschapSpecificatieEnumStringEnum
+    SearchEigenschapSpecificatieShared:
       type: object
+      description: polymorhic fields are grouped into one particular field
       properties:
         type:
           allOf:
           - $ref: '#/components/schemas/TypeEnum'
-          description: Volgens het JSON schema hebben datumwaarde een `string` type
+          description: Volgens het JSON schema hebben datumwaarde een `string` type.
         format:
           type: string
-          description: Wordt gebruikt om de datum en datumtijd waardes te onderscheiden
-            van andere strings
+          description: Wordt gebruikt om de `datum` en `datumtijd` waardes te onderscheiden
+            van andere `strings`.
         minLength:
           type: integer
-          description: Alleen voor strings
+          description: Alleen voor strings.
         maxLength:
           type: integer
-          description: Alleen voor strings
-        enum:
-          type: array
-          items: {}
-          description: Een array van verschillende waardes
+          description: Alleen voor strings.
       required:
       - type
-      title: SearchEigenschapSpecificatie
+      title: SearchEigenschapSpecificatieShared
     SearchReport:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
+          description: Id of search report.
         name:
           type: string
           title: Naam
+          description: Name of search report.
           maxLength: 100
         query:
           $ref: '#/components/schemas/Search'
@@ -7693,11 +7932,11 @@ components:
         omschrijving:
           type: string
           description: Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator
-            voor de verschillende versies van ZAAKTYPE
+            voor de verschillende versies van ZAAKTYPE.
         catalogus:
           type: string
           format: uri
-          description: Url reference of related CATALOGUS
+          description: Url reference of related CATALOGUS.
       required:
       - catalogus
       - omschrijving
@@ -7713,17 +7952,17 @@ components:
           items:
             type: string
             nullable: true
-          description: Aangewezen gebruikers tot het verzoek.
+          description: Toegewezen gebruikers tot het verzoek.
         groupAssignees:
           type: array
           items:
             type: string
             nullable: true
-          description: Aangewezen groepen tot het verzoek.
+          description: Toegewezen groepen tot het verzoek.
         emailNotification:
           type: boolean
           default: false
-          description: Send an email notification about the review request.
+          description: Stuur een emailnotificatie over het verzoek.
         deadline:
           type: string
           format: date
@@ -7740,13 +7979,13 @@ components:
           type: string
           format: uri
           title: geselecteerd DOCUMENT
-          description: URL-referentie van het geselecteerde DOCUMENT van de relevante
-            ZAAK
+          description: URL-referentie naar het geselecteerde DOCUMENT van de relevante
+            ZAAK.
         documentType:
           type: string
           format: uri
           title: geselecteerde documenttype
-          description: URL-referentie van het geselecteerde documenttype
+          description: URL-referentie naar het geselecteerde documenttype.
       required:
       - document
       - documentType
@@ -7758,12 +7997,12 @@ components:
           type: string
           format: uuid
           title: Taak `id`
-          description: De `id` van de taak waar de aangewezene/gedelegeerde op wordt
+          description: De `id` van de taak waar de begunstigde/gedelegeerde op wordt
             ingesteld.
         assignee:
           type: string
-          title: aangewezene
-          description: Aangewezene van de taak.
+          title: begunstigde
+          description: Begunstigde van de taak.
         delegate:
           type: string
           title: gedelegeerde
@@ -7876,19 +8115,34 @@ components:
       required:
       - value
       title: String
+    StringEnum:
+      type: object
+      properties:
+        label:
+          type: string
+          description: De label van de enum keuze.
+        value:
+          type: string
+          description: De waarde van de enum keuze als een `string`.
+      required:
+      - label
+      - value
+      title: StringEnum
     SubmitUserTask:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
-      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
       - $ref: '#/components/schemas/SubmitUserTaskValidSignTask'
+      - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTask'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
       discriminator:
         propertyName: form
         mapping:
           ? ''
           : '#/components/schemas/SubmitUserTaskDynamicFormWrite'
           zac:documentSelectie: '#/components/schemas/SubmitUserTaskDocumentSelectTask'
+          zac:zetResultaat: '#/components/schemas/SubmitUserTaskZetResultaatTask'
           zac:configureAdviceRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
           zac:configureApprovalRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequest'
           zac:validSign:configurePackage: '#/components/schemas/SubmitUserTaskValidSignTask'
@@ -7935,6 +8189,11 @@ components:
       - $ref: '#/components/schemas/SubmitUserTaskShared'
       - $ref: '#/components/schemas/ValidSignTask'
       title: SubmitUserTaskValidSignTask
+    SubmitUserTaskZetResultaatTask:
+      allOf:
+      - $ref: '#/components/schemas/SubmitUserTaskShared'
+      - $ref: '#/components/schemas/ZetResultaatTask'
+      title: SubmitUserTaskZetResultaatTask
     SuggestResult:
       type: object
       properties:
@@ -7968,11 +8227,11 @@ components:
         groupAssignee:
           type: string
           readOnly: true
-          description: Naam van de aangewezen groep.
+          description: Naam van de begunstigde groep.
         userAssignee:
           type: string
           readOnly: true
-          description: Username van de aangewezen gebruiker.
+          description: Username van de begunstigde gebruiker.
       required:
       - groupAssignee
       - name
@@ -7983,16 +8242,16 @@ components:
       properties:
         question:
           type: string
-          title: Related question
+          title: Gerelateerde vraag
           maxLength: 1000
         groupAssignee:
           type: string
           readOnly: true
-          description: Naam van de aangewezen groep.
+          description: Naam van de begunstigde groep.
         userAssignee:
           type: string
           readOnly: true
-          description: Username van de aangewezen gebruiker.
+          description: Username van de begunstigde gebruiker.
       required:
       - groupAssignee
       - question
@@ -8004,13 +8263,13 @@ components:
         url:
           type: string
           format: uri
-          description: URL reference of the ZAAK in Zaken API.
+          description: URL-referentie naar de ZAAK in de ZAKEN API
         identificatie:
           type: string
           description: Unieke identificatie van de ZAAK.
         bronorganisatie:
           type: string
-          description: The RSIN of the organisation that created the the ZAAK.
+          description: De RSIN van de organisatie die de ZAAK heeft aangemaakt.
         status:
           allOf:
           - $ref: '#/components/schemas/StatusDocument'
@@ -8023,9 +8282,9 @@ components:
       title: SummaryZaakDocument
     Task:
       oneOf:
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
-      - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
+      - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -8072,17 +8331,22 @@ components:
         hasForm:
           type: boolean
         assigneeType:
-          description: De `assigneeType` van de gebruikerstaak kreeg aangewezen.
+          description: De `assigneeType` van de gebruikerstaak.
           oneOf:
           - $ref: '#/components/schemas/AssigneeTypeEnum'
           - $ref: '#/components/schemas/BlankEnum'
         canCancelTask:
           type: boolean
           readOnly: true
+        formKey:
+          type: string
+          nullable: true
+          maxLength: 255
       required:
       - assigneeType
       - canCancelTask
       - created
+      - formKey
       - hasForm
       - id
       - name
@@ -8160,7 +8424,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AtomicPermission'
-          description: Atomische rechten voor de ZAAK
+          description: Atomic permissions for the ZAAK.
       required:
       - permissions
       - username
@@ -8191,11 +8455,12 @@ components:
     UserTaskContext:
       oneOf:
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
-      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
       - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
       - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
+      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -8203,6 +8468,7 @@ components:
           : '#/components/schemas/UserTaskContextDynamicFormTaskData'
           zac:doRedirect: '#/components/schemas/UserTaskContextRedirectTaskData'
           zac:documentSelectie: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+          zac:zetResultaat: '#/components/schemas/UserTaskContextZetResultaatTaskData'
           zac:configureAdviceRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
           zac:configureApprovalRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
           zac:validSign:configurePackage: '#/components/schemas/UserTaskContextValidSignTaskData'
@@ -8259,6 +8525,11 @@ components:
       - $ref: '#/components/schemas/UserTaskContextShared'
       - $ref: '#/components/schemas/ValidSignTaskData'
       title: UserTaskContextValidSignTaskData
+    UserTaskContextZetResultaatTaskData:
+      allOf:
+      - $ref: '#/components/schemas/UserTaskContextShared'
+      - $ref: '#/components/schemas/ZetResultaatTaskData'
+      title: UserTaskContextZetResultaatTaskData
     ValidSignContext:
       type: object
       properties:
@@ -8300,8 +8571,8 @@ components:
           nullable: true
           title: Gebruikerstaak context
           description: De vorm van de taakcontext hangt af van het `form` eigenschap.
-            De waarde is`null` als de backend de `formKey` van de gebruikerstaak niet
-            kent.
+            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
+            niet kent.
       required:
       - context
       title: ValidSignTaskData
@@ -8380,10 +8651,10 @@ components:
       properties:
         label:
           type: string
-          description: Leesbare classificatielabel
+          description: Human readable label of classication.
         value:
           type: string
-          description: Waarde van classificatie
+          description: Value of classication.
       required:
       - label
       - value
@@ -8427,11 +8698,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SummaryChecklistAnswer'
-          description: Questions to be answered by assignee.
+          description: Vragen die beantwoord moeten worden door de begunstigde.
         zaak:
           allOf:
           - $ref: '#/components/schemas/SummaryZaakDocument'
-          description: ZAAK that checklist questions belongs to.
+          description: ZAAK waar checklistvragen aan toebehoren.
       required:
       - checklistQuestions
       - zaak
@@ -8472,14 +8743,14 @@ components:
       properties:
         question:
           type: string
-          title: Related question
-          description: The question related to the answer.
+          title: Gerelateerde vraag
+          description: De vraag gerelateerd aan het antwoord.
           maxLength: 1000
           minLength: 1
         answer:
           type: string
-          title: Answer to the question
-          description: Answer to the question.
+          title: Antwoord op de vraag
+          description: Antwoord op de vraag.
           minLength: 0
         created:
           type: string
@@ -8490,26 +8761,27 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Aangepast
         remarks:
           type: string
           title: Opmerkingen
-          description: Remarks in addition to the answer.
+          description: Opmerkingen als aanvulling op het antwoord.
           minLength: 0
         document:
           type: string
           format: uri
           title: Document-URL
-          description: URL-reference to document related to answer.
+          description: URL-referentie naar document gerelateerd aan antwoord.
           maxLength: 1000
           minLength: 1
         groupAssignee:
           type: string
           nullable: true
-          description: '`name` of the group assigned to answer.'
+          description: '`name` van de groep toegewezen om te antwoorden.'
         userAssignee:
           type: string
           nullable: true
-          description: '`username` of the user assigned to answer.'
+          description: '`username` van de gebruiker toegewezen om te antwoorden.'
       required:
       - answer
       - created
@@ -8584,13 +8856,29 @@ components:
           type: boolean
           readOnly: true
           description: A boolean flag whether a user can force edit the ZAAK or not.
+        hasProcess:
+          type: boolean
+          readOnly: true
+          description: Een booleaan die laat zien of de ZAAK een proces heeft of niet.
+        isStatic:
+          type: boolean
+          readOnly: true
+          description: Een booleaan die laat zien of een ZAAK stationair is of niet.
+        isConfigured:
+          type: boolean
+          readOnly: true
+          description: Een booleaan die laat zien of een ZAAK al geconfigureerd is
+            of niet.
       required:
       - bronorganisatie
       - deadline
       - deadlineProgress
       - einddatum
       - einddatumGepland
+      - hasProcess
       - identificatie
+      - isConfigured
+      - isStatic
       - kanGeforceerdBijwerken
       - omschrijving
       - registratiedatum
@@ -8608,7 +8896,7 @@ components:
         url:
           type: string
           format: uri
-          description: URL-referentie naar de zaak in de API
+          description: URL-referentie naar de zaak in de API.
         zaaktype:
           allOf:
           - $ref: '#/components/schemas/ZaakTypeDocument'
@@ -8677,10 +8965,10 @@ components:
       title: ZaakDocument
     ZaakEigenschap:
       oneOf:
-      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
-      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
-      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
+      - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -8752,7 +9040,7 @@ components:
         object:
           type: string
           format: uri
-          description: URL-referentie naar het OBJECT in de OBJECTS API
+          description: URL-referentie naar het OBJECT in de OBJECTS API.
       title: ZaakObjectDocument
     ZaakObjectGroup:
       type: object
@@ -8786,8 +9074,8 @@ components:
       title: ZaakObjectProxyExtras
     ZaakRevReqDetail:
       oneOf:
-      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
+      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       discriminator:
         propertyName: reviewType
         mapping:
@@ -8829,7 +9117,6 @@ components:
           type: string
         completed:
           type: integer
-          readOnly: true
           title: Voltooide verzoeken
           description: Het aantal voltooide verzoeken.
         numAssignedUsers:
@@ -8838,7 +9125,7 @@ components:
           type: boolean
           readOnly: true
           title: can lock request
-          description: User can lock the review request.
+          description: Gebruiker kan het verzoek op slot zetten.
         locked:
           type: boolean
         lockReason:
@@ -8908,14 +9195,14 @@ components:
     ZaakTypeAggregate:
       type: object
       properties:
+        catalogus:
+          allOf:
+          - $ref: '#/components/schemas/Catalogus'
+          description: CATALOGUS waar ZAAKTYPE toebehoort.
         omschrijving:
           type: string
           description: Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator
-            voor de verschillende versies van ZAAKTYPE
-        catalogus:
-          type: string
-          format: uri
-          description: Url reference of related CATALOGUS
+            voor de verschillende versies van ZAAKTYPE.
       required:
       - catalogus
       - omschrijving
@@ -8950,7 +9237,7 @@ components:
           description: URL-referentie naar de ZAAKTYPE in de CATALOGI API
         catalogus:
           type: string
-          description: URL-referentie van de CATALOGUS die aan de ZAAKTYPE toebehoort.
+          description: URL-referentie naar de CATALOGUS die aan de ZAAKTYPE toebehoort.
         omschrijving:
           type: string
           description: Omschrijving van de ZAAKTYPE.
@@ -8967,6 +9254,73 @@ components:
       - coordinates
       - type
       title: Zaakgeometrie
+    ZetResultaatContext:
+      type: object
+      properties:
+        activiteiten:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadActivity'
+          nullable: true
+          description: Onafgeronde activiteiten voor ZAAK.
+        checklistVragen:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistQuestion'
+          nullable: true
+          description: Onbeantwoorde checklistvragen voor ZAAK.
+        taken:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          nullable: true
+          description: Onafgeronde taken voor ZAAK.
+        verzoeken:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZaakRevReqSummary'
+          nullable: true
+          description: Onafgeronde verzoeken voor ZAAK.
+        resultaattypen:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultaatType'
+          description: RESULTAATTYPEn voor ZAAKTYPE van ZAAK.
+      required:
+      - activiteiten
+      - checklistVragen
+      - resultaattypen
+      - taken
+      - verzoeken
+      title: ZetResultaatContext
+    ZetResultaatTask:
+      type: object
+      description: |-
+        Serializes the `resultaat` for the user task.
+
+        Requires ``task`` to be in serializer ``context``.
+      properties:
+        resultaat:
+          type: string
+          description: Het RESULTAAT van de ZAAK. Vereist voordat een ZAAK gesloten
+            wordt.
+      required:
+      - resultaat
+      title: ZetResultaatTask
+    ZetResultaatTaskData:
+      type: object
+      properties:
+        context:
+          allOf:
+          - $ref: '#/components/schemas/ZetResultaatContext'
+          nullable: true
+          title: Gebruikerstaak context
+          description: De vorm van de taakcontext hangt af van het `form` eigenschap.
+            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
+            niet kent.
+      required:
+      - context
+      title: ZetResultaatTaskData
   securitySchemes:
     cookieAuth:
       type: apiKey
