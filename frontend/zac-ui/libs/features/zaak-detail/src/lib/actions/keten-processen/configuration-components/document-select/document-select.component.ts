@@ -184,7 +184,10 @@ export class DocumentSelectComponent implements OnChanges {
             this.cdRef.detectChanges();
             return null;
           }
-          return documentTypeObject?.url;
+          return {
+            document: this.taskContextData.context.documents[i].url,
+            documentType: documentTypeObject.url
+          };
         }
         return null;
       })
