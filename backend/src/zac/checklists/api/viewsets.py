@@ -120,9 +120,9 @@ class ZaakChecklistTypeViewSet(
             "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
             "zaaktype_catalogus": zaak.zaaktype.catalogus,
         }
-        checklist_type = get_object_or_404(queryset, **filter_kwargs)
+        checklisttype = get_object_or_404(queryset, **filter_kwargs)
         self.check_object_permissions(self.request, zaak)
-        return checklist_type
+        return checklisttype
 
 
 zaak_checklist_parameters = [
@@ -168,8 +168,8 @@ class ZaakChecklistViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = (
-        Checklist.objects.select_related("checklist_type")
-        .select_related("checklist_type")
+        Checklist.objects.select_related("checklisttype")
+        .select_related("checklisttype")
         .prefetch_related(
             Prefetch(
                 "checklistanswer_set",

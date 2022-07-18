@@ -24,9 +24,16 @@ CACHES = {
 LOGGING = None  # Quiet is nice
 logging.disable(logging.CRITICAL)
 
-ENVIRONMENT = "ci"
 
 #
 # Django-axes
 #
 AXES_BEHIND_REVERSE_PROXY = False
+
+DEBUG = False
+TEMPLATE_DEBUG = False
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.MD5PasswordHasher",
+]
+
+ENVIRONMENT = "ci"

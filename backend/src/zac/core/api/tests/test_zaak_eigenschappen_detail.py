@@ -179,7 +179,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "detail": "EIGENSCHAP with name some-other-property not found for zaaktype http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60."
+                "detail": "EIGENSCHAP met naam some-other-property werd niet gevonden voor ZAAKTYPE http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60."
             },
         )
 

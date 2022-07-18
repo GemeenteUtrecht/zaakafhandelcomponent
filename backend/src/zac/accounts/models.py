@@ -3,10 +3,10 @@ from datetime import date
 from itertools import groupby
 
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import JSONField, Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 

@@ -215,7 +215,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             except ObjectDoesNotExist:
                 raise serializers.ValidationError(
                     _(
-                        "No camunda start process form is found for zaaktype with identificatie {zaaktype_identificatie} within catalogus {zaaktype_catalogus}"
+                        "No camunda start process form is found for zaaktype with `identificatie`: `{zaaktype_identificatie}` within catalogus `{zaaktype_catalogus}`."
                     ).format(
                         zaaktype_identificatie=self.zaakcontext.zaaktype.identificatie,
                         zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
@@ -235,7 +235,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             if iot_omschrijving not in iots:
                 raise serializers.ValidationError(
                     _(
-                        "A INFORMATIEOBJECT with INFORMATIEOBJECTTYPE description `{omschrijving}` is required."
+                        "A INFORMATIEOBJECT with INFORMATIEOBJECTTYPE `omschrijving`: `{omschrijving}` is required."
                     ).format(omschrijving=iot_omschrijving)
                 )
         return bijlagen
@@ -279,13 +279,13 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                     if betrokkene_type not in found_betrokkene_typen:
                         raise serializers.ValidationError(
                             _(
-                                "`betrokkene_type` of ROL with ROLTYPE omschrijving `{omschrijving}` does not match required betrokkene_type `{bt}`"
+                                "`betrokkene_type` of ROL with ROLTYPE `omschrijving`: `{omschrijving}` does not match required `betrokkene_type`: `{bt}`."
                             ).format(omschrijving=omschrijving, bt=betrokkene_type)
                         )
             else:
                 raise serializers.ValidationError(
                     _(
-                        "Required ROLTYPE omschrijving `{omschrijving}` not found in ROLlen related to ZAAK."
+                        "Required ROLTYPE `omschrijving`: `{omschrijving}` not found in ROLlen related to ZAAK."
                     ).format(omschrijving=omschrijving)
                 )
         return rollen
@@ -311,7 +311,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             if required_zei not in found_zaakeigenschapnaamwaarden:
                 raise serializers.ValidationError(
                     _(
-                        "A ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}` is required."
+                        "A ZAAKEIGENSCHAP with `naam`: `{eigenschapnaam}` is required."
                     ).format(eigenschapnaam=required_zei)
                 )
 
@@ -321,7 +321,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             ):
                 raise serializers.ValidationError(
                     _(
-                        "ZAAKEIGENCHAP with `naam`: `{eigenschapnaam}`, needs to have a `waarde` chosen from: {choices}."
+                        "ZAAKEIGENSCHAP with `naam`: `{eigenschapnaam}` needs to have a `waarde` chosen from: `{choices}`."
                     ).format(
                         eigenschapnaam=naam,
                         choices=sorted(list(multiple_choice_zaakeigenschappen[naam])),

@@ -142,23 +142,23 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             "ztc", "schemas/ResultaatType", zaaktype=cls.zaaktype["url"]
         )
 
-        cls.checklist_type = ChecklistTypeFactory.create(
+        cls.checklisttype = ChecklistTypeFactory.create(
             zaaktype=cls.zaaktype["url"],
             zaaktype_omschrijving=cls.zaaktype["omschrijving"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question_1 = ChecklistQuestionFactory.create(
             question="some-question-1",
-            checklist_type=cls.checklist_type,
+            checklisttype=cls.checklisttype,
             order=1,
         )
         cls.checklist_question_2 = ChecklistQuestionFactory.create(
             question="some-question-2",
-            checklist_type=cls.checklist_type,
+            checklisttype=cls.checklisttype,
             order=2,
         )
         cls.checklist = ChecklistFactory.create(
-            checklist_type=cls.checklist_type, zaak=cls.zaak["url"]
+            checklisttype=cls.checklisttype, zaak=cls.zaak["url"]
         )
         cls.checklist_answer_user = ChecklistAnswerFactory(
             checklist=cls.checklist,

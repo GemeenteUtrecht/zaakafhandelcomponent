@@ -300,7 +300,7 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             .exists()
         ):
             raise serializers.ValidationError(
-                _("User {requester} already has access to ZAAK {zaak}.").format(
+                _("User `{requester}` already has access to ZAAK `{zaak}`.").format(
                     requester=requester.username, zaak=zaak.url
                 )
             )
@@ -312,7 +312,7 @@ class CreateAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         ):
             raise serializers.ValidationError(
                 _(
-                    "User {requester} already has a pending access request to ZAAK {zaak}"
+                    "User `{requester}` already has a pending access request to ZAAK `{zaak}`."
                 ).format(requester=requester.username, zaak=zaak.url)
             )
 
@@ -328,12 +328,12 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
     requester = serializers.SlugRelatedField(
         slug_field="username",
         read_only=True,
-        help_text=_("Username of access requester/grantee"),
+        help_text=_("`username` of access requester/grantee"),
     )
     handler = serializers.SlugRelatedField(
         slug_field="username",
         read_only=True,
-        help_text=_("Username of access handler/granter"),
+        help_text=_("`username` of access handler/granter"),
     )
     handler_comment = serializers.CharField(
         required=False, help_text=_("Comment of the handler")
@@ -377,9 +377,8 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
             if perm not in allowed_permissions:
                 raise serializers.ValidationError(
                     _(
-                        "`%s` cannot grant permission `%s` because they do not have the permission."
-                    )
-                    % (user, perm)
+                        "`{user}` cannot grant permission `{perm}` because they do not have the permission."
+                    ).format(user=user, perm=perm)
                 )
         return permissions
 
@@ -389,20 +388,20 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         if not valid_data.get("result"):
             raise serializers.ValidationError(
                 _(
-                    "'result' field should be defined when the access request is handled`"
+                    "'result' field should be defined when the access request is handled."
                 )
             )
 
         if not valid_data.get("permissions"):
             raise serializers.ValidationError(
                 _(
-                    "'permissions' field should be defined when the access request is handled"
+                    "'permissions' field should be defined when the access request is handled."
                 )
             )
 
         if self.instance and self.instance.result:
             raise serializers.ValidationError(
-                _("This access request has already been handled")
+                _("This access request has already been handled.")
             )
 
         request = self.context["request"]

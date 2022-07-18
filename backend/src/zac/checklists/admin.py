@@ -15,11 +15,11 @@ class QuestionChoiceAdmin(NestedTabularInline):
 
 
 class ChecklistQuestionAdmin(NestedStackedInline):
-    list_display = ("checklist_type", "question")
-    list_filter = ("checklist_type",)
+    list_display = ("checklisttype", "question")
+    list_filter = ("checklisttype",)
     search_fields = ("question",)
     date_hierarchy = "created"
-    autocomplete_fields = ("checklist_type",)
+    autocomplete_fields = ("checklisttype",)
     inlines = [QuestionChoiceAdmin]
     model = ChecklistQuestion
     extra = 0
@@ -43,7 +43,7 @@ admin.site.register(ChecklistType, ChecklistTypeAdmin)
 class ChecklistAdmin(admin.ModelAdmin):
     list_display = (
         "zaak",
-        "checklist_type",
+        "checklisttype",
     )
-    list_filter = ("checklist_type",)
+    list_filter = ("checklisttype",)
     date_hierarchy = "created"

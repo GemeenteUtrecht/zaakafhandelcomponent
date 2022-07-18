@@ -60,7 +60,7 @@ def _client_from_url(url: str):
     service = Service.get_service(url)
     if not service:
         raise ServiceConfigError(
-            _("The service for the url %(url)s is not configured in the admin")
+            _("The service for the url %(url)s is not configured in the admin.")
             % {"url": url}
         )
     client = service.build_client()

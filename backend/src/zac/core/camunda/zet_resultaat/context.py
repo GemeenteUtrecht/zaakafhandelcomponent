@@ -36,7 +36,7 @@ def get_unanswered_checklist_questions_for_zaak(
         answered_questions = []
 
     zaaktype_url = zaak.zaaktype if type(zaak.zaaktype) == str else zaak.zaaktype.url
-    checklist_type = ChecklistType.objects.filter(
+    checklisttype = ChecklistType.objects.filter(
         zaaktype=zaaktype_url
     ).prefetch_related(
         Prefetch(
@@ -46,11 +46,11 @@ def get_unanswered_checklist_questions_for_zaak(
             ),
         )
     )
-    if checklist_type.exists():
-        checklist_type = checklist_type.get()
+    if checklisttype.exists():
+        checklisttype = checklisttype.get()
         return [
             question
-            for question in checklist_type.checklistquestion_set.all()
+            for question in checklisttype.checklistquestion_set.all()
             if question.question not in answered_questions
         ]
 

@@ -82,7 +82,7 @@ urlpatterns = [
         name="zaak-atomic-permissions",
     ),
     path(
-        "cases/<str:bronorganisatie>/<str:identificatie>",
+        "cases/<str:bronorganisatie>/<str:identificatie>/",
         include("zac.core.camunda.start_process.urls"),
     ),
     # meta

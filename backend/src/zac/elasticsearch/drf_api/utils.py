@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from typing import Any, Dict, Iterator, Optional, Tuple
 
+from django.utils.translation import gettext_lazy as _
+
 from drf_spectacular.openapi import OpenApiParameter
 from elasticsearch_dsl import Document, field
 
@@ -66,6 +68,8 @@ def es_document_to_ordering_parameters(
             type=str,
             location=OpenApiParameter.QUERY,
             required=False,
-            description="Possible ordering parameters. Multiple values are possible and should be separated by a comma.",
+            description=_(
+                "Possible ordering parameters. Multiple values are possible and should be separated by a comma."
+            ),
             enum=enum,
         )

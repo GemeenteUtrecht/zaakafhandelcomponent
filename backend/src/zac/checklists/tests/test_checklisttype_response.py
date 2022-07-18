@@ -101,7 +101,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             [
-                "Checklist type met deze CATALOGUS of ZAAKTYPE en Omschrijving bestaat al."
+                "Checklisttype met deze CATALOGUS van ZAAKTYPE en Omschrijving bestaat al."
             ],
         )
 
@@ -188,13 +188,13 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-        checklist_type = ChecklistTypeFactory.create(
+        checklisttype = ChecklistTypeFactory.create(
             zaaktype=self.zaaktype["url"],
             zaaktype_omschrijving=self.zaaktype["omschrijving"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         ChecklistQuestionFactory.create(
-            checklist_type=checklist_type, question="some-question", order=1
+            checklisttype=checklisttype, question="some-question", order=1
         )
         zaak = generate_oas_component(
             "zrc",
@@ -219,7 +219,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
                 },
             ],
         }
-        endpoint = reverse("checklisttype-detail", kwargs={"pk": checklist_type.pk})
+        endpoint = reverse("checklisttype-detail", kwargs={"pk": checklisttype.pk})
         response = self.client.put(endpoint, data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ChecklistType.objects.count(), 1)

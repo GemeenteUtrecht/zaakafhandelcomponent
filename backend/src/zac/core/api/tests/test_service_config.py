@@ -56,6 +56,6 @@ class NoServiceConfigTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "detail": f"De service voor de url {zaak['zaaktype']} is niet geconfigureerd in de admin"
+                "detail": f"De service voor de url {zaak['zaaktype']} is niet geconfigureerd in de admin."
             },
         )

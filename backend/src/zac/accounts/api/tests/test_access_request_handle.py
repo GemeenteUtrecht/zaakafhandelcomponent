@@ -418,7 +418,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json()["nonFieldErrors"],
-            ["Dit toegangsverzoek is al afgehandeld"],
+            ["Dit toegangsverzoek is al afgehandeld."],
         )
 
     @requests_mock.Mocker()
@@ -445,7 +445,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(
             response.json()["nonFieldErrors"],
             [
-                "'result'-veld moet gedefinieerd zijn wanneer een toegangsverzoek in behandeling wordt genomen"
+                "'result'-veld moet gedefinieerd zijn wanneer een toegangsverzoek in behandeling wordt genomen."
             ],
         )
 
@@ -473,6 +473,6 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
         self.assertEqual(
             response.json()["nonFieldErrors"],
             [
-                "'permissions' field should be defined when the access request is handled"
+                "'permissions'-veld moet gedefinieerd zijn wanneer een toegangsverzoek in behandeling wordt genomen."
             ],
         )

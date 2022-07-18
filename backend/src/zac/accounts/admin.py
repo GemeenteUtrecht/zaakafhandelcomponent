@@ -1,11 +1,8 @@
-from typing import Optional
-
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as _GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group
-from django.contrib.postgres.fields import JSONField
-from django.http.request import HttpRequest
+from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin

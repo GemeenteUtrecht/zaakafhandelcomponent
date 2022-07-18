@@ -11,12 +11,12 @@ class ChecklistTypeFactory(factory.django.DjangoModelFactory):
 
 
 class ChecklistQuestionFactory(factory.django.DjangoModelFactory):
-    checklist_type = factory.SubFactory(ChecklistTypeFactory)
+    checklisttype = factory.SubFactory(ChecklistTypeFactory)
     order = factory.Faker("pyint", min_value=0)
 
     class Meta:
         model = "checklists.ChecklistQuestion"
-        django_get_or_create = ("order", "checklist_type")
+        django_get_or_create = ("order", "checklisttype")
 
 
 class QuestionChoiceFactory(factory.django.DjangoModelFactory):
@@ -28,7 +28,7 @@ class QuestionChoiceFactory(factory.django.DjangoModelFactory):
 
 class ChecklistFactory(factory.django.DjangoModelFactory):
     zaak = factory.Faker("url")
-    checklist_type = factory.SubFactory(ChecklistTypeFactory)
+    checklisttype = factory.SubFactory(ChecklistTypeFactory)
 
     class Meta:
         model = "checklists.Checklist"
