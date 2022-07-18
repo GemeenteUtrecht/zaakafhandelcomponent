@@ -19,6 +19,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { RoleStepComponent } from './configuration-components/start-process/role-step/role-step.component';
 import { PropertiesStepComponent } from './configuration-components/start-process/properties-step/properties-step.component';
 import { DocumentsStepComponent } from './configuration-components/start-process/documents-step/documents-step.component';
+import { SetResultComponent } from './configuration-components/set-result/set-result.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { DocumentsStepComponent } from './configuration-components/start-process
     StartProcessComponent,
     RoleStepComponent,
     PropertiesStepComponent,
-    DocumentsStepComponent
+    DocumentsStepComponent,
+    SetResultComponent
   ],
   imports: [
     CommonModule,

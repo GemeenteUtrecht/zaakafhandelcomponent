@@ -20,6 +20,26 @@ export class KetenProcessenService {
   constructor(private http: ApplicationHttpClient) { }
 
   /**
+   * Returns wether a task is for the current user.
+   * @param {User} user
+   * @param {Task} task
+   * @returns {boolean}
+   */
+  isTaskForCurrentUser(user: User, task: Task): boolean {
+    return (task.assignee?.username === user.username || user.groups.includes(task.assignee?.name)) && task.formKey !== 'zac:zetResultaat';
+  }
+
+  /**
+   * Returns wether a task is for other users.
+   * @param {User} user
+   * @param {Task} task
+   * @returns {boolean}
+   */
+  isTaskForOtherUser(user: User, task: Task): boolean {
+    return (task.assignee?.username !== user.username && !user.groups.includes(task.assignee?.name)) && task.formKey !== 'zac:zetResultaat'
+  }
+
+  /**
    * Returns whether task is assigned.
    * @param {Task} task
    * @return {boolean}
@@ -72,7 +92,7 @@ export class KetenProcessenService {
     if(['Accorderen', 'Adviseren'].indexOf(task.name) > -1) {
       return user.username && !task.assignee
     }
-    return true;
+    return task.formKey !== 'zac:zetResultaat';
   }
 
   /**
@@ -86,9 +106,12 @@ export class KetenProcessenService {
     }
 
     const subTasksArray = [];
+    console.log(ketenProcessenData);
     ketenProcessenData[0].subProcesses.forEach( subProcess => {
       subProcess.tasks.forEach( task => subTasksArray.push(task))
     })
+
+    console.log(subTasksArray);
 
     return ketenProcessenData[0].tasks
       .concat(subTasksArray)

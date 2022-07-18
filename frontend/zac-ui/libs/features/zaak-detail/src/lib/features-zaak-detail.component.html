@@ -108,17 +108,16 @@
                 <div class="col-lg-7 mb-4">
 
                   <!-- Open activities button -->
-                  <div class="mb-4" *ngIf="activityData">
-                    <button gu-button
-                            buttonStyle="primary"
-                            icon="playlist_add_check"
-                            (click)="openModal('activities-modal')">
-                      Activiteiten
-                    </button>
+                  <div class="mb-4" *ngIf="currentUser && activityData && zaakData.isStatic">
+                    <!-- Show activities if case is static -->
+                    <gu-activiteiten [zaak]="zaakData"
+                                     [currentUser]="currentUser"
+                                     [activityData]="activityData">
+                    </gu-activiteiten>
                   </div>
 
                   <!-- Processes -->
-                  <gu-keten-processen *ngIf="currentUser"
+                  <gu-keten-processen *ngIf="currentUser && !zaakData.isStatic"
                                       [mainZaakUrl]="mainZaakUrl"
                                       [currentUser]="currentUser"
                                       [bronorganisatie]="bronorganisatie"
@@ -177,15 +176,6 @@
         <!-- Modals -->
         <gu-modal [closeIcon]="true" id="add-person-modal" title="Toegang verlenen" size="small">
           <gu-toegang-verlenen [zaak]="zaakData" (reload)="permissionsUpdate()"></gu-toegang-verlenen>
-        </gu-modal>
-
-        <!-- Hide if case is closed and the user is not allowed to force edit -->
-        <gu-modal *ngIf="mainZaakUrl && activityData" [closeIcon]="true" id="activities-modal">
-          <gu-activiteiten *ngIf="currentUser && activityData"
-                           [zaak]="zaakData"
-                           [currentUser]="currentUser"
-                           [activityData]="activityData">
-          </gu-activiteiten>
         </gu-modal>
       </div>
     </div>

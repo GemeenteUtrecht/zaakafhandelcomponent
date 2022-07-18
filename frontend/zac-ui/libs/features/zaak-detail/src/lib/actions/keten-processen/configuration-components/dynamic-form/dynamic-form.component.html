@@ -55,14 +55,12 @@
         </ng-container>
       </div>
     </div>
-    <div class="d-flex justify-content-start">
-      <button gu-button
-              (click)="submitForm()"
-              [disabled]="!dynamicForm.valid || isSubmitting"
-              [loading]="isSubmitting">
-        Voltooien
-      </button>
-    </div>
+    <button gu-button
+            (click)="submitForm()"
+            [disabled]="!dynamicForm.valid || isSubmitting"
+            [loading]="isSubmitting">
+      Voltooien
+    </button>
   </form>
   <gu-message *ngIf="submitHasError" type="warn" [message]="submitErrorMessage">
   </gu-message>

@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { FormField, TaskContextData } from '../../../../../models/task-context';
-import { ApplicationHttpClient } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { DatePipe } from '@angular/common';
 import { ModalService } from '@gu/components';
@@ -38,9 +37,9 @@ export class DynamicFormComponent implements OnChanges {
   submitSuccess: boolean;
   submitHasError: boolean;
   submitErrorMessage: string;
+  showCloseCaseConfirmation = false;
 
   constructor(
-    private http: ApplicationHttpClient,
     private fb: FormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private modalService: ModalService,

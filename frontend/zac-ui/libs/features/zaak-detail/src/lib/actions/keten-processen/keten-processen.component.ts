@@ -52,6 +52,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
   data: KetenProcessen[];
   allTaskData: Task[];
+  nVisibleTaskData: number;
   processInstanceId: string;
 
   debugTask: Task = null;
@@ -82,6 +83,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   showOverlay: boolean;
   showActions: boolean;
 
+  closeCaseTask: Task;
+
   constructor(
     public ketenProcessenService: KetenProcessenService,
     private zaakService: ZaakService,
@@ -89,7 +92,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     private modalService: ModalService,
     private userService: UserService,
     private route: ActivatedRoute,
-    private cdRef: ChangeDetectorRef
   ) {
   }
 
@@ -109,8 +111,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       }
     });
 
-    this.showOverlay = !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
-    this.showActions = !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+    this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
+    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
   }
 
   /**
@@ -205,6 +207,14 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
+   * Set task that is responsible for closing the case.
+   * @param {Task[]} data
+   */
+  setCloseCaseTask(data: Task[]) {
+    this.closeCaseTask = data.find(({formKey}) => formKey === 'zac:zetResultaat');
+  }
+
+  /**
    * Fetch all the related processes from the zaak.
    * @param {boolean} [openTask=false] Whether to automatically execute a newly created task (task not already known).
    */
@@ -277,16 +287,20 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   updateProcessData(data) {
     // Update data.
     this.data = data;
+    console.log(data);
     this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
+    console.log(this.allTaskData);
+    this.setCloseCaseTask(this.allTaskData);
 
     // Process instance ID for API calls
     this.processInstanceId = data.length > 0 ? data[0].id : null;
 
+    // Emit number of tasks
+    this.nVisibleTaskData = this.closeCaseTask ? this.allTaskData.length - 1 : this.allTaskData.length
+    this.nTaskDataEvent.emit(this.nVisibleTaskData);
+
     // Trigger update in parent
     this.update.emit(data);
-
-    // Emit number of tasks
-    this.nTaskDataEvent.emit(this.allTaskData.length);
   }
 
   /**

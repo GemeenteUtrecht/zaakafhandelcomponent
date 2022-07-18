@@ -1,0 +1,45 @@
+<h4>Zaak afsluiten</h4>
+<p>Selecteer een resultaat om de zaak af te sluiten. Alle openstaande acties en activiteiten worden beëindigd.</p>
+<ng-container *ngIf="setResultForm">
+  <div class="row">
+    <div class="col-md-8 col-lg-6 m-auto">
+      <gu-multiselect *ngIf="formItems"
+                      [control]="resultControl"
+                      [items]="formItems"
+                      [multiple]="false"
+                      [required]="true"
+                      bindLabel="label"
+                      bindValue="value"
+                      label="Resultaat"
+                      class="mb-4"
+      >
+      </gu-multiselect>
+      <div class="d-flex justify-content-end mb-2">
+        <button *ngIf="!showCloseCaseConfirmation"
+                gu-button
+                (click)="checkSubmitForm()"
+                [disabled]="!setResultForm.valid || isSubmitting"
+                [loading]="isSubmitting">
+          Versturen
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-container>
+<div *ngIf="showCloseCaseConfirmation" class="row">
+  <div class="col-md-8 col-lg-6 m-auto">
+    <p>Weet je zeker dat je deze zaak wilt afsluiten?<br><strong>Alle openstaande acties en activiteiten worden beëindigd.</strong></p>
+    <div class="d-flex justify-content-end">
+      <button gu-button buttonStyle="secondary" size="small" class="mr-2" (click)="showCloseCaseConfirmation = false; resultControl.enable()">Annuleren</button>
+      <button gu-button
+              buttonStyle="primary"
+              size="small"
+              (click)="putForm()"
+              [disabled]="isSubmitting"
+              [loading]="isSubmitting"
+      >
+        Bevestigen
+      </button>
+    </div>
+  </div>
+</div>

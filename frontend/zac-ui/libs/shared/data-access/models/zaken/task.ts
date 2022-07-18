@@ -15,6 +15,7 @@ export interface Task {
   assignee: Assignee;
   assigneeType: 'user' | 'group';
   canCancelTask: boolean;
+  formKey: string;
 }
 
 export interface UserTask {

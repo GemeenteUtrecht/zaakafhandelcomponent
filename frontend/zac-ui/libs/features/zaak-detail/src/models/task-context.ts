@@ -90,7 +90,12 @@ export interface Context {
   openInNewWindow?: boolean,
   benodigdeBijlagen?: BenodigdeBijlage[],
   benodigdeRollen?: BenodigdeRol[],
-  benodigdeZaakeigenschappen?: BenodigdeZaakeigenschap[]
+  benodigdeZaakeigenschappen?: BenodigdeZaakeigenschap[],
+  activiteiten: any[],
+  checklistVragen: any[],
+  resultaattypen: any[],
+  taken: any[],
+  verzoeken: any[]
 }
 
 export interface TaskContextData {
