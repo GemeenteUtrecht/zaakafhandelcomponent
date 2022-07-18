@@ -16,7 +16,7 @@
                 </a>
               </span>
             </gu-checkbox>
-            <div>
+            <div class="mb-2">
               <p class="d-inline">Documenttype: <strong>{{taskContextData.context.documents[i].documentType}}</strong></p>
               <button gu-button *ngIf="!openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Documenttype wijzigen</button>
               <button gu-button *ngIf="openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="closeDocumentTypeSelector(i)">Sluiten</button>
@@ -39,6 +39,9 @@
                   </div>
                 </div>
               </ng-container>
+              <mat-error *ngIf="documentType(i).invalid">
+                Dit documenttype bestaat niet in het vervolgproces. Selecteer een documenttype met "Documenttype wijzigen".
+              </mat-error>
             </div>
           </div>
         </div>

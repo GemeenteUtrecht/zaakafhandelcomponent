@@ -20,6 +20,7 @@ import { RoleStepComponent } from './configuration-components/start-process/role
 import { PropertiesStepComponent } from './configuration-components/start-process/properties-step/properties-step.component';
 import { DocumentsStepComponent } from './configuration-components/start-process/documents-step/documents-step.component';
 import { SetResultComponent } from './configuration-components/set-result/set-result.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { SetResultComponent } from './configuration-components/set-result/set-re
     ReactiveFormsModule,
     SharedUiComponentsModule,
     MatProgressBarModule,
-    SharedUtilsModule
+    SharedUtilsModule,
+    MatFormFieldModule
   ],
   exports: [
     KetenProcessenComponent
