@@ -4,6 +4,8 @@ import {DocumentenService, ZaakService} from '@gu/services';
 import { ModalService, SnackbarService } from '@gu/components';
 import { catchError, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 
 /**
  * <gu-documenten [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-documenten>
@@ -48,11 +50,15 @@ export class DocumentenComponent implements OnChanges {
   selectedDocumentUrl: string;
 
   constructor(
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+    private location: Location,
     private documentenService: DocumentenService,
     private modalService: ModalService,
     private zaakService: ZaakService,
     private snackbarService: SnackbarService
-  ) { }
+  ) {
+  }
 
   ngOnChanges(): void {
     this.fetchDocuments()
@@ -65,21 +71,9 @@ export class DocumentenComponent implements OnChanges {
     this.fetchDocuments();
   }
 
-  /**
-   * Show an alert if the user refreshes or closes the browser without saving the edited documents.
-   * Only fires if the user has had activity on the documents component.
-   * @param $event
-   */
-  @HostListener('window:beforeunload', ['$event'])
-  warnDocsInEditMode($event) {
-    // Check if there are any documents in edit mode
-    const hasOpenDoc = this.documentsData?.some((doc: Document) => doc.currentUserIsEditing);
-    if (hasOpenDoc) {
-      this.snackbarService.openSnackBar(this.alertText, 'Sluiten', 'warn', 10);
-      $event.preventDefault();
-      $event.returnValue = this.alertText;
-    }
-  }
+  //
+  // Context
+  //
 
   /**
    * Fetch all the documents related to the case.
@@ -91,6 +85,7 @@ export class DocumentenComponent implements OnChanges {
       this.tableData = this.documentenService.formatTableData(data, this.tableHead, this.zaak);
       this.documentsData = data;
 
+      this.handleQueryParam();
       this.isLoading = false;
     }, res => {
       const message = res.error.detail || this.errorMessage;
@@ -100,27 +95,15 @@ export class DocumentenComponent implements OnChanges {
   }
 
   /**
-   * Chains the button action to the matching function
-   * @param {object} action
+   * Open modal according to query param
    */
-  handleTableButtonOutput(action: object) {
-    const actionType = Object.keys(action)[0];
-    const actionUrl = action[actionType];
-
-    switch (actionType) {
-      case 'bestandsnaam':
-        this.patchDocumentName(actionUrl);
-        break;
-      case 'lezen':
-        this.readDocument(actionUrl);
-        break;
-      case 'bewerken':
-        this.editDocument(actionUrl);
-        break;
-      case 'overschrijven':
-        this.patchDocument(actionUrl);
-        break;
-    }
+  handleQueryParam() {
+    this.activatedRoute.queryParams.subscribe(queryParams => {
+      const modalParam = queryParams['modal'];
+      if (modalParam) {
+        this.openModal(modalParam);
+      }
+    });
   }
 
   /**
@@ -235,12 +218,78 @@ export class DocumentenComponent implements OnChanges {
       })
   }
 
+  //
+  // Events.
+  //
+
+  /**
+   * Show an alert if the user refreshes or closes the browser without saving the edited documents.
+   * Only fires if the user has had activity on the documents component.
+   * @param $event
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  warnDocsInEditMode($event) {
+    // Check if there are any documents in edit mode
+    const hasOpenDoc = this.documentsData?.some((doc: Document) => doc.currentUserIsEditing);
+    if (hasOpenDoc) {
+      this.snackbarService.openSnackBar(this.alertText, 'Sluiten', 'warn', 10);
+      $event.preventDefault();
+      $event.returnValue = this.alertText;
+    }
+  }
+
+  /**
+   * Removes all query params
+   */
+  removeQueryParam() {
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: { modal: null, tab: null },
+        queryParamsHandling: 'merge'
+      }
+    );
+  }
+
+  /**
+   * Chains the button action to the matching function
+   * @param {object} action
+   */
+  handleTableButtonOutput(action: object) {
+    const actionType = Object.keys(action)[0];
+    const actionUrl = action[actionType];
+
+    switch (actionType) {
+      case 'bestandsnaam':
+        this.patchDocumentName(actionUrl);
+        break;
+      case 'lezen':
+        this.readDocument(actionUrl);
+        break;
+      case 'bewerken':
+        this.editDocument(actionUrl);
+        break;
+      case 'overschrijven':
+        this.patchDocument(actionUrl);
+        break;
+    }
+  }
+
   /**
    * Open a modal.
    * @param {string} id
    */
   openModal(id: string) {
     this.modalService.open(id);
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: { modal: id },
+        queryParamsHandling: 'merge'
+      }
+    );
   }
 
   /**

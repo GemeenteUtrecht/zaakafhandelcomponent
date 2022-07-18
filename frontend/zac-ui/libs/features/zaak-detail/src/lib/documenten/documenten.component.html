@@ -39,6 +39,7 @@
 <!-- Add document -->
 <gu-modal id="document-toevoegen-modal"
           [closeIcon]="true"
+          (onClose)="removeQueryParam()"
           title="Document toevoegen"
           size="big">
   <gu-document-toevoegen-contezza [zaak]="zaak"
@@ -50,6 +51,7 @@
 <!-- Change document name -->
 <gu-modal id="bestandseigenschappen-wijzigen-modal"
           [closeIcon]="true"
+          (onClose)="removeQueryParam()"
           size="small">
   <gu-document-wijzigen [zaak]="zaak"
                         [selectedDocument]="selectedDocument"
@@ -61,6 +63,7 @@
 <!-- Change document file -->
 <gu-modal id="document-overschrijven-modal"
           [closeIcon]="true"
+          (onClose)="removeQueryParam()"
           title="Document overschrijven"
           size="big">
   <gu-document-toevoegen [zaak]="zaak"
