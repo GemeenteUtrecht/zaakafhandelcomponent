@@ -25,7 +25,7 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -623,7 +623,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                     "spec": {
                         "type": "number",
                         "enum": [
-                            {"label": "3", "value": 3},
+                            {"label": "3", "value": 3.0},
                             {"label": "4.0", "value": 4.0},
                         ],
                     },
