@@ -1080,7 +1080,9 @@ class EigenschappenView(ListAPIView):
                 queryset=ProcessEigenschap.objects.prefetch_related(
                     Prefetch(
                         "processeigenschapchoice_set",
-                        queryset=ProcessEigenschapChoice.objects.all(),
+                        queryset=ProcessEigenschapChoice.objects.all().order_by(
+                            "label"
+                        ),
                     )
                 ).all(),
             )
