@@ -19,6 +19,7 @@ zgw-consumers[drf]~=0.16.0
 
 # Framework libraries
 Django
+django-admin-index
 django-auth-adfs-db
 django-axes
 django-better-admin-arrayfield
