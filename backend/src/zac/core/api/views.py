@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import Prefetch
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -19,7 +18,6 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import (
     authentication,
     exceptions,
-    generics,
     permissions,
     serializers,
     status,
@@ -55,11 +53,7 @@ from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
 
 from ..cache import invalidate_zaak_cache, invalidate_zaakobjecten_cache
-from ..camunda.start_process.models import (
-    CamundaStartProcess,
-    ProcessEigenschap,
-    ProcessEigenschapChoice,
-)
+from ..camunda.start_process.utils import get_camunda_start_form_for_zaaktypen
 from ..services import (
     create_document,
     create_rol,
@@ -1074,22 +1068,7 @@ class EigenschappenView(ListAPIView):
         if not zaaktypen:
             return Response([])
 
-        process_forms = CamundaStartProcess.objects.prefetch_related(
-            Prefetch(
-                "processeigenschap_set",
-                queryset=ProcessEigenschap.objects.prefetch_related(
-                    Prefetch(
-                        "processeigenschapchoice_set",
-                        queryset=ProcessEigenschapChoice.objects.all().order_by(
-                            "label"
-                        ),
-                    )
-                ).all(),
-            )
-        ).filter(
-            zaaktype_catalogus__in=[zt.catalogus for zt in zaaktypen],
-            zaaktype_identificatie__in=[zt.identificatie for zt in zaaktypen],
-        )
+        process_forms = get_camunda_start_form_for_zaaktypen(zaaktypen)
 
         if process_forms.exists():
             eigenschappen = process_forms[0].eigenschappen

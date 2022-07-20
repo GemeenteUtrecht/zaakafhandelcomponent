@@ -74,7 +74,7 @@ from .utils import (
     ValidExpandChoices,
     ValidFieldChoices,
 )
-from .validators import ZaakFileValidator
+from .validators import EigenschapKeuzeWaardeValidator, ZaakFileValidator
 
 
 class InformatieObjectTypeSerializer(APIModelSerializer):
@@ -689,6 +689,7 @@ class CharValueSerializer(APIModelSerializer):
     waarde = serializers.CharField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
+        validators=(EigenschapKeuzeWaardeValidator(),),
     )
 
     class Meta:
@@ -704,6 +705,7 @@ class NumberValueSerializer(APIModelSerializer):
         max_digits=100,
         decimal_places=2,
         rounding=ROUND_05UP,
+        validators=(EigenschapKeuzeWaardeValidator(),),
     )
 
     class Meta:
@@ -715,6 +717,7 @@ class DateValueSerializer(APIModelSerializer):
     waarde = serializers.DateField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
+        validators=(EigenschapKeuzeWaardeValidator(),),
     )
 
     class Meta:
@@ -726,6 +729,7 @@ class DateTimeValueSerializer(APIModelSerializer):
     waarde = serializers.DateTimeField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
+        validators=(EigenschapKeuzeWaardeValidator(),),
     )
 
     class Meta:
@@ -761,7 +765,9 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
             "formaat",
             "eigenschap",
         )
-        extra_kwargs = {"url": {"read_only": True}}
+        extra_kwargs = {
+            "url": {"read_only": True},
+        }
 
 
 class CreateZaakEigenschapSerializer(serializers.Serializer):
@@ -773,7 +779,8 @@ class CreateZaakEigenschapSerializer(serializers.Serializer):
     waarde = serializers.CharField(
         help_text=_(
             "Value of ZAAKEIGENSCHAP. Must be able to be formatted as defined by the EIGENSCHAP spec."
-        )
+        ),
+        validators=(EigenschapKeuzeWaardeValidator(),),
     )
     zaak_url = serializers.URLField(help_text=_("URL-reference to ZAAK."))
 
