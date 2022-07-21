@@ -13,7 +13,7 @@
     </div>
   </header>
   <nav class="vertical-nav" [ngClass]="{'expanded': expanded === true}" (click)="toggle()">
-    <a class="mobile-menu-back menu-item menu-link d-lg-none" aria-label="Menuknop" (click)="toggle()">
+    <a class="mobile-menu-back menu-item menu-link d-lg-none" aria-label="Menuknop" (click)="toggle(false)">
       <gu-icon fontSize="50">arrow_back</gu-icon>
       Ga terug
     </a>
@@ -54,12 +54,15 @@
         </ng-container>
       </div>
     </div>
-    <p class="logged-in-user ml-2 mb-0">Ingelogd als:
-      <br>
-      <strong>{{currentUser?.fullName ? currentUser?.fullName : currentUser?.username}}</strong>
-    </p>
-    <button gu-button class="logout-button" buttonStyle="tertiary" size="small" (click)="logOutEvent()">
-      Uitloggen
-    </button>
+
+    <a class="menu-item menu-link"
+       (click)="logOutEvent()"
+       (mouseenter)="isUserLabelHovered=true"
+       (mouseleave)="isUserLabelHovered=false"
+    >
+      <gu-icon *ngIf="isUserLabelHovered">logout</gu-icon>
+      <gu-icon *ngIf="!isUserLabelHovered">person</gu-icon>
+      <span class="menu-item__label">{{getUserLabel()}}</span>
+    </a>
   </nav>
 </div>

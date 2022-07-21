@@ -31,6 +31,7 @@ import { MetaService } from '@gu/services';
 @Component({
   selector: 'gu-property-search-form',
   templateUrl: './property-search-form.component.html',
+  styleUrls: ['./property-search-form.component.scss'],
 })
 export class PropertySearchFormComponent implements OnInit, OnChanges {
   @Input() sortData: TableSort;

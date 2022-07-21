@@ -15,6 +15,11 @@
     white-space: normal;
   }
 
+  .mat-header-row,
+  &__row {
+    height: 2em;
+  }
+
   &__row--expandable &__cell--expandable-toggle .mat-icon {
     cursor: pointer;
     transform-origin: center;
