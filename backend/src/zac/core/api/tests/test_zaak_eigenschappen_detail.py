@@ -14,6 +14,11 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.core.camunda.start_process.tests.factories import (
+    CamundaStartProcessFactory,
+    ProcessEigenschapChoiceFactory,
+    ProcessEigenschapFactory,
+)
 from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -175,11 +180,15 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
                 "waarde": "10",
             },
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json(),
             {
-                "detail": "EIGENSCHAP met naam some-other-property werd niet gevonden voor ZAAKTYPE http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60."
+                "waarde": [
+                    "EIGENSCHAP met `naam`: `some-other-property` bestaat niet voor ZAAKTYPE met `omschrijving`: `{omschrijving}` van ZAAK met `identificatie`: `ZAAK-2020-0010`.".format(
+                        omschrijving=self.zaaktype["omschrijving"]
+                    )
+                ]
             },
         )
 
@@ -540,6 +549,123 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue("waarde" in response.json())
+
+    def test_patch_zaak_eigenschap_waarde_not_found_in_waardenverzameling(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            url=f"{CATALOGI_ROOT}eigenschappen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            zaaktype=self.zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "getal",
+                "lengte": "2",
+                "kardinaliteit": "1",
+                "waardenverzameling": [1, 2, 3],
+            },
+        )
+        zaak_eigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            url=ZAAK_EIGENSCHAP_URL,
+            zaak=ZAAK_URL,
+            eigenschap=eigenschap["url"],
+            naam=eigenschap["naam"],
+            waarde="4",
+        )
+
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, zaak_eigenschap)
+        mock_resource_get(m, eigenschap)
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
+
+        response = self.client.patch(self.endpoint, data={"waarde": 4})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "waarde": [
+                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` krijgen uit: `[1, 2, 3]`. Gegeven `waarde`: `4.00`."
+                ]
+            },
+        )
+
+    def test_patch_zaak_eigenschap_waarde_not_found_in_camundastartforms(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            url=f"{CATALOGI_ROOT}eigenschappen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            zaaktype=self.zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "getal",
+                "lengte": "2",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+        )
+        zaak_eigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            url=ZAAK_EIGENSCHAP_URL,
+            zaak=ZAAK_URL,
+            eigenschap=eigenschap["url"],
+            naam=eigenschap["naam"],
+            waarde="4",
+        )
+
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, zaak_eigenschap)
+        mock_resource_get(m, eigenschap)
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
+
+        camunda_start_process = CamundaStartProcessFactory.create(
+            zaaktype_identificatie=self.zaaktype["identificatie"],
+            zaaktype_catalogus=self.zaaktype["catalogus"],
+        )
+        process_eigenschap = ProcessEigenschapFactory.create(
+            camunda_start_process=camunda_start_process,
+            eigenschapnaam=eigenschap["naam"],
+            label="some-eigenschap",
+            required=False,
+        )
+        ProcessEigenschapChoiceFactory.create(
+            process_eigenschap=process_eigenschap,
+            label="1",
+            value="1",
+        )
+        ProcessEigenschapChoiceFactory.create(
+            process_eigenschap=process_eigenschap,
+            label="2",
+            value="2",
+        )
+
+        response = self.client.patch(self.endpoint, data={"waarde": 4})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "waarde": [
+                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` krijgen uit: `['1', '2']`. Gegeven `waarde`: `4.00`."
+                ]
+            },
+        )
 
     def test_patch_without_url(self, m):
         endpoint = reverse("zaak-properties-detail")

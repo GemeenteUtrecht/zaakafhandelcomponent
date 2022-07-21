@@ -68,6 +68,9 @@ export class MultiselectComponent implements OnInit, OnChanges {
    * @return {boolean}
    */
   getAllChecked(): boolean {
+    if(this.widgetType !== 'checkboxGroup') {
+      return false;
+    }
     return this.items.every((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
   }
 
@@ -166,6 +169,8 @@ export class MultiselectComponent implements OnInit, OnChanges {
    * @returns {boolean}
    */
   compareWith(item, selected) {
-    return item.value?.omschrijving ? item.value.omschrijving === selected.omschrijving : false;
+    return item.value?.omschrijving
+      ? item.value.omschrijving === selected.omschrijving
+      : item[this.bindValue] === selected;
   }
 }

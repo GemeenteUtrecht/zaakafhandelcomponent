@@ -3,11 +3,18 @@ from typing import List
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import exceptions
+from rest_framework import exceptions, serializers
 
-from zac.core.services import get_documenten
+from zac.core.services import (
+    get_documenten,
+    get_eigenschap,
+    get_eigenschappen,
+    get_zaak,
+    get_zaaktype,
+)
 from zgw.models.zrc import Zaak
 
+from ..camunda.start_process.utils import get_camunda_start_form_for_zaaktypen
 from .constants import ACCEPTABLE_CONTENT_TYPES, RE_PROG
 
 
@@ -60,4 +67,83 @@ class ZaakFileValidator:
             raise exceptions.ValidationError(
                 f"File format not allowed. Please use one of the following file formats: {', '.join(ACCEPTABLE_CONTENT_TYPES)}."
             )
+        return value
+
+
+class EigenschapKeuzeWaardeValidator:
+    requires_context = True
+    message = _(
+        "ZAAKEIGENSCHAP with `naam`: `{naam}` must take a value from `{choices}`. Given `waarde`: `{waarde}`."
+    )
+
+    def _validate_waarde_from_spec_or_camunda_forms(self, eigenschap, waarde):
+        process_forms = get_camunda_start_form_for_zaaktypen([eigenschap.zaaktype])
+        if process_forms.exists():
+            processeigenschap = process_forms[0].processeigenschap_set.filter(
+                eigenschapnaam=eigenschap.naam
+            )
+            if processeigenschap.exists() and processeigenschap[0].is_multiple_choice:
+                if waarde not in processeigenschap[0].valid_choice_values:
+                    raise serializers.ValidationError(
+                        self.message.format(
+                            naam=eigenschap.naam,
+                            choices=list(processeigenschap[0].valid_choice_values),
+                            waarde=waarde,
+                        )
+                    )
+        else:
+            if (
+                eigenschap.specificatie.waardenverzameling
+                and waarde not in eigenschap.specificatie.waardenverzameling
+            ):
+                raise serializers.ValidationError(
+                    self.message.format(
+                        naam=eigenschap.naam,
+                        choices=eigenschap.specificatie.waardenverzameling,
+                        waarde=waarde,
+                    )
+                )
+
+    def __call__(self, value, field: serializers.Field):
+        if not (instance := getattr(field.parent, "instance", None)):
+            data = field.parent.initial_data
+            naam = data["naam"]
+            zaak = get_zaak(zaak_url=data["zaak_url"])
+            zaaktype = get_zaaktype(zaak.zaaktype)
+            eigenschappen = get_eigenschappen(zaaktype)
+            try:
+                eigenschap = next(
+                    (
+                        eigenschap
+                        for eigenschap in eigenschappen
+                        if eigenschap.naam == naam
+                    )
+                )
+            except StopIteration:
+                raise serializers.ValidationError(
+                    _(
+                        "EIGENSCHAP with `naam`: `{naam}` not found for ZAAKTYPE with `omschrijving`: `{omschrijving}` of ZAAK with `identificatie`: `{identificatie}`."
+                    ).format(
+                        naam=naam,
+                        omschrijving=zaaktype.omschrijving,
+                        identificatie=zaak.identificatie,
+                    )
+                )
+
+            eigenschap.zaaktype = zaaktype
+
+        else:
+            eigenschap = (
+                get_eigenschap(instance.eigenschap)
+                if isinstance(instance.eigenschap, str)
+                else instance.eigenschap
+            )
+            eigenschap.zaaktype = (
+                get_zaaktype(eigenschap.zaaktype)
+                if isinstance(eigenschap.zaaktype, str)
+                else eigenschap.zaaktype
+            )
+
+        self._validate_waarde_from_spec_or_camunda_forms(eigenschap, value)
+
         return value

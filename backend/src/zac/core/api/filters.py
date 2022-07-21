@@ -24,10 +24,10 @@ class EigenschappenFilterSet(ApiFilterSet):
     zaaktype = fields.URLField(
         required=False, help_text=_("URL-reference of related ZAAKTYPE")
     )
-    zaaktype_omschrijving = fields.CharField(
+    zaaktype_identificatie = fields.CharField(
         required=False,
         help_text=_(
-            "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
+            "`identificatie` of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
         ),
     )
     catalogus = fields.URLField(
@@ -36,20 +36,20 @@ class EigenschappenFilterSet(ApiFilterSet):
 
     def is_valid(self):
         zt = self.data.get("zaaktype")
-        zto = self.data.get("zaaktype_omschrijving")
+        zti = self.data.get("zaaktype_identificatie")
         cat = self.data.get("catalogus")
 
         if zt:
-            if zto or cat:
+            if zti or cat:
                 raise exceptions.ValidationError(
                     _(
-                        "ZAAKTYPE is mutually exclusive from (zaaktype_omschrijving and CATALOGUS)."
+                        "ZAAKTYPE is mutually exclusive from (`zaaktype_identificatie` and CATALOGUS)."
                     )
                 )
-        elif not (zto and cat):
+        elif not (zti and cat):
             raise exceptions.ValidationError(
                 _(
-                    "The CATALOGUS and zaaktype_omschrijving are both required if one is given."
+                    "The CATALOGUS and `zaaktype_identificatie` are both required if one is given."
                 )
             )
         return super().is_valid()

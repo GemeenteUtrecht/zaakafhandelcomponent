@@ -113,10 +113,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Optional applications.
+    "django_admin_index",
+    "ordered_model",
     "django.contrib.admin",
     # 'django.contrib.admindocs',
     # 'django.contrib.humanize',
     # External applications.
+    # organize admin
     "solo",
     "axes",
     "corsheaders",
@@ -470,6 +473,13 @@ SPECTACULAR_SETTINGS = {
         "VertrouwelijkheidaanduidingEnum": "zgw_consumers.api_models.constants.VertrouwelijkheidsAanduidingen",
     },
 }
+
+#
+# Django-Admin-Index
+#
+ADMIN_INDEX_SHOW_REMAINING_APPS = True
+ADMIN_INDEX_AUTO_CREATE_APP_GROUP = True
+ADMIN_INDEX_HIDE_APP_INDEX_PAGES = True
 
 # URLs from which DRF spectacular retrieves API schemas
 

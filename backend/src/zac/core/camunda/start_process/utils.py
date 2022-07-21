@@ -1,6 +1,9 @@
 from typing import List
 
+from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
+
+from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.api.context import ZaakContext
 from zac.core.services import (
@@ -15,6 +18,7 @@ from zac.core.services import (
 from .models import (
     CamundaStartProcess,
     ProcessEigenschap,
+    ProcessEigenschapChoice,
     ProcessInformatieObject,
     ProcessRol,
 )
@@ -114,3 +118,21 @@ def get_required_zaakeigenschappen(
             required_process_eigenschappen.append(ei)
 
     return required_process_eigenschappen
+
+
+def get_camunda_start_form_for_zaaktypen(zten: List[ZaakType]):
+    process_forms = CamundaStartProcess.objects.prefetch_related(
+        Prefetch(
+            "processeigenschap_set",
+            queryset=ProcessEigenschap.objects.prefetch_related(
+                Prefetch(
+                    "processeigenschapchoice_set",
+                    queryset=ProcessEigenschapChoice.objects.all().order_by("label"),
+                )
+            ).all(),
+        )
+    ).filter(
+        zaaktype_catalogus__in=[zt.catalogus for zt in zten],
+        zaaktype_identificatie__in=[zt.identificatie for zt in zten],
+    )
+    return process_forms

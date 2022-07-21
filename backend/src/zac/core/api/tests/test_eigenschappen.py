@@ -15,12 +15,17 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.core.camunda.start_process.tests.factories import (
+    CamundaStartProcessFactory,
+    ProcessEigenschapChoiceFactory,
+    ProcessEigenschapFactory,
+)
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -49,7 +54,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
                 "formaat": "tekst",
                 "lengte": "3",
                 "kardinaliteit": "1",
-                "waardenverzameling": ["aaa", "bbb"],
+                "waardenverzameling": [],
             },
         )
 
@@ -71,7 +76,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT1"}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -112,7 +117,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT1"}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -138,7 +143,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT1"}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -172,7 +177,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT1"}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -255,7 +260,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT1"}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -271,7 +276,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 3,
-                        "enum": ["aaa", "bbb"],
+                        "enum": [
+                            {"label": "aaa", "value": "aaa"},
+                            {"label": "bbb", "value": "bbb"},
+                        ],
                     },
                 }
             ],
@@ -298,7 +306,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "formaat": "getal",
                 "lengte": "1",
                 "kardinaliteit": "1",
-                "waardenverzameling": [1, 2],
+                "waardenverzameling": [1.0, 2],
             },
         )
 
@@ -314,7 +322,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT1"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT1"}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -328,7 +336,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                     "name": "some-property",
                     "spec": {
                         "type": "number",
-                        "enum": [1, 2],
+                        "enum": [
+                            {"label": "1.0", "value": 1.0},
+                            {"label": "2", "value": 2},
+                        ],
                     },
                 }
             ],
@@ -339,7 +350,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             self.endpoint,
             {
                 "catalogus": "some-url",
-                "zaaktype_omschrijving": "ZT1",
+                "zaaktype_identificatie": "ZT1",
                 "zaaktype": "some-zaaktype",
             },
         )
@@ -348,7 +359,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(
             response.json(),
             [
-                "ZAAKTYPE en (zaaktype_omschrijving en CATALOGUS) zijn elkaar uitsluitend."
+                "ZAAKTYPE en (`zaaktype_identificatie` en CATALOGUS) zijn elkaar uitsluitend."
             ],
         )
 
@@ -359,13 +370,13 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(
             response.json(),
             [
-                "De CATALOGUS en zaaktype_omschrijving zijn beide vereist als 1 is opgegeven."
+                "De CATALOGUS en `zaaktype_identificatie` zijn beide vereist als 1 is opgegeven."
             ],
         )
 
     def test_get_eigenschappen_with_invalid_query_param(self):
         response = self.client.get(
-            self.endpoint, {"catalogus": "some-url", "zaaktype_omschrijving": "ZT1"}
+            self.endpoint, {"catalogus": "some-url", "zaaktype_identificatie": "ZT1"}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"catalogus": ["Voer een geldige URL in."]})
@@ -437,7 +448,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT"}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -453,7 +464,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 3,
-                        "enum": ["aaa", "bbb"],
+                        "enum": [
+                            {"label": "aaa", "value": "aaa"},
+                            {"label": "bbb", "value": "bbb"},
+                        ],
                     },
                 }
             ],
@@ -523,7 +537,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
 
         response = self.client.get(
-            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_omschrijving": "ZT"}
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT"}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -534,4 +548,85 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(data[0]["name"], "some-property")
         m_logger.warning.assert_called_with(
             "Eigenschappen 'some-property' which belong to zaaktype 'ZT' have different specs"
+        )
+
+    @requests_mock.Mocker()
+    def test_get_eigenschappen_specification_from_startcamundaprocess(self, m):
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "getal",
+                "lengte": "1",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+        )
+
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, zaaktype)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
+            json=paginated_response([zaaktype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
+
+        camunda_start_process = CamundaStartProcessFactory.create(
+            zaaktype_identificatie=zaaktype["identificatie"],
+            zaaktype_catalogus=zaaktype["catalogus"],
+        )
+        process_eigenschap = ProcessEigenschapFactory.create(
+            camunda_start_process=camunda_start_process,
+            eigenschapnaam=eigenschap["naam"],
+            label="some-eigenschap",
+            required=False,
+        )
+        ProcessEigenschapChoiceFactory.create(
+            process_eigenschap=process_eigenschap,
+            label="3",
+            value="3",
+        )
+        ProcessEigenschapChoiceFactory.create(
+            process_eigenschap=process_eigenschap,
+            label="4.0",
+            value="4.0",
+        )
+
+        response = self.client.get(
+            self.endpoint, {"catalogus": CATALOGUS_URL, "zaaktype_identificatie": "ZT1"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            data,
+            [
+                {
+                    "name": "some-property",
+                    "spec": {
+                        "type": "number",
+                        "enum": [
+                            {"label": "3", "value": 3.0},
+                            {"label": "4.0", "value": 4.0},
+                        ],
+                    },
+                }
+            ],
         )

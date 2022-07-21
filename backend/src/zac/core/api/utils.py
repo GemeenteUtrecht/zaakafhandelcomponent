@@ -103,6 +103,13 @@ def convert_eigenschap_spec_to_json_schema(spec) -> dict:
         json_schema.update({"min_length": 1, "max_length": int(spec.lengte)})
 
     if spec.waardenverzameling:
-        json_schema.update({"enum": spec.waardenverzameling})
+        waardenverzameling = []
+        for opt in spec.waardenverzameling:
+            if type(opt) in [list, tuple] and len(opt) == 2:
+                waarde = {"label": opt[0], "value": opt[1]}
+            else:
+                waarde = {"label": opt, "value": opt}
+            waardenverzameling.append(waarde)
+        json_schema.update({"enum": waardenverzameling})
 
     return json_schema

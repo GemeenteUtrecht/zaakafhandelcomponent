@@ -31,6 +31,7 @@ diff-match-patch==20181111
 django==3.2.12
     # via
     #   -r requirements/base.in
+    #   django-admin-index
     #   django-appconf
     #   django-auth-adfs
     #   django-auth-adfs-db
@@ -51,6 +52,8 @@ django==3.2.12
     #   drf-spectacular
     #   scim2-filter-parser
     #   zgw-consumers
+django-admin-index==2.0.2
+    # via -r requirements/base.in
 django-appconf==1.0.3
     # via django-axes
 django-auth-adfs==1.6.1
@@ -89,6 +92,8 @@ django-ipware==2.1.0
     # via django-axes
 django-nested-admin==3.4.0
     # via -r requirements/base.in
+django-ordered-model==3.6
+    # via django-admin-index
 django-redis==5.2.0
     # via -r requirements/base.in
 django-relativedelta==1.1.1

@@ -18,7 +18,6 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import (
     authentication,
     exceptions,
-    generics,
     permissions,
     serializers,
     status,
@@ -54,6 +53,7 @@ from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
 
 from ..cache import invalidate_zaak_cache, invalidate_zaakobjecten_cache
+from ..camunda.start_process.utils import get_camunda_start_form_for_zaaktypen
 from ..services import (
     create_document,
     create_rol,
@@ -1032,6 +1032,12 @@ class EigenschappenView(ListAPIView):
     and returns the eigenschappen available for the aggregated set of zaaktype versions.
     Note that only the zaaktypen that the authenticated user has read-permissions for
     are considered.
+
+
+    #TODO Move away from camunda process forms to define EIGENSCHAP waardeverzameling
+
+
+    #TODO Move towards object(type)s APIs to define EIGENSCHAP waardeverzameling
     """
 
     authentication_classes = (authentication.SessionAuthentication,)
@@ -1051,17 +1057,30 @@ class EigenschappenView(ListAPIView):
                 zt,
                 user=request.user,
             )
-            if not zaaktype:
-                return Response([])
-
-            eigenschappen = get_eigenschappen(zaaktype)
-
+            zaaktypen = [zaaktype] if zaaktype else []
         else:
             zaaktypen = get_zaaktypen(
                 user=request.user,
                 catalogus=request.query_params.get("catalogus"),
-                omschrijving=request.query_params.get("zaaktype_omschrijving"),
+                identificatie=request.query_params.get("zaaktype_identificatie"),
             )
+
+        if not zaaktypen:
+            return Response([])
+
+        process_forms = get_camunda_start_form_for_zaaktypen(zaaktypen)
+
+        if process_forms.exists():
+            eigenschappen = process_forms[0].eigenschappen
+            for ei in eigenschappen:
+                for pei in process_forms[0].processeigenschap_set.all():
+                    if not ei.naam == pei.eigenschapnaam:
+                        continue
+                    else:
+                        if pei.is_multiple_choice:
+                            ei.specificatie.waardenverzameling = pei.choices
+
+        else:
             eigenschappen = get_eigenschappen_for_zaaktypen(zaaktypen)
 
         eigenschappen_data = [

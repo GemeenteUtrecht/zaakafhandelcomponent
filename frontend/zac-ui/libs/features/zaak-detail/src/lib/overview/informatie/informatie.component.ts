@@ -79,7 +79,7 @@ export class InformatieComponent implements OnInit, OnChanges {
   //
 
   /**
-   * Returns the field configurations for the form..
+   * Returns the field configurations for the form.
    */
   get form(): FieldConfiguration[] {
      return [
@@ -142,13 +142,14 @@ export class InformatieComponent implements OnInit, OnChanges {
       const type = (zaaktypeEigenschap.spec.format === 'date') ? 'date' : null;
 
       return {
+        choices: zaaktypeEigenschap.spec.enum,
         label: zaaktypeEigenschap.name,
         maxlength: 80,
         placeholder: '-',
         readonly: false,
         required: false,
         value: value,
-        type: type,
+        type: (zaaktypeEigenschap.spec.enum) ? 'select' : type,
       };
     })
   }
