@@ -164,10 +164,12 @@ export class AdviserenAccorderenComponent implements OnInit {
 
           'opgehaald': `${reviewRequestSummary.completed}/${reviewRequestSummary.numAssignedUsers}`,
 
-          'last_update': {
-            type: date === null ? 'text' : 'date',
-            date: String(date),
-          } as ExtensiveCell,
+          'last_update': reviewRequestSummary.locked
+            ? `Geannuleerd: ${reviewRequestSummary.lockReason}`
+            : {
+              type: date === null ? 'text' : 'date',
+              date: String(date),
+            } as ExtensiveCell,
 
           'cancel': showCancelButton ? {
             type: 'button',
