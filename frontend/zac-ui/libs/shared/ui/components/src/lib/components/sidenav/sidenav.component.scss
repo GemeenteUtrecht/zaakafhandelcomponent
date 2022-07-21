@@ -50,7 +50,6 @@
       }
       .logged-in-user {
         opacity: 0;
-        white-space: nowrap;
         padding: 5px 2px;
       }
       .logout-button {
@@ -147,7 +146,8 @@
   }
   .vertical-nav {
     position: absolute;
-    display: block;
+    display: flex;
+    flex-direction: column;
     letter-spacing: 0;
     top: 0;
     height: 100vh;
@@ -157,7 +157,6 @@
     z-index: 2;
     @include media-breakpoint-down(md) {
       position: absolute;
-      display: block;
       transform: translateX(-100%);
       pointer-events: all;
       background: $color-background-white;
@@ -179,10 +178,10 @@
       box-sizing: border-box;
       position: relative;
       display: flex;
+      flex-basis: 100%;
       overflow-x: hidden;
       flex-direction: column;
       justify-content: flex-start;
-      height: calc(100vh - 195px);
       @include media-breakpoint-down(md) {
         height: calc(100vh - calc(175px + 5.2rem));
       }
@@ -205,6 +204,7 @@
       box-sizing: border-box;
       position: relative;
       color: $color-text;
+      gap: 8px;
       word-break: break-word;
       &:hover {
         outline: none;
@@ -212,9 +212,7 @@
         color: $color-text-contrast;
       }
       gu-icon {
-        display: flex;
         align-items: center;
-        margin-right: 8px;
         text-align: center;
         vertical-align: middle;
         pointer-events: none;
@@ -231,8 +229,7 @@
       justify-content: flex-start;
       color: var(--text-default, #141416);
       text-decoration: none;
-      height: 58px;
-      padding: 0 12px;
+      padding: 8px 12px;
       &.selected {
         background-color: $color-background-white;
         color: $color-primary;
@@ -268,4 +265,9 @@
     display: flex;
     margin-left: auto;
   }
+}
+
+:host gu-icon {
+  display: inline-flex;
+  font-size: 1em;
 }

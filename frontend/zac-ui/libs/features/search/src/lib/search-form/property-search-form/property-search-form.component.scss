@@ -1,0 +1,12 @@
+:host {
+  position: relative;
+
+  .property-search-form__toolbar {
+  }
+
+  .property-search-form__toolbar > * {
+    align-items: center;
+    display: flex;
+    white-space: nowrap;
+  }
+}

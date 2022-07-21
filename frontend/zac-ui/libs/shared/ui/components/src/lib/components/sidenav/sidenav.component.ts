@@ -31,6 +31,9 @@ export class SidenavComponent {
 
   expanded = this.getExpandedCache();
 
+  /** @const {boolean} Whether the user label is hovered. */
+  isUserLabelHovered = false;
+
   //
   // Getters / setters.
   //
@@ -60,12 +63,30 @@ export class SidenavComponent {
   }
 
   /**
-   * Toggle navigation bar.
+   * Returns the label for the user menu item.
    */
-  toggle() {
-    const newValue = !this.expanded;
+  getUserLabel(): string {
+    if (this.isUserLabelHovered) {
+      return 'Uitloggen';
+    }
+    return (this.currentUser?.fullName) ? this.currentUser?.fullName : this.currentUser?.username;
+  }
+
+  /**
+   * Toggle navigation bar.
+   * @param {(boolean|null)} Force a true/false value.
+   */
+  toggle(force: boolean | null = null): void {
+    const newValue = (force === null) ? !this.expanded : force;
     this.expanded = newValue;
     this.setExpandedCache(newValue);
+
+    if (force !== null) {
+      setTimeout(() => {
+        this.expanded = newValue;
+        this.setExpandedCache(newValue);
+      })
+    }
   }
 
 

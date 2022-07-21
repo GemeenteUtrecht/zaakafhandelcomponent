@@ -17,7 +17,6 @@ gu-modal {
       position: relative;
       min-height: 150px;
       width: 100%;
-      padding: 20px;
       background: #fff;
       margin: 40px auto;
       border-radius: 6px;
@@ -53,13 +52,11 @@ gu-modal {
 
     .gu-modal-header {
       display: flex;
-      justify-content: flex-end;
+      flex-direction: row-reverse;
+      justify-content: space-between;
       position: relative;
       z-index: 10;
 
-      &--mb {
-        margin-bottom: 0.45rem;
-      }
       .gu-modal-close-button {
         display: flex;
         padding: 4px;

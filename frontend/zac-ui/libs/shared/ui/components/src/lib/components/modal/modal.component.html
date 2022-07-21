@@ -1,20 +1,16 @@
 <div class="gu-modal" [class.gu-modal--expand-vertical]="expandVertical">
-  <div class="gu-modal-body"
+  <div class="gu-modal-body p-2"
        [ngClass]="{
         'gu-modal-body--small': size == 'small',
         'gu-modal-body--huge': size == 'huge',
         'gu-modal-body--right': type == 'right'
         }">
-    <div class="gu-modal-header"
-         [ngClass]="{
-        'gu-modal-header--mb': title
-        }"
-    >
+    <div class="gu-modal-header">
       <div class="gu-modal-close-button">
         <mat-icon role="button" (click)="close()">close</mat-icon>
       </div>
+      <h1 *ngIf="title" class="mb-2">{{title}}</h1>
     </div>
-      <h1 *ngIf="title" class="mb-4">{{title}}</h1>
     <ng-content></ng-content>
   </div>
 </div>

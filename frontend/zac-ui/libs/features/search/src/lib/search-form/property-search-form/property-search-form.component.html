@@ -60,17 +60,17 @@
         </ng-container>
         <ng-container *ngSwitchCase="'number'">
           <gu-input type="number"
-                          [control]="eigenschapwaarde"
-                          label="Eigenschapwaarde"
-                          autocomplete="off"
+                    [control]="eigenschapwaarde"
+                    label="Eigenschapwaarde"
+                    autocomplete="off"
           ></gu-input>
         </ng-container>
       </ng-container>
     </div>
   </div>
 
-  <div class="row pl-3">
-    <div class="col-12 mt-2">
+  <div class="row flex-row align-center property-search-form__toolbar">
+    <div class="col-6">
       <gu-checkbox class="d-inline-block mr-1"
                    [control]="saveReportControl"
                    (change)="onCheckboxChange()">
@@ -86,7 +86,20 @@
       </gu-tooltip>
     </div>
 
-    <div *ngIf="showReportNameField" class="col-12 col-md-8 mt-2">
+    <div class="col-6 d-flex justify-content-end">
+      <button gu-button
+              class="justify-content-end"
+              size="large"
+              [disabled]="!searchForm.valid || isSubmitting"
+              [loading]="isSubmitting"
+              (click)="submitForm()">
+        {{showReportNameField ? 'Opslaan' : 'Zoeken'}}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="showReportNameField" class="row flex-row">
+    <div class="col-12 mt-2">
       <gu-input type="text"
                 [control]="queryNameControl"
                 label="Rapportagenaam"
@@ -104,17 +117,6 @@
         <a class="anchor d-inline-block" routerLink='/rapportages'>Naar Rapportages</a>
         <gu-icon class="d-inline-block">navigate_next</gu-icon>
       </gu-message>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-12 mt-4 d-flex justify-content-end">
-      <button gu-button size="large"
-              [disabled]="!searchForm.valid || isSubmitting"
-              [loading]="isSubmitting"
-              (click)="submitForm()">
-        {{showReportNameField ? 'Zoeken en rapportage opslaan' : 'Zoeken'}}
-      </button>
     </div>
   </div>
 </form>
