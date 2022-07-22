@@ -73,7 +73,7 @@ class ProcessEigenschapSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessEigenschap
-        fields = ("choices", "eigenschap", "label", "default", "required")
+        fields = ("choices", "eigenschap", "label", "default", "required", "order")
 
 
 class ProcessInformatieObjectSerializer(serializers.ModelSerializer):
@@ -96,6 +96,7 @@ class ProcessInformatieObjectSerializer(serializers.ModelSerializer):
             "informatieobjecttype",
             "label",
             "required",
+            "order",
         )
 
 
@@ -121,7 +122,7 @@ class ProcessRolSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessRol
-        fields = ("betrokkene_type", "choices", "label", "roltype", "required")
+        fields = ("betrokkene_type", "choices", "label", "roltype", "required", "order")
 
 
 @dataclass
