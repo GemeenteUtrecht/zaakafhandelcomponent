@@ -75,8 +75,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         )
 
         cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype=cls.zaaktype["url"],
-            zaaktype_omschrijving=cls.zaaktype["omschrijving"],
+            zaaktype_identificatie=cls.zaaktype["identificatie"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question_1 = ChecklistQuestionFactory.create(

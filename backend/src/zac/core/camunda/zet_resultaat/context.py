@@ -11,7 +11,7 @@ from zac.camunda.user_tasks import register
 from zac.checklists.models import Checklist, ChecklistQuestion, ChecklistType
 from zac.contrib.kownsl.api import get_review_requests
 from zac.core.camunda.utils import get_process_zaak_url
-from zac.core.services import fetch_zaaktype, get_resultaattypen, get_zaak
+from zac.core.services import fetch_zaaktype, get_resultaattypen, get_zaak, get_zaaktype
 from zgw.models.zrc import Zaak
 
 from .serializers import (
@@ -35,9 +35,12 @@ def get_unanswered_checklist_questions_for_zaak(
     else:
         answered_questions = []
 
-    zaaktype_url = zaak.zaaktype if type(zaak.zaaktype) == str else zaak.zaaktype.url
+    zaaktype = (
+        get_zaaktype(zaak.zaaktype) if isinstance(zaak.zaaktype, str) else zaak.zaaktype
+    )
     checklisttype = ChecklistType.objects.filter(
-        zaaktype=zaaktype_url
+        zaaktype_catalogus=zaaktype.catalogus,
+        zaaktype_identificatie=zaaktype.identificatie,
     ).prefetch_related(
         Prefetch(
             "checklistquestion_set",

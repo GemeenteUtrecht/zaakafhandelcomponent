@@ -51,8 +51,7 @@ class RetrieveChecklistTypesPermissionTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype="https://some-zt-url.com/",
-            zaaktype_omschrijving="omschrijving",
+            zaaktype_identificatie="identificatie",
             zaaktype_catalogus="https://some-catalogus-url.com/",
         )
         cls.endpoint = reverse_lazy(
@@ -137,8 +136,7 @@ class UpdateChecklistTypesPermissionTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype="https://some-zaaktype-url.com/",
-            zaaktype_omschrijving="some-omschrijving",
+            zaaktype_identificatie="some-identificatie",
             zaaktype_catalogus="https://some-catalogus.com/",
         )
         cls.endpoint = reverse_lazy(

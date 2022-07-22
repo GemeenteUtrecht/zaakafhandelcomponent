@@ -2,8 +2,7 @@ import factory
 
 
 class ChecklistTypeFactory(factory.django.DjangoModelFactory):
-    zaaktype = factory.Faker("url")
-    zaaktype_omschrijving = factory.Faker("bs")
+    zaaktype_identificatie = factory.Faker("bs")
     zaaktype_catalogus = factory.Faker("url")
 
     class Meta:

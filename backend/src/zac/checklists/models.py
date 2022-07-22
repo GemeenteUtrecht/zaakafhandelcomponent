@@ -8,6 +8,8 @@ from django.db import models
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
+from ordered_model.models import OrderedModel
+
 from .query import ChecklistAnswerQuerySet
 
 
@@ -104,7 +106,7 @@ class QuestionChoice(ChecklistMeta):
         unique_together = (("question", "name"), ("question", "value"))
 
 
-class ChecklistQuestion(ChecklistMeta):
+class ChecklistQuestion(OrderedModel, ChecklistMeta):
     checklisttype = models.ForeignKey(
         "ChecklistType",
         on_delete=models.PROTECT,
@@ -114,12 +116,8 @@ class ChecklistQuestion(ChecklistMeta):
         _("Text of the question"),
         max_length=1000,
     )
-    order = models.PositiveSmallIntegerField(
-        _("Order"),
-        help_text=_(
-            "Order of the questions as they should be presented in the checklist."
-        ),
-    )
+
+    order_with_respect_to = "checklisttype"
 
     @property
     def is_multiple_choice(self) -> bool:
@@ -142,7 +140,7 @@ class ChecklistQuestion(ChecklistMeta):
     class Meta:
         verbose_name = _("question")
         verbose_name_plural = _("questions")
-        unique_together = (("question", "checklisttype"), ("checklisttype", "order"))
+        unique_together = (("question", "checklisttype"),)
 
 
 class ChecklistType(ChecklistMeta):
@@ -154,26 +152,24 @@ class ChecklistType(ChecklistMeta):
     zaaktype_catalogus = models.URLField(
         _("CATALOGUS of ZAAKTYPE"),
         max_length=1000,
-        help_text=_("URL-referentie naar de CATALOGUS van het ZAAKTYPE."),
+        help_text=_("URL-reference to CATALOGUS of ZAAKTYPE."),
     )
-    zaaktype_omschrijving = models.CharField(
-        _("Omschrijving"),
+    zaaktype_identificatie = models.CharField(
+        _("ZAAKTYPE identificatie"),
         max_length=80,
-        help_text=_("Omschrijving van het ZAAKTYPE."),
-    )
-    zaaktype = models.URLField(
-        _("ZAAKTYPE-URL"),
-        max_length=1000,
-        help_text=_("URL-referentie naar het ZAAKTYPE."),
+        help_text=_("`identificatie` of ZAAKTYPE."),
+        default="",
     )
 
     class Meta:
         verbose_name = _("checklisttype")
         verbose_name_plural = _("checklisttypes")
-        unique_together = (("zaaktype_catalogus", "zaaktype_omschrijving"),)
+        unique_together = (("zaaktype_catalogus", "zaaktype_identificatie"),)
 
     def __str__(self):
-        return f"Checklisttype of `{self.zaaktype_omschrijving}` within `{self.zaaktype_catalogus}`"
+        return _(
+            "Checklisttype for ZAAKTYPE identificatie: {zt_id} within CATALOGUS: {zt_cat}"
+        ).format(zt_id=self.zaaktype_identificatie, zt_cat=self.zaaktype_catalogus)
 
 
 class Checklist(ChecklistMeta):

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-20 10:31+0000\n"
+"POT-Creation-Date: 2022-07-22 07:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Ammeraal <danielammeraal@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -362,7 +362,7 @@ msgstr ""
 msgid "accordeur"
 msgstr ""
 
-#: zac/accounts/constants.py:22 zac/checklists/models.py:191
+#: zac/accounts/constants.py:22 zac/checklists/models.py:187
 msgid "checklist"
 msgstr "checklist"
 
@@ -640,11 +640,11 @@ msgstr "Lopend"
 msgid "Finished"
 msgstr "Afgerond"
 
-#: zac/activities/models.py:18 zac/checklists/models.py:181
+#: zac/activities/models.py:18 zac/checklists/models.py:177
 msgid "ZAAK-URL"
 msgstr "ZAAK-URL"
 
-#: zac/activities/models.py:23 zac/checklists/models.py:37
+#: zac/activities/models.py:23 zac/checklists/models.py:41
 msgid "remarks"
 msgstr "opmerkingen"
 
@@ -652,7 +652,7 @@ msgstr "opmerkingen"
 msgid "status"
 msgstr "status"
 
-#: zac/activities/models.py:34 zac/checklists/models.py:48
+#: zac/activities/models.py:34 zac/checklists/models.py:52
 msgid "user assignee"
 msgstr "begunstigde gebruiker"
 
@@ -660,7 +660,7 @@ msgstr "begunstigde gebruiker"
 msgid "Person responsible for managing this activity."
 msgstr "Persoon verantwoordelijk voor deze activiteit."
 
-#: zac/activities/models.py:42 zac/checklists/models.py:56
+#: zac/activities/models.py:42 zac/checklists/models.py:60
 msgid "group assignee"
 msgstr "begunstigde groep"
 
@@ -668,11 +668,11 @@ msgstr "begunstigde groep"
 msgid "Group responsible for managing this activity."
 msgstr "Groep verantwoordelijk voor deze activiteit."
 
-#: zac/activities/models.py:48 zac/checklists/models.py:39
+#: zac/activities/models.py:48 zac/checklists/models.py:43
 msgid "document URL"
 msgstr "document-URL"
 
-#: zac/activities/models.py:51 zac/checklists/models.py:42
+#: zac/activities/models.py:51 zac/checklists/models.py:46
 msgid "Document in the Documents API."
 msgstr "Document in de Documenten API."
 
@@ -1000,7 +1000,15 @@ msgstr "Vraag aan gebruiker."
 msgid "Order of question in checklist."
 msgstr "Volgordenummer van vraag in checklist."
 
-#: zac/checklists/api/serializers.py:105
+#: zac/checklists/api/serializers.py:73
+msgid ""
+"URL-reference to ZAAKTYPE. Zaaktype `identificatie` and `catalogus` will be "
+"derived from this."
+msgstr ""
+"URL-referentie naar ZAAKTYPE. Zaaktype `identificatie` en `catalogus` worden "
+"hiervan afgeleid."
+
+#: zac/checklists/api/serializers.py:111
 msgid ""
 "The order of the questions has to be unique. Question `{question['question']}"
 "` and question `{orders[question['order']]}` both have order "
@@ -1026,7 +1034,7 @@ msgstr "URL-referentie naar document gerelateerd aan antwoord."
 msgid "Answer to the question."
 msgstr "Antwoord op de vraag."
 
-#: zac/checklists/api/serializers.py:199 zac/checklists/models.py:57
+#: zac/checklists/api/serializers.py:199 zac/checklists/models.py:61
 msgid "Group assigned to answer."
 msgstr "Groep toegewezen aan het antwoord."
 
@@ -1047,20 +1055,20 @@ msgid "No checklisttype found for ZAAKTYPE of ZAAK."
 msgstr "Geen checklisttype gevonden foor ZAAKTYPE van ZAAK."
 
 #: zac/checklists/api/serializers.py:294
+#, python-brace-format
 msgid ""
-"Answer with question: `{answer['question']}` didn't answer a question of the "
-"related checklisttype: {checklist.checklisttype}."
+"Answer with question: `{question}` didn't answer a question of the related "
+"checklisttype: {checklisttype}"
 msgstr ""
-"Antwoord met vraag: `{answer['question']}` beantwoordt niet een vraag van "
-"het gerelateerde checklisttype: {checklist.checklisttype}."
+"Antwoord met vraag: `{question}` beantwoordt niet een vraag van "
+"het gerelateerde checklisttype: {checklisttype}."
 
-#: zac/checklists/api/serializers.py:304
-msgid ""
-"Answer `{answer['answer']}` was not found in the options: "
-"{list(valid_choices)}."
+#: zac/checklists/api/serializers.py:307
+#, python-brace-format
+msgid "Answer `{answer}` was not found in the options: {choices}."
 msgstr ""
-"Antwoord `{answer['answer']}` werd niet teruggevonden in de opties: "
-"{list(valid_choices)}."
+"Antwoord `{answer}` werd niet teruggevonden in de opties: "
+"{choices}."
 
 #: zac/checklists/api/viewsets.py:27
 msgid "List checklisttype and related questions."
@@ -1109,94 +1117,88 @@ msgstr "Maak checklist en gerelateerde antwoorden aan."
 msgid "Update checklist and related answers."
 msgstr "Werk checklist en gerelateerde antwoorden bij."
 
-#: zac/checklists/forms.py:24 zac/core/camunda/start_process/forms.py:53
+#: zac/checklists/forms.py:29 zac/core/camunda/start_process/forms.py:53
 msgid "Catalogus"
 msgstr "Catalogus"
 
-#: zac/checklists/forms.py:27 zac/core/camunda/start_process/forms.py:56
+#: zac/checklists/forms.py:32
 msgid ""
-"URL-referentie naar de CATALOGUS van het ZAAKTYPE. Een geselecteerd ZAAKTYPE "
-"zal deze waarde overschrijven."
+"URL-reference to CATALOGUS of ZAAKTYPE. A selected ZAAKTYPE will update this "
+"value."
 msgstr ""
+"URL-referentie naar de CATALOGUS van het ZAAKTYPE. Een geselecteerde "
+"ZAAKTYPE zal de waarde updaten."
 
-#: zac/checklists/forms.py:33 zac/checklists/models.py:160
-msgid "Omschrijving"
-msgstr ""
+#: zac/checklists/forms.py:38 zac/core/camunda/start_process/forms.py:62
+msgid "Identificatie"
+msgstr "Identificatie"
 
-#: zac/checklists/forms.py:36
+#: zac/checklists/forms.py:41
 msgid ""
-"Omschrijving van het ZAAKTYPE. Een geselecteerd ZAAKTYPE zal deze waarde "
-"overschrijven."
+"`identificatie` of ZAAKTYPE. A selected ZAAKTYPE will update this value."
 msgstr ""
+"`identificatie` van ZAAKTYPE. Een geselecteerde ZAAKTYPE zal de waarde "
+"updaten."
 
-#: zac/checklists/models.py:15
+#: zac/checklists/models.py:19
 msgid "Created"
 msgstr "Aangemaakt"
 
-#: zac/checklists/models.py:16
+#: zac/checklists/models.py:20
 msgid "Modified"
 msgstr "Aangepast"
 
-#: zac/checklists/models.py:30
+#: zac/checklists/models.py:34
 msgid "Checklist this answer is related to."
 msgstr "Checklist toebehorend aan antwoord."
 
-#: zac/checklists/models.py:33
+#: zac/checklists/models.py:37
 msgid "Related question"
 msgstr "Gerelateerde vraag"
 
-#: zac/checklists/models.py:36
+#: zac/checklists/models.py:40
 msgid "Answer to the question"
 msgstr "Antwoord op de vraag"
 
-#: zac/checklists/models.py:49
+#: zac/checklists/models.py:53
 msgid "Person assigned to answer."
 msgstr "Gebruiker toegewezen om te antwoorden."
 
-#: zac/checklists/models.py:64
+#: zac/checklists/models.py:68
 msgid "checklist answer"
 msgstr "checklistantwoord"
 
-#: zac/checklists/models.py:65
+#: zac/checklists/models.py:69
 msgid "checklist answers"
 msgstr "checklistantwoorden"
 
-#: zac/checklists/models.py:96
+#: zac/checklists/models.py:100
 msgid "Question the choices are related to."
 msgstr "Vraag toebehorend aan keuzes."
 
-#: zac/checklists/models.py:98
+#: zac/checklists/models.py:102
 msgid "Human readable name of choice"
 msgstr "Leesbare naam van keuze."
 
-#: zac/checklists/models.py:99
+#: zac/checklists/models.py:103
 msgid "Value of choice"
 msgstr "Waarde van keuze"
 
-#: zac/checklists/models.py:102
+#: zac/checklists/models.py:106
 msgid "question choice"
 msgstr "vraagkeuze"
 
-#: zac/checklists/models.py:103
+#: zac/checklists/models.py:107
 msgid "question choices"
 msgstr "vraagkeuzes"
 
-#: zac/checklists/models.py:111
+#: zac/checklists/models.py:115
 msgid "Checklisttype related to this question."
 msgstr "Checklisttype toebehorend aan vraag."
 
-#: zac/checklists/models.py:114
+#: zac/checklists/models.py:118
 msgid "Text of the question"
 msgstr "Vraagtekst"
-
-#: zac/checklists/models.py:118
-msgid "Order"
-msgstr "Volgordenummer"
-
-#: zac/checklists/models.py:120
-msgid "Order of the questions as they should be presented in the checklist."
-msgstr ""
-"Volgorde van de vragen zoals ze moeten worden vertoond in de checklist."
 
 #: zac/checklists/models.py:143
 msgid "question"
@@ -1211,42 +1213,45 @@ msgid "CATALOGUS of ZAAKTYPE"
 msgstr "CATALOGUS van ZAAKTYPE"
 
 #: zac/checklists/models.py:157
-msgid "URL-referentie naar de CATALOGUS van het ZAAKTYPE."
-msgstr ""
+msgid "URL-reference to CATALOGUS of ZAAKTYPE."
+msgstr "URL-referentie naar de CATALOGUS van het ZAAKTYPE."
+
+#: zac/checklists/models.py:160
+msgid "ZAAKTYPE identificatie"
+msgstr "ZAAKTYPE identificatie"
 
 #: zac/checklists/models.py:162
-msgid "Omschrijving van het ZAAKTYPE."
-msgstr ""
-
-#: zac/checklists/models.py:165
-msgid "ZAAKTYPE-URL"
-msgstr ""
+msgid "`identificatie` of ZAAKTYPE."
+msgstr "`identificatie` van het ZAAKTYPE."
 
 #: zac/checklists/models.py:167
-msgid "URL-referentie naar het ZAAKTYPE."
-msgstr ""
-
-#: zac/checklists/models.py:171
 msgid "checklisttype"
 msgstr "checklisttype"
 
-#: zac/checklists/models.py:172
+#: zac/checklists/models.py:168
 msgid "checklisttypes"
 msgstr "checklisttypes"
 
-#: zac/checklists/models.py:183
+#: zac/checklists/models.py:172
+#, python-brace-format
+msgid ""
+"Checklisttype for ZAAKTYPE identificatie: {zt_id} within CATALOGUS: {zt_cat}"
+msgstr ""
+"Checklisttype voor ZAAKTYPE identificatie: {zt_id} binnen CATALOGUS: {zt_cat}"
+
+#: zac/checklists/models.py:179
 msgid "URL-reference to the ZAAK in its API."
 msgstr "URL-referentie naar de ZAAK in zijn API"
 
-#: zac/checklists/models.py:187
+#: zac/checklists/models.py:183
 msgid "Type of the checklist."
 msgstr "Type van het checklist"
 
-#: zac/checklists/models.py:192
+#: zac/checklists/models.py:188
 msgid "checklists"
 msgstr "checklists"
 
-#: zac/checklists/tests/test_checklisttype_response.py:138
+#: zac/checklists/tests/test_checklisttype_response.py:136
 msgid ""
 "The order of the questions has to be unique. Question `some-other-question` "
 "and question `some-question` both have order `1`."
@@ -2421,16 +2426,18 @@ msgid ""
 "ZAAKEIGENSCHAP with `naam`: `{naam}` must take a value from `{choices}`. "
 "Given `waarde`: `{waarde}`."
 msgstr ""
-"ZAAKEIGENSCHAP met `naam`: `{naam}` moet een `waarde` krijgen uit: "
-"`{choices}`. Gegeven `waarde`: `{waarde}`."
+"ZAAKEIGENSCHAP met `naam`: `{naam}` moet een `waarde` krijgen uit: `{choices}"
+"`. Gegeven `waarde`: `{waarde}`."
 
 #: zac/core/api/validators.py:125
 #, python-brace-format
 msgid ""
 "EIGENSCHAP with `naam`: `{naam}` not found for ZAAKTYPE with `omschrijving`: "
 "`{omschrijving}` of ZAAK with `identificatie`: `{identificatie}`."
-msgstr "EIGENSCHAP met `naam`: `{naam}` bestaat niet voor ZAAKTYPE met `omschrijving`: "
-"`{omschrijving}` van ZAAK met `identificatie`: `{identificatie}`."
+msgstr ""
+"EIGENSCHAP met `naam`: `{naam}` bestaat niet voor ZAAKTYPE met "
+"`omschrijving`: `{omschrijving}` van ZAAK met `identificatie`: "
+"`{identificatie}`."
 
 #: zac/core/api/views.py:164
 msgid "'document' query parameter is required."
@@ -2660,9 +2667,13 @@ msgstr ""
 "Geselecteerde documenttypes: {invalid_doc_types} zijn ongeldige keuzes "
 "gebaseerd op het gerelateerde ZAAKTYPE {zaaktype}."
 
-#: zac/core/camunda/start_process/forms.py:62
-msgid "Identificatie"
+#: zac/core/camunda/start_process/forms.py:56
+msgid ""
+"URL-referentie naar de CATALOGUS van het ZAAKTYPE. Een geselecteerd ZAAKTYPE "
+"zal deze waarde overschrijven."
 msgstr ""
+"URL-referentie naar de CATALOGUS van het ZAAKTYPE. Een geselecteerd ZAAKTYPE "
+"zal deze waarde overschrijven."
 
 #: zac/core/camunda/start_process/forms.py:65
 msgid ""
@@ -3634,6 +3645,13 @@ msgstr "Alle checklistvragen voor ingelogde gebruiker opvragen."
 #: zac/werkvoorraad/api/views.py:172
 msgid "List checklist questions for groups of logged in user."
 msgstr "Alle checklistvragen voor groepen van ingelogde gebruiker opvragen."
+
+#~ msgid "Order"
+#~ msgstr "Volgordenummer"
+
+#~ msgid "Order of the questions as they should be presented in the checklist."
+#~ msgstr ""
+#~ "Volgorde van de vragen zoals ze moeten worden vertoond in de checklist."
 
 #~ msgid ""
 #~ "Description of ZAAKTYPE, used as an aggregator of different versions of "

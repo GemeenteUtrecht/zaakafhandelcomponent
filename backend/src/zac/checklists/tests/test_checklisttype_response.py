@@ -47,8 +47,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
 
     def test_list_checklisttypes(self, m):
         ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         self.client.force_authenticate(user=self.user)
@@ -88,8 +87,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(self.zaaktype["url"], json=self.zaaktype)
         ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         data = {"zaaktype": self.zaaktype["url"], "questions": []}
@@ -101,7 +99,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             [
-                "Checklisttype met deze CATALOGUS van ZAAKTYPE en Omschrijving bestaat al."
+                "Checklisttype met deze CATALOGUS van ZAAKTYPE en ZAAKTYPE identificatie bestaat al."
             ],
         )
 
@@ -141,56 +139,12 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    def test_create_checklisttype_question_order_normalization(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-
-        data = {
-            "zaaktype": self.zaaktype["url"],
-            "questions": [
-                {
-                    "question": "some-question",
-                    "choices": [{"name": "Some Value", "value": "some-value"}],
-                    "order": 10,
-                },
-                {
-                    "question": "some-other-question",
-                    "choices": [],
-                    "order": 3,
-                },
-            ],
-        }
-
-        endpoint = reverse("checklisttype-list")
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(endpoint, data)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(
-            response.json()["questions"],
-            [
-                {
-                    "question": "some-question",
-                    "order": 2,
-                    "choices": [{"name": "Some Value", "value": "some-value"}],
-                    "isMultipleChoice": True,
-                },
-                {
-                    "question": "some-other-question",
-                    "order": 1,
-                    "choices": [],
-                    "isMultipleChoice": False,
-                },
-            ],
-        )
-
     def test_update_checklisttype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
         checklisttype = ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         ChecklistQuestionFactory.create(
