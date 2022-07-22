@@ -215,13 +215,6 @@ class ProcessInformatieObject(
         ),
         default=False,
     )
-    required = models.BooleanField(
-        _("Required"),
-        help_text=_(
-            "A boolean flag to indicate whether the document is required or not."
-        ),
-        default=False,
-    )
 
     class Meta:
         verbose_name = _("Process INFORMATIEOBJECT")
