@@ -51,7 +51,7 @@ COMPLETED_TASK_DATA = {
     "description": None,
     "deleteReason": "completed",
     "owner": None,
-    "assignee": "some-user",
+    "assignee": "user:some-user",
     "startTime": "2022-02-11T16:24:31.545+0000",
     "endTime": "2022-02-11T16:24:43.006+0000",
     "duration": 11461,
@@ -258,8 +258,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
         url = furl(reverse("user-task-history"))
         url.set({"zaak_url": ZAAK_URL})
         self.client.force_authenticate(self.user)
-        with patch("zac.camunda.api.data.resolve_assignee", return_value=self.user):
-            response = self.client.get(url.url)
+        response = self.client.get(url.url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),

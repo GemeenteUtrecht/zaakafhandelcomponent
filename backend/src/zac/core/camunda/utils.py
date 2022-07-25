@@ -1,20 +1,19 @@
 import logging
 from typing import List, Union
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
 import requests
 from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
 
+from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
 
 logger = logging.getLogger(__name__)
 
-User = get_user_model()
 
 # FIXME: cleanup
 FORM_KEYS = {

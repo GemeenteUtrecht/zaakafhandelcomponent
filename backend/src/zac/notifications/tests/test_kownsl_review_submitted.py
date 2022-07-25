@@ -45,6 +45,30 @@ REVIEW_REQUEST = {
     "lockReason": "",
 }
 
+TASK_DATA = {
+    "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
+    "name": "aName",
+    "assignee": None,
+    "created": "2013-01-23T13:42:42.000+0200",
+    "due": "2013-01-23T13:49:42.576+0200",
+    "followUp": "2013-01-23T13:44:42.437+0200",
+    "delegationState": "RESOLVED",
+    "description": "aDescription",
+    "executionId": "anExecution",
+    "owner": "anOwner",
+    "parentTaskId": None,
+    "priority": 42,
+    "processDefinitionId": "aProcDefId",
+    "processInstanceId": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
+    "caseDefinitionId": "aCaseDefId",
+    "caseInstanceId": "aCaseInstId",
+    "caseExecutionId": "aCaseExecution",
+    "taskDefinitionKey": "aTaskDefinitionKey",
+    "suspended": False,
+    "formKey": "",
+    "tenantId": "aTenantId",
+}
+
 
 @requests_mock.Mocker()
 class ReviewSubmittedTests(APITestCase):
@@ -76,10 +100,10 @@ class ReviewSubmittedTests(APITestCase):
         m.get(
             "https://camunda.example.com/engine-rest/task"
             "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=user%3Abob",
-            json=[{"id": "some-task-id"}],
+            json=[{**TASK_DATA, "assignee": f"user:bob"}],
         )
         m.post(
-            "https://camunda.example.com/engine-rest/task/some-task-id/complete",
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/complete",
             json={"variables": {}},
         )
 
@@ -90,7 +114,7 @@ class ReviewSubmittedTests(APITestCase):
         self.assertEqual(m.last_request.method, "POST")
         self.assertEqual(
             m.last_request.url,
-            "https://camunda.example.com/engine-rest/task/some-task-id/complete",
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/complete",
         )
 
     def test_no_user_tasks_found(self, m):
@@ -111,10 +135,50 @@ class ReviewSubmittedTests(APITestCase):
             json=[],
         )
 
-        with patch("zac.contrib.kownsl.views.complete_task") as mock_complete:
+        with patch(
+            "zac.contrib.kownsl.views.set_assignee_and_complete_task"
+        ) as mock_complete:
             response = self.client.post(self.endpoint, NOTIFICATION)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.assertEqual(m.last_request.method, "GET")
         mock_complete.assert_not_called()
+
+    def test_user_task_closed_group_assignee_still_sets_a_user_assignee(self, m):
+        mock_service_oas_get(m, "https://kownsl.example.com/api/v1/", "kownsl")
+        m.get(
+            "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            "https://camunda.example.com/engine-rest/task"
+            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=group%3Asome-group",
+            json=[
+                {
+                    **TASK_DATA,
+                    "assignee": "group:some-group",
+                }
+            ],
+        )
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            status_code=204,
+        )
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/complete",
+            json={"variables": {}},
+        )
+
+        response = self.client.post(
+            self.endpoint,
+            {**NOTIFICATION, "kenmerken": {"author": "bob", "group": "some-group"}},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertEqual(m.last_request.method, "POST")
+        self.assertEqual(
+            m.last_request.url,
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/complete",
+        )
