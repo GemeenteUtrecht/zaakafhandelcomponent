@@ -4,17 +4,15 @@ Implement setting up the subscriptions.
 from typing import List
 from urllib.parse import urljoin
 
-from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
 
 from rest_framework.authtoken.models import Token
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
+from zac.accounts.models import User
+
 from .models import Subscription
-
-User = get_user_model()
-
 
 DESIRED = [
     {

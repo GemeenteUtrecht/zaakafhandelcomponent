@@ -4,12 +4,16 @@ from typing import Dict, Optional, Union
 
 from django.conf import settings
 
+from django_camunda.api import complete_task
 from django_camunda.client import get_client
 from django_camunda.interface import Variable
 from django_camunda.utils import serialize_variable
 from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize
 
+from zac.accounts.models import User
+from zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.data import Task
 from zac.camunda.process_instances import delete_process_instance
 from zac.camunda.processes import get_process_definitions, get_process_instances
 from zac.core.models import CoreConfig
@@ -106,3 +110,25 @@ def delete_zaak_creation_process(zaak: Zaak) -> None:
                 == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
             ):
                 delete_process_instance(pi.id)
+
+
+def set_assignee_and_complete_task(
+    task: Task, user_assignee: User, variables: dict = dict
+):
+    # First make sure the task has the right assignee for historical purposes
+    camunda_client = get_client()
+    if (
+        not task.assignee
+        or task.assignee != user_assignee
+        or task.assignee_type == AssigneeTypeChoices.group
+    ):
+        camunda_client.post(
+            f"task/{task.id}/assignee",
+            json={"userId": user_assignee},
+        )
+
+    # Then complete the task.
+    complete_task(
+        task.id,
+        variables=variables,
+    )

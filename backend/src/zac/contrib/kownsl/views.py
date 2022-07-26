@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
-from django_camunda.api import complete_task, send_message
+from django_camunda.api import send_message
 from django_camunda.client import get_client as get_camunda_client
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -17,7 +17,9 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.camunda.api.utils import set_assignee_and_complete_task
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.data import Task
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.camunda.utils import resolve_assignee
@@ -90,17 +92,19 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         review_request = _get_review_request_for_notification(data)
 
         # look up and complete the user task in Camunda
-        if data["kenmerken"]["group"]:
-            assignee = f'{AssigneeTypeChoices.group}:{data["kenmerken"]["group"]}'
-        else:
-            assignee = f'{AssigneeTypeChoices.user}:{data["kenmerken"]["author"]}'
+        group_assignee = (
+            f'{AssigneeTypeChoices.group}:{data["kenmerken"]["group"]}'
+            if data["kenmerken"]["group"]
+            else None
+        )
+        user_assignee = f'{AssigneeTypeChoices.user}:{data["kenmerken"]["author"]}'
 
         camunda_client = get_camunda_client()
 
         params = {
             "processInstanceId": review_request["metadata"]["processInstanceId"],
             "taskDefinitionKey": review_request["metadata"]["taskDefinitionId"],
-            "assignee": assignee,
+            "assignee": group_assignee or user_assignee,
         }
         logger.debug("Finding user tasks matching %r", params)
         tasks = camunda_client.get("task", params)
@@ -117,12 +121,11 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
                 extra={"tasks": tasks, "params": params},
             )
 
+        print(tasks)
+        tasks = factory(Task, tasks)
         for task in tasks:
-            complete_task(
-                task["id"],
-                variables={
-                    "author": f'{AssigneeTypeChoices.user}:{data["kenmerken"]["author"]}'
-                },
+            set_assignee_and_complete_task(
+                task, user_assignee, variables={"author": user_assignee}
             )
 
 

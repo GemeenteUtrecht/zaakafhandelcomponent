@@ -2,7 +2,7 @@ import uuid
 
 from django.utils.translation import gettext_lazy as _
 
-from django_camunda.api import complete_task, send_message
+from django_camunda.api import send_message
 from django_camunda.client import get_client
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
@@ -45,7 +45,7 @@ from .serializers import (
     SubmitUserTaskSerializer,
     UserTaskContextSerializer,
 )
-from .utils import get_bptl_app_id_variable
+from .utils import get_bptl_app_id_variable, set_assignee_and_complete_task
 
 
 class ProcessInstanceFetchViewSet(ViewSet):
@@ -226,20 +226,10 @@ class UserTaskView(APIView):
             **serializer.get_process_variables(),
         }
 
+        user_assignee = f"{AssigneeTypeChoices.user}:{request.user}"
         # For case history purposes set assignee if no assignee is set yet, has changed or the assignee is a group.
-        if (
-            not task.assignee
-            or task.assignee != f"{AssigneeTypeChoices.user}:{request.user}"
-            or task.assignee_type == AssigneeTypeChoices.group
-        ):
-            camunda_client = get_client()
-            assignee = f"{AssigneeTypeChoices.user}:{request.user}"
-            camunda_client.post(
-                f"task/{task.id}/assignee",
-                json={"userId": assignee},
-            )
 
-        complete_task(task.id, variables)
+        set_assignee_and_complete_task(task, user_assignee, variables=variables)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

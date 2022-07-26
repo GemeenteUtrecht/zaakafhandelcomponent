@@ -614,7 +614,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:documentSelectie"}),
     )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     @patch(
         "zac.core.camunda.select_documents.serializers.validate_zaak_documents",
         return_value=None,
@@ -671,7 +671,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureApprovalRequest"}),
     )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     def test_put_configure_advice_review_request_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
@@ -731,7 +731,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:validSign:configurePackage"}),
     )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     def test_put_validsign_user_task(self, m, gt, ct):
         self._mock_permissions(m)
 
@@ -764,7 +764,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "keuze"}),
     )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     def test_put_named_camunda_form_user_task(
         self, m, mock_get_task, mock_complete_task
     ):
@@ -795,7 +795,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(),
     )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     def test_put_empty_formkey_user_task(self, m, mock_get_task, mock_complete_task):
         FILES_DIR = Path(__file__).parent / "files"
 
@@ -825,7 +825,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     @patch(
         "zac.core.camunda.start_process.serializers.get_rollen",
         return_value=[],
@@ -869,7 +869,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:zetResultaat"}),
     )
-    @patch("zac.camunda.api.views.complete_task", return_value=None)
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     def test_put_zet_resultaat_user_task(self, m, *mocks):
         self._mock_permissions(m)
         payload = {"resultaat": self.resultaattype["omschrijving"]}
