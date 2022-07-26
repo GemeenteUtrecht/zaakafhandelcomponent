@@ -6,6 +6,6 @@ export interface ChecklistType {
   modified: string,
   questions: ChecklistQuestion[]
   zaaktype: string,
-  zaaktypeCatalogus: string,
-  zaaktypeOmschrijving: string,
+  zaaktype_catalogus: string,
+  zaaktype_identificatie: string,
 }
