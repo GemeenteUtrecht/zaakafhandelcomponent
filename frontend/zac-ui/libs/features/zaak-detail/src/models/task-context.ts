@@ -34,6 +34,7 @@ export interface BenodigdeBijlage {
   informatieobjecttype: InformatieObjectType;
   label: string;
   required: boolean;
+  order: number;
 }
 
 interface Roltype {
@@ -48,6 +49,7 @@ export interface BenodigdeRol {
   label: string;
   roltype: Roltype;
   required: boolean;
+  order: number;
 }
 
 interface Specificatie {
@@ -77,6 +79,7 @@ export interface BenodigdeZaakeigenschap {
   label: string;
   default: string;
   required: boolean;
+  order: number;
 }
 
 export interface Context {

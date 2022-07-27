@@ -223,7 +223,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
         this.zaaktypeControl(i).value.forEach(zaaktypeOmschrijving => {
           const zaaktype = this.caseTypes.results.find(caseType => caseType.omschrijving === zaaktypeOmschrijving);
           const policy = {
-            catalogus: zaaktype.catalogus,
+            catalogus: zaaktype.catalogus.url,
             zaaktypeOmschrijving: zaaktype.omschrijving,
             maxVa: this.confidentialityControl(i).value
           }

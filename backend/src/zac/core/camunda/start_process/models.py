@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
+from ordered_model.models import OrderedModel
 from zgw_consumers.api_models.catalogi import (
     Eigenschap,
     InformatieObjectType,
@@ -134,11 +135,19 @@ class MultipleChoiceMixin(models.Model):
         return None
 
 
+class OrderedMixin(OrderedModel):
+    order_with_respect_to = "camunda_start_process"
+
+    class Meta:
+        abstract = True
+
+
 class ProcessEigenschap(
     FieldLabelMixin,
     RequiredMixin,
     MultipleChoiceMixin,
     CamundaStartProcessMixin,
+    OrderedMixin,
     models.Model,
 ):
     eigenschapnaam = models.CharField(
@@ -155,7 +164,7 @@ class ProcessEigenschap(
     )
 
     def get_choices(self):
-        return self.processeigenschapchoice_set.all()
+        return self.processeigenschapchoice_set.all().order_by("label")
 
     class Meta:
         verbose_name = _("Process EIGENSCHAP")
@@ -192,7 +201,7 @@ class ProcessEigenschapChoice(FieldLabelMixin, models.Model):
 
 
 class ProcessInformatieObject(
-    FieldLabelMixin, RequiredMixin, CamundaStartProcessMixin, models.Model
+    FieldLabelMixin, RequiredMixin, CamundaStartProcessMixin, OrderedMixin, models.Model
 ):
     informatieobjecttype_omschrijving = models.CharField(
         _("INFORMATIEOBJECTTYPE description"),
@@ -203,13 +212,6 @@ class ProcessInformatieObject(
         _("Allow multiple documents"),
         help_text=_(
             "A boolean flag to indicate whether a user is allowed to add more than 1 document."
-        ),
-        default=False,
-    )
-    required = models.BooleanField(
-        _("Required"),
-        help_text=_(
-            "A boolean flag to indicate whether the document is required or not."
         ),
         default=False,
     )
@@ -237,6 +239,7 @@ class ProcessRol(
     RequiredMixin,
     MultipleChoiceMixin,
     CamundaStartProcessMixin,
+    OrderedMixin,
     models.Model,
 ):
     roltype_omschrijving = models.CharField(
@@ -257,7 +260,7 @@ class ProcessRol(
         verbose_name_plural = _("Process ROLlen")
 
     def get_choices(self):
-        return self.processrolchoice_set.all()
+        return self.processrolchoice_set.all().order_by("label")
 
     def clean(self):
         super().clean()

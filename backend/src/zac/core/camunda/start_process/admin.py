@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from nested_admin import NestedModelAdmin, NestedTabularInline
+from nested_admin import (
+    NestedModelAdminMixin,
+    NestedTabularInline,
+    NestedTabularInlineMixin,
+)
+from ordered_model.admin import OrderedInlineModelAdminMixin, OrderedTabularInline
 
 from .forms import CamundaStartProcessForm
 from .models import (
@@ -13,7 +18,17 @@ from .models import (
 )
 
 
-class ProcessInformatieObjectInlineAdmin(NestedTabularInline):
+class ProcessInformatieObjectInlineAdmin(
+    NestedTabularInlineMixin, OrderedTabularInline
+):
+    fields = (
+        "informatieobjecttype_omschrijving",
+        "label",
+        "allow_multiple",
+        "required",
+        "move_up_down_links",
+    )
+    readonly_fields = ("move_up_down_links",)
     list_display = (
         "camunda_start_process",
         "informatieobjecttype_omschrijving",
@@ -24,8 +39,7 @@ class ProcessInformatieObjectInlineAdmin(NestedTabularInline):
     model = ProcessInformatieObject
     extra = 0
     ordering = [
-        "camunda_start_process",
-        "informatieobjecttype_omschrijving",
+        "order",
     ]
 
 
@@ -37,7 +51,15 @@ class ProcessRolChoiceInlineAdmin(NestedTabularInline):
     ordering = ["process_rol", "label"]
 
 
-class ProcessRolInlineAdmin(NestedTabularInline):
+class ProcessRolInlineAdmin(NestedTabularInlineMixin, OrderedTabularInline):
+    fields = (
+        "roltype_omschrijving",
+        "betrokkene_type",
+        "label",
+        "required",
+        "move_up_down_links",
+    )
+    readonly_fields = ("move_up_down_links",)
     list_display = (
         "camunda_start_process",
         "roltype_omschrijving",
@@ -50,9 +72,7 @@ class ProcessRolInlineAdmin(NestedTabularInline):
     model = ProcessRol
     extra = 0
     ordering = [
-        "camunda_start_process",
-        "roltype_omschrijving",
-        "betrokkene_type",
+        "order",
     ]
 
 
@@ -64,7 +84,9 @@ class ProcessEigenschapChoiceInlineAdmin(NestedTabularInline):
     ordering = ["process_eigenschap", "label"]
 
 
-class ProcessEigenschapInlineAdmin(NestedTabularInline):
+class ProcessEigenschapInlineAdmin(NestedTabularInlineMixin, OrderedTabularInline):
+    fields = ("eigenschapnaam", "label", "default", "required", "move_up_down_links")
+    readonly_fields = ("move_up_down_links",)
     list_display = ("camunda_start_process", "eigenschapnaam")
     list_filter = ("camunda_start_process",)
     search_fields = ("eigenschapnaam",)
@@ -72,10 +94,14 @@ class ProcessEigenschapInlineAdmin(NestedTabularInline):
     inlines = [ProcessEigenschapChoiceInlineAdmin]
     model = ProcessEigenschap
     extra = 0
-    ordering = ["camunda_start_process", "eigenschapnaam"]
+    ordering = [
+        "order",
+    ]
 
 
-class CamundaStartProcessAdmin(NestedModelAdmin):
+class CamundaStartProcessAdmin(
+    OrderedInlineModelAdminMixin, NestedModelAdminMixin, admin.ModelAdmin
+):
     list_display = (
         "process_definition_key",
         "zaaktype_identificatie",

@@ -144,14 +144,6 @@ export class FeaturesAuthProfilesService {
   }
 
   /**
-   * Request the authorization profiles from API.
-   */
-  getCaseTypes(): Observable<MetaZaaktype> {
-    const endpoint = encodeURI(`/api/core/zaaktypen`);
-    return this.http.Get<MetaZaaktype>(endpoint);
-  }
-
-  /**
    * Request document types
    */
   getDocTypes(): Observable<MetaDocType> {

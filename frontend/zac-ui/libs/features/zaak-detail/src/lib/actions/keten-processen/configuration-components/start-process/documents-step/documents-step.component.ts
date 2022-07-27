@@ -55,6 +55,7 @@ export class DocumentsStepComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.taskContextData) {
       if (changes.taskContextData.previousValue !== this.taskContextData || changes.taskContextData?.firstChange) {
+        this.taskContextData.context.benodigdeBijlagen.sort((a, b) => a.order - b.order);
         this.startProcessDocumentForm = this.fb.group({
           documents: this.addDocumentControls()
         })

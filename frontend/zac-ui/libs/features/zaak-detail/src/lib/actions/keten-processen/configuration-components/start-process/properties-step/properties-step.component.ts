@@ -55,6 +55,7 @@ export class PropertiesStepComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.taskContextData) {
       if (changes.taskContextData.previousValue !== this.taskContextData || changes.taskContextData?.firstChange) {
+        this.taskContextData.context.benodigdeZaakeigenschappen.sort((a, b) => a.order - b.order);
         this.startProcessPropertyForm = this.fb.group({
           properties: this.addPropertyControls()
         })
