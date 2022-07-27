@@ -62,8 +62,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.assignee.groups.add(cls.group)
 
         cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype=cls.zaaktype["url"],
-            zaaktype_omschrijving=cls.zaaktype["omschrijving"],
+            zaaktype_identificatie=cls.zaaktype["identificatie"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question = ChecklistQuestionFactory.create(

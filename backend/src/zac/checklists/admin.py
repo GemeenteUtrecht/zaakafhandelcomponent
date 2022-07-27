@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from nested_admin import NestedModelAdmin, NestedStackedInline, NestedTabularInline
+from nested_admin import (
+    NestedModelAdminMixin,
+    NestedTabularInline,
+    NestedTabularInlineMixin,
+)
+from ordered_model.admin import OrderedInlineModelAdminMixin, OrderedTabularInline
 
 from .forms import ChecklistTypeForm
 from .models import Checklist, ChecklistQuestion, ChecklistType, QuestionChoice
@@ -14,22 +19,25 @@ class QuestionChoiceAdmin(NestedTabularInline):
     extra = 0
 
 
-class ChecklistQuestionAdmin(NestedStackedInline):
-    list_display = ("checklisttype", "question")
-    list_filter = ("checklisttype",)
+class ChecklistQuestionAdmin(NestedTabularInlineMixin, OrderedTabularInline):
+    fields = (
+        "question",
+        "move_up_down_links",
+    )
+    readonly_fields = ("move_up_down_links",)
     search_fields = ("question",)
-    date_hierarchy = "created"
-    autocomplete_fields = ("checklisttype",)
     inlines = [QuestionChoiceAdmin]
     model = ChecklistQuestion
     extra = 0
     ordering = ["order"]
 
 
-class ChecklistTypeAdmin(NestedModelAdmin):
-    list_display = ("zaaktype_omschrijving", "zaaktype_catalogus")
-    list_filter = ("zaaktype_omschrijving",)
-    search_fields = ("zaaktype_omschrijving",)
+class ChecklistTypeAdmin(
+    OrderedInlineModelAdminMixin, NestedModelAdminMixin, admin.ModelAdmin
+):
+    list_display = ("zaaktype_identificatie", "zaaktype_catalogus")
+    list_filter = ("zaaktype_identificatie",)
+    search_fields = ("zaaktype_identificatie",)
     date_hierarchy = "created"
     form = ChecklistTypeForm
     inlines = [ChecklistQuestionAdmin]

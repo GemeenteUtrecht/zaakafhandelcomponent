@@ -55,6 +55,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             catalogus=cls.catalogus,
             omschrijving="ZT1",
+            identificatie="ZT1",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -108,8 +109,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         data = {
@@ -137,8 +137,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         ChecklistTypeFactory.create(
-            zaaktype="https://some-other-zaaktype.com/",
-            zaaktype_omschrijving="ZT2",
+            zaaktype_identificatie="ZT2",
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         data = {
@@ -167,8 +166,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         checklisttype = ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         ChecklistQuestionFactory.create(
@@ -208,8 +206,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         checklisttype = ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         question = ChecklistQuestionFactory.create(
@@ -231,7 +228,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             [
-                "Answer `some-wrong-answer` was not found in the options: ['some-answer']."
+                "Antwoord `some-wrong-answer` werd niet teruggevonden in de opties: ['some-answer']."
             ],
         )
 
@@ -246,8 +243,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         checklisttype = ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         question = ChecklistQuestionFactory.create(
@@ -272,7 +268,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             [
-                "Answer with question: `some-non-existent-question` didn't answer a question of the related checklisttype: Checklisttype of `ZT1` within `https://open-zaak.nl/catalogi/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd`."
+                "Antwoord met vraag: `some-non-existent-question` beantwoordt niet een vraag van het gerelateerde checklisttype: Checklisttype voor ZAAKTYPE identificatie: ZT1 binnen CATALOGUS: https://open-zaak.nl/catalogi/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd."
             ],
         )
 
@@ -288,8 +284,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.get(self.zaaktype["url"], json=self.zaaktype)
 
         checklisttype = ChecklistTypeFactory.create(
-            zaaktype=self.zaaktype["url"],
-            zaaktype_omschrijving=self.zaaktype["omschrijving"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
             zaaktype_catalogus=self.zaaktype["catalogus"],
         )
         question = ChecklistQuestionFactory.create(

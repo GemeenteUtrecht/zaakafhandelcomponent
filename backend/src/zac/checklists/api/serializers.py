@@ -68,6 +68,12 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
     questions = ChecklistQuestionSerializer(
         many=True, source="checklistquestion_set", required=True
     )
+    zaaktype = serializers.URLField(
+        help_text=_(
+            "URL-reference to ZAAKTYPE. Zaaktype `identificatie` and `catalogus` will be derived from this."
+        ),
+        write_only=True,
+    )
 
     class Meta:
         model = ChecklistType
@@ -78,21 +84,21 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
             "questions",
             "zaaktype",
             "zaaktype_catalogus",
-            "zaaktype_omschrijving",
+            "zaaktype_identificatie",
         )
         extra_kwargs = {
             "uuid": {"read_only": True},
             "created": {"read_only": True},
             "modified": {"read_only": True},
-            "zaaktype": {"required": True, "min_length": 1},
             "zaaktype_catalogus": {"read_only": True},
-            "zaaktype_omschrijving": {"read_only": True},
+            "zaaktype_identificatie": {"read_only": True},
         }
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
-        zt = get_zaaktype(validated_data["zaaktype"])
-        validated_data["zaaktype_omschrijving"] = zt.omschrijving
+        zaaktype_url = validated_data.pop("zaaktype")
+        zt = get_zaaktype(zaaktype_url)
+        validated_data["zaaktype_identificatie"] = zt.identificatie
         validated_data["zaaktype_catalogus"] = zt.catalogus
 
         # validate uniqueness of question order
@@ -106,12 +112,6 @@ class ChecklistTypeSerializer(serializers.ModelSerializer):
                         )
                     )
                 orders[question["order"]] = question["question"]
-
-            # Set order of questions logically - monotonically increasing
-            for order, question in enumerate(
-                sorted(questions, key=lambda q: q["order"])
-            ):
-                question["order"] = order + 1
 
         return validated_data
 
@@ -266,7 +266,7 @@ class WriteChecklistSerializer(BaseChecklistSerializer):
 
             try:
                 checklisttype = ChecklistType.objects.get(
-                    zaaktype_omschrijving=zaak.zaaktype.omschrijving,
+                    zaaktype_identificatie=zaak.zaaktype.identificatie,
                     zaaktype_catalogus=zaak.zaaktype.catalogus,
                 )
             except ChecklistType.DoesNotExist:
@@ -291,7 +291,10 @@ class WriteChecklistSerializer(BaseChecklistSerializer):
             if answer["question"] not in questions:
                 raise serializers.ValidationError(
                     _(
-                        f"Answer with question: `{answer['question']}` didn't answer a question of the related checklisttype: {checklist.checklisttype}."
+                        "Answer with question: `{question}` didn't answer a question of the related checklisttype: {checklisttype}"
+                    ).format(
+                        question=answer["question"],
+                        checklisttype=checklist.checklisttype,
                     )
                 )
 
@@ -301,8 +304,8 @@ class WriteChecklistSerializer(BaseChecklistSerializer):
                 ] not in valid_choices:
                     raise serializers.ValidationError(
                         _(
-                            f"Answer `{answer['answer']}` was not found in the options: {list(valid_choices)}."
-                        )
+                            "Answer `{answer}` was not found in the options: {choices}."
+                        ).format(answer=answer["answer"], choices=list(valid_choices))
                     )
             if answer.get("user_assignee") and answer.get("group_assignee"):
                 raise serializers.ValidationError(

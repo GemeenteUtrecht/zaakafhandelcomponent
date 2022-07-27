@@ -117,7 +117,7 @@ class ZaakChecklistTypeViewSet(
         identificatie = self.request.parser_context["kwargs"]["identificatie"]
         zaak = find_zaak(bronorganisatie, identificatie)
         filter_kwargs = {
-            "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
+            "zaaktype_identificatie": zaak.zaaktype.identificatie,
             "zaaktype_catalogus": zaak.zaaktype.catalogus,
         }
         checklisttype = get_object_or_404(queryset, **filter_kwargs)

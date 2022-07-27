@@ -59,6 +59,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             catalogus=cls.catalogus,
             omschrijving="ZT1",
+            identificatie="ZT1",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -204,8 +205,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             einddatum=None,
         )
         cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype=cls.zaaktype["url"],
-            zaaktype_omschrijving=cls.zaaktype["omschrijving"],
+            zaaktype_identificatie=cls.zaaktype["identificatie"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question = ChecklistQuestionFactory.create(
@@ -473,8 +473,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             identificatie=IDENTIFICATIE,
         )
         cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype=cls.zaaktype["url"],
-            zaaktype_omschrijving=cls.zaaktype["omschrijving"],
+            zaaktype_identificatie=cls.zaaktype["identificatie"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
         cls.checklist_question = ChecklistQuestionFactory.create(
