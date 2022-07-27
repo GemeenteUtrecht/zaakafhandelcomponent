@@ -194,7 +194,7 @@
 
       <!-- Execute task -->
       <gu-tab label="Uitvoeren" *ngIf="ketenProcessenService.isUserAllowedToExecuteTask(currentUser, taskContextData.task)">
-        <div class="pt-4">
+        <div class="p-4">
           <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
                                           [taskContextData]="taskContextData"
                                           (successReload)="closeModal()"

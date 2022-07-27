@@ -51,6 +51,7 @@ export class RoleStepComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.taskContextData) {
       if (changes.taskContextData.previousValue !== this.taskContextData || changes.taskContextData?.firstChange) {
+        this.taskContextData.context.benodigdeRollen.sort((a, b) => a.order - b.order);
         this.startProcessRoleForm = this.fb.group({
           roles: this.addRoleControls(),
         })

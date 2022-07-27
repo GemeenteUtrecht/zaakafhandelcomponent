@@ -287,9 +287,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   updateProcessData(data) {
     // Update data.
     this.data = data;
-    console.log(data);
     this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
-    console.log(this.allTaskData);
+
     this.setCloseCaseTask(this.allTaskData);
 
     // Process instance ID for API calls
