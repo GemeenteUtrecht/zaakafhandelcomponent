@@ -116,7 +116,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       this.isLoading = true;
       this.hasError = false;
 
-      const catalogus = zaaktype.catalogus;
+      const catalogus = zaaktype.catalogus.url;
       const omschrijving = zaaktype.omschrijving;
 
       this.metaService.getZaaktypeEigenschappenByCatalogus(catalogus, omschrijving).subscribe(res => {
@@ -172,7 +172,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
         if (zaaktypeElement.omschrijving === this.zaaktype.value)
           zaaktype = {
             omschrijving: zaaktypeElement.omschrijving,
-            catalogus: zaaktypeElement.catalogus
+            catalogus: zaaktypeElement.catalogus.url
           }
       });
     }

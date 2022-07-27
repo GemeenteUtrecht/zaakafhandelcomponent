@@ -28,7 +28,7 @@ export class MetaService {
    * @returns {Observable<ZaaktypeEigenschap[]>}
    */
   getZaaktypeEigenschappenByCatalogus(catalogus, omschrijving): Observable<ZaaktypeEigenschap[]> {
-    const endpoint = encodeURI(`/api/core/eigenschappen?catalogus=${catalogus}&zaaktype_omschrijving=${omschrijving}`);
+    const endpoint = encodeURI(`/api/core/eigenschappen?catalogus=${catalogus}&zaaktype_identificatie=${omschrijving}`);
     return this.http.Get<ZaaktypeEigenschap[]>(endpoint);
   }
 
