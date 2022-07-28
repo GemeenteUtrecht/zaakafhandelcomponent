@@ -230,7 +230,9 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
 
         required_informatieobjecttype_omschrijvingen = [
             iot.informatieobjecttype_omschrijving
-            for iot in self.camunda_start_process.processinformatieobject_set.all()
+            for iot in self.camunda_start_process.processinformatieobject_set.filter(
+                required=True
+            )
         ]
         for iot_omschrijving in required_informatieobjecttype_omschrijvingen:
             if iot_omschrijving not in iots:
@@ -246,7 +248,9 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         # Get required rollen, map their omschrijving to their
         # betrokkene_type to validate that both are set appropriately.
         required_rt_omsch_betr_type = {}
-        for process_rol in self.camunda_start_process.processrol_set.all():
+        for process_rol in self.camunda_start_process.processrol_set.filter(
+            required=True
+        ):
             if process_rol.roltype_omschrijving not in required_rt_omsch_betr_type:
                 required_rt_omsch_betr_type[process_rol.roltype_omschrijving] = [
                     process_rol.betrokkene_type
@@ -295,7 +299,9 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
         required_zaakeigenschappen = {}
         multiple_choice_zaakeigenschappen = {}
-        for ei in self.camunda_start_process.processeigenschap_set.all():
+        for ei in self.camunda_start_process.processeigenschap_set.filter(
+            required=True
+        ):
             if ei.required:
                 required_zaakeigenschappen[ei.eigenschapnaam] = {
                     pec.label: pec.value for pec in ei.processeigenschapchoice_set.all()
