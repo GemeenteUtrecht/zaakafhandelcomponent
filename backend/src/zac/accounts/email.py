@@ -31,7 +31,7 @@ def send_email_to_requester(user, zaak_url, result, request=None):
     email_context = {
         "zaak": zaak,
         "result": result,
-        "user": user,
+        "user": user.get_full_name(),
     }
 
     message = email_template.render(email_context)
