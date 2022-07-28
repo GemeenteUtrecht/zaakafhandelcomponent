@@ -35,6 +35,11 @@
     bottom: 26px;
   }
 
+  &--top-center &__content {
+    bottom: 26px;
+    transform: translateX(-50%);
+  }
+
   &--bottom &__content {
     top: 26px;
   }
