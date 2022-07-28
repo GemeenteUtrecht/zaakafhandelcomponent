@@ -169,6 +169,7 @@ class ProcessEigenschap(
     class Meta:
         verbose_name = _("Process EIGENSCHAP")
         verbose_name_plural = _("Process EIGENSCHAPpen")
+        unique_together = (("camunda_start_process", "eigenschapnaam"),)
 
     def clean(self):
         super().clean()

@@ -281,6 +281,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
                         "type": "Json",
                         "value": '["http://documents.nl/api/v1/informatieobject/e82ae0d6-d442-436e-be55-cf5b827dfeec"]',
                     },
+                    "eigenschappen": {
+                        "type": "Json",
+                        "value": '{"some-property": "some-value-1"}',
+                    },
                     "some-property": {"type": "String", "value": "some-value-1"},
                     "bijlage1": {
                         "type": "String",
