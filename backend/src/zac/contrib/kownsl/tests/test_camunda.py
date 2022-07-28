@@ -180,7 +180,53 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             {
                 "assigned_users": {
                     "user_assignees": [],
-                    "group_assignees": ["some-group"],
+                    "group_assignees": [
+                        {
+                            "full_name": "Groep: some-group",
+                            "name": "some-group",
+                            "id": group.id,
+                        }
+                    ],
+                },
+                "documents": [
+                    {
+                        "beschrijving": self.document.beschrijving,
+                        "bestandsnaam": self.document.bestandsnaam,
+                        "url": DOCUMENT_URL,
+                        "read_url": get_dowc_url(
+                            self.document, purpose=DocFileTypes.read
+                        ),
+                    }
+                ],
+                "zaak_informatie": {
+                    "omschrijving": self.zaak.omschrijving,
+                    "toelichting": self.zaak.toelichting,
+                },
+                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                "review_type": KownslTypes.approval,
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_approval_context_serializer_with_user(self, m):
+        task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
+        user = UserFactory.create(
+            username="some-user", first_name="First", last_name="Last"
+        )
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            json=serialize_variable(["user:some-user"]),
+        )
+        task_data = UserTaskData(task=task, context=_get_context(task))
+        serializer = AdviceApprovalContextSerializer(instance=task_data)
+        self.assertEqual(
+            serializer.data["context"],
+            {
+                "assigned_users": {
+                    "user_assignees": [
+                        {"username": "some-user", "full_name": user.get_full_name()}
+                    ],
+                    "group_assignees": [],
                 },
                 "documents": [
                     {

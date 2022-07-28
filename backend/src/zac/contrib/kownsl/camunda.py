@@ -11,6 +11,7 @@ from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.api.serializers import GroupSerializer
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
@@ -65,35 +66,32 @@ class DocumentUserTaskSerializer(APIModelSerializer):
         )
 
 
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source="get_full_name")
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "full_name",
+        )
+
+
 class UsersRevReqSerializer(APIModelSerializer):
     """
     Allows users or groups to be assigned from within the camunda process.
 
     """
 
-    user_assignees = serializers.SlugRelatedField(
-        slug_field="username",
-        queryset=User.objects.all(),
-        help_text=_("Users assigned to the review request."),
-        many=True,
-        allow_null=True,
-        required=True,
-    )
-    group_assignees = serializers.SlugRelatedField(
-        slug_field="name",
-        queryset=Group.objects.all(),
-        help_text=_("Groups assigned to the review request."),
-        many=True,
-        allow_null=True,
-        required=True,
-    )
+    user_assignees = UserSerializer(many=True)
+    group_assignees = GroupSerializer(many=True)
 
     class Meta:
         model = UsersRevReq
-        fields = [
+        fields = (
             "user_assignees",
             "group_assignees",
-        ]
+        )
 
 
 @usertask_context_serializer
@@ -129,13 +127,29 @@ class SelectUsersRevReq(UsersRevReq):
     email_notification: bool = False
 
 
-class SelectUsersRevReqSerializer(UsersRevReqSerializer):
+class SelectUsersRevReqSerializer(APIModelSerializer):
     """
     Select users or groups and assign deadlines to those users in the configuration of
     review requests such as the advice and approval review requests.
 
     """
 
+    user_assignees = serializers.SlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_("Users assigned to the review request."),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    group_assignees = serializers.SlugRelatedField(
+        slug_field="name",
+        queryset=Group.objects.all(),
+        help_text=_("Groups assigned to the review request."),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
     email_notification = serializers.BooleanField(
         default=False,
         help_text=_("Send an email notification about the review request."),
@@ -145,9 +159,11 @@ class SelectUsersRevReqSerializer(UsersRevReqSerializer):
         help_text=_("On this date the review must be submitted."),
     )
 
-    class Meta(UsersRevReqSerializer.Meta):
+    class Meta:
         model = SelectUsersRevReq
-        fields = UsersRevReqSerializer.Meta.fields + [
+        fields = [
+            "user_assignees",
+            "group_assignees",
             "email_notification",
             "deadline",
         ]
