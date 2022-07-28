@@ -38,12 +38,12 @@
           <!-- Select zaaktypen -->
           <gu-multiselect
             [control]="zaaktypeControl(i)"
-            [items]="caseTypes.results"
+            [items]="caseTypeChoices"
             label="Zaaktypen"
             [multiple]="true"
             [required]="true"
-            bindLabel="omschrijving"
-            bindValue="omschrijving"
+            bindLabel="label"
+            bindValue="value"
             class="col-12 col-lg-12 mb-2"
             appendTo="body"
           >
