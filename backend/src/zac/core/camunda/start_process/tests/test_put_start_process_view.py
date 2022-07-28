@@ -203,12 +203,20 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             camunda_start_process=camunda_start_process,
             informatieobjecttype_omschrijving=cls.informatieobjecttype["omschrijving"],
             label="some-doc",
+            required=True,
+        )
+        ProcessInformatieObjectFactory.create(
+            camunda_start_process=camunda_start_process,
+            informatieobjecttype_omschrijving=cls.informatieobjecttype["omschrijving"],
+            label="some-other-doc",
+            required=False,
         )
         ProcessRolFactory.create(
             camunda_start_process=camunda_start_process,
             roltype_omschrijving=cls.roltype["omschrijving"],
             label="some-rol",
             betrokkene_type=cls.rol["betrokkeneType"],
+            required=True,
         )
 
     def setUp(self):
@@ -510,6 +518,55 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=[],
     )
     def test_put_start_process_user_task_wrong_eigenschap_choice(self, m, *mocks):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.eigenschap]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
+            json=[{**self.zaakeigenschap, "waarde": "some-waarde"}],
+        )
+
+        with patch(
+            "zac.core.camunda.start_process.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            response = self.client.put(self.task_endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "zaakeigenschappen": [
+                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` hebben uit: `['some-value-1']`."
+                ]
+            },
+        )
+
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.get_rollen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
+        return_value=[],
+    )
+    @patch(
+        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
+        return_value=[],
+    )
+    def test_put_start_process_user_task_not_required_eigenschap(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 

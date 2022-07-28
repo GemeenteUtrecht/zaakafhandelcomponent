@@ -6,7 +6,9 @@ from django.db import migrations
 from zac.core.services import fetch_zaaktype
 
 
-def migrate_checklisttype_zt_omschrijving_to_identificatie_and_set_order_to_pk(apps, _):
+def migrate_checklisttype_zt_omschrijving_to_identificatie_and_set_order_to_integer(
+    apps, _
+):
     # there is no point in blueprint permissions before roles are defined
     ChecklistType = apps.get_model("checklists", "ChecklistType")
     for order, ct in enumerate(ChecklistType.objects.all()):
@@ -24,7 +26,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(
-            migrate_checklisttype_zt_omschrijving_to_identificatie_and_set_order_to_pk,
+            migrate_checklisttype_zt_omschrijving_to_identificatie_and_set_order_to_integer,
             migrations.RunPython.noop,
         )
     ]
