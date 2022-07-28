@@ -9,11 +9,11 @@ import {
   SimpleChanges
 } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
-import { ModalService, SnackbarService } from '@gu/components';
+import { Choice, ModalService, SnackbarService } from '@gu/components';
 import {
   AuthProfile,
   MetaConfidentiality,
-  MetaZaaktype,
+  MetaZaaktypeResult,
   Role, User,
   UserAuthProfile,
   UserSearchResult,
@@ -52,7 +52,8 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   authProfileForm: FormGroup;
   currentAuthProfileUuid: string;
 
-  caseTypes: MetaZaaktype;
+  caseTypes: MetaZaaktypeResult[];
+  caseTypeChoices: Choice[];
 
   confidentiality: MetaConfidentiality[];
   selectedObjectType: 'zaak' | 'document' | 'search_report';
@@ -197,7 +198,15 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    */
   getCaseTypes() {
     this.metaService.getCaseTypes().subscribe(
-      (data) => this.caseTypes = data,
+      (data) => {
+        this.caseTypes = data.results
+        this.caseTypeChoices = this.caseTypes.map( type => {
+          return {
+            label: `${type.omschrijving}: ${type.catalogus.domein}`,
+            value: type,
+          }
+        })
+      },
       this.reportError.bind(this)
     );
   }
@@ -220,8 +229,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     const bluePrintPermissions = this.blueprintPermissionControl.controls
       .map( (bperm, i) => {
         const policies = [];
-        this.zaaktypeControl(i).value.forEach(zaaktypeOmschrijving => {
-          const zaaktype = this.caseTypes.results.find(caseType => caseType.omschrijving === zaaktypeOmschrijving);
+        this.zaaktypeControl(i).value.forEach(zaaktype => {
           const policy = {
             catalogus: zaaktype.catalogus.url,
             zaaktypeOmschrijving: zaaktype.omschrijving,

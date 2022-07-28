@@ -18,6 +18,7 @@ import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
 import { PageEvent } from '@angular/material/paginator';
 import { MetaService } from '@gu/services';
+import { Choice } from '@gu/components';
 
 
 /**
@@ -43,7 +44,8 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   searchForm: FormGroup
   search: Search;
 
-  zaaktypenData: MetaZaaktypeResult[];
+  caseTypes: MetaZaaktypeResult[];
+  caseTypeChoices: Choice[];
   zaaktypeEigenschappenData: ZaaktypeEigenschap[] = [];
 
   selectedPropertyValue: ZaaktypeEigenschap;
@@ -97,7 +99,13 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     this.isLoading = true;
     this.hasError = false;
     this.metaService.getCaseTypes().subscribe(res => {
-      this.zaaktypenData = res.results;
+      this.caseTypes = res.results;
+      this.caseTypeChoices = this.caseTypes.map( type => {
+        return {
+          label: `${type.omschrijving}: ${type.catalogus.domein}`,
+          value: type,
+        }
+      })
       this.isLoading = false;
       this.cdRef.detectChanges();
     }, error => {
@@ -111,13 +119,13 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
    * Fetch the properties of a case type based on the selection.
    * @param {MetaZaaktypeResult} zaaktype
    */
-  onZaaktypeSelect(zaaktype: MetaZaaktypeResult) {
+  onZaaktypeSelect(zaaktype) {
     if (zaaktype) {
       this.isLoading = true;
       this.hasError = false;
 
-      const catalogus = zaaktype.catalogus.url;
-      const omschrijving = zaaktype.omschrijving;
+      const catalogus = zaaktype.value.catalogus.url;
+      const omschrijving = zaaktype.value.omschrijving;
 
       this.metaService.getZaaktypeEigenschappenByCatalogus(catalogus, omschrijving).subscribe(res => {
         this.zaaktypeEigenschappenData = res;
@@ -168,13 +176,10 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     // Check if zaaktype has been filled in
     let zaaktype;
     if (this.zaaktype.value) {
-      this.zaaktypenData.forEach( zaaktypeElement => {
-        if (zaaktypeElement.omschrijving === this.zaaktype.value)
-          zaaktype = {
-            omschrijving: zaaktypeElement.omschrijving,
-            catalogus: zaaktypeElement.catalogus.url
-          }
-      });
+      zaaktype = {
+        omschrijving: this.zaaktype.value.omschrijving,
+        catalogus: this.zaaktype.value.catalogus.url
+      }
     }
 
     // Create object for eigenschappen

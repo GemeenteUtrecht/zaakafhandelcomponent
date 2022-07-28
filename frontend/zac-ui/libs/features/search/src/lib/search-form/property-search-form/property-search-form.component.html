@@ -2,14 +2,14 @@
 <form [formGroup]="searchForm">
   <div class="row">
     <div class="col-12">
-      <gu-multiselect *ngIf="zaaktypenData"
+      <gu-multiselect *ngIf="caseTypeChoices"
                       [control]="zaaktype"
                       (change)="onZaaktypeSelect($event)"
                       [searchable]="true"
-                      [items]="zaaktypenData"
+                      [items]="caseTypeChoices"
                       [multiple]="false"
-                      bindLabel="omschrijving"
-                      bindValue="omschrijving"
+                      bindLabel="label"
+                      bindValue="value"
                       label="Zaaktype">
       </gu-multiselect>
     </div>
