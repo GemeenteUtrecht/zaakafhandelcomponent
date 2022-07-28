@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 from django.test import TestCase
 
 import requests_mock
@@ -168,6 +169,32 @@ class StartProcessModelsTests(TestCase):
         )
         with self.assertRaises(ValidationError):
             pei.clean()
+
+    def test_create_process_eigenschap_fail_duplicate(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.eigenschap]),
+        )
+        camunda_start_process = CamundaStartProcess.objects.create(
+            zaaktype_catalogus=self.zaaktype["catalogus"],
+            zaaktype_identificatie=self.zaaktype["identificatie"],
+        )
+        ProcessEigenschap.objects.create(
+            camunda_start_process=camunda_start_process,
+            label="some-label",
+            eigenschapnaam="some-name",
+        )
+        with self.assertRaises(IntegrityError):
+            ProcessEigenschap.objects.create(
+                camunda_start_process=camunda_start_process,
+                label="some-label",
+                eigenschapnaam="some-name",
+            )
 
     def test_create_process_informatieobject_success(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
