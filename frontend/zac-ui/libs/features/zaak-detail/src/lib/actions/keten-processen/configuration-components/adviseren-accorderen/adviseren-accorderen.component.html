@@ -44,6 +44,7 @@
                               label="Personen"
                               bindLabel="fullName"
                               bindValue="username"
+                              [selectedValue]="assignedUsersControl(i).value"
                               placeholder="Zoek personen...">
               </gu-multiselect>
             </div>
@@ -56,6 +57,7 @@
                               label="Groepen"
                               bindLabel="name"
                               bindValue="name"
+                              [selectedValue]="assignedUserGroupControl(i).value"
                               placeholder="Zoek groepen...">
               </gu-multiselect>
             </div>

@@ -102,9 +102,10 @@ export class AdviserenAccorderenComponent implements OnChanges {
       this.reviewType = this.taskContextData.context.reviewType;
       this.assignUsersForm = this.fb.group({
         documents: this.addDocumentCheckboxes(),
-        assignedUsers: this.fb.array([this.addAssignUsersStep()]),
+        assignedUsers: this.fb.array([this.addAssignUsersStep(true)]),
         toelichting: this.fb.control("", Validators.maxLength(4000))
       })
+      this.checkPredefinedAssignees();
     }
   }
 
@@ -143,16 +144,34 @@ export class AdviserenAccorderenComponent implements OnChanges {
    * Creates form group for steps.
    * @returns {FormGroup}
    */
-  addAssignUsersStep() {
+  addAssignUsersStep(isFirstStep?: boolean) {
+    let userAssignees = [];
+    let groupAssignees = [];
+
+    if (isFirstStep) {
+      userAssignees = this.taskContextData.context.assignedUsers.userAssignees.map(userAssignee => userAssignee.username);
+      groupAssignees = this.taskContextData.context.assignedUsers.groupAssignees.map(groupAssignee => groupAssignee.name);
+    }
+
     return this.fb.group({
       deadline: [undefined, Validators.required],
       assignees: this.fb.group({
-        users: [[]],
-        userGroups: [[]],
+        users: [userAssignees],
+        userGroups: [groupAssignees],
       }, { validators: [this.atLeastOneAssignee]}),
       emailNotification: [true],
       extraStep: ['']
     })
+  }
+
+  /**
+   * Disable fields if preconfigure
+   */
+  checkPredefinedAssignees() {
+    if (this.assignedUsersControl(0).value.length > 0 || this.assignedUserGroupControl(0).value.length > 0 ) {
+      this.assignedUsersControl(0).disable();
+      this.assignedUserGroupControl(0).disable();
+    }
   }
 
   /**
