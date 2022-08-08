@@ -23,7 +23,6 @@ from zgw.models.zrc import Zaak
 
 from .factories import (
     CamundaStartProcessFactory,
-    ProcessEigenschapChoiceFactory,
     ProcessEigenschapFactory,
     ProcessInformatieObjectFactory,
     ProcessRolFactory,
@@ -193,11 +192,6 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             eigenschapnaam=cls.eigenschap["naam"],
             label="some-eigenschap",
             required=True,
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="some-choice-1",
-            value="some-value-1",
         )
         ProcessInformatieObjectFactory.create(
             camunda_start_process=camunda_start_process,

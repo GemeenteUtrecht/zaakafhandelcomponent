@@ -1304,3 +1304,51 @@ def fetch_zaak_object(zaak_object_url: str):
 def delete_zaak_object(zaak_object_url: str):
     client = _client_from_url(zaak_object_url)
     client.delete("zaakobject", url=zaak_object_url)
+
+
+def fetch_zaaktypeattributen_objects(
+    zaak: Optional[Zaak] = None, zaaktype: Optional[ZaakType] = None
+) -> List[dict]:
+    obj_types = fetch_objecttypes()
+    ot_zt_attribuut = None
+    for ot in obj_types:
+        if ot["name"] == "ZaaktypeAttribuut":
+            ot_zt_attribuut = ot
+            break
+
+    if not ot_zt_attribuut:
+        raise ObjectDoesNotExist(
+            "`ZaaktypeAttribuut` objecttype does not exist in the configured objecttype service."
+        )
+
+    object_filters = {"type": ot_zt_attribuut["url"]}
+    if zaak or zaaktype:
+        zaaktype = (
+            zaaktype
+            if zaaktype
+            else (
+                zaak.zaaktype
+                if isinstance(zaak.zaaktype, ZaakType)
+                else fetch_zaaktype(zaak.zaaktype)
+            )
+        )
+        catalogi = get_catalogi()
+        domein = None
+        for cat in catalogi:
+            if cat.url == zaaktype.catalogus:
+                domein = cat.domein
+                break
+
+        if not domein:
+            raise ObjectDoesNotExist(
+                "Catalogus with `url`: `{url}` does not exist.".format(
+                    url=zaaktype.catalogus
+                )
+            )
+
+        object_filters[
+            "data_attrs"
+        ] = f"zaaktypeIdentificaties__icontains__{zaaktype.identificatie},zaaktypeCatalogus__exact__{domein}"
+
+    zaaktype_attributes = search_objects(object_filters)
+    return [zatr["record"]["data"] for zatr in zaaktype_attributes]

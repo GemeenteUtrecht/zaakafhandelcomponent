@@ -22,15 +22,6 @@ class ProcessEigenschapFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("eigenschapnaam", "camunda_start_process")
 
 
-class ProcessEigenschapChoiceFactory(factory.django.DjangoModelFactory):
-    process_eigenschap = factory.Faker(ProcessEigenschapFactory)
-    label = factory.Faker("bs")
-    value = factory.Faker("bs")
-
-    class Meta:
-        model = "start_process.ProcessEigenschapChoice"
-
-
 class ProcessInformatieObjectFactory(factory.django.DjangoModelFactory):
     camunda_start_process = factory.SubFactory(CamundaStartProcessFactory)
     informatieobjecttype_omschrijving = factory.Faker(ProcessEigenschapFactory)

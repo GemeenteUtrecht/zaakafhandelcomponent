@@ -17,7 +17,6 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.camunda.start_process.tests.factories import (
     CamundaStartProcessFactory,
-    ProcessEigenschapChoiceFactory,
     ProcessEigenschapFactory,
 )
 from zac.core.permissions import zaken_inzien
@@ -595,16 +594,6 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             eigenschapnaam=eigenschap["naam"],
             label="some-eigenschap",
             required=False,
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="3",
-            value="3",
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="4.0",
-            value="4.0",
         )
 
         response = self.client.get(

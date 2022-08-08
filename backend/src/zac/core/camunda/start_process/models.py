@@ -145,7 +145,6 @@ class OrderedMixin(OrderedModel):
 class ProcessEigenschap(
     FieldLabelMixin,
     RequiredMixin,
-    MultipleChoiceMixin,
     CamundaStartProcessMixin,
     OrderedMixin,
     models.Model,
@@ -162,9 +161,6 @@ class ProcessEigenschap(
         help_text=_("The default value of the ZAAKEIGENSCHAP."),
         blank=True,
     )
-
-    def get_choices(self):
-        return self.processeigenschapchoice_set.all().order_by("label")
 
     class Meta:
         verbose_name = _("Process EIGENSCHAP")
@@ -183,22 +179,6 @@ class ProcessEigenschap(
                     )
                 )
             )
-
-
-class ProcessEigenschapChoice(FieldLabelMixin, models.Model):
-    process_eigenschap = models.ForeignKey(
-        ProcessEigenschap,
-        on_delete=models.CASCADE,
-    )
-    value = models.CharField(
-        _("value"),
-        max_length=100,
-        help_text=_("The value that will be used internally."),
-    )
-
-    class Meta:
-        verbose_name = _("Process EIGENSCHAP choice")
-        verbose_name_plural = _("Process EIGENSCHAP choices")
 
 
 class ProcessInformatieObject(
@@ -238,7 +218,6 @@ class ProcessInformatieObject(
 class ProcessRol(
     FieldLabelMixin,
     RequiredMixin,
-    MultipleChoiceMixin,
     CamundaStartProcessMixin,
     OrderedMixin,
     models.Model,
@@ -260,9 +239,6 @@ class ProcessRol(
         verbose_name = _("Process ROL")
         verbose_name_plural = _("Process ROLlen")
 
-    def get_choices(self):
-        return self.processrolchoice_set.all().order_by("label")
-
     def clean(self):
         super().clean()
         if self.roltype_omschrijving not in [
@@ -275,19 +251,3 @@ class ProcessRol(
                     )
                 )
             )
-
-
-class ProcessRolChoice(FieldLabelMixin, models.Model):
-    process_rol = models.ForeignKey(
-        ProcessRol,
-        on_delete=models.CASCADE,
-    )
-    value = models.CharField(
-        _("value"),
-        max_length=100,
-        help_text=_("The value that will be used internally."),
-    )
-
-    class Meta:
-        verbose_name = _("Process ROL choice")
-        verbose_name_plural = _("Process ROL choices")
