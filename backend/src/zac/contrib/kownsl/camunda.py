@@ -11,6 +11,7 @@ from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.api.serializers import GroupSerializer
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
@@ -20,6 +21,7 @@ from zac.camunda.user_tasks import Context, register, usertask_context_serialize
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.api.fields import SelectDocumentsField
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
@@ -28,11 +30,18 @@ from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
 
 
 @dataclass
+class UsersRevReq:
+    user_assignees: List[Optional[User]]
+    group_assignees: List[Optional[Group]]
+
+
+@dataclass
 class AdviceApprovalContext(Context):
     title: str
     zaak_informatie: Zaak
     documents: List[Document]
     review_type: str
+    assigned_users: UsersRevReq
 
 
 class ZaakInformatieTaskSerializer(APIModelSerializer):
@@ -57,6 +66,34 @@ class DocumentUserTaskSerializer(APIModelSerializer):
         )
 
 
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source="get_full_name")
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "full_name",
+        )
+
+
+class UsersRevReqSerializer(APIModelSerializer):
+    """
+    Allows users or groups to be assigned from within the camunda process.
+
+    """
+
+    user_assignees = UserSerializer(many=True)
+    group_assignees = GroupSerializer(many=True)
+
+    class Meta:
+        model = UsersRevReq
+        fields = (
+            "user_assignees",
+            "group_assignees",
+        )
+
+
 @usertask_context_serializer
 class AdviceApprovalContextSerializer(APIModelSerializer):
     documents = DocumentUserTaskSerializer(many=True)
@@ -64,10 +101,19 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
     review_type = serializers.ChoiceField(
         choices=KownslTypes.choices,
     )
+    assigned_users = UsersRevReqSerializer(
+        help_text=_("Users or groups assigned from within the camunda process.")
+    )
 
     class Meta:
         model = AdviceApprovalContext
-        fields = ("documents", "title", "zaak_informatie", "review_type")
+        fields = (
+            "documents",
+            "title",
+            "zaak_informatie",
+            "review_type",
+            "assigned_users",
+        )
 
 
 #
@@ -76,9 +122,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
 
 
 @dataclass
-class SelectUsersRevReq:
-    user_assignees: List[Optional[User]]
-    group_assignees: List[Optional[Group]]
+class SelectUsersRevReq(UsersRevReq):
     deadline: date
     email_notification: bool = False
 
@@ -117,12 +161,12 @@ class SelectUsersRevReqSerializer(APIModelSerializer):
 
     class Meta:
         model = SelectUsersRevReq
-        fields = (
+        fields = [
             "user_assignees",
             "group_assignees",
             "email_notification",
             "deadline",
-        )
+        ]
 
     def validate_user_assignees(self, user_assignees):
         if len(user_assignees) > len(set(user_assignees)):
@@ -315,6 +359,21 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         }
 
 
+def get_camunda_assigned_users(task: Task) -> Dict[str, List]:
+    camunda_assigned_users = task.get_variable("assignedUsers", "")
+    assigned_users = {
+        "user_assignees": [],
+        "group_assignees": [],
+    }
+    for assignee in camunda_assigned_users:
+        assignee = resolve_assignee(assignee)
+        if isinstance(assignee, Group):
+            assigned_users["group_assignees"].append(assignee)
+        else:
+            assigned_users["user_assignees"].append(assignee)
+    return assigned_users
+
+
 @register(
     "zac:configureAdviceRequest",
     AdviceApprovalContextSerializer,
@@ -327,6 +386,7 @@ def get_advice_context(task: Task) -> AdviceApprovalContext:
         review_type=KownslTypes.advice,
         title=f"{zaak_context.zaaktype.omschrijving} - {zaak_context.zaaktype.versiedatum}",
         zaak_informatie=zaak_context.zaak,
+        assigned_users=get_camunda_assigned_users(task),
     )
 
 
@@ -342,4 +402,5 @@ def get_approval_context(task: Task) -> AdviceApprovalContext:
         review_type=KownslTypes.approval,
         title=f"{zaak_context.zaaktype.omschrijving} - {zaak_context.zaaktype.versiedatum}",
         zaak_informatie=zaak_context.zaak,
+        assigned_users=get_camunda_assigned_users(task),
     )

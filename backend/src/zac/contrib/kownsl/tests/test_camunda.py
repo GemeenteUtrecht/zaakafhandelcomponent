@@ -1,10 +1,10 @@
-import uuid
 from datetime import date
 from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
 
-from django_camunda.utils import underscoreize
+import requests_mock
+from django_camunda.utils import serialize_variable, underscoreize
 from freezegun import freeze_time
 from rest_framework import exceptions
 from rest_framework.test import APITestCase
@@ -130,25 +130,22 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             },
         )
 
-    def test_advice_context_serializer(self):
+    @requests_mock.Mocker()
+    def test_advice_context_serializer(self, m):
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            status_code=404,
+        )
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
-        self.assertIn("context", serializer.data)
-        self.assertEqual(
-            sorted(list(serializer.data["context"].keys())),
-            sorted(
-                [
-                    "documents",
-                    "title",
-                    "zaak_informatie",
-                    "review_type",
-                ]
-            ),
-        )
         self.assertEqual(
             serializer.data["context"],
             {
+                "assigned_users": {
+                    "user_assignees": [],
+                    "group_assignees": [],
+                },
                 "documents": [
                     {
                         "beschrijving": self.document.beschrijving,
@@ -168,25 +165,69 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             },
         )
 
-    def test_approval_context_serializer(self):
+    @requests_mock.Mocker()
+    def test_approval_context_serializer(self, m):
         task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
+        group = GroupFactory.create(name="some-group")
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            json=serialize_variable(["group:some-group"]),
+        )
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
-        self.assertIn("context", serializer.data)
-        self.assertEqual(
-            sorted(list(serializer.data["context"])),
-            sorted(
-                [
-                    "documents",
-                    "title",
-                    "zaak_informatie",
-                    "review_type",
-                ]
-            ),
-        )
         self.assertEqual(
             serializer.data["context"],
             {
+                "assigned_users": {
+                    "user_assignees": [],
+                    "group_assignees": [
+                        {
+                            "full_name": "Groep: some-group",
+                            "name": "some-group",
+                            "id": group.id,
+                        }
+                    ],
+                },
+                "documents": [
+                    {
+                        "beschrijving": self.document.beschrijving,
+                        "bestandsnaam": self.document.bestandsnaam,
+                        "url": DOCUMENT_URL,
+                        "read_url": get_dowc_url(
+                            self.document, purpose=DocFileTypes.read
+                        ),
+                    }
+                ],
+                "zaak_informatie": {
+                    "omschrijving": self.zaak.omschrijving,
+                    "toelichting": self.zaak.toelichting,
+                },
+                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                "review_type": KownslTypes.approval,
+            },
+        )
+
+    @requests_mock.Mocker()
+    def test_approval_context_serializer_with_user(self, m):
+        task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
+        user = UserFactory.create(
+            username="some-user", first_name="First", last_name="Last"
+        )
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            json=serialize_variable(["user:some-user"]),
+        )
+        task_data = UserTaskData(task=task, context=_get_context(task))
+        serializer = AdviceApprovalContextSerializer(instance=task_data)
+        self.assertEqual(
+            serializer.data["context"],
+            {
+                "assigned_users": {
+                    "user_assignees": [
+                        {"username": "some-user", "full_name": user.get_full_name()}
+                    ],
+                    "group_assignees": [],
+                },
                 "documents": [
                     {
                         "beschrijving": self.document.beschrijving,

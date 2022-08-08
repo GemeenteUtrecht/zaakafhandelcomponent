@@ -237,6 +237,10 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            status_code=404,
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
@@ -258,7 +262,9 @@ class GetUserTaskContextViewTests(APITestCase):
 
         self.assertEqual(
             sorted(list(data["context"].keys())),
-            sorted(["zaakInformatie", "title", "documents", "reviewType"]),
+            sorted(
+                ["assignedUsers", "zaakInformatie", "title", "documents", "reviewType"]
+            ),
         )
 
         self.assertEqual(data["context"]["reviewType"], KownslTypes.advice)
@@ -277,6 +283,10 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            status_code=404,
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
@@ -298,7 +308,9 @@ class GetUserTaskContextViewTests(APITestCase):
 
         self.assertEqual(
             sorted(list(data["context"].keys())),
-            sorted(["zaakInformatie", "title", "documents", "reviewType"]),
+            sorted(
+                ["assignedUsers", "zaakInformatie", "title", "documents", "reviewType"]
+            ),
         )
 
         self.assertEqual(data["context"]["reviewType"], KownslTypes.approval)

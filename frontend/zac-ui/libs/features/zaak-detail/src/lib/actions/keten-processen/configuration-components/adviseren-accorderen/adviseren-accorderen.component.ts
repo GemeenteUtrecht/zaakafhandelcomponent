@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
@@ -22,7 +22,7 @@ import { ModalService, SnackbarService } from '@gu/components';
   templateUrl: './adviseren-accorderen.component.html',
   styleUrls: ['../configuration-components.scss']
 })
-export class AdviserenAccorderenComponent implements OnChanges {
+export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -35,8 +35,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   steps = 1;
   minDate = new Date();
-  searchResultUsers: UserSearchResult[] = [];
-  searchResultUserGroups: UserGroupDetail[] = [];
+  searchResultUsers: UserSearchResult[];
+  searchResultUserGroups: UserGroupDetail[];
 
   assignUsersForm: FormGroup;
 
@@ -94,6 +94,15 @@ export class AdviserenAccorderenComponent implements OnChanges {
   //
 
   /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit() {
+    this.searchUsers();
+    this.searchUserGroups();
+  }
+
+  /**
    * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
    * to handle the changes.
    */
@@ -102,9 +111,10 @@ export class AdviserenAccorderenComponent implements OnChanges {
       this.reviewType = this.taskContextData.context.reviewType;
       this.assignUsersForm = this.fb.group({
         documents: this.addDocumentCheckboxes(),
-        assignedUsers: this.fb.array([this.addAssignUsersStep()]),
+        assignedUsers: this.fb.array([this.addAssignUsersStep(true)]),
         toelichting: this.fb.control("", Validators.maxLength(4000))
       })
+      this.checkPredefinedAssignees();
     }
   }
 
@@ -143,16 +153,34 @@ export class AdviserenAccorderenComponent implements OnChanges {
    * Creates form group for steps.
    * @returns {FormGroup}
    */
-  addAssignUsersStep() {
+  addAssignUsersStep(isFirstStep?: boolean) {
+    let userAssignees = [];
+    let groupAssignees = [];
+
+    if (isFirstStep) {
+      userAssignees = this.taskContextData.context.assignedUsers.userAssignees.map(userAssignee => userAssignee.username);
+      groupAssignees = this.taskContextData.context.assignedUsers.groupAssignees.map(groupAssignee => groupAssignee.name);
+    }
+
     return this.fb.group({
       deadline: [undefined, Validators.required],
       assignees: this.fb.group({
-        users: [[]],
-        userGroups: [[]],
+        users: [userAssignees],
+        userGroups: [groupAssignees],
       }, { validators: [this.atLeastOneAssignee]}),
       emailNotification: [true],
       extraStep: ['']
     })
+  }
+
+  /**
+   * Disable fields if preconfigure
+   */
+  checkPredefinedAssignees() {
+    if (this.assignedUsersControl(0).value.length > 0 || this.assignedUserGroupControl(0).value.length > 0 ) {
+      this.assignedUsersControl(0).disable();
+      this.assignedUserGroupControl(0).disable();
+    }
   }
 
   /**
@@ -224,36 +252,26 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   /**
    * Searches for users.
-    * @param searchInput
    */
-  onSearchUsers(searchInput) {
-    if (searchInput) {
-      this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
-        this.searchResultUsers = res.results;
-      }, error => {
-        this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
-        this.reportError(error);
-      })
-    } else {
-      this.searchResultUsers = [];
-    }
+  searchUsers() {
+    this.ketenProcessenService.getAccounts('').subscribe(res => {
+      this.searchResultUsers = res.results;
+    }, error => {
+      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.reportError(error);
+    })
   }
 
   /**
    * Searches for user groups.
-   * @param searchInput
    */
-  onSearchUserGroups(searchInput) {
-    if (searchInput) {
-      this.ketenProcessenService.getUserGroups(searchInput).subscribe(res => {
-        this.searchResultUserGroups = res.results;
-      }, error => {
-        this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
-        this.reportError(error);
-      })
-    } else {
-      this.searchResultUserGroups = [];
-    }
+  searchUserGroups() {
+    this.ketenProcessenService.getUserGroups('').subscribe(res => {
+      this.searchResultUserGroups = res.results;
+    }, error => {
+      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.reportError(error);
+    })
   }
 
   /**

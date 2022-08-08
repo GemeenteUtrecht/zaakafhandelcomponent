@@ -82,7 +82,20 @@ export interface BenodigdeZaakeigenschap {
   order: number;
 }
 
+export interface Assignee {
+  id: number,
+  name: string,
+  fullName: string,
+  username: string
+}
+
+export interface AssignedUsers {
+  userAssignees: Assignee[],
+  groupAssignees: Assignee[]
+}
+
 export interface Context {
+  assignedUsers: AssignedUsers;
   documents?: Document[];
   informatieobjecttypen?: InformatieObjectType[];
   title?: string;
