@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
@@ -22,7 +22,7 @@ import { ModalService, SnackbarService } from '@gu/components';
   templateUrl: './adviseren-accorderen.component.html',
   styleUrls: ['../configuration-components.scss']
 })
-export class AdviserenAccorderenComponent implements OnChanges {
+export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -35,8 +35,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   steps = 1;
   minDate = new Date();
-  searchResultUsers: UserSearchResult[] = [];
-  searchResultUserGroups: UserGroupDetail[] = [];
+  searchResultUsers: UserSearchResult[];
+  searchResultUserGroups: UserGroupDetail[];
 
   assignUsersForm: FormGroup;
 
@@ -92,6 +92,15 @@ export class AdviserenAccorderenComponent implements OnChanges {
   //
   // Angular lifecycle.
   //
+
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
+  ngOnInit() {
+    this.searchUsers();
+    this.searchUserGroups();
+  }
 
   /**
    * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
@@ -243,36 +252,26 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   /**
    * Searches for users.
-    * @param searchInput
    */
-  onSearchUsers(searchInput) {
-    if (searchInput) {
-      this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
-        this.searchResultUsers = res.results;
-      }, error => {
-        this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
-        this.reportError(error);
-      })
-    } else {
-      this.searchResultUsers = [];
-    }
+  searchUsers() {
+    this.ketenProcessenService.getAccounts('').subscribe(res => {
+      this.searchResultUsers = res.results;
+    }, error => {
+      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.reportError(error);
+    })
   }
 
   /**
    * Searches for user groups.
-   * @param searchInput
    */
-  onSearchUserGroups(searchInput) {
-    if (searchInput) {
-      this.ketenProcessenService.getUserGroups(searchInput).subscribe(res => {
-        this.searchResultUserGroups = res.results;
-      }, error => {
-        this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
-        this.reportError(error);
-      })
-    } else {
-      this.searchResultUserGroups = [];
-    }
+  searchUserGroups() {
+    this.ketenProcessenService.getUserGroups('').subscribe(res => {
+      this.searchResultUserGroups = res.results;
+    }, error => {
+      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.reportError(error);
+    })
   }
 
   /**
