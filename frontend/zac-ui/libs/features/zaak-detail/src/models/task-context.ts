@@ -45,7 +45,6 @@ interface Roltype {
 
 export interface BenodigdeRol {
   betrokkeneType: string;
-  choices: Choice[];
   label: string;
   roltype: Roltype;
   required: boolean;

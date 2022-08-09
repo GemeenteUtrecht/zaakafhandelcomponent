@@ -3,7 +3,7 @@
     <div class="row" formArrayName="roles" *ngFor="let role of rolesControl.controls; let i = index">
       <!-- Free user input  -->
       <gu-input
-        *ngIf="getRolesContext(i).choices.length === 0 && (getRolesContext(i).betrokkeneType !== 'medewerker')"
+        *ngIf="getRolesContext(i).betrokkeneType !== 'medewerker'"
         [control]="roleControl(i)"
         type="text"
         [label]="getRolesContext(i).label"
@@ -11,20 +11,6 @@
         autocomplete="off"
         class="col-8"
       ></gu-input>
-
-      <!-- If choices are available -->
-      <gu-multiselect
-        *ngIf="getRolesContext(i).choices.length > 0"
-        [control]="roleControl(i)"
-        [items]="getRolesContext(i).choices"
-        [label]="getRolesContext(i).label"
-        [multiple]="false"
-        [required]="getRolesContext(i).required"
-        bindLabel="label"
-        bindValue="value"
-        appendTo="body"
-        class="mb-4 col-8"
-      ></gu-multiselect>
 
       <!-- If a medewerker needs to be selected -->
       <gu-multiselect *ngIf="getRolesContext(i).betrokkeneType === 'medewerker'"
