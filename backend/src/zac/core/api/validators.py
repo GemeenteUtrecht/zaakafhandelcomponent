@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, serializers
 
 from zac.core.services import (
+    fetch_zaaktypeattributen_objects,
     get_documenten,
     get_eigenschap,
     get_eigenschappen,
@@ -77,17 +78,17 @@ class EigenschapKeuzeWaardeValidator:
     )
 
     def _validate_waarde_from_spec_or_camunda_forms(self, eigenschap, waarde):
-        process_forms = get_camunda_start_form_for_zaaktypen([eigenschap.zaaktype])
-        if process_forms.exists():
-            processeigenschap = process_forms[0].processeigenschap_set.filter(
-                eigenschapnaam=eigenschap.naam
-            )
-            if processeigenschap.exists() and processeigenschap[0].is_multiple_choice:
-                if waarde not in processeigenschap[0].valid_choice_values:
+        zt_attrs = {
+            attr["naam"]: attr
+            for attr in fetch_zaaktypeattributen_objects(zaaktype=eigenschap.zaaktype)
+        }
+        if zt_attr := zt_attrs.get(eigenschap.naam):
+            if enum := zt_attr.get("enum"):
+                if waarde not in enum:
                     raise serializers.ValidationError(
                         self.message.format(
                             naam=eigenschap.naam,
-                            choices=list(processeigenschap[0].valid_choice_values),
+                            choices=enum,
                             waarde=waarde,
                         )
                     )

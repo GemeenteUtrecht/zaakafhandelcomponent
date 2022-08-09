@@ -785,28 +785,6 @@ class CreateZaakEigenschapSerializer(serializers.Serializer):
     )
     zaak_url = serializers.URLField(help_text=_("URL-reference to ZAAK."))
 
-    def validate(self, attrs):
-        validated_data = super().validate(attrs)
-        zaak = get_zaak(zaak_url=validated_data["zaak_url"])
-        zaaktype = fetch_zaaktype(zaak.zaaktype)
-        zt_attrs = {
-            attr["naam"]: attr
-            for attr in fetch_zaaktypeattributen_objects(zaaktype=zaaktype)
-        }
-        if zt_attr := zt_attrs.get(validated_data["naam"]):
-            if enum := zt_attr.get("enum"):
-                if validated_data["waarde"] not in enum:
-                    raise serializers.ValidationError(
-                        _(
-                            "Invalid `waarde`: `{waarde}`. Zaakeigenschap with `naam`: `{naam}` must take value from: `{choices}`.".format(
-                                waarde=validated_data["waarde"],
-                                naam=validated_data["naam"],
-                                choices=enum,
-                            )
-                        )
-                    )
-        return validated_data
-
 
 class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
     waarde = serializers.CharField(
