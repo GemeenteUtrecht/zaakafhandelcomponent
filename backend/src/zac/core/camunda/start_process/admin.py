@@ -11,7 +11,6 @@ from .forms import CamundaStartProcessForm
 from .models import (
     CamundaStartProcess,
     ProcessEigenschap,
-    ProcessEigenschapChoice,
     ProcessInformatieObject,
     ProcessRol,
     ProcessRolChoice,
@@ -76,14 +75,6 @@ class ProcessRolInlineAdmin(NestedTabularInlineMixin, OrderedTabularInline):
     ]
 
 
-class ProcessEigenschapChoiceInlineAdmin(NestedTabularInline):
-    list_display = ("process_eigenschap", "label", "value")
-    autocomplete_fields = ("process_eigenschap",)
-    model = ProcessEigenschapChoice
-    extra = 0
-    ordering = ["process_eigenschap", "label"]
-
-
 class ProcessEigenschapInlineAdmin(NestedTabularInlineMixin, OrderedTabularInline):
     fields = ("eigenschapnaam", "label", "default", "required", "move_up_down_links")
     readonly_fields = ("move_up_down_links",)
@@ -91,7 +82,6 @@ class ProcessEigenschapInlineAdmin(NestedTabularInlineMixin, OrderedTabularInlin
     list_filter = ("camunda_start_process",)
     search_fields = ("eigenschapnaam",)
     autocomplete_fields = ("camunda_start_process",)
-    inlines = [ProcessEigenschapChoiceInlineAdmin]
     model = ProcessEigenschap
     extra = 0
     ordering = [

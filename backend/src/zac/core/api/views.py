@@ -65,6 +65,7 @@ from ..services import (
     fetch_zaak_eigenschap,
     fetch_zaak_object,
     fetch_zaaktype,
+    fetch_zaaktypeattributen_objects,
     find_zaak,
     get_catalogi,
     get_document,
@@ -1033,14 +1034,11 @@ class EigenschappenView(ListAPIView):
     Note that only the zaaktypen that the authenticated user has read-permissions for
     are considered.
 
+    The waardenverzameling of the EIGENSCHAP specificatie is retrieved from the objects API if available.
 
-    #TODO Move away from camunda process forms to define EIGENSCHAP waardeverzameling
-
-
-    #TODO Move towards object(type)s APIs to define EIGENSCHAP waardeverzameling
     """
 
-    authentication_classes = (authentication.SessionAuthentication,)
+    # authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchEigenschapSerializer
     filter_backends = (ApiFilterBackend,)
@@ -1057,31 +1055,30 @@ class EigenschappenView(ListAPIView):
                 zt,
                 user=request.user,
             )
-            zaaktypen = [zaaktype] if zaaktype else []
+
         else:
             zaaktypen = get_zaaktypen(
                 user=request.user,
                 catalogus=request.query_params.get("catalogus"),
                 identificatie=request.query_params.get("zaaktype_identificatie"),
             )
+            if not zaaktypen:
+                return Response([])
+            else:
+                zaaktype = zaaktypen[0]
 
-        if not zaaktypen:
-            return Response([])
+        for zatr in fetch_zaaktypeattributen_objects(zaaktype=zaaktype):
+            print(zatr)
 
-        process_forms = get_camunda_start_form_for_zaaktypen(zaaktypen)
+        zaak_attributes = {
+            zatr["naam"]: zatr
+            for zatr in fetch_zaaktypeattributen_objects(zaaktype=zaaktype)
+        }
+        eigenschappen = get_eigenschappen(zaaktype)
 
-        if process_forms.exists():
-            eigenschappen = process_forms[0].eigenschappen
-            for ei in eigenschappen:
-                for pei in process_forms[0].processeigenschap_set.all():
-                    if not ei.naam == pei.eigenschapnaam:
-                        continue
-                    else:
-                        if pei.is_multiple_choice:
-                            ei.specificatie.waardenverzameling = pei.choices
-
-        else:
-            eigenschappen = get_eigenschappen_for_zaaktypen(zaaktypen)
+        for ei in eigenschappen:
+            if (zatr := zaak_attributes.get(ei.naam)) and (enum := zatr.get("enum")):
+                ei.specificatie.waardenverzameling = enum
 
         eigenschappen_data = [
             {

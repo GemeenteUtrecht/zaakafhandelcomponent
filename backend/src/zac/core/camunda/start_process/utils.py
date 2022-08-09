@@ -1,12 +1,14 @@
 from typing import List
 
-from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.api.context import ZaakContext
+from zac.core.camunda.start_process.data import ProcessEigenschapChoice
 from zac.core.services import (
+    fetch_zaaktypeattributen_objects,
     get_eigenschappen,
     get_informatieobjecttypen_for_zaaktype,
     get_rollen,
@@ -18,7 +20,6 @@ from zac.core.services import (
 from .models import (
     CamundaStartProcess,
     ProcessEigenschap,
-    ProcessEigenschapChoice,
     ProcessInformatieObject,
     ProcessRol,
 )
@@ -110,11 +111,25 @@ def get_required_zaakeigenschappen(
         zei.eigenschap.naam for zei in get_zaak_eigenschappen(zaak_context.zaak)
     ]
     eigenschappen = {ei.naam: ei for ei in get_eigenschappen(zaak_context.zaaktype)}
-    required_eigenschappen = camunda_start_process.processeigenschap_set.all()
+    required_eigenschappen = camunda_start_process.processeigenschap_set.filter(
+        required=True
+    )
+    zaakattributes = {
+        data["naam"]: data
+        for data in fetch_zaaktypeattributen_objects(zaaktype=zaak_context.zaaktype)
+    }
     required_process_eigenschappen = []
     for ei in required_eigenschappen:
         if ei.eigenschapnaam not in zaakeigenschappen:
             ei.eigenschap = eigenschappen[ei.eigenschapnaam]
+            if ei.eigenschapnaam in zaakattributes and (
+                enum := zaakattributes[ei.eigenschapnaam].get("enum")
+            ):
+                ei.choices = factory(
+                    ProcessEigenschapChoice,
+                    [{"value": choice, "label": choice} for choice in enum],
+                )
+
             required_process_eigenschappen.append(ei)
 
     return required_process_eigenschappen
@@ -122,15 +137,7 @@ def get_required_zaakeigenschappen(
 
 def get_camunda_start_form_for_zaaktypen(zten: List[ZaakType]):
     process_forms = CamundaStartProcess.objects.prefetch_related(
-        Prefetch(
-            "processeigenschap_set",
-            queryset=ProcessEigenschap.objects.prefetch_related(
-                Prefetch(
-                    "processeigenschapchoice_set",
-                    queryset=ProcessEigenschapChoice.objects.all().order_by("label"),
-                )
-            ).all(),
-        )
+        "processeigenschap_set"
     ).filter(
         zaaktype_catalogus__in=[zt.catalogus for zt in zten],
         zaaktype_identificatie__in=[zt.identificatie for zt in zten],

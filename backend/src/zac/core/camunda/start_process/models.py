@@ -145,7 +145,6 @@ class OrderedMixin(OrderedModel):
 class ProcessEigenschap(
     FieldLabelMixin,
     RequiredMixin,
-    MultipleChoiceMixin,
     CamundaStartProcessMixin,
     OrderedMixin,
     models.Model,
@@ -162,9 +161,6 @@ class ProcessEigenschap(
         help_text=_("The default value of the ZAAKEIGENSCHAP."),
         blank=True,
     )
-
-    def get_choices(self):
-        return self.processeigenschapchoice_set.all().order_by("label")
 
     class Meta:
         verbose_name = _("Process EIGENSCHAP")

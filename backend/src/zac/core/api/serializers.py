@@ -53,6 +53,7 @@ from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_rol,
     fetch_zaaktype,
+    fetch_zaaktypeattributen_objects,
     get_document,
     get_documenten,
     get_informatieobjecttypen_for_zaak,
@@ -784,6 +785,28 @@ class CreateZaakEigenschapSerializer(serializers.Serializer):
     )
     zaak_url = serializers.URLField(help_text=_("URL-reference to ZAAK."))
 
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+        zaak = get_zaak(zaak_url=validated_data["zaak_url"])
+        zaaktype = fetch_zaaktype(zaak.zaaktype)
+        zt_attrs = {
+            attr["naam"]: attr
+            for attr in fetch_zaaktypeattributen_objects(zaaktype=zaaktype)
+        }
+        if zt_attr := zt_attrs.get(validated_data["naam"]):
+            if enum := zt_attr.get("enum"):
+                if validated_data["waarde"] not in enum:
+                    raise serializers.ValidationError(
+                        _(
+                            "Invalid `waarde`: `{waarde}`. Zaakeigenschap with `naam`: `{naam}` must take value from: `{choices}`.".format(
+                                waarde=validated_data["waarde"],
+                                naam=validated_data["naam"],
+                                choices=enum,
+                            )
+                        )
+                    )
+        return validated_data
+
 
 class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
     waarde = serializers.CharField(
@@ -791,6 +814,25 @@ class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
             "Value of ZAAKEIGENSCHAP. Must be formatted as defined by the EIGENSCHAP spec."
         )
     )
+
+    def validate_waarde(self, waarde):
+        zaak = get_zaak(zaak_url=self.instance.zaak_url)
+        zaaktype = fetch_zaaktype(zaak.zaaktype)
+        zt_attrs = {
+            data["naam"]: data
+            for data in fetch_zaaktypeattributen_objects(zaaktype=zaaktype)
+        }
+        if self.instance.naam in zt_attrs:
+            if enum := zt_attrs[self.instance.naam].get("enum"):
+                if waarde not in enum:
+                    raise serializers.ValidationError(
+                        _(
+                            "Invalid `waarde`: `{waarde}`. Zaakeigenschap with `naam`: `{naam}` must take value from: `{choices}`.".format(
+                                waarde=waarde, naam=self.instance.naam, choices=enum
+                            )
+                        )
+                    )
+        return waarde
 
 
 class RelatedZaakDetailSerializer(ZaakDetailSerializer):
