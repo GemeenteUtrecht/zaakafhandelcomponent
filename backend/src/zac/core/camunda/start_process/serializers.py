@@ -280,15 +280,12 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             if len(required_zaakeigenschappen) > 1:
                 raise serializers.ValidationError(
                     _("ZAAKEIGENSCHAPpen with `namen`: `{namen}` are required.").format(
-                        namen=[
-                            ei["eigenschapnaam"]
-                            for ei in required_zaakeigenschappen.values()
-                        ]
+                        namen=list(required_zaakeigenschappen.keys())
                     )
                 )
             raise serializers.ValidationError(
                 _("A ZAAKEIGENSCHAP with `naam`: `{naam}` is required.").format(
-                    naam=required_zaakeigenschappen.values()[0]["eigenschapnaam"]
+                    naam=list(required_zaakeigenschappen.keys())[0]
                 )
             )
 

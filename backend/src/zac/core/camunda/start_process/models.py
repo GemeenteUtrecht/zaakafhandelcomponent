@@ -181,22 +181,6 @@ class ProcessEigenschap(
             )
 
 
-class ProcessEigenschapChoice(FieldLabelMixin, models.Model):
-    process_eigenschap = models.ForeignKey(
-        ProcessEigenschap,
-        on_delete=models.CASCADE,
-    )
-    value = models.CharField(
-        _("value"),
-        max_length=100,
-        help_text=_("The value that will be used internally."),
-    )
-
-    class Meta:
-        verbose_name = _("Process EIGENSCHAP choice")
-        verbose_name_plural = _("Process EIGENSCHAP choices")
-
-
 class ProcessInformatieObject(
     FieldLabelMixin, RequiredMixin, CamundaStartProcessMixin, OrderedMixin, models.Model
 ):

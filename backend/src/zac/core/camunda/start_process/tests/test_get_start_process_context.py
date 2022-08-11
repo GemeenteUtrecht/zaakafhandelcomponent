@@ -22,7 +22,6 @@ from zgw.models.zrc import Zaak
 
 from .factories import (
     CamundaStartProcessFactory,
-    ProcessEigenschapChoiceFactory,
     ProcessEigenschapFactory,
     ProcessInformatieObjectFactory,
     ProcessRolFactory,
@@ -170,24 +169,19 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             zaaktype_identificatie=cls.zaaktype["identificatie"],
             zaaktype_catalogus=cls.zaaktype["catalogus"],
         )
-        process_eigenschap = ProcessEigenschapFactory.create(
+        ProcessEigenschapFactory.create(
             camunda_start_process=camunda_start_process,
             eigenschapnaam=cls.eigenschap["naam"],
             label="some-eigenschap",
-            required=False,
+            required=True,
             order=0,
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="some-choice-1",
-            value="some-value-1",
         )
         ProcessInformatieObjectFactory.create(
             camunda_start_process=camunda_start_process,
             informatieobjecttype_omschrijving=cls.informatieobjecttype["omschrijving"],
             label="some-doc",
             allow_multiple=True,
-            required=False,
+            required=True,
             order=0,
         )
         ProcessRolFactory.create(
@@ -195,7 +189,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             roltype_omschrijving=cls.roltype["omschrijving"],
             label="some-rol",
             betrokkene_type="natuurlijk_persoon",
-            required=False,
+            required=True,
             order=0,
         )
 
@@ -268,7 +262,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             "alreadyUploadedInformatieobjecten": [self.document["url"]],
                             "allowMultiple": True,
                             "label": "some-doc",
-                            "required": False,
+                            "required": True,
                             "order": 0,
                         }
                     ],
@@ -345,7 +339,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             },
                             "allowMultiple": True,
                             "label": "some-doc",
-                            "required": False,
+                            "required": True,
                             "order": 0,
                         }
                     ],
@@ -358,19 +352,12 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             },
                             "label": "some-rol",
                             "betrokkeneType": "natuurlijk_persoon",
-                            "choices": [],
-                            "required": False,
+                            "required": True,
                             "order": 0,
                         }
                     ],
                     "benodigdeZaakeigenschappen": [
                         {
-                            "choices": [
-                                {
-                                    "label": "some-choice-1",
-                                    "value": "some-value-1",
-                                }
-                            ],
                             "eigenschap": {
                                 "url": self.eigenschap["url"],
                                 "naam": "some-property",
@@ -385,7 +372,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             },
                             "label": "some-eigenschap",
                             "default": "",
-                            "required": False,
+                            "required": True,
                             "order": 0,
                         }
                     ],

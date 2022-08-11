@@ -14,20 +14,21 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.camunda.start_process.tests.factories import (
-    CamundaStartProcessFactory,
-    ProcessEigenschapChoiceFactory,
-    ProcessEigenschapFactory,
-)
+from zac.core.models import CoreConfig
 from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950"
 ZAAK_EIGENSCHAP_URL = (
     f"{ZAAK_URL}/zaakeigenschappen/829ba774-ffd4-4727-8aa3-bf91db611f77"
+)
+OBJECTS_ROOT = "http://object.nl/api/v1/"
+ZAAKTYPE_ATTRIBUTE_OBJECTTYPE = (
+    "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
 )
 
 
@@ -46,15 +47,18 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOMEIN",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
         cls.zaak = generate_oas_component(
@@ -601,7 +605,13 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
     def test_patch_zaak_eigenschap_waarde_not_found_in_camundastartforms(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOMEIN",
+        )
         eigenschap = generate_oas_component(
             "ztc",
             "schemas/Eigenschap",
@@ -634,26 +644,43 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([eigenschap]),
         )
+        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([catalogus]))
 
-        camunda_start_process = CamundaStartProcessFactory.create(
-            zaaktype_identificatie=self.zaaktype["identificatie"],
-            zaaktype_catalogus=self.zaaktype["catalogus"],
+        core_config = CoreConfig.get_solo()
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        process_eigenschap = ProcessEigenschapFactory.create(
-            camunda_start_process=camunda_start_process,
-            eigenschapnaam=eigenschap["naam"],
-            label="some-eigenschap",
-            required=False,
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="1",
-            value="1",
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="2",
-            value="2",
+        core_config.primary_objects_api = objects_service
+        core_config.zaaktype_attribute_object_type = "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
+        core_config.save()
+        enum_obj = {
+            "url": f"{objects_service.api_root}objects/0196252f-32de-4edb-90e8-10669b5dbf50",
+            "uuid": "0196252f-32de-4edb-90e8-10669b5dbf50",
+            "type": core_config.zaaktype_attribute_object_type,
+            "record": {
+                "index": 1,
+                "typeVersion": 1,
+                "data": {
+                    "enum": ["1", "2"],
+                    "naam": "some-property",
+                    "waarde": "",
+                    "zaaktypeCatalogus": catalogus["domein"],
+                    "zaaktypeIdentificaties": [
+                        self.zaaktype["identificatie"],
+                    ],
+                },
+                "geometry": None,
+                "startAt": "2022-08-08",
+                "endAt": None,
+                "registrationAt": "2022-08-08",
+                "correctionFor": None,
+                "correctedBy": None,
+            },
+        }
+
+        m.post(
+            f"{objects_service.api_root}objects/search",
+            json=[enum_obj],
         )
 
         response = self.client.patch(self.endpoint, data={"waarde": 4})

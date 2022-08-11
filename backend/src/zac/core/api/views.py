@@ -1034,11 +1034,11 @@ class EigenschappenView(ListAPIView):
     Note that only the zaaktypen that the authenticated user has read-permissions for
     are considered.
 
-    The waardenverzameling of the EIGENSCHAP specificatie is retrieved from the objects API if available.
+    The choices for the EIGENSCHAP waarde are retrieved from the objects API if available.
 
     """
 
-    # authentication_classes = (authentication.SessionAuthentication,)
+    authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SearchEigenschapSerializer
     filter_backends = (ApiFilterBackend,)
@@ -1055,6 +1055,7 @@ class EigenschappenView(ListAPIView):
                 zt,
                 user=request.user,
             )
+            zaaktypen = [zaaktype] if zaaktype else []
 
         else:
             zaaktypen = get_zaaktypen(
@@ -1062,19 +1063,15 @@ class EigenschappenView(ListAPIView):
                 catalogus=request.query_params.get("catalogus"),
                 identificatie=request.query_params.get("zaaktype_identificatie"),
             )
-            if not zaaktypen:
-                return Response([])
-            else:
-                zaaktype = zaaktypen[0]
 
-        for zatr in fetch_zaaktypeattributen_objects(zaaktype=zaaktype):
-            print(zatr)
+        if not zaaktypen:
+            return Response([])
 
         zaak_attributes = {
             zatr["naam"]: zatr
-            for zatr in fetch_zaaktypeattributen_objects(zaaktype=zaaktype)
+            for zatr in fetch_zaaktypeattributen_objects(zaaktype=zaaktypen[0])
         }
-        eigenschappen = get_eigenschappen(zaaktype)
+        eigenschappen = get_eigenschappen_for_zaaktypen(zaaktypen)
 
         for ei in eigenschappen:
             if (zatr := zaak_attributes.get(ei.naam)) and (enum := zatr.get("enum")):

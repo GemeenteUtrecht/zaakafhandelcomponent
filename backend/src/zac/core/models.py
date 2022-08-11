@@ -39,6 +39,13 @@ class CoreConfig(SingletonModel):
         related_name="+",
         help_text=_("Default OBJECTTYPES API service to use"),
     )
+    zaaktype_attribute_object_type = models.URLField(
+        _("URL-reference to ZaaktypeAttributes in OBJECTTYPES API."),
+        help_text=_(
+            "A URL-reference to the ZaaktypeAttributes OBJECTTYPE. This is used to get extra data for EIGENSCHAPs."
+        ),
+        default="",
+    )
 
     app_id = models.URLField(
         _("BPTL Application ID"),

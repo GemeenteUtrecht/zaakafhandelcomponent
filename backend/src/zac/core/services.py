@@ -277,12 +277,20 @@ def get_eigenschappen_for_zaaktypen(zaaktypen: List[ZaakType]) -> List[Eigenscha
         existing_eigenschappen = [
             e for e in eigenschappen_aggregated if e.naam == eigenschap.naam
         ]
-        if existing_eigenschappen:
-            if convert_eigenschap_spec_to_json_schema(
-                eigenschap.specificatie
-            ) != convert_eigenschap_spec_to_json_schema(
-                existing_eigenschappen[0].specificatie
-            ):
+        eigenschap_json_schema = convert_eigenschap_spec_to_json_schema(
+            eigenschap.specificatie
+        )
+        differing_specs = []
+        for e in existing_eigenschappen:
+            existing_eigenschap_json_schema = convert_eigenschap_spec_to_json_schema(
+                e.specificatie
+            )
+            differing_specs.append(
+                eigenschap_json_schema != existing_eigenschap_json_schema
+            )
+
+        if len(differing_specs) > 0:
+            if any(differing_specs):
                 logger.warning(
                     "Eigenschappen '%(name)s' which belong to zaaktype '%(zaaktype)s' have different specs"
                     % {
@@ -1309,19 +1317,17 @@ def delete_zaak_object(zaak_object_url: str):
 def fetch_zaaktypeattributen_objects(
     zaak: Optional[Zaak] = None, zaaktype: Optional[ZaakType] = None
 ) -> List[dict]:
-    obj_types = fetch_objecttypes()
-    ot_zt_attribuut = None
-    for ot in obj_types:
-        if ot["name"] == "ZaaktypeAttribuut":
-            ot_zt_attribuut = ot
-            break
 
-    if not ot_zt_attribuut:
-        raise ObjectDoesNotExist(
-            "`ZaaktypeAttribuut` objecttype does not exist in the configured objecttype service."
+    config = CoreConfig.get_solo()
+    ot_zt_attribuut_url = config.zaaktype_attribute_object_type
+
+    if not ot_zt_attribuut_url:
+        logger.warning(
+            "`ZaaktypeAttribuut` objecttype is not configured in core configuration or does not exist in the configured objecttype service."
         )
+        return []
 
-    object_filters = {"type": ot_zt_attribuut["url"]}
+    object_filters = {"type": ot_zt_attribuut_url}
     if zaak or zaaktype:
         zaaktype = (
             zaaktype
