@@ -6,11 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('start_process', '0010_alter_processeigenschap_unique_together'),
+        ("start_process", "0010_alter_processeigenschap_unique_together"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='ProcessEigenschapChoice',
+            name="ProcessEigenschapChoice",
         ),
     ]
