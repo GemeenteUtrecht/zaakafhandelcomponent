@@ -2,10 +2,10 @@
   <h2>{{taskContextData.task.name | capitalize}}</h2>
   <form class="configuration-form" [formGroup]="dynamicForm">
     <div class="configuration-details row" *ngFor="let formField of formFields">
-      <div class="col-md-6">
+      <div class="col-md-4">
         <label class="label">{{formField.label | capitalize}}</label>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-8">
         <ng-container [ngSwitch]="formField.inputType">
 <!--          enum-->
           <ng-container *ngSwitchCase="'enum'">
@@ -19,13 +19,12 @@
             </gu-multiselect>
           </ng-container>
 <!--          string-->
-          <gu-input *ngSwitchCase="'string'"
-                    type="text"
+          <gu-textarea *ngSwitchCase="'string'"
                     [required]="true"
                     [control]="dynamicFormField(formField.name)"
                     [value]="formField.value"
                     id="dyn-form-str-{{formField.name}}"
-          ></gu-input>
+          ></gu-textarea>
 <!--          number-->
           <gu-input *ngSwitchCase="'int'"
                     type="number"
