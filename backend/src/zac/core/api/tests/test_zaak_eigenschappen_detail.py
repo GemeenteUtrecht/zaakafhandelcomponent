@@ -644,7 +644,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([eigenschap]),
         )
-        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([catalogus]))
+        m.get(catalogus["url"], json=catalogus)
 
         core_config = CoreConfig.get_solo()
         objects_service = Service.objects.create(
@@ -711,15 +711,12 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )

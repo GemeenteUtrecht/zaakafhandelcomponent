@@ -598,7 +598,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
             json=paginated_response([eigenschap]),
         )
-        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([catalogus]))
+        m.get(catalogus["url"], json=catalogus)
 
         core_config = CoreConfig.get_solo()
         objects_service = Service.objects.create(

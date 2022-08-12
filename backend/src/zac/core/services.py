@@ -83,6 +83,13 @@ def fetch_besluittype(url: str) -> BesluitType:
     return factory(BesluitType, result)
 
 
+@cache_result("catalogus:{url}", timeout=A_DAY)
+def fetch_catalogus(url: str) -> Catalogus:
+    client = _client_from_url(url)
+    result = client.retrieve("catalogus", url=url)
+    return factory(Catalogus, result)
+
+
 def _get_from_catalogus(resource: str, catalogus: str = "", **extra_query) -> List:
     """
     Retrieve informatieobjecttype or zaaktypen from all catalogi in the configured APIs.
@@ -1314,10 +1321,7 @@ def delete_zaak_object(zaak_object_url: str):
     client.delete("zaakobject", url=zaak_object_url)
 
 
-def fetch_zaaktypeattributen_objects(
-    zaak: Optional[Zaak] = None, zaaktype: Optional[ZaakType] = None
-) -> List[dict]:
-
+def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType]) -> List[dict]:
     config = CoreConfig.get_solo()
     ot_zt_attribuut_url = config.zaaktype_attribute_object_type
 
@@ -1328,33 +1332,11 @@ def fetch_zaaktypeattributen_objects(
         return []
 
     object_filters = {"type": ot_zt_attribuut_url}
-    if zaak or zaaktype:
-        zaaktype = (
-            zaaktype
-            if zaaktype
-            else (
-                zaak.zaaktype
-                if isinstance(zaak.zaaktype, ZaakType)
-                else fetch_zaaktype(zaak.zaaktype)
-            )
-        )
-        catalogi = get_catalogi()
-        domein = None
-        for cat in catalogi:
-            if cat.url == zaaktype.catalogus:
-                domein = cat.domein
-                break
-
-        if not domein:
-            raise ObjectDoesNotExist(
-                "Catalogus with `url`: `{url}` does not exist.".format(
-                    url=zaaktype.catalogus
-                )
-            )
-
+    if zaaktype:
+        catalogus = fetch_catalogus(zaaktype.catalogus)
         object_filters[
             "data_attrs"
-        ] = f"zaaktypeIdentificaties__icontains__{zaaktype.identificatie},zaaktypeCatalogus__exact__{domein}"
+        ] = f"zaaktypeIdentificaties__icontains__{zaaktype.identificatie},zaaktypeCatalogus__exact__{catalogus.domein}"
 
     zaaktype_attributes = search_objects(object_filters)
     return [zatr["record"]["data"] for zatr in zaaktype_attributes]
