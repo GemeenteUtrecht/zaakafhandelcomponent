@@ -65,6 +65,7 @@ from ..services import (
     fetch_zaak_eigenschap,
     fetch_zaak_object,
     fetch_zaaktype,
+    fetch_zaaktypeattributen_objects,
     find_zaak,
     get_catalogi,
     get_document,
@@ -1033,11 +1034,8 @@ class EigenschappenView(ListAPIView):
     Note that only the zaaktypen that the authenticated user has read-permissions for
     are considered.
 
+    The choices for the EIGENSCHAP waarde are retrieved from the objects API if available.
 
-    #TODO Move away from camunda process forms to define EIGENSCHAP waardeverzameling
-
-
-    #TODO Move towards object(type)s APIs to define EIGENSCHAP waardeverzameling
     """
 
     authentication_classes = (authentication.SessionAuthentication,)
@@ -1058,6 +1056,7 @@ class EigenschappenView(ListAPIView):
                 user=request.user,
             )
             zaaktypen = [zaaktype] if zaaktype else []
+
         else:
             zaaktypen = get_zaaktypen(
                 user=request.user,
@@ -1068,20 +1067,15 @@ class EigenschappenView(ListAPIView):
         if not zaaktypen:
             return Response([])
 
-        process_forms = get_camunda_start_form_for_zaaktypen(zaaktypen)
+        zaak_attributes = {
+            zatr["naam"]: zatr
+            for zatr in fetch_zaaktypeattributen_objects(zaaktype=zaaktypen[0])
+        }
+        eigenschappen = get_eigenschappen_for_zaaktypen(zaaktypen)
 
-        if process_forms.exists():
-            eigenschappen = process_forms[0].eigenschappen
-            for ei in eigenschappen:
-                for pei in process_forms[0].processeigenschap_set.all():
-                    if not ei.naam == pei.eigenschapnaam:
-                        continue
-                    else:
-                        if pei.is_multiple_choice:
-                            ei.specificatie.waardenverzameling = pei.choices
-
-        else:
-            eigenschappen = get_eigenschappen_for_zaaktypen(zaaktypen)
+        for ei in eigenschappen:
+            if (zatr := zaak_attributes.get(ei.naam)) and (enum := zatr.get("enum")):
+                ei.specificatie.waardenverzameling = enum
 
         eigenschappen_data = [
             {

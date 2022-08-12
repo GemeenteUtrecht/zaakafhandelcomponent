@@ -1,3 +1,4 @@
+from re import M
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -15,11 +16,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.camunda.start_process.tests.factories import (
-    CamundaStartProcessFactory,
-    ProcessEigenschapChoiceFactory,
-    ProcessEigenschapFactory,
-)
+from zac.core.models import CoreConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -29,7 +26,8 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30
 
 
 @requests_mock.Mocker()
-class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
+@patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
@@ -60,12 +58,12 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
 
         self.endpoint = reverse("eigenschappen")
 
-    def test_not_authenticated(self, m):
+    def test_not_authenticated(self, m, *mocks):
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_authenticated_no_permissions(self, m):
+    def test_authenticated_no_permissions(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
@@ -88,7 +86,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 0)
 
-    def test_has_perm_but_not_for_zaaktype(self, m):
+    def test_has_perm_but_not_for_zaaktype(self, m, *mocks):
         zaaktype2 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -129,7 +127,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 0)
 
-    def test_is_superuser(self, m):
+    def test_is_superuser(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
@@ -154,7 +152,7 @@ class EigenschappenPermissiontests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 1)
 
-    def test_has_perms(self, m):
+    def test_has_perms(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
@@ -201,8 +199,9 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.endpoint = reverse("eigenschappen")
 
+    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
     @requests_mock.Mocker()
-    def test_get_eigenschappen_string(self, m):
+    def test_get_eigenschappen_string(self, mock_fetch_ztao, m):
         zaaktype1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -285,8 +284,9 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
+    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
     @requests_mock.Mocker()
-    def test_get_eigenschappen_number(self, m):
+    def test_get_eigenschappen_number(self, mock_fetch_ztao, m):
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -345,7 +345,8 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    def test_get_eigenschappen_with_all_query_params(self):
+    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    def test_get_eigenschappen_with_all_query_params(self, mock_fetch_ztao):
         response = self.client.get(
             self.endpoint,
             {
@@ -363,7 +364,8 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    def test_get_eigenschappen_without_query_params(self):
+    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    def test_get_eigenschappen_without_query_params(self, mock_fetch_ztao):
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -374,7 +376,8 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    def test_get_eigenschappen_with_invalid_query_param(self):
+    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    def test_get_eigenschappen_with_invalid_query_param(self, mock_fetch_ztao):
         response = self.client.get(
             self.endpoint, {"catalogus": "some-url", "zaaktype_identificatie": "ZT1"}
         )
@@ -385,8 +388,9 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"zaaktype": ["Voer een geldige URL in."]})
 
+    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
     @requests_mock.Mocker()
-    def test_get_eigenschappen_with_same_name_and_spec(self, m):
+    def test_get_eigenschappen_with_same_name_and_spec(self, mock_fetch_ztao, m):
         zaaktype1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -473,9 +477,12 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
+    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
     @patch("zac.core.services.logger")
     @requests_mock.Mocker()
-    def test_get_eigenschappen_with_same_name_but_different_spec(self, m_logger, m_req):
+    def test_get_eigenschappen_with_same_name_but_different_spec(
+        self, m_logger, mock_ztao, m_req
+    ):
         zaaktype1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -551,7 +558,13 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
 
     @requests_mock.Mocker()
-    def test_get_eigenschappen_specification_from_startcamundaprocess(self, m):
+    def test_get_eigenschappen_specification_from_objects(self, m):
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOMEIN",
+        )
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -574,8 +587,8 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "waardenverzameling": [],
             },
         )
-
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, "http://object.nl/api/v1/", "objects")
         mock_resource_get(m, zaaktype)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
@@ -585,26 +598,44 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
             json=paginated_response([eigenschap]),
         )
+        m.get(catalogus["url"], json=catalogus)
 
-        camunda_start_process = CamundaStartProcessFactory.create(
-            zaaktype_identificatie=zaaktype["identificatie"],
-            zaaktype_catalogus=zaaktype["catalogus"],
+        core_config = CoreConfig.get_solo()
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root="http://object.nl/api/v1/"
         )
-        process_eigenschap = ProcessEigenschapFactory.create(
-            camunda_start_process=camunda_start_process,
-            eigenschapnaam=eigenschap["naam"],
-            label="some-eigenschap",
-            required=False,
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="3",
-            value="3",
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="4.0",
-            value="4.0",
+        core_config.primary_objects_api = objects_service
+        core_config.zaaktype_attribute_object_type = "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
+        core_config.save()
+
+        enum_obj = {
+            "url": f"{objects_service.api_root}objects/0196252f-32de-4edb-90e8-10669b5dbf50",
+            "uuid": "0196252f-32de-4edb-90e8-10669b5dbf50",
+            "type": core_config.zaaktype_attribute_object_type,
+            "record": {
+                "index": 1,
+                "typeVersion": 1,
+                "data": {
+                    "enum": ["3", "4"],
+                    "naam": "some-property",
+                    "waarde": "",
+                    "zaaktypeCatalogus": catalogus["domein"],
+                    "zaaktypeIdentificaties": [
+                        zaaktype["identificatie"],
+                    ],
+                },
+                "geometry": None,
+                "startAt": "2022-08-08",
+                "endAt": None,
+                "registrationAt": "2022-08-08",
+                "correctionFor": None,
+                "correctedBy": None,
+            },
+        }
+
+        m.post(
+            f"{objects_service.api_root}objects/search",
+            json=[enum_obj],
         )
 
         response = self.client.get(
@@ -614,7 +645,6 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-
         self.assertEqual(
             data,
             [
@@ -624,7 +654,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                         "type": "number",
                         "enum": [
                             {"label": "3", "value": 3.0},
-                            {"label": "4.0", "value": 4.0},
+                            {"label": "4", "value": 4.0},
                         ],
                     },
                 }

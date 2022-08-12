@@ -29,13 +29,12 @@ from zac.core.services import (
     resolve_documenten_informatieobjecttypen,
 )
 
+from .data import ProcessEigenschapChoice
 from .models import (
     CamundaStartProcess,
     ProcessEigenschap,
-    ProcessEigenschapChoice,
     ProcessInformatieObject,
     ProcessRol,
-    ProcessRolChoice,
 )
 from .utils import (
     get_required_process_informatie_objecten,
@@ -54,7 +53,7 @@ class CreatedProcessInstanceSerializer(serializers.Serializer):
     )
 
 
-class ProcessEigenschapChoiceSerializer(serializers.ModelSerializer):
+class ProcessEigenschapChoiceSerializer(APIModelSerializer):
     class Meta:
         model = ProcessEigenschapChoice
         fields = ("label", "value")
@@ -65,7 +64,6 @@ class ProcessEigenschapSerializer(serializers.ModelSerializer):
         many=True,
         required=False,
         help_text=_("Possible choices related to the EIGENSCHAP."),
-        source="processeigenschapchoice_set",
     )
     eigenschap = EigenschapSerializer(
         required=True, help_text=_("The EIGENSCHAP related to the ZAAKEIGENSCHAP.")
@@ -100,29 +98,14 @@ class ProcessInformatieObjectSerializer(serializers.ModelSerializer):
         )
 
 
-class ProcessRolChoiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProcessRolChoice
-        fields = (
-            "label",
-            "value",
-        )
-
-
 class ProcessRolSerializer(serializers.ModelSerializer):
-    choices = ProcessRolChoiceSerializer(
-        many=True,
-        required=False,
-        help_text=_("Possible choices related to the ROL."),
-        source="processrolchoice_set",
-    )
     roltype = RolTypeSerializer(
         _("roltype"), required=True, help_text=_("The ROLTYPE related to the ROL.")
     )
 
     class Meta:
         model = ProcessRol
-        fields = ("betrokkene_type", "choices", "label", "roltype", "required", "order")
+        fields = ("betrokkene_type", "label", "roltype", "required", "order")
 
 
 @dataclass
@@ -196,18 +179,8 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 self._camunda_start_process = (
                     CamundaStartProcess.objects.prefetch_related(
                         "processinformatieobject_set",
-                        Prefetch(
-                            "processrol_set",
-                            queryset=ProcessRol.objects.prefetch_related(
-                                "processrolchoice_set"
-                            ).all(),
-                        ),
-                        Prefetch(
-                            "processeigenschap_set",
-                            queryset=ProcessEigenschap.objects.prefetch_related(
-                                "processeigenschapchoice_set"
-                            ).all(),
-                        ),
+                        "processeigenschap_set",
+                        "processrol_set",
                     ).get(
                         zaaktype_catalogus=self.zaakcontext.zaaktype.catalogus,
                         zaaktype_identificatie=self.zaakcontext.zaaktype.identificatie,
@@ -297,43 +270,25 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
 
     def validate_zaakeigenschappen(self, zaakeigenschappen) -> List[ZaakEigenschap]:
         # Validate that zaakeigenschappen related to zaak match required zaakeigenschappen.
-        required_zaakeigenschappen = {}
-        multiple_choice_zaakeigenschappen = {}
-        for ei in self.camunda_start_process.processeigenschap_set.filter(
-            required=True
-        ):
-            if ei.required:
-                required_zaakeigenschappen[ei.eigenschapnaam] = {
-                    pec.label: pec.value for pec in ei.processeigenschapchoice_set.all()
-                }
-            if ei.is_multiple_choice:
-                multiple_choice_zaakeigenschappen[
-                    ei.eigenschapnaam
-                ] = ei.valid_choice_values
-
-        found_zaakeigenschapnaamwaarden = {
-            zei.naam: zei.waarde for zei in zaakeigenschappen
+        required_zaakeigenschappen = {
+            ei.eigenschapnaam: ei
+            for ei in get_required_zaakeigenschappen(
+                self.zaakcontext, self.camunda_start_process
+            )
         }
-        for required_zei in required_zaakeigenschappen.keys():
-            if required_zei not in found_zaakeigenschapnaamwaarden:
+        if required_zaakeigenschappen:
+            if len(required_zaakeigenschappen) > 1:
                 raise serializers.ValidationError(
-                    _(
-                        "A ZAAKEIGENSCHAP with `naam`: `{eigenschapnaam}` is required."
-                    ).format(eigenschapnaam=required_zei)
-                )
-
-        for naam, waarde in found_zaakeigenschapnaamwaarden.items():
-            if (naam in multiple_choice_zaakeigenschappen) and (
-                waarde not in multiple_choice_zaakeigenschappen[naam]
-            ):
-                raise serializers.ValidationError(
-                    _(
-                        "ZAAKEIGENSCHAP with `naam`: `{eigenschapnaam}` needs to have a `waarde` chosen from: `{choices}`."
-                    ).format(
-                        eigenschapnaam=naam,
-                        choices=sorted(list(multiple_choice_zaakeigenschappen[naam])),
+                    _("ZAAKEIGENSCHAPpen with `namen`: `{namen}` are required.").format(
+                        namen=list(required_zaakeigenschappen.keys())
                     )
                 )
+            raise serializers.ValidationError(
+                _("A ZAAKEIGENSCHAP with `naam`: `{naam}` is required.").format(
+                    naam=list(required_zaakeigenschappen.keys())[0]
+                )
+            )
+
         return zaakeigenschappen
 
     def on_task_submission(self) -> None:

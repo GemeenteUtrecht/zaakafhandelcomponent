@@ -23,7 +23,6 @@ from zgw.models.zrc import Zaak
 
 from .factories import (
     CamundaStartProcessFactory,
-    ProcessEigenschapChoiceFactory,
     ProcessEigenschapFactory,
     ProcessInformatieObjectFactory,
     ProcessRolFactory,
@@ -193,11 +192,6 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             eigenschapnaam=cls.eigenschap["naam"],
             label="some-eigenschap",
             required=True,
-        )
-        ProcessEigenschapChoiceFactory.create(
-            process_eigenschap=process_eigenschap,
-            label="some-choice-1",
-            value="some-value-1",
         )
         ProcessInformatieObjectFactory.create(
             camunda_start_process=camunda_start_process,
@@ -497,104 +491,6 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             {
                 "zaakeigenschappen": [
                     "Een ZAAKEIGENSCHAP met `naam`: `some-property` is vereist."
-                ]
-            },
-        )
-
-    @patch(
-        "zac.camunda.api.views.get_task",
-        return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
-        return_value=[],
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.get_rollen",
-        return_value=[],
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-        return_value=[],
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
-        return_value=[],
-    )
-    def test_put_start_process_user_task_wrong_eigenschap_choice(self, m, *mocks):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-
-        m.get(
-            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
-            json=paginated_response([self.eigenschap]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
-            json=[{**self.zaakeigenschap, "waarde": "some-waarde"}],
-        )
-
-        with patch(
-            "zac.core.camunda.start_process.serializers.get_zaak_context",
-            return_value=self.zaak_context,
-        ):
-            response = self.client.put(self.task_endpoint)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
-            {
-                "zaakeigenschappen": [
-                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` hebben uit: `['some-value-1']`."
-                ]
-            },
-        )
-
-    @patch(
-        "zac.camunda.api.views.get_task",
-        return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
-        return_value=[],
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.get_rollen",
-        return_value=[],
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-        return_value=[],
-    )
-    @patch(
-        "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_rollen",
-        return_value=[],
-    )
-    def test_put_start_process_user_task_not_required_eigenschap(self, m, *mocks):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-
-        m.get(
-            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
-            json=paginated_response([self.eigenschap]),
-        )
-        m.get(
-            f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
-            json=[{**self.zaakeigenschap, "waarde": "some-waarde"}],
-        )
-
-        with patch(
-            "zac.core.camunda.start_process.serializers.get_zaak_context",
-            return_value=self.zaak_context,
-        ):
-            response = self.client.put(self.task_endpoint)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json(),
-            {
-                "zaakeigenschappen": [
-                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` hebben uit: `['some-value-1']`."
                 ]
             },
         )

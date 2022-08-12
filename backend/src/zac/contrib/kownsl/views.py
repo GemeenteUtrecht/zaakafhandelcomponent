@@ -121,7 +121,6 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
                 extra={"tasks": tasks, "params": params},
             )
 
-        print(tasks)
         tasks = factory(Task, tasks)
         for task in tasks:
             set_assignee_and_complete_task(

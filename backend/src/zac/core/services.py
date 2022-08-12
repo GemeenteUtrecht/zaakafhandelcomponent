@@ -83,6 +83,13 @@ def fetch_besluittype(url: str) -> BesluitType:
     return factory(BesluitType, result)
 
 
+@cache_result("catalogus:{url}", timeout=A_DAY)
+def fetch_catalogus(url: str) -> Catalogus:
+    client = _client_from_url(url)
+    result = client.retrieve("catalogus", url=url)
+    return factory(Catalogus, result)
+
+
 def _get_from_catalogus(resource: str, catalogus: str = "", **extra_query) -> List:
     """
     Retrieve informatieobjecttype or zaaktypen from all catalogi in the configured APIs.
@@ -277,12 +284,20 @@ def get_eigenschappen_for_zaaktypen(zaaktypen: List[ZaakType]) -> List[Eigenscha
         existing_eigenschappen = [
             e for e in eigenschappen_aggregated if e.naam == eigenschap.naam
         ]
-        if existing_eigenschappen:
-            if convert_eigenschap_spec_to_json_schema(
-                eigenschap.specificatie
-            ) != convert_eigenschap_spec_to_json_schema(
-                existing_eigenschappen[0].specificatie
-            ):
+        eigenschap_json_schema = convert_eigenschap_spec_to_json_schema(
+            eigenschap.specificatie
+        )
+        differing_specs = []
+        for e in existing_eigenschappen:
+            existing_eigenschap_json_schema = convert_eigenschap_spec_to_json_schema(
+                e.specificatie
+            )
+            differing_specs.append(
+                eigenschap_json_schema != existing_eigenschap_json_schema
+            )
+
+        if len(differing_specs) > 0:
+            if any(differing_specs):
                 logger.warning(
                     "Eigenschappen '%(name)s' which belong to zaaktype '%(zaaktype)s' have different specs"
                     % {
@@ -1304,3 +1319,24 @@ def fetch_zaak_object(zaak_object_url: str):
 def delete_zaak_object(zaak_object_url: str):
     client = _client_from_url(zaak_object_url)
     client.delete("zaakobject", url=zaak_object_url)
+
+
+def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType]) -> List[dict]:
+    config = CoreConfig.get_solo()
+    ot_zt_attribuut_url = config.zaaktype_attribute_object_type
+
+    if not ot_zt_attribuut_url:
+        logger.warning(
+            "`ZaaktypeAttribuut` objecttype is not configured in core configuration or does not exist in the configured objecttype service."
+        )
+        return []
+
+    object_filters = {"type": ot_zt_attribuut_url}
+    if zaaktype:
+        catalogus = fetch_catalogus(zaaktype.catalogus)
+        object_filters[
+            "data_attrs"
+        ] = f"zaaktypeIdentificaties__icontains__{zaaktype.identificatie},zaaktypeCatalogus__exact__{catalogus.domein}"
+
+    zaaktype_attributes = search_objects(object_filters)
+    return [zatr["record"]["data"] for zatr in zaaktype_attributes]
