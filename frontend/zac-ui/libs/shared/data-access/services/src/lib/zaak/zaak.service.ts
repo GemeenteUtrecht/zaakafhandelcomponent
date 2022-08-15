@@ -284,12 +284,12 @@ export class ZaakService {
    * Deletes a role
    * @param {string} bronorganisatie
    * @param {string} identificatie
-   * @param formData
+   * @param {string} url
    * @returns {Observable<*>}
    */
-  deleteCaseRole(bronorganisatie: string, identificatie: string, formData: any): Observable<any> {
-    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/roles`);
-    return this.http.Delete<any>(endpoint, formData);
+  deleteCaseRole(bronorganisatie: string, identificatie: string, url: string): Observable<any> {
+    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/roles?url=${url}`);
+    return this.http.Delete<any>(endpoint);
   }
 
 }

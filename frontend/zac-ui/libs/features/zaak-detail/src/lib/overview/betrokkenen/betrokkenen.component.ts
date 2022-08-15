@@ -1,6 +1,8 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { ZaakService } from '@gu/services';
-import { ModalService, SnackbarService } from '@gu/components';
+import { AccountsService, MetaService, ZaakService } from '@gu/services';
+import { FieldConfiguration, ModalService, SnackbarService } from '@gu/components';
+import { Betrokkene, MetaRoltype, UserSearchResult, Zaak } from '@gu/models';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'gu-betrokkenen',
@@ -8,8 +10,7 @@ import { ModalService, SnackbarService } from '@gu/components';
   styleUrls: ['./betrokkenen.component.scss']
 })
 export class BetrokkenenComponent implements OnChanges {
-  @Input() bronorganisatie: string;
-  @Input() identificatie: string;
+  @Input() zaak: Zaak;
 
   hiddenRoleData: any;
   alwaysVisibleRoleData: any;
@@ -18,16 +19,39 @@ export class BetrokkenenComponent implements OnChanges {
   isExpanded: boolean;
   errorMessage: string;
 
-  edit = false
+  edit = false;
+  users: UserSearchResult[];
+  roleTypes: MetaRoltype[];
+
+  roleForm: FormGroup;
+  isSubmitting: boolean;
 
   constructor(
     private zaakService: ZaakService,
+    private metaService: MetaService,
+    private accountsService: AccountsService,
     private snackbarService: SnackbarService,
-    private modalService: ModalService
+    private modalService: ModalService,
+    private fb: FormBuilder,
   ) { }
+
+  // Getters / setters
+
+  get medewerkerControl() {
+    return this.roleForm.get('medewerker') as FormControl;
+  }
+
+  get roltypeControl() {
+    return this.roleForm.get('roltype') as FormControl;
+  }
 
   ngOnChanges(): void {
     this.getContextData();
+    this.roleForm = this.fb.group({
+      medewerker: this.fb.control("", Validators.required),
+      roltype: this.fb.control("", Validators.required)
+
+    })
   }
 
   /**
@@ -42,27 +66,29 @@ export class BetrokkenenComponent implements OnChanges {
    */
   getContextData() {
     this.isLoading = true;
-    this.zaakService.getCaseRoles(this.bronorganisatie, this.identificatie).subscribe(data => {
+    this.metaService.getRoleTypes(this.zaak.url).subscribe(roletypes => {
+      this.roleTypes = roletypes;
+    })
+    this.zaakService.getCaseRoles(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
       this.allRoleData = data;
       this.hiddenRoleData = data.slice(0, -3);
       this.alwaysVisibleRoleData = data.slice(-3)
       this.isLoading = false;
+      this.edit = false;
     }, error => {
       console.error(error);
       this.isLoading = false;
     })
   }
 
+  /**
+   * Delete role from api
+   * @param url
+   */
   deleteRole(url) {
     this.isLoading = true;
-    const formData = {
-      body: {
-        url: url
-      }
-    };
-    this.zaakService.deleteCaseRole(this.bronorganisatie, this.identificatie, formData).subscribe(() => {
+    this.zaakService.deleteCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, url).subscribe(() => {
       this.getContextData()
-      this.edit = false;
     }, error => {
       this.errorMessage = 'Verwijderen van betrokkene mislukt.'
       this.reportError(error)
@@ -81,11 +107,12 @@ export class BetrokkenenComponent implements OnChanges {
   // Events
   //
 
+  /**
+   * Opens or closes edit mode
+   */
   toggleEdit() {
     this.edit = !this.edit;
-
-    // Expand roles when in edit mode
-    this.isExpanded = this.edit;
+    this.isExpanded = this.edit; // Expand roles when in edit mode
   }
 
   /**
@@ -94,6 +121,54 @@ export class BetrokkenenComponent implements OnChanges {
    */
   openModal(id: string) {
     this.modalService.open(id);
+  }
+
+  /**
+   * Closes modal.
+   * @param {string} id
+   */
+  closeModal(id: string) {
+    this.modalService.close(id);
+  }
+
+  /**
+   * Search for user accounts.
+   * @param searchInput
+   */
+  onSearchAccounts(searchInput) {
+    this.accountsService.getAccounts(searchInput).subscribe(res => {
+      this.users = res.results;
+    })
+  }
+
+  /**
+   * Submit form
+   */
+  submitForm() {
+    this.isSubmitting = true;
+
+    const formData: Betrokkene = {
+      betrokkeneType: 'medewerker',
+      roltype: this.roltypeControl.value,
+      zaak: this.zaak.url,
+      betrokkeneIdentificatie: {
+        identificatie: this.medewerkerControl.value
+      }
+    }
+
+    this.zaakService.createCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, formData)
+      .subscribe(() => {
+        setTimeout(() => {
+          this.getContextData();
+          this.closeModal('betrokkene-modal');
+          this.isSubmitting = false;
+          this.roleForm.reset();
+        }, 3000)
+      }, error => {
+        this.errorMessage = 'Aanmaken van betrokkene mislukt'
+        this.reportError(error);
+        this.isSubmitting = false;
+      })
   }
 
   //
