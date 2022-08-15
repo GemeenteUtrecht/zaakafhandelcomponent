@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { ZaakService } from '@gu/services';
+import { ModalService, SnackbarService } from '@gu/components';
 
 @Component({
   selector: 'gu-betrokkenen',
@@ -15,9 +16,14 @@ export class BetrokkenenComponent implements OnChanges {
   allRoleData: any;
   isLoading = true;
   isExpanded: boolean;
+  errorMessage: string;
+
+  edit = false
 
   constructor(
-    private zaakService: ZaakService
+    private zaakService: ZaakService,
+    private snackbarService: SnackbarService,
+    private modalService: ModalService
   ) { }
 
   ngOnChanges(): void {
@@ -47,11 +53,60 @@ export class BetrokkenenComponent implements OnChanges {
     })
   }
 
+  deleteRole(url) {
+    this.isLoading = true;
+    const formData = {
+      body: {
+        url: url
+      }
+    };
+    this.zaakService.deleteCaseRole(this.bronorganisatie, this.identificatie, formData).subscribe(() => {
+      this.getContextData()
+      this.edit = false;
+    }, error => {
+      this.errorMessage = 'Verwijderen van betrokkene mislukt.'
+      this.reportError(error)
+    })
+  }
+
   /**
    * Slice roles for visibility
    * @param data
    */
   formatRoles(data) {
     this.alwaysVisibleRoleData = data.slice(-3)
+  }
+
+  //
+  // Events
+  //
+
+  toggleEdit() {
+    this.edit = !this.edit;
+
+    // Expand roles when in edit mode
+    this.isExpanded = this.edit;
+  }
+
+  /**
+   * Opens modal.
+   * @param {string} id
+   */
+  openModal(id: string) {
+    this.modalService.open(id);
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    this.isLoading = false;
+    console.error(error);
   }
 }
