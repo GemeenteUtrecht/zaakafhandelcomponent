@@ -52,6 +52,9 @@ p {
   &.p--primary {
     color: $color-primary;
   }
+  &.p--danger {
+    color: $color-danger;
+  }
   &.p--nomargin {
     margin-bottom: 0;
   }

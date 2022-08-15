@@ -11,19 +11,19 @@
                       class="col-3"
       ></gu-file-upload>
 
-      <!-- Only show this button if the form is not yet submitted -->
-      <button *ngIf="!isSubmittedDocument(i)"
-              gu-button
-              class="start-process__submit-document-button ml-3"
-              buttonStyle="primary"
-              size="small"
-              [disabled]="!documentControl(i).value || submittingDocuments.indexOf(i) !== -1"
-              [loading]="submittingDocuments.indexOf(i) !== -1"
-              (click)="submitDocument(i)">
-        Opslaan
-      </button>
-
-      <gu-icon class="start-process__submitted-check-icon" *ngIf="isSubmittedDocument(i)">check_circle</gu-icon>
+      <gu-icon class="start-process__submitted-check-icon start-process__submitted-check-icon--document" *ngIf="isSubmittedDocument(i)">check_circle</gu-icon>
     </div>
+
+    <!-- Only show this button if the form is not yet submitted -->
+    <button *ngIf="!(submittedDocuments.length === documentsControl.controls.length)"
+            gu-button
+            class="start-process__submit-button"
+            buttonStyle="primary"
+            size="small"
+            [disabled]="!startProcessDocumentForm.valid || submittingDocuments.length > 0"
+            [loading]="submittingDocuments.length > 0"
+            (click)="submitDocuments()">
+      Opslaan
+    </button>
   </ng-container>
 </div>

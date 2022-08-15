@@ -52,19 +52,19 @@
         ></gu-datepicker>
       </ng-container>
 
-      <!-- Only show this button if the form is not yet submitted -->
-      <button *ngIf="!isSubmittedProperty(i)"
-              gu-button
-              class="start-process__submit-button ml-3"
-              buttonStyle="primary"
-              size="small"
-              [disabled]="!propertyControl(i).value || submittingProperties.indexOf(i) !== -1"
-              [loading]="submittingProperties.indexOf(i) !== -1"
-              (click)="submitProperty(i)">
-        Opslaan
-      </button>
-
       <gu-icon class="start-process__submitted-check-icon" *ngIf="isSubmittedProperty(i)">check_circle</gu-icon>
     </div>
+
+    <!-- Only show this button if the form is not yet submitted -->
+    <button *ngIf="!(submittedProperties.length === propertiesControl.controls.length)"
+            gu-button
+            class="start-process__submit-button"
+            buttonStyle="primary"
+            size="small"
+            [disabled]="!startProcessPropertyForm.valid || submittingProperties.length > 0"
+            [loading]="submittingProperties.length > 0"
+            (click)="submitProperties()">
+      Opslaan
+    </button>
   </ng-container>
 </div>

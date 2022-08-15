@@ -1,11 +1,11 @@
 import {
   Component,
   EventEmitter,
-  Input,
-  Output,
+  Input, OnInit,
+  Output
 } from '@angular/core';
 import { TaskContextData } from '../../../../../models/task-context';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { Zaak } from '@gu/models';
 import { AccountsService, CamundaService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
@@ -24,7 +24,7 @@ import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
     {provide: STEPPER_GLOBAL_OPTIONS, useValue: { displayDefaultIndicatorType: false }}
   ],
 })
-export class StartProcessComponent {
+export class StartProcessComponent implements OnInit {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
 
@@ -37,6 +37,8 @@ export class StartProcessComponent {
   rolesFields: any;
   propertiesFields: any;
   documentsFields: any;
+
+  startProcessRoleForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
@@ -63,6 +65,10 @@ export class StartProcessComponent {
 
   get documentsCount(): string {
     return this.displayCount(this.documentsFields);
+  }
+
+  ngOnInit() {
+    this.startProcessRoleForm = this.fb.group({});
   }
 
   //
