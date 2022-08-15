@@ -374,6 +374,10 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             "default": "",
                             "required": True,
                             "order": 0,
+                            "choices": [
+                                {"label": "aaa", "value": "aaa"},
+                                {"label": "bbb", "value": "bbb"},
+                            ],
                         }
                     ],
                 },

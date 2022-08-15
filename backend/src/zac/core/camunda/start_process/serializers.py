@@ -62,7 +62,7 @@ class ProcessEigenschapChoiceSerializer(APIModelSerializer):
 class ProcessEigenschapSerializer(serializers.ModelSerializer):
     choices = ProcessEigenschapChoiceSerializer(
         many=True,
-        required=False,
+        required=True,
         help_text=_("Possible choices related to the EIGENSCHAP."),
     )
     eigenschap = EigenschapSerializer(
@@ -275,6 +275,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             for ei in get_required_zaakeigenschappen(
                 self.zaakcontext, self.camunda_start_process
             )
+            if ei.required
         }
         if required_zaakeigenschappen:
             if len(required_zaakeigenschappen) > 1:
