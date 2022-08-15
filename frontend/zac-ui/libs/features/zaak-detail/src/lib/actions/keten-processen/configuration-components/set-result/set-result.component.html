@@ -1,4 +1,4 @@
-<h4>Zaak afsluiten</h4>
+<h4>Zaak annuleren</h4>
 <p>Selecteer een resultaat om de zaak af te sluiten. Alle openstaande acties en activiteiten worden beëindigd.</p>
 <ng-container *ngIf="setResultForm">
   <div class="row">
@@ -28,7 +28,7 @@
 </ng-container>
 <div *ngIf="showCloseCaseConfirmation" class="row">
   <div class="col-md-8 col-lg-6 m-auto">
-    <p>Weet je zeker dat je deze zaak wilt afsluiten?<br><strong>Alle openstaande acties en activiteiten worden beëindigd.</strong></p>
+    <p class="p p--danger">Weet je zeker dat je deze zaak wilt afsluiten?<br><strong>Alle openstaande acties en activiteiten worden beëindigd.</strong></p>
     <div class="d-flex justify-content-end">
       <button gu-button buttonStyle="secondary" size="small" class="mr-2" (click)="showCloseCaseConfirmation = false; resultControl.enable()">Annuleren</button>
       <button gu-button
