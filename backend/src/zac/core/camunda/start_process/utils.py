@@ -111,9 +111,7 @@ def get_required_zaakeigenschappen(
         zei.eigenschap.naam for zei in get_zaak_eigenschappen(zaak_context.zaak)
     ]
     eigenschappen = {ei.naam: ei for ei in get_eigenschappen(zaak_context.zaaktype)}
-    required_eigenschappen = camunda_start_process.processeigenschap_set.filter(
-        required=True
-    )
+    required_eigenschappen = camunda_start_process.processeigenschap_set.all()
     zaakattributes = {
         data["naam"]: data
         for data in fetch_zaaktypeattributen_objects(zaaktype=zaak_context.zaaktype)
@@ -129,7 +127,13 @@ def get_required_zaakeigenschappen(
                     ProcessEigenschapChoice,
                     [{"value": choice, "label": choice} for choice in enum],
                 )
-
+            elif enum := ei.eigenschap.specificatie.waardenverzameling:
+                ei.choices = factory(
+                    ProcessEigenschapChoice,
+                    [{"value": choice, "label": choice} for choice in enum],
+                )
+            else:
+                ei.choices = []
             required_process_eigenschappen.append(ei)
 
     return required_process_eigenschappen
