@@ -71,7 +71,6 @@ from ..services import (
     get_document,
     get_documenten,
     get_eigenschap,
-    get_eigenschappen,
     get_eigenschappen_for_zaaktypen,
     get_informatieobjecttype,
     get_informatieobjecttypen_for_zaak,
@@ -97,6 +96,7 @@ from .filters import (
     EigenschappenFilterSet,
     ZaakEigenschappenFilterSet,
     ZaakObjectFilterSet,
+    ZaakRolFilterSet,
     ZaaktypenFilterSet,
 )
 from .mixins import ListMixin, RetrieveMixin
@@ -569,7 +569,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         CanReadOrUpdateZaken,
         CanForceEditClosedZaken,
     )
-    serializer_class = RolSerializer
+    filterset_class = ZaakRolFilterSet
 
     def get_serializer_class(self):
         mapping = {
@@ -581,13 +581,10 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
 
     def get_serializer(self, **kwargs):
         serializer = self.get_serializer_class()
-        if self.request.method == "GET":
-            kwargs.update({"many": True})
         return serializer(**kwargs)
 
     @extend_schema(
         summary=_("List ROLlen of ZAAK."),
-        responses={"200": ReadRolSerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -617,10 +614,27 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
 
     @extend_schema(
         summary=_("Destroy ROL from ZAAK."),
+        parameters=[
+            OpenApiParameter(
+                name="url",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_("URL-reference of ROL in ZAKEN API"),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
     )
     def delete(self, request, *args, **kwargs):
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+
         zaak = self.get_object()
-        serializer = self.get_serializer(data=request.data, context={"zaak": zaak})
+        serializer = self.get_serializer(
+            data=self.request.query_params, context={"zaak": zaak}
+        )
         serializer.is_valid(raise_exception=True)
         delete_rol(serializer.validated_data["url"])
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)

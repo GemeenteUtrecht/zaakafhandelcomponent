@@ -11,7 +11,7 @@ from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.accounts.api.serializers import GroupSerializer
+from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
@@ -63,17 +63,6 @@ class DocumentUserTaskSerializer(APIModelSerializer):
             "bestandsnaam",
             "read_url",
             "url",
-        )
-
-
-class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source="get_full_name")
-
-    class Meta:
-        model = User
-        fields = (
-            "username",
-            "full_name",
         )
 
 
