@@ -17,11 +17,11 @@ import { SnackbarService } from '@gu/components';
 export class DocumentsStepComponent implements OnChanges {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
+  @Input() startProcessDocumentForm: FormGroup;
 
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  startProcessDocumentForm: FormGroup;
   errorMessage: string;
 
   submittedDocuments: number[] = [];
@@ -123,11 +123,24 @@ export class DocumentsStepComponent implements OnChanges {
     this.selectedFiles.push(file);
   }
 
+
+  /**
+   * Loop and post documents
+   */
+  submitDocuments() {
+    this.documentsControl.controls.forEach((control, i) => {
+      if (control.value) {
+        this.postDocument(i);
+      }
+    })
+  }
+
+
   /**
    * Submits the selected document to the API.
    * @param i
    */
-  submitDocument(i) {
+  postDocument(i) {
     const selectedDocument = this.getDocumentsContext(i);
     const selectedFile = this.selectedFiles.find( ({ name })  => name === this.documentControl(i).value);
     this.submittingDocuments.push(i)
@@ -151,7 +164,9 @@ export class DocumentsStepComponent implements OnChanges {
           hasValidForm: this.startProcessDocumentForm.valid
         })
 
-        this.updateComponents.emit(true);
+        if (this.submittingDocuments.length === 0) {
+          this.updateComponents.emit(true);
+        }
         this.documentControl(i).disable()
       }, error => {
         this.submittingDocuments = this.submittingDocuments.filter(index => index !== i);

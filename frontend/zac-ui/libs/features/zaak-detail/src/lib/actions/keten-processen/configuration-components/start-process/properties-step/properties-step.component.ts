@@ -22,7 +22,8 @@ export class PropertiesStepComponent implements OnChanges {
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  startProcessPropertyForm: FormGroup;
+  @Input() startProcessPropertyForm: FormGroup;
+
   errorMessage: string;
 
   submittedProperties: number[] = [];
@@ -112,10 +113,22 @@ export class PropertiesStepComponent implements OnChanges {
   //
 
   /**
+   * Loop and post properties
+   */
+  submitProperties() {
+    this.propertiesControl.controls.forEach((control, i) => {
+      if (control.value) {
+        this.postProperty(i);
+      }
+    })
+  }
+
+
+  /**
    * Submits the selected property to the API.
    * @param i
    */
-  submitProperty(i) {
+  postProperty(i) {
     this.submittingProperties.push(i);
 
     const selectedProperty = this.getPropertiesContext(i);
@@ -141,7 +154,9 @@ export class PropertiesStepComponent implements OnChanges {
           hasValidForm: this.startProcessPropertyForm.valid
         })
 
-        this.updateComponents.emit(true);
+        if (this.submittingProperties.length === 0) {
+          this.updateComponents.emit(true);
+        }
         this.propertyControl(i).disable()
       }, error => {
         this.submittingProperties = this.submittingProperties.filter(index => index !== i);

@@ -1,36 +1,107 @@
 <div class="betrokkenen card">
-  <div class="d-flex">
+  <div class="d-flex justify-content-between">
     <h2 class="mr-1">Betrokkenen</h2>
-    <gu-chip type="badge"
-             color="tertiary"
-             *ngIf="allRoleData?.length > 0">
-      {{allRoleData?.length}}
-    </gu-chip>
+    <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit"
+            (click)="toggleEdit()">
+      {{edit ? 'Annuleren' : 'Bewerken' }}
+    </button>
   </div>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <ng-container *ngIf="alwaysVisibleRoleData && hiddenRoleData && !isLoading">
-    <div class="betrokkenen__role" *ngFor="let role of alwaysVisibleRoleData; let i = index">
-      <div class="role-description">
-        <p class="p--bold">{{role.roltoelichting}}</p>
+    <div *ngFor="let role of alwaysVisibleRoleData; let i = index">
+      <div class="betrokkenen__role">
+        <div>
+          <div class="role-description">
+            <p class="p--bold">{{role.roltoelichting}}</p>
+          </div>
+          <p class="p--nomargin">{{role.name}}</p>
+        </div>
+        <div *ngIf="role.betrokkeneType === 'medewerker'">
+          <button
+            *ngIf="edit"
+            (click)="deleteRole(role.url)"
+            gu-button
+            buttonStyle="tertiary"
+            size="extrasmall"
+            icon="delete_outline">
+          </button>
+        </div>
       </div>
-      <p class="p--nomargin">{{role.name}}</p>
     </div>
-    <div class="betrokkenen__role"
-         *ngFor="let role of hiddenRoleData; let i = index"
-         [hidden]="!isExpanded">
-      <div class="role-description">
-        <p class="p--bold">{{role.roltoelichting}}</p>
+    <div *ngFor="let role of hiddenRoleData; let i = index"
+                  [hidden]="!isExpanded">
+      <div class="betrokkenen__role">
+        <div>
+          <div class="role-description">
+            <p class="p--bold">{{role.roltoelichting}}</p>
+          </div>
+          <p class="p--nomargin">{{role.name}}</p>
+        </div>
+        <div *ngIf="role.betrokkeneType === 'medewerker'">
+          <button
+            *ngIf="edit"
+            (click)="deleteRole(role.url)"
+            gu-button
+            title="Verwijderen"
+            buttonStyle="tertiary"
+            size="extrasmall"
+            icon="delete_outline">
+          </button>
+        </div>
       </div>
-      <p class="p--nomargin">{{role.name}}</p>
     </div>
     <div class="d-flex justify-content-end">
-      <button gu-button *ngIf="hiddenRoleData?.length > 0"
+      <button gu-button *ngIf="hiddenRoleData?.length > 0 && !edit"
               buttonStyle="tertiary"
               size="extrasmall"
               [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
               (click)="isExpanded = !isExpanded">
         {{isExpanded ? 'Toon minder' : 'Toon meer'}}
       </button>
+
+      <button gu-button *ngIf="edit"
+              buttonStyle="tertiary"
+              size="extrasmall"
+              [icon]="'add'"
+              (click)="openModal('betrokkene-modal')">
+        Betrokkene toevoegen
+      </button>
     </div>
   </ng-container>
 </div>
+
+<gu-modal id="betrokkene-modal"
+          [closeIcon]="true"
+          title="Betrokkene toevoegen"
+          size="small">
+
+  <gu-multiselect (search)="onSearchAccounts($event)"
+                  [items]="users"
+                  [multiple]="false"
+                  [control]="medewerkerControl"
+                  [label]="'Medewerker'"
+                  bindLabel="fullName"
+                  bindValue="username"
+                  [required]="true"
+                  placeholder="Zoek een medewerker"
+                  class="mb-4"
+  ></gu-multiselect>
+  <gu-multiselect *ngIf="roleTypes"
+                  [items]="roleTypes"
+                  [multiple]="false"
+                  [control]="roltypeControl"
+                  [label]="'Roltype'"
+                  bindLabel="omschrijving"
+                  bindValue="url"
+                  [required]="true"
+                  class="mb-4"
+  ></gu-multiselect>
+  <div class="d-flex justify-content-end mb-2">
+    <button gu-button
+            (click)="submitForm()"
+            [disabled]="!roleForm.valid || isSubmitting"
+            [loading]="isSubmitting">
+      Versturen
+    </button>
+  </div>
+</gu-modal>

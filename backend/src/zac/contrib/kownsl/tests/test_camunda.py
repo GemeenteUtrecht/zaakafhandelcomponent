@@ -224,7 +224,16 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             {
                 "assigned_users": {
                     "user_assignees": [
-                        {"username": "some-user", "full_name": user.get_full_name()}
+                        {
+                            "username": "some-user",
+                            "full_name": user.get_full_name(),
+                            "id": user.id,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
+                            "is_staff": user.is_staff,
+                            "email": user.email,
+                            "groups": [],
+                        }
                     ],
                     "group_assignees": [],
                 },

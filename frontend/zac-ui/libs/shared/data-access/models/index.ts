@@ -23,6 +23,7 @@ export * from './geojson/utrecht';
 // Meta
 export * from './meta/confidentiality';
 export * from './meta/document';
+export * from './meta/roltype';
 export * from './meta/zaaktype';
 
 // Objects

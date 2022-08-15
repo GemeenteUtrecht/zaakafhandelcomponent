@@ -13,13 +13,13 @@ import { SnackbarService } from '@gu/components';
 export class RoleStepComponent implements OnChanges {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
+  @Input() startProcessRoleForm: FormGroup;
 
   @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   users: UserSearchResult[];
 
-  startProcessRoleForm: FormGroup;
   errorMessage: string;
 
   submittedRoles: number[] = [];
@@ -108,10 +108,21 @@ export class RoleStepComponent implements OnChanges {
   //
 
   /**
+   * Loop and post roles
+   */
+  submitRoles() {
+    this.rolesControl.controls.forEach((control, i) => {
+      if (control.value) {
+        this.postRole(i);
+      }
+    })
+  }
+
+  /**
    * Submits the selected role to the API.
    * @param i
    */
-  submitRole(i) {
+  postRole(i) {
     this.submittingRoles.push(i)
     const selectedRole = this.getRolesContext(i);
 
@@ -165,7 +176,9 @@ export class RoleStepComponent implements OnChanges {
           hasValidForm: this.startProcessRoleForm.valid
         })
 
-        this.updateComponents.emit(true);
+        if (this.submittingRoles.length === 0) {
+          this.updateComponents.emit(true);
+        }
         this.roleControl(i).disable()
         }, error => {
           this.submittingRoles = this.submittingRoles.filter(index => index !== i);

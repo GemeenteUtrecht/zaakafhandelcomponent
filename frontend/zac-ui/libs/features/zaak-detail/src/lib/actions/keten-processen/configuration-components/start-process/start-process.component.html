@@ -9,7 +9,7 @@
     Alleen als alle vereiste gegevens zijn opgeslagen, kan het configuratieproces afgerond worden.
   </p>
   <div class="start-process__steps mb-4">
-    <mat-stepper orientation="vertical" [linear]="false" #stepper>
+    <mat-stepper orientation="vertical" [linear]="true" #stepper>
       <!-- Step 1: Case roles -->
       <ng-template matStepperIcon="group">
         <mat-icon>group</mat-icon>
@@ -19,8 +19,13 @@
                 [completed]="rolesFields?.submitted === rolesFields?.total"
       >
         <ng-template matStepLabel>Betrokkenen: {{rolesCount}}</ng-template>
-        <gu-role-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="rolesFields = $event" (updateComponents)="updateComponents.emit()"></gu-role-step>
-        <button gu-button
+        <gu-role-step [zaak]="zaak"
+                      [taskContextData]="taskContextData"
+                      (submittedFields)="rolesFields = $event"
+                      (updateComponents)="updateComponents.emit()">
+        </gu-role-step>
+        <button *ngIf="rolesFields?.submitted === rolesFields?.total"
+                gu-button
                 matStepperNext
                 buttonStyle="tertiary"
                 size="small">
@@ -36,7 +41,8 @@
       <mat-step state="list" [completed]="propertiesFields?.submitted === propertiesFields?.total">
         <ng-template matStepLabel>Eigenschappen: {{propertiesCount}}</ng-template>
         <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="propertiesFields = $event" (updateComponents)="updateComponents.emit()"></gu-properties-step>
-        <button gu-button
+        <button *ngIf="propertiesFields?.submitted === propertiesFields?.total"
+                gu-button
                 matStepperNext
                 buttonStyle="tertiary"
                 size="small">
@@ -52,7 +58,8 @@
       <mat-step state="upload_file" [completed]="documentsFields?.submitted === documentsFields?.total">
         <ng-template matStepLabel>Documenten: {{documentsCount}}</ng-template>
         <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="documentsFields = $event" (updateComponents)="updateComponents.emit()"></gu-documents-step>
-        <button gu-button
+        <button *ngIf="documentsFields?.submitted === documentsFields?.total"
+                gu-button
                 matStepperNext
                 buttonStyle="tertiary"
                 size="small">

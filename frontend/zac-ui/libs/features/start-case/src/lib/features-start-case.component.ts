@@ -46,9 +46,10 @@ export class FeaturesStartCaseComponent implements OnInit {
         this.caseTypeChoices = this.caseTypes.map( type => {
           return {
             label: `${type.omschrijving}: ${type.catalogus.domein}`,
-            value: type,
+            value: `${type.omschrijving},${type.catalogus.url}`
           }
         })
+        console.log(this.caseTypeChoices);
         this.form = this.getForm();
       }, (error) => console.error(error),
     );
@@ -86,9 +87,12 @@ export class FeaturesStartCaseComponent implements OnInit {
    * @param formData
    */
   createCase(formData) {
+    const zaaktypeOmschrijving = formData.zaaktype.split(',')[0];
+    const zaaktypeUrl = formData.zaaktype.split(',')[1];
+
     const createCaseData: CreateCase = {
-      zaaktypeOmschrijving: formData.zaaktype.omschrijving,
-      zaaktypeCatalogus: formData.zaaktype.catalogus.url,
+      zaaktypeOmschrijving: zaaktypeOmschrijving,
+      zaaktypeCatalogus: zaaktypeUrl,
       zaakDetails: {
         omschrijving: formData.omschrijving,
         toelichting: formData.toelichting

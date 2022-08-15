@@ -26,19 +26,19 @@
                       class="mb-4 col-8"
       ></gu-multiselect>
 
-      <!-- Only show this button if the form is not yet submitted -->
-      <button *ngIf="!isSubmittedRole(i)"
-              gu-button
-              class="start-process__submit-button ml-3"
-              buttonStyle="primary"
-              size="small"
-              [disabled]="!roleControl(i).value || submittingRoles.indexOf(i) !== -1"
-              [loading]="submittingRoles.indexOf(i) !== -1"
-              (click)="submitRole(i)">
-        Opslaan
-      </button>
-
       <gu-icon class="start-process__submitted-check-icon" *ngIf="isSubmittedRole(i)">check_circle</gu-icon>
     </div>
+
+    <!-- Only show this button if the form is not yet submitted -->
+    <button *ngIf="!(submittedRoles.length === rolesControl.controls.length)"
+            gu-button
+            class="start-process__submit-button"
+            buttonStyle="primary"
+            size="small"
+            [disabled]="!startProcessRoleForm.valid || submittingRoles.length > 0"
+            [loading]="submittingRoles.length > 0"
+            (click)="submitRoles()">
+      Opslaan
+    </button>
   </ng-container>
 </div>

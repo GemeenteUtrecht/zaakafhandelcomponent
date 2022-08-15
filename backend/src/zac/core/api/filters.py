@@ -69,3 +69,9 @@ class ZaakObjectFilterSet(ApiFilterSet):
     url = fields.URLField(
         required=True, help_text=_("URL-reference of ZAAKOBJECT in ZAKEN API")
     )
+
+
+class ZaakRolFilterSet(ApiFilterSet):
+    url = fields.URLField(
+        required=True, help_text=_("URL-reference to ROL in ZAKEN API")
+    )

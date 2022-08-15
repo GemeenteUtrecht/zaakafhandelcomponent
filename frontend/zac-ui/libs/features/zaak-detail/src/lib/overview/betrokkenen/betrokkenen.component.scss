@@ -4,6 +4,9 @@
   &__role {
     padding: 0.45rem 0;
     margin-bottom: 0.625rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     p {
       margin: 0;
     }
