@@ -286,7 +286,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
                     },
                     "some-roltype-omschrijving": {
                         "type": "Json",
-                        "value": '{"betrokkene_type": "medewerker", "identificatie": "some-username", "name": "W. van Orange", "omschrijving": "some-rol-omschrijving"}',
+                        "value": '{"betrokkeneType": "medewerker", "identificatie": "some-username", "name": "W. van Orange", "omschrijving": "some-rol-omschrijving", "roltoelichting": "some-roltype-omschrijving"}',
                     },
                 }
             },
