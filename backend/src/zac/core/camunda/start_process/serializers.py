@@ -326,7 +326,10 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         }
         return {
             "bijlagen": self.validated_data["bijlagen"],
-            "eigenschappen": eigenschappen,
+            "eigenschappen": [
+                {"naam": naam, "waarde": waarde}
+                for naam, waarde in eigenschappen.items()
+            ],
             **eigenschappen,
             **{
                 f"bijlage{i+1}": bijlage
