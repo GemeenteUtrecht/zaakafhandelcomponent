@@ -277,7 +277,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
                     },
                     "eigenschappen": {
                         "type": "Json",
-                        "value": '{"some-property": "some-value-1"}',
+                        "value": '[{"naam": "some-property", "waarde": "some-value-1"}]',
                     },
                     "some-property": {"type": "String", "value": "some-value-1"},
                     "bijlage1": {
