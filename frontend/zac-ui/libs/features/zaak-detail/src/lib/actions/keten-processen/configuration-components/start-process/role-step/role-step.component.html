@@ -15,6 +15,7 @@
       <!-- If a medewerker needs to be selected -->
       <gu-multiselect *ngIf="getRolesContext(i).betrokkeneType === 'medewerker'"
                       (search)="onSearchAccounts($event)"
+                      (change)="onUserSelect()"
                       [items]="users"
                       [multiple]="false"
                       [control]="roleControl(i)"

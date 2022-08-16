@@ -199,6 +199,13 @@ export class RoleStepComponent implements OnChanges {
     })
   }
 
+  /**
+   * Clear search results afters selection
+   */
+  onUserSelect() {
+    this.users = [];
+  }
+
   //
   // Error handling.
   //
