@@ -86,7 +86,7 @@ export class SetResultComponent implements OnChanges {
 
         this.modalService.close('ketenprocessenModal');
         document.location.reload()
-      }, 3000)
+      }, 7000)
     }, res => {
       this.isSubmitting = false;
       this.submitErrorMessage = res.error.detail ? res.error.detail : "Er is een fout opgetreden";
