@@ -337,10 +337,11 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             },
             **{
                 rol["roltoelichting"]: {
-                    "betrokkene_type": rol["betrokkene_type"],
+                    "betrokkeneType": rol["betrokkene_type"],
                     "identificatie": rol["identificatie"],
                     "name": rol["name"],
                     "omschrijving": rol["omschrijving"],
+                    "roltoelichting": rol["roltoelichting"],
                 }
                 for rol in self.validated_data["rollen"]
             },
