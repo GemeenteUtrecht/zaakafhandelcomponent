@@ -994,10 +994,11 @@ class RolSerializer(PolymorphicSerializer):
     roltoelichting = serializers.SerializerMethodField(
         help_text=_(
             "Comment related to the ROL. Usually it is the `omschrijving` of ROLTYPE of ROL."
-        )
+        ),
     )
     roltype = serializers.URLField(
-        required=True, help_text=_("URL-reference to ROLTYPE of ROL.")
+        required=True,
+        help_text=_("URL-reference to ROLTYPE of ROL."),
     )
     url = serializers.URLField(
         read_only=True, help_text=_("URL-reference to ROL itself.")
