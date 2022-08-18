@@ -216,6 +216,10 @@ export class FormComponent implements OnInit, OnChanges {
    * Updates this._fieldsets in place.
    */
   updateFieldsets() {
+    if (this._fieldsets.length) {
+      return;
+    }
+
     const fieldsets = this.fieldsets.length
       ? this.fieldsets
       : [{label: '', keys: this.formService.getKeysFromForm(this.form)}]

@@ -9,4 +9,9 @@
     display: flex;
     white-space: nowrap;
   }
+
+  .property-search-form__toolbar > * gu-tooltip {
+    white-space: normal;
+    z-index: 10;
+  }
 }
