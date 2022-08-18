@@ -18,7 +18,7 @@ from zac.accounts.tests.factories import SuperUserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from .factories import (
@@ -162,11 +162,11 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             betrokkene="",
             betrokkeneType="medewerker",
             roltype=cls.roltype["url"],
-            betrokkeneIdentificatie=cls.medewerker,
+            betrokkene_identificatie=cls.medewerker,
             omschrijving="some-rol-omschrijving",
             registratiedatum="2004-06-23T01:52:50Z",
             roltoelichting=cls.roltype["omschrijving"],
-            omschrijvingGeneriek=cls.roltype["omschrijvingGeneriek"],
+            omschrijving_generiek=cls.roltype["omschrijvingGeneriek"],
         )
 
         cls.task_endpoint = reverse(
@@ -238,6 +238,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.roltype]),
         )
+        mock_resource_get(m, self.roltype)
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.eigenschap]),
@@ -286,7 +287,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
                     },
                     "some-roltype-omschrijving": {
                         "type": "Json",
-                        "value": '{"betrokkeneType": "medewerker", "identificatie": "some-username", "name": "W. van Orange", "omschrijving": "some-rol-omschrijving", "roltoelichting": "some-roltype-omschrijving"}',
+                        "value": '{"betrokkeneType": "medewerker", "betrokkeneIdentificatie": {"identificatie": "some-username", "achternaam": "Orange", "voorletters": "W.", "voorvoegsel_achternaam": "van"}, "name": "W. van Orange", "omschrijving": "some-roltype-omschrijving", "roltoelichting": "some-roltype-omschrijving", "identificatie": "some-username"}',
                     },
                 }
             },
@@ -378,6 +379,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.roltype]),
         )
+        mock_resource_get(m, self.roltype)
 
         with patch(
             "zac.core.camunda.start_process.serializers.get_zaak_context",
@@ -429,7 +431,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.roltype]),
         )
-
+        mock_resource_get(m, self.roltype)
         with patch(
             "zac.core.camunda.start_process.serializers.get_zaak_context",
             return_value=self.zaak_context,

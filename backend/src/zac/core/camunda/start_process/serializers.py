@@ -3,7 +3,6 @@ from functools import partial
 from typing import Dict, List, Union
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -18,7 +17,7 @@ from zac.camunda.user_tasks import Context, register, usertask_context_serialize
 from zac.core.api.serializers import (
     EigenschapSerializer,
     InformatieObjectTypeSerializer,
-    ReadRolSerializer,
+    RolSerializer,
     RolTypeSerializer,
     ZaakEigenschapSerializer,
 )
@@ -240,10 +239,8 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         # Resolve the roltype of rollen and map roltype omschrijving to rol betrokkene type(n).
         found_rt_omsch_betr_type = {}
         for rol in rollen:
-            rol.roltype = all_roltypen_urls[rol.roltype]
-            if (
-                omschrijving := rol.roltype.omschrijving
-            ) not in found_rt_omsch_betr_type:
+            roltype = all_roltypen_urls[rol.roltype]
+            if (omschrijving := roltype.omschrijving) not in found_rt_omsch_betr_type:
                 found_rt_omsch_betr_type[omschrijving] = [rol.betrokkene_type]
             else:
                 found_rt_omsch_betr_type[omschrijving].append(rol.betrokkene_type)
@@ -309,10 +306,6 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 self.validated_data["zaakeigenschappen"], many=True
             ).data
         ]  # ordereddict unpacking into dict to shut up django_camunda.utils.serialize_variable
-        self.validated_data["rollen"] = [
-            {**data}
-            for data in ReadRolSerializer(self.validated_data["rollen"], many=True).data
-        ]  # ordereddict unpacking into dict to shut up django_camunda.utils.serialize_variable
 
     def get_process_variables(self) -> Dict[str, Union[List, str]]:
         """
@@ -336,12 +329,13 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 for i, bijlage in enumerate(self.validated_data["bijlagen"])
             },
             **{
-                rol["roltoelichting"]: {
-                    "betrokkeneType": rol["betrokkene_type"],
-                    "identificatie": rol["identificatie"],
-                    "name": rol["name"],
-                    "omschrijving": rol["omschrijving"],
-                    "roltoelichting": rol["roltoelichting"],
+                rol.roltoelichting: {
+                    "betrokkeneType": rol.betrokkene_type,
+                    "betrokkeneIdentificatie": rol.betrokkene_identificatie,
+                    "name": rol.get_name(),
+                    "omschrijving": rol.get_roltype_omschrijving(),
+                    "roltoelichting": rol.get_roltype_omschrijving(),
+                    "identificatie": rol.get_identificatie(),
                 }
                 for rol in self.validated_data["rollen"]
             },
