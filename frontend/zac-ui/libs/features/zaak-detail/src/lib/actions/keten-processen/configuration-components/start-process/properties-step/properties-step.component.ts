@@ -5,6 +5,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 import { DatePipe } from '@angular/common';
+import { SubmittedFields } from '../models/submitted-fields';
 
 /**
  * This component allows the user to configure
@@ -19,7 +20,7 @@ export class PropertiesStepComponent implements OnChanges {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
 
-  @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
+  @Output() submittedFields: EventEmitter<SubmittedFields> = new EventEmitter<SubmittedFields>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   @Input() startProcessPropertyForm: FormGroup;
@@ -40,6 +41,20 @@ export class PropertiesStepComponent implements OnChanges {
   //
   // Getters / setters.
   //
+
+  get totalRequired(): number {
+    const totalRequired = [];
+    this.propertiesControl.controls.forEach(c => {
+      if (c.hasValidator(Validators.required)) {
+        totalRequired.push(c)
+      }
+    })
+    return totalRequired.length ? totalRequired.length : 0;
+  }
+
+  get showSaveButton(): boolean {
+    return this.submittedProperties.length <= this.propertiesControl.length && this.propertiesControl.length > 0;
+  }
 
   get propertiesControl(): FormArray {
     return this.startProcessPropertyForm.get('properties') as FormArray;
@@ -62,9 +77,11 @@ export class PropertiesStepComponent implements OnChanges {
         })
         this.submittedProperties = [];
         this.submittingProperties = [];
+
         this.submittedFields.emit({
           submitted: 0,
           total: this.propertiesControl.controls.length,
+          totalRequired: this.totalRequired,
           hasValidForm: this.startProcessPropertyForm.valid
         })
       }
@@ -151,6 +168,7 @@ export class PropertiesStepComponent implements OnChanges {
         this.submittedFields.emit({
           submitted: this.submittedProperties.length,
           total: this.propertiesControl.controls.length,
+          totalRequired: this.totalRequired,
           hasValidForm: this.startProcessPropertyForm.valid
         })
 

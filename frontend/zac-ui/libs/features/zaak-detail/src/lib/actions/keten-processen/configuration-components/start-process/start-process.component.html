@@ -15,19 +15,19 @@
         <mat-icon>group</mat-icon>
       </ng-template>
 
-      <mat-step state="group"
-                [completed]="rolesFields?.submitted === rolesFields?.total"
-      >
+      <mat-step state="group" [completed]="rolesFields?.submitted >= rolesFields?.totalRequired">
         <ng-template matStepLabel>Betrokkenen: {{rolesCount}}</ng-template>
-        <gu-role-step [zaak]="zaak"
+        <gu-role-step
+                      [zaak]="zaak"
                       [taskContextData]="taskContextData"
                       (submittedFields)="rolesFields = $event"
                       (updateComponents)="updateComponents.emit()">
         </gu-role-step>
-        <button *ngIf="rolesFields?.submitted === rolesFields?.total"
+        <button *ngIf="rolesFields?.submitted >= rolesFields?.totalRequired"
                 gu-button
                 matStepperNext
                 buttonStyle="tertiary"
+                icon="keyboard_arrow_down"
                 size="small">
           Volgende stap
         </button>
@@ -38,13 +38,14 @@
         <mat-icon>list</mat-icon>
       </ng-template>
 
-      <mat-step state="list" [completed]="propertiesFields?.submitted === propertiesFields?.total">
+      <mat-step state="list" [completed]="propertiesFields?.submitted >= propertiesFields?.totalRequired">
         <ng-template matStepLabel>Eigenschappen: {{propertiesCount}}</ng-template>
         <gu-properties-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="propertiesFields = $event" (updateComponents)="updateComponents.emit()"></gu-properties-step>
-        <button *ngIf="propertiesFields?.submitted === propertiesFields?.total"
+        <button *ngIf="propertiesFields?.submitted >= propertiesFields?.totalRequired"
                 gu-button
                 matStepperNext
                 buttonStyle="tertiary"
+                icon="keyboard_arrow_down"
                 size="small">
           Volgende stap
         </button>
@@ -55,13 +56,14 @@
         <mat-icon>upload_file</mat-icon>
       </ng-template>
 
-      <mat-step state="upload_file" [completed]="documentsFields?.submitted === documentsFields?.total">
+      <mat-step state="upload_file" [completed]="documentsFields?.submitted >= documentsFields?.totalRequired">
         <ng-template matStepLabel>Documenten: {{documentsCount}}</ng-template>
         <gu-documents-step [zaak]="zaak" [taskContextData]="taskContextData" (submittedFields)="documentsFields = $event" (updateComponents)="updateComponents.emit()"></gu-documents-step>
-        <button *ngIf="documentsFields?.submitted === documentsFields?.total"
+        <button *ngIf="documentsFields?.submitted >= documentsFields?.totalRequired"
                 gu-button
                 matStepperNext
                 buttonStyle="tertiary"
+                icon="keyboard_arrow_down"
                 size="small">
           Volgende stap
         </button>
