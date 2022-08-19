@@ -11,6 +11,7 @@ import { AccountsService, CamundaService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 import { MatStepperIntl } from '@angular/material/stepper';
 import { STEPPER_GLOBAL_OPTIONS } from '@angular/cdk/stepper';
+import { SubmittedFields } from './models/submitted-fields';
 
 /**
  * This component allows the user to configure and start a camunda process.
@@ -34,9 +35,9 @@ export class StartProcessComponent implements OnInit {
   isSubmitting: boolean;
   errorMessage: string;
 
-  rolesFields: any;
-  propertiesFields: any;
-  documentsFields: any;
+  rolesFields: SubmittedFields;
+  propertiesFields: SubmittedFields;
+  documentsFields: SubmittedFields;
 
   startProcessRoleForm: FormGroup;
 
@@ -99,8 +100,11 @@ export class StartProcessComponent implements OnInit {
    * @returns {string}
    */
   displayCount(fieldsCount): string {
-    if (fieldsCount.total === 0 || fieldsCount.submitted === fieldsCount.total) {
+    if (fieldsCount.total === 0 || fieldsCount.submitted >= fieldsCount.total) {
       return 'voltooid'
+    }
+    else if (fieldsCount.submitted >= fieldsCount.totalRequired) {
+      return `${fieldsCount.submitted}/${fieldsCount.total} (alle verplichte velden zijn ingevuld)`
     }
     else {
       return `${fieldsCount.submitted}/${fieldsCount.total}`

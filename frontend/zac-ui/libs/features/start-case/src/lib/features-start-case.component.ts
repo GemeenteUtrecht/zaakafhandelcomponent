@@ -49,7 +49,6 @@ export class FeaturesStartCaseComponent implements OnInit {
             value: `${type.omschrijving},${type.catalogus.url}`
           }
         })
-        console.log(this.caseTypeChoices);
         this.form = this.getForm();
       }, (error) => console.error(error),
     );

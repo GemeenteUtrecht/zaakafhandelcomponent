@@ -4,6 +4,7 @@ import { BenodigdeBijlage, TaskContextData } from '../../../../../../models/task
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
+import { SubmittedFields } from '../models/submitted-fields';
 
 /**
  * This component allows the user to upload required
@@ -19,7 +20,7 @@ export class DocumentsStepComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
   @Input() startProcessDocumentForm: FormGroup;
 
-  @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
+  @Output() submittedFields: EventEmitter<SubmittedFields> = new EventEmitter<SubmittedFields>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   errorMessage: string;
@@ -39,6 +40,20 @@ export class DocumentsStepComponent implements OnChanges {
   //
   // Getters / setters.
   //
+
+  get totalRequired(): number {
+    const totalRequired = [];
+    this.documentsControl.controls.forEach(c => {
+      if (c.hasValidator(Validators.required)) {
+        totalRequired.push(c)
+      }
+    })
+    return totalRequired.length ? totalRequired.length : 0;
+  }
+
+  get showSaveButton(): boolean {
+    return this.submittedDocuments.length <= this.documentsControl.length && this.documentsControl.length > 0;
+  }
 
   get documentsControl(): FormArray {
     return this.startProcessDocumentForm.get('documents') as FormArray;
@@ -61,9 +76,11 @@ export class DocumentsStepComponent implements OnChanges {
         })
         this.submittedDocuments = [];
         this.submittingDocuments = [];
+
         this.submittedFields.emit({
           submitted: 0,
           total: this.documentsControl.controls.length,
+          totalRequired: this.totalRequired,
           hasValidForm: this.startProcessDocumentForm.valid
         })
       }
@@ -161,6 +178,7 @@ export class DocumentsStepComponent implements OnChanges {
         this.submittedFields.emit({
           submitted: this.submittedDocuments.length,
           total: this.documentsControl.controls.length,
+          totalRequired: this.totalRequired,
           hasValidForm: this.startProcessDocumentForm.valid
         })
 

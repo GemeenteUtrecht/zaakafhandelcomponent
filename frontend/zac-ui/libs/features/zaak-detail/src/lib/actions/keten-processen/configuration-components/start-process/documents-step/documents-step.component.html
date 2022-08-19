@@ -15,9 +15,9 @@
     </div>
 
     <!-- Only show this button if the form is not yet submitted -->
-    <button *ngIf="!(submittedDocuments.length === documentsControl.controls.length)"
+    <button *ngIf="showSaveButton"
             gu-button
-            class="start-process__submit-button"
+            class="start-process__submit-button mb-4"
             buttonStyle="primary"
             size="small"
             [disabled]="!startProcessDocumentForm.valid || submittingDocuments.length > 0"

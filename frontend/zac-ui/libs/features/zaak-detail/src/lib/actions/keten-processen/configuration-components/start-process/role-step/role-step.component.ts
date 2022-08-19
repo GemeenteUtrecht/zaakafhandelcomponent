@@ -4,6 +4,7 @@ import { BenodigdeRol, TaskContextData } from '../../../../../../models/task-con
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
+import { SubmittedFields } from '../models/submitted-fields';
 
 @Component({
   selector: 'gu-role-step',
@@ -15,7 +16,7 @@ export class RoleStepComponent implements OnChanges {
   @Input() taskContextData: TaskContextData;
   @Input() startProcessRoleForm: FormGroup;
 
-  @Output() submittedFields: EventEmitter<any> = new EventEmitter<any>();
+  @Output() submittedFields: EventEmitter<SubmittedFields> = new EventEmitter<SubmittedFields>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   users: UserSearchResult[];
@@ -35,6 +36,20 @@ export class RoleStepComponent implements OnChanges {
   //
   // Getters / setters.
   //
+
+  get totalRequired(): number {
+    const totalRequired = [];
+    this.rolesControl.controls.forEach(c => {
+      if (c.hasValidator(Validators.required)) {
+        totalRequired.push(c)
+      }
+    })
+    return totalRequired.length ? totalRequired.length : 0;
+  }
+
+  get showSaveButton(): boolean {
+    return this.submittedRoles.length <= this.rolesControl.length && this.rolesControl.length > 0;
+  }
 
   get rolesControl(): FormArray {
     return this.startProcessRoleForm.get('roles') as FormArray;
@@ -57,9 +72,11 @@ export class RoleStepComponent implements OnChanges {
         })
         this.submittedRoles = [];
         this.submittingRoles = [];
+
         this.submittedFields.emit({
           submitted: 0,
           total: this.rolesControl.controls.length,
+          totalRequired: this.totalRequired,
           hasValidForm: this.startProcessRoleForm.valid
         })
       }
@@ -173,6 +190,7 @@ export class RoleStepComponent implements OnChanges {
         this.submittedFields.emit({
           submitted: this.submittedRoles.length,
           total: this.rolesControl.controls.length,
+          totalRequired: this.totalRequired,
           hasValidForm: this.startProcessRoleForm.valid
         })
 
