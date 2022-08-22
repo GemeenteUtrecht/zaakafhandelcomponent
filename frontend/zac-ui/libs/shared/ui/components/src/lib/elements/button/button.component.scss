@@ -99,6 +99,10 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
     &--danger {
       background-color: $color-danger;
       border-color: $color-danger;
+      &:hover {
+        background-color: $color-background-danger;
+        border-color: $color-background-danger;
+      }
     }
 
 

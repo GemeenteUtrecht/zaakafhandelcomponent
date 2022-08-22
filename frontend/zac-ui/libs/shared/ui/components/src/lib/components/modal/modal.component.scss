@@ -60,6 +60,7 @@ gu-modal {
       .gu-modal-close-button {
         display: flex;
         padding: 4px;
+        height: fit-content;
         &:hover {
           background-color: $color-background-lightgrey;
           border-radius: 50%;

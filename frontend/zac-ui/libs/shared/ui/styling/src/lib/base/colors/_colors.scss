@@ -18,6 +18,7 @@ $color-secondary-orange: #ff6e00;
 $color-secondary-yellow: #ffcc00;
 $color-secondary-lime: #99d000;
 $color-secondary-green: #32ab27;
+$color-secondary-lightblue: #dbeaf6;
 $color-secondary-cyan: #009ed4;
 $color-secondary-blue: #006dff;
 $color-secondary-marine: #1c4181;
@@ -25,8 +26,8 @@ $color-secondary-brown: #ad643b;
 
 // mappings
 $color-primary: $color-primary-red;
-$color-tertiary: $color-primary-yellow;
 $color-secondary: $color-secondary-marine;
+$color-tertiary: $color-secondary-lightblue;
 
 $color-danger: $color-secondary-red;
 $color-info: $color-secondary-cyan;
@@ -37,7 +38,11 @@ $color-disabled: #b3b3b3;
 $color-muted: $shade-secondary-gray;
 
 $color-background-white: $shade-primary-white;
+$color-background-warning: #feb;
+$color-background-danger: #ff9890;
+$color-background-info: $color-secondary-lightblue;
 $color-background-lightgrey: #f2f2f2;
+$color-background-grey: #e3e3e3;
 
 $color-border: $shade-secondary-gray;
 $color-border-input: #e0e0e0;
