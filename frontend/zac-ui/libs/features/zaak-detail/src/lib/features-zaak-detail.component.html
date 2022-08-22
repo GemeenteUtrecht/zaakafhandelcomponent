@@ -1,5 +1,5 @@
 <!--  Loading -->
-<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+<gu-loading-indicator *ngIf="isLoading" [loadingText]="'De zaakgegevens worden opgehaald...'"></gu-loading-indicator>
 
 <section *ngIf="!isLoading" class="row m-0 flex-nowrap">
   <div class="flex-fill p-0">
