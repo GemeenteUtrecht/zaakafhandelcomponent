@@ -26,8 +26,8 @@ $color-secondary-brown: #ad643b;
 
 // mappings
 $color-primary: $color-primary-red;
-$color-tertiary: $color-secondary-lightblue;
 $color-secondary: $color-secondary-marine;
+$color-tertiary: $color-secondary-lightblue;
 
 $color-danger: $color-secondary-red;
 $color-info: $color-secondary-cyan;
@@ -38,7 +38,9 @@ $color-disabled: #b3b3b3;
 $color-muted: $shade-secondary-gray;
 
 $color-background-white: $shade-primary-white;
-$color-background-lightyellow: #feb;
+$color-background-warning: #feb;
+$color-background-danger: #ff9890;
+$color-background-info: $color-secondary-lightblue;
 $color-background-lightgrey: #f2f2f2;
 $color-background-grey: #e3e3e3;
 

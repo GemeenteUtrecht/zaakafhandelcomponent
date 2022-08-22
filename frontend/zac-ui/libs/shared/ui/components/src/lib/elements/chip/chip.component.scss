@@ -36,7 +36,7 @@
   }
 
   &--tertiary {
-    background-color: $color-tertiary;
+    background-color: $color-background-info;
     color: $color-text;
     .chip-icon {
       ::ng-deep .mat-icon {

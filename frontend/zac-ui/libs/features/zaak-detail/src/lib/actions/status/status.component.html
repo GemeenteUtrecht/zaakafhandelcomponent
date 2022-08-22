@@ -24,39 +24,42 @@
     </div>
   </div>
 
+  <!-- Loading indicator -->
+  <div *ngIf="isLoading">
+    <gu-loading-indicator></gu-loading-indicator>
+  </div>
+
   <gu-tab-group>
     <gu-tab label="Doorlooptijd">
-      <div *ngIf="isLoading" class="p-4">
-        <gu-loading-indicator></gu-loading-indicator>
-      </div>
-
-      <div *ngIf="data && data[0] && !isLoading"  class="p-4">
-        <gu-progress-bar [progress]="finished ? 100 : progress ? progress : 0"
-                         [finished]="finished"
-                         endDate="{{data[0].datumStatusGezet | date:'shortDate'}}"
-                         class="d-block mb-3"></gu-progress-bar>
-        <div class="d-flex">
-          <p class="mr-1">Uiterlijke einddatum:</p>
-          <p class="p--bold" *ngIf="deadline">{{deadline}}</p>
-        </div>
-        <div class="timeline mb-2" *ngIf="data">
-          <div class="timeline__row row no-gutters"
-               *ngFor="let status of data; let last = last; let first = first; let i = index"
-               [ngClass]="{'timeline__row--first': first, 'timeline__row--last': last}"
-          >
-            <div class="col-1">
-              <div class="timeline-item__dot"></div>
-            </div>
-            <div class="timeline-item timeline-item--left col-5">
-              <div class="item-left__info">
-                <p class="p--nomargin p--bold">{{status.statustype.omschrijving}}</p>
+      <div class="p-4">
+        <div *ngIf="data && data[0] && !isLoading">
+          <gu-progress-bar [progress]="finished ? 100 : progress ? progress : 0"
+                           [finished]="finished"
+                           endDate="{{data[0].datumStatusGezet | date:'shortDate'}}"
+                           class="d-block mb-3"></gu-progress-bar>
+          <div class="d-flex">
+            <p class="mr-1">Uiterlijke einddatum:</p>
+            <p class="p--bold" *ngIf="deadline">{{deadline}}</p>
+          </div>
+          <div class="timeline mb-2" *ngIf="data">
+            <div class="timeline__row row no-gutters"
+                 *ngFor="let status of data; let last = last; let first = first; let i = index"
+                 [ngClass]="{'timeline__row--first': first, 'timeline__row--last': last}"
+            >
+              <div class="col-1">
+                <div class="timeline-item__dot"></div>
               </div>
-            </div>
-            <div class="timeline-item timeline-item--right col-2">
-              <label class="label label--small p-0 m-0">{{status.datumStatusGezet | date:'shortDate'}}</label>
-            </div>
-            <div class="timeline-item timeline-item--right col-4">
-              <p class="p--nomargin">{{status.statustoelichting}}</p>
+              <div class="timeline-item timeline-item--left col-5">
+                <div class="item-left__info">
+                  <p class="p--nomargin p--bold">{{status.statustype.omschrijving}}</p>
+                </div>
+              </div>
+              <div class="timeline-item timeline-item--right col-2">
+                <label class="label label--small p-0 m-0">{{status.datumStatusGezet | date:'shortDate'}}</label>
+              </div>
+              <div class="timeline-item timeline-item--right col-4">
+                <p class="p--nomargin">{{status.statustoelichting}}</p>
+              </div>
             </div>
           </div>
         </div>

@@ -71,6 +71,14 @@
   &__cell {
     padding: 0 12px;
     white-space: pre;
+    word-wrap: break-word;
+    max-width: 200px;
+    .cell__text {
+      min-width: 100px;
+      span {
+        white-space: pre-line;
+      }
+    }
   }
 
   &__cell--expandable-toggle {
