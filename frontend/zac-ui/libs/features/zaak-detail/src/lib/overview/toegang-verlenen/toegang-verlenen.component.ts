@@ -110,7 +110,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       }
     })
     const endDate = this.endDateControl.value ?
-      this.datePipe.transform(this.endDateControl.value, "yyyy-MM-dd") :
+      this.datePipe.transform(this.endDateControl.value, "yyyy-MM-ddT00:00") :
       undefined;
     const formData = [{
       requester: this.requesterControl.value,
