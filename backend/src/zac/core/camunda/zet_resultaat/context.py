@@ -81,11 +81,18 @@ def get_context(task: Task) -> ZetResultaatContext:
         rr for rr in get_review_requests(zaak) if rr.completed < rr.num_assigned_users
     ] or None
     zaaktype = fetch_zaaktype(zaak.zaaktype)
-    result_types = get_resultaattypen(zaaktype)
+
+    all_result_types = get_resultaattypen(zaaktype)
+    chosen_result_types = []
+    if result_type_choices := task.get_variable("resultaatTypeKeuzes", default=None):
+        for result in all_result_types:
+            if result.omschrijving in result_type_choices:
+                chosen_result_types.append(result)
+
     return ZetResultaatContext(
         activities=activities,
         checklist_questions=checklist_questions,
         tasks=tasks,
         review_requests=review_requests,
-        result_types=result_types,
+        result_types=chosen_result_types or all_result_types,
     )

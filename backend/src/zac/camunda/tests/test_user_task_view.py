@@ -465,7 +465,10 @@ class GetUserTaskContextViewTests(APITestCase):
             "schemas/ResultaatType",
             catalogus=self.zaaktype["catalogus"],
         )
-
+        m.get(
+            "https://camunda.example.com/engine-rest/task/598347ee-62fc-46a2-913a-6e0788bc1b8c/variables/resultaatTypeKeuzes?deserializeValue=false",
+            json=serialize_variable([resultaattype["omschrijving"]]),
+        )
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
