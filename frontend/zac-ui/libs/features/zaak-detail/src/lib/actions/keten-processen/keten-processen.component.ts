@@ -83,7 +83,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   showOverlay: boolean;
   showActions: boolean;
 
-  closeCaseTask: Task;
+  hasCancelCaseMessage: boolean;
 
   constructor(
     public ketenProcessenService: KetenProcessenService,
@@ -208,10 +208,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
   /**
    * Set task that is responsible for closing the case.
-   * @param {Task[]} data
+   * @param {string[]} messages
    */
-  setCloseCaseTask(data: Task[]) {
-    this.closeCaseTask = data.find(({formKey}) => formKey === 'zac:zetResultaat');
+  setCloseCaseMessage(messages: string[]) {
+    this.hasCancelCaseMessage = messages.includes('Zaak annuleren');
   }
 
   /**
@@ -275,7 +275,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.snackbarService.openSnackBar(sendMessageConfirmation, 'Sluiten', 'primary')
     }, errorRes => {
       this.isLoading = false;
-      this.errorMessage = errorRes?.error?.detail || 'Het openen van de taak is niet gelukt. Probeer het nog eens.';
+      this.errorMessage = errorRes?.error?.detail || 'Het openen van de actie is niet gelukt. Controleer of de actie al actief is in het "Acties" blok hierboven.';
       this.reportError(errorRes);
     })
   }
@@ -289,14 +289,15 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.data = data;
     this.allTaskData = this.ketenProcessenService.mergeTaskData(data);
 
-    this.setCloseCaseTask(this.allTaskData);
+    this.setCloseCaseMessage(data[0]?.messages || []);
 
     // Process instance ID for API calls
     this.processInstanceId = data.length > 0 ? data[0].id : null;
 
+    this.nVisibleTaskData = this.allTaskData.length;
+
     // Emit number of tasks
-    this.nVisibleTaskData = this.closeCaseTask ? this.allTaskData.length - 1 : this.allTaskData.length
-    this.nTaskDataEvent.emit(this.nVisibleTaskData);
+    this.nTaskDataEvent.emit(this.allTaskData.length);
 
     // Trigger update in parent
     this.update.emit(data);
