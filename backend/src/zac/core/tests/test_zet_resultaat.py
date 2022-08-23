@@ -184,6 +184,10 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             f"{CAMUNDA_URL}task/{task.id}/variables/zaakUrl?deserializeValue=false",
             json=serialize_variable(self.zaak["url"]),
         )
+        m.get(
+            f"{CAMUNDA_URL}task/{task.id}/variables/resultaatTypeKeuzes?deserializeValue=false",
+            json=serialize_variable([self.resultaattype["omschrijving"]]),
+        )
         mock_resource_get(m, self.zaak)
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",

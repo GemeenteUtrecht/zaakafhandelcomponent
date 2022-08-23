@@ -151,7 +151,8 @@
   <!-- Action buttons -->
   <div class="processen__msg-btns-container">
     <ng-container *ngFor="let message of data[0].messages; let i = index">
-      <button gu-button
+      <button *ngIf="message !== 'Zaak annuleren'"
+              gu-button
               (click)="sendMessage(message)"
               buttonStyle="action-link"
               class="mr-2 mb-3">
@@ -159,12 +160,12 @@
       </button>
     </ng-container>
   </div>
-  <button *ngIf="closeCaseTask"
+  <button *ngIf="hasCancelCaseMessage"
           gu-button
           buttonStyle="primary"
           buttonType="danger"
           icon="dangerous"
-          (click)="executeTask(closeCaseTask.id, 0)"
+          (click)="sendMessage('Zaak annuleren')"
   >
     Zaak annuleren
   </button>
