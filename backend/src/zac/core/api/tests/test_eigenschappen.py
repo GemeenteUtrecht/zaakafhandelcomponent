@@ -605,13 +605,13 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             api_type=APITypes.orc, api_root="http://object.nl/api/v1/"
         )
         core_config.primary_objects_api = objects_service
-        core_config.zaaktype_attribute_object_type = "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
+        core_config.zaaktype_attribute_objecttype = "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
         core_config.save()
 
         enum_obj = {
             "url": f"{objects_service.api_root}objects/0196252f-32de-4edb-90e8-10669b5dbf50",
             "uuid": "0196252f-32de-4edb-90e8-10669b5dbf50",
-            "type": core_config.zaaktype_attribute_object_type,
+            "type": core_config.zaaktype_attribute_objecttype,
             "record": {
                 "index": 1,
                 "typeVersion": 1,

@@ -53,7 +53,6 @@ from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
 
 from ..cache import invalidate_zaak_cache, invalidate_zaakobjecten_cache
-from ..camunda.start_process.utils import get_camunda_start_form_for_zaaktypen
 from ..services import (
     create_document,
     create_rol,

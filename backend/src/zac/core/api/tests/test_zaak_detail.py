@@ -26,7 +26,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.camunda.start_process.tests.factories import CamundaStartProcessFactory
+from zac.core.models import CoreConfig
 from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
     zaken_inzien,
@@ -40,6 +40,13 @@ from zgw.models.zrc import Zaak
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 KOWNSL_ROOT = "https://kownsl.nl/"
+
+from zac.core.camunda.start_process.tests.utils import (
+    OBJECTS_ROOT,
+    START_CAMUNDA_PROCESS_FORM,
+    START_CAMUNDA_PROCESS_FORM_OBJ,
+    START_CAMUNDA_PROCESS_FORM_OT,
+)
 
 
 @requests_mock.Mocker()
@@ -56,9 +63,24 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+        core_config = CoreConfig.get_solo()
+        core_config.start_camunda_process_form_objecttype = (
+            START_CAMUNDA_PROCESS_FORM_OT["url"]
+        )
+        core_config.primary_objects_api = objects_service
+        core_config.save()
 
         catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=catalogus_url,
+            domein=START_CAMUNDA_PROCESS_FORM["zaaktypeCatalogus"],
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -122,10 +144,6 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.patch_get_top_level_process_instances = patch(
             "zac.core.api.serializers.get_top_level_process_instances", return_value=[]
         )
-        CamundaStartProcessFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-        )
 
     def setUp(self):
         super().setUp()
@@ -143,8 +161,13 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_get_zaak_detail_indexed_in_es(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
         zaak_document.save()
@@ -159,7 +182,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "bronorganisatie": "123456782",
             "zaaktype": {
                 "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
                 "omschrijving": self.zaaktype["omschrijving"],
                 "versiedatum": self.zaaktype["versiedatum"],
             },
@@ -177,7 +200,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "resultaat": self.resultaat,
             "kanGeforceerdBijwerken": True,
             "hasProcess": False,
-            "isStatic": False,
+            "isStatic": True,
             "isConfigured": False,
         }
         self.assertEqual(response.json(), expected_response)
@@ -186,7 +209,11 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_not_indexed_in_es(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
@@ -201,7 +228,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "bronorganisatie": "123456782",
             "zaaktype": {
                 "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
                 "omschrijving": self.zaaktype["omschrijving"],
                 "versiedatum": self.zaaktype["versiedatum"],
             },
@@ -219,7 +246,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "resultaat": self.resultaat,
             "kanGeforceerdBijwerken": True,
             "hasProcess": False,
-            "isStatic": False,
+            "isStatic": True,
             "isConfigured": False,
         }
         self.assertEqual(response.json(), expected_response)
@@ -238,8 +265,9 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     @freeze_time("2020-12-26T12:00:00Z")
     def test_update_zaak_detail(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
@@ -277,8 +305,9 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     @freeze_time("2020-12-26T12:00:00Z")
     def test_update_zaak_set_zaakgeometrie_null(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
@@ -293,8 +322,12 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     def test_update_zaak_invalid_cache(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
@@ -328,13 +361,13 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     @freeze_time("2020-12-26T12:00:00Z")
     def test_change_va_without_reden_invalid(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
         )
-
         m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
 
         response = self.client.patch(
@@ -352,15 +385,14 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @freeze_time("2020-12-26T12:00:00Z")
     def test_change_va_without_reden_valid(self, m):
-        """Update va without changing va value doesn't require reden"""
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
         )
-
         m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
 
         response = self.client.patch(
@@ -384,13 +416,13 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     def test_change_without_reden_valid(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
         )
-
         m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
 
         response = self.client.patch(
@@ -412,14 +444,15 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
     def test_update_with_blank_toelichting(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_resource_get(m, self.zaaktype)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
         )
-
         m.patch(self.zaak["url"], status_code=status.HTTP_200_OK)
+
         data = {
             "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.openbaar,
             "reden": "some",
@@ -446,6 +479,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_has_process(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
@@ -500,6 +537,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_is_static(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(
             m, {**self.zaaktype, "identificatie": "some-other-identificatie"}
         )
@@ -517,7 +558,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "bronorganisatie": "123456782",
             "zaaktype": {
                 "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
                 "omschrijving": self.zaaktype["omschrijving"],
                 "versiedatum": self.zaaktype["versiedatum"],
             },
@@ -544,6 +585,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_is_configured_raise_httperror(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
@@ -567,7 +612,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "bronorganisatie": "123456782",
             "zaaktype": {
                 "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
                 "omschrijving": self.zaaktype["omschrijving"],
                 "versiedatum": self.zaaktype["versiedatum"],
             },
@@ -585,7 +630,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "resultaat": self.resultaat,
             "kanGeforceerdBijwerken": True,
             "hasProcess": True,
-            "isStatic": False,
+            "isStatic": True,
             "isConfigured": False,
         }
         self.assertEqual(response.json(), expected_response)
@@ -594,6 +639,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_is_configured(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
@@ -617,7 +666,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "bronorganisatie": "123456782",
             "zaaktype": {
                 "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
                 "omschrijving": self.zaaktype["omschrijving"],
                 "versiedatum": self.zaaktype["versiedatum"],
             },
@@ -635,7 +684,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "resultaat": self.resultaat,
             "kanGeforceerdBijwerken": True,
             "hasProcess": True,
-            "isStatic": False,
+            "isStatic": True,
             "isConfigured": True,
         }
         self.assertEqual(response.json(), expected_response)
@@ -684,10 +733,6 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         cls.patch_get_top_level_process_instances = patch(
             "zac.core.api.serializers.get_top_level_process_instances", return_value=[]
-        )
-        CamundaStartProcessFactory.create(
-            zaaktype_identificatie=cls._zaaktype["identificatie"],
-            zaaktype_catalogus=cls._zaaktype["catalogus"],
         )
 
         cls.detail_url = reverse(

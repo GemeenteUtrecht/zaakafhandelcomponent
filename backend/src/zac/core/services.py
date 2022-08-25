@@ -38,6 +38,7 @@ from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
 from zac.contrib.brp.models import BRPConfig
+from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.elasticsearch.searches import search
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
@@ -1323,7 +1324,7 @@ def delete_zaak_object(zaak_object_url: str):
 
 def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType]) -> List[dict]:
     config = CoreConfig.get_solo()
-    ot_zt_attribuut_url = config.zaaktype_attribute_object_type
+    ot_zt_attribuut_url = config.zaaktype_attribute_objecttype
 
     if not ot_zt_attribuut_url:
         logger.warning(
@@ -1340,3 +1341,33 @@ def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType]) -> List[dict]
 
     zaaktype_attributes = search_objects(object_filters)
     return [zatr["record"]["data"] for zatr in zaaktype_attributes]
+
+
+def fetch_start_camunda_process_form_object(
+    zaaktype: ZaakType,
+) -> Optional[StartCamundaProcessForm]:
+    config = CoreConfig.get_solo()
+    scpf_ot_url = config.start_camunda_process_form_objecttype
+
+    if not scpf_ot_url:
+        logger.warning(
+            "`StartCamundaProcessForm` objecttype is not configured in core configuration or does not exist in the configured objecttype service."
+        )
+        return None
+
+    object_filters = {"type": scpf_ot_url}
+    if zaaktype:
+        catalogus = fetch_catalogus(zaaktype.catalogus)
+        object_filters[
+            "data_attrs"
+        ] = f"zaaktypeIdentificatie__exact__{zaaktype.identificatie},zaaktypeCatalogus__exact__{catalogus.domein}"
+
+    start_camunda_process_form = search_objects(object_filters)
+    if not start_camunda_process_form:
+        logger.warning("No `StartCamundaProcessForm` object is found.")
+        return None
+    elif len(start_camunda_process_form) > 1:
+        logger.warning("More than 1 `StartCamundaProcessForm` object is found.")
+    return factory(
+        StartCamundaProcessForm, start_camunda_process_form[-1]["record"]["data"]
+    )

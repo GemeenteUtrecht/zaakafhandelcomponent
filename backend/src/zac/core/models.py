@@ -39,7 +39,14 @@ class CoreConfig(SingletonModel):
         related_name="+",
         help_text=_("Default OBJECTTYPES API service to use"),
     )
-    zaaktype_attribute_object_type = models.URLField(
+    start_camunda_process_form_objecttype = models.URLField(
+        _("URL-reference to StartCamundaForms in OBJECTTYPES API."),
+        help_text=_(
+            "A URL-reference to the StartCamundaForms OBJECTTYPE. This is used to set the right variables for the camunda process related to the ZAAKTYPE."
+        ),
+        default="",
+    )
+    zaaktype_attribute_objecttype = models.URLField(
         _("URL-reference to ZaaktypeAttributes in OBJECTTYPES API."),
         help_text=_(
             "A URL-reference to the ZaaktypeAttributes OBJECTTYPE. This is used to get extra data for EIGENSCHAPs."
