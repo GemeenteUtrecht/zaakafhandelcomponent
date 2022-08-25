@@ -510,7 +510,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "bronorganisatie": "123456782",
             "zaaktype": {
                 "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "catalogus": f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
                 "omschrijving": self.zaaktype["omschrijving"],
                 "versiedatum": self.zaaktype["versiedatum"],
             },
