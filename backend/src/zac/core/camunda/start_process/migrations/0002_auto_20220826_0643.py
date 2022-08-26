@@ -6,43 +6,43 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('start_process', '0001_initial'),
+        ("start_process", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='processeigenschap',
+            name="processeigenschap",
             unique_together=None,
         ),
         migrations.RemoveField(
-            model_name='processeigenschap',
-            name='camunda_start_process',
+            model_name="processeigenschap",
+            name="camunda_start_process",
         ),
         migrations.RemoveField(
-            model_name='processinformatieobject',
-            name='camunda_start_process',
+            model_name="processinformatieobject",
+            name="camunda_start_process",
         ),
         migrations.RemoveField(
-            model_name='processrol',
-            name='camunda_start_process',
+            model_name="processrol",
+            name="camunda_start_process",
         ),
         migrations.RemoveField(
-            model_name='processrolchoice',
-            name='process_rol',
+            model_name="processrolchoice",
+            name="process_rol",
         ),
         migrations.DeleteModel(
-            name='CamundaStartProcess',
+            name="CamundaStartProcess",
         ),
         migrations.DeleteModel(
-            name='ProcessEigenschap',
+            name="ProcessEigenschap",
         ),
         migrations.DeleteModel(
-            name='ProcessInformatieObject',
+            name="ProcessInformatieObject",
         ),
         migrations.DeleteModel(
-            name='ProcessRol',
+            name="ProcessRol",
         ),
         migrations.DeleteModel(
-            name='ProcessRolChoice',
+            name="ProcessRolChoice",
         ),
     ]
