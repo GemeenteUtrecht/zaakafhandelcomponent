@@ -16,46 +16,25 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
+from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
-from .factories import (
-    CamundaStartProcessFactory,
-    ProcessEigenschapFactory,
-    ProcessInformatieObjectFactory,
-    ProcessRolFactory,
+from .utils import (
+    CATALOGI_ROOT,
+    DOCUMENTS_ROOT,
+    OBJECTS_ROOT,
+    OBJECTTYPES_ROOT,
+    PROCESS_EIGENSCHAP,
+    PROCESS_INFORMATIE_OBJECT,
+    PROCESS_ROL,
+    START_CAMUNDA_PROCESS_FORM,
+    START_CAMUNDA_PROCESS_FORM_OBJ,
+    START_CAMUNDA_PROCESS_FORM_OT,
+    TASK_DATA,
+    ZAKEN_ROOT,
 )
-
-CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
-ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-PI_URL = "https://camunda.example.com/engine-rest/process-instance"
-
-# Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
-TASK_DATA = {
-    "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
-    "name": "aName",
-    "assignee": None,
-    "created": "2013-01-23T13:42:42.000+0200",
-    "due": "2013-01-23T13:49:42.576+0200",
-    "followUp": "2013-01-23T13:44:42.437+0200",
-    "delegationState": "RESOLVED",
-    "description": "aDescription",
-    "executionId": "anExecution",
-    "owner": "anOwner",
-    "parentTaskId": None,
-    "priority": 42,
-    "processDefinitionId": "aProcDefId",
-    "processInstanceId": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
-    "caseDefinitionId": "aCaseDefId",
-    "caseInstanceId": "aCaseInstId",
-    "caseExecutionId": "aCaseExecution",
-    "taskDefinitionKey": "aTaskDefinitionKey",
-    "suspended": False,
-    "formKey": "",
-    "tenantId": "aTenantId",
-}
 
 
 def _get_task(**overrides):
@@ -73,9 +52,26 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        Service.objects.create(api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT)
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+
+        core_config = CoreConfig.get_solo()
+        core_config.start_camunda_process_form_objecttype = (
+            START_CAMUNDA_PROCESS_FORM_OT["url"]
+        )
+        core_config.primary_objects_api = objects_service
+        core_config.save()
 
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=catalogus_url,
+            domein=START_CAMUNDA_PROCESS_FORM["zaaktypeCatalogus"],
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -87,7 +83,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             "ztc",
             "schemas/Eigenschap",
             zaaktype=cls.zaaktype["url"],
-            naam="some-property",
+            naam=PROCESS_EIGENSCHAP["eigenschapnaam"],
             specificatie={
                 "groep": "dummy",
                 "formaat": "tekst",
@@ -116,7 +112,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             "ztc",
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-            omschrijving="bijlage",
+            omschrijving=PROCESS_INFORMATIE_OBJECT["informatieobjecttypeOmschrijving"],
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
@@ -125,14 +121,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             "schemas/EnkelvoudigInformatieObject",
             informatieobjecttype=cls.informatieobjecttype["url"],
         )
-        cls.roltype = generate_oas_component(
-            "ztc",
-            "schemas/RolType",
-            url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            zaaktype=cls.zaaktype["url"],
-            omschrijvingGeneriek="klantcontacter",
-            omschrijving="some-omschrijving",
-        )
+
         cls.medewerker = generate_oas_component(
             "zrc",
             "schemas/RolMedewerker",
@@ -141,12 +130,20 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             voorletters="W.",
             voorvoegselAchternaam="van",
         )
+        cls.roltype = generate_oas_component(
+            "ztc",
+            "schemas/RolType",
+            url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            zaaktype=cls.zaaktype["url"],
+            omschrijvingGeneriek="klantcontacter",
+            omschrijving=PROCESS_ROL["roltypeOmschrijving"],
+        )
         cls.rol = generate_oas_component(
             "zrc",
             "schemas/Rol",
             zaak=cls.zaak["url"],
             betrokkene="",
-            betrokkeneType="medewerker",
+            betrokkeneType=PROCESS_ROL["betrokkeneType"],
             roltype=cls.roltype["url"],
             betrokkeneIdentificatie=cls.medewerker,
         )
@@ -165,34 +162,6 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             ],
         )
 
-        camunda_start_process = CamundaStartProcessFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-        )
-        ProcessEigenschapFactory.create(
-            camunda_start_process=camunda_start_process,
-            eigenschapnaam=cls.eigenschap["naam"],
-            label="some-eigenschap",
-            required=True,
-            order=0,
-        )
-        ProcessInformatieObjectFactory.create(
-            camunda_start_process=camunda_start_process,
-            informatieobjecttype_omschrijving=cls.informatieobjecttype["omschrijving"],
-            label="some-doc",
-            allow_multiple=True,
-            required=True,
-            order=0,
-        )
-        ProcessRolFactory.create(
-            camunda_start_process=camunda_start_process,
-            roltype_omschrijving=cls.roltype["omschrijving"],
-            label="some-rol",
-            betrokkene_type="natuurlijk_persoon",
-            required=True,
-            order=0,
-        )
-
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(self.user)
@@ -204,7 +173,9 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
     def test_get_start_process_context_user_task_everything_done(self, m, gt):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
 
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}informatieobjecttypen",
             json=paginated_response([self.informatieobjecttype]),
@@ -225,6 +196,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
             json=[self.zaakeigenschap],
         )
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
 
         with patch(
             "zac.core.camunda.start_process.serializers.get_zaak_context",
@@ -261,9 +233,9 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                             },
                             "alreadyUploadedInformatieobjecten": [self.document["url"]],
                             "allowMultiple": True,
-                            "label": "some-doc",
+                            "label": PROCESS_INFORMATIE_OBJECT["label"],
                             "required": True,
-                            "order": 0,
+                            "order": 1,
                         }
                     ],
                     "benodigdeRollen": [],
@@ -279,7 +251,9 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
     def test_get_start_process_context_user_task_missing_everything(self, m, gt):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
 
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}informatieobjecttypen",
             json=paginated_response([self.informatieobjecttype]),
@@ -300,6 +274,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
             json=[],
         )
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
 
         zaak_context = ZaakContext(
             zaak=self.zaak_context.zaak,
@@ -335,32 +310,34 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                         {
                             "informatieobjecttype": {
                                 "url": "http://catalogus.nl/api/v1/informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-                                "omschrijving": "bijlage",
+                                "omschrijving": PROCESS_INFORMATIE_OBJECT[
+                                    "informatieobjecttypeOmschrijving"
+                                ],
                             },
                             "allowMultiple": True,
-                            "label": "some-doc",
+                            "label": PROCESS_INFORMATIE_OBJECT["label"],
                             "required": True,
-                            "order": 0,
+                            "order": 1,
                         }
                     ],
                     "benodigdeRollen": [
                         {
                             "roltype": {
                                 "url": "http://catalogus.nl/api/v1/roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-                                "omschrijving": "some-omschrijving",
+                                "omschrijving": PROCESS_ROL["roltypeOmschrijving"],
                                 "omschrijvingGeneriek": "klantcontacter",
                             },
-                            "label": "some-rol",
-                            "betrokkeneType": "natuurlijk_persoon",
+                            "label": PROCESS_ROL["label"],
+                            "betrokkeneType": PROCESS_ROL["betrokkeneType"],
                             "required": True,
-                            "order": 0,
+                            "order": 1,
                         }
                     ],
                     "benodigdeZaakeigenschappen": [
                         {
                             "eigenschap": {
                                 "url": self.eigenschap["url"],
-                                "naam": "some-property",
+                                "naam": self.eigenschap["naam"],
                                 "toelichting": self.eigenschap["toelichting"],
                                 "specificatie": {
                                     "groep": "dummy",
@@ -370,10 +347,10 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                                     "waardenverzameling": ["aaa", "bbb"],
                                 },
                             },
-                            "label": "some-eigenschap",
+                            "label": PROCESS_EIGENSCHAP["label"],
                             "default": "",
                             "required": True,
-                            "order": 0,
+                            "order": 1,
                             "choices": [
                                 {"label": "aaa", "value": "aaa"},
                                 {"label": "bbb", "value": "bbb"},

@@ -21,7 +21,6 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.camunda.start_process.tests.factories import CamundaStartProcessFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -159,10 +158,6 @@ class RelatedCasesResponseTests(APITestCase):
         cls.patch_get_top_level_process_instances = patch(
             "zac.core.api.serializers.get_top_level_process_instances", return_value=[]
         )
-        CamundaStartProcessFactory.create(
-            zaaktype_identificatie=related_zaaktype["identificatie"],
-            zaaktype_catalogus=related_zaaktype["catalogus"],
-        )
 
     def setUp(self):
         super().setUp()
@@ -234,7 +229,7 @@ class RelatedCasesResponseTests(APITestCase):
                     },
                     "kanGeforceerdBijwerken": True,
                     "hasProcess": False,
-                    "isStatic": False,
+                    "isStatic": True,
                     "isConfigured": False,
                 },
             }

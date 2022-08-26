@@ -48,10 +48,10 @@ from zac.camunda.api.utils import get_bptl_app_id_variable
 from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
-from zac.core.camunda.start_process.models import CamundaStartProcess
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_rol,
+    fetch_start_camunda_process_form_object,
     fetch_zaaktype,
     fetch_zaaktypeattributen_objects,
     get_document,
@@ -512,13 +512,8 @@ class ZaakDetailSerializer(APIModelSerializer):
         return bool(process_instances)
 
     def get_is_static(self, obj) -> bool:
-        zaaktype_catalogus = obj.zaaktype.catalogus
-        zaaktype_identificatie = obj.zaaktype.identificatie
-        objs = CamundaStartProcess.objects.filter(
-            zaaktype_catalogus=zaaktype_catalogus,
-            zaaktype_identificatie=zaaktype_identificatie,
-        )
-        return not objs.exists()
+        form = fetch_start_camunda_process_form_object(obj.zaaktype)
+        return not form
 
     def get_is_configured(self, obj) -> bool:
         process_instances = get_top_level_process_instances(obj.url)

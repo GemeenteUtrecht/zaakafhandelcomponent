@@ -19,16 +19,21 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.core.models import CoreConfig
 from zac.core.permissions import zaakprocess_starten
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
-from .factories import CamundaStartProcessFactory
+from .utils import (
+    CATALOGI_ROOT,
+    OBJECTS_ROOT,
+    START_CAMUNDA_PROCESS_FORM,
+    START_CAMUNDA_PROCESS_FORM_OBJ,
+    START_CAMUNDA_PROCESS_FORM_OT,
+    ZAKEN_ROOT,
+)
 
-DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
-ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 ZAAK_URL = "https://some.zrc.nl/api/v1/zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
 CAMUNDA_ROOT = "https://camunda.example.com/"
 CAMUNDA_API_PATH = "engine-rest/"
@@ -38,8 +43,8 @@ CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/history/task/get-task-query/
 COMPLETED_TASK_DATA = {
     "id": "1790e564-8b57-11ec-baad-6ed7f836cf1f",
-    "processDefinitionKey": "HARVO_behandelen",
-    "processDefinitionId": "HARVO_behandelen:61:54586277-7922-11ec-8209-aa9470edda89",
+    "processDefinitionKey": START_CAMUNDA_PROCESS_FORM["camundaProcessDefinitionKey"],
+    "processDefinitionId": f"{START_CAMUNDA_PROCESS_FORM['camundaProcessDefinitionKey']}:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
     "processInstanceId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
     "executionId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
     "caseDefinitionKey": None,
@@ -62,12 +67,12 @@ COMPLETED_TASK_DATA = {
     "followUp": None,
     "tenantId": None,
     "removalTime": None,
-    "rootProcessInstanceId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
+    "rootProcessInstanceId": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
 }
 
 PROCESS_DEFINITION = {
-    "id": f"start_camunda_process:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
-    "key": "start_camunda_process",
+    "id": f"{START_CAMUNDA_PROCESS_FORM['camundaProcessDefinitionKey']}:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+    "key": START_CAMUNDA_PROCESS_FORM["camundaProcessDefinitionKey"],
     "category": "http://bpmn.io/schema/bpmn",
     "description": None,
     "name": "Start Camunda Process",
@@ -112,9 +117,23 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+        core_config = CoreConfig.get_solo()
+        core_config.start_camunda_process_form_objecttype = (
+            START_CAMUNDA_PROCESS_FORM_OT["url"]
+        )
+        core_config.primary_objects_api = objects_service
+        core_config.save()
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=catalogus_url,
+            domein=START_CAMUNDA_PROCESS_FORM["zaaktypeCatalogus"],
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -132,17 +151,15 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         cls.zaak_obj = factory(Zaak, cls.zaak)
         cls.zaak_obj.zaaktype = factory(ZaakType, cls.zaaktype)
 
-        cls.camunda_start_process = CamundaStartProcessFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-            process_definition_key=PROCESS_DEFINITION["key"],
-        )
-
     def setUp(self) -> None:
         super().setUp()
         self.client.force_authenticate(self.user)
 
     def test_success_start_camunda_process(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
             json=[PROCESS_INSTANCE],
@@ -202,6 +219,10 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         )
 
     def test_start_camunda_process_no_process_instance_to_close(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
             json=[],
@@ -231,6 +252,10 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         )
 
     def test_start_camunda_process_no_process_definition_found(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
             json=[PROCESS_INSTANCE],
@@ -287,9 +312,23 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+        core_config = CoreConfig.get_solo()
+        core_config.start_camunda_process_form_objecttype = (
+            START_CAMUNDA_PROCESS_FORM_OT["url"]
+        )
+        core_config.primary_objects_api = objects_service
+        core_config.save()
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=catalogus_url,
+            domein=START_CAMUNDA_PROCESS_FORM["zaaktypeCatalogus"],
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -309,12 +348,6 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak_obj = factory(Zaak, cls.zaak)
         cls.zaak_obj.zaaktype = factory(ZaakType, cls.zaaktype)
-
-        cls.camunda_start_process = CamundaStartProcessFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-            process_definition_key=PROCESS_DEFINITION["key"],
-        )
         cls.find_zaak_patcher = patch(
             "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
             return_value=cls.zaak_obj,
@@ -368,8 +401,11 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_has_perm(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
             role__permissions=[zaakprocess_starten.name],

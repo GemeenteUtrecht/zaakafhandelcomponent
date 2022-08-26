@@ -15,7 +15,6 @@ from zac.core.services import (
 )
 from zgw.models.zrc import Zaak
 
-from ..camunda.start_process.utils import get_camunda_start_form_for_zaaktypen
 from .constants import ACCEPTABLE_CONTENT_TYPES, RE_PROG
 
 

@@ -20,7 +20,10 @@ def get_objecttypes_choices():
 class CoreConfigAdmin(SingletonModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj=obj, change=change, **kwargs)
-        form.base_fields["zaaktype_attribute_object_type"] = fields.ChoiceField(
+        form.base_fields["zaaktype_attribute_objecttype"] = fields.ChoiceField(
+            choices=get_objecttypes_choices(), required=False, initial=""
+        )
+        form.base_fields["start_camunda_process_form_objecttype"] = fields.ChoiceField(
             choices=get_objecttypes_choices(), required=False, initial=""
         )
         return form

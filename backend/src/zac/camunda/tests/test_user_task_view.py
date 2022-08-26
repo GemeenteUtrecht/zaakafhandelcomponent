@@ -373,10 +373,6 @@ class GetUserTaskContextViewTests(APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_object_or_404",
-        return_value=None,
-    )
-    @patch(
         "zac.core.camunda.start_process.serializers.get_required_process_informatie_objecten",
         return_value=[],
     )

@@ -3,7 +3,6 @@ from typing import List
 from django.utils.translation import gettext_lazy as _
 
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.api.context import ZaakContext
 from zac.core.camunda.start_process.data import ProcessEigenschapChoice
@@ -17,16 +16,12 @@ from zac.core.services import (
     resolve_documenten_informatieobjecttypen,
 )
 
-from .models import (
-    CamundaStartProcess,
-    ProcessEigenschap,
-    ProcessInformatieObject,
-    ProcessRol,
-)
+from .data import StartCamundaProcessForm
+from .models import ProcessEigenschap, ProcessInformatieObject, ProcessRol
 
 
 def get_required_process_informatie_objecten(
-    zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
+    zaak_context: ZaakContext, camunda_start_process: StartCamundaProcessForm
 ) -> List[ProcessInformatieObject]:
     iots = get_informatieobjecttypen_for_zaaktype(zaak_context.zaaktype)
     # Get all documents that are already uploaded and add them to
@@ -44,8 +39,8 @@ def get_required_process_informatie_objecten(
         else:
             ziot_omschrijvingen_to_doc_map[omschrijving].append(doc)
 
-    # Get all required process informatie objecten from CamundaStartProcess
-    pi_objecten = camunda_start_process.processinformatieobject_set.all()
+    # Get all required process informatie objecten from StartCamundaProcessForm
+    pi_objecten = camunda_start_process.process_informatie_objecten
     required_process_informatie_objecten = []
     for piobject in pi_objecten:
         piobject.informatieobjecttype = None
@@ -72,7 +67,7 @@ def get_required_process_informatie_objecten(
 
 
 def get_required_rollen(
-    zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
+    zaak_context: ZaakContext, camunda_start_process: StartCamundaProcessForm
 ) -> List[ProcessRol]:
     # Get all rollen that are already created and check if any of them
     # match the required rollen. Drop those that are already created.
@@ -85,8 +80,8 @@ def get_required_rollen(
         rol.roltype = roltypen[rol.roltype]
         already_set_roltype.append(rol.roltype.omschrijving)
 
-    # Get all required rollen from CamundaStartProcess
-    process_rollen = camunda_start_process.processrol_set.all()
+    # Get all required rollen from StartCamundaProcessForm
+    process_rollen = camunda_start_process.process_rollen
     required_process_rollen = []
     omschrijving_to_roltypen_map = {
         roltype.omschrijving: roltype for url, roltype in roltypen.items()
@@ -102,7 +97,7 @@ def get_required_rollen(
 
 
 def get_required_zaakeigenschappen(
-    zaak_context: ZaakContext, camunda_start_process: CamundaStartProcess
+    zaak_context: ZaakContext, camunda_start_process: StartCamundaProcessForm
 ) -> List[ProcessEigenschap]:
     # Get all zaakeigenschappen and check if any of them match the
     # required zaakeigenschappen. Drop those that are already created.
@@ -111,7 +106,7 @@ def get_required_zaakeigenschappen(
         zei.eigenschap.naam for zei in get_zaak_eigenschappen(zaak_context.zaak)
     ]
     eigenschappen = {ei.naam: ei for ei in get_eigenschappen(zaak_context.zaaktype)}
-    required_eigenschappen = camunda_start_process.processeigenschap_set.all()
+    required_eigenschappen = camunda_start_process.process_eigenschappen
     zaakattributes = {
         data["naam"]: data
         for data in fetch_zaaktypeattributen_objects(zaaktype=zaak_context.zaaktype)
@@ -137,13 +132,3 @@ def get_required_zaakeigenschappen(
             required_process_eigenschappen.append(ei)
 
     return required_process_eigenschappen
-
-
-def get_camunda_start_form_for_zaaktypen(zten: List[ZaakType]):
-    process_forms = CamundaStartProcess.objects.prefetch_related(
-        "processeigenschap_set"
-    ).filter(
-        zaaktype_catalogus__in=[zt.catalogus for zt in zten],
-        zaaktype_identificatie__in=[zt.identificatie for zt in zten],
-    )
-    return process_forms
