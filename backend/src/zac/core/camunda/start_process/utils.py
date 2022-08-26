@@ -16,8 +16,12 @@ from zac.core.services import (
     resolve_documenten_informatieobjecttypen,
 )
 
-from .data import StartCamundaProcessForm
-from .models import ProcessEigenschap, ProcessInformatieObject, ProcessRol
+from .data import (
+    ProcessEigenschap,
+    ProcessInformatieObject,
+    ProcessRol,
+    StartCamundaProcessForm,
+)
 
 
 def get_required_process_informatie_objecten(
