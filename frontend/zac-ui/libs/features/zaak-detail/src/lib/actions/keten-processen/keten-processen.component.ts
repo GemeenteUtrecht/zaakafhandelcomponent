@@ -15,6 +15,7 @@ import {KetenProcessenService} from './keten-processen.service';
 import {KetenProcessen} from '../../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
 import {UserService, ZaakService} from '@gu/services';
+import { delay, retryWhen, take } from 'rxjs/operators';
 
 
 /**
@@ -48,6 +49,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   @Input() zaak: Zaak;
 
   @Output() update = new EventEmitter<any>();
+  @Output() updateCase = new EventEmitter<Zaak>();
   @Output() nTaskDataEvent = new EventEmitter<number>();
 
   data: KetenProcessen[];
@@ -60,6 +62,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
   isExpanded = false;
   isLoading = true;
+  isStartingProcess = false;
   isPolling = false;
   nPollingFails = 0;
   pollingInterval = 5000;
@@ -111,8 +114,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       }
     });
 
-    this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
-    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+    this.checkActionsVisibility();
   }
 
   /**
@@ -300,7 +302,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.nTaskDataEvent.emit(this.allTaskData.length);
 
     // Trigger update in parent
-    this.update.emit(data);
+    this.update.emit();
   }
 
   /**
@@ -346,14 +348,37 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     })
   }
 
+  /**
+   * Fetches the case details.
+   */
+  fetchCaseDetails() {
+    this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie)
+      .subscribe( res => {
+        this.zaak = res;
+        setTimeout(() => {
+          if (this.zaak.hasProcess === false) {
+            this.fetchCaseDetails();
+          } else {
+            this.checkActionsVisibility();
+            this.isStartingProcess = false;
+          }
+        }, 3000)
+      }, err => {
+        this.reportError(err.error);
+      })
+  }
+
   //
   // Events.
   //
 
   initiateCamundaProcess() {
-    this.isLoading = true;
+    this.isStartingProcess = true;
     this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
-      this.showOverlay = false;
+      setTimeout(() => {
+        this.showOverlay = false;
+      }, 2000)
+      this.fetchCaseDetails();
     }, err => {
       this.isLoading = false;
       this.errorMessage = "Het opstarten van het proces is mislukt. Probeer het nog eens."
@@ -397,6 +422,14 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.update.emit();
     this.showActions = true;
     this.closeModal();
+  }
+
+  /**
+   * Show actions and overlay.
+   */
+  checkActionsVisibility() {
+    this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
+    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
   }
 
   //

@@ -4,6 +4,10 @@
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
+  <ng-container *ngIf="isStartingProcess && !zaak.resultaat">
+    <gu-loading-indicator loadingText="Het zaakproces wordt opgestart..."></gu-loading-indicator>
+  </ng-container>
+
   <div class="processen__acties" [ngClass]="{'processen__acties--disabled': showOverlay}">
     <h2 class="d-inline-block mr-1">Acties</h2>
     <p *ngIf="!(!!data && data.length === 0 && !isLoading) && !zaak.resultaat">Dit zijn acties die uitgevoerd moeten worden om de zaak af te ronden.</p>

@@ -114,7 +114,7 @@ export class FeaturesStartCaseComponent implements OnInit {
   getCaseUrlForProcessInstance(processInstanceId) {
     this.camundaService.getCaseUrlForProcessInstance(processInstanceId)
       .pipe(
-        retryWhen(errors => errors.pipe(delay(2000), take(5)))
+        retryWhen(errors => errors.pipe(delay(2000), take(10)))
       )
       .subscribe(processInstanceCase => {
         this.zaakService.navigateToCaseActions({
