@@ -12,6 +12,7 @@ import {ActivatedRoute} from '@angular/router';
 import {UserPermissionsComponent} from './overview/user-permissions/user-permissions.component';
 import {BetrokkenenComponent} from './overview/betrokkenen/betrokkenen.component';
 import {DocumentenComponent} from './documenten/documenten.component';
+import { delay, retryWhen, take, takeWhile } from 'rxjs/operators';
 
 
 /**
@@ -198,7 +199,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
   //
 
   /**
-   * Fetches the details of the case (zaak).
+   * Get the context.
    */
   getContextData(): void {
     this.canRequestAccess = false
@@ -207,6 +208,9 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
     this.fetchCaseDetails();
   }
 
+  /**
+   * Fetches the details of the case
+   */
   fetchCaseDetails() {
     this.zaakService.retrieveCaseDetails(this.bronorganisatie, this.identificatie)
       .subscribe( res => {
@@ -290,9 +294,8 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
 
   /**
    * Updates child components
-   * @param event
    */
-  ketenProcessenUpdate(event) {
+  ketenProcessenUpdate() {
     this.fetchCaseDetails();
     this.adviserenAccorderenComponent.update();
     this.statusComponent.update();

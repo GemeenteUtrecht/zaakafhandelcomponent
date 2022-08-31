@@ -31,7 +31,7 @@
 
   <gu-tab-group>
     <gu-tab label="Doorlooptijd">
-      <div class="p-4">
+      <div class="pt-4 p-2">
         <div *ngIf="data && data[0] && !isLoading">
           <gu-progress-bar [progress]="finished ? 100 : progress ? progress : 0"
                            [finished]="finished"
@@ -46,7 +46,7 @@
                  *ngFor="let status of data; let last = last; let first = first; let i = index"
                  [ngClass]="{'timeline__row--first': first, 'timeline__row--last': last}"
             >
-              <div class="col-1">
+              <div class="col-1" style="max-width: 5%">
                 <div class="timeline-item__dot"></div>
               </div>
               <div class="timeline-item timeline-item--left col-5">
