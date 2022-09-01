@@ -109,30 +109,29 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
         this.requesterUser = user;
       }
     })
+
     const endDate = this.endDateControl.value ?
       this.datePipe.transform(this.endDateControl.value, "yyyy-MM-ddT00:00") :
       undefined;
-    const formData = [{
-      requester: this.requesterControl.value,
-      permissions: this.selectedPermissions,
-      endDate: endDate,
-      zaak: this.zaak.url
-    }];
-    this.accountsService.postAccessForCase(formData).subscribe( res => {
+
+    this.accountsService.addAtomicPermissions(this.zaak, this.requesterControl.value, this.selectedPermissions, endDate).subscribe(res => {
       this.submitResult = {
         username: res.requester,
         name: this.requesterUser
       }
+
       this.submitSuccess = true;
       this.grantAccessForm.reset();
       this.submitHasError = false;
       this.isSubmitting = false;
+
       this.reload.emit();
     }, error => {
       this.submitErrorMessage =
         error?.error?.detail ? error.error.detail
           : error?.error[0] ? error.error[0].nonFieldErrors[0]
           : 'Er is een fout opgetreden';
+
       this.reportError(error);
       this.modalService.close('add-person-modal');
     })
