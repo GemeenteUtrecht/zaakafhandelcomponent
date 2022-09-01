@@ -40,12 +40,21 @@ export class AccountsService {
   }
 
   /**
-   *
-   * @param formData
-   * @returns {Observable<any>}
+   * Add atomic permissions to a zaak (case).
+   * @param {Zaak} zaak
+   * @param {string} userName
+   * @param {string[]} permissions
+   * @param {string} endDate
    */
-  postAccessForCase(formData) {
+  addAtomicPermissions(zaak, userName, permissions, endDate) {
+    const formData = permissions.map((selectedPermission) => ({
+      requester: userName,
+      permission: selectedPermission,
+      endDate: endDate,
+      zaak: zaak.url
+    }));
+
     const endpoint = encodeURI('/api/accounts/cases/access');
     return this.http.Post<any>(endpoint, formData)
-  }
+}
 }
