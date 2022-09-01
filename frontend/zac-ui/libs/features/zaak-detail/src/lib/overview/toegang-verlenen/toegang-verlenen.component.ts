@@ -127,10 +127,15 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
 
       this.reload.emit();
     }, error => {
-      this.submitErrorMessage =
-        error?.error?.detail ? error.error.detail
-          : error?.error[0] ? error.error[0].nonFieldErrors[0]
-          : 'Er is een fout opgetreden';
+
+      try {
+        this.submitErrorMessage = (error?.error?.detail)
+            ? error.error.detail
+            : error.error[0].nonFieldErrors[0];
+      } catch (e) {
+        this.submitErrorMessage = 'Er is een fout opgetreden';
+      }
+
 
       this.reportError(error);
       this.modalService.close('add-person-modal');
