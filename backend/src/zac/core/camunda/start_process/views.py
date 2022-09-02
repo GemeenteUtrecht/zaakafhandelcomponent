@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from zac.camunda.api.utils import delete_zaak_creation_process, start_process
 from zac.core.api.views import GetZaakMixin
-from zac.core.services import fetch_start_camunda_process_form_object
+from zac.objects.services import fetch_start_camunda_process_form
 
 from .permissions import CanStartCamundaProcess
 from .serializers import CreatedProcessInstanceSerializer
@@ -31,7 +31,7 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         delete_zaak_creation_process(zaak)
 
         # See if there is a configured camunda_start_process object
-        camunda_start_process = fetch_start_camunda_process_form_object(zaak.zaaktype)
+        camunda_start_process = fetch_start_camunda_process_form(zaak.zaaktype)
         results = start_process(
             process_key=camunda_start_process.camunda_process_definition_key,
             variables={

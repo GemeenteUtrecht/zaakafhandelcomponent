@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse_lazy
 
 import requests_mock
@@ -14,15 +16,17 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..permissions import checklisttypes_inzien
-from .factories import ChecklistTypeFactory
-
-ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
-CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
-BRONORGANISATIE = "123456789"
-IDENTIFICATIE = "ZAAK-0000001"
+from .utils import (
+    BRONORGANISATIE,
+    CATALOGI_ROOT,
+    CHECKLISTTYPE_OBJECT,
+    IDENTIFICATIE,
+    ZAAK_URL,
+    ZAKEN_ROOT,
+)
 
 
 @requests_mock.Mocker()
@@ -63,17 +67,12 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            url=ZAAK_URL,
             zaaktype=cls.zaaktype["url"],
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
         )
         cls.user = UserFactory.create()
-
-        cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-        )
 
     def test_read_not_logged_in(self, m):
         response = self.client.get(self.endpoint)
@@ -87,7 +86,7 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
 
         self.client.force_authenticate(self.user)
         response = self.client.get(self.endpoint)
@@ -101,8 +100,8 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         # set up user permissions
         BlueprintPermissionFactory.create(
@@ -125,8 +124,8 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         # set up user permissions
         BlueprintPermissionFactory.create(
@@ -139,7 +138,11 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
             },
         )
         self.client.force_authenticate(self.user)
-        response = self.client.get(self.endpoint)
+        with patch(
+            "zac.objects.services.fetch_checklisttype_object",
+            return_value=CHECKLISTTYPE_OBJECT,
+        ):
+            response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_read_logged_in_zaak_permission_atomic(self, m):
@@ -150,8 +153,8 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         # set up user permissions
         AtomicPermissionFactory.create(
@@ -161,5 +164,9 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         )
 
         self.client.force_authenticate(self.user)
-        response = self.client.get(self.endpoint)
+        with patch(
+            "zac.objects.services.fetch_checklisttype_object",
+            return_value=CHECKLISTTYPE_OBJECT,
+        ):
+            response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

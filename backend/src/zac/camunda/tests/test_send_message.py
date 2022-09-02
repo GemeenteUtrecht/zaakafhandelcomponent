@@ -175,7 +175,6 @@ class SendMessagePermissionAndResponseTests(APITestCase):
 
         self.client.force_authenticate(user=user)
 
-        # with patch("zac.camunda.api.views.send_message", return_value=None):
         m.post(
             "https://camunda.example.com/engine-rest/message",
             status_code=201,

@@ -14,6 +14,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_geforceerd_bijwerken
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 
 from ..permissions import activiteiten_inzien, activiteiten_schrijven
 from .factories import ActivityFactory
@@ -247,7 +248,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         response = self.client.get(endpoint)
 
@@ -269,8 +270,8 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         response = self.client.get(endpoint)
 
@@ -292,8 +293,8 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         response = self.client.get(endpoint)
 
@@ -310,7 +311,7 @@ class ReadActivityDetailPermissionTests(ClearCachesMixin, APITestCase):
             object_url=self.zaak["url"],
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         response = self.client.get(endpoint)
 
@@ -366,7 +367,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         data = {
             "zaak": self.zaak["url"],
             "name": "Dummy",
@@ -392,8 +393,8 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {
             "zaak": self.zaak["url"],
             "name": "Dummy",
@@ -419,8 +420,8 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {
             "zaak": self.zaak["url"],
             "name": "Dummy",
@@ -441,7 +442,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         )
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         data = {
             "zaak": self.zaak["url"],
             "name": "Dummy",
@@ -465,7 +466,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         data = {
             "activity": activity.id,
             "notes": "Test notes",
@@ -493,8 +494,8 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {
             "activity": activity.id,
             "notes": "Test notes",
@@ -522,8 +523,8 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {
             "activity": activity.id,
             "notes": "Test notes",
@@ -551,7 +552,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {
             "activity": activity.id,
@@ -589,7 +590,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {
             "activity": activity.id,
@@ -613,7 +614,7 @@ class CreatePermissionTests(ClearCachesMixin, APITestCase):
         )
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         data = {
             "activity": activity.id,
             "notes": "Test notes",
@@ -730,7 +731,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         data = {"name": "New name"}
 
         response = self.client.patch(endpoint, data)
@@ -753,8 +754,8 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {"name": "New name"}
 
         response = self.client.patch(endpoint, data)
@@ -777,8 +778,8 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {"name": "New name"}
 
         response = self.client.patch(endpoint, data)
@@ -803,7 +804,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {"name": "New name"}
 
@@ -836,7 +837,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {"name": "New name"}
 
@@ -855,7 +856,7 @@ class UpdatePermissionTests(ClearCachesMixin, APITestCase):
             object_url=self.zaak["url"],
         )
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         data = {"name": "New name"}
 
         response = self.client.patch(endpoint, data)

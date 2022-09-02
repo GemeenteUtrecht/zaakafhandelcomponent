@@ -156,7 +156,7 @@ INSTALLED_APPS = [
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
     "zac.contrib.dowc",
-    "zac.checklists",
+    "zac.objects.checklists",
     "zac.core.camunda.start_process",
 ]
 
@@ -454,6 +454,7 @@ SPECTACULAR_SETTINGS = {
         "zac.api.drf_spectacular.djangorestframework_camel_case.camelize_discriminators",
         "zac.api.drf_spectacular.component_titles.add_title_to_component_schema",
     ],
+    "COMPONENT_SPLIT_REQUEST": True,
     "TOS": None,
     # Optional: MAY contain "name", "url", "email"
     "CONTACT": {
@@ -536,6 +537,7 @@ if SENTRY_DSN:
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
 ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
     os.path.join(DJANGO_PROJECT_DIR, "tests", "schemas"),
+    os.path.join(DJANGO_PROJECT_DIR, "objects", "tests", "schemas"),
 ]
 
 # Django-Hijack
@@ -580,9 +582,3 @@ SCIM_SERVICE_PROVIDER = {
 
 # Custom settings
 UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
-CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
-    "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
-)
-START_CAMUNDA_PROCESS_DEFINITION_KEY = config(
-    "START_CAMUNDA_PROCESS_DEFINITION_KEY", default="start_camunda_process"
-)

@@ -13,7 +13,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.permissions import zaakproces_send_message, zaken_handle_access
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ...models import AtomicPermission, UserAtomicPermission
 from ...tests.factories import (
@@ -71,7 +71,7 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
         response = self.client.delete(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -80,8 +80,8 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
         BlueprintPermissionFactory.create(
@@ -117,8 +117,8 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
@@ -153,8 +153,8 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
@@ -190,8 +190,8 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
@@ -235,7 +235,7 @@ class DeleteAccessAPITests(APITransactionTestCase):
     @requests_mock.Mocker()
     def test_delete_access_success(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
         atomic_permission = AtomicPermissionFactory.create(
             object_url=self.zaak["url"], permission=zaakproces_send_message.name
         )

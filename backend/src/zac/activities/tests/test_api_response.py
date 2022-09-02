@@ -8,6 +8,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 
 from ..models import Activity
 from .factories import ActivityFactory
@@ -73,7 +74,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(Activity.objects.count(), 1)
 
         # Mock zaak
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         # Create activity
         response = self.client.post(endpoint, data=data)
@@ -93,7 +94,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(Activity.objects.count(), 2)
 
         # Mock zaak
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         # Delete activity
         response = self.client.delete(endpoint)
@@ -115,7 +116,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         old_assignee = self.activity.user_assignee
 
         # Mock zaak
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         # Patch activity
         response = self.client.patch(endpoint, data=data)
@@ -156,7 +157,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Mock zaak
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         # Patch activity
         response = self.client.patch(endpoint, data=data)
@@ -196,7 +197,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Mock zaak
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         # Patch activity
         response = self.client.patch(endpoint, data=data)
@@ -215,7 +216,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
 
         # Mock zaak
         m.get(self.zaak["url"] + "invalidate-this-url", json=self.zaak)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         # Patch activity
         response = self.client.patch(endpoint, data=data)
@@ -233,7 +234,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
         # Mock zaak
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         # Put activity
         response = self.client.put(endpoint, data=data)

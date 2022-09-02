@@ -20,7 +20,7 @@ from zac.core.permissions import (
     zaken_inzien,
 )
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ...constants import (
     AccessRequestResult,
@@ -89,8 +89,8 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
         BlueprintPermissionFactory.create(
@@ -127,8 +127,8 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
@@ -165,7 +165,7 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
@@ -203,7 +203,7 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
@@ -259,7 +259,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
     def test_handle_request_access_approve(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         access_request = AccessRequestFactory.create(
             requester=self.requester, zaak=ZAAK_URL
@@ -340,7 +340,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
     def test_handle_access_request_reject(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         access_request = AccessRequestFactory.create(
             requester=self.requester, zaak=ZAAK_URL
@@ -398,7 +398,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
     def test_handle_access_request_with_result(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         access_request = AccessRequestFactory.create(
             requester=self.requester, zaak=ZAAK_URL, result=AccessRequestResult.reject
@@ -425,7 +425,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
     def test_handle_access_request_empty_result(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         access_request = AccessRequestFactory.create(
             requester=self.requester, zaak=ZAAK_URL
@@ -453,7 +453,7 @@ class HandleAccessRequestAPITests(APITransactionTestCase):
     def test_handle_access_request_empty_permissions(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         access_request = AccessRequestFactory.create(
             requester=self.requester, zaak=ZAAK_URL

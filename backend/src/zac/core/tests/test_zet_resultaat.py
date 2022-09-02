@@ -15,12 +15,6 @@ from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
-from zac.checklists.tests.factories import (
-    ChecklistAnswerFactory,
-    ChecklistFactory,
-    ChecklistQuestionFactory,
-    ChecklistTypeFactory,
-)
 from zac.contrib.kownsl.models import KownslConfig
 from zac.contrib.kownsl.tests.utils import REVIEW_REQUEST
 from zac.tests.utils import mock_resource_get, paginated_response

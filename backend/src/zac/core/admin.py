@@ -3,7 +3,7 @@ from django.forms import fields
 
 from solo.admin import SingletonModelAdmin
 
-from .models import CoreConfig
+from .models import CoreConfig, MetaObjectTypesConfig
 
 
 def get_objecttypes_choices():
@@ -18,12 +18,21 @@ def get_objecttypes_choices():
 
 @admin.register(CoreConfig)
 class CoreConfigAdmin(SingletonModelAdmin):
+    pass
+
+
+@admin.register(MetaObjectTypesConfig)
+class MetaObjectTypesConfigAdmin(SingletonModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj=obj, change=change, **kwargs)
-        form.base_fields["zaaktype_attribute_objecttype"] = fields.ChoiceField(
-            choices=get_objecttypes_choices(), required=False, initial=""
-        )
-        form.base_fields["start_camunda_process_form_objecttype"] = fields.ChoiceField(
-            choices=get_objecttypes_choices(), required=False, initial=""
-        )
+        objecttype_fields = [
+            "zaaktype_attribute_objecttype",
+            "start_camunda_process_form_objecttype",
+            "checklisttype_objecttype",
+            "checklist_objecttype",
+        ]
+        for field in objecttype_fields:
+            form.base_fields[field] = fields.ChoiceField(
+                choices=get_objecttypes_choices(), required=False, initial=""
+            )
         return form

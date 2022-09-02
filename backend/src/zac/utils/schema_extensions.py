@@ -1,5 +1,9 @@
-from drf_spectacular.extensions import OpenApiFilterExtension
-from drf_spectacular.plumbing import build_parameter_type
+from drf_spectacular.extensions import (
+    OpenApiFilterExtension,
+    OpenApiSerializerFieldExtension,
+)
+from drf_spectacular.plumbing import build_basic_type, build_parameter_type
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter
 from rest_framework import fields
 
@@ -30,3 +34,15 @@ class ApiFilterExtension(OpenApiFilterExtension):
             )
 
         return parameters
+
+
+class SerializerSlugRelatedFieldExtension(OpenApiSerializerFieldExtension):
+    target_class = "zac.core.api.fields.SerializerSlugRelatedField"
+    match_subclasses = True
+
+    def map_serializer_field(self, auto_schema, direction):
+        if direction == "request":
+            return build_basic_type(OpenApiTypes.STR)
+        return auto_schema.resolve_serializer(
+            self.target.response_serializer, direction
+        ).ref

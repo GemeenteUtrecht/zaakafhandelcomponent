@@ -25,4 +25,4 @@ going to be the (generic) objects API.
 User story: TODO
 Technical issue: TODO
 """
-default_app_config = "zac.checklists.apps.ChecklistsConfig"
+default_app_config = "zac.objects.checklists.apps.ChecklistsConfig"

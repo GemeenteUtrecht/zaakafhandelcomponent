@@ -12,7 +12,6 @@ from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks.api import get_killable_camunda_tasks
-from zac.checklists.models import ChecklistAnswer
 from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
@@ -20,6 +19,7 @@ from zac.elasticsearch.drf_api.filters import ESOrderingFilter
 from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 from zac.elasticsearch.searches import search
+from zac.objects.checklists.data import ChecklistAnswer
 
 from .data import AccessRequestGroup, TaskAndCase
 from .serializers import (

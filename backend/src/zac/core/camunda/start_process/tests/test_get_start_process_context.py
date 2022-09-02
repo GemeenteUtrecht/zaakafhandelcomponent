@@ -16,7 +16,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
-from zac.core.models import CoreConfig
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -57,7 +57,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
 
-        core_config = CoreConfig.get_solo()
+        core_config = MetaObjectTypesConfig.get_solo()
         core_config.start_camunda_process_form_objecttype = (
             START_CAMUNDA_PROCESS_FORM_OT["url"]
         )

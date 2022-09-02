@@ -15,12 +15,6 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.checklists.tests.factories import (
-    ChecklistAnswerFactory,
-    ChecklistFactory,
-    ChecklistQuestionFactory,
-    ChecklistTypeFactory,
-)
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin

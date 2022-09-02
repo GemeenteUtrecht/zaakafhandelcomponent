@@ -1,6 +1,5 @@
-from typing import List, Optional
+from typing import List
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Prefetch
 
 from zac.activities.constants import ActivityStatuses
@@ -8,10 +7,10 @@ from zac.activities.models import Activity
 from zac.camunda.data import Task
 from zac.camunda.processes import get_top_level_process_instances
 from zac.camunda.user_tasks import register
-from zac.checklists.models import Checklist, ChecklistQuestion, ChecklistType
 from zac.contrib.kownsl.api import get_review_requests
 from zac.core.camunda.utils import get_process_zaak_url
 from zac.core.services import fetch_zaaktype, get_resultaattypen, get_zaak, get_zaaktype
+from zac.objects.checklists.data import Checklist, ChecklistQuestion, ChecklistType
 from zgw.models.zrc import Zaak
 
 from .serializers import (

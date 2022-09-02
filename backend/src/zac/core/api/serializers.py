@@ -51,9 +51,7 @@ from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_rol,
-    fetch_start_camunda_process_form_object,
     fetch_zaaktype,
-    fetch_zaaktypeattributen_objects,
     get_document,
     get_documenten,
     get_informatieobjecttypen_for_zaak,
@@ -62,6 +60,10 @@ from zac.core.services import (
     get_statustypen,
     get_zaak,
     get_zaaktypen,
+)
+from zac.objects.services import (
+    fetch_start_camunda_process_form,
+    fetch_zaaktypeattributen_objects,
 )
 from zgw.models.zrc import Zaak
 
@@ -512,7 +514,7 @@ class ZaakDetailSerializer(APIModelSerializer):
         return bool(process_instances)
 
     def get_is_static(self, obj) -> bool:
-        form = fetch_start_camunda_process_form_object(obj.zaaktype)
+        form = fetch_start_camunda_process_form(obj.zaaktype)
         return not form
 
     def get_is_configured(self, obj) -> bool:

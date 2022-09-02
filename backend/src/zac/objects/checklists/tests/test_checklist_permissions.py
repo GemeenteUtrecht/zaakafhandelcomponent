@@ -1,8 +1,11 @@
+from unittest.mock import patch
+
 from django.urls import reverse_lazy
 
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -15,15 +18,18 @@ from zac.accounts.tests.factories import (
 from zac.core.permissions import zaken_geforceerd_bijwerken
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
+from ..data import Checklist, ChecklistType
 from ..permissions import checklists_inzien, checklists_schrijven
-from .factories import ChecklistFactory, ChecklistQuestionFactory, ChecklistTypeFactory
-
-ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
-CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
-BRONORGANISATIE = "123456789"
-IDENTIFICATIE = "ZAAK-0000001"
+from .utils import (
+    BRONORGANISATIE,
+    CATALOGI_ROOT,
+    IDENTIFICATIE,
+    OBJECTTYPES_ROOT,
+    ZAAK_URL,
+    ZAKEN_ROOT,
+)
 
 
 @requests_mock.Mocker()
@@ -64,7 +70,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            url=ZAAK_URL,
             zaaktype=cls.zaaktype["url"],
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
@@ -85,10 +91,9 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
 
-        ChecklistFactory.create(zaak=self.zaak["url"])
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         self.client.force_authenticate(self.user)
         response = self.client.get(self.endpoint)
@@ -101,7 +106,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_inzien.name],
             for_user=self.user,
@@ -123,10 +128,8 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
-
-        ChecklistFactory.create(zaak=self.zaak["url"])
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_inzien.name],
@@ -149,18 +152,33 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
-
-        ChecklistFactory.create(zaak=self.zaak["url"])
-
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         AtomicPermissionFactory.create(
             for_user=self.user,
             permission=checklists_inzien.name,
             object_url=self.zaak["url"],
         )
         self.client.force_authenticate(self.user)
-        response = self.client.get(self.endpoint)
+        checklist = generate_oas_component(
+            "checklists_objects",
+            "schemas/Checklist",
+            zaak=ZAAK_URL,
+            answers=[
+                {
+                    "question": "some-question",
+                    "answer": "",
+                    "userAssignee": self.user,
+                    "groupAssignee": None,
+                }
+            ],
+            meta=True,
+        )
+        checklist = factory(Checklist, checklist)
+        with patch(
+            "zac.objects.checklists.api.views.fetch_checklist", return_value=checklist
+        ):
+            response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -174,7 +192,6 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-
         Service.objects.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
@@ -183,14 +200,16 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-
-        cls.catalogus = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="UTRE",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus["url"],
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
             omschrijving="ZT1",
@@ -198,22 +217,69 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            url=ZAAK_URL,
             zaaktype=cls.zaaktype["url"],
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
             einddatum=None,
         )
-        cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-        )
-        cls.checklist_question = ChecklistQuestionFactory.create(
-            question="some-question",
-            checklisttype=cls.checklisttype,
-            order=1,
-        )
         cls.user = UserFactory.create()
+
+        cls.checklisttype = generate_oas_component(
+            "checklists_objects",
+            "schemas/ChecklistType",
+            zaaktypeCatalogus=cls.catalogus["domein"],
+            zaaktypeIdentificaties=[cls.zaaktype["identificatie"]],
+            questions=[{"question": "some-question", "choices": [], "order": 1}],
+            meta=True,
+        )
+        cls.checklisttype = factory(ChecklistType, cls.checklisttype)
+        cls.patch_fetch_checklisttype = patch(
+            "zac.objects.checklists.api.serializers.fetch_checklisttype",
+            return_value=cls.checklisttype,
+        )
+        cls.patch_fetch_objecttype = patch(
+            "zac.objects.checklists.api.serializers.fetch_objecttype",
+            return_value={
+                "versions": [
+                    f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1"
+                ],
+                "url": f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1",
+                "name": "some-name",
+                "version": 1,
+            },
+        )
+        cls.patch_fetch_checklist = patch(
+            "zac.objects.checklists.api.serializers.fetch_checklist", return_value=None
+        )
+
+        cls.patch_create_object = patch(
+            "zac.objects.checklists.api.serializers.create_object",
+            return_value={"url": "some-url"},
+        )
+
+        cls.patch_relate_object_to_zaak = patch(
+            "zac.objects.checklists.api.serializers.relate_object_to_zaak",
+            return_value=None,
+        )
+
+    def setUp(self):
+        super().setUp()
+
+        self.patch_fetch_checklisttype.start()
+        self.addCleanup(self.patch_fetch_checklisttype.stop)
+
+        self.patch_fetch_objecttype.start()
+        self.addCleanup(self.patch_fetch_objecttype.stop)
+
+        self.patch_fetch_checklist.start()
+        self.addCleanup(self.patch_fetch_checklist.stop)
+
+        self.patch_create_object.start()
+        self.addCleanup(self.patch_create_object.stop)
+
+        self.patch_relate_object_to_zaak.start()
+        self.addCleanup(self.patch_relate_object_to_zaak.stop)
 
     def test_create_checklist_not_logged_in(self, m):
         response = self.client.post(self.endpoint)
@@ -226,15 +292,10 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
-        data = {
-            "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
-            ],
-        }
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(self.endpoint, data)
+        response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_checklist_logged_in_with_permissions_for_other_zaak(self, m):
@@ -244,24 +305,19 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
-        data = {
-            "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
-            ],
-        }
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(self.endpoint, data)
+        response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_checklist_logged_in_with_permissions(self, m):
@@ -271,18 +327,21 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -298,11 +357,14 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         AtomicPermissionFactory.create(
@@ -321,11 +383,14 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         AtomicPermissionFactory.create(
@@ -346,11 +411,14 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         AtomicPermissionFactory.create(
@@ -374,18 +442,21 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -403,18 +474,21 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -423,7 +497,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -453,13 +527,16 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             api_root=CATALOGI_ROOT,
         )
 
-        cls.catalogus = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="UTRE",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus["url"],
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
             omschrijving="ZT1",
@@ -467,25 +544,91 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
+            url=ZAAK_URL,
             zaaktype=cls.zaaktype["url"],
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
         )
-        cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-        )
-        cls.checklist_question = ChecklistQuestionFactory.create(
-            question="some-question",
-            checklisttype=cls.checklisttype,
-            order=1,
-        )
-        cls.checklist = ChecklistFactory.create(
-            zaak=cls.zaak["url"],
-            checklisttype=cls.checklisttype,
-        )
         cls.user = UserFactory.create()
+
+        cls.checklisttype = generate_oas_component(
+            "checklists_objects",
+            "schemas/ChecklistType",
+            zaaktypeCatalogus=cls.catalogus["domein"],
+            zaaktypeIdentificaties=[cls.zaaktype["identificatie"]],
+            questions=[{"question": "some-question", "choices": [], "order": 1}],
+            meta=True,
+        )
+        cls.checklisttype = factory(ChecklistType, cls.checklisttype)
+        cls.patch_fetch_checklisttype = patch(
+            "zac.objects.checklists.api.serializers.fetch_checklisttype",
+            return_value=cls.checklisttype,
+        )
+        cls.patch_fetch_objecttype = patch(
+            "zac.objects.checklists.api.serializers.fetch_objecttype",
+            return_value={
+                "versions": [
+                    f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1"
+                ],
+                "url": f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1",
+                "name": "some-name",
+                "version": 1,
+            },
+        )
+
+        cls.checklist = generate_oas_component(
+            "checklists_objects",
+            "schemas/Checklist",
+            zaak=ZAAK_URL,
+            meta=True,
+            answers=[
+                {
+                    "question": cls.checklisttype.questions[0].question,
+                    "answer": "some-first-answer",
+                    "userAssignee": cls.user,
+                    "groupAssignee": None,
+                }
+            ],
+        )
+        cls.checklist = factory(Checklist, cls.checklist)
+        cls.patch_fetch_checklist_views = patch(
+            "zac.objects.checklists.api.views.fetch_checklist",
+            return_value=cls.checklist,
+        )
+        cls.patch_fetch_checklist_serializers = patch(
+            "zac.objects.checklists.api.serializers.fetch_checklist", return_value=None
+        )
+
+        cls.patch_fetch_checklist_object = patch(
+            "zac.objects.checklists.api.serializers.fetch_checklist_object",
+            return_value={"uuid": "some-uuid"},
+        )
+
+        cls.patch_update_object_record_data = patch(
+            "zac.objects.checklists.api.serializers.update_object_record_data",
+            return_value={"zaak": cls.zaak["url"]},
+        )
+
+    def setUp(self):
+        super().setUp()
+
+        self.patch_fetch_checklisttype.start()
+        self.addCleanup(self.patch_fetch_checklisttype.stop)
+
+        self.patch_fetch_objecttype.start()
+        self.addCleanup(self.patch_fetch_objecttype.stop)
+
+        self.patch_fetch_checklist_views.start()
+        self.addCleanup(self.patch_fetch_checklist_views.stop)
+
+        self.patch_fetch_checklist_serializers.start()
+        self.addCleanup(self.patch_fetch_checklist_serializers.stop)
+
+        self.patch_fetch_checklist_object.start()
+        self.addCleanup(self.patch_fetch_checklist_object.stop)
+
+        self.patch_update_object_record_data.start()
+        self.addCleanup(self.patch_update_object_record_data.stop)
 
     def test_update_checklist_not_logged_in(self, m):
         response = self.client.patch(self.endpoint, {})
@@ -499,16 +642,11 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
-        data = {
-            "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
-            ],
-        }
         self.client.force_authenticate(user=self.user)
-        response = self.client.put(self.endpoint, data)
+        response = self.client.put(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_checklist_logged_in_with_permissions_for_other_zaak(self, m):
@@ -519,25 +657,20 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
-        data = {
-            "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
-            ],
-        }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
         self.client.force_authenticate(user=self.user)
-        response = self.client.put(self.endpoint, data)
+        response = self.client.put(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_checklist_logged_in_with_permissions(self, m):
@@ -548,19 +681,22 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -577,19 +713,22 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
 
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -606,19 +745,22 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
 
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         BlueprintPermissionFactory.create(
             role__permissions=[checklists_schrijven.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -627,7 +769,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["url"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -646,12 +788,15 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([{**self.zaak, "einddatum": "2020-01-01"}]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(self.zaak["url"], json={**self.zaak, "einddatum": "2020-01-01"})
 
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         AtomicPermissionFactory.create(
@@ -671,12 +816,15 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
         data = {
             "answers": [
-                {"question": self.checklist_question.question, "answer": "some-answer"}
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
             ],
         }
         AtomicPermissionFactory.create(
