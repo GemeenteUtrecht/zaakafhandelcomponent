@@ -179,7 +179,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         m.post(
             "https://camunda.example.com/engine-rest/message",
             status_code=201,
-            json=[{"variables": serialize_variable({"waitForIt": True})}],
+            json=[{"variables": {"waitForIt": serialize_variable(True)}}],
         )
 
         data = {
