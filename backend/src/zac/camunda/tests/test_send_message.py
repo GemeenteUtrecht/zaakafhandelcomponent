@@ -176,7 +176,11 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         self.client.force_authenticate(user=user)
 
         # with patch("zac.camunda.api.views.send_message", return_value=None):
-        m.post("https://camunda.example.com/engine-rest/message", status_code=201)
+        m.post(
+            "https://camunda.example.com/engine-rest/message",
+            status_code=201,
+            json=[{"variables": serialize_variable({"waitForIt": True})}],
+        )
 
         data = {
             "message": "some-message",
@@ -186,7 +190,8 @@ class SendMessagePermissionAndResponseTests(APITestCase):
             self.endpoint,
             data=data,
         )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_201_OK)
+        self.assertEqual(response.json(), {"wait_for_it": True})
 
         expected_payload = {
             "messageName": data["message"],
@@ -194,5 +199,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
             "processVariables": {
                 "bptlAppId": serialize_variable(self.core_config.app_id)
             },
+            "resultEnabled": True,
+            "variablesInResultEnabled": True,
         }
         self.assertEqual(m.last_request.json(), expected_payload)

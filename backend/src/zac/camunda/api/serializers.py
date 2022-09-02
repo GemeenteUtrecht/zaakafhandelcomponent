@@ -170,6 +170,14 @@ class MessageSerializer(serializers.Serializer):
         self.fields["message"].choices = [(name, name) for name in message_names]
 
 
+class MessageVariablesSerializer(serializers.Serializer):
+    wait_for_it = serializers.BooleanField(
+        label=_("Wait for it"),
+        help_text=_("Wait for a change in fetch-process-instances if this is True."),
+        default=False,
+    )
+
+
 class SetTaskAssigneeSerializer(serializers.Serializer):
     task = TaskField(
         label=_("Task `id`"),
