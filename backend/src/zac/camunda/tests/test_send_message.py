@@ -190,8 +190,8 @@ class SendMessagePermissionAndResponseTests(APITestCase):
             self.endpoint,
             data=data,
         )
-        self.assertEqual(response.status_code, status.HTTP_201_OK)
-        self.assertEqual(response.json(), {"wait_for_it": True})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.json(), {"waitForIt": True})
 
         expected_payload = {
             "messageName": data["message"],

@@ -171,7 +171,7 @@ class MessageSerializer(serializers.Serializer):
 
 
 class MessageVariablesSerializer(serializers.Serializer):
-    wait_for_it = serializers.BooleanField(
+    waitForIt = serializers.BooleanField(
         label=_("Wait for it"),
         help_text=_("Wait for a change in fetch-process-instances if this is True."),
         default=False,
