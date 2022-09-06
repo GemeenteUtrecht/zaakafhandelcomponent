@@ -1,9 +1,11 @@
 import uuid
+from typing import Any, Dict, Iterable, Optional
 
 from django.utils.translation import gettext_lazy as _
 
-from django_camunda.api import send_message
 from django_camunda.client import get_client
+from django_camunda.types import CamundaId
+from django_camunda.utils import deserialize_variable, serialize_variable
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import HTTPError
@@ -40,6 +42,7 @@ from .serializers import (
     ErrorSerializer,
     HistoricUserTaskSerializer,
     MessageSerializer,
+    MessageVariablesSerializer,
     ProcessInstanceSerializer,
     SetTaskAssigneeSerializer,
     SubmitUserTaskSerializer,
@@ -260,7 +263,7 @@ class SendMessageView(APIView):
         summary=_("Send BPMN message."),
         request=MessageSerializer,
         responses={
-            204: None,
+            201: MessageVariablesSerializer,
             403: ErrorSerializer,
             404: ErrorSerializer,
         },
@@ -290,12 +293,56 @@ class SendMessageView(APIView):
         # Set variables
         variables = get_bptl_app_id_variable()
 
-        send_message(
+        def _send_message(
+            name: str,
+            process_instance_ids: Iterable[CamundaId],
+            variables: Optional[Dict[str, Any]] = None,
+            result_enabled=False,
+        ) -> None:
+            """
+            Taken from django_camunda and adapted for Camunda 7.11 and higher.
+
+            Send a BPMN message into running process instances, with optional process variables.
+
+            :param name: Name/ID of the message definition, extract this from the process.
+            :param process_instance_ids: an iterable of process instance IDs, can be uuid
+            instances or strings.
+            :param variables: Optional mapping of ``{name: value}`` process variables. Will be
+            serialized as part of the message sending.
+            """
+            client = get_client()
+            variables = (
+                {name: serialize_variable(value) for name, value in variables.items()}
+                if variables
+                else None
+            )
+            for instance_id in process_instance_ids:
+                body = {
+                    "messageName": name,
+                    "processInstanceId": instance_id,
+                    "processVariables": variables or {},
+                    "resultEnabled": result_enabled,
+                    "variablesInResultEnabled": result_enabled,
+                }
+                return client.post("message", json=body)
+
+        results = _send_message(
             serializer.validated_data["message"],
             [process_instance.id],
             variables,
+            result_enabled=True,
         )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # In our case messages always correlate to a single definition, hence we can grab results[0] or crash if something isn't right.
+        return Response(
+            MessageVariablesSerializer(
+                {
+                    key: deserialize_variable(val)
+                    for key, val in results[0]["variables"].items()
+                }
+            ).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class SetTaskAssigneeView(APIView):
