@@ -168,8 +168,9 @@ export class Field {
 export class Fieldset {
   label: string;
   fields: Field[];
+  keys: string[];
 
-  constructor(fieldsetConfiguration: FieldsetConfiguration, form: Field[]) {
+  constructor(fieldsetConfiguration: FieldsetConfiguration|Fieldset, form: Field[]) {
     Object.assign(this, fieldsetConfiguration);
     this.fields = form.filter((field: Field) =>
       fieldsetConfiguration.keys.indexOf(new FormService().getKeyFromFieldConfiguration(field)) > -1)
