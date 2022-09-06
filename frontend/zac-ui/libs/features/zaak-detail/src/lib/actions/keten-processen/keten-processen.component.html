@@ -173,6 +173,11 @@
   >
     Zaak annuleren
   </button>
+
+  <!-- Loader -->
+  <ng-container *ngIf="isLoadingAction && !zaak.resultaat">
+    <gu-loading-indicator></gu-loading-indicator>
+  </ng-container>
 </div>
 
 <!-- BPMN modal -->
