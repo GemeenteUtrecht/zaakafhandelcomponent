@@ -6,16 +6,15 @@ import {
   AfterViewInit,
   EventEmitter,
   OnDestroy,
-  ViewEncapsulation, ChangeDetectorRef, SimpleChanges
+  ViewEncapsulation, SimpleChanges
 } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../../models/task-context';
-import { KetenProcessenService, SendMessageForm } from './keten-processen.service';
+import {KetenProcessenService, SendMessageForm} from './keten-processen.service';
 import {KetenProcessen} from '../../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
 import {UserService, ZaakService} from '@gu/services';
-import { delay, retryWhen, take } from 'rxjs/operators';
 
 
 /**
@@ -123,7 +122,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   /**
    * A callback method that performs custom clean-up, invoked immediately before a directive, pipe, or service instance is destroyed.
    */
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.cancelPolling();
   }
 
@@ -131,7 +130,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Check if a the url has the param "user-task". If so,
    * the user task should be opened in a pop-up.
    */
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.route.queryParams.subscribe(params => {
       const userTaskId = params['user-task'];
       if (userTaskId && !this.zaak.resultaat) {
@@ -150,14 +149,17 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
-   * Poll tasks every 5 seconds.
+   * Start polling
    */
-  startPollingProcesses() {
+  startPollingProcesses(): void {
     this.isPolling = true;
     this.fetchPollProcesses();
   }
 
-  async fetchPollProcesses() {
+  /**
+   * Poll tasks every 5 seconds.
+   */
+  async fetchPollProcesses(): Promise<void> {
     let currentTaskIds;
     if (this.isPolling) {
       // Fetch processes.
@@ -218,7 +220,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   /**
    * Cancels the polling of tasks.
    */
-  cancelPolling() {
+  cancelPolling(): void {
     if (this.isPolling) {
       this.isPolling = false;
     }
@@ -227,7 +229,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   /**
    * Sets the id of the newest task.
    */
-  setNewestTask(newestTask) {
+  setNewestTask(newestTask): void {
     if (newestTask) {
       this.newestTaskId = newestTask.id;
     }
@@ -237,7 +239,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Set task that is responsible for closing the case.
    * @param {string[]} messages
    */
-  setCloseCaseMessage(messages: string[]) {
+  setCloseCaseMessage(messages: string[]): void {
     this.hasCancelCaseMessage = messages.includes('Zaak annuleren');
   }
 
@@ -246,7 +248,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * @param {boolean} [openTask=false] Whether to automatically execute a newly created task (task not already known).
    * @param {boolean} [waitForIt] Wait for new task to pop up.
    */
-  async fetchProcesses(openTask: boolean = false, waitForIt?: boolean) {
+  async fetchProcesses(openTask: boolean = false, waitForIt?: boolean): Promise<void> {
     if (!this.isPolling) {
       // Known tasks after initialization.
       const currentTaskIds = openTask && this.data && this.data.length ? await this.ketenProcessenService.mergeTaskData(this.data) : null;
