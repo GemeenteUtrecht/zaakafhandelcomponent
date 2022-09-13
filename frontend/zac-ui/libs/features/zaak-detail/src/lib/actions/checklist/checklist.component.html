@@ -8,6 +8,7 @@
   <!-- End loading -->
 
   <gu-form *ngIf="!isLoading && checklistForm"
+           [editable]="'toggle'"
            [zaak]="zaak"
            [fieldsets]="getFieldsets()"
            [form]="checklistForm"
