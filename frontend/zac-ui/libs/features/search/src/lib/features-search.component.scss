@@ -16,9 +16,14 @@
     position: fixed;
     right: 1em;
     top: 0;
-    width: calc(50% - 50px);
+    width: calc(50% - 64px);
   }
 }
+
+::ng-deep gu-sidenav.expanded + .main-content-outer-wrapper gu-map {
+  width: calc(50% - 164px);
+}
+
 
 ::ng-deep gu-features-search .mat-tab-body-content {
   overflow: hidden;
