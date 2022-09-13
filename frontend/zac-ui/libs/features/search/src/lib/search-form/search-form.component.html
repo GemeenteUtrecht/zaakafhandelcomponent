@@ -3,7 +3,7 @@
   <div class="col-xl-12">
     <gu-tab-group>
       <!-- Case (zaak) by property. -->
-      <gu-tab label="Zoeken op eigenschap">
+      <gu-tab label="Zoeken op zaak">
         <div class="mt-4">
           <gu-property-search-form [pageData]="pageData"
                                    [sortData]="sortData"
@@ -14,7 +14,7 @@
       </gu-tab>
 
       <!-- Case (zaak) by object object. -->
-      <gu-tab label="Zoeken op zaakobject">
+      <gu-tab label="Zoeken op object">
         <div class="mt-4">
           <gu-zaak-object-search-form (mapGeometry)="mapGeometry.emit($event)"
                                       (mapMarkers)="mapMarkers.emit($event)"
