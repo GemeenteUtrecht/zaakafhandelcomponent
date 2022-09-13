@@ -139,13 +139,10 @@ class ChecklistSerializer(APIModelSerializer):
         many=True,
     )
     meta = serializers.HiddenField(default=True)
-    zaak = serializers.URLField(
-        read_only=True, help_text=_("URL-reference to ZAAK that checklist belongs to")
-    )
 
     class Meta:
         model = Checklist
-        fields = ("answers", "meta", "zaak")
+        fields = ("answers", "meta")
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)

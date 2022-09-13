@@ -487,7 +487,7 @@ ADMIN_INDEX_HIDE_APP_INDEX_PAGES = True
 EXTERNAL_API_SCHEMAS = {
     "BAG_API_SCHEMA": config(
         "BAG_API_SCHEMA",
-        "https://api.bag.acceptatie.kadaster.nl/esd/huidigebevragingen/v1/openapi.yaml",
+        "https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/openapi.yaml",
     ),
     "DOWC_API_SCHEMA": config(
         "DOWC_API_SCHEMA", "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
@@ -582,3 +582,6 @@ SCIM_SERVICE_PROVIDER = {
 
 # Custom settings
 UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
+CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
+    "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
+)

@@ -155,7 +155,7 @@ CHECKLIST_OBJECT = {
         "typeVersion": 3,
         "data": {
             "meta": True,
-            "zaak": "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/zaken/75aaad36-27c9-4a63-aa0c-28331f3b2f5f",
+            "zaak": ZAAK_URL,
             "answers": [
                 {"answer": "Ja", "question": "Ja?"},
                 {"answer": "Nee", "question": "Nee?"},

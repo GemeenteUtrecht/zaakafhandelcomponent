@@ -21,7 +21,6 @@ class ChecklistAnswer(Model):
 
 @dataclass
 class Checklist(Model):
-    zaak: str
     answers: List[ChecklistAnswer]
 
 

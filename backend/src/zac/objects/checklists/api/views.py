@@ -117,15 +117,15 @@ class ZaakChecklistView(views.APIView):
         return checklist
 
     def _add_permissions_for_checklist_assignee(
-        self, checklist, answers: List[ChecklistAnswer]
+        self, zaak, answers: List[ChecklistAnswer]
     ):
         for answer in answers:
             if answer.user_assignee:
-                add_permissions_for_checklist_assignee(checklist, answer.user_assignee)
+                add_permissions_for_checklist_assignee(zaak, answer.user_assignee)
             if answer.group_assignee:
                 users = answer.group_assignee.user_set.all()
                 for user in users:
-                    add_permissions_for_checklist_assignee(checklist, user)
+                    add_permissions_for_checklist_assignee(zaak, user)
 
     @extend_schema(
         summary=_("Retrieve checklist and related answers."),
@@ -160,7 +160,7 @@ class ZaakChecklistView(views.APIView):
         checklist = serializer.create()
 
         # Add permissions:
-        self._add_permissions_for_checklist_assignee(checklist, checklist.answers)
+        self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
         return Response(
             self.get_serializer(checklist).data, status=status.HTTP_201_CREATED
         )
@@ -184,5 +184,5 @@ class ZaakChecklistView(views.APIView):
         )
         serializer.is_valid(raise_exception=True)
         checklist = serializer.update()
-        self._add_permissions_for_checklist_assignee(checklist, checklist.answers)
+        self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
         return Response(self.get_serializer(checklist).data, status=status.HTTP_200_OK)

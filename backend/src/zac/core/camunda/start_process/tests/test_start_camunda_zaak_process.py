@@ -19,7 +19,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.models import MetaObjectTypesConfig
+from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import zaakprocess_starten
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
@@ -120,12 +120,14 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        config = MetaObjectTypesConfig.get_solo()
-        config.start_camunda_process_form_objecttype = START_CAMUNDA_PROCESS_FORM_OT[
-            "url"
-        ]
-        config.primary_objects_api = objects_service
-        config.save()
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.start_camunda_process_form_objecttype = (
+            START_CAMUNDA_PROCESS_FORM_OT["url"]
+        )
+        meta_config.save()
+        core_config = CoreConfig.get_solo()
+        core_config.primary_objects_api = objects_service
+        core_config.save()
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -315,10 +317,12 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        core_config = MetaObjectTypesConfig.get_solo()
-        core_config.start_camunda_process_form_objecttype = (
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.start_camunda_process_form_objecttype = (
             START_CAMUNDA_PROCESS_FORM_OT["url"]
         )
+        meta_config.save()
+        core_config = CoreConfig.get_solo()
         core_config.primary_objects_api = objects_service
         core_config.save()
         catalogus_url = (

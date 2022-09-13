@@ -5,11 +5,12 @@ from django.utils.translation import ugettext_lazy as _
 
 from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import underscoreize
-from furl import furl
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import ZaakObject
+from zgw_consumers.concurrent import parallel
 
+from zac.accounts.models import User
 from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import fetch_catalogus, get_zaakobjecten, search_objects
@@ -25,6 +26,7 @@ def _search_meta_objects(
     zaak: Optional[Zaak] = None,
     zaaktype: Optional[ZaakType] = None,
     unique: bool = False,
+    data_attrs: List = [],
 ) -> List[dict]:
     config = MetaObjectTypesConfig.get_solo()
     ot_url = getattr(config, attribute_name)
@@ -47,6 +49,9 @@ def _search_meta_objects(
     if zaak:
         object_filters["data_attrs"] += [f"zaak__icontains__{zaak.url}"]
 
+    if data_attrs:
+        object_filters += data_attrs
+
     object_filters["data_attrs"] = ",".join(object_filters["data_attrs"])
     meta_objects = search_objects(object_filters)
 
@@ -65,7 +70,9 @@ def _search_meta_objects(
 
 
 def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType] = None) -> List[dict]:
-    return _search_meta_objects("zaaktype_attribute_objecttype", zaaktype=zaaktype)
+    if objs := _search_meta_objects("zaaktype_attribute_objecttype", zaaktype=zaaktype):
+        return [obj["record"]["data"] for obj in objs]
+    return []
 
 
 ###################################################
@@ -127,7 +134,6 @@ def fetch_checklist_object(
 
 def fetch_checklist(zaak: Zaak) -> Optional[Checklist]:
     checklist_object_data = fetch_checklist_object(zaak)
-
     if checklist_object_data:
         from zac.objects.checklists.api.serializers import ChecklistSerializer
 
@@ -136,11 +142,50 @@ def fetch_checklist(zaak: Zaak) -> Optional[Checklist]:
                 checklist_object_data["record"]["data"],
                 **api_settings.JSON_UNDERSCOREIZE,
             ),
-            context={"zaak": zaak},
         )
         serializer.is_valid(raise_exception=True)
         return factory(Checklist, serializer.validated_data)
     return None
+
+
+def fetch_all_checklists_for_user(user: User) -> List[dict]:
+    data_attrs = [f"answers__answer__userAssignee__exact__{user.username}"]
+    if objs := _search_meta_objects("checklist_objecttype", data_attrs=data_attrs):
+        return [
+            underscoreize(
+                obj["record"]["data"],
+                **api_settings.JSON_UNDERSCOREIZE,
+            )
+            for obj in objs
+        ]
+    return []
+
+
+def fetch_all_checklists_for_user_groups(user: User) -> List[dict]:
+    data_attrs_list = [
+        [f"answers__answer__groupAssignee__exact__{group.name}"]
+        for group in user.groups.all()
+    ]
+
+    def _search_checklists_objects(data_attrs: List[str]) -> List[dict]:
+        if objs := _search_meta_objects("checklist_objecttype", data_attrs=data_attrs):
+            return [
+                underscoreize(
+                    obj["record"]["data"],
+                    **api_settings.JSON_UNDERSCOREIZE,
+                )
+                for obj in objs
+            ]
+        return []
+
+    with parallel() as executor:
+        results = executor.map(_search_checklists_objects, data_attrs_list)
+
+    final_results = []
+    for result in results:
+        if result:
+            final_results += result
+    return final_results
 
 
 def fetch_checklist_zaakobject(

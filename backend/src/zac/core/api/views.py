@@ -571,20 +571,18 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     )
     filterset_class = ZaakRolFilterSet
 
-    def get_serializer_class(self):
+    def get_serializer(self, **kwargs):
         mapping = {
             "GET": ReadRolSerializer,
             "POST": RolSerializer,
             "DELETE": DestroyRolSerializer,
         }
-        return mapping[self.request.method]
-
-    def get_serializer(self, **kwargs):
-        serializer = self.get_serializer_class()
-        return serializer(**kwargs)
+        return mapping[self.request.method](**kwargs)
 
     @extend_schema(
         summary=_("List ROLlen of ZAAK."),
+        request=ReadRolSerializer,
+        responses={"200": ReadRolSerializer},
     )
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -594,6 +592,8 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
 
     @extend_schema(
         summary=_("Add ROL to ZAAK."),
+        request=RolSerializer,
+        responses={"201": RolSerializer},
     )
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -623,6 +623,8 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
                 location=OpenApiParameter.QUERY,
             )
         ],
+        request=DestroyRolSerializer,
+        responses={"204": DestroyRolSerializer},
     )
     def delete(self, request, *args, **kwargs):
         filterset = self.filterset_class(

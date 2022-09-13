@@ -10,7 +10,8 @@ from zac.camunda.user_tasks import register
 from zac.contrib.kownsl.api import get_review_requests
 from zac.core.camunda.utils import get_process_zaak_url
 from zac.core.services import fetch_zaaktype, get_resultaattypen, get_zaak, get_zaaktype
-from zac.objects.checklists.data import Checklist, ChecklistQuestion, ChecklistType
+from zac.objects.checklists.data import ChecklistQuestion
+from zac.objects.services import fetch_checklist, fetch_checklisttype
 from zgw.models.zrc import Zaak
 
 from .serializers import (
@@ -23,13 +24,10 @@ from .serializers import (
 def get_unanswered_checklist_questions_for_zaak(
     zaak: Zaak,
 ) -> List[ChecklistQuestion]:
-    checklist = Checklist.objects.filter(zaak=zaak.url).prefetch_related(
-        "checklistanswer_set"
-    )
-    if checklist.exists():
-        checklist = checklist.get()
+    checklist = fetch_checklist(zaak)
+    if checklist:
         answered_questions = [
-            answer.question for answer in checklist.checklistanswer_set.all()
+            answer.question for answer in checklist.answers if answer.answer
         ]
     else:
         answered_questions = []
@@ -37,22 +35,11 @@ def get_unanswered_checklist_questions_for_zaak(
     zaaktype = (
         get_zaaktype(zaak.zaaktype) if isinstance(zaak.zaaktype, str) else zaak.zaaktype
     )
-    checklisttype = ChecklistType.objects.filter(
-        zaaktype_catalogus=zaaktype.catalogus,
-        zaaktype_identificatie=zaaktype.identificatie,
-    ).prefetch_related(
-        Prefetch(
-            "checklistquestion_set",
-            queryset=(
-                ChecklistQuestion.objects.prefetch_related("questionchoice_set").all()
-            ),
-        )
-    )
-    if checklisttype.exists():
-        checklisttype = checklisttype.get()
+    checklisttype = fetch_checklisttype(zaaktype)
+    if checklisttype:
         return [
             question
-            for question in checklisttype.checklistquestion_set.all()
+            for question in checklisttype.questions
             if question.question not in answered_questions
         ]
 

@@ -14,7 +14,6 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
-from ..data import Checklist, ChecklistAnswer
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
@@ -190,8 +189,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "remarks": "",
                         "userAssignee": None,
                     },
-                ],
-                "zaak": ZAAK_URL,
+                ]
             },
         )
 
@@ -421,7 +419,6 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "groupAssignee": None,
                         "userAssignee": None,
                     },
-                ],
-                "zaak": ZAAK_URL,
+                ]
             },
         )

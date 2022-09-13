@@ -14,7 +14,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.models import CoreConfig
+from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -651,12 +651,14 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
         core_config.primary_objects_api = objects_service
-        core_config.zaaktype_attribute_objecttype = "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
         core_config.save()
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.zaaktype_attribute_objecttype = ZAAKTYPE_ATTRIBUTE_OBJECTTYPE
+        meta_config.save()
         enum_obj = {
             "url": f"{objects_service.api_root}objects/0196252f-32de-4edb-90e8-10669b5dbf50",
             "uuid": "0196252f-32de-4edb-90e8-10669b5dbf50",
-            "type": core_config.zaaktype_attribute_objecttype,
+            "type": ZAAKTYPE_ATTRIBUTE_OBJECTTYPE,
             "record": {
                 "index": 1,
                 "typeVersion": 1,

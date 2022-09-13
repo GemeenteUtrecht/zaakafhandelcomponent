@@ -102,20 +102,9 @@ class WorkStackTaskSerializer(APIModelSerializer):
 
 
 class SummaryChecklistAnswerSerializer(APIModelSerializer):
-    group_assignee = serializers.SlugRelatedField(
-        slug_field="name",
-        help_text=_("Name of the group assignee."),
-        read_only=True,
-    )
-    user_assignee = serializers.SlugRelatedField(
-        slug_field="username",
-        help_text=_("Username of the user assignee."),
-        read_only=True,
-    )
-
     class Meta:
         model = ChecklistAnswer
-        fields = ("question", "group_assignee", "user_assignee")
+        fields = ("question",)
 
 
 class WorkStackChecklistAnswerSerializer(APIModelSerializer):

@@ -98,7 +98,7 @@ def get_activity_groups(user: User, grouped_activities: dict) -> List[ActivityGr
 
 
 def get_checklist_answers_groups(
-    user: User, grouped_checklist_answers: dict
+    user: User, grouped_checklist_answers: List[dict]
 ) -> List[ChecklistAnswerGroup]:
     checklist_answers_groups_with_zaak = filter_on_existing_zaken(
         user, grouped_checklist_answers
