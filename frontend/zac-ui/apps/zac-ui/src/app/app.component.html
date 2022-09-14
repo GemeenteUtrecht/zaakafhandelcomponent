@@ -11,6 +11,7 @@
       placeholder='Zaaknummer'
       role='searchbox'
       (change)="zaakSelected($event)"
+      [appendTo]="'.zaak-select'"
     ></gu-zaak-select>
   </gu-sidenav>
   <div class="main-content-outer-wrapper">
