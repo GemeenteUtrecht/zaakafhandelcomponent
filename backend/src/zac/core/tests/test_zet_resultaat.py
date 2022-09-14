@@ -15,12 +15,6 @@ from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
-from zac.checklists.tests.factories import (
-    ChecklistAnswerFactory,
-    ChecklistFactory,
-    ChecklistQuestionFactory,
-    ChecklistTypeFactory,
-)
 from zac.contrib.kownsl.models import KownslConfig
 from zac.contrib.kownsl.tests.utils import REVIEW_REQUEST
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -60,6 +54,8 @@ TASK_DATA = {
     "formKey": "",
     "tenantId": "aTenantId",
 }
+
+from zac.objects.checklists.tests.utils import CHECKLIST_OBJECT, CHECKLISTTYPE_OBJECT
 
 
 def _get_task(**overrides):
@@ -142,28 +138,6 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             "ztc", "schemas/ResultaatType", zaaktype=cls.zaaktype["url"]
         )
 
-        cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-        )
-        cls.checklist_question_1 = ChecklistQuestionFactory.create(
-            question="some-question-1",
-            checklisttype=cls.checklisttype,
-            order=1,
-        )
-        cls.checklist_question_2 = ChecklistQuestionFactory.create(
-            question="some-question-2",
-            checklisttype=cls.checklisttype,
-            order=2,
-        )
-        cls.checklist = ChecklistFactory.create(
-            checklisttype=cls.checklisttype, zaak=cls.zaak["url"]
-        )
-        cls.checklist_answer_user = ChecklistAnswerFactory(
-            checklist=cls.checklist,
-            question=cls.checklist_question_1.question,
-            user_assignee=None,
-        )
         cls.activity = ActivityFactory.create(
             zaak=cls.zaak["url"], status=ActivityStatuses.on_going
         )
@@ -205,9 +179,19 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             f"{CATALOGI_ROOT}resultaattypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.resultaattype]),
         )
-        task_data = UserTaskData(task=task, context=_get_context(task))
+        checklist = {**CHECKLIST_OBJECT}
+        checklist["record"]["data"]["answers"][0]["answer"] = ""
+        with patch(
+            "zac.objects.services.fetch_checklist_object", return_value=checklist
+        ):
+            with patch(
+                "zac.objects.services.fetch_checklisttype_object",
+                return_value=CHECKLISTTYPE_OBJECT,
+            ):
+                task_data = UserTaskData(task=task, context=_get_context(task))
         factory = APIRequestFactory()
         request = factory.get("/")
+
         serializer = ZetResultaatContextSerializer(
             instance=task_data,
             context={
@@ -236,10 +220,10 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             serializer.data["context"]["checklist_vragen"],
             [
                 {
-                    "question": self.checklist_question_2.question,
-                    "order": self.checklist_question_2.order,
-                    "choices": [],
-                    "is_multiple_choice": self.checklist_question_2.is_multiple_choice,
+                    "question": checklist["record"]["data"]["answers"][0]["question"],
+                    "order": 1,
+                    "choices": [{"name": "Ja", "value": "Ja"}],
+                    "is_multiple_choice": True,
                 }
             ],
         )

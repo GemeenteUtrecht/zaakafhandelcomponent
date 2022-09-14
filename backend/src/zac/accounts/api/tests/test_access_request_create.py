@@ -124,7 +124,7 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
     def test_request_access_success(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         data = {
             "zaak": {
@@ -194,7 +194,7 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
     def test_request_access_with_existing_permission_expired(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         UserAtomicPermissionFactory.create(
             atomic_permission__object_url=ZAAK_URL,
@@ -227,7 +227,7 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
     def test_request_access_with_existing_pending_request(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         AccessRequestFactory.create(requester=self.requester, result="", zaak=ZAAK_URL)
         data = {

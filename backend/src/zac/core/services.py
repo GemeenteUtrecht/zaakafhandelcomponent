@@ -47,7 +47,7 @@ from zgw.models import Zaak
 from .api.data import AuditTrailData
 from .api.utils import convert_eigenschap_spec_to_json_schema
 from .cache import invalidate_document_cache, invalidate_zaak_cache
-from .models import CoreConfig
+from .models import CoreConfig, MetaObjectTypesConfig
 from .rollen import Rol
 
 logger = logging.getLogger(__name__)
@@ -1268,6 +1268,55 @@ def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocum
 ###################################################
 
 
+def create_object(data: Dict) -> Dict:
+    conf = CoreConfig.get_solo()
+    object_service = conf.primary_objects_api
+
+    client = object_service.build_client()
+    object = client.create("object", data=data)
+    return object
+
+
+def fetch_object(object_uuid: str) -> Dict:
+    conf = CoreConfig.get_solo()
+    object_service = conf.primary_objects_api
+
+    client = object_service.build_client()
+    object = client.retrieve("object", uuid=object_uuid)
+    return object
+
+
+def update_object_record_data(
+    object: Dict, data: Dict, user: Optional[User] = None
+) -> Dict:
+    conf = CoreConfig.get_solo()
+    object_service = conf.primary_objects_api
+    client = object_service.build_client()
+    new_data = {
+        "record": {
+            **object["record"],
+            **{"data": data},
+            "correctionFor": object["record"]["index"],
+            "correctedBy": user.username if user else "",
+        }
+    }
+    obj = client.partial_update(
+        "object",
+        uuid=object["uuid"],
+        data=new_data,
+    )
+    return obj
+
+
+def fetch_objecttype(objecttype_url) -> dict:
+    conf = CoreConfig.get_solo()
+    objecttype_service = conf.primary_objecttypes_api
+
+    client = objecttype_service.build_client()
+    objecttype = client.retrieve("objecttype", url=objecttype_url)
+    return objecttype
+
+
 def fetch_objecttypes() -> List[dict]:
     conf = CoreConfig.get_solo()
     objecttype_service = conf.primary_objecttypes_api
@@ -1320,54 +1369,3 @@ def fetch_zaak_object(zaak_object_url: str):
 def delete_zaak_object(zaak_object_url: str):
     client = _client_from_url(zaak_object_url)
     client.delete("zaakobject", url=zaak_object_url)
-
-
-def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType]) -> List[dict]:
-    config = CoreConfig.get_solo()
-    ot_zt_attribuut_url = config.zaaktype_attribute_objecttype
-
-    if not ot_zt_attribuut_url:
-        logger.warning(
-            "`ZaaktypeAttribuut` objecttype is not configured in core configuration or does not exist in the configured objecttype service."
-        )
-        return []
-
-    object_filters = {"type": ot_zt_attribuut_url}
-    if zaaktype:
-        catalogus = fetch_catalogus(zaaktype.catalogus)
-        object_filters[
-            "data_attrs"
-        ] = f"zaaktypeIdentificaties__icontains__{zaaktype.identificatie},zaaktypeCatalogus__exact__{catalogus.domein}"
-
-    zaaktype_attributes = search_objects(object_filters)
-    return [zatr["record"]["data"] for zatr in zaaktype_attributes]
-
-
-def fetch_start_camunda_process_form_object(
-    zaaktype: ZaakType,
-) -> Optional[StartCamundaProcessForm]:
-    config = CoreConfig.get_solo()
-    scpf_ot_url = config.start_camunda_process_form_objecttype
-
-    if not scpf_ot_url:
-        logger.warning(
-            "`StartCamundaProcessForm` objecttype is not configured in core configuration or does not exist in the configured objecttype service."
-        )
-        return None
-
-    object_filters = {"type": scpf_ot_url}
-    if zaaktype:
-        catalogus = fetch_catalogus(zaaktype.catalogus)
-        object_filters[
-            "data_attrs"
-        ] = f"zaaktypeIdentificatie__exact__{zaaktype.identificatie},zaaktypeCatalogus__exact__{catalogus.domein}"
-
-    start_camunda_process_form = search_objects(object_filters)
-    if not start_camunda_process_form:
-        logger.warning("No `StartCamundaProcessForm` object is found.")
-        return None
-    elif len(start_camunda_process_form) > 1:
-        logger.warning("More than 1 `StartCamundaProcessForm` object is found.")
-    return factory(
-        StartCamundaProcessForm, start_camunda_process_form[-1]["record"]["data"]
-    )

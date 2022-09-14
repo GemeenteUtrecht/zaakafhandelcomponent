@@ -19,12 +19,12 @@ from zac.core.api.serializers import (
     ZaakEigenschapSerializer,
 )
 from zac.core.services import (
-    fetch_start_camunda_process_form_object,
     get_rollen,
     get_roltypen,
     get_zaak_eigenschappen,
     resolve_documenten_informatieobjecttypen,
 )
+from zac.objects.services import fetch_start_camunda_process_form
 
 from .data import (
     ProcessEigenschap,
@@ -171,7 +171,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
     @property
     def camunda_start_process(self):
         if not hasattr(self, "_camunda_start_process"):
-            form = fetch_start_camunda_process_form_object(self.zaakcontext.zaaktype)
+            form = fetch_start_camunda_process_form(self.zaakcontext.zaaktype)
             if not form:
                 raise serializers.ValidationError(
                     _(
@@ -335,9 +335,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
 )
 def get_zaak_start_process_form_context(task: Task) -> StartProcessFormContext:
     zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
-    camunda_start_process = fetch_start_camunda_process_form_object(
-        zaak_context.zaaktype
-    )
+    camunda_start_process = fetch_start_camunda_process_form(zaak_context.zaaktype)
     bijlagen = get_required_process_informatie_objecten(
         zaak_context, camunda_start_process
     )

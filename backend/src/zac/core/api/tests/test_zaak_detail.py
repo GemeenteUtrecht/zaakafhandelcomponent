@@ -26,7 +26,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.models import CoreConfig
+from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
     zaken_inzien,
@@ -66,10 +66,12 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        core_config = CoreConfig.get_solo()
-        core_config.start_camunda_process_form_objecttype = (
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.start_camunda_process_form_objecttype = (
             START_CAMUNDA_PROCESS_FORM_OT["url"]
         )
+        meta_config.save()
+        core_config = CoreConfig.get_solo()
         core_config.primary_objects_api = objects_service
         core_config.save()
 

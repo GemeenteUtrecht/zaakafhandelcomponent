@@ -6,13 +6,14 @@ from django.utils.translation import gettext as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
 from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks.api import get_killable_camunda_tasks
-from zac.checklists.models import ChecklistAnswer
 from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
@@ -20,6 +21,10 @@ from zac.elasticsearch.drf_api.filters import ESOrderingFilter
 from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 from zac.elasticsearch.searches import search
+from zac.objects.services import (
+    fetch_all_checklists_for_user,
+    fetch_all_checklists_for_user_groups,
+)
 
 from .data import AccessRequestGroup, TaskAndCase
 from .serializers import (
@@ -151,21 +156,32 @@ class WorkStackGroupTasksView(WorkStackUserTasksView):
 
 
 @extend_schema(summary=_("List checklist questions for logged in user."))
-class WorkStackChecklistQuestionsView(ListAPIView):
+class WorkStackChecklistQuestionsView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackChecklistAnswerSerializer
     filter_backends = ()
 
     def get_assigned_checklist_answers(self) -> List[Dict]:
-        return ChecklistAnswer.objects.as_werkvoorraad(user=self.request.user)
+        checklists = fetch_all_checklists_for_user(self.request.user)
+        answers_grouped_by_zaak = []
+        for checklist in checklists:
+            answer_group = {"zaak_url": checklist["zaak"], "checklist_answers": []}
+            for answer in checklist["answers"]:
+                if answer.get("user_assignee") == self.request.user.username:
+                    answer_group["checklist_answers"].append(answer)
 
-    def get_queryset(self):
+            answers_grouped_by_zaak.append(answer_group)
+
+        return answers_grouped_by_zaak
+
+    def get(self, request, *args, **kwargs):
         grouped_checklist_answers = self.get_assigned_checklist_answers()
         checklist_answers = get_checklist_answers_groups(
             self.request.user, grouped_checklist_answers
         )
-        return checklist_answers
+        serializer = self.serializer_class(checklist_answers, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema(
@@ -173,6 +189,15 @@ class WorkStackChecklistQuestionsView(ListAPIView):
 )
 class WorkStackGroupChecklistQuestionsView(WorkStackChecklistQuestionsView):
     def get_assigned_checklist_answers(self) -> List[Dict]:
-        return ChecklistAnswer.objects.as_werkvoorraad(
-            groups=self.request.user.groups.all()
-        )
+        checklists = fetch_all_checklists_for_user_groups(self.request.user)
+        answers_grouped_by_zaak = []
+        groups = self.request.user.groups.all().values_list("name", flat=True)
+        for checklist in checklists:
+            answer_group = {"zaak_url": checklist["zaak"], "checklist_answers": []}
+            for answer in checklist["answers"]:
+                if answer.get("group_assignee") in groups:
+                    answer_group["checklist_answers"].append(answer)
+
+            answers_grouped_by_zaak.append(answer_group)
+
+        return answers_grouped_by_zaak

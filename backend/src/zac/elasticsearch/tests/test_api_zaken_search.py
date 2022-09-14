@@ -26,7 +26,7 @@ from zac.elasticsearch.api import (
     update_zaakobjecten_in_zaak_document,
 )
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 OBJECTS_ROOT = "http://objects.nl/api/v1/"
@@ -140,7 +140,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
@@ -156,7 +156,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         user = UserFactory.create()
         # todo remove after auth refactoring

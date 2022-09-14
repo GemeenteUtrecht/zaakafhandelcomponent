@@ -11,6 +11,7 @@ from zac.accounts.models import AtomicPermission
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 
 from ..permissions import activiteiten_inzien, activiteiten_schrijven
 from .factories import ActivityFactory
@@ -46,7 +47,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_create_activity_without_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         endpoint = reverse("activity-list")
         data = {
             "zaak": ZAAK_URL,
@@ -60,7 +61,8 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_create_activity_with_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
+
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
         endpoint = reverse("activity-list")
@@ -89,7 +91,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_create_activity_with_group_assignement(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
         endpoint = reverse("activity-list")
@@ -118,7 +120,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
 
     def test_update_activity_change_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
         activity = ActivityFactory.create(zaak=ZAAK_URL)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 

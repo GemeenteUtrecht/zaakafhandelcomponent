@@ -7,7 +7,6 @@ from zgw_consumers.api_models.base import factory
 from zac.api.context import ZaakContext
 from zac.core.camunda.start_process.data import ProcessEigenschapChoice
 from zac.core.services import (
-    fetch_zaaktypeattributen_objects,
     get_eigenschappen,
     get_informatieobjecttypen_for_zaaktype,
     get_rollen,
@@ -15,6 +14,7 @@ from zac.core.services import (
     get_zaak_eigenschappen,
     resolve_documenten_informatieobjecttypen,
 )
+from zac.objects.services import fetch_zaaktypeattributen_objects
 
 from .data import (
     ProcessEigenschap,

@@ -22,9 +22,8 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
         base_name = self._get_name_base()
 
         # get the base serializer
-
         main = ResolvedComponent(
-            name=f"{base_name}Shared",
+            name=f"{base_name}Shared{direction.capitalize()}",
             type=ResolvedComponent.SCHEMA,
             schema=auto_schema._map_basic_serializer(serializer, direction),
             object=serializer,

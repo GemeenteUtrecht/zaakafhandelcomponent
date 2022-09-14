@@ -76,8 +76,8 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def _setUpMock(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
 
     def test_list_no_permissions(self, m):
         BoardItemFactory.create(object=ZAAK_URL)

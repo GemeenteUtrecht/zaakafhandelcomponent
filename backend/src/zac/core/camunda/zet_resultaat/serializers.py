@@ -9,16 +9,16 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.activities.api.serializers import ReadActivitySerializer
 from zac.activities.models import Activity
-from zac.api.context import ZaakContext, get_zaak_context
+from zac.api.context import get_zaak_context
 from zac.camunda.api.serializers import TaskSerializer
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, usertask_context_serializer
-from zac.checklists.api.serializers import ChecklistQuestionSerializer
-from zac.checklists.models import ChecklistQuestion
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.kownsl.serializers import ZaakRevReqSummarySerializer
 from zac.core.api.serializers import ResultaatTypeSerializer
 from zac.core.services import get_resultaattypen
+from zac.objects.checklists.api.serializers import ChecklistQuestionSerializer
+from zac.objects.checklists.data import ChecklistQuestion
 
 
 @dataclass

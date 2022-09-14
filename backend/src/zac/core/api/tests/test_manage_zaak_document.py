@@ -24,6 +24,7 @@ from zac.accounts.tests.factories import (
 from zac.contrib.dowc.data import DowcResponse
 from zac.core.api.data import AuditTrailData
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 
 from ...models import CoreConfig
 from ...permissions import (
@@ -96,7 +97,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 "results": [self.zaaktype],
             },
         )
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+
+        mock_resource_get(m, self.zaaktype)
         m.get(self.informatieobjecttype["url"], json=self.informatieobjecttype)
         m.get(
             f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={self.zaaktype['url']}",
@@ -116,7 +118,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             bronorganisatie="123456782",
             identificatie="ZAAK-2020-0010",
         )
-        m.get(self.zaak["url"], json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         patch_find_zaak = patch(
             "zac.core.services.search", return_value=[self.zaak["url"]]

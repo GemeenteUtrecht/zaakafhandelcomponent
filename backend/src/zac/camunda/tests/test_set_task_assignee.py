@@ -17,6 +17,7 @@ from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.camunda.data import Task
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
+from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
 from ..api.serializers import SetTaskAssigneeSerializer
@@ -228,7 +229,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.addCleanup(self.patch_get_task.stop)
 
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],

@@ -40,6 +40,7 @@ from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.dowc.data import DowcResponse
 from zac.core.camunda.start_process.serializers import CreatedProcessInstanceSerializer
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
     fetch_objecttype_version,
     fetch_objecttypes,
@@ -48,6 +49,7 @@ from zac.core.services import (
     update_document,
     update_zaak_eigenschap,
 )
+from zac.objects.services import fetch_zaaktypeattributen_objects
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -64,7 +66,6 @@ from ..services import (
     fetch_zaak_eigenschap,
     fetch_zaak_object,
     fetch_zaaktype,
-    fetch_zaaktypeattributen_objects,
     find_zaak,
     get_catalogi,
     get_document,
@@ -570,20 +571,18 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     )
     filterset_class = ZaakRolFilterSet
 
-    def get_serializer_class(self):
+    def get_serializer(self, **kwargs):
         mapping = {
             "GET": ReadRolSerializer,
             "POST": RolSerializer,
             "DELETE": DestroyRolSerializer,
         }
-        return mapping[self.request.method]
-
-    def get_serializer(self, **kwargs):
-        serializer = self.get_serializer_class()
-        return serializer(**kwargs)
+        return mapping[self.request.method](**kwargs)
 
     @extend_schema(
         summary=_("List ROLlen of ZAAK."),
+        request=ReadRolSerializer,
+        responses={"200": ReadRolSerializer},
     )
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -593,6 +592,8 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
 
     @extend_schema(
         summary=_("Add ROL to ZAAK."),
+        request=RolSerializer,
+        responses={"201": RolSerializer},
     )
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -622,6 +623,8 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
                 location=OpenApiParameter.QUERY,
             )
         ],
+        request=DestroyRolSerializer,
+        responses={"204": DestroyRolSerializer},
     )
     def delete(self, request, *args, **kwargs):
         filterset = self.filterset_class(
@@ -656,6 +659,14 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
             if zo.object_type == "overige":
                 return zo.object_type_overige
             return zo.object_type
+
+        # Do not include meta objects such as Checklists, etc, as defined in MetaObjectTypesConfig
+        meta_objecttype_config = MetaObjectTypesConfig.get_solo()
+        zaakobjecten = [
+            zo
+            for zo in zaakobjecten
+            if group_key(zo) not in meta_objecttype_config.meta_objecttype_urls
+        ]
 
         # re-group by type
         groups = []
@@ -1153,7 +1164,12 @@ class ObjecttypeListView(ListMixin, views.APIView):
     action = "list"
 
     def get_objects(self) -> List[dict]:
-        return fetch_objecttypes()
+        meta_objecttype_config = MetaObjectTypesConfig.get_solo()
+        return [
+            ot
+            for ot in fetch_objecttypes()
+            if ot["url"] not in meta_objecttype_config.meta_objecttype_urls
+        ]
 
 
 @extend_schema(

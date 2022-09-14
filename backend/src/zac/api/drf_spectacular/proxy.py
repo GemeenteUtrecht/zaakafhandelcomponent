@@ -25,7 +25,7 @@ class ProxySerializerExtension(OpenApiSerializerExtension):
 
         # get the extra serializer
         extra = ResolvedComponent(
-            name=f"{base_name}Extras",
+            name=f"{base_name}Extras{direction.capitalize()}",
             type=ResolvedComponent.SCHEMA,
             schema=auto_schema._map_basic_serializer(serializer, direction),
             object=serializer,

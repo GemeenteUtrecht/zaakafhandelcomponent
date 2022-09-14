@@ -21,7 +21,7 @@ from zac.core.permissions import (
     zaken_inzien,
 )
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ...constants import (
     AccessRequestResult,
@@ -91,8 +91,8 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
 
         BlueprintPermissionFactory.create(
@@ -129,8 +129,8 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
@@ -167,8 +167,8 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
         BlueprintPermissionFactory.create(
@@ -205,7 +205,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
@@ -243,7 +243,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(self.zaaktype["url"], json=self.zaaktype)
+        mock_resource_get(m, self.zaaktype)
         m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
 
@@ -304,7 +304,7 @@ class GrantAccessAPITests(APITransactionTestCase):
     def test_grant_access_success(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         data = [
             {
@@ -425,7 +425,7 @@ class GrantAccessAPITests(APITransactionTestCase):
     def test_grant_access_with_existing_permission_expired(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         UserAtomicPermissionFactory.create(
             atomic_permission__object_url=ZAAK_URL,
@@ -475,7 +475,7 @@ class GrantAccessAPITests(APITransactionTestCase):
     def test_grant_access_with_existing_pending_request(self, m):
         # mock ZRC data
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(ZAAK_URL, json=self.zaak)
+        mock_resource_get(m, self.zaak)
 
         pending_request = AccessRequestFactory.create(
             requester=self.requester, result="", zaak=ZAAK_URL

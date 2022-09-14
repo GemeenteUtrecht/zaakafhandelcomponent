@@ -1,3 +1,5 @@
+from typing import List
+
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
@@ -39,6 +41,28 @@ class CoreConfig(SingletonModel):
         related_name="+",
         help_text=_("Default OBJECTTYPES API service to use"),
     )
+    app_id = models.URLField(
+        _("BPTL Application ID"),
+        help_text=_(
+            "A (globally) unique ID of the BPTL application. In this case the URL that points to the appropriate "
+            "application on the Open Zaak Autorisaties API."
+        ),
+        default="",
+    )
+    non_adfs_login_enabled = models.BooleanField(
+        _("Non-ADFS login enabled"),
+        help_text=_("A flag that allows non-ADFS login (True) or not (False)."),
+        default=True,
+    )
+
+    class Meta:
+        verbose_name = _("global configuration")
+
+    def __str__(self):
+        return force_str(self._meta.verbose_name)
+
+
+class MetaObjectTypesConfig(SingletonModel):
     start_camunda_process_form_objecttype = models.URLField(
         _("URL-reference to StartCamundaForms in OBJECTTYPES API."),
         help_text=_(
@@ -53,24 +77,31 @@ class CoreConfig(SingletonModel):
         ),
         default="",
     )
-
-    app_id = models.URLField(
-        _("BPTL Application ID"),
+    checklisttype_objecttype = models.URLField(
+        _("URL-reference to ChecklistType in OBJECTTYPES API."),
         help_text=_(
-            "A (globally) unique ID of the BPTL application. In this case the URL that points to the appropriate "
-            "application on the Open Zaak Autorisaties API."
+            "A URL-reference to the ChecklistType OBJECTTYPE. This is used to get the questions for a checklist for a ZAAKTYPE."
+        ),
+        default="",
+    )
+    checklist_objecttype = models.URLField(
+        _("URL-reference to Checklist in OBJECTTYPES API."),
+        help_text=_(
+            "A URL-reference to the Checklist OBJECTTYPE. This is used to fetch the checklist objecttype for a ZAAK."
         ),
         default="",
     )
 
-    non_adfs_login_enabled = models.BooleanField(
-        _("Non-ADFS login enabled"),
-        help_text=_("A flag that allows non-ADFS login (True) or not (False)."),
-        default=True,
-    )
-
     class Meta:
-        verbose_name = _("global configuration")
+        verbose_name = _("meta objecttype configuration")
 
     def __str__(self):
         return force_str(self._meta.verbose_name)
+
+    @property
+    def meta_objecttype_urls(self) -> List[str]:
+        return [
+            getattr(self, field.name)
+            for field in self._meta.get_fields()
+            if isinstance(field, models.URLField)
+        ]

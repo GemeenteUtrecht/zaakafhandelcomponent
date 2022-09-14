@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
 
@@ -15,21 +15,20 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.checklists.tests.factories import (
-    ChecklistAnswerFactory,
-    ChecklistFactory,
-    ChecklistQuestionFactory,
-    ChecklistTypeFactory,
-)
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.objects.checklists.tests.utils import (
+    BRONORGANISATIE,
+    CATALOGI_ROOT,
+    CHECKLIST_OBJECT,
+    IDENTIFICATIE,
+    ZAAK_URL,
+    ZAKEN_ROOT,
+)
 
 from ..api.data import ChecklistAnswerGroup
 from ..api.serializers import WorkStackChecklistAnswerSerializer
-
-ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 
 
 @freeze_time("2021-12-16T12:00:00Z")
@@ -60,9 +59,9 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie="ZAAK-2020-0010",
-            bronorganisatie="123456782",
+            url=ZAAK_URL,
+            identificatie=IDENTIFICATIE,
+            bronorganisatie=BRONORGANISATIE,
             startdatum="2021-02-12",
             einddatum=None,
             einddatumGepland=None,
@@ -72,72 +71,6 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
 
         cls.endpoint = reverse(
             "werkvoorraad:checklists",
-        )
-
-        cls.checklisttype = ChecklistTypeFactory.create(
-            zaaktype_identificatie=cls.zaaktype["identificatie"],
-            zaaktype_catalogus=cls.zaaktype["catalogus"],
-        )
-        cls.checklist_question_1 = ChecklistQuestionFactory.create(
-            question="some-question-1",
-            checklisttype=cls.checklisttype,
-            order=1,
-        )
-        cls.checklist_question_2 = ChecklistQuestionFactory.create(
-            question="some-question-2",
-            checklisttype=cls.checklisttype,
-            order=1,
-        )
-        cls.checklist = ChecklistFactory.create(
-            checklisttype=cls.checklisttype, zaak=cls.zaak["url"]
-        )
-        cls.checklist_answer_user = ChecklistAnswerFactory(
-            checklist=cls.checklist,
-            question=cls.checklist_question_1.question,
-            user_assignee=cls.user,
-        )
-        cls.checklist_answer_group = ChecklistAnswerFactory(
-            checklist=cls.checklist,
-            question=cls.checklist_question_2.question,
-            group_assignee=cls.group_1,
-        )
-
-        cls.group_checklist_answer_user = ChecklistAnswerGroup(
-            checklist_answers=[cls.checklist_answer_user],
-            zaak=cls.zaak,
-            zaak_url=cls.zaak["url"],
-        )
-        cls.group_checklist_answer_group = ChecklistAnswerGroup(
-            checklist_answers=[cls.checklist_answer_group],
-            zaak=cls.zaak,
-            zaak_url=cls.zaak["url"],
-        )
-
-    def test_workstack_checklist_answers_serializer(self):
-        request = MagicMock()
-        request.user.return_value = self.user
-        serializer = WorkStackChecklistAnswerSerializer(
-            self.group_checklist_answer_user
-        )
-        self.assertEqual(
-            serializer.data,
-            {
-                "checklist_questions": [
-                    {
-                        "question": self.group_checklist_answer_user.checklist_answers[
-                            0
-                        ].question,
-                        "user_assignee": self.user.username,
-                        "group_assignee": None,
-                    }
-                ],
-                "zaak": {
-                    "url": self.zaak["url"],
-                    "identificatie": self.zaak["identificatie"],
-                    "bronorganisatie": self.zaak["bronorganisatie"],
-                    "status": None,
-                },
-            },
         )
 
     def test_workstack_checklist_answers_endpoint(self):
@@ -156,8 +89,15 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
+        user_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.endpoint)
+        with patch(
+            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user",
+            return_value=[user_checklist],
+        ):
+            response = self.client.get(self.endpoint)
+
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
@@ -167,12 +107,8 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
                 {
                     "checklistQuestions": [
                         {
-                            "question": self.group_checklist_answer_user.checklist_answers[
-                                0
-                            ].question,
-                            "groupAssignee": None,
-                            "userAssignee": self.user.username,
-                        }
+                            "question": user_checklist["answers"][0]["question"],
+                        },
                     ],
                     "zaak": {
                         "url": self.zaak["url"],
@@ -193,7 +129,14 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         self.refresh_index()
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.endpoint)
+        user_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        user_checklist["answers"][0]["user_assignee"] = self.user.username
+        self.client.force_authenticate(user=self.user)
+        with patch(
+            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user",
+            return_value=[user_checklist],
+        ):
+            response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
@@ -208,44 +151,20 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint)
+        user_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        user_checklist["answers"][0]["user_assignee"] = self.user.username
+        self.client.force_authenticate(user=self.user)
+        with patch(
+            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user",
+            return_value=[],
+        ):
+            response = self.client.get(self.endpoint)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
 
-    def test_workstack_checklist_answers_no_group_specified_in_url(self):
-        endpoint = reverse("werkvoorraad:group-checklists")
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(endpoint)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data, [])
-
-    def test_workstack_group_checklist_answers_user_not_part_of_group(self):
-        zaak_document = self.create_zaak_document(self.zaak)
-        zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
-            for_user=self.user,
-            policy={
-                "catalogus": self.catalogus,
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-
-        endpoint = reverse("werkvoorraad:group-checklists")
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(endpoint)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data, [])
-
     def test_workstack_group_checklist_answers_group_specified(self):
         self.user.groups.add(self.group_1)
-        self.user.groups.add(self.group_2)
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
         zaak_document.save()
@@ -261,23 +180,27 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        endpoint = reverse("werkvoorraad:group-checklists")
+        group_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        group_checklist["answers"][0]["group_assignee"] = self.group_1.name
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(endpoint)
+        endpoint = reverse("werkvoorraad:group-checklists")
+        with patch(
+            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user_groups",
+            return_value=[group_checklist],
+        ):
+            response = self.client.get(endpoint)
+
         self.assertEqual(response.status_code, 200)
         data = response.json()
+
         self.assertEqual(
             data,
             [
                 {
                     "checklistQuestions": [
                         {
-                            "question": self.group_checklist_answer_group.checklist_answers[
-                                0
-                            ].question,
-                            "groupAssignee": self.group_1.name,
-                            "userAssignee": None,
-                        }
+                            "question": group_checklist["answers"][0]["question"],
+                        },
                     ],
                     "zaak": {
                         "url": self.zaak["url"],
@@ -294,29 +217,3 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             ],
         )
         self.user.groups.remove(self.group_1)
-        self.user.groups.remove(self.group_2)
-
-    def test_workstack_group_checklist_answers_part_of_different_group(self):
-        self.user.groups.add(self.group_2)
-        zaak_document = self.create_zaak_document(self.zaak)
-        zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
-            for_user=self.user,
-            policy={
-                "catalogus": self.catalogus,
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            },
-        )
-
-        endpoint = reverse("werkvoorraad:group-checklists")
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(endpoint)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data, [])
-        self.user.groups.remove(self.group_2)
