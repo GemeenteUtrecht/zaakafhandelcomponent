@@ -1,6 +1,7 @@
 @import './base/colors/colors';
 
 .progress-bar {
+  text-indent: 0.5em;
   white-space: nowrap;
   &-container {
     height: 2.25rem;
