@@ -144,7 +144,10 @@
 
         <mat-expansion-panel-header>
           <mat-panel-title><strong>{{fieldset.label}}</strong></mat-panel-title>
-          <mat-panel-description *ngIf="fieldset.description">{{fieldset.description}}</mat-panel-description>
+          <mat-panel-description *ngIf="fieldset.description">
+            <ng-container *ngIf="fieldset.description.length > 20">{{fieldset.description|slice:0:20}}…</ng-container>
+            <ng-container *ngIf="fieldset.description.length <= 20">{{fieldset.description}}</ng-container>
+          </mat-panel-description>
         </mat-expansion-panel-header>
 
         <ng-container *ngTemplateOutlet="fields"></ng-container>
