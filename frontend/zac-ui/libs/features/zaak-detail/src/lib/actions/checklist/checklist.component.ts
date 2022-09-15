@@ -243,16 +243,25 @@ export class ChecklistComponent implements OnInit, OnChanges {
    * Returns fieldsets based on questions.
    */
   getFieldsets() {
-    return this.checklistType?.questions.map((question: ChecklistQuestion): FieldsetConfiguration => ({
-      label: question.question,
-      keys: [
-        question.question,
-        `__remarks_${question.question}`,
-        `__document_${question.question}`,
-        `__userAssignee_${question.question}`,
-        `__groupAssignee_${question.question}`,
-      ]
-    }))
+    return this.checklistType?.questions.map((question: ChecklistQuestion): FieldsetConfiguration => {
+      const answer = this.checklist?.answers.find((checklistAnswer) => checklistAnswer.question === question.question);
+      const value = answer?.answer
+      const description = (value!==undefined && question.choices.length)
+        ? question.choices[parseInt(value, 10)]?.name
+        : value
+
+      return ({
+        description: description,
+        label: question.question,
+        keys: [
+          question.question,
+          `__remarks_${question.question}`,
+          `__document_${question.question}`,
+          `__userAssignee_${question.question}`,
+          `__groupAssignee_${question.question}`,
+        ]
+      });
+    })
   }
 
   //

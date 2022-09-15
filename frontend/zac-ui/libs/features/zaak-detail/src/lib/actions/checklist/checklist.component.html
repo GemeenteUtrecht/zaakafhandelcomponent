@@ -1,6 +1,4 @@
 <div class="card">
-  <h2 class="d-inline-block mr-1">Takenlijst</h2>
-  <gu-tooltip type="primary" inline="true">In de takenlijst kun je aangeven welke taken uitgevoerd zijn in deze zaak. Deze vragen kunnen op elk moment tijdens het proces beantwoord worden. Het is mogelijk om een taak toe te wijzen aan een collega.</gu-tooltip>
   <!-- Loading -->
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
@@ -14,6 +12,8 @@
            [form]="checklistForm"
            [isLoading]="isSubmitting"
            [buttonSize]="'small'"
+           title="Takenlijst"
+           tooltip="In de takenlijst kun je aangeven welke taken uitgevoerd zijn in deze zaak. Deze vragen kunnen op elk moment tijdens het proces beantwoord worden. Het is mogelijk om een taak toe te wijzen aan een collega."
            (formSubmit)="onSubmitForm($event)">
   </gu-form>
 </div>

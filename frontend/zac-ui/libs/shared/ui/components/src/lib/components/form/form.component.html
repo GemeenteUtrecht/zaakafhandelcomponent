@@ -1,128 +1,161 @@
 <form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup"
       (ngSubmit)="_formSubmit()" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
-  <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit"
-          (click)="toggleClick($event)" *ngIf="isToggleable()">
-    {{edit ? 'Annuleren' : 'Bewerken' }}
-  </button>
 
-  <h2 *ngIf="title">{{ title }}</h2>
 
-  <fieldset class="form__body" *ngFor="let fieldset of _fieldsets">
-    <h5>{{fieldset.label}}</h5>
-    <div *ngFor="let field of fieldset.fields; let i = index">
-      <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit && showLess">
-        <!-- Document -->
-        <div *ngIf="field.widgetType == 'document'" class="form__document mb-4">
-          <!-- Has document -->
-          <div *ngIf="field.value" class="row">
-            <div class="col-12">
-              <p class="p--bold d-inline">Document:&nbsp;</p>
-              <a class="anchor" (click)="onDocumentClick(field.value.readUrl)">{{field.value.titel}}</a>
+  <mat-action-row>
+    <h2 *ngIf="title" class="d-inline-block mr-1">
+      {{ title }}
+      <gu-tooltip *ngIf="tooltip" type="primary" inline="true">{{ tooltip }}</gu-tooltip>
+    </h2>
+
+    <button
+      *ngIf="isToggleable()"
+      gu-button
+      class="form__edit-toggle"
+      buttonStyle="tertiary"
+      size="extrasmall"
+      icon="edit"
+      (click)="toggleClick($event)"
+    >
+      {{edit ? 'Annuleren' : 'Bewerken' }}
+    </button>
+  </mat-action-row>
+
+
+  <mat-accordion multi>
+    <ng-container *ngFor="let fieldset of _fieldsets">
+      <ng-template #fields>
+        <div *ngFor="let field of fieldset.fields; let i = index">
+          <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit && showLess">
+            <!-- Document -->
+            <div *ngIf="field.widgetType == 'document'" class="form__document mb-4">
+              <!-- Has document -->
+              <div *ngIf="field.value" class="row">
+                <div class="col-12">
+                  <p class="p--bold d-inline">Document:&nbsp;</p>
+                  <a class="anchor" (click)="onDocumentClick(field.value.readUrl)">{{field.value.titel}}</a>
+                </div>
+              </div>
+
+              <!-- Selected document -->
+              <div *ngIf="documents[field.name]" class="row">
+                <p class="col-8 mb-4">Document: {{documents[field.name]?.bestandsnaam}}</p>
+                <p class="col-4 mb-4">
+                  <button gu-button
+                          buttonStyle="tertiary"
+                          icon="remove"
+                          size="extrasmall"
+                          type="button"
+                          (click)="removeDocument(field)">
+                    Documentkoppeling verwijderen
+                  </button>
+                </p>
+
+              </div>
+
+              <!-- Allow select -->
+              <div *ngIf="!documents[field.name]" class="row">
+                <div class="col-12 mb-2">
+                  <button *ngIf="field.widgetType == 'document'"
+                          gu-button
+                          buttonStyle="tertiary"
+                          icon="upload_file"
+                          size="extrasmall"
+                          type="button"
+                          (click)="field.edit = !field.edit">
+                    {{field.value
+                    ? 'Wijzigen'
+                    : field.edit
+                      ? 'Annuleren'
+                      : field.label
+                    }}
+                  </button>
+
+                  <gu-document-toevoegen *ngIf="field.edit"
+                                         [zaak]="zaak"
+                                         (uploadedDocument)="onUploadedDocument(field, $event)"
+                                         title=""
+                                         description=""
+                                         submitLabel="Toevoegen">
+                  </gu-document-toevoegen>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Selected document -->
-          <div *ngIf="documents[field.name]" class="row">
-            <p class="col-8 mb-4">Document: {{documents[field.name]?.bestandsnaam}}</p>
-            <p class="col-4 mb-4">
-              <button gu-button
-                      buttonStyle="tertiary"
-                      icon="remove"
-                      size="extrasmall"
-                      type="button"
-                      (click)="removeDocument(field)">
-                Documentkoppeling verwijderen
-              </button>
-            </p>
+            <!-- Read-only field. -->
+            <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
+              <div class="col-12">
+                <p class="p--bold mb-0">{{field.label}}</p>
+              </div>
 
-          </div>
+              <div class="col-12" *ngIf="!field.choices">
+                <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
+                <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
+              </div>
 
-          <!-- Allow select -->
-          <div *ngIf="!documents[field.name]" class="row">
-            <div class="col-12 mb-2">
-              <button *ngIf="field.widgetType == 'document'"
-                      gu-button
-                      buttonStyle="tertiary"
-                      icon="upload_file"
-                      size="extrasmall"
-                      type="button"
-                      (click)="field.edit = !field.edit">
-                {{field.value
-                ? 'Wijzigen'
-                : field.edit
-                  ? 'Annuleren'
-                  : field.label
-                }}
-              </button>
 
-              <gu-document-toevoegen *ngIf="field.edit"
-                                     [zaak]="zaak"
-                                     (uploadedDocument)="onUploadedDocument(field, $event)"
-                                     title=""
-                                     description=""
-                                     submitLabel="Toevoegen">
-              </gu-document-toevoegen>
+              <div class="col-12" *ngIf="field.choices">
+                <p class="mt-2">
+                  <gu-chip color="tertiary">{{field.choices[field.value]?.label || '-'}}</gu-chip>
+                </p>
+              </div>
             </div>
+            <!-- End read-only field. -->
+
+            <!-- Regular field. -->
+            <gu-input
+              *ngIf="field.widgetType == 'input' && edit"
+              [control]="field.control"
+              [label]="field.label"
+              [maxlength]="field.maxlength"
+              [pattern]="field.pattern || null"
+              [placeholder]="field.placeholder"
+              [type]="field.type"
+              [required]="field.required"
+              [value]="field.control.value"
+              [autocomplete]="field.autocomplete"
+              (change)="inputChanged($event, field)"
+              class="mb-4"
+            ></gu-input>
+            <!-- End regular field. -->
+
+            <!-- Select field. -->
+            <gu-multiselect
+              *ngIf="['checkboxGroup', 'select'].indexOf(field.widgetType) > -1 && edit"
+              [control]="field.control"
+              [items]="field.choices"
+              [selectedValue]="field.control.value"
+              [label]="field.label"
+              [multiple]="field.multiple"
+              [required]="field.required"
+              [widgetType]="field.widgetType"
+              bindLabel="label"
+              bindValue="value"
+              (change)="selectChanged($event, field)"
+              (search)="selectSearch($event, field)"
+              class="mb-4"
+            ></gu-multiselect>
+            <!-- End select field. -->
           </div>
         </div>
+      </ng-template>
 
-        <!-- Read-only field. -->
-        <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
-          <div class="col-12">
-            <p class="p--bold mb-0">{{field.label}}</p>
-          </div>
+      <mat-expansion-panel *ngIf="_fieldsets.length > 1" [expanded]="edit">
 
-          <div class="col-12" *ngIf="!field.choices">
-            <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
-            <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
-          </div>
+        <mat-expansion-panel-header>
+          <mat-panel-title><strong>{{fieldset.label}}</strong></mat-panel-title>
+          <mat-panel-description *ngIf="fieldset.description">{{fieldset.description}}</mat-panel-description>
+        </mat-expansion-panel-header>
 
+        <ng-container *ngTemplateOutlet="fields"></ng-container>
 
-          <div class="col-12" *ngIf="field.choices">
-            <p class="mt-2">
-              <gu-chip color="tertiary">{{field.choices[field.value]?.label || '-'}}</gu-chip>
-            </p>
-          </div>
-        </div>
-        <!-- End read-only field. -->
+      </mat-expansion-panel>
 
-        <!-- Regular field. -->
-        <gu-input
-          *ngIf="field.widgetType == 'input' && edit"
-          [control]="field.control"
-          [label]="field.label"
-          [maxlength]="field.maxlength"
-          [pattern]="field.pattern || null"
-          [placeholder]="field.placeholder"
-          [type]="field.type"
-          [required]="field.required"
-          [value]="field.control.value"
-          [autocomplete]="field.autocomplete"
-          (change)="inputChanged($event, field)"
-          class="mb-4"
-        ></gu-input>
-        <!-- End regular field. -->
-
-        <!-- Select field. -->
-        <gu-multiselect
-          *ngIf="['checkboxGroup', 'select'].indexOf(field.widgetType) > -1 && edit"
-          [control]="field.control"
-          [items]="field.choices"
-          [selectedValue]="field.control.value"
-          [label]="field.label"
-          [multiple]="field.multiple"
-          [required]="field.required"
-          [widgetType]="field.widgetType"
-          bindLabel="label"
-          bindValue="value"
-          (change)="selectChanged($event, field)"
-          (search)="selectSearch($event, field)"
-          class="mb-4"
-        ></gu-multiselect>
-        <!-- End select field. -->
-      </div>
-    </div>
-  </fieldset>
+      <ng-container *ngIf="_fieldsets.length <= 1">
+        <ng-container *ngTemplateOutlet="fields"></ng-container>
+      </ng-container>
+    </ng-container>
+  </mat-accordion>
 
   <div class="d-flex justify-content-end">
     <button gu-button

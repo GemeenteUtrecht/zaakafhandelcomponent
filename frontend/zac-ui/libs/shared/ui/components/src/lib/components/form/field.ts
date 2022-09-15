@@ -88,6 +88,10 @@ export interface FieldsetConfiguration {
 
   /** The FieldConfiguration keys to render as part of this fiedlset. */
   keys: string[];
+
+  /** Optional description. */
+  description?: string
+
 }
 
 /**
@@ -169,6 +173,7 @@ export class Fieldset {
   label: string;
   fields: Field[];
   keys: string[];
+  description?: string
 
   constructor(fieldsetConfiguration: FieldsetConfiguration|Fieldset, form: Field[]) {
     Object.assign(this, fieldsetConfiguration);

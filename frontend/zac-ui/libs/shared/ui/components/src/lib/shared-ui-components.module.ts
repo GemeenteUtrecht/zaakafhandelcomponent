@@ -50,30 +50,32 @@ import {TabGroupComponent} from './components/tabs/tab-group.component';
 import {PaginatorComponent} from './components/paginator/paginator.component';
 import {CustomPaginatorLabels} from './components/paginator/custom-paginator-labels';
 import {SharedUtilsModule} from '@gu/utils';
+import {MatExpansionModule} from '@angular/material/expansion';
 
 // Customise Material Form Fields
 patchMatFormField();
 
 @NgModule({
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    SharedUtilsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatNativeDateModule,
-    MatIconModule,
-    MatTableModule,
-    RouterModule,
-    MatSortModule,
-    MatCheckboxModule,
-    MatDatepickerModule,
-    MatTabsModule,
-    MatSnackBarModule,
-    MultiselectModule,
-    MatPaginatorModule
-  ],
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        SharedUtilsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatNativeDateModule,
+        MatIconModule,
+        MatTableModule,
+        RouterModule,
+        MatSortModule,
+        MatCheckboxModule,
+        MatDatepickerModule,
+        MatTabsModule,
+        MatSnackBarModule,
+        MultiselectModule,
+        MatPaginatorModule,
+        MatExpansionModule
+    ],
   declarations: [
     ButtonComponent,
     ChipComponent,

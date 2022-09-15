@@ -2,15 +2,26 @@
   box-sizing: border-box;
   position: relative;
 
-  &__edit-toggle {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 10;
-  }
-
   &__footer {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .mat-action-row{
+    border-top: 0;
+    justify-content: space-between;
+  }
+
+  .mat-action-row h2 {
+    margin-left: -24px;
+  }
+
+  .mat-expansion-panel-header-title,
+  .mat-expansion-panel-header-description {
+    flex-basis: 50%;
+  }
+
+  .mat-expansion-panel:last-child {
+    margin-bottom: 16px;
   }
 }
