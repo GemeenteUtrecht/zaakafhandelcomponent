@@ -125,7 +125,7 @@ export class FormService {
       .map(key => {
         const fieldConfiguration = this.getFieldConfigurationByKey(form, key);
         fieldConfiguration.control = formGroup.controls[key];
-        fieldConfiguration.readonly = editable ? fieldConfiguration.readonly : true;
+        fieldConfiguration.readonly = (typeof editable === 'boolean') ? !editable : fieldConfiguration.readonly;
         return new Field(fieldConfiguration);
       });
   }

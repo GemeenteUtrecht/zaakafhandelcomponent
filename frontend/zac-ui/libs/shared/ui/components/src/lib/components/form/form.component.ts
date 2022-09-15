@@ -37,6 +37,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() resetAfterSubmit = false;
   @Input() showLess: boolean;
   @Input() showEditOnHover: boolean;
+  @Input() tooltip: string;
   @Input() isLoading = false;
 
   @Input() zaak: Zaak;

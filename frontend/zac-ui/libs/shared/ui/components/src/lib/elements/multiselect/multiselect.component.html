@@ -1,6 +1,7 @@
 <ng-container *ngIf="widgetType==='select'">
   <span class="has-float-label">
     <ng-select
+      (click)="$event.stopImmediatePropagation()"
       [items]="items"
       (search)="onSearch($event)"
       (change)="onChange($event)"

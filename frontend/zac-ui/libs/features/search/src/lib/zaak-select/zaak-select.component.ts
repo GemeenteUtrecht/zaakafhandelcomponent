@@ -12,6 +12,7 @@ export class ZaakSelectComponent {
   @Input() control?: FormControl;
   @Input() label = 'Zaaknummer';
   @Input() placeholder? = '';
+  @Input() appendTo? = 'body';
 
   @Output() search: EventEmitter<any> = new EventEmitter<any>();
   @Output() change: EventEmitter<any> = new EventEmitter<any>();
