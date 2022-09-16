@@ -84,7 +84,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_not_authenticated(self, m):
         response = self.client.post(self.endpoint, self.data)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_authenticated_no_permissions(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")

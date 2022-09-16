@@ -27,7 +27,7 @@ class GetZakenTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
 
     def test_login_required(self, m):
         response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_no_query_parameter_errors(self, m):
         user = UserFactory.create()
