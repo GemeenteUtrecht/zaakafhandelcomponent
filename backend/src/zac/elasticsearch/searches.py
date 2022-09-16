@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
-from typing import List
+from typing import List, Optional
+from urllib.request import Request
 
 from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import (
@@ -15,44 +16,42 @@ from elasticsearch_dsl.query import (
 )
 
 from zac.accounts.constants import PermissionObjectTypeChoices
-from zac.accounts.models import BlueprintPermission, User, UserAtomicPermission
+from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.core.permissions import zaken_inzien
 
 from .documents import ZaakDocument
 
 
-def query_allowed_for_user(
-    user: User,
+def query_allowed_for_requester(
+    request: Request,
     object_type: str = PermissionObjectTypeChoices.zaak,
     permission: str = zaken_inzien.name,
 ) -> Query:
     """
     construct query part to display only allowed zaken
     """
-    if user.is_superuser:
-        return Q("match_all")
-
     allowed = []
+    if user := request.user:
+        if user.is_superuser:
+            return Q("match_all")
 
-    # atomic permissions
-    object_urls = (
-        UserAtomicPermission.objects.filter(
-            user=user,
-            atomic_permission__object_type=object_type,
-            atomic_permission__permission=permission,
+        # atomic permissions
+        object_urls = (
+            UserAtomicPermission.objects.filter(
+                user=user,
+                atomic_permission__object_type=object_type,
+                atomic_permission__permission=permission,
+            )
+            .actual()
+            .values_list("atomic_permission__object_url", flat=True)
         )
-        .actual()
-        .values_list("atomic_permission__object_url", flat=True)
-    )
-    if object_urls.count():
-        allowed.append(Terms(url=list(object_urls)))
+        if object_urls.count():
+            allowed.append(Terms(url=list(object_urls)))
 
     # blueprint permissions
-    for blueprint_permission in (
-        BlueprintPermission.objects.for_user(user)
-        .actual()
-        .filter(object_type=object_type, role__permissions__contains=[permission])
-    ):
+    for blueprint_permission in BlueprintPermission.objects.for_requester(
+        request, actual=True
+    ).filter(object_type=object_type, role__permissions__contains=[permission]):
         allowed.append(blueprint_permission.get_search_query())
 
     if not allowed:
@@ -62,7 +61,7 @@ def query_allowed_for_user(
 
 
 def search(
-    user=None,
+    request=None,
     size=None,
     identificatie=None,
     bronorganisatie=None,
@@ -132,7 +131,7 @@ def search(
 
     # display only allowed zaken
     if only_allowed:
-        s = s.filter(query_allowed_for_user(user))
+        s = s.filter(query_allowed_for_requester(request))
 
     if ordering:
         s = s.sort(*ordering)
@@ -145,7 +144,9 @@ def search(
 
 
 def autocomplete_zaak_search(
-    user: User, identificatie: str, only_allowed: bool = True
+    identificatie: str,
+    request: Optional[Request] = None,
+    only_allowed: bool = True,
 ) -> List[ZaakDocument]:
     search = ZaakDocument.search().query(
         Regexp(
@@ -156,7 +157,7 @@ def autocomplete_zaak_search(
         )
     )
     if only_allowed:
-        search = search.filter(query_allowed_for_user(user))
+        search = search.filter(query_allowed_for_requester(request))
 
     response = search.execute()
     return response.hits

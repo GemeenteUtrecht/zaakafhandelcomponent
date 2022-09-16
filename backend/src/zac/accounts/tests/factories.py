@@ -105,3 +105,19 @@ class UserAuthProfileFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.UserAuthorizationProfile"
+
+
+class ApplicationTokenFactory(factory.django.DjangoModelFactory):
+    contact_person = factory.Faker("name")
+    email = factory.Faker("email")
+
+    class Meta:
+        model = "accounts.ApplicationToken"
+
+
+class ApplicationAuthProfileFactory(factory.django.DjangoModelFactory):
+    application = factory.SubFactory(ApplicationTokenFactory)
+    auth_profile = factory.SubFactory(AuthorizationProfileFactory)
+
+    class Meta:
+        model = "accounts.ApplicationTokenAuthorizationProfile"

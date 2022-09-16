@@ -7,7 +7,6 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
@@ -52,7 +51,7 @@ class WorkStackAccessRequestsView(ListAPIView):
     filter_backends = ()
 
     def get_queryset(self):
-        access_requests_groups = get_access_requests_groups(self.request.user)
+        access_requests_groups = get_access_requests_groups(self.request)
         return [AccessRequestGroup(**group) for group in access_requests_groups]
 
 
@@ -68,7 +67,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
 
     def get_queryset(self):
         grouped_activities = self.get_activities()
-        activity_groups = get_activity_groups(self.request.user, grouped_activities)
+        activity_groups = get_activity_groups(self.request, grouped_activities)
         return activity_groups
 
 
@@ -94,7 +93,7 @@ class WorkStackAssigneeCasesView(ListMixin, views.APIView):
     def get_objects(self):
         ordering = ESOrderingFilter().get_ordering(self.request, self)
         zaken = search(
-            user=self.request.user,
+            request=self.request,
             behandelaar=self.request.user.username,
             ordering=ordering,
         )
@@ -126,7 +125,7 @@ class WorkStackUserTasksView(ListAPIView):
         zaken = {
             zaak.url: zaak
             for zaak in search(
-                user=self.request.user,
+                request=self.request,
                 urls=list({tzu[1] for tzu in task_ids_and_zaak_urls}),
             )
         }
@@ -178,7 +177,7 @@ class WorkStackChecklistQuestionsView(views.APIView):
     def get(self, request, *args, **kwargs):
         grouped_checklist_answers = self.get_assigned_checklist_answers()
         checklist_answers = get_checklist_answers_groups(
-            self.request.user, grouped_checklist_answers
+            self.request, grouped_checklist_answers
         )
         serializer = self.serializer_class(checklist_answers, many=True)
         return Response(serializer.data)

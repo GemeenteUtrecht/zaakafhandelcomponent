@@ -62,7 +62,7 @@ class PermissionView(ListMixin, views.APIView):
         Only returns permissions the user has.
 
         """
-        perms = permissions_related_to_user(self.request.user)
+        perms = permissions_related_to_user(self.request)
         return perms
 
 

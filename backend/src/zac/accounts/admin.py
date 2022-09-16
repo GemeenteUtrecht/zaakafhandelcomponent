@@ -6,12 +6,15 @@ from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
 
 from hijack_admin.admin import HijackUserAdminMixin
+from nested_admin import NestedModelAdminMixin, NestedTabularInline
 
 from zac.utils.admin import RelatedLinksMixin
 
 from .forms import GroupAdminForm
 from .models import (
     AccessRequest,
+    ApplicationToken,
+    ApplicationTokenAuthorizationProfile,
     AtomicPermission,
     AuthorizationProfile,
     BlueprintPermission,
@@ -226,3 +229,34 @@ class GroupAdmin(_GroupAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("user_set")
+
+
+class ApplicationTokenAuthorizationInline(NestedTabularInline):
+    model = ApplicationTokenAuthorizationProfile
+    extra = 0
+
+
+@admin.register(ApplicationTokenAuthorizationProfile)
+class ApplicationAuthorizationProfileAdmin(admin.ModelAdmin):
+    list_display = ("application", "auth_profile", "start", "end")
+    list_filter = ("application", "auth_profile", "start", "end")
+    search_fields = (
+        "application__application",
+        "auth_profile__name",
+        "auth_profile__uuid",
+    )
+
+
+@admin.register(ApplicationToken)
+class ApplicationTokenAuthAdmin(NestedModelAdminMixin, admin.ModelAdmin):
+    list_display = (
+        "token",
+        "contact_person",
+        "organization",
+        "administration",
+        "application",
+    )
+    readonly_fields = ("token",)
+    inlines = [ApplicationTokenAuthorizationInline]
+    date_hierarchy = "created"
+    extra = 0

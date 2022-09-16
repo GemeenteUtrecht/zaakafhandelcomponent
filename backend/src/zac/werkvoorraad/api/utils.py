@@ -1,6 +1,7 @@
 import logging
 from itertools import groupby
 from typing import Dict, List
+from urllib.request import Request
 
 from django_camunda.camunda_models import factory
 from django_camunda.client import get_client
@@ -47,13 +48,14 @@ def get_camunda_tasks(assignee: str) -> List[Task]:
     return tasks
 
 
-def get_access_requests_groups(user: User):
+def get_access_requests_groups(request: Request):
     # if user doesn't have a permission to handle access requests - don't show them
-    if not user.has_perm(zaken_handle_access.name):
+    if not request.user.has_perm(zaken_handle_access.name):
         return []
 
     behandelaar_zaken = {
-        zaak.url: zaak for zaak in search(user=user, behandelaar=user.username)
+        zaak.url: zaak
+        for zaak in search(request=request, behandelaar=request.user.username)
     }
     access_requests = AccessRequest.objects.filter(
         result="", zaak__in=list(behandelaar_zaken.keys())
@@ -71,9 +73,9 @@ def get_access_requests_groups(user: User):
     return requested_zaken
 
 
-def filter_on_existing_zaken(user: User, groups: List[Dict]) -> List[Dict]:
+def filter_on_existing_zaken(request: Request, groups: List[Dict]) -> List[Dict]:
     zaak_urls = list({group["zaak_url"] for group in groups})
-    es_results = search(user=user, urls=zaak_urls)
+    es_results = search(request=request, urls=zaak_urls)
     zaken = {zaak.url: zaak for zaak in es_results}
 
     # Make sure groups without a zaak in elasticsearch are not returned.
@@ -92,16 +94,18 @@ def filter_on_existing_zaken(user: User, groups: List[Dict]) -> List[Dict]:
     return filtered
 
 
-def get_activity_groups(user: User, grouped_activities: dict) -> List[ActivityGroup]:
-    activity_groups_with_zaak = filter_on_existing_zaken(user, grouped_activities)
+def get_activity_groups(
+    request: Request, grouped_activities: dict
+) -> List[ActivityGroup]:
+    activity_groups_with_zaak = filter_on_existing_zaken(request, grouped_activities)
     return [ActivityGroup(**group) for group in activity_groups_with_zaak]
 
 
 def get_checklist_answers_groups(
-    user: User, grouped_checklist_answers: List[dict]
+    request: Request, grouped_checklist_answers: List[dict]
 ) -> List[ChecklistAnswerGroup]:
     checklist_answers_groups_with_zaak = filter_on_existing_zaken(
-        user, grouped_checklist_answers
+        request, grouped_checklist_answers
     )
     return [
         ChecklistAnswerGroup(**group) for group in checklist_answers_groups_with_zaak

@@ -8,8 +8,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 from rest_framework.viewsets import ModelViewSet
 
+from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.services import get_zaaktypen
@@ -20,6 +22,7 @@ from ..searches import autocomplete_zaak_search, search
 from .filters import ESOrderingFilter
 from .pagination import ESPagination
 from .parsers import IgnoreCamelCaseJSONParser
+from .permissions import HasTokenAuth
 from .serializers import (
     SearchReportSerializer,
     SearchSerializer,
@@ -30,7 +33,10 @@ from .utils import es_document_to_ordering_parameters
 
 
 class GetZakenView(views.APIView):
-    permission_classes = (IsAuthenticated,)
+    authentication_classes = [
+        ApplicationTokenAuthentication
+    ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    permission_classes = (HasTokenAuth | IsAuthenticated,)
 
     @staticmethod
     def get_serializer(**kwargs):
@@ -46,8 +52,10 @@ class GetZakenView(views.APIView):
         """
         serializer = ZaakIdentificatieSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
+
         zaken = autocomplete_zaak_search(
-            request.user, identificatie=serializer.validated_data["identificatie"]
+            request=request,
+            identificatie=serializer.validated_data["identificatie"],
         )
         zaak_serializer = self.get_serializer(instance=zaken)
         return Response(data=zaak_serializer.data)
@@ -60,7 +68,7 @@ class PerformSearchMixin:
 
             # First get zaaktypen based on omschrijving...
             zaaktypen = get_zaaktypen(
-                self.request.user,
+                self.request,
                 catalogus=zaaktype_data["catalogus"],
                 omschrijving=zaaktype_data["omschrijving"],
             )
@@ -74,21 +82,25 @@ class PerformSearchMixin:
                 urls += [
                     zt.url
                     for zt in get_zaaktypen(
-                        self.request.user,
+                        self.request,
                         catalogus=zaaktype_data["catalogus"],
                         identificatie=identificatie,
                     )
                 ]
 
             search_query["zaaktypen"] = [url for url in set(urls)]
-        results = search(user=self.request.user, **search_query)
+
+        results = search(**search_query, request=self.request)
         return results
 
 
 class SearchView(PerformSearchMixin, views.APIView):
+    authentication_classes = [
+        ApplicationTokenAuthentication
+    ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
     ordering = ("-identificatie",)
     parser_classes = (IgnoreCamelCaseJSONParser,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (HasTokenAuth | IsAuthenticated,)
     search_document = ZaakDocument
     serializer_class = SearchSerializer
     pagination_class = ESPagination

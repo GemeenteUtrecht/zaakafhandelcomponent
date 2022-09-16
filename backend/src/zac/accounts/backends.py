@@ -31,11 +31,9 @@ class PermissionsBackend:
         if not user_obj.is_active:
             return False
 
-        blueprint_permissions = (
-            BlueprintPermission.objects.for_user(user_obj)
-            .filter(role__permissions__contains=[perm])
-            .actual()
-        )
+        blueprint_permissions = BlueprintPermission.objects.for_user(
+            user_obj, actual=True
+        ).filter(role__permissions__contains=[perm])
 
         user_atomic_permissions = (
             UserAtomicPermission.objects.select_related("atomic_permission")

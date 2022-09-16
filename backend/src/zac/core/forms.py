@@ -1,20 +1,18 @@
-import itertools
 import logging
 from datetime import date
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Dict, Iterator, Tuple
 
 from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
-from zgw_consumers.api_models.catalogi import BesluitType, ZaakType
+from zgw_consumers.api_models.catalogi import BesluitType
 
-from zac.utils.sorting import sort
 from zgw.models.zrc import Zaak
 
 from .fields import AlfrescoDocumentField
-from .services import get_besluittypen_for_zaaktype
+from .services import get_besluittypen_for_zaaktype, get_catalogi, get_zaaktypen
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +28,21 @@ def dict_to_choices(
     return choices
 
 
-def get_zaaktype_choices(zaaktypen: List[ZaakType]) -> List[Tuple[str, list]]:
-    zaaktypen = sort(zaaktypen, ["omschrijving", "-versiedatum"])
-    choices = []
-    for key, group in itertools.groupby(zaaktypen, lambda zt: zt.omschrijving):
-        group_choices = [
-            (zt.url, _("Version {zt.versiedatum} - {zt.identificatie}").format(zt=zt))
-            for zt in group
-        ]
-        choices.append((key, group_choices))
+def get_zaaktypen_choices():
+    zaaktypen = get_zaaktypen()
+    zaaktypen = sorted(
+        sorted(zaaktypen, key=lambda _zt: _zt.versiedatum, reverse=True),
+        key=lambda zt: (zt.omschrijving,),
+    )
+    catalogi = {cat.url: cat.domein for cat in get_catalogi()}
 
-    return choices
+    return (
+        (
+            zt.url,
+            f"{catalogi[zt.catalogus]} - {zt.omschrijving} - {zt.identificatie}: {zt.versiedatum}",
+        )
+        for zt in zaaktypen
+    )
 
 
 def _repr(doc):
