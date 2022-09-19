@@ -50,7 +50,7 @@ def _search_meta_objects(
         object_filters["data_attrs"] += [f"zaak__icontains__{zaak.url}"]
 
     if data_attrs:
-        object_filters += data_attrs
+        object_filters["data_attrs"] += data_attrs
 
     object_filters["data_attrs"] = ",".join(object_filters["data_attrs"])
     meta_objects = search_objects(object_filters)
