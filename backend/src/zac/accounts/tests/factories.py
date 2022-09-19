@@ -4,7 +4,7 @@ import factory
 import factory.fuzzy
 
 from ..constants import PermissionObjectTypeChoices, PermissionReason
-from ..models import UserAuthorizationProfile
+from ..models import ApplicationTokenAuthorizationProfile, UserAuthorizationProfile
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -87,6 +87,17 @@ class BlueprintPermissionFactory(factory.django.DjangoModelFactory):
             auth_profile.blueprint_permissions.add(obj)
             UserAuthorizationProfile.objects.create(
                 user=extracted, auth_profile=auth_profile
+            )
+
+    @factory.post_generation
+    def for_application(obj, create, extracted, **kwargs):
+        assert create, "BlueprintPermission must be saved in the DB"
+
+        if extracted:
+            auth_profile = AuthorizationProfileFactory.create()
+            auth_profile.blueprint_permissions.add(obj)
+            ApplicationTokenAuthorizationProfile.objects.create(
+                application=extracted, auth_profile=auth_profile
             )
 
 
