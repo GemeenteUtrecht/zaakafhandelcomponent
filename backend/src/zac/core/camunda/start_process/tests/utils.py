@@ -80,7 +80,7 @@ START_CAMUNDA_PROCESS_FORM = {
     "processRollen": [PROCESS_ROL],
     "zaaktypeCatalogus": "SOME-DOMEIN",
     "processEigenschappen": [PROCESS_EIGENSCHAP],
-    "zaaktypeIdentificatie": "1",
+    "zaaktypeIdentificaties": ["1"],
     "processInformatieObjecten": [PROCESS_INFORMATIE_OBJECT],
     "camundaProcessDefinitionKey": "some_definition_key",
 }
