@@ -412,7 +412,7 @@ class ZaakEigenschapDetailView(views.APIView):
 
         # Create zaakeigenschap
         zaak_eigenschap = create_zaak_eigenschap(
-            user=request.user, **serializer.validated_data
+            request=request, **serializer.validated_data
         )
         if not zaak_eigenschap:
             raise exceptions.NotFound(
@@ -448,7 +448,7 @@ class ZaakEigenschapDetailView(views.APIView):
         )
         serializer.is_valid(raise_exception=True)
         updated_zaak_eigenschap = update_zaak_eigenschap(
-            zaak_eigenschap, request.data, user=request.user
+            zaak_eigenschap, request.data, request=request
         )
         # Resolve relation
         updated_zaak_eigenschap.eigenschap = get_eigenschap(
@@ -965,7 +965,7 @@ class ZaakTypenView(ListAPIView):
         return zaaktypen
 
     def get_zaaktypen(self) -> List[dict]:
-        zaaktypen = get_zaaktypen(self.request.user)
+        zaaktypen = get_zaaktypen(self.request)
 
         # aggregate
         zaaktypen_aggregated = []
@@ -1077,13 +1077,13 @@ class EigenschappenView(ListAPIView):
         if zt := request.query_params.get("zaaktype"):
             zaaktype = get_zaaktype(
                 zt,
-                user=request.user,
+                request=request,
             )
             zaaktypen = [zaaktype] if zaaktype else []
 
         else:
             zaaktypen = get_zaaktypen(
-                user=request.user,
+                request=request,
                 catalogus=request.query_params.get("catalogus"),
                 identificatie=request.query_params.get("zaaktype_identificatie"),
             )

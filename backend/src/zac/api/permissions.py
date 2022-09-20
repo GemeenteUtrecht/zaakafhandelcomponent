@@ -29,13 +29,9 @@ class DefinitionBasePermission(permissions.BasePermission):
         return self.permission
 
     def get_blueprint_permissions(self, request, permission_name) -> QuerySet:
-        return (
-            BlueprintPermission.objects.for_user(request.user)
-            .filter(
-                role__permissions__contains=[permission_name],
-                object_type=self.object_type,
-            )
-            .actual()
+        return BlueprintPermission.objects.for_requester(request, actual=True).filter(
+            role__permissions__contains=[permission_name],
+            object_type=self.object_type,
         )
 
     def user_atomic_permissions_exists(

@@ -368,17 +368,19 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {"url": {"read_only": True}, "result": {"allow_blank": False}}
 
     def validate_permissions(self, permissions):
-        user = self.context["request"].user
-        if user.is_superuser:
+        request = self.context["request"]
+        if request.user.is_superuser:
             return permissions
 
-        allowed_permissions = [perm.name for perm in permissions_related_to_user(user)]
+        allowed_permissions = [
+            perm.name for perm in permissions_related_to_user(request)
+        ]
         for perm in permissions:
             if perm not in allowed_permissions:
                 raise serializers.ValidationError(
                     _(
                         "`{user}` cannot grant permission `{perm}` because they do not have the permission."
-                    ).format(user=user, perm=perm)
+                    ).format(user=request.user, perm=perm)
                 )
         return permissions
 

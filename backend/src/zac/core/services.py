@@ -2,6 +2,7 @@ import logging
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urljoin, urlparse
+from urllib.request import Request
 
 from django.contrib.auth.models import Group
 from django.core.cache import cache
@@ -34,11 +35,11 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
+from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
 from zac.contrib.brp.models import BRPConfig
-from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.elasticsearch.searches import search
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
@@ -47,7 +48,7 @@ from zgw.models import Zaak
 from .api.data import AuditTrailData
 from .api.utils import convert_eigenschap_spec_to_json_schema
 from .cache import invalidate_document_cache, invalidate_zaak_cache
-from .models import CoreConfig, MetaObjectTypesConfig
+from .models import CoreConfig
 from .rollen import Rol
 
 logger = logging.getLogger(__name__)
@@ -130,7 +131,7 @@ def get_informatieobjecttypen(catalogus: str = "") -> List[InformatieObjectType]
 
 
 def get_zaaktypen(
-    user: Optional[User] = None,
+    request: Optional[Request] = None,
     catalogus: str = "",
     omschrijving: str = "",
     identificatie: str = "",
@@ -148,16 +149,22 @@ def get_zaaktypen(
             if zaaktype.identificatie == identificatie
         ]
 
-    if user is None or user.is_superuser:
+    if (
+        (not request)
+        or (
+            isinstance(request, ApplicationTokenAuthentication)
+            and request.auth.has_all_reading_rights
+        )
+        or (request.user and request.user.is_superuser)
+    ):
         return zaaktypen
 
     # filter out zaaktypen from permissions
     zaaktypen_policies = (
-        BlueprintPermission.objects.for_user(user)
+        BlueprintPermission.objects.for_requester(request, actual=True)
         .filter(object_type=PermissionObjectTypeChoices.zaak)
-        .actual()
-        .values_list("policy", flat=True)
         .distinct()
+        .values_list("policy", flat=True)
     )
     zaaktypen_policies = list(zaaktypen_policies)
 
@@ -182,20 +189,28 @@ def fetch_zaaktype(url: str) -> ZaakType:
     return factory(ZaakType, result)
 
 
-def get_zaaktype(url: str, user: Optional[User] = None) -> Optional[ZaakType]:
+def get_zaaktype(url: str, request: Optional[Request] = None) -> Optional[ZaakType]:
     """
     Calls fetch_zaaktype, but filters the result on the user's permissions.
     """
     zaaktype = fetch_zaaktype(url)
-    if user is None or user.is_superuser:
+
+    if (
+        (not request)
+        or (
+            isinstance(request, ApplicationTokenAuthentication)
+            and request.auth.has_all_reading_rights
+        )
+        or (request.user and request.user.is_superuser)
+    ):
         return zaaktype
 
+    # filter out zaaktypen from permissions
     zaaktypen_policies = (
-        BlueprintPermission.objects.for_user(user)
+        BlueprintPermission.objects.for_requester(request, actual=True)
         .filter(object_type=PermissionObjectTypeChoices.zaak)
-        .actual()
-        .values_list("policy", flat=True)
         .distinct()
+        .values_list("policy", flat=True)
     )
     zaaktypen_policies = list(zaaktypen_policies)
     return (
@@ -652,14 +667,17 @@ def fetch_zaak_eigenschap(zaak_eigenschap_url: str) -> ZaakEigenschap:
 
 
 def create_zaak_eigenschap(
-    user: Optional[User] = None, zaak_url: str = "", naam: str = "", waarde: str = ""
+    request: Optional[Request] = None,
+    zaak_url: str = "",
+    naam: str = "",
+    waarde: str = "",
 ) -> Optional[ZaakEigenschap]:
     zaak = get_zaak(zaak_url=zaak_url)
-    zaaktype = get_zaaktype(zaak.zaaktype, user=user)
+    zaaktype = get_zaaktype(zaak.zaaktype, request=request)
     if not zaaktype:
         logger.info(
             "Zaaktype %s could not be retrieved for user with username '%s', aborting."
-            % (zaak.zaaktype, user.username)
+            % (zaak.zaaktype, request.user)
         )
         return None
 
@@ -687,10 +705,10 @@ def create_zaak_eigenschap(
 
 
 def update_zaak_eigenschap(
-    zaak_eigenschap: ZaakEigenschap, data: dict, user: Optional[User] = None
+    zaak_eigenschap: ZaakEigenschap, data: dict, request: Optional[Request] = None
 ) -> ZaakEigenschap:
     zei = create_zaak_eigenschap(
-        user=user,
+        request=request,
         zaak_url=zaak_eigenschap.zaak,
         naam=zaak_eigenschap.naam,
         waarde=data["waarde"],

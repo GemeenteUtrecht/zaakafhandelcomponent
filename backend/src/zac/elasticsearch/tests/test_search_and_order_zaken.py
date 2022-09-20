@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from django.conf import settings
 from django.test import TestCase
 
@@ -127,8 +129,9 @@ class SearchZakenTests(ESMixin, TestCase):
             },
             for_user=user,
         )
-
-        result = search(user=user, only_allowed=True)
+        request = MagicMock()
+        request.user = user
+        result = search(request=request, only_allowed=True)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
@@ -140,8 +143,9 @@ class SearchZakenTests(ESMixin, TestCase):
             permission=zaken_inzien.name,
             for_user=user,
         )
-
-        result = search(user=user, only_allowed=True)
+        request = MagicMock()
+        request.user = user
+        result = search(request=request, only_allowed=True)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
@@ -189,8 +193,10 @@ class SearchZakenTests(ESMixin, TestCase):
             },
             for_user=user,
         )
+        request = MagicMock()
+        request.user = user
         result = search(
-            user=user,
+            request=request,
             zaaktypen=[
                 "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
             ],
@@ -205,10 +211,14 @@ class SearchZakenTests(ESMixin, TestCase):
 
     def test_ordering(self):
         super_user = SuperUserFactory.create()
-        result = search(user=super_user, ordering=("-identificatie",))
+        request = MagicMock()
+        request.user = super_user
+        result = search(request=request, ordering=("-identificatie",))
         self.assertEqual(result[0].url, self.zaak_document2.url)
 
     def test_nested_ordering(self):
         super_user = SuperUserFactory.create()
-        result = search(user=super_user, ordering=("-zaaktype.omschrijving",))
+        request = MagicMock()
+        request.user = super_user
+        result = search(request=request, ordering=("-zaaktype.omschrijving",))
         self.assertEqual(result[0].url, self.zaak_document2.url)

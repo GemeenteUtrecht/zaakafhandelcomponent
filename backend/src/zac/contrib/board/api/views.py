@@ -47,4 +47,4 @@ class BoardItemViewSet(ModelViewSet):
         if self.action != "list":
             return base
 
-        return base.for_user(self.request.user)
+        return base.for_user(self.request)

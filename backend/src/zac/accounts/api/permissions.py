@@ -38,7 +38,7 @@ class GrantAccessMixin:
 
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, UserAtomicPermission):
-            allowed_perms = permissions_related_to_user(request.user)
+            allowed_perms = permissions_related_to_user(request)
             if obj.atomic_permission.permission not in [
                 perm.name for perm in allowed_perms
             ]:
