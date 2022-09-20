@@ -40,7 +40,7 @@ class ProcessInformatieObject(Model):
 @dataclass
 class StartCamundaProcessForm(Model):
     zaaktype_catalogus: str
-    zaaktype_identificaties: List[str]
+    zaaktype_identificatie: str
     camunda_process_definition_key: str
     process_eigenschappen: List[ProcessEigenschap]
     process_rollen: List[ProcessRol]
