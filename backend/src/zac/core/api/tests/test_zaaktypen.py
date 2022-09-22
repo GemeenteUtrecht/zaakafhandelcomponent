@@ -254,10 +254,12 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                     {
                         "omschrijving": "some zaaktype 1",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
+                        "identificatie": "ZT1",
                     },
                     {
                         "omschrijving": "some zaaktype 2",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
+                        "identificatie": "ZT2",
                     },
                 ],
             },
@@ -309,6 +311,7 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                     {
                         "omschrijving": "some zaaktype",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
+                        "identificatie": "ZT",
                     },
                 ],
             },
@@ -347,7 +350,18 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint, {"q": "ZAAKTYPE 1"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()["results"]
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]["omschrijving"], "some zaaktype 1")
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "omschrijving": "some zaaktype 1",
+                        "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
+                        "identificatie": "ZT1",
+                    },
+                ],
+            },
+        )
