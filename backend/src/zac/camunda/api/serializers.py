@@ -256,8 +256,8 @@ class HistoricActivityInstanceDetailSerializer(serializers.Serializer):
 
 
 class HistoricUserTaskSerializer(APIModelSerializer):
-    assignee = UserSerializer(
-        help_text=_("User assigned to user task."),
+    assignee = serializers.SerializerMethodField(
+        help_text=_("Full name of user or group assigned to user task."),
     )
     completed = serializers.DateTimeField(
         source="task.end_time", help_text=_("Datetime user task was completed.")
@@ -279,6 +279,12 @@ class HistoricUserTaskSerializer(APIModelSerializer):
             "name",
             "history",
         )
+
+    def get_assignee(self, obj) -> str:
+        if isinstance(obj.assignee, User):
+            return obj.assignee.get_full_name()
+        else:
+            return f"Groep: {obj.assignee.name.lower()}"
 
 
 class CancelTaskSerializer(serializers.Serializer):

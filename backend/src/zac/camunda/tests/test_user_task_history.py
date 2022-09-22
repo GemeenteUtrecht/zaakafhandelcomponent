@@ -13,6 +13,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
+    GroupFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -264,16 +265,92 @@ class UserTaskHistoryTests(APITransactionTestCase):
             response.json(),
             [
                 {
-                    "assignee": {
-                        "id": self.user.id,
-                        "username": self.user.username,
-                        "firstName": self.user.first_name,
-                        "fullName": self.user.get_full_name(),
-                        "lastName": self.user.last_name,
-                        "isStaff": self.user.is_staff,
-                        "email": self.user.email,
-                        "groups": [],
-                    },
+                    "assignee": self.user.get_full_name(),
+                    "completed": "2022-02-11T16:24:43.006000Z",
+                    "created": "2022-02-11T16:24:31.545000Z",
+                    "name": "Inhoudelijk voorbereiden (= checkvragen)",
+                    "history": [
+                        {
+                            "naam": "checkIntegriteit",
+                            "waarde": "Ja",
+                            "label": "Is de integriteit van de wederpartij getoetst?",
+                        }
+                    ],
+                }
+            ],
+        )
+
+    def test_success_get_user_task_history_if_group(self, m):
+        # Mocks for get_completed_user_tasks_for_zaak
+        m.get(
+            f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
+            json=[{"id": COMPLETED_TASK_DATA["processInstanceId"]}],
+        )
+        m.get(
+            f"{CAMUNDA_URL}history/process-instance?superProcessInstanceId={COMPLETED_TASK_DATA['processInstanceId']}",
+            json=[],
+        )
+        # Mock current process instances
+        m.get(
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
+            json=[],
+        )
+        # Mock completed tasks from historic process instances
+        group = GroupFactory.create(name="some-group")
+        m.get(
+            f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
+            json=[{**COMPLETED_TASK_DATA, "assignee": f"group:{group.name}"}],
+        )
+
+        # Mock for extract_task_form_key
+        m.get(
+            f"{CAMUNDA_URL}process-definition/HARVO_behandelen:61:54586277-7922-11ec-8209-aa9470edda89/xml",
+            json={"bpmn20_xml": HARVO_BEHANDELEN_BPMN},
+        )
+
+        # Mock historic activity details
+        m.get(
+            f"{CAMUNDA_URL}history/detail?activityInstanceId={COMPLETED_TASK_DATA['activityInstanceId']}&deserializeValues=False",
+            json=[
+                {
+                    "type": "variableUpdate",
+                    "id": "1e653f89-8b57-11ec-baad-6ed7f836cf1f",
+                    "processDefinitionKey": "HARVO_behandelen",
+                    "processDefinitionId": "HARVO_behandelen:61:54586277-7922-11ec-8209-aa9470edda89",
+                    "processInstanceId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
+                    "activityInstanceId": "Activity_0bkealj:1790e563-8b57-11ec-baad-6ed7f836cf1f",
+                    "executionId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
+                    "caseDefinitionKey": None,
+                    "caseDefinitionId": None,
+                    "caseInstanceId": None,
+                    "caseExecutionId": None,
+                    "taskId": None,
+                    "tenantId": None,
+                    "userOperationId": "1e653f88-8b57-11ec-baad-6ed7f836cf1f",
+                    "time": "2022-02-11T16:24:43.001+0000",
+                    "removalTime": None,
+                    "rootProcessInstanceId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
+                    "variableName": "checkIntegriteit",
+                    "variableInstanceId": "1e653f87-8b57-11ec-baad-6ed7f836cf1f",
+                    "variableType": "String",
+                    "value": "Ja",
+                    "valueInfo": {},
+                    "revision": 0,
+                    "errorMessage": None,
+                }
+            ],
+        )
+
+        url = furl(reverse("user-task-history"))
+        url.set({"zaak_url": ZAAK_URL})
+        self.client.force_authenticate(self.user)
+        response = self.client.get(url.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "assignee": f"Groep: {group.name}",
                     "completed": "2022-02-11T16:24:43.006000Z",
                     "created": "2022-02-11T16:24:31.545000Z",
                     "name": "Inhoudelijk voorbereiden (= checkvragen)",
