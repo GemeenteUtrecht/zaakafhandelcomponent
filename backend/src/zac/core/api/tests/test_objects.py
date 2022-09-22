@@ -1,18 +1,21 @@
 from django.urls import reverse
 
 import requests_mock
+from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
-from zac.core.models import CoreConfig
+from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 
 OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
 OBJECTS_ROOT = "http://object.nl/api/v1/"
+CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 
 
 @requests_mock.Mocker()
@@ -89,6 +92,112 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(2, len(response.json()))
+
+    def test_retrieve_objecttypes_filter_meta_objects(self, m):
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=[self.objecttype_1, self.objecttype_2],
+        )
+
+        config = CoreConfig.get_solo()
+        config.primary_objecttypes_api = self.objecttypes_service
+        config.save()
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.checklist_objecttype = self.objecttype_1["url"]
+        meta_config.save()
+
+        list_url = reverse("objecttypes-list")
+        user = UserFactory.create()
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "url": "http://objecttype.nl/api/v1/objecttypes/2",
+                    "name": "bin",
+                    "namePlural": "bins",
+                    "description": "",
+                    "dataClassification": "",
+                    "maintainerOrganization": "",
+                    "maintainerDepartment": "",
+                    "contactPerson": "",
+                    "contactEmail": "",
+                    "source": "",
+                    "updateFrequency": "",
+                    "providerOrganization": "",
+                    "documentationUrl": "",
+                    "labels": {},
+                    "createdAt": "2019-08-24",
+                    "modifiedAt": "2019-08-24",
+                    "versions": [],
+                }
+            ],
+        )
+
+    def test_retrieve_objecttypes_filter_zaaktype(self, m):
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            identificatie="ZT1",
+            omschrijving="ZT1",
+        )
+        mock_resource_get(m, zaaktype)
+        ot_1 = {
+            **self.objecttype_1,
+            "labels": {"zaaktypeIdentificaties": [zaaktype["identificatie"]]},
+        }
+        ot_2 = {**self.objecttype_2}
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=[ot_1, ot_2],
+        )
+
+        config = CoreConfig.get_solo()
+        config.primary_objecttypes_api = self.objecttypes_service
+        config.save()
+
+        list_url = (
+            furl(reverse("objecttypes-list")).set({"zaaktype": zaaktype["url"]}).url
+        )
+        user = UserFactory.create()
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "url": "http://objecttype.nl/api/v1/objecttypes/1",
+                    "name": "tree",
+                    "namePlural": "trees",
+                    "description": "",
+                    "dataClassification": "",
+                    "maintainerOrganization": "",
+                    "maintainerDepartment": "",
+                    "contactPerson": "",
+                    "contactEmail": "",
+                    "source": "",
+                    "updateFrequency": "",
+                    "providerOrganization": "",
+                    "documentationUrl": "",
+                    "labels": {"zaaktypeIdentificaties": ["ZT1"]},
+                    "createdAt": "2019-08-24",
+                    "modifiedAt": "2019-08-24",
+                    "versions": [],
+                }
+            ],
+        )
 
 
 @requests_mock.Mocker()
