@@ -203,7 +203,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
         this.caseTypeChoices = this.caseTypes.map( type => {
           return {
             label: `${type.omschrijving}: ${type.catalogus.domein}`,
-            value: type,
+            value: type.omschrijving
           }
         })
       },
@@ -229,10 +229,11 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     const bluePrintPermissions = this.blueprintPermissionControl.controls
       .map( (bperm, i) => {
         const policies = [];
-        this.zaaktypeControl(i).value.forEach(zaaktype => {
+        this.zaaktypeControl(i).value.forEach(zaaktypeOmschrijving => {
+          const zaakType = this.caseTypes.find((c) => c.omschrijving === zaaktypeOmschrijving);
           const policy = {
-            catalogus: zaaktype.catalogus.url,
-            zaaktypeOmschrijving: zaaktype.omschrijving,
+            catalogus: zaakType.catalogus.url,
+            zaaktypeOmschrijving: zaaktypeOmschrijving,
             maxVa: this.confidentialityControl(i).value
           }
           policies.push(policy);
@@ -247,6 +248,8 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
       name: this.authProfileNameControl.value,
       blueprintPermissions: bluePrintPermissions
     };
+
+
     if (this.type === "edit" && this.selectedAuthProfile) {
       this.updateProfile(formData, this.selectedAuthProfile.uuid);
     } else {
