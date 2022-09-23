@@ -35,7 +35,6 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.service import get_paginated_results
 
-from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
@@ -151,11 +150,8 @@ def get_zaaktypen(
 
     if (
         (not request)
-        or (
-            isinstance(request, ApplicationTokenAuthentication)
-            and request.auth.has_all_reading_rights
-        )
-        or (request.user and request.user.is_superuser)
+        or (getattr(request.auth, "has_all_reading_rights", False))
+        or (getattr(request.user, "is_superuser", False))
     ):
         return zaaktypen
 
@@ -197,11 +193,8 @@ def get_zaaktype(url: str, request: Optional[Request] = None) -> Optional[ZaakTy
 
     if (
         (not request)
-        or (
-            isinstance(request, ApplicationTokenAuthentication)
-            and request.auth.has_all_reading_rights
-        )
-        or (request.user and request.user.is_superuser)
+        or (getattr(request.auth, "has_all_reading_rights", False))
+        or (getattr(request.user, "is_superuser", False))
     ):
         return zaaktype
 
