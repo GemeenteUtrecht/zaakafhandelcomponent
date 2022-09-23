@@ -1,8 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import permissions
-from zgw_consumers.api_models.base import factory
 
+from zac.accounts.models import User
 from zac.api.permissions import DefinitionBasePermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import BaseConditionalPermission, CanReadZaken
@@ -64,14 +64,22 @@ class HasNotReviewed(permissions.BasePermission):
             reviews = retrieve_advices(obj)
         else:
             reviews = retrieve_approvals(obj)
+
+        assignee_is_user = isinstance(assignee, User)
         for review in reviews:
             if review.group:
+                if assignee_is_user:
+                    continue
+
                 if assignee.name == review.group:
                     self.message = self._message.format(
                         assignee=assignee.name, identificatie=zaak.identificatie
                     )
                     return False
             else:
+                if not assignee_is_user:
+                    continue
+
                 if assignee.username == review.author.username:
                     self.message = self._message.format(
                         assignee=assignee.get_full_name(),

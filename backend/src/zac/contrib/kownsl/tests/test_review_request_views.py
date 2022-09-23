@@ -139,6 +139,37 @@ class ViewTests(ClearCachesMixin, APITestCase):
             },
         )
 
+    def test_success_get_review_already_exists_for_group_but_not_user(self, m):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
+        rev_req = {
+            **REVIEW_REQUEST,
+            "userDeadlines": {
+                "user:some-author": "2022-04-14",
+                f"group:{self.group}": "2022-04-14",
+            },
+            "numAssignedUsers": 2,
+        }
+        advice = {**ADVICE, "group": self.group.name}
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=rev_req,
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}/advices",
+            json=[advice],
+        )
+        user = UserFactory(username=advice["author"]["username"])
+        self.client.force_authenticate(user=user)
+        url = reverse(
+            "kownsl:reviewrequest-advice",
+            kwargs={"request_uuid": rev_req["id"]},
+        )
+        url = furl(url).set({"assignee": f"user:{user}"})
+
+        response = self.client.get(url.url)
+        self.assertEqual(response.status_code, 200)
+
     def test_create_advices_assignee_query_param(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
