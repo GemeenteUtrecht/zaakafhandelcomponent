@@ -48,6 +48,9 @@ def query_allowed_for_requester(
         if object_urls.count():
             allowed.append(Terms(url=list(object_urls)))
 
+    if getattr(request.auth, "has_all_reading_rights", False):
+        return Q("match_all")
+
     # blueprint permissions
     for blueprint_permission in BlueprintPermission.objects.for_requester(
         request, actual=True

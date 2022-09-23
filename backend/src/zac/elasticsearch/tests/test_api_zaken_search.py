@@ -195,6 +195,34 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         results = response.json()
         self.assertEqual(results["count"], 1)
 
+    def test_token_auth_perms(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
+        mock_resource_get(m, self.zaak)
+
+        token = ApplicationTokenFactory.create()
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_application=token,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
+        )
+
+        response = self.client.post(
+            self.endpoint,
+            self.data,
+            HTTP_AUTHORIZATION="ApplicationToken " + token.token,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        results = response.json()
+        self.assertEqual(results["count"], 1)
+
     def test_has_perms(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

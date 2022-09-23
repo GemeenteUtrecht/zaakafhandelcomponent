@@ -131,6 +131,7 @@ class SearchZakenTests(ESMixin, TestCase):
         )
         request = MagicMock()
         request.user = user
+        request.auth = None
         result = search(request=request, only_allowed=True)
 
         self.assertEqual(len(result), 1)
@@ -145,6 +146,7 @@ class SearchZakenTests(ESMixin, TestCase):
         )
         request = MagicMock()
         request.user = user
+        request.auth = None
         result = search(request=request, only_allowed=True)
 
         self.assertEqual(len(result), 1)
