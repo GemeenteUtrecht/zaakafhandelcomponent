@@ -247,7 +247,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
       const answer = this.checklist?.answers.find((checklistAnswer) => checklistAnswer.question === question.question);
       const value = answer?.answer
       const description = (value!==undefined && question.choices.length)
-        ? question.choices[parseInt(value, 10)]?.name
+        ? question.choices[parseInt(value, 10)]?.name || value
         : value
 
       return ({
