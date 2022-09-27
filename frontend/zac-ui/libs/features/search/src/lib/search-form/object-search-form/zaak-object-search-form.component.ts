@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, EventEmitter, OnInit, Output} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Choice, FieldConfiguration, SnackbarService} from '@gu/components';
 import {
   Feature,
@@ -8,7 +8,7 @@ import {
   ObjectType,
   ObjectTypeVersion, Position,
   UtrechtNeighbourhoods,
-  ZaakObject,
+  ZaakObject, Zaaktype,
 } from '@gu/models';
 import {ObjectsService, ZaakObjectService} from '@gu/services';
 import {SearchService} from '../../search.service';
@@ -58,6 +58,7 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
   templateUrl: './zaak-object-search-form.component.html',
 })
 export class ZaakObjectSearchFormComponent implements OnInit {
+  @Input() zaaktype: Zaaktype = null;
   @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
@@ -152,7 +153,11 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.isLoading = true;
     this.isLoadingResult.emit(true);
 
-    this.objectsService.listObjectTypes().subscribe(
+    const observable = (this.zaaktype)
+      ? this.objectsService.listObjectTypesForZaakType(this.zaaktype)
+      : this.objectsService.listObjectTypes();
+
+    observable.subscribe(
       this.getObjectTypesContext.bind(this),
       (error) => {
         this.reportError(error)

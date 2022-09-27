@@ -1,7 +1,8 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {ApplicationHttpClient} from '@gu/services';
-import {ObjectType, ObjectTypeVersion} from '@gu/models';
+import {ObjectType, ObjectTypeVersion, Zaaktype} from '@gu/models';
+import {HttpParams} from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,17 @@ export class ObjectsService {
   listObjectTypes(): Observable<ObjectType[]> {
     const endpoint = encodeURI(`/api/core/objecttypes`);
     return this.http.Get<ObjectType[]>(endpoint);
+  }
+
+  /**
+   * Retrieves all object types from the configured Objecttypes API.
+   * @param {Zaaktype} zaaktype
+   * @return {Observable}
+   */
+  listObjectTypesForZaakType(zaaktype: Zaaktype): Observable<ObjectType[]> {
+    const endpoint = encodeURI(`/api/core/objecttypes`);
+    const params = new HttpParams().set('zaaktype', zaaktype.url)
+    return this.http.Get<ObjectType[]>(endpoint, {params: params});
   }
 
   /**
