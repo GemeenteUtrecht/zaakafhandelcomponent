@@ -221,7 +221,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
           label: `Toegewezen gebruiker`,
           name: `__userAssignee_${question.question}`,
           required: false,
-          choices: this.users.map((user: UserSearchResult) => ({label: user.username, value: user.username})),
+          choices: this.users.map((user: UserSearchResult) => ({label: user.fullName || user.username, value: user.username})),
           value: answer?.userAssignee?.username,
           readonly: !this.canForceEdit
         },
