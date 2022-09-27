@@ -1,14 +1,5 @@
 export interface HistoricalUserTaskData {
-  assignee: {
-    id: number,
-    username: string,
-    firstName: string,
-    fullName: string,
-    lastName: string,
-    isStaff: true,
-    email: string,
-    groups: string[]
-  },
+  assignee: string,
   completed: string,
   created: string,
   name: string,

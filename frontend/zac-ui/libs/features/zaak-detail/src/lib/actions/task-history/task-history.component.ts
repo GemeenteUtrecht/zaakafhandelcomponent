@@ -66,7 +66,7 @@ export class TaskHistoryComponent implements OnInit {
       bodyData: historicalUserTasksData.map((historicalUserTaskData: HistoricalUserTaskData) => ({
           cellData: {
             name: historicalUserTaskData.name,
-            assignee: historicalUserTaskData.assignee ? (historicalUserTaskData.assignee.fullName || historicalUserTaskData.assignee.username) :'',
+            assignee: historicalUserTaskData.assignee,
             created: {date: historicalUserTaskData.created, type: 'date'},
             completed: {date: historicalUserTaskData.completed, type: 'date'},
           },
