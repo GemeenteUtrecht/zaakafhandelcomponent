@@ -283,8 +283,9 @@ class HistoricUserTaskSerializer(APIModelSerializer):
     def get_assignee(self, obj) -> str:
         if isinstance(obj.assignee, User):
             return obj.assignee.get_full_name()
-        else:
+        elif isinstance(obj.assignee, Group):
             return f"Groep: {obj.assignee.name.lower()}"
+        return ""
 
 
 class CancelTaskSerializer(serializers.Serializer):
