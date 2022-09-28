@@ -63,6 +63,7 @@ from ..services import (
     delete_zaak_eigenschap,
     delete_zaak_object,
     fetch_document_audit_trail,
+    fetch_objecttype,
     fetch_zaak_eigenschap,
     fetch_zaak_object,
     fetch_zaaktype,
@@ -94,6 +95,7 @@ from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import (
     EigenschappenFilterSet,
+    ObjectTypeFilterSet,
     ZaakEigenschappenFilterSet,
     ZaakObjectFilterSet,
     ZaakRolFilterSet,
@@ -1152,24 +1154,52 @@ class RolTypenView(views.APIView):
 ###############################
 
 
-@extend_schema(
-    summary=_("List OBJECTTYPEs."),
-    description=_("Retrieves all OBJECTTYPEs from the configured OBJECTTYPES API."),
-    tags=["objects"],
-)
-class ObjecttypeListView(ListMixin, views.APIView):
+class ObjecttypeListView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ObjecttypeProxySerializer
-    action = "list"
+    filterset_class = ObjectTypeFilterSet
 
-    def get_objects(self) -> List[dict]:
+    @extend_schema(
+        summary=_("List OBJECTTYPEs."),
+        description=_(
+            "Retrieves all non-meta OBJECTTYPEs from the configured OBJECTTYPES API."
+        ),
+        tags=["objects"],
+        parameters=[
+            OpenApiParameter(
+                name="zaaktype",
+                required=False,
+                type=OpenApiTypes.URI,
+                description=_("URL-reference of ZAAKTYPE in CATALOGI API."),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+    )
+    def get(self, request, *args, **kwargs):
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+
         meta_objecttype_config = MetaObjectTypesConfig.get_solo()
-        return [
+        objecttypes = [
             ot
             for ot in fetch_objecttypes()
             if ot["url"] not in meta_objecttype_config.meta_objecttype_urls
         ]
+
+        if zt_url := filterset.data.get("zaaktype"):
+            zaaktype = fetch_zaaktype(zt_url)
+            objecttypes = [
+                ot
+                for ot in objecttypes
+                if zaaktype.identificatie
+                in ot.get("labels", {}).get("zaaktypeIdentificaties", [])
+            ]
+        serializer = self.serializer_class(objecttypes, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema(

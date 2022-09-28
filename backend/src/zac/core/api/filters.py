@@ -22,7 +22,7 @@ class EigenschappenFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_queryset() method.
     # This filterset is used just to validate query params
     zaaktype = fields.URLField(
-        required=False, help_text=_("URL-reference of related ZAAKTYPE")
+        required=False, help_text=_("URL-reference of related ZAAKTYPE.")
     )
     zaaktype_identificatie = fields.CharField(
         required=False,
@@ -31,7 +31,7 @@ class EigenschappenFilterSet(ApiFilterSet):
         ),
     )
     catalogus = fields.URLField(
-        required=False, help_text=_("URL-reference of related CATALOGUS")
+        required=False, help_text=_("URL-reference of related CATALOGUS.")
     )
 
     def is_valid(self):
@@ -59,7 +59,7 @@ class ZaakEigenschappenFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_object() method.
     # This filterset is used just to validate query params
     url = fields.URLField(
-        required=True, help_text=_("URL-reference of ZAAKEIGENSCHAP in ZAKEN API")
+        required=True, help_text=_("URL-reference of ZAAKEIGENSCHAP in ZAKEN API.")
     )
 
 
@@ -67,11 +67,17 @@ class ZaakObjectFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_object() method.
     # This filterset is used just to validate query params
     url = fields.URLField(
-        required=True, help_text=_("URL-reference of ZAAKOBJECT in ZAKEN API")
+        required=True, help_text=_("URL-reference of ZAAKOBJECT in ZAKEN API.")
     )
 
 
 class ZaakRolFilterSet(ApiFilterSet):
     url = fields.URLField(
-        required=True, help_text=_("URL-reference to ROL in ZAKEN API")
+        required=True, help_text=_("URL-reference to ROL in ZAKEN API.")
+    )
+
+
+class ObjectTypeFilterSet(ApiFilterSet):
+    zaaktype = fields.URLField(
+        required=False, help_text=_("URL-reference to ZAAKTYPE in CATALOGI API.")
     )
