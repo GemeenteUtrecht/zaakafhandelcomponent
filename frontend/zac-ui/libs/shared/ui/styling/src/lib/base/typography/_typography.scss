@@ -29,6 +29,7 @@ h2, .h2 {
 h3, .h3 {
   @include heading;
   font-size: $h3-font;
+  color: $color-secondary;
 }
 
 h4, .h4 {

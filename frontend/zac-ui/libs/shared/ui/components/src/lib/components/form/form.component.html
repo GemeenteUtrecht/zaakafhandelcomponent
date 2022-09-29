@@ -3,10 +3,10 @@
 
 
   <mat-action-row>
-    <h2 *ngIf="title" class="d-inline-block mr-1">
+    <h3 *ngIf="title" class="d-inline-block mr-1">
       {{ title }}
       <gu-tooltip *ngIf="tooltip" type="primary" inline="true">{{ tooltip }}</gu-tooltip>
-    </h2>
+    </h3>
 
     <button
       *ngIf="isToggleable()"

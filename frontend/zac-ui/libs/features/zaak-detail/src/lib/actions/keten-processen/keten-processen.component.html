@@ -9,7 +9,7 @@
   </ng-container>
 
   <div class="processen__acties" [ngClass]="{'processen__acties--disabled': showOverlay}">
-    <h2 class="d-inline-block mr-1">Acties</h2>
+    <h3 class="d-inline-block mr-1">Acties</h3>
     <p *ngIf="!(!!data && data.length === 0 && !isLoading) && !zaak.resultaat">Dit zijn acties die uitgevoerd moeten worden om de zaak af te ronden.</p>
 
     <!-- Result set -->
@@ -150,7 +150,7 @@
 </div>
 
 <div class="acties card mt-4" *ngIf="!!data && data?.length > 0 && showActions">
-  <h2>Optionele acties</h2>
+  <h3>Optionele acties</h3>
   <p>Dit zijn acties die op elk moment tijdens de zaak uitgevoerd kunnen worden.</p>
   <!-- Action buttons -->
   <div class="processen__msg-btns-container">
