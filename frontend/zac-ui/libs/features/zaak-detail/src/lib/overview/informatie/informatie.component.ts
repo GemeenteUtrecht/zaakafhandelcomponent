@@ -115,6 +115,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       {
         activeWhen: (formGroup) => formGroup.getRawValue().vertrouwelijkheidaanduiding !== this.zaak.vertrouwelijkheidaanduiding,
         label: 'Reden wijziging vertrouwelijkheidniveau',
+        name: 'reden',
         maxlength: 80,
         placeholder: 'Reden wijziging vertrouwelijkheidniveau',
         value: '',
