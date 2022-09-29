@@ -2,6 +2,11 @@
   box-sizing: border-box;
   position: relative;
 
+  &__header {
+    display: flex;
+    justify-content: space-between;
+  }
+
   &__footer {
     display: flex;
     justify-content: flex-end;
@@ -11,10 +16,6 @@
     border-top: 0;
     display: flex;
     justify-content: space-between;
-  }
-
-  .mat-action-row h2 {
-    margin-left: -24px;
   }
 
   .mat-expansion-panel-header-title,
