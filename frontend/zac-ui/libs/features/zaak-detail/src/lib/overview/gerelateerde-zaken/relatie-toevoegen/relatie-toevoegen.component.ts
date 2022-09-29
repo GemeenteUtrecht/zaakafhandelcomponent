@@ -78,6 +78,7 @@ export class RelatieToevoegenComponent implements OnInit {
         name: 'relation_zaak',
         required: true,
         choices: (zaak) ? [{value: zaak.url, label: zaak.identificatie}] : [],
+        onChange: this.updateZaakValue.bind(this),
         onSearch: this.updateZaakChoices.bind(this),
         value: (zaak) ? zaak.url : null,
       },
@@ -121,6 +122,27 @@ export class RelatieToevoegenComponent implements OnInit {
     )
   }
 
+  /**
+   * NOTE: SV 2022-09-29 - There is a bug with multiselect not showing value in certain cases, probably after a form
+   * re-render.
+   *
+   * I strongly think that multiselect stores its value as a string instead of a choice (object) which causes the widget
+   * not to find the correct choice and lists its value. We can try to fix this in the future but this would likely
+   * cause issues with other parts of the codebase directly reading the value.
+   *
+   * For now I worked around this by updating the choice value on the change volue on the change event, however in the
+   * future we can try to have form (component) keep this in sync.
+   *
+   * As I update the value in this method, submitForm should be updated as well.
+   *
+   * @param {string} value
+   * @param {Field} field
+   */
+  updateZaakValue(value: string, field: Field): void {
+    // @ts-ignore
+    field.control.value = value;
+  }
+
   //
   // Events.
   //
@@ -158,6 +180,9 @@ export class RelatieToevoegenComponent implements OnInit {
    * @param {Object} formData
    */
   submitForm(formData): void {
+    // Update due to change to value format.
+    formData.relation_zaak = formData.relation_zaak.value;
+
     this.isLoading = true;
     this.zaakService.addRelatedCase(formData).subscribe(() => {
       this.reload.emit(true);
