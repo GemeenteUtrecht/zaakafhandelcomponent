@@ -2,7 +2,7 @@
   <!-- Grant access - hide button if case is closed and the user is not allowed to force edit -->
   <div *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken" class="d-flex justify-content-between">
     <!-- Title -->
-    <h2>Gebruikersrechten</h2>
+    <h3>Rechten</h3>
     <button gu-button
             *ngIf="canForceEdit && table"
             buttonStyle="tertiary"

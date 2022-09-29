@@ -1,13 +1,12 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
   <h2>{{taskContextData.task.name}} voor {{taskContextData.context.zaakInformatie.omschrijving}}</h2>
-  <p>{{taskContextData.context.zaakInformatie.toelichting ? taskContextData.context.zaakInformatie.toelichting : " "}}</p>
 
   <p *ngIf="taskContextData.context.reviewType === 'advice'">
-    Met de gegevens hieronder kun je collega’s vragen advies te geven over jouw documenten. De collega(‘s) die jij selecteert ontvangen een mail, waarna ze opmerkingen over/in jouw document kunnen toevoegen.
+    Met de gegevens hieronder kun je medewerkers vragen advies te geven over jouw documenten. De medewerkers die jij selecteert ontvangen een mail, waarna ze opmerkingen over/in jouw document kunnen toevoegen.
   </p>
 
   <p *ngIf="taskContextData.context.reviewType === 'approval'">
-    Met de gegevens hieronder kun je akkoord vragen aan een collega/manager. Deze collega/manager ontvangt hiervoor een mail met een link naar de zaak.
+    Met de gegevens hieronder kun je akkoord vragen aan een medewerker. Deze medewerker ontvangt hiervoor een mail met een link naar de zaak.
   </p>
 
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="assignUsersForm.controls['documents'].value">

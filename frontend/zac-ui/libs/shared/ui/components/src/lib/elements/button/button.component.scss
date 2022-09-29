@@ -36,6 +36,7 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
 @mixin button--tertiary {
   background-color: unset;
   color: $button-text-color--tertiary;
+  padding: 0;
 }
 :host {
   width: fit-content;
