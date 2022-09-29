@@ -36,11 +36,12 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() keys?: string[] = null;
   @Input() resetAfterSubmit = false;
   @Input() showLess: boolean;
-  @Input() showEditOnHover: boolean;
   @Input() tooltip: string;
   @Input() isLoading = false;
-
   @Input() zaak: Zaak;
+
+  /** @deprecated */
+  @Input() showEditOnHover: boolean;
 
   @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
@@ -244,13 +245,13 @@ export class FormComponent implements OnInit, OnChanges {
           throw new Error('Invalid value for editable input in form');
         }
 
-        // Always show toggle for form.
-        if (!this.showEditOnHover) {
-          return true;
+        // Check if properly set to toggle.
+        if (this.showEditOnHover) {
+          console.warn('WARNING: Usage of deprecated input FormComponent.showEditOnHover.')
         }
 
-        // Show toggle based on hover.
-        return this.isHovered;
+        // Always show toggle for form.
+        return true;
     }
   }
 
