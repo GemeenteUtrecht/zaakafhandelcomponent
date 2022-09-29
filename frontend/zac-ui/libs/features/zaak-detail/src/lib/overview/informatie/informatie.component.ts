@@ -323,6 +323,10 @@ export class InformatieComponent implements OnInit, OnChanges {
     }, 0);
   }
 
+  goToLink(url: string){
+    window.open(url, "_blank");
+  }
+
   /**
    * Submits the properties.
    * @param {Object} data

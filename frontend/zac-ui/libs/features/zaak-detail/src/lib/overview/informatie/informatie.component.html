@@ -4,8 +4,9 @@
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <!-- End loading -->
-
-  <a class="anchor d-inline-block mb-4" target="_blank" *ngIf="isVisibleTezzaLink && tezzaLink" href="{{tezzaLink}}">Zaak in Tezza</a>
+  <button class="mb-4" gu-button *ngIf="isVisibleTezzaLink && tezzaLink" icon="open_in_new" (click)="goToLink(tezzaLink);">
+    Bekijk zaak in Tezza
+  </button>
 
   <!-- Disable edit possibility if case is closed and the user is not allowed to force edit -->
   <div class='mb-4' *ngIf="zaak && properties && !isLoading">
