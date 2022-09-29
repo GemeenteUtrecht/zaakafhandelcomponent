@@ -1,8 +1,8 @@
 <form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup"
-      (ngSubmit)="_formSubmit()" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
+      (ngSubmit)="_formSubmit()">
 
 
-  <mat-action-row>
+  <header class="form__header">
     <h3 *ngIf="title" class="d-inline-block mr-1">
       {{ title }}
       <gu-tooltip *ngIf="tooltip" type="primary" inline="true">{{ tooltip }}</gu-tooltip>
@@ -19,7 +19,7 @@
     >
       {{edit ? 'Annuleren' : 'Bewerken' }}
     </button>
-  </mat-action-row>
+  </header>
 
 
   <mat-accordion multi>
