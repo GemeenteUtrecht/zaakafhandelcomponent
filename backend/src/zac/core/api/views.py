@@ -121,6 +121,7 @@ from .permissions import (
 from .serializers import (
     AddZaakDocumentSerializer,
     AddZaakRelationSerializer,
+    CatalogusSerializer,
     CreateZaakEigenschapSerializer,
     CreateZaakSerializer,
     DestroyRolSerializer,
@@ -943,6 +944,21 @@ class InformatieObjectTypeListView(ListAPIView):
         if not zaak_url:
             raise exceptions.ValidationError("'zaak' query parameter is required.")
         return get_informatieobjecttypen_for_zaak(zaak_url)
+
+
+@extend_schema(summary=_("List CATALOGI."), tags=["meta"])
+class CatalogiView(views.APIView):
+    """
+    List a collection of catalogi.
+
+    """
+
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = CatalogusSerializer
+
+    def get(self, request, *args, **kwargs):
+        return Response(self.serializer_class(get_catalogi(), many=True).data)
 
 
 @extend_schema(summary=_("List ZAAKTYPEs."), tags=["meta"])
