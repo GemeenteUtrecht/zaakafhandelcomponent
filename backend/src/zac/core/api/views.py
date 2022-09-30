@@ -63,7 +63,6 @@ from ..services import (
     delete_zaak_eigenschap,
     delete_zaak_object,
     fetch_document_audit_trail,
-    fetch_objecttype,
     fetch_zaak_eigenschap,
     fetch_zaak_object,
     fetch_zaaktype,
@@ -967,7 +966,9 @@ class ZaakTypenView(ListAPIView):
         return zaaktypen
 
     def get_zaaktypen(self) -> List[dict]:
-        zaaktypen = get_zaaktypen(self.request)
+        zaaktypen = sorted(
+            get_zaaktypen(self.request), key=lambda zt: zt.versiedatum, reverse=True
+        )
 
         # aggregate
         zaaktypen_aggregated = []

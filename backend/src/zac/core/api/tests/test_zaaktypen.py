@@ -255,11 +255,13 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                         "omschrijving": "some zaaktype 1",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                         "identificatie": "ZT1",
+                        "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
                     },
                     {
                         "omschrijving": "some zaaktype 2",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                         "identificatie": "ZT2",
+                        "url": f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
                     },
                 ],
             },
@@ -276,6 +278,7 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
             identificatie="ZT",
             catalogus=catalogus["url"],
             omschrijving="some zaaktype",
+            versiedatum="2020-01-01",
         )
         zaaktype_v2 = generate_oas_component(
             "ztc",
@@ -284,6 +287,7 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
             identificatie="ZT",
             catalogus=catalogus["url"],
             omschrijving="some zaaktype",
+            versiedatum="2020-01-02",
         )
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
@@ -312,6 +316,7 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                         "omschrijving": "some zaaktype",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                         "identificatie": "ZT",
+                        "url": f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
                     },
                 ],
             },
@@ -361,6 +366,7 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                         "omschrijving": "some zaaktype 1",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                         "identificatie": "ZT1",
+                        "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
                     },
                 ],
             },

@@ -1087,8 +1087,11 @@ class ZaakTypeAggregateSerializer(APIModelSerializer):
 
     class Meta:
         model = ZaakType
-        fields = ("catalogus", "omschrijving", "identificatie")
+        fields = ("catalogus", "omschrijving", "identificatie", "url")
         extra_kwargs = {
+            "url": {
+                "help_text": _("URL-reference of the ZAAKTYPE in the CATALOGI API.")
+            },
             "omschrijving": {
                 "help_text": _(
                     "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
