@@ -28,6 +28,7 @@ from zgw_consumers.api_models.catalogi import (
 )
 from zgw_consumers.api_models.constants import (
     AardRelatieChoices,
+    RolOmschrijving,
     RolTypes,
     VertrouwelijkheidsAanduidingen,
 )
@@ -55,6 +56,7 @@ from zac.core.services import (
     get_document,
     get_documenten,
     get_informatieobjecttypen_for_zaak,
+    get_rollen,
     get_roltype,
     get_roltypen,
     get_statustypen,
@@ -1046,16 +1048,32 @@ class DestroyRolSerializer(APIModelSerializer):
         fields = ("url",)
 
     def validate_url(self, url):
-        try:
-            zaak = self.context["zaak"]
-        except KeyError:
+        if not (zaak := self.context.get("zaak")):
             raise RuntimeError(
                 _("Serializer {name} needs ZAAK in context.").format(name=self.__name__)
             )
+        rollen = get_rollen(zaak)
+
+        if not any([rol.url == url for rol in rollen]):
+            raise serializers.ValidationError(_("ROL does not belong to ZAAK."))
 
         rol = fetch_rol(url)
-        if not rol.zaak == zaak.url:
-            raise serializers.ValidationError(_("ROL does not belong to ZAAK."))
+        if (rol.omschrijving_generiek.lower() == RolOmschrijving.behandelaar) and (
+            len(
+                [
+                    _rol
+                    for _rol in rollen
+                    if _rol.omschrijving_generiek.lower() == RolOmschrijving.behandelaar
+                ]
+            )
+            == 1
+        ):
+            raise serializers.ValidationError(
+                _(
+                    "A ZAAK always requires at least one ROL with `omschrijving_generiek`: `{omschrijving}`."
+                ).format(omschrijving=RolOmschrijving.behandelaar)
+            )
+
         return url
 
 

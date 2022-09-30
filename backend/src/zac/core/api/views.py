@@ -626,7 +626,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
             )
         ],
         request=DestroyRolSerializer,
-        responses={"204": DestroyRolSerializer},
+        responses={"204": None},
     )
     def delete(self, request, *args, **kwargs):
         filterset = self.filterset_class(
@@ -641,7 +641,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         )
         serializer.is_valid(raise_exception=True)
         delete_rol(serializer.validated_data["url"])
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ZaakObjectsView(GetZaakMixin, views.APIView):
