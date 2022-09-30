@@ -1,7 +1,8 @@
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import exceptions, fields
+from rest_framework import exceptions, fields, serializers
 
+from zac.core.services import get_catalogi
 from zac.utils.filters import ApiFilterSet
 
 
@@ -9,12 +10,31 @@ class ZaaktypenFilterSet(ApiFilterSet):
     q = fields.CharField(
         required=False, help_text="`icontains` on `omschrijving` field"
     )
+    domein = fields.CharField(
+        required=False,
+        help_text="`iexact` on `domein` field of CATALOGUS related to ZAAKTYPEs.",
+    )
 
     def filter_q(self, results, value) -> list:
         return [
             zaaktype
             for zaaktype in results
             if value.lower() in zaaktype.omschrijving.lower()
+        ]
+
+    def filter_domein(self, results, value) -> list:
+        catalogi = get_catalogi()
+        catalogus = [cat for cat in catalogi if cat.domein.lower() == value.lower()]
+        if not catalogus:
+            raise serializers.ValidationError(
+                _("Could not find a CATALOGUS with `domein`: `{val}`.").format(
+                    val=value
+                )
+            )
+        return [
+            zaaktype
+            for zaaktype in results
+            if zaaktype.catalogus.url == catalogus[0].url
         ]
 
 

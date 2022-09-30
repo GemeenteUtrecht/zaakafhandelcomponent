@@ -18,7 +18,7 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -370,4 +370,103 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                     },
                 ],
             },
+        )
+
+    def test_get_with_filter_domein(self, m):
+        catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
+        )
+        zaaktype_1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            omschrijving="some zaaktype 1",
+        )
+        catalogus_2 = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}catalogussen/67a31e08-f167-492b-b765-c7b90c472b27",
+            domein="some-other-domein",
+        )
+        zaaktype_2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
+            identificatie="ZT2",
+            catalogus=catalogus_2["url"],
+            omschrijving="some zaaktype 2",
+        )
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json=paginated_response([zaaktype_1, zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([catalogus, catalogus_2]),
+        )
+
+        response = self.client.get(self.endpoint, {"domein": "some-domein"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "omschrijving": "some zaaktype 1",
+                        "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
+                        "identificatie": "ZT1",
+                    },
+                ],
+            },
+        )
+
+    def test_fail_get_with_filter_domein(self, m):
+        catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
+        )
+        zaaktype_1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            omschrijving="some zaaktype 1",
+        )
+        catalogus_2 = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}catalogussen/67a31e08-f167-492b-b765-c7b90c472b27",
+            domein="some-other-domein",
+        )
+        zaaktype_2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
+            identificatie="ZT2",
+            catalogus=catalogus_2["url"],
+            omschrijving="some zaaktype 2",
+        )
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json=paginated_response([zaaktype_1, zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([catalogus, catalogus_2]),
+        )
+
+        response = self.client.get(self.endpoint, {"domein": "some-random-domein"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            ["Could not find a CATALOGUS with `domein`: `some-random-domein`."],
         )

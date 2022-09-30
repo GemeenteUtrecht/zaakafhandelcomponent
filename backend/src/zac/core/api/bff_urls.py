@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from .views import (
+    CatalogiView,
     CreateZaakRelationView,
     CreateZaakView,
     EigenschappenView,
@@ -86,6 +87,7 @@ urlpatterns = [
         include("zac.core.camunda.start_process.urls"),
     ),
     # meta
+    path("catalogi", CatalogiView.as_view(), name="catalogi"),
     path("zaaktypen", ZaakTypenView.as_view(), name="zaaktypen"),
     path("eigenschappen", EigenschappenView.as_view(), name="eigenschappen"),
     path(
