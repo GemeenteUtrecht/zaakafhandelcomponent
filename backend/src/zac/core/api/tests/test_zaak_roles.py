@@ -8,7 +8,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.constants import (
+    RolOmschrijving,
+    VertrouwelijkheidsAanduidingen,
+)
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -457,14 +460,43 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             zaak=self.zaak["url"],
             url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
             betrokkene_identificatie={"identificatie": self.user.username},
+            omschrijving_generiek=RolOmschrijving.adviseur,
         )
         mock_resource_get(m, rol)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
 
         m.delete(rol["url"], status_code=status.HTTP_204_NO_CONTENT)
         response = self.client.delete(
             self.endpoint + "?url=" + rol["url"],
         )
         self.assertEqual(response.status_code, 204)
+
+    @requests_mock.Mocker()
+    def test_fail_destroy_rol(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaaktype)
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
+            betrokkene_identificatie={"identificatie": self.user.username},
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
+        )
+        mock_resource_get(m, rol)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+
+        response = self.client.delete(
+            self.endpoint + "?url=" + rol["url"],
+        )
+        self.assertEqual(response.status_code, 400)
 
     @requests_mock.Mocker()
     def test_destroy_rol_missing_url(self, m):
@@ -499,6 +531,9 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             betrokkene_identificatie={"identificatie": self.user.username},
         )
         mock_resource_get(m, rol)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
+        )
 
         m.delete(rol["url"], status_code=status.HTTP_204_NO_CONTENT)
         response = self.client.delete(
@@ -748,6 +783,10 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
             betrokkene_identificatie={"identificatie": "some-username"},
         )
         mock_resource_get(m, rol)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
         m.delete(rol["url"], status_code=status.HTTP_204_NO_CONTENT)
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
