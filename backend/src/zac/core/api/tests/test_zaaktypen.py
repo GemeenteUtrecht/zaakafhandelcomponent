@@ -422,6 +422,7 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
                         "omschrijving": "some zaaktype 1",
                         "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
                         "identificatie": "ZT1",
+                        "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
                     },
                 ],
             },
