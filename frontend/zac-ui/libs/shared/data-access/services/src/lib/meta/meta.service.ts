@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod} from '@gu/utils';
-import { MetaConfidentiality, ZaaktypeEigenschap, MetaZaaktype, MetaRoltype } from '@gu/models';
+import {MetaConfidentiality, ZaaktypeEigenschap, MetaZaaktype, MetaRoltype, MetaZaaktypeCatalogus} from '@gu/models';
 
 @Injectable({
   providedIn: 'root',
@@ -44,10 +44,20 @@ export class MetaService {
 
   /**
    * Retrieve a collection of case types
-   * @returns {Observable<Zaaktype>}
+   * @returns {Observable<MetaZaaktype>}
    */
   getCaseTypes(): Observable<MetaZaaktype> {
     const endpoint = encodeURI("/api/core/zaaktypen");
+    return this.http.Get<MetaZaaktype>(endpoint);
+  }
+
+  /**
+   * Retrieve a collection of case types
+   * @param {string} domain
+   * @returns {Observable<MetaZaaktype>}
+   */
+  getCaseTypesForDomain(domain: MetaZaaktypeCatalogus): Observable<MetaZaaktype> {
+    const endpoint = encodeURI(`/api/core/zaaktypen?domein=${domain}`);
     return this.http.Get<MetaZaaktype>(endpoint);
   }
 

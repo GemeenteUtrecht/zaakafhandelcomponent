@@ -12,7 +12,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Zaak, TableSort, ZaaktypeEigenschap, MetaZaaktypeResult } from '@gu/models';
+import {Zaak, TableSort, ZaaktypeEigenschap, MetaZaaktypeResult, MetaZaaktypeCatalogus} from '@gu/models';
 import { Search } from '../../../models/search';
 import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
@@ -45,6 +45,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   search: Search;
 
   caseTypes: MetaZaaktypeResult[];
+  domainChoices: Choice[];
   caseTypeChoices: Choice[];
   zaaktypeEigenschappenData: ZaaktypeEigenschap[] = [];
 
@@ -73,6 +74,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.searchForm = this.fb.group({
+      domain: [''],
       zaaktype: [''],
       omschrijving: [''],
       eigenschapnaam: [''],
@@ -93,26 +95,57 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Fetch all the different zaak types.
+   * Returns choices for case types.
+   * @return {Choice[]}
    */
-  fetchZaaktypen() {
+  getDomainChoices(): Choice[] {
+    return [...new Set(this.caseTypes.map((caseType: MetaZaaktypeResult) => caseType.catalogus.domein))]
+      .map((domain) => ({label: domain, value: domain}))
+
+  }
+
+  /**
+   * Fetch all the different zaak types.
+   * @param {string} [domain]
+   */
+  fetchZaaktypen(domain: MetaZaaktypeCatalogus=null): void {
     this.isLoading = true;
     this.hasError = false;
-    this.metaService.getCaseTypes().subscribe(res => {
+
+    // Check if domain should be applied.
+    const observable = (domain)
+      ? this.metaService.getCaseTypesForDomain(domain)
+      : this.metaService.getCaseTypes()
+
+    observable.subscribe(res => {
       this.caseTypes = res.results;
       this.caseTypeChoices = this.caseTypes.map( type => {
         return {
-          label: `${type.omschrijving}: ${type.catalogus.domein}`,
+          label: type.omschrijving,
           value: type,
         }
       })
       this.isLoading = false;
       this.cdRef.detectChanges();
+
+      // Only update choices when all case types are loaded.
+      if(!domain) {
+        this.domainChoices = this.getDomainChoices();
+      }
     }, error => {
       this.isLoading = false;
       this.hasError = true;
       this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden bij het ophalen van zaaktypen."
     })
+  }
+
+  /**
+   * Gets called when domain is selected.
+   */
+  onDomainSelect(event) {
+    console.log(event);
+    this.caseTypes = [];
+    this.fetchZaaktypen(event.value);
   }
 
   /**
@@ -258,6 +291,10 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       }
     )
   }
+
+  get domain(): FormControl {
+    return this.searchForm.get('domain') as FormControl;
+  };
 
   get zaaktype(): FormControl {
     return this.searchForm.get('zaaktype') as FormControl;

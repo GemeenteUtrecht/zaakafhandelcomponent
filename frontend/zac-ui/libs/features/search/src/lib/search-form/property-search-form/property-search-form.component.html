@@ -3,6 +3,21 @@
   <div class="row">
     <div class="col-12">
       <gu-multiselect *ngIf="caseTypeChoices"
+                      [control]="domain"
+                      (change)="onDomainSelect($event)"
+                      [searchable]="true"
+                      [items]="domainChoices"
+                      [multiple]="false"
+                      bindLabel="label"
+                      bindValue="value"
+                      label="Domein">
+      </gu-multiselect>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 mt-4">
+      <gu-multiselect *ngIf="caseTypeChoices"
                       [control]="zaaktype"
                       (change)="onZaaktypeSelect($event)"
                       [searchable]="true"
