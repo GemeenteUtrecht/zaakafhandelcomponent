@@ -12,7 +12,7 @@
       icon="add"
       (click)="addClick($event)"
     >
-      Toevoegen
+      Object Toevoegen
     </button>
   </div>
 
@@ -35,7 +35,7 @@
   <!-- Modal object search -->
   <gu-modal [closeIcon]="true"
             [id]="modalObjectSearchId"
-            title="Gerelateerd object toevoegen"
+            title="Object toevoegen"
             size="medium"
             expandVertical="true">
     <gu-zaak-object-search-form [zaaktype]="zaak.zaaktype" (selectZaakObject)="selectZaakObject($event)"></gu-zaak-object-search-form>
