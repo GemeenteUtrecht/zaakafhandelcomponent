@@ -72,8 +72,17 @@
   <div class="row flex-row align-center property-search-form__toolbar">
     <div class="col-6">
       <gu-checkbox class="d-inline-block mr-1"
+                   [control]="includeClosedControl">
+        <p class="mb-0">Neem gesloten zaken mee</p>
+      </gu-checkbox>
+    </div>
+  </div>
+
+  <div class="row flex-row align-center property-search-form__toolbar">
+    <div class="col-6">
+      <gu-checkbox class="d-inline-block mr-1"
                    [control]="saveReportControl"
-                   (change)="onCheckboxChange()">
+                   (change)="onSaveReportChange()">
         <p class="mb-0">Zoekopdracht opslaan als rapportage</p>
       </gu-checkbox>
 
