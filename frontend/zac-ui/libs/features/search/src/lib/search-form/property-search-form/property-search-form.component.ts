@@ -78,7 +78,8 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
       eigenschapnaam: [''],
       eigenschapwaarde: [''],
       saveReport: [''],
-      queryName: ['']
+      queryName: [''],
+      includeClosed: false,
     })
     this.fetchZaaktypen();
   }
@@ -150,11 +151,10 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     this.selectedPropertyValue = property;
   }
 
-
   /**
    * Show input for report name and set it as required for the form.
    */
-  onCheckboxChange() {
+  onSaveReportChange() {
     this.saveReportControl.updateValueAndValidity({ onlySelf: false, emitEvent: true });
     if (this.saveReportControl.value) {
       this.showReportNameField = true;
@@ -224,7 +224,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     const orderingParam = sortData ? tableHeadMapping[sortData.value] : '';
     const ordering = sortData ? `${orderingDirection}${orderingParam}` : null;
 
-    this.searchService.searchZaken(formData, page, ordering).subscribe(res =>{
+    const search = {...formData, includeClosed: this.includeClosedControl.value}
+
+    this.searchService.searchZaken(search, page, ordering).subscribe(res =>{
       this.loadResult.emit(res.results);
       this.resultLength.emit(res.count);
       this.isSubmitting = false;
@@ -281,5 +283,9 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   get queryNameControl(): FormControl {
     return this.searchForm.get('queryName') as FormControl;
+  };
+
+  get includeClosedControl(): FormControl {
+    return this.searchForm.get('includeClosed') as FormControl;
   };
 }
