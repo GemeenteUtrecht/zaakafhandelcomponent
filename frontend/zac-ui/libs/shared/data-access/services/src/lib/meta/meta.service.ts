@@ -56,7 +56,7 @@ export class MetaService {
    * @param {string} domain
    * @returns {Observable<MetaZaaktype>}
    */
-  getCaseTypesForDomain(domain: MetaZaaktypeCatalogus): Observable<MetaZaaktype> {
+  getCaseTypesForDomain(domain: string): Observable<MetaZaaktype> {
     const endpoint = encodeURI(`/api/core/zaaktypen?domein=${domain}`);
     return this.http.Get<MetaZaaktype>(endpoint);
   }

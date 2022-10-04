@@ -74,7 +74,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.searchForm = this.fb.group({
-      domain: [''],
+      domain: [{label: 'UTRE', value: 'UTRE'}],
       zaaktype: [''],
       omschrijving: [''],
       eigenschapnaam: [''],
@@ -101,14 +101,13 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   getDomainChoices(): Choice[] {
     return [...new Set(this.caseTypes.map((caseType: MetaZaaktypeResult) => caseType.catalogus.domein))]
       .map((domain) => ({label: domain, value: domain}))
-
   }
 
   /**
    * Fetch all the different zaak types.
    * @param {string} [domain]
    */
-  fetchZaaktypen(domain: MetaZaaktypeCatalogus=null): void {
+  fetchZaaktypen(domain: string=this.domain.value?.value): void {
     this.isLoading = true;
     this.hasError = false;
 
@@ -143,9 +142,8 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
    * Gets called when domain is selected.
    */
   onDomainSelect(event) {
-    console.log(event);
     this.caseTypes = [];
-    this.fetchZaaktypen(event.value);
+    this.fetchZaaktypen(event?.value);
   }
 
   /**
