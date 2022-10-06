@@ -2,12 +2,15 @@ import logging
 
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
 from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
+from zac.camunda.api.utils import set_assignee
+from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.board.models import BoardItem
 from zac.contrib.kownsl.api import get_review_requests, lock_review_request
 from zac.contrib.kownsl.data import ReviewRequest
@@ -19,7 +22,13 @@ from zac.core.cache import (
     invalidate_zaakobjecten_cache,
     invalidate_zaaktypen_cache,
 )
-from zac.core.services import _client_from_url, update_medewerker_identificatie_rol
+from zac.core.rollen import Rol
+from zac.core.services import (
+    _client_from_url,
+    fetch_rol,
+    get_rollen,
+    update_medewerker_identificatie_rol,
+)
 from zac.elasticsearch.api import (
     create_status_document,
     create_zaak_document,
@@ -139,11 +148,57 @@ class ZakenHandler:
         # index in ES
         update_status_in_zaak_document(zaak)
 
+    def _handle_new_rol_creation_camunda(self, zaak: Zaak, new_rol: Rol):
+        # Change camunda assignee to new behandelaar
+        # First get old behandelaar(s)
+        rollen = get_rollen(zaak)
+        old_behandelaars = "".join(
+            [
+                _rol.betrokkene_identificatie["identificatie"]
+                for _rol in rollen
+                if _rol.omschrijving_generiek.lower()
+                == RolOmschrijving.behandelaar.lower()
+                and _rol.url != new_rol.url
+            ]
+        )
+
+        # Get camunda tasks associated to this zaak
+        change_assignee_tasks = []
+        process_instances = get_top_level_process_instances(new_rol.zaak)
+        for pi in process_instances:
+            for task in pi.tasks:
+                if (
+                    username := getattr(task.assignee, "username", None)
+                ) and username in old_behandelaars:
+                    change_assignee_tasks.append(
+                        {
+                            "task_id": task.id,
+                            "assignee": new_rol.betrokkene_identificatie[
+                                "identificatie"
+                            ],
+                        }
+                    )
+
+        with parallel() as executor:
+            list(
+                executor.map(
+                    lambda task_and_assignee: set_assignee(**task_and_assignee),
+                    change_assignee_tasks,
+                )
+            )
+
     def _handle_rol_creation(self, zaak_url: str, rol_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_rollen_cache(zaak, rol_urls=[rol_url])
-        update_medewerker_identificatie_rol(rol_url)
-        add_permission_for_behandelaar(rol_url)
+        updated = update_medewerker_identificatie_rol(rol_url)
+
+        rol = fetch_rol(rol_url=rol_url)
+        if not updated and (
+            rol.omschrijving_generiek.lower() == RolOmschrijving.behandelaar.lower()
+        ):
+            add_permission_for_behandelaar(rol_url)
+            self._handle_new_rol_creation_camunda(zaak, rol)
+
         update_rollen_in_zaak_document(zaak)
 
     def _handle_rol_destroy(self, zaak_url: str):

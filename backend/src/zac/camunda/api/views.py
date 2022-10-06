@@ -48,7 +48,11 @@ from .serializers import (
     SubmitUserTaskSerializer,
     UserTaskContextSerializer,
 )
-from .utils import get_bptl_app_id_variable, set_assignee_and_complete_task
+from .utils import (
+    get_bptl_app_id_variable,
+    set_assignee,
+    set_assignee_and_complete_task,
+)
 
 
 class ProcessInstanceFetchViewSet(ViewSet):
@@ -416,10 +420,7 @@ class SetTaskAssigneeView(APIView):
         # If assignee is given, set assignee.
         assignee = serializer.validated_data["assignee"]
         if assignee:
-            camunda_client.post(
-                f"task/{task.id}/assignee",
-                json={"userId": assignee},
-            )
+            set_assignee(task.id, assignee)
             self._create_rol(zaak, assignee)
 
         # If delegate is given, set delegate.

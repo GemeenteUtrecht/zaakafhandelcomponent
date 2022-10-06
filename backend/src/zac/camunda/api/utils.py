@@ -112,20 +112,24 @@ def delete_zaak_creation_process(zaak: Zaak) -> None:
                 delete_process_instance(pi.id)
 
 
+def set_assignee(task_id: str, assignee: str):
+    camunda_client = get_client()
+    camunda_client.post(
+        f"task/{task_id}/assignee",
+        json={"userId": assignee},
+    )
+
+
 def set_assignee_and_complete_task(
     task: Task, user_assignee: User, variables: dict = dict
 ):
     # First make sure the task has the right assignee for historical purposes
-    camunda_client = get_client()
     if (
         not task.assignee
         or task.assignee != user_assignee
         or task.assignee_type == AssigneeTypeChoices.group
     ):
-        camunda_client.post(
-            f"task/{task.id}/assignee",
-            json={"userId": user_assignee},
-        )
+        set_assignee(task.id, user_assignee)
 
     # Then complete the task.
     complete_task(

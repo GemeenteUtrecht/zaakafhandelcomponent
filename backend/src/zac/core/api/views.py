@@ -724,7 +724,7 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
 
 @extend_schema(summary=_("List ZAAK documents."))
 class ListZaakDocumentsView(GetZaakMixin, views.APIView):
-    authentication_classes = (authentication.SessionAuthentication,)
+    # authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
         CanReadZaken,
