@@ -1,10 +1,10 @@
-from collections import OrderedDict
 from unittest.mock import patch
 
 from django.urls import reverse_lazy
 from django.utils import timezone
 
 import requests_mock
+from django_camunda.utils import serialize_variable, underscoreize
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
@@ -16,12 +16,13 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.constants import PermissionObjectTypeChoices, PermissionReason
 from zac.accounts.models import AtomicPermission
 from zac.accounts.tests.factories import UserFactory
+from zac.camunda.data import ProcessInstance, Task
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from .utils import (
@@ -80,6 +81,36 @@ NOTIFICATION = {
     },
 }
 
+# Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
+TASK_DATA = {
+    "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
+    "name": "aName",
+    "assignee": None,
+    "created": "2013-01-23T13:42:42.000+0200",
+    "due": "2013-01-23T13:49:42.576+0200",
+    "followUp": "2013-01-23T13:44:42.437+0200",
+    "delegationState": "RESOLVED",
+    "description": "aDescription",
+    "executionId": "anExecution",
+    "owner": "anOwner",
+    "parentTaskId": None,
+    "priority": 42,
+    "processDefinitionId": "aProcDefId",
+    "processInstanceId": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
+    "caseDefinitionId": "aCaseDefId",
+    "caseInstanceId": "aCaseInstId",
+    "caseExecutionId": "aCaseExecution",
+    "taskDefinitionKey": "aTaskDefinitionKey",
+    "suspended": False,
+    "formKey": None,
+    "tenantId": "aTenantId",
+}
+
+
+def _get_task(**overrides):
+    data = underscoreize({**TASK_DATA, **overrides})
+    return factory(Task, data)
+
 
 @requests_mock.Mocker()
 class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
@@ -115,7 +146,11 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         get_roltype_patcher.start()
         self.addCleanup(get_roltype_patcher.stop)
 
-    def test_rol_created_indexed_in_es(self, rm):
+    @patch(
+        "zac.notifications.handlers.ZakenHandler._handle_new_rol_creation_camunda",
+        return_value=None,
+    )
+    def test_rol_created_indexed_in_es(self, rm, mock_handle_new_rol_creation_camunda):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
@@ -136,8 +171,15 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak_document = ZaakDocument.get(id=self.zaak_document.meta.id)
         self.assertEqual(len(zaak_document.rollen), 1)
         self.assertEqual(zaak_document.rollen[0]["url"], ROL)
+        mock_handle_new_rol_creation_camunda.assert_called_once()
 
-    def test_rol_created_add_permission_for_behandelaar(self, rm):
+    @patch(
+        "zac.notifications.handlers.ZakenHandler._handle_new_rol_creation_camunda",
+        return_value=None,
+    )
+    def test_rol_created_add_permission_for_behandelaar(
+        self, rm, mock_handle_new_rol_creation_camunda
+    ):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
@@ -173,8 +215,15 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         user_atomic_permission = atomic_permission.useratomicpermission_set.get()
         self.assertEqual(user_atomic_permission.reason, PermissionReason.betrokkene)
+        mock_handle_new_rol_creation_camunda.assert_called_once()
 
-    def test_rol_created_destroyed_recreated_with_betrokkene_identificatie(self, rm):
+    @patch(
+        "zac.notifications.handlers.ZakenHandler._handle_new_rol_creation_camunda",
+        return_value=None,
+    )
+    def test_rol_created_destroyed_recreated_with_betrokkene_identificatie(
+        self, rm, mock_handle_new_rol_creation_camunda
+    ):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
@@ -245,8 +294,13 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         )
+        mock_handle_new_rol_creation_camunda.assert_not_called()
 
-    def test_rol_created_name_not_empty(self, rm):
+    @patch(
+        "zac.notifications.handlers.ZakenHandler._handle_new_rol_creation_camunda",
+        return_value=None,
+    )
+    def test_rol_created_name_not_empty(self, rm, mock_handle_new_rol_creation_camunda):
         """check that rol is not updated if it already has name attributes"""
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -284,8 +338,13 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         )
+        mock_handle_new_rol_creation_camunda.assert_called_once()
 
-    def test_rol_created_username_empty(self, rm):
+    @patch(
+        "zac.notifications.handlers.ZakenHandler._handle_new_rol_creation_camunda",
+        return_value=None,
+    )
+    def test_rol_created_username_empty(self, rm, mock_handle_new_rol_creation_camunda):
         """check that rol is not updated if user doesn't have first and last name"""
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -328,8 +387,15 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "voorvoegsel_achternaam": "",
             },
         )
+        mock_handle_new_rol_creation_camunda.assert_called_once()
 
-    def test_rol_created_other_app_updated(self, rm):
+    @patch(
+        "zac.notifications.handlers.ZakenHandler._handle_new_rol_creation_camunda",
+        return_value=None,
+    )
+    def test_rol_created_other_app_updated(
+        self, rm, mock_handle_new_rol_creation_camunda
+    ):
         """check there are no race conditions if several ZAC instances update rollen"""
         # set up mocks
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
@@ -432,6 +498,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         mock_update_rol2.assert_not_called()
+        mock_handle_new_rol_creation_camunda.assert_called_once()
         mock_es_get_rollen2.assert_called_once_with(self.zaak)
 
         # check that we saved the rol updated by other app
@@ -446,4 +513,52 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "achternaam": "Other Surname",
                 "voorvoegsel_achternaam": "",
             },
+        )
+
+    def test_rol_created_update_camunda_assignees(self, rm):
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, ROL_RESPONSE)
+        old_rol = {
+            **ROL_RESPONSE,
+            "url": f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbd",
+            "betrokkeneIdentificatie": {
+                "identificatie": "123456",
+                "voorletters": "M.Y.",
+                "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        }
+        rm.get(
+            f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
+            json=paginated_response([ROL_RESPONSE, old_rol]),
+        )
+        process_instance = factory(
+            ProcessInstance,
+            {
+                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
+                "definition_id": "beleid_opstellen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+            },
+        )
+        task = _get_task(**{"formKey": "zac:zetResultaat"})
+        user = UserFactory.create(username="123456")
+        task.assignee = user
+        process_instance.tasks = [task]
+
+        rm.post(
+            f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
+            status_code=204,
+        )
+        with patch(
+            "zac.notifications.handlers.get_top_level_process_instances",
+            return_value=[process_instance],
+        ):
+            response = self.client.post(self.path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(
+            rm.last_request.url,
+            f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
         )
