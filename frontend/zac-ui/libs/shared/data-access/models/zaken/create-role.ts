@@ -4,7 +4,7 @@ export interface BetrokkeneIdentificatie {
   isGehuisvestIn: string;
 }
 
-export interface Betrokkene {
+export interface CreateBetrokkene {
   betrokkene?: string;
   betrokkeneType: string;
   indicatieMachtiging?: string;
