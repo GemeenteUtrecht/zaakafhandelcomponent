@@ -48,6 +48,7 @@ export * from './accounts/user-search';
 
 // Zaken
 export * from './zaken/assignee'
+export * from './zaken/betrokkene'
 export * from './zaken/create-case'
 export * from './zaken/create-case-document'
 export * from './zaken/create-role'

@@ -18,7 +18,7 @@
         </div>
         <div *ngIf="role.betrokkeneType === 'medewerker'">
           <button
-            *ngIf="edit"
+            *ngIf="isRemovableRole(role)"
             (click)="deleteRole(role.url)"
             gu-button
             buttonStyle="tertiary"
@@ -39,7 +39,7 @@
         </div>
         <div *ngIf="role.betrokkeneType === 'medewerker'">
           <button
-            *ngIf="edit"
+            *ngIf="isRemovableRole(role)"
             (click)="deleteRole(role.url)"
             gu-button
             title="Verwijderen"
@@ -64,7 +64,7 @@
               size="extrasmall"
               [icon]="'add'"
               (click)="openModal('betrokkene-modal')">
-        Betrokkene toevoegen
+        Toevoegen
       </button>
     </div>
   </ng-container>

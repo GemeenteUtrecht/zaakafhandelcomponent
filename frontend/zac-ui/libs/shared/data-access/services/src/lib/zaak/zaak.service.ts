@@ -9,7 +9,7 @@ import {
   UserPermission,
   Zaak,
   NieuweEigenschap,
-  CreateCase, ProcessInstance, Betrokkene, CreateCaseDocument
+  CreateCase, ProcessInstance, CreateBetrokkene, CreateCaseDocument, Betrokkene
 } from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall, getEnv} from '@gu/utils';
@@ -260,11 +260,11 @@ export class ZaakService {
    * Create a role.
    * @param {string} bronorganisatie
    * @param {string} identificatie
-   * @param {Betrokkene} caseRole
+   * @param {CreateBetrokkene} caseRole
    * @returns {Observable<*>}
    */
   @ClearCacheOnMethodCall('ZaakService.retrieveCaseDetails')
-  createCaseRole(bronorganisatie: string, identificatie: string, caseRole: Betrokkene): Observable<any> {
+  createCaseRole(bronorganisatie: string, identificatie: string, caseRole: CreateBetrokkene): Observable<any> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/roles`);
     return this.http.Post<any>(endpoint, caseRole);
   }
@@ -273,11 +273,11 @@ export class ZaakService {
    * Retrieve all roles
    * @param {string} bronorganisatie
    * @param {string} identificatie
-   * @returns {Observable<*>}
+   * @returns {Observable<Betrokkene[]>}
    */
-  getCaseRoles(bronorganisatie: string, identificatie: string): Observable<any> {
+  getCaseRoles(bronorganisatie: string, identificatie: string): Observable<Betrokkene[]> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/roles`);
-    return this.http.Get<any>(endpoint);
+    return this.http.Get<Betrokkene[]>(endpoint);
   }
 
   /**

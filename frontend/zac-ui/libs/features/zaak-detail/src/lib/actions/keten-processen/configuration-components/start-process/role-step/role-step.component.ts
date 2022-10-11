@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { Betrokkene, UserSearchResult, Zaak } from '@gu/models';
+import { CreateBetrokkene, UserSearchResult, Zaak } from '@gu/models';
 import { BenodigdeRol, TaskContextData } from '../../../../../../models/task-context';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
@@ -174,7 +174,7 @@ export class RoleStepComponent implements OnChanges {
         break;
     }
 
-    const newCaseRole: Betrokkene = {
+    const newCaseRole: CreateBetrokkene = {
       betrokkeneType: selectedRole.betrokkeneType,
       roltype: selectedRole.roltype.url,
       zaak: this.zaak.url,

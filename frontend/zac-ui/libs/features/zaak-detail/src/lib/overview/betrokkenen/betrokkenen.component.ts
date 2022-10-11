@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { AccountsService, MetaService, ZaakService } from '@gu/services';
 import { FieldConfiguration, ModalService, SnackbarService } from '@gu/components';
-import { Betrokkene, MetaRoltype, UserSearchResult, Zaak } from '@gu/models';
+import { Betrokkene, CreateBetrokkene, MetaRoltype, UserSearchResult, Zaak } from '@gu/models';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
@@ -12,8 +12,9 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 export class BetrokkenenComponent implements OnChanges {
   @Input() zaak: Zaak;
 
-  hiddenRoleData: any;
-  alwaysVisibleRoleData: any;
+  hiddenRoleData: Betrokkene[];
+  alwaysVisibleRoleData: Betrokkene[];
+  nBehandelaars: number;
   allRoleData: any;
   isLoading = true;
   isExpanded: boolean;
@@ -45,6 +46,15 @@ export class BetrokkenenComponent implements OnChanges {
     return this.roleForm.get('roltype') as FormControl;
   }
 
+  /**
+   * Check if delete button should be shown
+   * @param role
+   * @returns {boolean}
+   */
+  isRemovableRole(role) {
+    return this.edit && (role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek === 'behandelaar' && this.nBehandelaars > 1))
+  }
+
   ngOnChanges(): void {
     this.getContextData();
     this.roleForm = this.fb.group({
@@ -71,8 +81,7 @@ export class BetrokkenenComponent implements OnChanges {
     })
     this.zaakService.getCaseRoles(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
       this.allRoleData = data;
-      this.hiddenRoleData = data.slice(0, -3);
-      this.alwaysVisibleRoleData = data.slice(-3)
+      this.formatRoles(data);
       this.isLoading = false;
       this.edit = false;
     }, error => {
@@ -90,7 +99,7 @@ export class BetrokkenenComponent implements OnChanges {
     this.zaakService.deleteCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, url).subscribe(() => {
       this.getContextData()
     }, error => {
-      this.errorMessage = 'Verwijderen van betrokkene mislukt.'
+      this.errorMessage = 'Verwijderen van betrokkene mislukt. Let op, een zaak moet minimaal één behandelaar hebben.'
       this.reportError(error)
     })
   }
@@ -99,8 +108,12 @@ export class BetrokkenenComponent implements OnChanges {
    * Slice roles for visibility
    * @param data
    */
-  formatRoles(data) {
+  formatRoles(data: Betrokkene[]) {
+    this.hiddenRoleData = data.slice(0, -3);
     this.alwaysVisibleRoleData = data.slice(-3)
+    this.nBehandelaars = data.filter(role => {
+      return role.omschrijvingGeneriek === 'behandelaar'
+    }).length;
   }
 
   //
@@ -147,7 +160,7 @@ export class BetrokkenenComponent implements OnChanges {
   submitForm() {
     this.isSubmitting = true;
 
-    const formData: Betrokkene = {
+    const formData: CreateBetrokkene = {
       betrokkeneType: 'medewerker',
       roltype: this.roltypeControl.value,
       zaak: this.zaak.url,
