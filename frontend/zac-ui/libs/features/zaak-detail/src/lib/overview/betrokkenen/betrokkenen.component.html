@@ -18,7 +18,7 @@
         </div>
         <div *ngIf="role.betrokkeneType === 'medewerker'">
           <button
-            *ngIf="edit && (role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek === 'behandelaar' && nBehandelaars > 1))"
+            *ngIf="getDeleteButton(role)"
             (click)="deleteRole(role.url)"
             gu-button
             buttonStyle="tertiary"
@@ -39,7 +39,7 @@
         </div>
         <div *ngIf="role.betrokkeneType === 'medewerker'">
           <button
-            *ngIf="edit && (role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek === 'behandelaar' && nBehandelaars > 1))"
+            *ngIf="getDeleteButton(role)"
             (click)="deleteRole(role.url)"
             gu-button
             title="Verwijderen"

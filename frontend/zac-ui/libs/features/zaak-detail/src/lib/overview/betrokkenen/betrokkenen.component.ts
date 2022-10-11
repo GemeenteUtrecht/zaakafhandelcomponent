@@ -46,6 +46,15 @@ export class BetrokkenenComponent implements OnChanges {
     return this.roleForm.get('roltype') as FormControl;
   }
 
+  /**
+   * Check if delete button should be shown
+   * @param role
+   * @returns {boolean}
+   */
+  getDeleteButton(role) {
+    return this.edit && (role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek === 'behandelaar' && this.nBehandelaars > 1))
+  }
+
   ngOnChanges(): void {
     this.getContextData();
     this.roleForm = this.fb.group({
