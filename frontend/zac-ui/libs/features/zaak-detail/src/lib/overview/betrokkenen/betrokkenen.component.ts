@@ -51,7 +51,7 @@ export class BetrokkenenComponent implements OnChanges {
    * @param role
    * @returns {boolean}
    */
-  getDeleteButton(role) {
+  isRemovableRole(role) {
     return this.edit && (role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek === 'behandelaar' && this.nBehandelaars > 1))
   }
 
