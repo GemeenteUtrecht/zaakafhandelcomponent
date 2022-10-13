@@ -2,7 +2,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from elasticsearch_dsl.query import Query, Range, Term
 from rest_framework import serializers
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.constants import (
+    RolOmschrijving,
+    RolTypes,
+    VertrouwelijkheidsAanduidingen,
+)
 from zgw_consumers.api_models.documenten import Document
 
 from zac.accounts.constants import PermissionObjectTypeChoices
@@ -36,8 +40,8 @@ class ZaakTypeBlueprint(Blueprint):
         user_rollen = [
             rol
             for rol in get_rollen(zaak)
-            if rol.omschrijving_generiek == "behandelaar"
-            and rol.betrokkene_type == "medewerker"
+            if rol.omschrijving_generiek == RolOmschrijving.behandelaar
+            and rol.betrokkene_type == RolTypes.medewerker
             and rol.betrokkene_identificatie.get("identificatie") == user.username
         ]
         return bool(user_rollen)
