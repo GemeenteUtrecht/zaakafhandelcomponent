@@ -247,3 +247,29 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "instanceUrl": "https://some-url.com/",
             },
         )
+        expected_payload = {
+            "businessKey": "",
+            "withVariablesInReturn": False,
+            "variables": {
+                "zaaktypeOmschrijving": {
+                    "type": "String",
+                    "value": self.zaaktype["omschrijving"],
+                },
+                "zaaktypeCatalogus": {
+                    "type": "String",
+                    "value": "http://catalogus.nl/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                },
+                "zaaktype": {
+                    "type": "String",
+                    "value": "http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                },
+                "zaakDetails": {
+                    "type": "Json",
+                    "value": '{"omschrijving": "some-omschrijving", "toelichting": "some-toelichting"}',
+                },
+                "bptlAppId": {"type": "String", "value": ""},
+                "initiator": {"type": "String", "value": f"user:{self.user}"},
+                "organisatieRSIN": {"type": "String", "value": "002220647"},
+            },
+        }
+        self.assertEqual(m.last_request.json(), expected_payload)

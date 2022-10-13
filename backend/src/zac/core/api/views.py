@@ -243,7 +243,7 @@ class CreateZaakView(views.APIView):
 
     @extend_schema(
         summary=_("Let users create a ZAAK."),
-        responses={"200": CreatedProcessInstanceSerializer},
+        responses={"201": CreatedProcessInstanceSerializer},
     )
     def post(self, request):
         serializer = self.serializer_class(

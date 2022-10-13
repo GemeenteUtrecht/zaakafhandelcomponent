@@ -409,6 +409,7 @@ class CreateZaakSerializer(serializers.Serializer):
         serialized_data = {
             **super().to_internal_value(data),
             **get_bptl_app_id_variable(),
+            "initiator": f"{AssigneeTypeChoices.user}:{self.context['request'].user}",
         }
         organisatie_rsin = serialized_data.pop("organisatie_rsin")
         serialized_data["organisatieRSIN"] = organisatie_rsin
