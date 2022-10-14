@@ -9,7 +9,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.constants import (
+    RolOmschrijving,
+    VertrouwelijkheidsAanduidingen,
+)
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -22,7 +25,7 @@ from zac.accounts.tests.factories import (
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import zaakprocess_starten
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from .utils import (
@@ -160,6 +163,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
     def test_success_start_camunda_process(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
         mock_resource_get(m, self.catalogus)
         m.get(
@@ -183,44 +187,72 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
             },
         )
 
-        with patch(
-            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
-            return_value=self.zaak_obj,
-        ):
-            response = self.client.post(self.endpoint, {})
+        other_user = SuperUserFactory.create()
+        for rt_omschrijving, user in [
+            (RolOmschrijving.behandelaar, self.user),
+            (RolOmschrijving.initiator, other_user),
+        ]:
+            with self.subTest("Testing roltypes initiator and behandelaar"):
+                rol = generate_oas_component(
+                    "zrc",
+                    "schemas/Rol",
+                    betrokkeneIdentificatie={"identificatie": f"user:{other_user}"},
+                    betrokkeneType="medewerker",
+                    omschrijvingGeneriek=rt_omschrijving,
+                    betrokkene="",
+                    indicatieMachtiging="gemachtigde",
+                    zaak=self.zaak["url"],
+                    url=f"{ZAKEN_ROOT}rollen/fb498b0b-e4c7-44f1-8e39-a55d9f55ebb8",
+                )
+                m.get(
+                    f"{ZAKEN_ROOT}rollen?zaak={self.zaak_obj.url}",
+                    json=paginated_response([rol]),
+                )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            response.json(),
-            {
-                "instanceId": PROCESS_INSTANCE["id"],
-                "instanceUrl": "https://some-url.com/",
-            },
-        )
-        self.assertEqual(
-            m.last_request.url,
-            f"{CAMUNDA_URL}process-definition/key/{PROCESS_DEFINITION['key']}/start",
-        )
+                with patch(
+                    "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
+                    return_value=self.zaak_obj,
+                ):
+                    response = self.client.post(self.endpoint, {})
 
-        self.assertEqual(
-            m.last_request.json(),
-            {
-                "businessKey": "",
-                "withVariablesInReturn": False,
-                "variables": {
-                    "zaakUrl": serialize_variable(self.zaak["url"]),
-                    "zaakIdentificatie": serialize_variable(self.zaak["identificatie"]),
-                    "zaakDetails": serialize_variable(
-                        {
-                            "omschrijving": self.zaak["omschrijving"],
-                            "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
-                        }
-                    ),
-                },
-            },
-        )
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(
+                    response.json(),
+                    {
+                        "instanceId": PROCESS_INSTANCE["id"],
+                        "instanceUrl": "https://some-url.com/",
+                    },
+                )
+                self.assertEqual(
+                    m.last_request.url,
+                    f"{CAMUNDA_URL}process-definition/key/{PROCESS_DEFINITION['key']}/start",
+                )
 
-    def test_start_camunda_process_no_process_instance_to_close(self, m):
+                self.assertEqual(
+                    m.last_request.json(),
+                    {
+                        "businessKey": "",
+                        "withVariablesInReturn": False,
+                        "variables": {
+                            "zaakUrl": serialize_variable(self.zaak["url"]),
+                            "zaakIdentificatie": serialize_variable(
+                                self.zaak["identificatie"]
+                            ),
+                            "zaakDetails": serialize_variable(
+                                {
+                                    "omschrijving": self.zaak["omschrijving"],
+                                    "zaaktypeOmschrijving": self.zaaktype[
+                                        "omschrijving"
+                                    ],
+                                }
+                            ),
+                            "initiator": serialize_variable(f"user:{user}"),
+                        },
+                    },
+                )
+
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_start_camunda_process_no_process_instance_to_close(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
@@ -253,7 +285,8 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    def test_start_camunda_process_no_process_definition_found(self, m):
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_start_camunda_process_no_process_definition_found(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
@@ -404,7 +437,8 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm(self, m):
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_has_perm(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
