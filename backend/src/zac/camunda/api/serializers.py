@@ -10,6 +10,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol, get_zaak
 from zgw.models.zrc import Zaak
@@ -203,25 +204,20 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
     )
 
     def _resolve_name(self, name: str) -> str:
-        try:
-            User.objects.get(username=name)
-            return f"user:{name}"
-        except User.DoesNotExist:
-            pass
-
-        try:
-            Group.objects.get(name=name)
-            return f"group:{name}"
-        except Group.DoesNotExist:
-            pass
-
-        return name
+        user_or_group = resolve_assignee(name)
+        if isinstance(user_or_group, User):
+            return f"{AssigneeTypeChoices.user}:{user_or_group}"
+        return f"{AssigneeTypeChoices.group}:{user_or_group}"
 
     def validate_assignee(self, assignee: str) -> str:
-        return self._resolve_name(assignee)
+        if assignee:
+            return self._resolve_name(assignee)
+        return assignee
 
     def validate_delegate(self, delegate: str) -> str:
-        return self._resolve_name(delegate)
+        if delegate:
+            return self._resolve_name(delegate)
+        return delegate
 
 
 class BPMNSerializer(APIModelSerializer):

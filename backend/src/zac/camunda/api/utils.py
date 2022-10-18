@@ -1,12 +1,13 @@
 import logging
 from collections import OrderedDict
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from django.conf import settings
 
 from django_camunda.api import complete_task
 from django_camunda.client import get_client
 from django_camunda.interface import Variable
+from django_camunda.types import CamundaId
 from django_camunda.utils import serialize_variable
 from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize
@@ -135,4 +136,14 @@ def set_assignee_and_complete_task(
     complete_task(
         task.id,
         variables=variables,
+    )
+
+
+def update_process_instance_variable(
+    pid: CamundaId, variable_name: str, variable_value: Any
+):
+    camunda_client = get_client()
+    camunda_client.put(
+        f"process-instance/{pid}/variables/{variable_name}",
+        json=serialize_variable(variable_value),
     )

@@ -63,8 +63,7 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-@requests_mock.Mocker()
-class UpdateCamundaBehandelaarPermissionAndViewTests(APITestCase):
+class UpdateCamundaBehandelaarViewTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -124,6 +123,7 @@ class UpdateCamundaBehandelaarPermissionAndViewTests(APITestCase):
         get_roltype_patcher.start()
         self.addCleanup(get_roltype_patcher.stop)
 
+    @requests_mock.Mocker()
     def test_update_camunda_assignees(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -156,6 +156,10 @@ class UpdateCamundaBehandelaarPermissionAndViewTests(APITestCase):
         task.assignee = self.user
         process_instance.tasks = [task]
 
+        rm.put(
+            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/behandelaar",
+            status_code=204,
+        )
         rm.post(
             f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
             status_code=204,
@@ -175,6 +179,7 @@ class UpdateCamundaBehandelaarPermissionAndViewTests(APITestCase):
             f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
         )
 
+    @requests_mock.Mocker()
     def test_update_camunda_assignees_not_updated_kownsl(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -206,7 +211,10 @@ class UpdateCamundaBehandelaarPermissionAndViewTests(APITestCase):
         task = _get_task(**{"name": "adviseren"})
         task.assignee = self.user
         process_instance.tasks = [task]
-
+        rm.put(
+            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/behandelaar",
+            status_code=204,
+        )
         rm.post(
             f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
             status_code=204,
@@ -223,28 +231,30 @@ class UpdateCamundaBehandelaarPermissionAndViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(
             rm.last_request.url,
-            "https://some.zrc.nl/api/v1/rollen?zaak=https%3A%2F%2Fsome.zrc.nl%2Fapi%2Fv1%2Fzaken%2Ff3ff2713-2f53-42ff-a154-16842309ad60",
+            "https://camunda.example.com/engine-rest/process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405/variables/behandelaar",
         )
 
+    @requests_mock.Mocker()
     def test_update_camunda_assignees_zaak_does_not_exist(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
-        rm.get(self.zaak["url"], status_code=404)
-        mock_resource_get(rm, self.rol)
+        rm.get(f"{ZAKEN_ROOT}zaken/some-zaak", status_code=404, json={})
+        rm.get(self.rol["url"], json=self.rol)
         response = self.client.post(
             reverse_lazy("change-behandelaar"),
-            {"zaak": ZAAK, "rol": self.rol["url"]},
+            {"zaak": f"{ZAKEN_ROOT}zaken/some-zaak", "rol": self.rol["url"]},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @requests_mock.Mocker()
     def test_update_camunda_assignees_rol_does_not_exist(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
-        rm.get(self.rol["url"], status_code=404)
-        mock_resource_get(rm, self.zaak)
+        rm.get(f"{ZAKEN_ROOT}rollen/some-rol", status_code=404, json={})
+        rm.get(self.zaak["url"], json=self.zaak)
         response = self.client.post(
             reverse_lazy("change-behandelaar"),
-            {"zaak": ZAAK, "rol": self.rol["url"]},
+            {"zaak": self.zaak["url"], "rol": f"{ZAKEN_ROOT}rollen/some-rol"},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

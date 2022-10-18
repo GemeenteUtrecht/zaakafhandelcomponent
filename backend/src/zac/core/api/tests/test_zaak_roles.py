@@ -171,7 +171,12 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         rol = generate_oas_component(
             "zrc",
             "schemas/Rol",
-            betrokkeneIdentificatie={"identificatie": self.user.username},
+            betrokkeneIdentificatie={
+                "voorletters": "",
+                "achternaam": "",
+                "identificatie": f"user:{self.user.username}",
+                "voorvoegselAchternaam": "",
+            },
             betrokkeneType="medewerker",
             roltype=self.roltype["url"],
             betrokkene="",
@@ -197,7 +202,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkeneIdentificatie": {
                     "voorletters": "",
                     "achternaam": "",
-                    "identificatie": self.user.username,
+                    "identificatie": f"user:{self.user.username}",
                     "voorvoegselAchternaam": "",
                 },
                 "betrokkeneType": "medewerker",
@@ -215,7 +220,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkene_identificatie": {
                     "voorletters": "",
                     "achternaam": "",
-                    "identificatie": self.user.username,
+                    "identificatie": f"user:{self.user.username}",
                     "voorvoegsel_achternaam": "",
                 },
                 "betrokkene_type": "medewerker",
