@@ -1,14 +1,19 @@
 from typing import Any, Dict, List
 
 from django.contrib.auth.models import Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from zds_client.client import ClientError
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
+from zac.core.rollen import Rol
+from zac.core.services import fetch_rol, get_zaak
+from zgw.models.zrc import Zaak
 
 from ..api.data import HistoricUserTask
 from ..constants import AssigneeTypeChoices
@@ -305,3 +310,24 @@ class CancelTaskSerializer(serializers.Serializer):
                 _("Task `{name}` can not be canceled.").format(name=task.name)
             )
         return task
+
+
+class ChangeBehandelaarTasksSerializer(serializers.Serializer):
+    zaak = serializers.URLField(
+        help_text=_("URL-reference to the ZAAK in its API"),
+    )
+    rol = serializers.URLField(help_text=_("URL-reference to the ROL in its API"))
+
+    def validate_zaak(self, zaak) -> Zaak:
+        try:
+            zaak = get_zaak(zaak_url=zaak)
+        except ClientError as exc:
+            raise serializers.ValidationError(_("ZAAK was not found."))
+        return zaak
+
+    def validate_rol(self, rol) -> Rol:
+        try:
+            rol = fetch_rol(rol)
+        except ClientError as exc:
+            raise serializers.ValidationError(detail=exc.args)
+        return rol
