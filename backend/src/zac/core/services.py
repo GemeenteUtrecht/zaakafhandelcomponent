@@ -847,7 +847,7 @@ def delete_rol(rol_url: str):
 
 def update_rol(rol_url: str, new_rol: Dict) -> Rol:
     """
-    Open zaak 1.6.0 (CURRENT) does not allow patching/putting ROLlen.
+    Open zaak 1.7.x (CURRENT) does not allow patching/putting ROLlen.
 
     """
     # Destroy old rol

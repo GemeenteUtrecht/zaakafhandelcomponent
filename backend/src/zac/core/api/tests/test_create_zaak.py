@@ -91,6 +91,11 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "some-other-omschrijving",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.create_zaak_url, self.data)
@@ -105,6 +110,11 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_aanmaken.name],
             for_user=self.user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": self.zaaktype.omschrijving,
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self.client.force_authenticate(user=self.user)
         with patch(
@@ -188,7 +198,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "nonFieldErrors": [
-                    f"ZAAKTYPE `{self.zaaktype['omschrijving']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}`."
+                    f"ZAAKTYPE `{self.zaaktype['omschrijving']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}` of de gebruiker heeft de benodigde rechten niet."
                 ]
             },
         )
@@ -247,3 +257,29 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "instanceUrl": "https://some-url.com/",
             },
         )
+        expected_payload = {
+            "businessKey": "",
+            "withVariablesInReturn": False,
+            "variables": {
+                "zaaktypeOmschrijving": {
+                    "type": "String",
+                    "value": self.zaaktype["omschrijving"],
+                },
+                "zaaktypeCatalogus": {
+                    "type": "String",
+                    "value": "http://catalogus.nl/api/v1//catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                },
+                "zaaktype": {
+                    "type": "String",
+                    "value": "http://catalogus.nl/api/v1/zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                },
+                "zaakDetails": {
+                    "type": "Json",
+                    "value": '{"omschrijving": "some-omschrijving", "toelichting": "some-toelichting"}',
+                },
+                "bptlAppId": {"type": "String", "value": ""},
+                "initiator": {"type": "String", "value": f"user:{self.user}"},
+                "organisatieRSIN": {"type": "String", "value": "002220647"},
+            },
+        }
+        self.assertEqual(m.last_request.json(), expected_payload)

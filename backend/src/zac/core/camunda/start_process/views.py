@@ -5,9 +5,12 @@ from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.constants import RolOmschrijving
 
 from zac.camunda.api.utils import delete_zaak_creation_process, start_process
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.views import GetZaakMixin
+from zac.core.services import get_rollen
 from zac.objects.services import fetch_start_camunda_process_form
 
 from .permissions import CanStartCamundaProcess
@@ -30,6 +33,12 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         # process still running and delete it if so.
         delete_zaak_creation_process(zaak)
 
+        initiator = [
+            rol
+            for rol in get_rollen(zaak)
+            if rol.omschrijving_generiek.lower() == RolOmschrijving.initiator.lower()
+        ]
+
         # See if there is a configured camunda_start_process object
         camunda_start_process = fetch_start_camunda_process_form(zaak.zaaktype)
         results = start_process(
@@ -41,6 +50,9 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
                     "omschrijving": zaak.omschrijving,
                     "zaaktypeOmschrijving": zaak.zaaktype.omschrijving,
                 },
+                "initiator": initiator[0].betrokkene_identificatie["identificatie"]
+                if initiator
+                else f"{AssigneeTypeChoices.user}:{request.user}",
             },
         )
         serializer = self.get_serializer(results)

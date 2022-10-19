@@ -2,6 +2,8 @@ from typing import List, Optional, Union
 
 from django.contrib.auth.models import Group
 
+from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
+
 from zac.camunda.api.permissions import zaakproces_usertasks
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
@@ -53,8 +55,8 @@ def add_permission_for_behandelaar(
         rol = fetch_rol(rol)
 
     if not (
-        rol.betrokkene_type == "medewerker"
-        and rol.omschrijving_generiek == "behandelaar"
+        rol.betrokkene_type == RolTypes.medewerker
+        and rol.omschrijving_generiek == RolOmschrijving.behandelaar
         and rol.betrokkene_identificatie
     ):
         return

@@ -21,6 +21,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_inzien, zaken_wijzigen
 from zac.core.rollen import Rol
@@ -174,7 +175,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             betrokkeneIdentificatie={
                 "voorletters": "",
                 "achternaam": "",
-                "identificatie": f"user:{self.user.username}",
+                "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
                 "voorvoegselAchternaam": "",
             },
             betrokkeneType="medewerker",
@@ -202,7 +203,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkeneIdentificatie": {
                     "voorletters": "",
                     "achternaam": "",
-                    "identificatie": f"user:{self.user.username}",
+                    "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
                     "voorvoegselAchternaam": "",
                 },
                 "betrokkeneType": "medewerker",
@@ -220,7 +221,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkene_identificatie": {
                     "voorletters": "",
                     "achternaam": "",
-                    "identificatie": f"user:{self.user.username}",
+                    "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
                     "voorvoegsel_achternaam": "",
                 },
                 "betrokkene_type": "medewerker",
