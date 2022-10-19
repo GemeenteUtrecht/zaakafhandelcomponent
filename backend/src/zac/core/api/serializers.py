@@ -393,11 +393,15 @@ class CreateZaakSerializer(serializers.Serializer):
         validated_data = super().validate(data)
         zt_omschrijving = validated_data["zaaktype_omschrijving"]
         zt_catalogus = validated_data["zaaktype_catalogus"]
-        zaaktypen = get_zaaktypen(catalogus=zt_catalogus, omschrijving=zt_omschrijving)
+        zaaktypen = get_zaaktypen(
+            catalogus=zt_catalogus,
+            omschrijving=zt_omschrijving,
+            request=self.context["request"],
+        )
         if not zaaktypen:
             raise serializers.ValidationError(
                 _(
-                    "ZAAKTYPE `{zt_omschrijving}` can not be found in `{zt_catalogus}`."
+                    "ZAAKTYPE `{zt_omschrijving}` can not be found in `{zt_catalogus}` or user does not have permission."
                 ).format(zt_omschrijving=zt_omschrijving, zt_catalogus=zt_catalogus)
             )
         max_date = max([zt.versiedatum for zt in zaaktypen])

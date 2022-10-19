@@ -91,6 +91,11 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": "some-other-omschrijving",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self.client.force_authenticate(user=self.user)
         response = self.client.post(self.create_zaak_url, self.data)
@@ -105,6 +110,11 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_aanmaken.name],
             for_user=self.user,
+            policy={
+                "catalogus": self.zaaktype.catalogus,
+                "zaaktype_omschrijving": self.zaaktype.omschrijving,
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
         )
         self.client.force_authenticate(user=self.user)
         with patch(
@@ -188,7 +198,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "nonFieldErrors": [
-                    f"ZAAKTYPE `{self.zaaktype['omschrijving']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}`."
+                    f"ZAAKTYPE `{self.zaaktype['omschrijving']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}` of de gebruiker heeft de benodigde rechten niet."
                 ]
             },
         )
