@@ -469,5 +469,5 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.json(),
-            ["Could not find a CATALOGUS with `domein`: `some-random-domein`."],
+            ["Kan geen CATALOGUS met `domein`: `some-random-domein` vinden."],
         )
