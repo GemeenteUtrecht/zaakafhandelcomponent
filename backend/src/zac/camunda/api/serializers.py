@@ -4,11 +4,16 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from zds_client.client import ClientError
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.api.polymorphism import PolymorphicSerializer
+from zac.core.camunda.utils import resolve_assignee
+from zac.core.rollen import Rol
+from zac.core.services import fetch_rol, get_zaak
+from zgw.models.zrc import Zaak
 
 from ..api.data import HistoricUserTask
 from ..constants import AssigneeTypeChoices
@@ -199,25 +204,20 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
     )
 
     def _resolve_name(self, name: str) -> str:
-        try:
-            User.objects.get(username=name)
-            return f"user:{name}"
-        except User.DoesNotExist:
-            pass
-
-        try:
-            Group.objects.get(name=name)
-            return f"group:{name}"
-        except Group.DoesNotExist:
-            pass
-
-        return name
+        user_or_group = resolve_assignee(name)
+        if isinstance(user_or_group, User):
+            return f"{AssigneeTypeChoices.user}:{user_or_group}"
+        return f"{AssigneeTypeChoices.group}:{user_or_group}"
 
     def validate_assignee(self, assignee: str) -> str:
-        return self._resolve_name(assignee)
+        if assignee:
+            return self._resolve_name(assignee)
+        return assignee
 
     def validate_delegate(self, delegate: str) -> str:
-        return self._resolve_name(delegate)
+        if delegate:
+            return self._resolve_name(delegate)
+        return delegate
 
 
 class BPMNSerializer(APIModelSerializer):
@@ -305,3 +305,24 @@ class CancelTaskSerializer(serializers.Serializer):
                 _("Task `{name}` can not be canceled.").format(name=task.name)
             )
         return task
+
+
+class ChangeBehandelaarTasksSerializer(serializers.Serializer):
+    zaak = serializers.URLField(
+        help_text=_("URL-reference to the ZAAK in its API"),
+    )
+    rol = serializers.URLField(help_text=_("URL-reference to the ROL in its API"))
+
+    def validate_zaak(self, zaak) -> Zaak:
+        try:
+            zaak = get_zaak(zaak_url=zaak)
+        except ClientError as exc:
+            raise serializers.ValidationError(_("ZAAK was not found."))
+        return zaak
+
+    def validate_rol(self, rol) -> Rol:
+        try:
+            rol = fetch_rol(rol)
+        except ClientError as exc:
+            raise serializers.ValidationError(detail=exc.args)
+        return rol

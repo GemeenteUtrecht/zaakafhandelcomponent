@@ -46,9 +46,11 @@ from zac.api.polymorphism import (
 )
 from zac.api.proxy import ProxySerializer
 from zac.camunda.api.utils import get_bptl_app_id_variable
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_rol,
@@ -943,6 +945,9 @@ class RolMedewerkerSerializer(serializers.Serializer):
         default="", help_text=_("Last name prefix of medewerker.")
     )
 
+    def get_identificatie(self, attrs) -> str:
+        return f"{AssigneeTypeChoices.user}:{self.context.get('user')}"
+
     def get_voorletters(self, attrs) -> str:
         user = self.context.get("user")
         voorletters = attrs.get("voorletters", "")
@@ -961,6 +966,16 @@ class RolMedewerkerSerializer(serializers.Serializer):
         if user:
             return user.last_name.capitalize() or achternaam
         return achternaam
+
+    def validate(self, data):
+        validated_data = super().validate(data)
+        user = resolve_assignee(validated_data["identificatie"])
+        validated_data["achternaam"] = user.last_name.capitalize()
+        validated_data["voorletters"] = "".join(
+            [part[0].upper() + "." for part in user.first_name.split()]
+        ).strip()
+        validated_data["identificatie"] = f"{AssigneeTypeChoices.user}:{user}"
+        return validated_data
 
 
 EmptySerializer = betrokkene_identificatie_serializer(serializers.JSONField)
