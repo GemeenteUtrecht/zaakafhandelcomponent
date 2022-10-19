@@ -83,6 +83,15 @@ class ZaakEigenschappenFilterSet(ApiFilterSet):
     )
 
 
+class MetaObjectFilterSet(ApiFilterSet):
+    include_meta = fields.BooleanField(
+        required=False,
+        help_text=_(
+            "A boolean flag that allows an end user to exclude or include meta objects."
+        ),
+    )
+
+
 class ZaakObjectFilterSet(ApiFilterSet):
     # filtering is done in viewset.get_object() method.
     # This filterset is used just to validate query params
