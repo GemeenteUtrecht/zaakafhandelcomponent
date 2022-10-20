@@ -353,3 +353,70 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, len(response.json()))
+
+    def test_filter_meta(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        objects = [
+            {
+                "url": f"{OBJECTS_ROOT}objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
+                "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
+                "record": {
+                    "index": 1,
+                    "typeVersion": 1,
+                    "data": {
+                        "type": "Laadpaal",
+                        "adres": "Utrechtsestraat 41",
+                        "status": "Laadpaal in ontwikkeling",
+                        "objectid": 2,
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [5.114160150114911, 52.08850095597628],
+                    },
+                    "startAt": "2021-07-09",
+                    "endAt": None,
+                    "registrationAt": "2021-07-09",
+                    "correctionFor": None,
+                    "correctedBy": None,
+                },
+            },
+            {
+                "url": f"{OBJECTS_ROOT}objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
+                "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
+                "record": {
+                    "index": 1,
+                    "typeVersion": 1,
+                    "data": {
+                        "type": "zaaktypeattribute",
+                        "meta": True,
+                        "objectid": 3,
+                    },
+                    "geometry": {},
+                    "startAt": "2021-07-09",
+                    "endAt": None,
+                    "registrationAt": "2021-07-09",
+                    "correctionFor": None,
+                    "correctedBy": None,
+                },
+            },
+        ]
+        m.post(f"{OBJECTS_ROOT}objects/search", json=objects)
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        with self.subTest("Test different meta filtering cases"):
+            for object_count, url in zip(
+                [1, 2],
+                [
+                    reverse("object-search"),
+                    reverse("object-search") + "?include_meta=True",
+                ],
+            ):
+                response = self.client.post(url)
+                self.assertEqual(status.HTTP_200_OK, response.status_code)
+                self.assertEqual(object_count, len(response.json()))

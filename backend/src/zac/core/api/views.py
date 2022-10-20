@@ -94,6 +94,7 @@ from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import (
     EigenschappenFilterSet,
+    MetaObjectFilterSet,
     ObjectTypeFilterSet,
     ZaakEigenschappenFilterSet,
     ZaakObjectFilterSet,
@@ -1243,12 +1244,25 @@ class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ObjectFilterProxySerializer
+    filterset_class = MetaObjectFilterSet
 
     def post(self, request):
         try:
             objects = search_objects(filters=request.data)
         except ClientError as exc:
             raise ValidationError(detail=exc.args)
+
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+        if not filterset.data.get("include_meta"):
+            objects = [
+                obj
+                for obj in objects
+                if not obj.get("record", {}).get("data", {}).get("meta", False)
+            ]
 
         object_serializer = ObjectProxySerializer(objects, many=True)
         return Response(object_serializer.data)
