@@ -9,7 +9,7 @@ from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import RolType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -101,7 +101,8 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.post(self.create_zaak_url, self.data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_has_perm_to_create(self, m):
+    @patch("zac.core.api.serializers.get_roltypen", return_value=[])
+    def test_has_perm_to_create(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
@@ -206,7 +207,8 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
     @override_settings(
         CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-model-that-does-not-exist"
     )
-    def test_create_zaak_process_definition_not_found(self, m):
+    @patch("zac.core.api.serializers.get_roltypen", return_value=[])
+    def test_create_zaak_process_definition_not_found(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -235,6 +237,14 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        roltype = generate_oas_component(
+            "ztc",
+            "schemas/RolType",
+            url=f"{CATALOGI_ROOT}roltypen/b7f920f7-ad3f-4bb3-b03f-f59a940bee4b",
+            zaaktype=self.zaaktype["url"],
+            omschrijving="zaak initiator",
+            omschrijvingGeneriek="initiator",
+        )
 
         config = CamundaConfig.get_solo()
         config.root_url = "https://camunda.example.com/"
@@ -248,15 +258,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "id": "e13e72de-56ba-42b6-be36-5c280e9b30cd",
             },
         )
-        response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(
-            response.json(),
-            {
-                "instanceId": "e13e72de-56ba-42b6-be36-5c280e9b30cd",
-                "instanceUrl": "https://some-url.com/",
-            },
-        )
+
         expected_payload = {
             "businessKey": "",
             "withVariablesInReturn": False,
@@ -282,4 +284,34 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "organisatieRSIN": {"type": "String", "value": "002220647"},
             },
         }
+
+        # First test with roltype initiator
+        with patch(
+            "zac.core.api.serializers.get_roltypen",
+            return_value=[factory(RolType, roltype)],
+        ):
+            response = self.client.post(self.url, self.data)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            response.json(),
+            {
+                "instanceId": "e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "instanceUrl": "https://some-url.com/",
+            },
+        )
         self.assertEqual(m.last_request.json(), expected_payload)
+
+        # Now remove initiator from roltypes
+        del expected_payload["variables"]["initiator"]
+        with patch("zac.core.api.serializers.get_roltypen", return_value=[]):
+            response = self.client.post(self.url, self.data)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            response.json(),
+            {
+                "instanceId": "e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "instanceUrl": "https://some-url.com/",
+            },
+        )

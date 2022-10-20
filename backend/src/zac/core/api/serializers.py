@@ -407,13 +407,22 @@ class CreateZaakSerializer(serializers.Serializer):
         max_date = max([zt.versiedatum for zt in zaaktypen])
         zaaktype = [zt for zt in zaaktypen if zt.versiedatum == max_date][0]
         validated_data["zaaktype"] = zaaktype.url
+        roltypen = [
+            rt
+            for rt in get_roltypen(zaaktype)
+            if rt.omschrijving_generiek == RolOmschrijving.initiator
+        ]
+        if roltypen:
+            validated_data[
+                "initiator"
+            ] = f"{AssigneeTypeChoices.user}:{self.context['request'].user}"
+
         return validated_data
 
     def to_internal_value(self, data):
         serialized_data = {
             **super().to_internal_value(data),
             **get_bptl_app_id_variable(),
-            "initiator": f"{AssigneeTypeChoices.user}:{self.context['request'].user}",
         }
         organisatie_rsin = serialized_data.pop("organisatie_rsin")
         serialized_data["organisatieRSIN"] = organisatie_rsin
