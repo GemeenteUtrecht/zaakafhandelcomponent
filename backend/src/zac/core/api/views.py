@@ -247,6 +247,11 @@ class CreateZaakView(views.APIView):
         responses={"201": CreatedProcessInstanceSerializer},
     )
     def post(self, request):
+        """
+        Note: If a ZAAK has a ZAAKTYPE that has ROLTYPE with `omschrijving_generiek`: `initiator`
+        this will automatically set the requesting user as the initiator.
+
+        """
         serializer = self.serializer_class(
             data=request.data, context={"request": request}
         )
