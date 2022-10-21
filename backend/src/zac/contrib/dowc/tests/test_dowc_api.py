@@ -235,9 +235,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             json=[self.dowc_response],
         )
 
-        response = get_open_documenten(self.user, referer="http://referer-link.test/")
+        response = get_open_documenten(self.user)
         self.assertEqual(
-            "https://dowc.nl/api/v1/documenten?purpose=write&info_url=http%3A%2F%2Freferer-link.test%2F",
+            "https://dowc.nl/api/v1/documenten?purpose=write",
             m.last_request.url,
         )
         self.assertEqual(response, [factory(DowcResponse, self.dowc_response)])
@@ -247,9 +247,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         m.get(f"{DOWC_API_ROOT}/api/v1/documenten", status_code=404, json=[])
 
-        response = get_open_documenten(self.user, referer="http://referer-link.test/")
+        response = get_open_documenten(self.user)
         self.assertEqual(
-            "https://dowc.nl/api/v1/documenten?purpose=write&info_url=http%3A%2F%2Freferer-link.test%2F",
+            "https://dowc.nl/api/v1/documenten?purpose=write",
             m.last_request.url,
         )
         self.assertEqual(response, [])

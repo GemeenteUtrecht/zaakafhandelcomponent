@@ -76,14 +76,13 @@ def create_doc(
 
 
 @optional_service
-def get_open_documenten(user: User, referer: str) -> List[Optional[DowcResponse]]:
+def get_open_documenten(user: User) -> List[Optional[DowcResponse]]:
     client = get_client(user)
     operation_id = "documenten_list"
     url = get_operation_url(client.schema, operation_id)
     url = furl(url).add(
         {
             "purpose": DocFileTypes.write,
-            "info_url": referer,
         }
     )
     try:
