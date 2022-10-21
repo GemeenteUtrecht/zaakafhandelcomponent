@@ -5,7 +5,7 @@ import requests
 from zgw_consumers.api_models.zaken import ZaakObject
 
 from zac.contrib.kadaster.bag import fetch_pand, fetch_verblijfsobject
-from zac.core.models import CoreConfig
+from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.utils import fetch_objects
 
 
@@ -25,7 +25,9 @@ class ZaakObjectGroup:
     template: str = "core/includes/zaakobjecten/default.html"
     items: list = None
 
-    def retrieve_items(self, items: Iterator[ZaakObject]) -> None:
+    def retrieve_items(
+        self, items: Iterator[ZaakObject], exclude_meta: bool = True
+    ) -> None:
         object_items = [
             (item.url, self.retriever(item.object)) if item.object else item
             for item in items
@@ -46,8 +48,16 @@ class ZaakObjectGroup:
         object_url_mapping = {obj["url"]: obj for obj in objects_in_object_api}
 
         self.items = []
+
+        # Do not show retrieved meta objects unless explicitly requested
+        meta_objecttype_urls = MetaObjectTypesConfig.get_solo().meta_objecttype_urls
         for zaakobject_url, item in object_items:
             retrieved_item = object_url_mapping.get(item, item)
+            if (
+                retrieved_item.get("type", {}).get("url") in meta_objecttype_urls
+                and exclude_meta
+            ):
+                continue
 
             # add zaakobject_url for all dict-like object items
             if isinstance(retrieved_item, dict):

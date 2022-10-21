@@ -660,6 +660,10 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
     schema_summary = _("List related OBJECTs of a ZAAK.")
 
     def get(self, request, *args, **kwargs):
+        """
+        Note: These objects do not include objects related to `meta` objecttypes.
+
+        """
         zaak = self.get_object()
         zaakobjecten = get_zaakobjecten(zaak)
 
@@ -667,14 +671,6 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
             if zo.object_type == "overige":
                 return zo.object_type_overige
             return zo.object_type
-
-        # Do not include meta objects such as Checklists, etc, as defined in MetaObjectTypesConfig
-        meta_objecttype_config = MetaObjectTypesConfig.get_solo()
-        zaakobjecten = [
-            zo
-            for zo in zaakobjecten
-            if group_key(zo) not in meta_objecttype_config.meta_objecttype_urls
-        ]
 
         # re-group by type
         groups = []
@@ -686,7 +682,8 @@ class ZaakObjectsView(GetZaakMixin, views.APIView):
                 ZaakObjectGroup(object_type=_group, label=_group, retriever=noop),
             )
             group.retrieve_items(items)
-            groups.append(group)
+            if group.items:
+                groups.append(group)
 
         serializer = self.serializer_class(instance=groups, many=True)
         return Response(serializer.data)
