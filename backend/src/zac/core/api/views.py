@@ -38,7 +38,6 @@ from zac.accounts.models import User, UserAtomicPermission
 from zac.camunda.api.utils import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
-from zac.contrib.dowc.data import DowcResponse
 from zac.core.camunda.start_process.serializers import CreatedProcessInstanceSerializer
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
@@ -750,8 +749,7 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
         resolved_documenten = resolve_documenten_informatieobjecttypen(
             filtered_documents
         )
-        referer = request.headers.get("referer", "")
-        open_documenten = get_open_documenten(request.user, referer)
+        open_documenten = get_open_documenten(request.user)
 
         # Resolve audit trail
         with parallel() as executor:
@@ -833,17 +831,13 @@ class ZaakDocumentView(views.APIView):
         }
         return editing_history
 
-    def get_open_documenten(self) -> List[Optional[DowcResponse]]:
-        referer = self.request.headers.get("referer", "")
-        return get_open_documenten(self.request.user, referer)
-
     def get_response_serializer(self, instance: Document) -> GetZaakDocumentSerializer:
-        open_documenten = self.get_open_documenten()
+        open_documenten = get_open_documenten(self.request.user)
         editing_history = self.get_document_audit_trail(instance)
         serializer = GetZaakDocumentSerializer(
             instance=instance,
             context={
-                "open_documenten": open_documenten,
+                "open_documenten": [dowc.unversioned_url for dowc in open_documenten],
                 "editing_history": editing_history,
             },
         )
