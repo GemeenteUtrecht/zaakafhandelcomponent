@@ -130,22 +130,22 @@ export class DocumentenComponent implements OnChanges {
   /**
    * Opens the selected document in edit mode or closes the edit mode.
    * A user is only allowed to edit one file at a time.
-   * @param writeUrl
+   * @param url
    */
-  editDocument(writeUrl) {
-    const selectedDoc: Document = this.documentsData.find((doc: Document) => doc.writeUrl === writeUrl);
+  editDocument(url) {
+    const selectedDoc: Document = this.documentsData.find((doc: Document) => doc.writeUrl === url || doc.deleteUrl === url);
     const hasOpenDoc = this.documentsData.some((doc: Document) => doc.currentUserIsEditing);
 
     // Open the document if the current user is not already editing it and has no other files open.
     if (!selectedDoc.currentUserIsEditing && !hasOpenDoc) {
-      this.openDocumentEdit(writeUrl);
+      this.openDocumentEdit(url);
       // Show message if the user is already editing another document.
     } else if (!selectedDoc.currentUserIsEditing && hasOpenDoc) {
       const message = "U kunt maar één document tegelijk bewerken."
       this.snackbarService.openSnackBar(message, "Sluiten")
       // Exit edit mode
     } else {
-      this.closeDocumentEdit(writeUrl);
+      this.closeDocumentEdit(url);
     }
   }
 
