@@ -169,6 +169,9 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                 "bestandsnaam": "some-bestandsnaam",
                 "bestandsomvang": 10,
                 "currentUserIsEditing": True,
+                "deleteUrl": reverse_lazy(
+                    "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc.uuid}
+                ),
                 "identificatie": "DOC-2020-007",
                 "informatieobjecttype": {
                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
