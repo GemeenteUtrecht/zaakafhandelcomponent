@@ -772,7 +772,9 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
             instance=resolved_documenten,
             many=True,
             context={
-                "open_documenten": [dowc.unversioned_url for dowc in open_documenten],
+                "open_documenten": {
+                    dowc.unversioned_url: dowc for dowc in open_documenten
+                },
                 "editing_history": editing_history,
                 "zaak_is_closed": True if zaak.einddatum else False,
             },
@@ -837,7 +839,9 @@ class ZaakDocumentView(views.APIView):
         serializer = GetZaakDocumentSerializer(
             instance=instance,
             context={
-                "open_documenten": [dowc.unversioned_url for dowc in open_documenten],
+                "open_documenten": {
+                    dowc.unversioned_url: dowc for dowc in open_documenten
+                },
                 "editing_history": editing_history,
             },
         )

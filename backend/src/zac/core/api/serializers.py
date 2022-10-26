@@ -7,6 +7,7 @@ from typing import Optional
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
+from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from django_camunda.api import get_process_instance_variable
@@ -94,14 +95,28 @@ class InformatieObjectTypeSerializer(APIModelSerializer):
 
 
 class GetZaakDocumentSerializer(APIModelSerializer):
+    delete_url = serializers.SerializerMethodField(
+        help_text=_(
+            "The URL required to save edits and delete the DOWC object related to the DOCUMENT."
+        )
+    )
     read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
     write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write, allow_blank=True)
     vertrouwelijkheidaanduiding = serializers.CharField(
-        source="get_vertrouwelijkheidaanduiding_display"
+        source="get_vertrouwelijkheidaanduiding_display",
+        help_text=_("Vertrouwelijkheidaanduiding of DOCUMENT."),
     )
-    informatieobjecttype = InformatieObjectTypeSerializer()
-    current_user_is_editing = serializers.SerializerMethodField()
-    last_edited_date = serializers.SerializerMethodField()
+    informatieobjecttype = InformatieObjectTypeSerializer(
+        help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")
+    )
+    current_user_is_editing = serializers.SerializerMethodField(
+        help_text=_(
+            "Boolean flag to indicate if requesting user is editing current DOCUMENT."
+        )
+    )
+    last_edited_date = serializers.SerializerMethodField(
+        help_text=_("Shows last edited datetime.")
+    )
 
     class Meta:
         model = Document
@@ -111,6 +126,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "bestandsnaam",
             "bestandsomvang",
             "current_user_is_editing",
+            "delete_url",
             "identificatie",
             "informatieobjecttype",
             "last_edited_date",
@@ -128,18 +144,20 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             }
         }
 
-    def get_current_user_is_editing(self, obj) -> Optional[bool]:
-        if "open_documenten" in self.context:
-            if obj.url in self.context["open_documenten"]:
-                return True
-            else:
-                return False
-        return None
+    def get_delete_url(self, obj) -> str:
+        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        return (
+            reverse("dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid})
+            if dowc_obj
+            else ""
+        )
+
+    def get_current_user_is_editing(self, obj) -> bool:
+        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        return bool(dowc_obj)
 
     def get_last_edited_date(self, obj) -> Optional[datetime]:
-        if "editing_history" in self.context:
-            return self.context["editing_history"][obj.url]
-        return None
+        return self.context.get("editing_history", {}).get(obj.url)
 
 
 class AddZaakDocumentSerializer(serializers.Serializer):

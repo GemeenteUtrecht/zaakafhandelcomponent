@@ -21,6 +21,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.data import DowcResponse
 from zac.core.api.data import AuditTrailData
 from zac.core.tests.utils import ClearCachesMixin
@@ -224,7 +225,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                     magic_url="",
                     purpose="write",
                     uuid=uuid4(),
-                    unversioned_url="",
+                    unversioned_url=document["url"],
                 )
             ],
         ):
@@ -422,7 +423,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                             magic_url="",
                             purpose="write",
                             uuid=uuid4(),
-                            unversioned_url="",
+                            unversioned_url=document["url"],
                         )
                     ],
                 ):
@@ -591,7 +592,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                             magic_url="",
                             purpose="write",
                             uuid=uuid4(),
-                            unversioned_url="",
+                            unversioned_url=document["url"],
                         )
                     ],
                 ):
@@ -611,6 +612,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
     endpoint = reverse_lazy("zaak-document")
 
     def setUp(self):
+        self.maxDiff = None
         super().setUp()
 
         Service.objects.create(
@@ -742,18 +744,9 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             aanmaakdatum="2022-03-04T12:11:39.293+01:00",
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-
         with patch(
             "zac.core.api.views.get_open_documenten",
-            return_value=[
-                DowcResponse(
-                    drc_url=document["url"],
-                    unversioned_url="",
-                    magic_url="",
-                    purpose="write",
-                    uuid=uuid4(),
-                )
-            ],
+            return_value=[],
         ):
             with patch(
                 "zac.core.api.views.fetch_document_audit_trail",
@@ -779,18 +772,33 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "bestandsnaam": document["bestandsnaam"],
             "bestandsomvang": document["bestandsomvang"],
             "currentUserIsEditing": False,
+            "deleteUrl": "",
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
                 "omschrijving": self.informatieobjecttype["omschrijving"],
             },
             "locked": document["locked"],
-            "readUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/read',
+            "readUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.read,
+                },
+            ),
             "titel": document["titel"],
             "url": document["url"],
             "versie": 1,
             "vertrouwelijkheidaanduiding": "Openbaar",
-            "writeUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/write',
+            "writeUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.write,
+                },
+            ),
             "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(expected_data, data)
@@ -851,18 +859,9 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             aanmaakdatum="2022-03-04T12:11:39.293+01:00",
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-
         with patch(
             "zac.core.api.views.get_open_documenten",
-            return_value=[
-                DowcResponse(
-                    drc_url=document["url"],
-                    unversioned_url="",
-                    magic_url="",
-                    purpose="write",
-                    uuid=uuid4(),
-                )
-            ],
+            return_value=[],
         ):
             with patch(
                 "zac.core.api.views.fetch_document_audit_trail",
@@ -885,18 +884,33 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "bestandsnaam": document["bestandsnaam"],
             "bestandsomvang": document["bestandsomvang"],
             "currentUserIsEditing": False,
+            "deleteUrl": "",
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
                 "omschrijving": self.informatieobjecttype["omschrijving"],
             },
             "locked": document["locked"],
-            "readUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/read',
+            "readUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.read,
+                },
+            ),
             "titel": document["titel"],
             "url": document["url"],
             "versie": 1,
             "vertrouwelijkheidaanduiding": "Openbaar",
-            "writeUrl": f'/api/dowc/{document["bronorganisatie"]}/{document["identificatie"]}/write',
+            "writeUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.write,
+                },
+            ),
             "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(expected_data, data)
@@ -1101,6 +1115,13 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
         audit_trail = factory(AuditTrailData, audit_trail)
+        dowc_obj = DowcResponse(
+            drc_url=document["url"],
+            unversioned_url=document["url"],
+            magic_url="",
+            purpose="write",
+            uuid=uuid4(),
+        )
         with patch(
             "zac.core.api.serializers.get_documenten",
             return_value=factory(
@@ -1120,15 +1141,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             ):
                 with patch(
                     "zac.core.api.views.get_open_documenten",
-                    return_value=[
-                        DowcResponse(
-                            drc_url=document["url"],
-                            unversioned_url="",
-                            magic_url="",
-                            purpose="write",
-                            uuid=uuid4(),
-                        )
-                    ],
+                    return_value=[dowc_obj],
                 ):
                     with patch(
                         "zac.core.api.views.fetch_document_audit_trail",
@@ -1145,19 +1158,36 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "beschrijving": document["beschrijving"],
             "bestandsnaam": document["bestandsnaam"],
             "bestandsomvang": None,
-            "currentUserIsEditing": False,
+            "currentUserIsEditing": True,
+            "deleteUrl": reverse_lazy(
+                "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid}
+            ),
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": self.informatieobjecttype["url"],
                 "omschrijving": self.informatieobjecttype["omschrijving"],
             },
             "locked": False,
-            "readUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/read",
+            "readUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.read,
+                },
+            ),
             "titel": document["titel"],
             "url": "https://open-zaak.nl/documenten/api/v1/enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             "versie": 1,
             "vertrouwelijkheidaanduiding": "Zaakvertrouwelijk",
-            "writeUrl": f"/api/dowc/{document['bronorganisatie']}/{document['identificatie']}/write",
+            "writeUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.write,
+                },
+            ),
             "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(data, expected_data)
@@ -1208,15 +1238,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         with patch(
             "zac.core.api.views.get_open_documenten",
-            return_value=[
-                DowcResponse(
-                    drc_url=document["url"],
-                    unversioned_url="",
-                    magic_url="",
-                    purpose="write",
-                    uuid=uuid4(),
-                )
-            ],
+            return_value=[],
         ):
             with patch(
                 "zac.core.api.views.fetch_document_audit_trail",
@@ -1282,15 +1304,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         with patch(
             "zac.core.api.views.get_open_documenten",
-            return_value=[
-                DowcResponse(
-                    drc_url=document["url"],
-                    unversioned_url="",
-                    magic_url="",
-                    purpose="write",
-                    uuid=uuid4(),
-                )
-            ],
+            return_value=[],
         ):
             with patch(
                 "zac.core.api.views.fetch_document_audit_trail",
