@@ -1,10 +1,11 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import {NavigationEnd, Router} from '@angular/router';
 import {filter} from 'rxjs/operators';
 import {SnackbarService} from '@gu/components';
 import {UserService, ZaakService} from '@gu/services';
 import {menuItems, MenuItem} from './constants/menu';
 import { User } from '@gu/models';
+import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 
 
 /**
@@ -37,25 +38,46 @@ export class AppComponent implements OnInit {
   /** @type {string} Selected menu item. */
   selectedMenu: string;
 
-  /** @type {number} Time out handler. */
-  timeoutId: number;
-
-  /** @type {number} Maximum time for inactive user. */
-  maxUserInactivityTime: number = 30 * 60 * 1000; // 30 minutes
+  /** @type {string} Idle state. */
+  idleState = "NOT_STARTED";
 
   /**
    * Constructor method.
+   * @param {Idle} idle
    * @param {Router} router
    * @param {SnackbarService} snackbarService
    * @param {UserService} userService
    * @param {ZaakService} zaakService
+   * @param {ChangeDetectorRef} cd
    */
   constructor (
+    private idle: Idle,
     private router: Router,
     private snackbarService: SnackbarService,
     private userService: UserService,
     private zaakService: ZaakService,
+    cd: ChangeDetectorRef
   ) {
+    idle.setIdle(5); // how long can they be inactive before considered idle, in seconds
+    idle.setTimeout(10 * 60 * 1000); // how long can they be idle before considered timed out, in seconds (10 minutes)
+    idle.setInterrupts(DEFAULT_INTERRUPTSOURCES); // provide sources that will "interrupt" aka provide events indicating the user is active
+
+    // When the user becomes idle
+    idle.onIdleStart.subscribe(() => {
+      this.idleState = "IDLE";
+    });
+
+    // When the user is no longer idle
+    idle.onIdleEnd.subscribe(() => {
+      this.idleState = "NOT_IDLE";
+      cd.detectChanges();
+    });
+
+    // When the user has timed out
+    idle.onTimeout.subscribe(() => {
+      this.idleState = "TIMED_OUT";
+      this.logOutUser();
+    });
   }
 
   //
@@ -67,6 +89,7 @@ export class AppComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
+    this.reset();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
@@ -76,12 +99,19 @@ export class AppComponent implements OnInit {
       });
 
     this.getContextData();
-    this.checkTimeOut();
   }
 
   //
   // Context.
   //
+
+  /**
+   * Call this method to start/reset the idle process
+   */
+  reset() {
+    this.idle.watch();
+    this.idleState = "NOT_IDLE";
+  }
 
   /**
    * Retrieves the current user.
@@ -118,26 +148,6 @@ export class AppComponent implements OnInit {
         this.reportError(error, this.logOutErrorMessage);
       }
     );
-  }
-
-  /**
-   * Clear time out if user shows activity.
-   */
-  @HostListener('window:keydown')
-  @HostListener('window:mousedown')
-  @HostListener('window:mousemove')
-  checkUserActivity() {
-    clearTimeout(this.timeoutId);
-    this.checkTimeOut();
-  }
-
-  /**
-   * Log user out after timeout.
-   */
-  checkTimeOut() {
-    this.timeoutId = setTimeout(() => {
-      this.logOutUser()
-    }, this.maxUserInactivityTime);
   }
 
   /**
