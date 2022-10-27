@@ -85,6 +85,7 @@ export class DocumentenService {
       const iconColor = (element.locked && !element.currentUserIsEditing) ? 'orange' : 'green'
       const iconInfo = (element.locked && !element.currentUserIsEditing) ? 'Het document wordt al door een ander persoon bewerkt.' : 'U kunt het document bewerken. Klik op "Bewerkingen opslaan" na het bewerken.'
       const editLabel = element.currentUserIsEditing ? 'Bewerkingen opslaan' : 'Bewerken';
+      const editUrl = element.currentUserIsEditing ? element.deleteUrl : element.writeUrl;
       const editButtonStyle = element.currentUserIsEditing  ? 'primary' : 'tertiary';
 
       const showEditCell = (!element.locked || element.currentUserIsEditing) && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
@@ -93,7 +94,7 @@ export class DocumentenService {
       const editCell: ExtensiveCell = {
         type: 'button',
         label: editLabel,
-        value: element.writeUrl,
+        value: editUrl,
         buttonType: editButtonStyle
       };
       const overwriteCell: ExtensiveCell = {
