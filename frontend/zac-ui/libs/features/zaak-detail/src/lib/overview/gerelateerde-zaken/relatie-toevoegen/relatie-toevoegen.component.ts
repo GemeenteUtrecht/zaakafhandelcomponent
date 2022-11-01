@@ -200,7 +200,8 @@ export class RelatieToevoegenComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
-    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
+    const message = error?.error?.detail || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
+    this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     console.error(error);
     this.isLoading = false;
   }
