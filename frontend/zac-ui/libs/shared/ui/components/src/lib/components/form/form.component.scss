@@ -21,10 +21,26 @@
   .mat-expansion-panel-header-title,
   .mat-expansion-panel-header-description {
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
-    flex-basis: 50%;
   }
+
+  .mat-expansion-panel-header-title {
+    flex-basis: 100%;
+  }
+
+  .mat-expansion-panel-header[aria-expanded="true"] .mat-expansion-panel-header-title {
+    white-space: normal;
+  }
+
+  .mat-expansion-panel-header-title strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mat-expansion-panel-header-description {
+    flex-shrink: 0;
+  }
+
 
   .mat-expansion-panel-header-description {
     justify-content: flex-end;
