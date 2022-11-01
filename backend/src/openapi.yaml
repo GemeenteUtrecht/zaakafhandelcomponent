@@ -1397,6 +1397,42 @@ paths:
                 - 'true'
               description: Header displays als de gebruiker is gehijackt.
           description: No response body
+  /api/camunda/change-behandelaar:
+    post:
+      operationId: camunda_change_behandelaar_create
+      description: |-
+        Changes the assignee from all tasks where the assignee is a behandelaar.
+
+        Note: This does not include tasks related to kownsl review requests.
+      summary: Change camunda behandelaar.
+      tags:
+      - camunda
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeBehandelaarTasksRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangeBehandelaarTasksRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangeBehandelaarTasksRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          description: No response body
   /api/camunda/claim-task:
     post:
       operationId: camunda_claim_task_create
@@ -1968,6 +2004,9 @@ paths:
   /api/core/cases:
     post:
       operationId: core_cases_create
+      description: |-
+        Note: If a ZAAK has a ZAAKTYPE that has ROLTYPE with `omschrijving_generiek`: `initiator`
+        this will automatically set the requesting user as the initiator.
       summary: Laat gebruikers een ZAAK aanmaken.
       tags:
       - core
@@ -1986,7 +2025,7 @@ paths:
       security:
       - cookieAuth: []
       responses:
-        '200':
+        '201':
           headers:
             X-Is-Hijacked:
               schema:
@@ -2175,6 +2214,7 @@ paths:
   /api/core/cases/{bronorganisatie}/{identificatie}/objects:
     get:
       operationId: core_cases_objects_retrieve
+      description: 'Note: These objects do not include objects related to `meta` objecttypes.'
       summary: Alle gerelateerde OBJECTen van een ZAAK opvragen.
       parameters:
       - in: path
@@ -2389,11 +2429,7 @@ paths:
                 - 'false'
                 - 'true'
               description: Header displays als de gebruiker is gehijackt.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DestroyRol'
-          description: ''
+          description: No response body
   /api/core/cases/{bronorganisatie}/{identificatie}/start-process:
     post:
       operationId: core_cases_start_process_create
@@ -2700,6 +2736,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/AddZaakRelation'
           description: ''
+  /api/core/catalogi:
+    get:
+      operationId: core_catalogi_retrieve
+      description: List a collection of catalogi.
+      summary: Alle CATALOGI opvragen.
+      tags:
+      - meta
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalogus'
+          description: ''
   /api/core/document-types:
     get:
       operationId: core_document_types_list
@@ -2762,16 +2822,16 @@ paths:
           type: string
           format: uri
           minLength: 1
-          description: URL-referentie naar gerelateerde CATALOGUS
-        description: URL-referentie naar gerelateerde CATALOGUS
+          description: URL-referentie naar het gerelateerde CATALOGUS.
+        description: URL-referentie naar het gerelateerde CATALOGUS.
       - in: query
         name: zaaktype
         schema:
           type: string
           format: uri
           minLength: 1
-          description: URL-referentie naar de gerelateerde ZAAKTYPE
-        description: URL-referentie naar de gerelateerde ZAAKTYPE
+          description: URL-referentie naar het gerelateerde ZAAKTYPE.
+        description: URL-referentie naar het gerelateerde ZAAKTYPE.
       - in: query
         name: zaaktype_identificatie
         schema:
@@ -2839,9 +2899,17 @@ paths:
           description: ''
   /api/core/objecttypes:
     get:
-      operationId: core_objecttypes_list
-      description: Haalt alle OBJECTTYPEs van configureerde OBJECTTYPES API op.
+      operationId: core_objecttypes_retrieve
+      description: Haalt alle non-meta OBJECTTYPEs van configureerde OBJECTTYPES API
+        op.
       summary: Alle OBJECTTYPEs opvragen.
+      parameters:
+      - in: query
+        name: zaaktype
+        schema:
+          type: string
+          format: uri
+        description: URL-referentie naar ZAAKTYPE in de CATALOGI API.
       tags:
       - objects
       security:
@@ -2859,9 +2927,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ObjecttypeProxy'
+                $ref: '#/components/schemas/ObjecttypeProxy'
           description: ''
   /api/core/objecttypes/{uuid}/versions/{version}:
     get:
@@ -3051,6 +3117,13 @@ paths:
         the authenticated user has read-permissions for are returned.
       summary: Alle ZAAKTYPEn opvragen.
       parameters:
+      - in: query
+        name: domein
+        schema:
+          type: string
+          minLength: 1
+          description: '`iexact` on `domein` field of CATALOGUS related to ZAAKTYPEs.'
+        description: '`iexact` on `domein` field of CATALOGUS related to ZAAKTYPEs.'
       - name: page
         required: false
         in: query
@@ -3934,6 +4007,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/ZaakRevReqDetail'
           description: ''
+  /api/landing-page/:
+    get:
+      operationId: landing_page_retrieve
+      tags:
+      - landing-page
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LandingPageConfiguration'
+          description: ''
   /api/search/reports/:
     get:
       operationId: search_reports_list
@@ -4248,6 +4344,7 @@ paths:
             schema:
               $ref: '#/components/schemas/SearchRequest'
       security:
+      - tokenAuth: []
       - cookieAuth: []
       - tokenAuth: []
       responses:
@@ -4281,6 +4378,7 @@ paths:
       tags:
       - search
       security:
+      - tokenAuth: []
       - cookieAuth: []
       - tokenAuth: []
       responses:
@@ -5329,6 +5427,23 @@ components:
       - domein
       - url
       title: Catalogus
+    ChangeBehandelaarTasksRequest:
+      type: object
+      properties:
+        zaak:
+          type: string
+          format: uri
+          minLength: 1
+          description: URL-referentie naar de ZAAK in zijn API
+        rol:
+          type: string
+          format: uri
+          minLength: 1
+          description: URL-reference to the ROL in its API
+      required:
+      - rol
+      - zaak
+      title: ChangeBehandelaarTasksRequest
     CharValue:
       type: object
       properties:
@@ -5729,16 +5844,6 @@ components:
       required:
       - value
       title: Datetime
-    DestroyRol:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-          description: URL-referentie naar de ROL zelf.
-      required:
-      - url
-      title: DestroyRol
     Document:
       type: object
       properties:
@@ -6137,11 +6242,11 @@ components:
       title: FormEnum
     FormField:
       oneOf:
-      - $ref: '#/components/schemas/FormFieldEnum'
-      - $ref: '#/components/schemas/FormFieldDatetime'
       - $ref: '#/components/schemas/FormFieldInt'
-      - $ref: '#/components/schemas/FormFieldString'
       - $ref: '#/components/schemas/FormFieldBoolean'
+      - $ref: '#/components/schemas/FormFieldEnum'
+      - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldDatetime'
       discriminator:
         propertyName: inputType
         mapping:
@@ -6218,17 +6323,26 @@ components:
           description: Bestandsformaat in bytes
         currentUserIsEditing:
           type: boolean
-          nullable: true
           readOnly: true
+          description: Boolean flag to indicate if requesting user is editing current
+            DOCUMENT.
+        deleteUrl:
+          type: string
+          readOnly: true
+          description: The URL required to save edits and delete the DOWC object related
+            to the DOCUMENT.
         identificatie:
           type: string
         informatieobjecttype:
-          $ref: '#/components/schemas/InformatieObjectType'
+          allOf:
+          - $ref: '#/components/schemas/InformatieObjectType'
+          description: De INFORMATIEOBJECTTYPE toebehorend aan het ZAAKINFORMATIEOBJECT.
         lastEditedDate:
           type: string
           format: date-time
           nullable: true
           readOnly: true
+          description: Shows last edited datetime.
         locked:
           type: boolean
         readUrl:
@@ -6246,6 +6360,7 @@ components:
           type: integer
         vertrouwelijkheidaanduiding:
           type: string
+          description: Vertrouwelijkheidaanduiding van DOCUMENT.
         writeUrl:
           type: string
           format: uri
@@ -6259,6 +6374,7 @@ components:
       - bestandsnaam
       - bestandsomvang
       - currentUserIsEditing
+      - deleteUrl
       - identificatie
       - informatieobjecttype
       - lastEditedDate
@@ -6406,8 +6522,8 @@ components:
       title: GroupBlueprintPoliciesZaakTypeBlueprintRequest
     GroupBlueprintRequest:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprintRequest'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprintRequest'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprintRequest'
       discriminator:
         propertyName: objectType
         mapping:
@@ -6516,9 +6632,10 @@ components:
       type: object
       properties:
         assignee:
-          allOf:
-          - $ref: '#/components/schemas/User'
-          description: Toegewezen gebruiker voor de gebruikerstaak
+          type: string
+          readOnly: true
+          description: Volledige naam van de gebruiker of groep die toegewezen is
+            om te antwoorden.
         completed:
           type: string
           format: date-time
@@ -6664,6 +6781,59 @@ components:
       required:
       - zaak
       title: KownslReviewRequestExtrasResponse
+    LandingPageConfiguration:
+      type: object
+      properties:
+        title:
+          type: string
+        image:
+          type: string
+          nullable: true
+          readOnly: true
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/LandingPageSection'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/LandingPageLink'
+      required:
+      - image
+      - links
+      - sections
+      - title
+      title: LandingPageConfiguration
+    LandingPageLink:
+      type: object
+      properties:
+        icon:
+          type: string
+        label:
+          type: string
+        href:
+          type: string
+      required:
+      - href
+      - icon
+      - label
+      title: LandingPageLink
+    LandingPageSection:
+      type: object
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/LandingPageLink'
+      required:
+      - icon
+      - links
+      - name
+      title: LandingPageSection
     ManageGroup:
       type: object
       properties:
@@ -7689,11 +7859,11 @@ components:
       title: ReviewTypeEnum
     Rol:
       oneOf:
-      - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
+      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
       - $ref: '#/components/schemas/RolJSONFieldTaskData'
       - $ref: '#/components/schemas/RolRolVestigingTaskData'
       - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
-      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
       - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
       discriminator:
         propertyName: betrokkeneType
@@ -7953,12 +8123,12 @@ components:
       title: RolOrganisatorischeEenheidTaskDataRequest
     RolRequest:
       oneOf:
-      - $ref: '#/components/schemas/RolRolVestigingTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolMedewerkerTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
       - $ref: '#/components/schemas/RolJSONFieldTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolVestigingTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolMedewerkerTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskDataRequest'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -8690,12 +8860,12 @@ components:
       title: SubmitUserTaskDynamicFormWrite
     SubmitUserTaskRequest:
       oneOf:
+      - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
       discriminator:
         propertyName: form
         mapping:
@@ -8810,9 +8980,9 @@ components:
       title: SummaryZaakDocument
     Task:
       oneOf:
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -9004,10 +9174,10 @@ components:
       - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
-      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
-      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
       - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
+      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
+      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -9546,10 +9716,10 @@ components:
       title: ZaakDocumentRequest
     ZaakEigenschap:
       oneOf:
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -9831,9 +10001,17 @@ components:
           type: string
           description: Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator
             voor de verschillende versies van ZAAKTYPE.
+        identificatie:
+          type: string
+          description: Unieke identificatie in de CATALOGI API.
+        url:
+          type: string
+          description: URL-referentie naar de ZAAKTYPE in de CATALOGI API.
       required:
       - catalogus
+      - identificatie
       - omschrijving
+      - url
       title: ZaakTypeAggregate
     ZaakTypeBlueprint:
       type: object
@@ -9885,7 +10063,7 @@ components:
         url:
           type: string
           format: uri
-          description: URL-referentie naar de ZAAKTYPE in de CATALOGI API
+          description: URL-referentie naar de ZAAKTYPE in de CATALOGI API.
         catalogus:
           type: string
           description: URL-referentie naar de CATALOGUS die aan de ZAAKTYPE toebehoort.
@@ -9900,7 +10078,7 @@ components:
           type: string
           format: uri
           minLength: 1
-          description: URL-referentie naar de ZAAKTYPE in de CATALOGI API
+          description: URL-referentie naar de ZAAKTYPE in de CATALOGI API.
         catalogus:
           type: string
           minLength: 1

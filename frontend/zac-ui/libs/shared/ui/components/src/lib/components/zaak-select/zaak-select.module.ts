@@ -10,9 +10,6 @@ import {ZaakSelectComponent} from './zaak-select.component';
     MultiselectModule,
     SharedUiComponentsModule,
   ],
-  declarations: [
-    ZaakSelectComponent,
-  ],
   exports: [
     ZaakSelectComponent,
   ]

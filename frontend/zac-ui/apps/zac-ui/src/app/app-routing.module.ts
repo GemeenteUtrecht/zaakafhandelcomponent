@@ -5,7 +5,7 @@ const routes: Routes = [
   {
     path: '',
     loadChildren: () =>
-      import('./components/workstack/workstack.module').then((m) => m.WorkstackModule),
+      import('./components/landing/landing.module').then((m) => m.LandingModule),
   },
   {
     path: 'kownsl',

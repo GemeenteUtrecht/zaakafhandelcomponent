@@ -17,10 +17,10 @@ import { AppComponent } from './app.component';
 import { KownslModule } from './components/kownsl/kownsl.module';
 import { ZakenModule } from './components/zaken/zaken.module';
 import { WorkstackModule } from './components/workstack/workstack.module';
-import { ZaakSelectModule } from '@gu/search';
 import { AuthProfilesModule } from './components/auth-profiles/auth-profiles.module';
 import { DashboardModule } from './components/dashboard/dashboard.module';
 import { NgIdleModule } from '@ng-idle/core';
+import { LandingModule } from './components/landing/landing.module';
 
 
 registerLocaleData(localeNL);
@@ -41,10 +41,10 @@ registerLocaleData(localeNL);
       headerName: 'X-CSRFToken',
     }),
     KownslModule,
+    LandingModule,
     NgIdleModule.forRoot(),
     SharedUiComponentsModule,
     WorkstackModule,
-    ZaakSelectModule,
     ZakenModule,
   ],
   providers: [

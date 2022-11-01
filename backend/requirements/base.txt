@@ -154,6 +154,8 @@ openpyxl==3.0.0
     # via tablib
 orderedmultidict==1.0.1
     # via furl
+pillow==9.3.0
+    # via -r requirements/base.in
 psutil==5.8.0
     # via -r requirements/base.in
 psycopg2==2.8.6
