@@ -394,9 +394,9 @@ class CreateZaakSerializer(serializers.Serializer):
             )
         ],
     )
-    zaaktype_omschrijving = serializers.CharField(
+    zaaktype_identificatie = serializers.CharField(
         required=True,
-        help_text=_("`omschrijving` of ZAAKTYPE."),
+        help_text=_("`identificatie` of ZAAKTYPE."),
     )
     zaaktype_catalogus = serializers.URLField(
         required=True,
@@ -409,22 +409,25 @@ class CreateZaakSerializer(serializers.Serializer):
 
     def validate(self, data):
         validated_data = super().validate(data)
-        zt_omschrijving = validated_data["zaaktype_omschrijving"]
+        zt_identificatie = validated_data["zaaktype_identificatie"]
         zt_catalogus = validated_data["zaaktype_catalogus"]
         zaaktypen = get_zaaktypen(
             catalogus=zt_catalogus,
-            omschrijving=zt_omschrijving,
+            identificatie=zt_identificatie,
             request=self.context["request"],
         )
         if not zaaktypen:
             raise serializers.ValidationError(
                 _(
-                    "ZAAKTYPE `{zt_omschrijving}` can not be found in `{zt_catalogus}` or user does not have permission."
-                ).format(zt_omschrijving=zt_omschrijving, zt_catalogus=zt_catalogus)
+                    "ZAAKTYPE with `identificatie`: `{zt_identificatie}` can not be found in `{zt_catalogus}` or user does not have permission."
+                ).format(zt_identificatie=zt_identificatie, zt_catalogus=zt_catalogus)
             )
         max_date = max([zt.versiedatum for zt in zaaktypen])
         zaaktype = [zt for zt in zaaktypen if zt.versiedatum == max_date][0]
         validated_data["zaaktype"] = zaaktype.url
+        validated_data["zaaktype_omschrijving"] = zaaktype.omschrijving
+
+        # If roltypes contain an initiator include `initiator` in validated_data
         roltypen = [
             rt
             for rt in get_roltypen(zaaktype)

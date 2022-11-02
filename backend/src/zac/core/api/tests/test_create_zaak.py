@@ -50,14 +50,13 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            omschrijving="ZT1",
         )
         cls.zaaktype = factory(ZaakType, cls._zaaktype)
         cls.create_zaak_url = reverse(
             "zaak-create",
         )
         cls.data = {
-            "zaaktype_omschrijving": cls.zaaktype.omschrijving,
+            "zaaktype_identificatie": cls.zaaktype.identificatie,
             "zaaktype_catalogus": cls.zaaktype.catalogus,
             "zaak_details": {
                 "omschrijving": "some-omschrijving",
@@ -155,7 +154,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         cls.user = SuperUserFactory.create()
 
         cls.data = {
-            "zaaktype_omschrijving": cls.zaaktype["omschrijving"],
+            "zaaktype_identificatie": cls.zaaktype["identificatie"],
             "zaaktype_catalogus": cls.zaaktype["catalogus"],
             "zaak_details": {
                 "omschrijving": "some-omschrijving",
@@ -199,7 +198,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "nonFieldErrors": [
-                    f"ZAAKTYPE `{self.zaaktype['omschrijving']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}` of de gebruiker heeft de benodigde rechten niet."
+                    f"ZAAKTYPE met `identificatie`: `{self.zaaktype['identificatie']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}` of de gebruiker heeft de benodigde rechten niet."
                 ]
             },
         )
@@ -266,6 +265,10 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "zaaktypeOmschrijving": {
                     "type": "String",
                     "value": self.zaaktype["omschrijving"],
+                },
+                "zaaktypeIdentificatie": {
+                    "type": "String",
+                    "value": self.zaaktype["identificatie"],
                 },
                 "zaaktypeCatalogus": {
                     "type": "String",
