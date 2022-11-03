@@ -19,9 +19,9 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
 
 from ..documents import ZaakDocument, ZaakTypeDocument
 from ..drf_api.serializers import DEFAULT_ES_FIELDS
@@ -63,7 +63,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "betrokkene_type": "medewerker",
                     "omschrijving_generiek": "behandelaar",
                     "betrokkene_identificatie": {
-                        "identificatie": "some_username",
+                        "identificatie": f"{AssigneeTypeChoices.user}:some_username",
                     },
                 },
             ],
@@ -377,7 +377,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                                 "betrokkeneType": "medewerker",
                                 "omschrijvingGeneriek": "behandelaar",
                                 "betrokkeneIdentificatie": {
-                                    "identificatie": "some_username"
+                                    "identificatie": "user:some_username"
                                 },
                             },
                         ],
@@ -497,7 +497,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                                 "betrokkeneType": "medewerker",
                                 "omschrijvingGeneriek": "behandelaar",
                                 "betrokkeneIdentificatie": {
-                                    "identificatie": "some_username"
+                                    "identificatie": "user:some_username"
                                 },
                             },
                         ],

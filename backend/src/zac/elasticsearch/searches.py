@@ -17,6 +17,7 @@ from elasticsearch_dsl.query import (
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
 from .documents import ZaakDocument
@@ -102,7 +103,7 @@ def search(
                         Term(rollen__betrokkene_type="medewerker"),
                         Term(rollen__omschrijving_generiek="behandelaar"),
                         Term(
-                            rollen__betrokkene_identificatie__identificatie=behandelaar
+                            rollen__betrokkene_identificatie__identificatie=f"{AssigneeTypeChoices.user}:{behandelaar}"
                         ),
                     ]
                 ),
