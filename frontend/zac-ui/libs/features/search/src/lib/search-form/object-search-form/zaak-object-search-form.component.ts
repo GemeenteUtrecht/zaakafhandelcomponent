@@ -73,6 +73,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   /** @type {boolean} Whether to show the zaak objecten. */
   showZaakObjecten = false;
 
+  /** @type {boolean} Whether to include all object types. */
+  includeAllObjectTypes = false;
+
   /** @tupe {ObjectType[]} The object types. */
   objectTypes: ObjectType[] = [];
 
@@ -129,6 +132,17 @@ export class ZaakObjectSearchFormComponent implements OnInit {
         required: false,
         value: '',
       },
+      {
+        activeWhen: () => this.zaaktype,
+        checked: this.includeAllObjectTypes,
+        label: 'Toon objecttypen van alle zaaktypen.',
+        name: 'include_all_object_types',
+        type: 'checkbox',
+        onChange: (e, field) => {
+          this.includeAllObjectTypes = !field.checked;
+          this.getContextData();
+        },
+      },
     ];
   }
 
@@ -153,9 +167,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.isLoading = true;
     this.isLoadingResult.emit(true);
 
-    const observable = (this.zaaktype)
-      ? this.objectsService.listObjectTypesForZaakType(this.zaaktype)
-      : this.objectsService.listObjectTypes();
+    const observable = (this.includeAllObjectTypes || !this.zaaktype)
+      ? this.objectsService.listObjectTypes()
+      : this.objectsService.listObjectTypesForZaakType(this.zaaktype)
 
     observable.subscribe(
       this.getObjectTypesContext.bind(this),
@@ -172,30 +186,39 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {ObjectType[]} objectTypes.
    */
   getObjectTypesContext(objectTypes: ObjectType[]): void {
-    this.isLoading = true;
-    this.isLoadingResult.emit(true);
+    this.objectTypes = [];
+    this.objectTypeVersions = [];
     const objectTypeVersions = [];
     let loadingLength = objectTypes.length;
 
-    objectTypes.forEach((objectType: ObjectType) => this.objectsService
-      .readLatestObjectTypeVersion(objectType)
-      .subscribe(
-        (objectTypeVersion) => {
-          objectTypeVersions.push(objectTypeVersion);
-        },
-        this.reportError.bind(this),
-        () => {
-          loadingLength -= 1;
+    if (!loadingLength) {
+      this.isLoading = false;
+      this.isLoadingResult.emit(false);
+    }
 
-          if (loadingLength === 0) {
-            this.objectTypes = objectTypes;
-            this.objectTypeVersions = objectTypeVersions;
-            this.isLoading = false;
-            this.isLoadingResult.emit(false);
-            this.cdRef.detectChanges();
-          }
-        }
-      )
+    objectTypes.forEach((objectType: ObjectType) => {
+        this.isLoading = true;
+        this.isLoadingResult.emit(true);
+
+        this.objectsService
+          .readLatestObjectTypeVersion(objectType)
+          .subscribe(
+            (objectTypeVersion) => objectTypeVersions.push(objectTypeVersion),
+            (...args) => this.reportError(...args),
+            () => {
+              loadingLength -= 1;
+
+              if (loadingLength === 0) {
+                this.objectTypes = objectTypes;
+                this.objectTypeVersions = objectTypeVersions;
+                this.cdRef.detectChanges();
+              }
+
+              this.isLoading = false;
+              this.isLoadingResult.emit(false);
+            }
+          );
+      }
     );
   }
 
@@ -270,7 +293,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
         let activeMapMarkers = []
 
-        if(!zaakObjects.length) {
+        if (!zaakObjects.length) {
           this.isLoading = false;
           this.isLoadingResult.emit(false);
           return;

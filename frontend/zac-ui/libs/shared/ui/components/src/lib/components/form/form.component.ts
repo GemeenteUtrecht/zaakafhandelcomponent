@@ -166,7 +166,7 @@ export class FormComponent implements OnInit, OnChanges {
    * Returns the form fields.
    * @return {Field[]}
    */
-  getFields(): Field[] {
+  getFieldsFromFormInput(): Field[] {
     return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.edit)
       .map((field: Field): Field => {
         this.formService.setValidators(this.formGroup, field);
@@ -179,26 +179,28 @@ export class FormComponent implements OnInit, OnChanges {
    * Updates this.fields in place.
    */
   updateFields(): void {
-    const fields = this.getFields();
+    const fieldsFromFormInput = this.getFieldsFromFormInput();
 
     if (!this.fields) {
-      this.fields = fields;
+      this.fields = fieldsFromFormInput;
       return
     }
 
-    // Update fields.
-    fields.forEach((field) => {
-      const otherField = this.fields.find((f) => f.name === field.name)
+    // Update field with changes from fields from form input (this.form).
+    fieldsFromFormInput.forEach((fieldFromFormInput) => {
+      const currentlyRenderedField = this.fields.find((f) => f.name === fieldFromFormInput.name)
 
-      if (!otherField) {
-        this.fields.push(field)
+      // There is no currently rendered field for field from form input, add it to this.fields (rendered fields).
+      if (!currentlyRenderedField) {
+        this.fields.push(fieldFromFormInput)
+      // This field already seems to exist, overwrite it.
       } else {
-        Object.assign(otherField, field);
+        Object.assign(currentlyRenderedField, fieldFromFormInput);
       }
     });
 
     const previousFields = this.fields.map((field) => field.name)
-    const nextFields = fields.map((field) => field.name)
+    const nextFields = fieldsFromFormInput.map((field) => field.name)
     const removedFields = previousFields.filter((key) => nextFields.indexOf(key) === -1)
 
     // Field is removed, remove from fields.
@@ -320,6 +322,16 @@ export class FormComponent implements OnInit, OnChanges {
     if (field.onChange) {
       field.onChange(event, field);
     }
+  }
+
+  /**
+   * Gets called when checkbox is changed.
+   */
+  checkboxChanged(event, field: Field) {
+    field.checked = !field.checked;
+    this.updateFields();
+    this.updateFieldsets();
+    field.onChange(event, field)
   }
 
   /**
