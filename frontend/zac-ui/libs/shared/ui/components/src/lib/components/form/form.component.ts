@@ -16,7 +16,9 @@ import {DocumentenService} from '@gu/services';
  * Takes buttonLabel: string as submit button label.
  * Takes editable: boolean|'toggle' to indicate whether the form is form or summary mode.
  * Takes keys: string[] to indicate what field in form to render.
+ * Takes showLess: boolean to indicate whether a show more/less button should be rendered.
  * Takes title: string as form title.
+ * Takes isExpanded: as initial value for showLess.
  *
  * Emits formSubmit: Object output when a form is submitted.
  */
@@ -37,6 +39,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() resetAfterSubmit = false;
   @Input() showLess: boolean;
   @Input() tooltip: string;
+  @Input() isExpanded = false;
   @Input() isLoading = false;
   @Input() zaak: Zaak;
 
@@ -75,9 +78,6 @@ export class FormComponent implements OnInit, OnChanges {
    * @type {string[]} Keys resolved either from keys or form.
    */
   resolvedKeys = [];
-
-  isExpanded = false;
-  isHovered = false;
 
   /**
    * Constructor method.

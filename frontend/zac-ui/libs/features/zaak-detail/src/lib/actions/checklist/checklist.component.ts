@@ -251,7 +251,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
         : value
 
       return ({
-        description: description,
+        description: description || '-',
         label: question.question,
         keys: [
           question.question,
