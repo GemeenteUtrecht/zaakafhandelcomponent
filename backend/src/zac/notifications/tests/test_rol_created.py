@@ -210,6 +210,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, ROLTYPE_RESPONSE)
 
         # Some more mocks
         rol_old = {
@@ -260,6 +261,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
                 "url": ROL,
                 "zaak": ZAAK,
+                "roltype_omschrijving": ROLTYPE_RESPONSE["omschrijving"],
             },
         )
         mock_es_get_rollen.assert_called_once_with(self.zaak)
@@ -367,6 +369,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, ROLTYPE_RESPONSE)
 
         # Some more mocks
         rol = {
@@ -434,6 +437,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
                 "url": f"{ZAKEN_ROOT}rollen/69e98129-1f0d-497f-bbfb-84b88137edbc",
                 "zaak": f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
+                "roltype_omschrijving": ROLTYPE_RESPONSE["omschrijving"],
             },
         )
         mock_es_get_rollen.assert_called_once_with(self.zaak)
