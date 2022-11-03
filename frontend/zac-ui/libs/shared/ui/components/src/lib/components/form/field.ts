@@ -27,6 +27,9 @@ export interface FieldConfiguration {
   /** @type {string} FIXME: should be boolean. */
   autocomplete?: 'on' | 'off';
 
+  /** @type {boolean} Whether a checkbox is checked. */
+  checked?: boolean;
+
   /** @type {Choice[]} An optional array of Choice's, setting this will render the field as <select> instance. */
   choices?: Choice[];
 
@@ -102,6 +105,7 @@ export interface FieldsetConfiguration {
 export class Field {
   activeWhen?: Function;
   autocomplete?: 'on' | 'off';
+  checked?: boolean;
   choices: Array<Object>;
   control: AbstractControl;
   edit: false;

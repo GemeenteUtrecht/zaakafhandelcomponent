@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { AbstractControl, FormBuilder, FormControl } from '@angular/forms';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import { AbstractControl, FormControl } from '@angular/forms';
 
 /**
  * <gu-checkbox [control]="formControl">I'm a checkbox</gu-checkbox>
@@ -18,7 +18,7 @@ import { AbstractControl, FormBuilder, FormControl } from '@angular/forms';
   templateUrl: './checkbox.component.html',
   styleUrls: ['./checkbox.component.scss']
 })
-export class CheckboxComponent {
+export class CheckboxComponent implements OnInit {
   @Input() control: AbstractControl = new FormControl('');
   @Input() color: 'primary' | 'accent' | 'warn' = 'primary'
   @Input() value: any;
@@ -27,5 +27,13 @@ export class CheckboxComponent {
 
   @Output() change: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor() { }
+  model = false
+
+  ngOnInit() {
+    this.model = Boolean(this.checked)
+  }
+
+  onChange(event) {
+    this.change.emit(event)
+  }
 }

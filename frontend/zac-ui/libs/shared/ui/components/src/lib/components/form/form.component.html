@@ -119,6 +119,17 @@
             ></gu-input>
             <!-- End regular field. -->
 
+            <!-- Checbkox field. -->
+            <!-- TODO: Non editable field, required etc. -->
+            <gu-checkbox
+              *ngIf="field.widgetType === 'checkbox' && edit"
+              [control]="field.control"
+              [value]="field.value"
+              [checked]="field.checked"
+              (change)="checkboxChanged($event, field)"
+              class="mb-4"
+            >{{field.label}}</gu-checkbox>
+
             <!-- Select field. -->
             <gu-multiselect
               *ngIf="['checkboxGroup', 'select'].indexOf(field.widgetType) > -1 && edit"

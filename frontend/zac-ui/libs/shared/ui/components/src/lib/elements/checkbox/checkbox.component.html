@@ -1,10 +1,11 @@
 <mat-checkbox
+  [ngModel]="model"
   [formControl]="control"
   [disabled]="disabled"
   [checked]="checked"
   [value]="value"
   [color]="color"
-  (change)="change.emit($event)"
+  (change)="onChange($event)"
 >
   <ng-content></ng-content>
 </mat-checkbox>

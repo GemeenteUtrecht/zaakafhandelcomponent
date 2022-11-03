@@ -3,6 +3,7 @@ import {
   Component,
   EventEmitter,
   Input,
+  NgZone,
   OnChanges,
   OnDestroy,
   OnInit,
@@ -64,6 +65,9 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
   /** @type {L.Layer} Temporary maker layer (used when creating a marker). */
   temporaryMarkerLayer: L.Layer;
 
+  constructor(private zone: NgZone) {
+  }
+
   //
   // Angular lifecycle.
   //
@@ -73,9 +77,11 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
-    requestAnimationFrame(() => {
-      this.getContextData();
-    });
+    this.zone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        this.getContextData();
+      });
+    })
   }
 
   /**
