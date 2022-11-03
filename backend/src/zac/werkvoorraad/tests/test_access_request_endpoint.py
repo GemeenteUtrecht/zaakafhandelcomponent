@@ -13,6 +13,7 @@ from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     UserFactory,
 )
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
@@ -82,7 +83,7 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": self.user.username,
+                "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
             },
         }
         zaak_document = self.create_zaak_document(zaak)
