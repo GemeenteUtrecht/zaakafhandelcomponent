@@ -192,24 +192,11 @@ export class DocumentenComponent implements OnChanges {
 
   /**
    * Save edited documents.
-   * @param writeUrl
+   * @param deleteUrl
    */
-  closeDocumentEdit(writeUrl) {
+  closeDocumentEdit(deleteUrl) {
     this.isLoading = true;
-    // Retrieve the deleteUrl of the selected document. This url is required to close the edit mode.
-    this.documentenService.openDocumentEdit(writeUrl)
-      .pipe(
-        switchMap((res: ReadWriteDocument) => {
-          const { deleteUrl } = res;
-          return this.documentenService.closeDocumentEdit(deleteUrl)
-        }),
-        catchError( () => {
-          this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
-          this.isLoading = false;
-          return of(null)
-        })
-      )
-      .subscribe( () => {
+    this.documentenService.closeDocumentEdit(deleteUrl).subscribe( () => {
         // Refresh section
         this.fetchDocuments();
       }, () => {
