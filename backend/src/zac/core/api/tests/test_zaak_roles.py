@@ -34,6 +34,7 @@ ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 KOWNSL_ROOT = "https://kownsl.nl/"
 
 
+@requests_mock.Mocker()
 class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
     """
     Test the API response body for Roles endpoint.
@@ -97,7 +98,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
-    def test_get_zaak_rollen(self):
+    def test_get_zaak_rollen(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
         medewerker = generate_oas_component(
             "zrc",
             "schemas/RolMedewerker",
@@ -107,53 +111,52 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             voorvoegselAchternaam="van",
         )
 
-        _rol = generate_oas_component(
+        rol = generate_oas_component(
             "zrc",
             "schemas/Rol",
             zaak=self.zaak["url"],
             betrokkene="",
             betrokkeneType="medewerker",
-            roltype=f"{CATALOGI_ROOT}roltypen/a28646d7-d0dd-4d6a-a747-7e882fb3e750",
+            roltype=self.roltype["url"],
             betrokkeneIdentificatie=medewerker,
         )
-
-        rol = factory(Rol, _rol)
-
-        with patch("zac.core.api.views.get_rollen", return_value=[rol]):
-            response = self.client.get(self.endpoint)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+        mock_resource_get(m, self.roltype)
+        response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         expected = [
             {
-                "url": rol.url,
+                "url": rol["url"],
                 "betrokkeneType": "medewerker",
                 "betrokkeneTypeDisplay": "Medewerker",
-                "omschrijving": rol.omschrijving,
-                "omschrijvingGeneriek": rol.omschrijving_generiek,
-                "roltoelichting": rol.roltoelichting,
-                "registratiedatum": rol.registratiedatum.isoformat().replace(
-                    "+00:00", "Z"
-                ),
+                "omschrijving": rol["omschrijving"],
+                "omschrijvingGeneriek": rol["omschrijvingGeneriek"],
+                "roltoelichting": rol["roltoelichting"],
+                "registratiedatum": rol["registratiedatum"].replace("+00:00", "Z"),
                 "name": "W. van Orange",
                 "identificatie": "some-username",
+                "roltypeOmschrijving": self.roltype["omschrijving"],
             }
         ]
         self.assertEqual(response_data, expected)
 
-    def test_get_rollen_no_roles(self):
+    def test_get_rollen_no_roles(self, m):
         with patch("zac.core.api.views.get_rollen", return_value=[]):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
 
-    def test_zaak_not_found(self):
+    def test_zaak_not_found(self, m):
         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @requests_mock.Mocker()
     def test_create_rol(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -200,22 +203,23 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "betrokkene": "",
+                "betrokkeneType": "medewerker",
+                "indicatieMachtiging": "gemachtigde",
+                "roltoelichting": rol["roltoelichting"],
+                "roltype": self.roltype["url"],
+                "zaak": self.zaak["url"],
+                "url": rol["url"],
+                "roltypeOmschrijving": self.roltype["omschrijving"],
                 "betrokkeneIdentificatie": {
                     "voorletters": "",
                     "achternaam": "",
                     "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
                     "voorvoegselAchternaam": "",
                 },
-                "betrokkeneType": "medewerker",
-                "indicatieMachtiging": "gemachtigde",
-                "roltoelichting": self.roltype["omschrijving"],
-                "roltype": self.roltype["url"],
-                "zaak": self.zaak["url"],
-                "url": rol["url"],
             },
         )
         self.assertEqual(
-            m.last_request.json(),
+            m.request_history[-2].json(),
             {
                 "betrokkene": "",
                 "betrokkene_identificatie": {
@@ -232,7 +236,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    @requests_mock.Mocker()
     def test_create_rol_empty_betrokkene_identificatie(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -277,14 +280,15 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkeneIdentificatie": {"identificatie": "some-identificatie"},
                 "betrokkeneType": "organisatorische_eenheid",
                 "indicatieMachtiging": "gemachtigde",
-                "roltoelichting": self.roltype["omschrijving"],
+                "roltoelichting": rol["roltoelichting"],
                 "roltype": self.roltype["url"],
                 "zaak": self.zaak["url"],
                 "url": rol["url"],
+                "roltypeOmschrijving": self.roltype["omschrijving"],
             },
         )
         self.assertEqual(
-            m.last_request.json(),
+            m.request_history[-2].json(),
             {
                 "betrokkene": "",
                 "betrokkene_identificatie": {},
@@ -296,39 +300,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    @requests_mock.Mocker()
-    def test_create_rol_cant_find_roltype(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
-        mock_resource_get(m, self.zaak)
-        mock_resource_get(m, self.zaaktype)
-        m.get(
-            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
-            json=paginated_response([self.roltype]),
-        )
-        m.get(self.roltype["url"], status_code=404, json={})
-
-        with patch("zac.core.api.views.create_rol", return_value=[]):
-            response = self.client.post(
-                self.endpoint,
-                {
-                    "betrokkene_type": "medewerker",
-                    "betrokkene_identificatie": {"identificatie": self.user.username},
-                    "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "gemachtigde",
-                },
-            )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json(),
-            ["Kan ROLTYPE {rt} niet vinden.".format(rt=self.roltype["url"])],
-        )
-
-    @requests_mock.Mocker()
     def test_create_rol_cant_find_roltype_for_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -366,7 +337,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    @requests_mock.Mocker()
     def test_create_rol_mutually_exclusive_fields(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -424,7 +394,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    @requests_mock.Mocker()
     def test_create_rol_dependent_fields(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -455,7 +424,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             {"betrokkeneIdentificatie": ["Dit veld is vereist."]},
         )
 
-    @requests_mock.Mocker()
     def test_destroy_rol(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -480,7 +448,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 204)
 
-    @requests_mock.Mocker()
     def test_fail_destroy_rol(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -504,7 +471,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    @requests_mock.Mocker()
     def test_destroy_rol_missing_url(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -524,7 +490,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
 
-    @requests_mock.Mocker()
     def test_destroy_rol_fail_different_zaak(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

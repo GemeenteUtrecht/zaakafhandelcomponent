@@ -867,9 +867,16 @@ class RolTypeSerializer(APIModelSerializer):
 class ReadRolSerializer(APIModelSerializer):
     name = serializers.CharField(source="get_name")
     identificatie = serializers.CharField(source="get_identificatie")
-    betrokkene_type = serializers.ChoiceField(choices=RolTypes)
+    betrokkene_type = serializers.ChoiceField(
+        choices=RolTypes,
+        help_text=_("Betrokkene type of ROL. Mutually exclusive with `betrokkene`."),
+    )
     betrokkene_type_display = serializers.CharField(
         source="get_betrokkene_type_display"
+    )
+    roltype_omschrijving = serializers.CharField(
+        source="get_roltype_omschrijving",
+        help_text=_("Description of ROLTYPE related to ROL."),
     )
 
     class Meta:
@@ -884,6 +891,7 @@ class ReadRolSerializer(APIModelSerializer):
             "registratiedatum",
             "name",
             "identificatie",
+            "roltype_omschrijving",
         )
 
 
@@ -1037,10 +1045,9 @@ class RolSerializer(PolymorphicSerializer):
     indicatie_machtiging = serializers.ChoiceField(
         choices=["gemachtigde", "machtiginggever"], default="gemachtigde"
     )
-    roltoelichting = serializers.SerializerMethodField(
-        help_text=_(
-            "Comment related to the ROL. Usually it is the `omschrijving` of ROLTYPE of ROL."
-        ),
+    roltoelichting = serializers.CharField(
+        help_text=_("Comment related to the ROL."),
+        default="",
     )
     roltype = serializers.URLField(
         required=True,
@@ -1052,16 +1059,11 @@ class RolSerializer(PolymorphicSerializer):
     zaak = serializers.URLField(
         help_text=_("URL-reference to ZAAK of ROL."),
     )
-
-    def get_roltoelichting(self, obj) -> str:
-        rt = obj.roltype if isinstance(obj, Rol) else obj["roltype"]
-        try:
-            roltype = get_roltype(rt)
-        except ClientError:
-            raise serializers.ValidationError(
-                _("Can not find ROLTYPE {rt}.").format(rt=rt)
-            )
-        return roltype.omschrijving
+    roltype_omschrijving = serializers.CharField(
+        read_only=True,
+        help_text=_("Description of ROLTYPE related to ROL."),
+        source="get_roltype_omschrijving",
+    )
 
     def validate(self, data):
         data = super().validate(data)
@@ -1082,6 +1084,10 @@ class RolSerializer(PolymorphicSerializer):
             raise serializers.ValidationError(
                 _("`betrokkene` and `betrokkene_identificatie` are mutually exclusive.")
             )
+
+        if not data.get("roltoelichting"):
+            data["roltoelichting"] = roltypen[data["roltype"]].omschrijving
+
         return data
 
 
