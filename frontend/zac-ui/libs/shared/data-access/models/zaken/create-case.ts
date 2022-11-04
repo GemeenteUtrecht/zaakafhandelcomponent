@@ -1,5 +1,5 @@
 export interface CreateCase {
-  zaaktypeOmschrijving: string,
+  zaaktypeIdentificatie: string,
   zaaktypeCatalogus: string,
   zaakDetails: {
     omschrijving: string,

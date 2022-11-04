@@ -4,6 +4,7 @@ export interface MetaZaaktypeCatalogus {
 }
 
 export interface MetaZaaktypeResult {
+  identificatie: string;
   omschrijving: string;
   catalogus: MetaZaaktypeCatalogus;
 }
