@@ -7,5 +7,6 @@ export interface Betrokkene {
   omschrijvingGeneriek: string,
   registratiedatum: Date,
   roltoelichting: string,
+  roltypeOmschrijving: string,
   url: string
 }
