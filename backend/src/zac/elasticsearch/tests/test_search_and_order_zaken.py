@@ -12,6 +12,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
 from ..documents import ZaakDocument, ZaakTypeDocument
@@ -52,7 +53,7 @@ class SearchZakenTests(ESMixin, TestCase):
                     "betrokkene_type": "medewerker",
                     "omschrijving_generiek": "behandelaar",
                     "betrokkene_identificatie": {
-                        "identificatie": "some_username",
+                        "identificatie": f"{AssigneeTypeChoices.user}:some_username",
                     },
                 },
             ],

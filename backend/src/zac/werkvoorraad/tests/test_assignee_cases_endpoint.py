@@ -12,6 +12,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import SuperUserFactory
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.tests.utils import ESMixin
 from zgw.models.zrc import Zaak
@@ -92,7 +93,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": user.username,
+                "identificatie": f"{AssigneeTypeChoices.user}:{user}",
             },
         }
         rol_2 = {
@@ -107,7 +108,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": user.username,
+                "identificatie": f"{AssigneeTypeChoices.user}:{user}",
             },
         }
         zaak_document_1.rollen = [create_rol_document(factory(Rol, rol_1))]
@@ -195,7 +196,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": user.username,
+                "identificatie": f"{AssigneeTypeChoices.user}:{user}",
             },
         }
         rol_2 = {
@@ -210,7 +211,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": user.username,
+                "identificatie": f"{AssigneeTypeChoices.user}:{user}",
             },
         }
         zaak_document_1.rollen = [create_rol_document(factory(Rol, rol_1))]

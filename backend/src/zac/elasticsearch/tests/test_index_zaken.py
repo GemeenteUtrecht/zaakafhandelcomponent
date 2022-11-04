@@ -11,6 +11,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
@@ -140,7 +141,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": "some_username",
+                "identificatie": f"{AssigneeTypeChoices.user}:some_username",
             },
         }
 
