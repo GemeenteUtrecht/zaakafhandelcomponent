@@ -56,6 +56,7 @@
             <div class="activity__description col-lg-4">
               <p class="p--bold p--marginsmall">{{activity.name}}</p>
               <p>{{activity.remarks}}</p>
+              <p *ngIf="activity.createdBy">Aangemaakt door: {{getCreatedBy(activity)}}</p>
             </div>
             <div class="activity__details col-lg-6">
               <div class="activity__detail mb-4">
@@ -289,6 +290,7 @@
             <div class="activity__description col-lg-4">
               <p class="p--bold p--marginsmall">{{activity.name}}</p>
               <p>{{activity.remarks}}</p>
+              <p *ngIf="activity.createdBy">Aangemaakt door: {{getCreatedBy(activity)}}</p>
             </div>
             <div class="activity__details col-lg-8">
               <!--  Gebruiker toewijzen  -->

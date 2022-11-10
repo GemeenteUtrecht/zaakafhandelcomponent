@@ -11,6 +11,7 @@ import {
 } from '@gu/models';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { SnackbarService } from '@gu/components';
+import {UserService} from '@gu/services';
 
 /**
  * This component allows the user to set and edit activities.
@@ -58,9 +59,7 @@ export class ActiviteitenComponent implements OnInit {
   finishedActivityDocs: ShortDocument[] = [];
   isFetchingDocuments: boolean;
 
-  constructor(private actvititeitenService: ActiviteitenService,
-              private snackbarService: SnackbarService,
-              private fb: FormBuilder) { }
+  constructor(private actvititeitenService: ActiviteitenService, private fb: FormBuilder, private snackbarService: SnackbarService, private userService: UserService) { }
 
   //
   // Getters / setters.
@@ -88,6 +87,16 @@ export class ActiviteitenComponent implements OnInit {
 
   get canForceEdit(): boolean {
     return !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken;
+  }
+
+  /**
+   * Returns the stringied activity.createdBy value.
+   * @param {Activity} activity
+   * @return {string}
+   */
+  getCreatedBy(activity: Activity) {
+    const user = activity.createdBy;
+    return this.userService.stringifyUser(user);
   }
 
   //
