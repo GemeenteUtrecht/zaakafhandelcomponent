@@ -143,9 +143,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Fetches the current user.
    */
   fetchCurrentUser(): void {
-    this.userService.getCurrentUser().subscribe(([user,]) => {
-      this.currentUser = user;
-    })
+    this.userService.getCurrentUser().subscribe(
+      ([user,]) => this.currentUser = user,
+      (error) => this.reportError(error)
+    )
   }
 
   /**
@@ -209,6 +210,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
           if (this.nPollingFails < 5) {
             this.fetchPollProcesses();
           } else {
+            this.isLoading = false;
             this.isPolling = false;
             this.nPollingFails = 0;
           }
@@ -280,6 +282,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         this.errorMessage = errorRes?.error?.detail || 'Taken ophalen mislukt. Ververs de pagina om het nog eens te proberen.';
         this.reportError(errorRes);
       })
+    } else {
+      this.isLoading = false;
     }
   }
 
@@ -303,6 +307,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.snackbarService.openSnackBar(sendMessageConfirmation, 'Sluiten', 'primary')
     }, errorRes => {
       this.isLoading = false;
+      this.isLoadingAction = false;
       this.errorMessage = errorRes?.error?.detail || 'Het openen van de actie is niet gelukt. Controleer of de actie al actief is in het "Acties" blok hierboven.';
       this.reportError(errorRes);
     })
@@ -474,5 +479,11 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   reportError(error: any): void {
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     console.error(error);
+
+    // Clear loading indicator to remove spinner.
+    this.isLoading = false;
+    this.isLoadingAction = false;
+    this.isLoadingContext = false;
+    this.isStartingProcess = false;
   }
 }
