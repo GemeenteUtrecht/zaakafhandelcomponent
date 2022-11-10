@@ -203,6 +203,7 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             [
                 {
                     "created": "2013-01-23T11:42:42Z",
+                    'createdBy': None,
                     "document": "",
                     "events": [],
                     "group_assignee": None,
@@ -234,6 +235,7 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                     "id": TASK_DATA["id"],
                     "name": TASK_DATA["name"],
                     "created": "2013-01-23T11:42:42Z",
+                    'createdBy': None,
                     "has_form": False,
                     "assignee_type": "",
                     "can_cancel_task": False,
