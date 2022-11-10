@@ -4,7 +4,7 @@ FROM node:16-buster AS build
 WORKDIR /app
 
 COPY . ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 ARG ui_prefix=/ui/
 RUN ./node_modules/.bin/ng build --configuration production --base-href="$ui_prefix"
 
