@@ -14,12 +14,19 @@ class BaseLandingPageLinkInline(nested_admin.NestedStackedInline):
 
 class LandingPageSectionLinkInline(BaseLandingPageLinkInline):
     extra = 0
-    fields = ("icon", "label", "href",)
+    fields = (
+        "icon",
+        "label",
+        "href",
+    )
     verbose_name_plural = _("Sectie links")
 
 
 class LandingPageFooterLinkInline(BaseLandingPageLinkInline):
-    fields = ("label", "href",)
+    fields = (
+        "label",
+        "href",
+    )
     verbose_name_plural = _("Footer links")
 
 

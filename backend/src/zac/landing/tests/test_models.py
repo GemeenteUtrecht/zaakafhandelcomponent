@@ -12,7 +12,9 @@ class LandingPageConfigurationTestCase(TestCase):
         LandingPageConfigurationFactory.create()
 
     def test_str(self):
-        configuration = LandingPageConfigurationFactory.build(title="Startpagina Werkomgeving")
+        configuration = LandingPageConfigurationFactory.build(
+            title="Startpagina Werkomgeving"
+        )
         self.assertEqual("Startpagina Werkomgeving", str(configuration))
 
 

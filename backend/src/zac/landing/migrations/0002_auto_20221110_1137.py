@@ -6,18 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('landing', '0001_initial'),
+        ("landing", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='landingpageconfiguration',
-            name='image',
-            field=models.ImageField(blank=True, help_text='Kies de afbeelding die bovenaan de pagina wordt getoond.', null=True, upload_to=''),
+            model_name="landingpageconfiguration",
+            name="image",
+            field=models.ImageField(
+                blank=True,
+                help_text="Kies de afbeelding die bovenaan de pagina wordt getoond.",
+                null=True,
+                upload_to="",
+            ),
         ),
         migrations.AlterField(
-            model_name='landingpagelink',
-            name='icon',
+            model_name="landingpagelink",
+            name="icon",
             field=models.CharField(blank=True, max_length=25),
         ),
     ]

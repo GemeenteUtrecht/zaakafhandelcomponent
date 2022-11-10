@@ -18,7 +18,7 @@ class LandingPageSectionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = LandingPageSection
-        django_get_or_create = ('landing_page_configuration',)
+        django_get_or_create = ("landing_page_configuration",)
 
 
 class LandingPageLinkFactory(factory.django.DjangoModelFactory):
@@ -29,11 +29,11 @@ class LandingPageLinkFactory(factory.django.DjangoModelFactory):
         model = LandingPageLink
 
     class Params:
-        with_icon = factory.Trait(
-            icon=factory.Faker("word")
-        )
+        with_icon = factory.Trait(icon=factory.Faker("word"))
         with_configuration = factory.Trait(
-            landing_page_configuration=factory.SubFactory(LandingPageConfigurationFactory)
+            landing_page_configuration=factory.SubFactory(
+                LandingPageConfigurationFactory
+            )
         )
         with_section = factory.Trait(
             landing_page_section=factory.SubFactory(LandingPageSectionFactory)

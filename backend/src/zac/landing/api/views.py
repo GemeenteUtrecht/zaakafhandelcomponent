@@ -6,9 +6,7 @@ from .serializers import LandingPageConfigurationSerializer
 
 
 class LandingPageConfigurationView(views.APIView):
-    permission_classes = (
-        permissions.IsAuthenticated,
-    )
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = LandingPageConfigurationSerializer
 
     def get_serializer(self, *args, **kwargs):
