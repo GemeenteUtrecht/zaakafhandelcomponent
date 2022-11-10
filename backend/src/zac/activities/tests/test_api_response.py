@@ -140,7 +140,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "groupAssignee": None,
             "document": self.activity.document,
             "created": "1999-12-31T23:59:59Z",
-            'createdBy': None,
+            "createdBy": None,
             "events": [],
         }
         data = response.json()
@@ -183,7 +183,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             "groupAssignee": group.name,
             "document": self.activity.document,
             "created": "1999-12-31T23:59:59Z",
-            'createdBy': None,
+            "createdBy": None,
             "events": [],
         }
         data = response.json()
