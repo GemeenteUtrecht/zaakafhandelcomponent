@@ -1,7 +1,8 @@
 from typing import Optional
 
 from rest_framework import serializers
-from ..models import LandingPageConfiguration, LandingPageSection, LandingPageLink
+
+from ..models import LandingPageConfiguration, LandingPageLink, LandingPageSection
 
 
 class LandingPageLinkSerializer(serializers.Serializer):

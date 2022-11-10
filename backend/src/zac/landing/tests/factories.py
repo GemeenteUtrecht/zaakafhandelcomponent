@@ -1,6 +1,6 @@
 import factory
 
-from ..models import LandingPageConfiguration, LandingPageSection, LandingPageLink
+from ..models import LandingPageConfiguration, LandingPageLink, LandingPageSection
 
 
 class LandingPageConfigurationFactory(factory.django.DjangoModelFactory):

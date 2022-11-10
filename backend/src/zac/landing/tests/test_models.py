@@ -1,6 +1,10 @@
 from django.test import TestCase
 
-from .factories import LandingPageConfigurationFactory, LandingPageSectionFactory, LandingPageLinkFactory
+from .factories import (
+    LandingPageConfigurationFactory,
+    LandingPageLinkFactory,
+    LandingPageSectionFactory,
+)
 
 
 class LandingPageConfigurationTestCase(TestCase):

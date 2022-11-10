@@ -1,11 +1,15 @@
 import json
 
 from django.urls import reverse
+
 from rest_framework.test import APITestCase
 
 from zac.accounts.tests.factories import SuperUserFactory
-from zac.landing.tests.factories import LandingPageConfigurationFactory, LandingPageLinkFactory, \
-    LandingPageSectionFactory
+from zac.landing.tests.factories import (
+    LandingPageConfigurationFactory,
+    LandingPageLinkFactory,
+    LandingPageSectionFactory,
+)
 
 
 class LandingPageConfigurationViewTestCase(APITestCase):

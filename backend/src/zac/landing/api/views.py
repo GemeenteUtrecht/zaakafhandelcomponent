@@ -1,8 +1,8 @@
 from rest_framework import permissions, views
 from rest_framework.response import Response
 
-from .serializers import LandingPageConfigurationSerializer
 from ..models import LandingPageConfiguration
+from .serializers import LandingPageConfigurationSerializer
 
 
 class LandingPageConfigurationView(views.APIView):

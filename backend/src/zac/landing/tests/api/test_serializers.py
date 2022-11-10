@@ -1,8 +1,15 @@
 from django.test import RequestFactory, TestCase
 
-from ..factories import LandingPageConfigurationFactory, LandingPageLinkFactory, LandingPageSectionFactory
-from ...api.serializers import LandingPageConfigurationSerializer, LandingPageSectionSerializer, \
-    LandingPageLinkSerializer
+from ...api.serializers import (
+    LandingPageConfigurationSerializer,
+    LandingPageLinkSerializer,
+    LandingPageSectionSerializer,
+)
+from ..factories import (
+    LandingPageConfigurationFactory,
+    LandingPageLinkFactory,
+    LandingPageSectionFactory,
+)
 
 
 class LandingPageConfigurationSerializerTestCase(TestCase):

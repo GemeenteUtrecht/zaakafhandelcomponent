@@ -1,9 +1,10 @@
-from django.utils.translation import gettext as _
-from solo.admin import SingletonModelAdmin
 from django.contrib import admin
-import nested_admin
+from django.utils.translation import gettext as _
 
-from .models import LandingPageConfiguration, LandingPageSection, LandingPageLink
+import nested_admin
+from solo.admin import SingletonModelAdmin
+
+from .models import LandingPageConfiguration, LandingPageLink, LandingPageSection
 
 
 class BaseLandingPageLinkInline(nested_admin.NestedStackedInline):
