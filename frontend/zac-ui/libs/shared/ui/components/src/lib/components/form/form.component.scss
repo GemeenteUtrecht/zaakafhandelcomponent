@@ -7,6 +7,12 @@
     justify-content: space-between;
   }
 
+  &__toolbar {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+  }
+
   &__footer {
     display: flex;
     justify-content: flex-end;

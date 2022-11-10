@@ -1,6 +1,14 @@
 <form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup"
       (ngSubmit)="_formSubmit()">
 
+  <!-- button template -->
+  <ng-template #button>
+    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block"
+            [disabled]="!formGroup?.valid || isLoading" [loading]="isLoading">
+      {{buttonLabel}}
+    </button>
+  </ng-template>
+  <!-- end button template -->
 
   <header class="form__header">
     <h3 *ngIf="title" class="d-inline-block mr-1">
@@ -8,17 +16,23 @@
       <gu-tooltip *ngIf="tooltip" type="primary" inline="true">{{ tooltip }}</gu-tooltip>
     </h3>
 
-    <button
-      *ngIf="isToggleable()"
-      gu-button
-      class="form__edit-toggle"
-      buttonStyle="tertiary"
-      size="extrasmall"
-      icon="edit"
-      (click)="toggleClick($event)"
-    >
-      {{edit ? 'Annuleren' : 'Bewerken' }}
-    </button>
+    <div class="form__toolbar">
+      <ng-container *ngIf="buttonPosition==='top'">
+        <ng-container *ngTemplateOutlet="button"></ng-container>
+      </ng-container>
+
+      <button
+        *ngIf="isToggleable()"
+        gu-button
+        class="form__edit-toggle"
+        buttonStyle="tertiary"
+        size="extrasmall"
+        icon="edit"
+        (click)="toggleClick($event)"
+      >
+        {{edit ? 'Annuleren' : 'Bewerken' }}
+      </button>
+    </div>
   </header>
 
 
@@ -183,11 +197,8 @@
     </button>
   </div>
 
-  <footer class="form__footer">
-    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block"
-            [disabled]="!formGroup?.valid || isLoading" [loading]="isLoading">
-      {{buttonLabel}}
-    </button>
+  <footer class="form__footer" *ngIf="buttonPosition==='bottom'">
+    <ng-container *ngTemplateOutlet="button"></ng-container>
   </footer>
 </form>
 
