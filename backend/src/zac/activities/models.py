@@ -5,9 +5,9 @@ from django.db import models
 from django.template.defaultfilters import truncatewords
 from django.utils.translation import gettext_lazy as _
 
+from ..accounts.models import User
 from .constants import ActivityStatuses
 from .query import ActivityQuerySet
-from ..accounts.models import User
 
 
 class Activity(models.Model):
