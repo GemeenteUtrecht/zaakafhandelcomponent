@@ -81,7 +81,9 @@ $landing-spacing: 40px;
 
   &__body &__navigation-list {
     display: flex;
-    gap: $landing-spacing;
+    flex-wrap: wrap;
+    column-gap: $landing-spacing;
+    row-gap: $landing-gutter-size;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -89,7 +91,6 @@ $landing-spacing: 40px;
 
   &__body &__navigation-list--vertical {
     flex-direction: column;
-    gap: $landing-gutter-size;
   }
 
   &__body .card {
