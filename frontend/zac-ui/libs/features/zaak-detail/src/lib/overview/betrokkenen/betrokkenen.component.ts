@@ -193,8 +193,9 @@ export class BetrokkenenComponent implements OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
-    this.isLoading = false;
+    const message = error?.error?.detail || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
+    this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     console.error(error);
+    this.isLoading = false;
   }
 }
