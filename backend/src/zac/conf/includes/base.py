@@ -147,6 +147,7 @@ INSTALLED_APPS = [
     "zac.core",
     "zac.notifications",
     "zac.forms",
+    "zac.landing",
     "zac.utils",
     "zac.contrib.board",
     "zac.contrib.brp",

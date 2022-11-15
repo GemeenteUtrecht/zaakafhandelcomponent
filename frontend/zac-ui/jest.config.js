@@ -14,5 +14,6 @@ module.exports = {
     '<rootDir>/libs/features/auth-profiles',
     '<rootDir>/libs/features/contezza-document-search',
     '<rootDir>/libs/features/dashboard',
+    '<rootDir>/libs/features/landing',
   ],
 };

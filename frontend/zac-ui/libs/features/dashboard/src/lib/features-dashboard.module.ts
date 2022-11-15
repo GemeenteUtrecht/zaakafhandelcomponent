@@ -5,7 +5,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClientXsrfModule } from '@angular/common/http';
 import { MultiselectModule, SharedUiComponentsModule } from '@gu/components';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ZaakSelectModule } from '@gu/search';
 import { RouterModule } from '@angular/router';
 
 @NgModule({
@@ -21,7 +20,6 @@ import { RouterModule } from '@angular/router';
     SharedUiComponentsModule,
     MultiselectModule,
     MatProgressBarModule,
-    ZaakSelectModule,
     RouterModule
   ],
   declarations: [FeaturesDashboardComponent],

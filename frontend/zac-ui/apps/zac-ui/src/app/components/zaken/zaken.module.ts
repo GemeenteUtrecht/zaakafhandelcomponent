@@ -7,7 +7,7 @@ import { ZaakDetailComponent } from './zaak-detail/zaak-detail.component'
 import { FeaturesZaakDetailModule } from '@gu/zaak-detail';
 import { ZakenRoutingModule } from './zaken-routing.module';
 import { CollapseModule } from 'ngx-bootstrap/collapse';
-import { FeaturesSearchModule, ZaakSelectModule } from '@gu/search';
+import { FeaturesSearchModule } from '@gu/search';
 import { SharedUiComponentsModule } from '@gu/components';
 import { TabsModule } from 'ngx-bootstrap/tabs';
 
@@ -25,7 +25,6 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
     CollapseModule,
     SharedUiComponentsModule,
     TabsModule.forRoot(),
-    ZaakSelectModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

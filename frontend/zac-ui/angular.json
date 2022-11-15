@@ -222,6 +222,32 @@
       },
       "tags": []
     },
+    "features-landing": {
+      "projectType": "library",
+      "root": "libs/features/landing",
+      "sourceRoot": "libs/features/landing/src",
+      "prefix": "gu",
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/features/landing"],
+          "options": {
+            "jestConfig": "libs/features/landing/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/features/landing/src/**/*.ts",
+              "libs/features/landing/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
     "features-reports": {
       "projectType": "library",
       "root": "libs/features/reports",
@@ -708,49 +734,6 @@
       },
       "tags": [],
       "implicitDependencies": ["zac-ui"]
-    }
-  },
-  "schematics": {
-    "@nrwl/workspace": {
-      "library": {
-        "linter": "tslint"
-      }
-    },
-    "@nrwl/cypress": {
-      "cypress-project": {
-        "linter": "tslint"
-      }
-    },
-    "@nrwl/node": {
-      "application": {
-        "linter": "tslint"
-      },
-      "library": {
-        "linter": "tslint"
-      }
-    },
-    "@nrwl/nest": {
-      "application": {
-        "linter": "tslint"
-      },
-      "library": {
-        "linter": "tslint"
-      }
-    },
-    "@nrwl/express": {
-      "application": {
-        "linter": "tslint"
-      },
-      "library": {
-        "linter": "tslint"
-      }
-    },
-    "@nrwl/angular:application": {
-      "unitTestRunner": "jest",
-      "e2eTestRunner": "cypress"
-    },
-    "@nrwl/angular:library": {
-      "unitTestRunner": "jest"
     }
   }
 }

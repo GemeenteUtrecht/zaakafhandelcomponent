@@ -1,0 +1,46 @@
+<main class="landing">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+
+  <header class="landing__header" style="--background-image: url('{{landingPage.image}}')" *ngIf="!isLoading">
+    <h1 class="landing__title">{{landingPage.title}}</h1>
+  </header>
+
+  <section class="landing__body card" *ngIf="!isLoading">
+    <form class="landing__form">
+      <div>
+        <h3>
+          Snel zoeken
+          <gu-tooltip type="primary" inline="true">Hiermee zoekt en navigeert u direct naar een zaak.</gu-tooltip>
+        </h3>
+        <gu-zaak-select (change)="onZaakSelectChange($event)"></gu-zaak-select>
+      </div>
+    </form>
+
+    <nav class="landing__navigation landing__navigation--primary">
+      <aside class="card" *ngFor="let section of landingPage.sections">
+        <h3>
+          <mat-icon aria-hidden="true">{{section.icon}}</mat-icon>
+          {{section.name}}
+        </h3>
+
+        <ul class="landing__navigation-list landing__navigation-list--vertical">
+          <li class="landing__navigation-list-item" *ngFor="let link of section.links">
+            <a href="{{link.href}}" gu-button type="submit" buttonStyle="action-button" size="huge">
+              <mat-icon aria-hidden="true">{{link.icon}}</mat-icon>
+              {{link.label}}
+              <mat-icon aria-hidden="true">chevron_right</mat-icon>
+            </a>
+          </li>
+        </ul>
+      </aside>
+    </nav>
+
+    <nav class="landing__navigation landing__navigation--secondary">
+      <ul class="landing__navigation-list">
+        <li class="landing__navigation-list-item" *ngFor="let link of landingPage.links">
+          <a href="{{link.href}}" gu-button type="submit" buttonStyle="action-link">{{link.label}}</a>
+        </li>
+      </ul>
+    </nav>
+  </section>
+</main>

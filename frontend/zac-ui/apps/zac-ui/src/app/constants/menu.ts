@@ -3,9 +3,14 @@ import {getEnv} from '@gu/utils';
 
 const menuItems: MenuItem[] = [
   {
+    icon: 'home',
+    label: 'Startpagina',
+    to: '/',
+  },
+  {
     icon: 'inventory',
     label: 'Werkvoorraad',
-    to: '/',
+    to: '/werkvoorraad',
   },
   {
     icon: 'search',

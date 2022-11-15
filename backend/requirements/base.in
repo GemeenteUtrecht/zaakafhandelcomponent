@@ -5,6 +5,7 @@ python-dotenv
 python-decouple  # processing of envvar configs
 pytz
 uwsgi
+Pillow
 python-dateutil
 pyyaml
 isodate

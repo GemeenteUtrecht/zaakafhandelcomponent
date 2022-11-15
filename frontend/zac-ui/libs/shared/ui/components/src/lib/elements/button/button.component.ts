@@ -7,9 +7,9 @@ import { Component, HostBinding, Input } from '@angular/core';
   styleUrls: ['./button.component.scss']
 })
 export class ButtonComponent {
-  @Input() buttonStyle: 'primary' | 'secondary' | 'tertiary' | 'action-link' | 'danger' = 'primary';
+  @Input() buttonStyle: 'primary' | 'secondary' | 'tertiary' | 'action-button' | 'action-link' | 'danger' = 'primary';
   @Input() buttonType: 'danger';
-  @Input() size?: 'extrasmall' | 'small' | 'medium' | 'large' = 'medium';
+  @Input() size?: 'extrasmall' | 'small' | 'medium' | 'large' | 'huge' = 'medium';
   @Input() noPadding?: boolean;
   @Input() loading?: boolean;
   @Input() icon?: string;

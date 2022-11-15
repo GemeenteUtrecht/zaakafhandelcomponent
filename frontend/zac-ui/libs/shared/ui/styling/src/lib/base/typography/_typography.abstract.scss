@@ -29,7 +29,11 @@ $h4-font-size-s: 18px !default;
 $h4-font-size-m: 18px !default;
 
 @mixin heading {
+  align-items: center;
   color: $color-text;
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
   font-family: $font-family-heading;
   font-weight: 700;
   line-height: 1.3;

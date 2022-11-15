@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {ZaakSearchService} from "./zaak-search.service";
 import {FormControl} from "@angular/forms";
 

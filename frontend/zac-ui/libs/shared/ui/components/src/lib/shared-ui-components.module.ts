@@ -47,6 +47,7 @@ export {TableButtonClickEvent} from './components/table/table';
 import {SidenavComponent} from './components/sidenav/sidenav.component';
 import {TabComponent} from './components/tabs/tab.component';
 import {TabGroupComponent} from './components/tabs/tab-group.component';
+import {ZaakSelectComponent} from './components/zaak-select/zaak-select.component';
 import {PaginatorComponent} from './components/paginator/paginator.component';
 import {CustomPaginatorLabels} from './components/paginator/custom-paginator-labels';
 import {SharedUtilsModule} from '@gu/utils';
@@ -100,6 +101,7 @@ patchMatFormField();
     SidenavComponent,
     TabComponent,
     TabGroupComponent,
+    ZaakSelectComponent,
     InputComponent,
     TextareaComponent,
     PaginatorComponent,
@@ -129,6 +131,7 @@ patchMatFormField();
     SidenavComponent,
     TabComponent,
     TabGroupComponent,
+    ZaakSelectComponent,
     MatTabsModule,
     InputComponent,
     TextareaComponent,
