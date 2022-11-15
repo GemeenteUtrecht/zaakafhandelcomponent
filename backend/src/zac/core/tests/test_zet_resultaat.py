@@ -198,14 +198,14 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                 "request": Request(request),
             },
         )
+
         self.assertEqual(
             serializer.data["context"]["activiteiten"],
             [
                 {
                     "created": "2013-01-23T11:42:42Z",
-                    "createdBy": None,
-                    "document": "",
-                    "events": [],
+                    "created_by": None,
+                    "document": "", "events": [],
                     "group_assignee": None,
                     "id": self.activity.id,
                     "name": self.activity.name,
@@ -235,7 +235,6 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                     "id": TASK_DATA["id"],
                     "name": TASK_DATA["name"],
                     "created": "2013-01-23T11:42:42Z",
-                    "createdBy": None,
                     "has_form": False,
                     "assignee_type": "",
                     "can_cancel_task": False,
