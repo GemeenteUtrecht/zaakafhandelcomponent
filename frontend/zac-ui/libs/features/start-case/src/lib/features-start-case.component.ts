@@ -43,10 +43,10 @@ export class FeaturesStartCaseComponent implements OnInit {
       (data) => {
         this.isLoading = false;
         this.caseTypes = data.results;
-        this.caseTypeChoices = this.caseTypes.map( type => {
+        this.caseTypeChoices = this.caseTypes.map((type, index) => {
           return {
             label: `${type.omschrijving}: ${type.catalogus.domein}`,
-            value: `${type.identificatie},${type.catalogus.url}`
+            value: `${type.identificatie},${type.catalogus.url},${index}`
           }
         })
         this.form = this.getForm();
