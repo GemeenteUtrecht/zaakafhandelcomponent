@@ -32,6 +32,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() form: FieldConfiguration[] = [];
   @Input() fieldsets: FieldsetConfiguration[] = [];
   @Input() buttonLabel = 'Opslaan';
+  @Input() buttonPosition: 'bottom' | 'top' = 'bottom';
   @Input() buttonSize: 'small' | 'large' = 'large';
   @Input() editable: boolean | string = true;
   @Input() title = '';
