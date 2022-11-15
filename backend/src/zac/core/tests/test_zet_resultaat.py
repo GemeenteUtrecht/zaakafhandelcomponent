@@ -205,7 +205,8 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                 {
                     "created": "2013-01-23T11:42:42Z",
                     "created_by": None,
-                    "document": "", "events": [],
+                    "document": "",
+                    "events": [],
                     "group_assignee": None,
                     "id": self.activity.id,
                     "name": self.activity.name,
