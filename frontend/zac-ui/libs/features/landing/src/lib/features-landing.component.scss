@@ -44,6 +44,7 @@ $landing-spacing: 40px;
     font-size: $landing-font-size-h1;
     line-height: 1;
     margin: 0 $landing-gutter-size;
+    position: relative;
   }
 
   &__body {
