@@ -31,4 +31,14 @@ export class CamundaService {
     const endpoint = encodeURI(`/api/camunda/task-data/${taskId}`);
     return this.http.Put<any>(endpoint, formData);
   }
+
+  /**
+   * Update main behandelaar
+   * @param formData
+   * @returns {Observable<*>}
+   */
+  changeBehandelaar(formData) {
+    const endpoint = encodeURI(`/api/camunda/change-behandelaar`);
+    return this.http.Post<any>(endpoint, formData);
+  }
 }

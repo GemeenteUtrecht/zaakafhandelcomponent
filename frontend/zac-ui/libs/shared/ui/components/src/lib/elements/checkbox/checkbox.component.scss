@@ -1,3 +1,7 @@
 :host {
   display: inline-block;
+
+  ::ng-deep .mat-checkbox-layout {
+    white-space: break-spaces;
+  }
 }

@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges } from '@angular/core';
-import { AccountsService, MetaService, ZaakService } from '@gu/services';
+import { AccountsService, CamundaService, MetaService, ZaakService } from '@gu/services';
 import { FieldConfiguration, ModalService, SnackbarService } from '@gu/components';
 import { Betrokkene, CreateBetrokkene, MetaRoltype, UserSearchResult, Zaak } from '@gu/models';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
@@ -23,6 +23,7 @@ export class BetrokkenenComponent implements OnChanges {
   edit = false;
   users: UserSearchResult[];
   roleTypes: MetaRoltype[];
+  behandelaarType: MetaRoltype;
 
   roleForm: FormGroup;
   isSubmitting: boolean;
@@ -30,6 +31,7 @@ export class BetrokkenenComponent implements OnChanges {
   constructor(
     private zaakService: ZaakService,
     private metaService: MetaService,
+    private camundaService: CamundaService,
     private accountsService: AccountsService,
     private snackbarService: SnackbarService,
     private modalService: ModalService,
@@ -46,6 +48,10 @@ export class BetrokkenenComponent implements OnChanges {
     return this.roleForm.get('roltype') as FormControl;
   }
 
+  get changeBehandelaarControl(): FormControl {
+    return this.roleForm.get('changeBehandelaar') as FormControl;
+  };
+
   /**
    * Check if delete button should be shown
    * @param role
@@ -59,8 +65,8 @@ export class BetrokkenenComponent implements OnChanges {
     this.getContextData();
     this.roleForm = this.fb.group({
       medewerker: this.fb.control("", Validators.required),
-      roltype: this.fb.control("", Validators.required)
-
+      roltype: this.fb.control("", Validators.required),
+      changeBehandelaar: false,
     })
   }
 
@@ -78,6 +84,7 @@ export class BetrokkenenComponent implements OnChanges {
     this.isLoading = true;
     this.metaService.getRoleTypes(this.zaak.url).subscribe(roletypes => {
       this.roleTypes = roletypes;
+      this.behandelaarType = this.roleTypes.filter(x => x.omschrijvingGeneriek === "behandelaar")[0];
     })
     this.zaakService.getCaseRoles(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
       this.allRoleData = data;
@@ -114,6 +121,28 @@ export class BetrokkenenComponent implements OnChanges {
     this.nBehandelaars = data.filter(role => {
       return role.omschrijvingGeneriek === 'behandelaar'
     }).length;
+  }
+
+  /**
+   * Change the main behandelaar.
+   * @param roleUrl
+   */
+  changeBehandelaar(roleUrl) {
+    const formData = {
+      zaak: this.zaak.url,
+      rol: roleUrl
+    }
+    this.camundaService.changeBehandelaar(formData)
+      .subscribe(() => {
+        setTimeout(() => {
+          this.getContextData();
+          this.resetForm();
+        }, 3000)
+      }, error => {
+        this.errorMessage = 'Het overhevelen van de taken van de behandelaar is mislukt.'
+        this.reportError(error);
+        this.isSubmitting = false;
+      })
   }
 
   //
@@ -170,18 +199,29 @@ export class BetrokkenenComponent implements OnChanges {
     }
 
     this.zaakService.createCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, formData)
-      .subscribe(() => {
-        setTimeout(() => {
-          this.getContextData();
-          this.closeModal('betrokkene-modal');
-          this.isSubmitting = false;
-          this.roleForm.reset();
-        }, 3000)
+      .subscribe((role) => {
+        if (this.roltypeControl.value === this.behandelaarType.url && this.changeBehandelaarControl.value) {
+          this.changeBehandelaar(role.url);
+        } else {
+          setTimeout(() => {
+            this.getContextData();
+            this.resetForm();
+          }, 3000)
+        }
       }, error => {
         this.errorMessage = 'Aanmaken van betrokkene mislukt'
         this.reportError(error);
         this.isSubmitting = false;
       })
+  }
+
+  /**
+   * Reset form and close modal
+   */
+  resetForm() {
+    this.closeModal('betrokkene-modal');
+    this.isSubmitting = false;
+    this.roleForm.reset();
   }
 
   //
