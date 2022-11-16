@@ -5,6 +5,7 @@ from django.db import models
 from django.template.defaultfilters import truncatewords
 from django.utils.translation import gettext_lazy as _
 
+from ..accounts.models import User
 from .constants import ActivityStatuses
 from .query import ActivityQuerySet
 
@@ -21,6 +22,13 @@ class Activity(models.Model):
     )
     name = models.CharField(_("name"), max_length=100)
     remarks = models.TextField(_("remarks"), blank=True)
+    created_by = models.ForeignKey(
+        User,
+        related_name="activities_created",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
     status = models.CharField(
         _("status"),
         max_length=50,

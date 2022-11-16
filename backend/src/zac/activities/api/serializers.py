@@ -24,6 +24,7 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class ReadActivitySerializer(serializers.ModelSerializer):
+    created_by = UserSerializer()
     group_assignee = GroupSerializer(
         required=False,
         help_text=_("Group assigned to activity."),
@@ -38,6 +39,7 @@ class ReadActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = (
             "created",
+            "created_by",
             "document",
             "events",
             "group_assignee",
@@ -75,6 +77,7 @@ class CreateOrUpdateActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = (
             "created",
+            "created_by",
             "document",
             "events",
             "group_assignee",

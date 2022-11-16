@@ -1,3 +1,5 @@
+import {User} from '../accounts/user';
+
 export interface Event {
   activity: number;
   created: string;
@@ -6,6 +8,7 @@ export interface Event {
 }
 
 export interface Activity {
+  createdBy: User;
   id: number;
   url: string;
   zaak: string;

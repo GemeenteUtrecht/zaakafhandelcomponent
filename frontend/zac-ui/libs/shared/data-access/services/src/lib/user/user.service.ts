@@ -58,6 +58,10 @@ export class UserService {
    * @return {string}
    */
   stringifyUser(user: User): string {
+    if(!user) {
+      return '-';
+    }
+
     return user.firstName
       ? `${user.firstName} ${user.lastName}`.trim()
       : user.username;

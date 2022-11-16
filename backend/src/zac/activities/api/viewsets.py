@@ -78,6 +78,11 @@ class ActivityViewSet(viewsets.ModelViewSet):
         }
         return mapping.get(self.request.method, ReadActivitySerializer)
 
+    def create(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            self.request.data["created_by"] = self.request.user.pk
+        return super().create(request, *args, **kwargs)
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(
