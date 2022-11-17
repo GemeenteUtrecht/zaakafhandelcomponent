@@ -106,7 +106,7 @@ export class Field {
   activeWhen?: Function;
   autocomplete?: 'on' | 'off';
   checked?: boolean;
-  choices: Array<Object>;
+  choices: Array<Choice>;
   control: AbstractControl;
   edit: false;
   key?: string;
