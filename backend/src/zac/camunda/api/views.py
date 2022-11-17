@@ -392,7 +392,9 @@ class ChangeBehandelaarTasksView(APIView):
 
         # Get camunda tasks associated to this zaak
         change_assignee_tasks = []
-        process_instances = get_top_level_process_instances(serializer.data["zaak"])
+        process_instances = get_top_level_process_instances(
+            serializer.validated_data["zaak"].url
+        )
         for pi in process_instances:
 
             for task in pi.tasks:
