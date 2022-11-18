@@ -107,6 +107,14 @@ export class FormComponent implements OnInit, OnChanges {
     return this.fields.filter((field) => field.type === 'hidden');
   }
 
+  /**
+   * Returns the selected choice of a field.
+   * @param {Field} field
+   */
+  getSelectedChoice(field: Field): Choice|null {
+    return field.choices.find((choice: Choice) => choice.value === field.value) || null
+  }
+
 
   //
   // Angular lifecycle.
