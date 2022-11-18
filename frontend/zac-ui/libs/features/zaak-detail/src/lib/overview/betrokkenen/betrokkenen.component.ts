@@ -84,7 +84,7 @@ export class BetrokkenenComponent implements OnChanges {
     this.isLoading = true;
     this.metaService.getRoleTypes(this.zaak.url).subscribe(roletypes => {
       this.roleTypes = roletypes;
-      this.behandelaarType = this.roleTypes.filter(x => x.omschrijvingGeneriek === "behandelaar")[0];
+      this.behandelaarType = this.roleTypes.find(x => x.omschrijvingGeneriek === "behandelaar");
     })
     this.zaakService.getCaseRoles(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
       this.allRoleData = data;
@@ -200,7 +200,7 @@ export class BetrokkenenComponent implements OnChanges {
 
     this.zaakService.createCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, formData)
       .subscribe((role) => {
-        if (this.roltypeControl.value === this.behandelaarType.url && this.changeBehandelaarControl.value) {
+        if (role && (this.roltypeControl.value === this.behandelaarType.url && this.changeBehandelaarControl.value)) {
           this.changeBehandelaar(role.url);
         } else {
           setTimeout(() => {
