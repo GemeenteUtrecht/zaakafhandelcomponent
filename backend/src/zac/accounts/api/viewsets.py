@@ -9,10 +9,12 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
 from zac.core.api.pagination import BffPagination
 from zac.utils.mixins import PatchModelMixin
 
+from ..authentication import ApplicationTokenAuthentication
 from ..constants import AccessRequestResult
 from ..email import send_email_to_requester
 from ..models import (
@@ -29,6 +31,7 @@ from .permissions import (
     CanForceCreateOrHandleAccessRequest,
     CanForceGrantAccess,
     CanGrantAccess,
+    HasTokenAuth,
     ManageGroup,
 )
 from .serializers import (
@@ -59,6 +62,10 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         filters.SearchFilter,
         django_filter.DjangoFilterBackend,
     )
+    authentication_classes = [
+        ApplicationTokenAuthentication
+    ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    permission_classes = (HasTokenAuth | IsAuthenticated,)
     search_fields = ["username", "first_name", "last_name", "email"]
     filterset_class = UserFilter
 

@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import ModelViewSet
 
+from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
 from zac.core.api.serializers import ZaakSerializer
@@ -22,7 +23,6 @@ from ..searches import autocomplete_zaak_search, search
 from .filters import ESOrderingFilter
 from .pagination import ESPagination
 from .parsers import IgnoreCamelCaseJSONParser
-from .permissions import HasTokenAuth
 from .serializers import (
     SearchReportSerializer,
     SearchSerializer,

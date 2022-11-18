@@ -5,6 +5,7 @@ from .views import (
     CreateZaakRelationView,
     CreateZaakView,
     EigenschappenView,
+    FetchZaakDetailUrlView,
     InformatieObjectTypeListView,
     ListZaakDocumentsView,
     ObjectSearchView,
@@ -85,6 +86,11 @@ urlpatterns = [
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>/",
         include("zac.core.camunda.start_process.urls"),
+    ),
+    path(
+        "cases/url",
+        FetchZaakDetailUrlView.as_view(),
+        name="fetch-zaak-detail-url",
     ),
     # meta
     path("catalogi", CatalogiView.as_view(), name="catalogi"),

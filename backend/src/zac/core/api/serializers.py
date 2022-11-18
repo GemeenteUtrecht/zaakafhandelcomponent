@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from django_camunda.api import get_process_instance_variable
+from furl import furl
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from rest_framework.utils import formatting
@@ -66,6 +67,7 @@ from zac.core.services import (
     get_zaak,
     get_zaaktypen,
 )
+from zac.core.utils import build_absolute_url
 from zac.objects.services import (
     fetch_start_camunda_process_form,
     fetch_zaaktypeattributen_objects,
@@ -479,6 +481,21 @@ class ResultaatSerializer(APIModelSerializer):
     class Meta:
         model = Resultaat
         fields = ("url", "resultaattype", "toelichting")
+
+
+class FetchZaakDetailUrlSerializer(serializers.Serializer):
+    zaak_detail_url = serializers.SerializerMethodField(
+        help_text=_("URL of the ZAAK detail page in the zaakafhandelcomponent."),
+        read_only=True,
+    )
+
+    def get_zaak_detail_url(self, zaak: Zaak) -> str:
+        path = furl(settings.UI_ROOT_URL).path.segments + [
+            "zaken",
+            zaak.bronorganisatie,
+            zaak.identificatie,
+        ]
+        return build_absolute_url(path, request=self.context["request"])
 
 
 class ZaakDetailSerializer(APIModelSerializer):
