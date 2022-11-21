@@ -200,7 +200,7 @@ export class BetrokkenenComponent implements OnChanges {
 
     this.zaakService.createCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, formData)
       .subscribe((role) => {
-        if (role && (this.roltypeControl.value === this.behandelaarType.url && this.changeBehandelaarControl.value)) {
+        if (role?.url && (this.roltypeControl.value === this.behandelaarType.url && this.changeBehandelaarControl.value)) {
           this.changeBehandelaar(role.url);
         } else {
           setTimeout(() => {
