@@ -218,37 +218,6 @@ class PostExtraInfoSubjectView(views.APIView):
         return Response(serializer.data)
 
 
-class FetchZaakDetailUrlView(views.APIView):
-    authentication_classes = (ApplicationTokenAuthentication,)
-    permission_classes = (HasTokenAuth,)
-    serializer_class = FetchZaakDetailUrlSerializer
-
-    @extend_schema(
-        summary=_("Let an application retrieve a direct link to the zaak-detail page."),
-        parameters=[
-            OpenApiParameter(
-                "zaak",
-                OpenApiTypes.URI,
-                OpenApiParameter.QUERY,
-                required=True,
-            )
-        ],
-    )
-    def get(self, request):
-        zaak = request.query_params.get("zaak")
-        if not zaak:
-            raise exceptions.ValidationError(_("`zaak` query parameter is required."))
-
-        try:
-            zaak = get_zaak(zaak_url=zaak)
-        except (ObjectDoesNotExist, ClientError):
-            raise exceptions.ValidationError(
-                _("Zaak with `URL`: `{zaak}` can not be found.").format(zaak=zaak)
-            )
-        serializer = self.serializer_class(instance=zaak, context={"request": request})
-        return Response(serializer.data)
-
-
 # Backend-For-Frontend endpoints (BFF)
 
 
@@ -295,6 +264,28 @@ class GetZaakMixin:
             raise Http404("No ZAAK matches the given query.")
         self.check_object_permissions(self.request, zaak)
         return zaak
+
+
+class ZaakDetailUrlView(GetZaakMixin, views.APIView):
+    authentication_classes = (ApplicationTokenAuthentication,)
+    permission_classes = (HasTokenAuth,)
+    serializer_class = FetchZaakDetailUrlSerializer
+
+    @extend_schema(
+        summary=_("Let an application retrieve a direct link to the zaak-detail page."),
+        parameters=[
+            OpenApiParameter(
+                "zaak",
+                OpenApiTypes.URI,
+                OpenApiParameter.QUERY,
+                required=True,
+            )
+        ],
+    )
+    def get(self, request, bronorganisatie, identificatie):
+        zaak = self.get_object()
+        serializer = self.serializer_class(instance=zaak, context={"request": request})
+        return Response(serializer.data)
 
 
 class ZaakDetailView(GetZaakMixin, views.APIView):
