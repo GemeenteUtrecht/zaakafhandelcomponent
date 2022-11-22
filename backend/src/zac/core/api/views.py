@@ -2,7 +2,7 @@ import base64
 import logging
 from datetime import date, datetime
 from itertools import groupby
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -34,6 +34,8 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
+from zac.accounts.api.permissions import HasTokenAuth
+from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.accounts.models import User, UserAtomicPermission
 from zac.camunda.api.utils import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
@@ -128,6 +130,7 @@ from .serializers import (
     ExpandParamSerializer,
     ExtraInfoSubjectSerializer,
     ExtraInfoUpSerializer,
+    FetchZaakDetailUrlSerializer,
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
     ObjectFilterProxySerializer,
@@ -218,18 +221,6 @@ class PostExtraInfoSubjectView(views.APIView):
 # Backend-For-Frontend endpoints (BFF)
 
 
-class GetZaakMixin:
-    def get_object(self):
-        if not self.kwargs:  # shut up drf-spectular
-            return None
-        try:
-            zaak = find_zaak(**self.kwargs)
-        except ObjectDoesNotExist:
-            raise Http404("No ZAAK matches the given query.")
-        self.check_object_permissions(self.request, zaak)
-        return zaak
-
-
 class CreateZaakView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
@@ -261,6 +252,40 @@ class CreateZaakView(views.APIView):
         )
 
         return Response(details, status=status.HTTP_201_CREATED)
+
+
+class GetZaakMixin:
+    def get_object(self):
+        if not self.kwargs:  # shut up drf-spectular
+            return None
+        try:
+            zaak = find_zaak(**self.kwargs)
+        except ObjectDoesNotExist:
+            raise Http404("No ZAAK matches the given query.")
+        self.check_object_permissions(self.request, zaak)
+        return zaak
+
+
+class ZaakDetailUrlView(GetZaakMixin, views.APIView):
+    authentication_classes = (ApplicationTokenAuthentication,)
+    permission_classes = (HasTokenAuth,)
+    serializer_class = FetchZaakDetailUrlSerializer
+
+    @extend_schema(
+        summary=_("Let an application retrieve a direct link to the zaak-detail page."),
+        parameters=[
+            OpenApiParameter(
+                "zaak",
+                OpenApiTypes.URI,
+                OpenApiParameter.QUERY,
+                required=True,
+            )
+        ],
+    )
+    def get(self, request, bronorganisatie, identificatie):
+        zaak = self.get_object()
+        serializer = self.serializer_class(instance=zaak, context={"request": request})
+        return Response(serializer.data)
 
 
 class ZaakDetailView(GetZaakMixin, views.APIView):

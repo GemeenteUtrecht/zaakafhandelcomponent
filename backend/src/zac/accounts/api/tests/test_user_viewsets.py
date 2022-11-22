@@ -4,7 +4,11 @@ from django.urls import reverse
 
 from rest_framework.test import APITestCase
 
-from zac.accounts.tests.factories import GroupFactory, UserFactory
+from zac.accounts.tests.factories import (
+    ApplicationTokenFactory,
+    GroupFactory,
+    UserFactory,
+)
 
 from ...models import User
 
@@ -97,3 +101,16 @@ class UserViewsetTests(APITestCase):
         params = {"include_groups": [self.group_0.name, self.group_1.name]}
         response = self.client.get(self.url, params)
         self.assertEqual(response.data["count"], 3)
+
+    def test_no_user_no_application_token(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_no_user_with_application_token(self):
+        self.client.logout()
+        token = ApplicationTokenFactory.create()
+        response = self.client.get(
+            self.url, HTTP_AUTHORIZATION=f"ApplicationToken {token.token}"
+        )
+        self.assertEqual(response.status_code, 200)

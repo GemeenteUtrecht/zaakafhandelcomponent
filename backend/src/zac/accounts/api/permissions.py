@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth.models import Group
 
 from rest_framework import serializers
+from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from zds_client import ClientError
@@ -12,7 +13,7 @@ from zac.core.api.permissions import CanForceEditClosedZaak, CanForceEditClosedZ
 from zac.core.permissions import zaken_handle_access
 from zac.core.services import get_zaak
 
-from ..models import AccessRequest, UserAtomicPermission
+from ..models import AccessRequest, ApplicationToken, UserAtomicPermission
 from ..utils import permissions_related_to_user
 
 logger = logging.getLogger(__name__)
@@ -189,3 +190,15 @@ class ManageGroup:
 
     def has_object_permission(self, request: Request, view: APIView, obj) -> bool:
         return self.get_permission(request).has_object_permission(request, view, obj)
+
+
+###############################
+#   Application Permissions   #
+###############################
+
+
+class HasTokenAuth(BasePermission):
+    def has_permission(self, request, view) -> bool:
+        if request.auth and isinstance(request.auth, ApplicationToken):
+            return True
+        return False
