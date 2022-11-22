@@ -1,4 +1,4 @@
-import {Component, Input, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Component, Input, OnChanges, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {Location} from '@angular/common';
 import {Title} from '@angular/platform-browser';
 import {ActivitiesService, UserService, ZaakService} from '@gu/services';
@@ -28,7 +28,7 @@ import { delay, retryWhen, take, takeWhile } from 'rxjs/operators';
   templateUrl: './features-zaak-detail.component.html',
   styleUrls: ['./features-zaak-detail.component.scss']
 })
-export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
+export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy {
   /** @type {string} To identify the organisation. */
   @Input() bronorganisatie: string;
 
@@ -183,6 +183,14 @@ export class FeaturesZaakDetailComponent implements OnInit, OnDestroy {
     this.originalTitle = this.title.getTitle();
     this.title.setTitle(this.identificatie);
     this.fetchCurrentUser();
+    this.getContextData();
+  }
+
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   */
+  ngOnChanges(): void {
     this.getContextData();
   }
 
