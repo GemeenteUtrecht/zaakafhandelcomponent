@@ -39,7 +39,7 @@ export class InformatieComponent implements OnInit, OnChanges {
   properties: EigenschapWaarde[];
 
   /** @type {ZaaktypeEigenschap[]} The zaaktype eigenschappen for the zaak. */
-  zaaktypeEigenschappen: ZaaktypeEigenschap[] = []
+  zaaktypeEigenschappen: ZaaktypeEigenschap[];
 
   /** @type {string} Link to case in Tezza. */
   tezzaLink: string;
