@@ -110,7 +110,7 @@
 
               <div class="col-12" *ngIf="field.choices">
                 <p class="mt-2">
-                  <gu-chip color="tertiary">{{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}</gu-chip>
+                  {{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}
                 </p>
               </div>
             </div>
