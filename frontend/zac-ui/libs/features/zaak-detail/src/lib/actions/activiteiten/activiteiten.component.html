@@ -179,6 +179,7 @@
                       <div class="item-left__info ml-2">
                         <p class="p--nomargin p--bold">{{event.notes}}</p>
                         <label class="label label--small p-0 m-0">{{event.created | date:'shortDate'}}</label>
+                        <p *ngIf="event.createdBy" class="p p--small">Door: {{getCreatedBy(event)}}</p>
                       </div>
                     </div>
                   </div>

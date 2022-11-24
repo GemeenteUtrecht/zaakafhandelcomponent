@@ -91,6 +91,13 @@ class Event(models.Model):
     )
     notes = models.TextField(_("notes"))
     created = models.DateTimeField(_("created"), auto_now_add=True)
+    created_by = models.ForeignKey(
+        User,
+        related_name="events_created",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
 
     class Meta:
         verbose_name = _("activity event")

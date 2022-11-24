@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import mixins, permissions, viewsets, status
 from rest_framework.response import Response
 
 from ..models import Activity, Event
@@ -104,3 +104,8 @@ class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         CanWriteEventsPermission,
         CanForceWriteEventsPermission,
     )
+
+    def create(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            self.request.data["created_by"] = self.request.user.username
+        return super().create(request, *args, **kwargs)

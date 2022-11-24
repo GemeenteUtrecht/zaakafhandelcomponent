@@ -91,11 +91,11 @@ export class ActiviteitenComponent implements OnInit {
 
   /**
    * Returns the stringied activity.createdBy value.
-   * @param {Activity} activity
+   * @param {Object} obj
    * @return {string}
    */
-  getCreatedBy(activity: Activity) {
-    const user = activity.createdBy;
+  getCreatedBy(obj: {[index: string]: any, createdBy: User }) {
+    const user = obj.createdBy;
     return this.userService.stringifyUser(user);
   }
 
