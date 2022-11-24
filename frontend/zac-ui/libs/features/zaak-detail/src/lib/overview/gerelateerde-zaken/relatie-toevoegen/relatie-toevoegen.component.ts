@@ -181,7 +181,9 @@ export class RelatieToevoegenComponent implements OnInit {
    */
   submitForm(formData): void {
     // Update due to change to value format.
-    formData.relation_zaak = formData.relation_zaak.value;
+    formData.relation_zaak = (typeof formData.relation_zaak === 'string')
+      ? formData.relation_zaak
+      : formData.relation_zaak?.value;
 
     this.isLoading = true;
     this.zaakService.addRelatedCase(formData).subscribe(() => {
