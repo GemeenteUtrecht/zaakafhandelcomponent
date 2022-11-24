@@ -46,7 +46,7 @@ export class ActiviteitenComponent implements OnInit {
   openAssigneeEditField: number;
   openDocumentUploadForm: number;
 
-  eventIsExpanded: number;
+  expandedActivity: Activity|null;
 
   showAddActivityButton: boolean;
   showCloseActivityConfirmation: number;
@@ -434,6 +434,14 @@ export class ActiviteitenComponent implements OnInit {
     this.openAssigneeEditField = null;
     this.openNoteEditField = null;
     this.openNoteEditField = null;
+  }
+
+  /**
+   * Gets called when te activity is either expanded or collapsed.
+   * @param {Activity} activity
+   */
+  onToggleExpandedActivity(activity: Activity): void {
+    this.expandedActivity = this.expandedActivity ? null : activity;
   }
 
   //
