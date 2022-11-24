@@ -194,7 +194,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
         url = furl(reverse("user-task-history"))
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["Mist de `zaak_url` query parameter."])
+        self.assertEqual(response.json(), ["Mist de `zaakUrl` query parameter."])
 
     def test_success_get_user_task_history(self, m):
         # Mocks for get_completed_user_tasks_for_zaak
@@ -257,7 +257,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
         )
 
         url = furl(reverse("user-task-history"))
-        url.set({"zaak_url": ZAAK_URL})
+        url.set({"zaakUrl": ZAAK_URL})
         self.client.force_authenticate(self.user)
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 200)
@@ -342,7 +342,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
         )
 
         url = furl(reverse("user-task-history"))
-        url.set({"zaak_url": ZAAK_URL})
+        url.set({"zaakUrl": ZAAK_URL})
         self.client.force_authenticate(self.user)
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 200)
@@ -370,13 +370,13 @@ class UserTaskHistoryTests(APITransactionTestCase):
 class UserTaskHistoryPermissionTests(APITestCase):
     def test_no_user_logged_in(self, m):
         url = furl(reverse("user-task-history"))
-        url.set({"zaak_url": ZAAK_URL})
+        url.set({"zaakUrl": ZAAK_URL})
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 403)
 
     def test_user_logged_in_but_no_permission(self, m):
         url = furl(reverse("user-task-history"))
-        url.set({"zaak_url": ZAAK_URL})
+        url.set({"zaakUrl": ZAAK_URL})
         user = UserFactory.create()
         self.client.force_authenticate(user)
         response = self.client.get(url.url)
@@ -396,7 +396,7 @@ class UserTaskHistoryPermissionTests(APITestCase):
         self.client.force_authenticate(user)
 
         url = furl(reverse("user-task-history"))
-        url.set({"zaak_url": ZAAK_URL})
+        url.set({"zaakUrl": ZAAK_URL})
         with patch(
             "zac.camunda.api.views.get_camunda_history_for_zaak", return_value=[]
         ):
