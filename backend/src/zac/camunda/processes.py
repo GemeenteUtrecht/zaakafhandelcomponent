@@ -56,7 +56,7 @@ def add_subprocesses(
 
 
 def get_process_instances(
-    zaak_url: str, historic: bool = False, include_subprocess: bool=True
+    zaak_url: str, historic: bool = False, include_subprocess: bool = True
 ) -> Dict[CamundaId, ProcessInstance]:
     client = get_client()
 
@@ -72,23 +72,30 @@ def get_process_instances(
         data["id"]: factory(ProcessInstance, {**data, "historical": historic})
         for data in response
     }
-    # fill in all subprocesses into the dict
-    pids = [
-        process_instance for id, process_instance in process_instances.copy().items()
-    ]
 
-    def _add_subprocesses(pid: ProcessInstance):
-        nonlocal process_instances, client, historic
-        add_subprocesses(pid, process_instances, client, historic=historic)
+    if include_subprocess:
+        # fill in all subprocesses into the dict
+        pids = [
+            process_instance
+            for id, process_instance in process_instances.copy().items()
+        ]
 
-    with parallel() as executor:
-        list(executor.map(_add_subprocesses, pids))
+        def _add_subprocesses(pid: ProcessInstance):
+            nonlocal process_instances, client, historic
+            add_subprocesses(pid, process_instances, client, historic=historic)
+
+        with parallel() as executor:
+            list(executor.map(_add_subprocesses, pids))
 
     return process_instances
 
 
-def get_top_level_process_instances(zaak_url: str, include_subprocess: bool=True) -> List[ProcessInstance]:
-    process_instances = get_process_instances(zaak_url, include_subprocess=include_subprocess)
+def get_top_level_process_instances(
+    zaak_url: str, include_subprocess: bool = True
+) -> List[ProcessInstance]:
+    process_instances = get_process_instances(
+        zaak_url, include_subprocess=include_subprocess
+    )
     # add definitions add user tasks
     definition_ids = [p.definition_id for p in process_instances.values()]
     definitions = {
