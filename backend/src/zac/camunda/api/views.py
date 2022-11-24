@@ -10,11 +10,9 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import HTTPError
 from rest_framework import exceptions, permissions, status
-from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet
 from zgw_consumers.api_models.constants import RolOmschrijving
 from zgw_consumers.concurrent import parallel
 
@@ -43,6 +41,7 @@ from ..user_tasks.api import (
     get_killable_camunda_tasks,
 )
 from ..user_tasks.history import get_camunda_history_for_zaak
+from .filters import ProcessInstanceFilterSet
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     BPMNSerializer,
@@ -65,34 +64,34 @@ from .utils import (
 )
 
 
-class ProcessInstanceFetchViewSet(ViewSet):
+class ProcessInstanceFetchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ProcessInstanceSerializer
-    lookup_field = "id"
+    filterset_class = ProcessInstanceFilterSet
 
     @extend_schema(
         summary=_("List process instances for a ZAAK."),
         parameters=[
             OpenApiParameter(
-                "zaak_url",
+                "zaakUrl",
                 OpenApiTypes.URI,
                 OpenApiParameter.QUERY,
                 required=True,
             ),
             OpenApiParameter(
-                "include_subprocess",
+                "includeSubprocess",
                 OpenApiTypes.BOOL,
                 OpenApiParameter.QUERY,
-                default=True,
-                required=False
-            )
+                default=False,
+                required=False,
+            ),
         ],
         responses={
             200: serializer_class(many=True),
             400: ErrorSerializer,
         },
     )
-    def list(self, request: Request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         """
         Get the Camunda process instances for a given ZAAK.
 
@@ -101,13 +100,16 @@ class ProcessInstanceFetchViewSet(ViewSet):
         sent into the process and the available user tasks. The response includes the
         child-process instances of each matching process instance.
         """
-        zaak_url = request.GET.get("zaak_url")
-        if not zaak_url:
-            err_serializer = ErrorSerializer({"detail": "missing zaak_url"})
-            return Response(err_serializer.data, status=status.HTTP_400_BAD_REQUEST)
-        
-        include_subprocess = bool(request.GET.get("include_subprocess", True))
-        process_instances = get_top_level_process_instances(zaak_url, include_subprocess=include_subprocess)
+
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+
+        process_instances = get_top_level_process_instances(
+            **filterset.serializer.validated_data
+        )
         serializer = self.serializer_class(
             process_instances,
             many=True,
@@ -115,6 +117,11 @@ class ProcessInstanceFetchViewSet(ViewSet):
         )
 
         return Response(serializer.data)
+
+
+class ProcessInstanceZaakURLView(APIView):
+    permission_classes = (permissions.IsAuthenticated, CanCreateZaken)
+    serializer_class = ProcessInstanceSerializer
 
     @extend_schema(
         summary=_("Retrieve ZAAK URL for process instance."),
@@ -129,8 +136,7 @@ class ProcessInstanceFetchViewSet(ViewSet):
         ],
         responses={"200": ZaakSerializer},
     )
-    @action(detail=True, methods=["get"], permission_classes=(CanCreateZaken,))
-    def zaak(self, request: Request, id: uuid.UUID):
+    def get(self, request: Request, id: uuid.UUID):
         process_instance = get_process_instance(id)
         zaak_url = process_instance.get_variable("zaakUrl")
         zaak = get_zaak(zaak_url=zaak_url)
@@ -567,7 +573,7 @@ class UserTaskHistoryView(APIView):
         ),
         parameters=[
             OpenApiParameter(
-                "zaak_url",
+                "zaakUrl",
                 OpenApiTypes.URI,
                 OpenApiParameter.QUERY,
                 required=True,
@@ -575,10 +581,10 @@ class UserTaskHistoryView(APIView):
         ],
     )
     def get(self, request, *args, **kwargs):
-        zaak_url = request.GET.get("zaak_url")
+        zaak_url = request.GET.get("zaakUrl")
         if not zaak_url:
             raise exceptions.ValidationError(
-                _("Missing the `zaak_url` query parameter.")
+                _("Missing the `zaakUrl` query parameter.")
             )
 
         user_task_history = get_camunda_history_for_zaak(zaak_url)
