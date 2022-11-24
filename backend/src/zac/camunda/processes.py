@@ -56,7 +56,7 @@ def add_subprocesses(
 
 
 def get_process_instances(
-    zaak_url: str, historic: bool = False
+    zaak_url: str, historic: bool = False, include_subprocess: bool=True
 ) -> Dict[CamundaId, ProcessInstance]:
     client = get_client()
 
@@ -87,8 +87,8 @@ def get_process_instances(
     return process_instances
 
 
-def get_top_level_process_instances(zaak_url: str) -> List[ProcessInstance]:
-    process_instances = get_process_instances(zaak_url)
+def get_top_level_process_instances(zaak_url: str, include_subprocess: bool=True) -> List[ProcessInstance]:
+    process_instances = get_process_instances(zaak_url, include_subprocess=include_subprocess)
     # add definitions add user tasks
     definition_ids = [p.definition_id for p in process_instances.values()]
     definitions = {

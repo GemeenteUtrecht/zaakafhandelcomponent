@@ -78,6 +78,13 @@ class ProcessInstanceFetchViewSet(ViewSet):
                 OpenApiTypes.URI,
                 OpenApiParameter.QUERY,
                 required=True,
+            ),
+            OpenApiParameter(
+                "include_subprocess",
+                OpenApiTypes.BOOL,
+                OpenApiParameter.QUERY,
+                default=True,
+                required=False
             )
         ],
         responses={
@@ -98,8 +105,9 @@ class ProcessInstanceFetchViewSet(ViewSet):
         if not zaak_url:
             err_serializer = ErrorSerializer({"detail": "missing zaak_url"})
             return Response(err_serializer.data, status=status.HTTP_400_BAD_REQUEST)
-
-        process_instances = get_top_level_process_instances(zaak_url)
+        
+        include_subprocess = bool(request.GET.get("include_subprocess", True))
+        process_instances = get_top_level_process_instances(zaak_url, include_subprocess=include_subprocess)
         serializer = self.serializer_class(
             process_instances,
             many=True,
