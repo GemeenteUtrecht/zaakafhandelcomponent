@@ -141,7 +141,6 @@ export class BetrokkenenComponent implements OnChanges {
       }, error => {
         this.errorMessage = 'Het overhevelen van de taken van de behandelaar is mislukt.'
         this.reportError(error);
-        this.isSubmitting = false;
       })
   }
 
@@ -211,7 +210,6 @@ export class BetrokkenenComponent implements OnChanges {
       }, error => {
         this.errorMessage = 'Aanmaken van betrokkene mislukt'
         this.reportError(error);
-        this.isSubmitting = false;
       })
   }
 
@@ -233,9 +231,10 @@ export class BetrokkenenComponent implements OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    const message = error?.error?.detail || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
+    const message = error?.error?.detail || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     console.error(error);
     this.isLoading = false;
+    this.isSubmitting = false;
   }
 }
