@@ -310,28 +310,28 @@ LOGGING = {
         "zac": {
             "handlers": ["project"] if not LOG_STDOUT else ["console"],
             "level": LOG_LEVEL,
-            "propagate": True,
+            "propagate": False,
         },
-        "django_adfs_auth": {
+        "django_auth_adfs": {
             "handlers": ["project"] if not LOG_STDOUT else ["console"],
             "level": LOG_LEVEL,
-            "propagate": True,
+            "propagate": False,
         },
-        "django_adfs_auth_db": {
+        "django_auth_adfs_db": {
             "handlers": ["project"] if not LOG_STDOUT else ["console"],
             "level": LOG_LEVEL,
-            "propagate": True,
+            "propagate": False,
         },
         "django.request": {
             "handlers": ["django"] if not LOG_STDOUT else ["console"],
             "level": LOG_LEVEL,
-            "propagate": True,
+            "propagate": False,
         },
-        "django.template": {
-            "handlers": ["console"],
-            "level": LOG_LEVEL,
-            "propagate": True,
-        },
+        # "django.template": {
+        #     "handlers": ["console"],
+        #     "level": LOG_LEVEL,
+        #     "propagate": False,
+        # },
         "performance": {
             "handlers": ["performance"] if LOG_PERFORMANCE else [],
             "level": LOG_LEVEL,
