@@ -254,9 +254,9 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="zac@example.com")
 #
 # LOGGING
 #
-LOG_STDOUT = config("LOG_STDOUT", default=False)
-LOG_LEVEL = config("LOG_LEVEL", default="INFO")
-LOG_PERFORMANCE = config("LOG_PERFORMANCE", default=False)
+LOG_STDOUT = config("LOG_STDOUT", default=DEBUG)
+LOG_LEVEL = config("LOG_LEVEL", default="DEBUG" if DEBUG else "INFO")
+LOG_PERFORMANCE = config("LOG_PERFORMANCE", default=DEBUG)
 
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
 
@@ -312,19 +312,29 @@ LOGGING = {
             "level": LOG_LEVEL,
             "propagate": True,
         },
+        "django_adfs_auth": {
+            "handlers": ["project"] if not LOG_STDOUT else ["console"],
+            "level": LOG_LEVEL,
+            "propagate": True,
+        },
+        "django_adfs_auth_db": {
+            "handlers": ["project"] if not LOG_STDOUT else ["console"],
+            "level": LOG_LEVEL,
+            "propagate": True,
+        },
         "django.request": {
             "handlers": ["django"] if not LOG_STDOUT else ["console"],
-            "level": "ERROR",
+            "level": LOG_LEVEL,
             "propagate": True,
         },
         "django.template": {
             "handlers": ["console"],
-            "level": "INFO",
+            "level": LOG_LEVEL,
             "propagate": True,
         },
         "performance": {
             "handlers": ["performance"] if LOG_PERFORMANCE else [],
-            "level": "INFO",
+            "level": LOG_LEVEL,
             "propagate": False,
         },
     },
