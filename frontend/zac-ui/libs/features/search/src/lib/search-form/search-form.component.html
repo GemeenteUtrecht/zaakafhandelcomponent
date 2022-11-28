@@ -3,8 +3,8 @@
   <div class="col-xl-12">
     <nav mat-tab-nav-bar>
       <a mat-tab-link *ngFor="let tab of tabs; index as i"
-         [href]="getTabLink(tab.link)"
-         (click)="$event.preventDefault(); setUrl(tab.link); activatedChildRoute = tab.link"
+         [href]="tab.link"
+         (click)="handleTabClick($event, tab)"
          [active]="activatedChildRoute === tab.link">
         {{tab.title}}
       </a>

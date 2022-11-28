@@ -38,11 +38,11 @@ export class SearchFormComponent {
   /** Tabs */
   tabs: object[] = [
     {
-      link: 'zaak',
+      link: '/zoeken/zaak',
       title: 'Zoeken op zaak'
     },
     {
-      link: 'object',
+      link: '/zoeken/object',
       title: 'Zoeken op object'
     }
   ]
@@ -94,20 +94,23 @@ export class SearchFormComponent {
   }
 
   /**
-   * Create tab link
+   * Handle tab click
+   * @param event
    * @param tab
    * @returns {string}
    */
-  getTabLink(tab) {
-    return `/zoeken/${tab}`;
+  handleTabClick(event, tab) {
+    event.preventDefault()
+    this.setUrl(tab.link);
+    this.activatedChildRoute = tab.link
   }
 
   /**
    * Redirect to url
-   * @param tab
+   * @param url
    */
-  setUrl(tab) {
-    this.location.go(this.getTabLink(tab))
+  setUrl(url) {
+    this.location.go(url)
   }
 
   /**
