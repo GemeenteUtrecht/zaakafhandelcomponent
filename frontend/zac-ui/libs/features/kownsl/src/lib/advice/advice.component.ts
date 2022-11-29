@@ -3,14 +3,14 @@ import { ActivatedRoute } from '@angular/router';
 import { AbstractControl, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm } from '../../models/advice-form';
-import { ReviewRequest } from '../../models/review-request';
-import {DocumentUrls, ReadWriteDocument, RowData, Table, Zaak} from '@gu/models';
+import {Requester, ReviewRequest} from '../../models/review-request';
+import {DocumentUrls, ReadWriteDocument, RowData, Table, User, Zaak} from '@gu/models';
 import { Review } from '../../models/review';
 import { ZaakDocument } from '../../models/zaak-document';
 import { CloseDocument } from '../../models/close-document';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
-import {ZaakService} from '@gu/services'
+import {UserService, ZaakService} from '@gu/services'
 import { SnackbarService } from '@gu/components';
 
 @Component({
@@ -52,10 +52,20 @@ export class AdviceComponent implements OnInit {
 
   get documents(): AbstractControl { return this.adviceForm.get('documents'); }
 
+  /**
+   * Returns the stringified version of user.
+   * @param {User} user
+   * @return {string}
+   */
+  getStringifiedUser(user: User|Requester): string {
+    return this.userService.stringifyUser(user as User);
+  }
+
   constructor(
     private fb: FormBuilder,
     private adviceService: AdviceService,
     private route: ActivatedRoute,
+    private userService: UserService,
     private zaakService: ZaakService,
     private snackbarService: SnackbarService,
   ) { }
