@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import mixins, permissions, status, viewsets
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.response import Response
 
 from ..models import Activity, Event
