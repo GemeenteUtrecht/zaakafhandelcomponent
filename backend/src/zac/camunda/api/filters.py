@@ -6,13 +6,13 @@ from zac.utils.filters import ApiFilterSet
 
 
 class ProcessInstanceFilterSet(ApiFilterSet):
-    zaak_url = fields.URLField(
+    zaakUrl = fields.URLField(
         required=True, help_text=_("URL-reference of related ZAAK.")
     )
-    include_subprocess = fields.BooleanField(
+    includeBijdragezaak = fields.BooleanField(
         required=False,
         help_text=_(
-            "A boolean flag that allows an end user to explicitely specify only super level process instances."
+            "A boolean flag that allows an end user to explicitely retrieve (sub) process instances related to the ZAAK."
         ),
         default=False,
     )

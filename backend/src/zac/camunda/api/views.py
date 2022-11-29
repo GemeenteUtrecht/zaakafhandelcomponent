@@ -79,7 +79,7 @@ class ProcessInstanceFetchView(APIView):
                 required=True,
             ),
             OpenApiParameter(
-                "includeSubprocess",
+                "includeBijdragezaak",
                 OpenApiTypes.BOOL,
                 OpenApiParameter.QUERY,
                 default=False,
@@ -108,7 +108,10 @@ class ProcessInstanceFetchView(APIView):
             raise exceptions.ValidationError(filterset.errors)
 
         process_instances = get_top_level_process_instances(
-            **filterset.serializer.validated_data
+            filterset.serializer.validated_data["zaakUrl"],
+            include_bijdragezaak=filterset.serializer.validated_data[
+                "includeBijdragezaak"
+            ],
         )
         serializer = self.serializer_class(
             process_instances,
