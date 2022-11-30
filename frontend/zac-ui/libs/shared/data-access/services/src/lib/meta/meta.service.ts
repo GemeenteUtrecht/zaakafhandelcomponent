@@ -44,10 +44,11 @@ export class MetaService {
 
   /**
    * Retrieve a collection of case types
+   * @param {boolean} activeCasesOnly
    * @returns {Observable<MetaZaaktype>}
    */
-  getCaseTypes(): Observable<MetaZaaktype> {
-    const endpoint = encodeURI("/api/core/zaaktypen");
+  getCaseTypes(activeCasesOnly = false): Observable<MetaZaaktype> {
+    const endpoint = encodeURI(`/api/core/zaaktypen${activeCasesOnly ? '?active=true' : ''}`);
     return this.http.Get<MetaZaaktype>(endpoint);
   }
 
