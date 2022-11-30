@@ -4,6 +4,8 @@ import {SnackbarService} from '@gu/components';
 import {Zaak, TableSort, ZaakObject} from '@gu/models';
 import {SearchService} from '../search.service';
 import {MapGeometry, MapMarker} from "../../../../../shared/ui/components/src/lib/components/map/map";
+import { ActivatedRoute } from '@angular/router';
+import { Location } from '@angular/common';
 
 
 /**
@@ -22,18 +24,40 @@ import {MapGeometry, MapMarker} from "../../../../../shared/ui/components/src/li
 export class SearchFormComponent {
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar zaken.'
 
-  isLoading: boolean;
-
   @Input() sortData: TableSort;
-  @Input() pageData: PageEvent;
 
+  @Input() pageData: PageEvent;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
   @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
 
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
   @Output() mapMarkers: EventEmitter<MapMarker[]> = new EventEmitter<MapMarker[]>();
 
-  constructor(private searchService: SearchService, private snackbarService: SnackbarService) {
+  isLoading: boolean;
+
+  /** Tabs */
+  tabs: object[] = [
+    {
+      link: '/zoeken/zaak',
+      title: 'Zoeken op zaak'
+    },
+    {
+      link: '/zoeken/object',
+      title: 'Zoeken op object'
+    }
+  ]
+
+  /** Active tab */
+  activatedChildRoute: string;
+
+  constructor(
+    private location: Location,
+    private route: ActivatedRoute,
+    private searchService: SearchService,
+    private snackbarService: SnackbarService) {
+    route.url.subscribe(() => {
+      this.activatedChildRoute = route.snapshot.url[0].path;
+    });
   }
 
   //
@@ -67,6 +91,26 @@ export class SearchFormComponent {
       },
       this.reportError.bind(this)
     );
+  }
+
+  /**
+   * Handle tab click
+   * @param event
+   * @param tab
+   * @returns {string}
+   */
+  handleTabClick(event, tab) {
+    event.preventDefault()
+    this.setUrl(tab.link);
+    this.activatedChildRoute = tab.link
+  }
+
+  /**
+   * Redirect to url
+   * @param url
+   */
+  setUrl(url) {
+    this.location.go(url)
   }
 
   /**
