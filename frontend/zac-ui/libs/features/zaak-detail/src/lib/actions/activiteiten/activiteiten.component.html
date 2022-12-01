@@ -170,7 +170,7 @@
                   <div class="timeline__row row no-gutters"
                        *ngFor="let event of activity.events; let last = last; let i = index"
                        [ngClass]="(last ? 'timeline__row--last' : '')"
-                       [hidden]="!eventIsExpanded && i >= 3"
+                       [hidden]="expandedActivity !== activity && i >= 3"
                   >
                     <div class="col-1">
                       <div class="timeline-item__dot"></div>
@@ -179,6 +179,7 @@
                       <div class="item-left__info ml-2">
                         <p class="p--nomargin p--bold">{{event.notes}}</p>
                         <label class="label label--small p-0 m-0">{{event.created | date:'shortDate'}}</label>
+                        <p *ngIf="event.createdBy" class="p p--small">Door: {{getCreatedBy(event)}}</p>
                       </div>
                     </div>
                   </div>
@@ -186,9 +187,9 @@
                 <button gu-button *ngIf="activity.events.length > 3"
                         buttonStyle="tertiary"
                            size="extrasmall"
-                           [icon]="eventIsExpanded === i ? 'unfold_less' : 'unfold_more'"
-                           (click)="eventIsExpanded === i ? eventIsExpanded = null : eventIsExpanded = i">
-                  {{eventIsExpanded === i ? 'Toon minder' : 'Toon meer'}}
+                           [icon]="expandedActivity === i ? 'unfold_less' : 'unfold_more'"
+                           (click)="onToggleExpandedActivity(activity)">
+                  {{expandedActivity === activity ? 'Toon minder' : 'Toon meer'}}
                 </button>
               </div>
               <!--  Notitie toevoegen  -->
@@ -311,7 +312,7 @@
                   <div class="timeline__row row no-gutters"
                        *ngFor="let event of activity.events; let last = last; let i = index"
                        [ngClass]="(last ? 'timeline__row--last' : '')"
-                       [hidden]="!eventIsExpanded && i >= 3"
+                       [hidden]="!expandedActivity && i >= 3"
                   >
                     <div class="col-1">
                       <div class="timeline-item__dot"></div>
@@ -327,9 +328,9 @@
                 <button gu-button *ngIf="activity.events.length > 3"
                         buttonStyle="tertiary"
                         size="extrasmall"
-                        [icon]="eventIsExpanded === i ? 'unfold_less' : 'unfold_more'"
-                        (click)="eventIsExpanded === i ? eventIsExpanded = null : eventIsExpanded = i">
-                  {{eventIsExpanded === i ? 'Toon minder' : 'Toon meer'}}
+                        [icon]="expandedActivity === i ? 'unfold_less' : 'unfold_more'"
+                        (click)="expandedActivity === i ? expandedActivity = null : expandedActivity = i">
+                  {{expandedActivity === i ? 'Toon minder' : 'Toon meer'}}
                 </button>
               </div>
             </div>

@@ -3,6 +3,7 @@ import {User} from '../accounts/user';
 export interface Event {
   activity: number;
   created: string;
+  createdBy: User
   id: number;
   notes: string;
 }

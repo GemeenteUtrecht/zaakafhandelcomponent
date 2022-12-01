@@ -1059,6 +1059,7 @@ paths:
       tags:
       - accounts
       security:
+      - tokenAuth: []
       - cookieAuth: []
       - tokenAuth: []
       responses:
@@ -1090,6 +1091,7 @@ paths:
       tags:
       - accounts
       security:
+      - tokenAuth: []
       - cookieAuth: []
       - tokenAuth: []
       responses:
@@ -1114,6 +1116,7 @@ paths:
       tags:
       - accounts
       security:
+      - tokenAuth: []
       - cookieAuth: []
       - tokenAuth: []
       responses:
@@ -2543,6 +2546,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ZaakStatus'
+          description: ''
+  /api/core/cases/{bronorganisatie}/{identificatie}/url:
+    get:
+      operationId: core_cases_url_retrieve
+      summary: Let an application retrieve a direct link to the zaak-detail page.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: zaak
+        schema:
+          type: string
+          format: uri
+        required: true
+      tags:
+      - core
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FetchZaakDetailUrl'
           description: ''
   /api/core/cases/document:
     post:
@@ -4010,6 +4053,7 @@ paths:
   /api/landing-page/:
     get:
       operationId: landing_page_retrieve
+      description: Retrieve the landing page configuration.
       tags:
       - landing-page
       security:
@@ -5646,6 +5690,9 @@ components:
           format: date-time
           readOnly: true
           title: Aangemaakt
+        createdBy:
+          type: integer
+          nullable: true
         document:
           type: string
           format: uri
@@ -5696,6 +5743,9 @@ components:
     CreateOrUpdateActivityRequest:
       type: object
       properties:
+        createdBy:
+          type: integer
+          nullable: true
         document:
           type: string
           format: uri
@@ -5777,10 +5827,10 @@ components:
             to be a valid `RSIN` of 9 digits and comply to https://nl.wikipedia.org/wiki/Burgerservicenummer#11-proef.
           pattern: ^[0-9]{9}$
           maxLength: 9
-        zaaktypeOmschrijving:
+        zaaktypeIdentificatie:
           type: string
           minLength: 1
-          description: '`omschrijving` van ZAAKTYPE.'
+          description: '`identificatie` van het ZAAKTYPE.'
         zaaktypeCatalogus:
           type: string
           format: uri
@@ -5793,7 +5843,7 @@ components:
       required:
       - zaakDetails
       - zaaktypeCatalogus
-      - zaaktypeOmschrijving
+      - zaaktypeIdentificatie
       title: CreateZaakRequest
     CreatedProcessInstance:
       type: object
@@ -6146,6 +6196,11 @@ components:
           format: date-time
           readOnly: true
           title: Aangemaakt
+        createdBy:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          nullable: true
+          description: '`username` van de gebruiker toegewezen om te antwoorden.'
       required:
       - activity
       - created
@@ -6161,10 +6216,24 @@ components:
           type: string
           minLength: 1
           title: Opmerkingen
+        createdBy:
+          type: string
+          nullable: true
+          description: '`username` van de gebruiker toegewezen om te antwoorden.'
       required:
       - activity
       - notes
       title: EventRequest
+    FetchZaakDetailUrl:
+      type: object
+      properties:
+        zaakDetailUrl:
+          type: string
+          readOnly: true
+          description: URL of the ZAAK detail page in the zaakafhandelcomponent.
+      required:
+      - zaakDetailUrl
+      title: FetchZaakDetailUrl
     FieldsEnum:
       enum:
       - url
@@ -6242,11 +6311,11 @@ components:
       title: FormEnum
     FormField:
       oneOf:
-      - $ref: '#/components/schemas/FormFieldInt'
-      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldEnum'
-      - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldInt'
       discriminator:
         propertyName: inputType
         mapping:
@@ -6324,13 +6393,13 @@ components:
         currentUserIsEditing:
           type: boolean
           readOnly: true
-          description: Boolean flag to indicate if requesting user is editing current
-            DOCUMENT.
+          description: Een booleaan die laat zien of de gebruiker het DOCUMENT aan
+            het bewerken is.
         deleteUrl:
           type: string
           readOnly: true
-          description: The URL required to save edits and delete the DOWC object related
-            to the DOCUMENT.
+          description: De vereiste URL om bewerkingen op te slaan en het gerelateerde
+            DOWC object te verwijderen.
         identificatie:
           type: string
         informatieobjecttype:
@@ -6342,7 +6411,7 @@ components:
           format: date-time
           nullable: true
           readOnly: true
-          description: Shows last edited datetime.
+          description: Laatste bewerkingsdatum.
         locked:
           type: boolean
         readUrl:
@@ -6492,8 +6561,8 @@ components:
       title: Group
     GroupBlueprint:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       discriminator:
         propertyName: objectType
         mapping:
@@ -6522,8 +6591,8 @@ components:
       title: GroupBlueprintPoliciesZaakTypeBlueprintRequest
     GroupBlueprintRequest:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprintRequest'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprintRequest'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprintRequest'
       discriminator:
         propertyName: objectType
         mapping:
@@ -7152,6 +7221,9 @@ components:
     PatchedCreateOrUpdateActivityRequest:
       type: object
       properties:
+        createdBy:
+          type: integer
+          nullable: true
         document:
           type: string
           format: uri
@@ -7575,6 +7647,8 @@ components:
           format: date-time
           readOnly: true
           title: Aangemaakt
+        createdBy:
+          $ref: '#/components/schemas/User'
         document:
           type: string
           format: uri
@@ -7618,6 +7692,7 @@ components:
           readOnly: true
       required:
       - created
+      - createdBy
       - events
       - id
       - name
@@ -7630,7 +7705,9 @@ components:
         url:
           type: string
         betrokkeneType:
-          $ref: '#/components/schemas/BetrokkeneTypeEnum'
+          allOf:
+          - $ref: '#/components/schemas/BetrokkeneTypeEnum'
+          description: Betrokkene type van ROL. Elkaar uitsluitend met `betrokkene`.
         betrokkeneTypeDisplay:
           type: string
         omschrijving:
@@ -7646,6 +7723,9 @@ components:
           type: string
         identificatie:
           type: string
+        roltypeOmschrijving:
+          type: string
+          description: Beschrijving van ROLTYPE gerelateerd aan ROL.
       required:
       - betrokkeneType
       - betrokkeneTypeDisplay
@@ -7655,6 +7735,7 @@ components:
       - omschrijvingGeneriek
       - registratiedatum
       - roltoelichting
+      - roltypeOmschrijving
       - url
       title: ReadRol
     ReadUserAuthorizationProfile:
@@ -7859,12 +7940,12 @@ components:
       title: ReviewTypeEnum
     Rol:
       oneOf:
-      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
-      - $ref: '#/components/schemas/RolJSONFieldTaskData'
       - $ref: '#/components/schemas/RolRolVestigingTaskData'
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolJSONFieldTaskData'
       - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
+      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
       - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -8123,12 +8204,12 @@ components:
       title: RolOrganisatorischeEenheidTaskDataRequest
     RolRequest:
       oneOf:
-      - $ref: '#/components/schemas/RolJSONFieldTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolVestigingTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolMedewerkerTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
       - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolVestigingTaskDataRequest'
+      - $ref: '#/components/schemas/RolJSONFieldTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolMedewerkerTaskDataRequest'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -8211,9 +8292,9 @@ components:
           default: gemachtigde
         roltoelichting:
           type: string
-          readOnly: true
-          description: Toelichting toebehorend aan de ROL. Meestal is het de `omschrijving`
-            van ROLTYPE van ROL.
+          minLength: 1
+          default: ''
+          description: Toelichting gerelateerd aan de ROL.
         roltype:
           type: string
           format: uri
@@ -8230,10 +8311,15 @@ components:
           format: uri
           minLength: 1
           description: URL-referentie naar ZAAK van ROL.
+        roltypeOmschrijving:
+          type: string
+          readOnly: true
+          minLength: 1
+          description: Beschrijving van ROLTYPE gerelateerd aan ROL.
       required:
       - betrokkeneType
-      - roltoelichting
       - roltype
+      - roltypeOmschrijving
       - url
       - zaak
       title: RolSharedRequest
@@ -8257,9 +8343,8 @@ components:
           default: gemachtigde
         roltoelichting:
           type: string
-          readOnly: true
-          description: Toelichting toebehorend aan de ROL. Meestal is het de `omschrijving`
-            van ROLTYPE van ROL.
+          default: ''
+          description: Toelichting gerelateerd aan de ROL.
         roltype:
           type: string
           format: uri
@@ -8273,10 +8358,14 @@ components:
           type: string
           format: uri
           description: URL-referentie naar ZAAK van ROL.
+        roltypeOmschrijving:
+          type: string
+          readOnly: true
+          description: Beschrijving van ROLTYPE gerelateerd aan ROL.
       required:
       - betrokkeneType
-      - roltoelichting
       - roltype
+      - roltypeOmschrijving
       - url
       - zaak
       title: RolSharedResponse
@@ -8452,8 +8541,8 @@ components:
       title: SearchEigenschap
     SearchEigenschapSpecificatie:
       oneOf:
-      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumNumberEnum'
       - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumStringEnum'
+      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumNumberEnum'
       discriminator:
         propertyName: type
         mapping:
@@ -8860,12 +8949,12 @@ components:
       title: SubmitUserTaskDynamicFormWrite
     SubmitUserTaskRequest:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
       - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
-      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
       discriminator:
         propertyName: form
         mapping:
@@ -8981,8 +9070,8 @@ components:
     Task:
       oneOf:
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
-      - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
       - $ref: '#/components/schemas/TaskTaskAssigneeUser'
+      - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -9171,13 +9260,13 @@ components:
       title: UserAuthorizationProfileRequest
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
       - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
-      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
       - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -9716,10 +9805,10 @@ components:
       title: ZaakDocumentRequest
     ZaakEigenschap:
       oneOf:
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -9847,8 +9936,8 @@ components:
       title: ZaakObjectProxyRequest
     ZaakRevReqDetail:
       oneOf:
-      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
+      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       discriminator:
         propertyName: reviewType
         mapping:

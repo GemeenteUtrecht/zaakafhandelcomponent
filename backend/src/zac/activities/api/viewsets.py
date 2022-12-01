@@ -104,3 +104,8 @@ class EventViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         CanWriteEventsPermission,
         CanForceWriteEventsPermission,
     )
+
+    def create(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            self.request.data["created_by"] = self.request.user.username
+        return super().create(request, *args, **kwargs)
