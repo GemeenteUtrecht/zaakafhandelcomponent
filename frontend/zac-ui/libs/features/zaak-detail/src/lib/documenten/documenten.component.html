@@ -72,3 +72,13 @@
                          (reload)="fetchDocuments()">
   </gu-document-toevoegen>
 </gu-modal>
+
+<!-- Change document confidentiality -->
+<gu-modal *ngIf="selectedConfidentialityChoice"
+          id="document-confidentiality-modal"
+          [closeIcon]="true"
+          (onClose)="selectedDocument=null"
+          title="Vertrouwelijkheidaanduiding wijzigen"
+          size="big">
+    <gu-form [form]="confidentialityForm" label="Opslaan" (formSubmit)="onConfidentialitySubmit($event)"></gu-form>
+</gu-modal>

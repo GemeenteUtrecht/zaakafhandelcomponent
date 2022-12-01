@@ -1,3 +1,6 @@
+// @ts-ignore
+import {Choice} from '../../../ui/components/src';
+
 export class Table {
   headData: string[];
   bodyData: RowData[];
@@ -29,11 +32,17 @@ export interface ExtensiveCell {
   iconInfo?: string;
   label?: string | number;
   target?: '_blank' | '_parent' | '_self' | '_top' | string
-  type: 'button' | 'chip' | 'icon' | 'link' | 'table' | 'text' | 'date';
+  type: 'button' | 'chip' | 'icon' | 'link' | 'select' | 'table' | 'text' | 'date';
   url?: string;
   value?: any;
   date?: string;
   sortValue?: any;
+
+  /** @type {Function} When type is "select", an onChange callback can be specified. */
+  choices? : Choice[]
+
+  /** @type {Function} When type is "select", an onChange callback can be specified. */
+  onChange? : Function
 }
 
 export interface TableSort {

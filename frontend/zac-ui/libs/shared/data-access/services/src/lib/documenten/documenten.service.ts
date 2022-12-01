@@ -1,14 +1,24 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import { Document, ExtensiveCell, InformatieObjectType, ReadWriteDocument, RowData, Table, Zaak } from '@gu/models';
-import { ApplicationHttpClient } from '@gu/services';
+import {
+  Document,
+  ExtensiveCell,
+  InformatieObjectType,
+  MetaConfidentiality,
+  ReadWriteDocument,
+  RowData,
+  Table,
+  Zaak
+} from '@gu/models';
+import {ApplicationHttpClient} from '@gu/services';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentenService {
 
-  constructor(private http: ApplicationHttpClient) {}
+  constructor(private http: ApplicationHttpClient) {
+  }
 
   /**
    * Get documents for an activity.
@@ -39,11 +49,6 @@ export class DocumentenService {
     return this.http.Delete<any>(endpoint);
   }
 
-  getConfidentiality(): Observable<any> {
-    const endpoint = encodeURI("/api/core/vertrouwelijkheidsaanduidingen");
-    return this.http.Get<any>(endpoint);
-  }
-
   setConfidentiality(documentUrl: string, confidentiality: 'openbaar' | 'beperkt_openbaar' | 'intern' | 'zaakvertrouwelijk' | 'vertrouwelijk' | 'confidentieel' | 'geheim' | 'zeer_geheim', reason: string, zaakUrl: string): Observable<Document> {
     const endpoint = encodeURI('/api/core/cases/document');
     const formData = new FormData()
@@ -71,13 +76,15 @@ export class DocumentenService {
    * Format the layout of the table.
    * @param data
    * @param tableHead
-   * @param zaak
+   * @param {Zaak} zaak
+   * @param {MetaConfidentiality[]} metaConfidentialities
+   * @param {Function} onChange onChange callback.
    * @returns {Table}
    */
-  formatTableData(data, tableHead, zaak: Zaak): Table {
+  formatTableData(data, tableHead, zaak: Zaak, metaConfidentialities: MetaConfidentiality[], onChange: Function): Table {
     const tableData: Table = new Table(tableHead, []);
 
-    tableData.bodyData = data.map( (element: Document) => {
+    tableData.bodyData = data.map((element: Document) => {
       // The "locked" and "currentUserIsEditing" states decide if certain buttons should be shown in the table or not.
       // If a case is closed (has no "zaak.resultaat" and the user is not allowed to force edit ("zaak.kanGeforceerdBijwerken),
       // the buttons will also be hidden.
@@ -86,7 +93,7 @@ export class DocumentenService {
       const iconInfo = (element.locked && !element.currentUserIsEditing) ? 'Het document wordt al door een ander persoon bewerkt.' : 'U kunt het document bewerken. Klik op "Bewerkingen opslaan" na het bewerken.'
       const editLabel = element.currentUserIsEditing ? 'Bewerkingen opslaan' : 'Bewerken';
       const editUrl = element.currentUserIsEditing ? element.deleteUrl : element.writeUrl;
-      const editButtonStyle = element.currentUserIsEditing  ? 'primary' : 'tertiary';
+      const editButtonStyle = element.currentUserIsEditing ? 'primary' : 'tertiary';
 
       const showEditCell = (!element.locked || element.currentUserIsEditing) && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
       const showOverwriteCell = !element.locked && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
@@ -128,6 +135,13 @@ export class DocumentenService {
           overschrijven: showOverwriteCell ? overwriteCell : '',
           auteur: element.auteur,
           type: element.informatieobjecttype['omschrijving'],
+          vertrouwelijkheidaanduiding: {
+            choices: metaConfidentialities,
+            type: (element.currentUserIsEditing) ? 'text' :'select',
+            label: element.vertrouwelijkheidaanduiding,
+            value: metaConfidentialities.find((metaConfidentiality: MetaConfidentiality) => metaConfidentiality.label == element.vertrouwelijkheidaanduiding),
+            onChange: (choice) => {onChange(element, choice)}
+          },
         }
       }
       return cellData;

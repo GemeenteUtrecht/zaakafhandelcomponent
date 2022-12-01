@@ -77,6 +77,11 @@
                     </ng-container>
 
                     <!-- Table -->
+                    <ng-container *ngSwitchCase="'select'">
+                      <gu-multiselect [items]="dataRow[column.name].choices" [selectedValue]="dataRow[column.name].value" bindValue="value" bindLabel="label" (change)="onColumnChanged(dataRow[column.name], $event)"></gu-multiselect>
+                    </ng-container>
+
+                    <!-- Table -->
                     <ng-container *ngSwitchCase="'table'">
                       <ng-container *ngIf="dataRow[column.name].value">
                         <gu-table [table]="dataRow[column.name].value"></gu-table>

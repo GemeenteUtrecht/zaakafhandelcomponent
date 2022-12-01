@@ -2,9 +2,10 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import {AfterViewInit, Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild} from '@angular/core';
 import {MatSort} from '@angular/material/sort';
 import {MatTableDataSource} from '@angular/material/table';
-import {Column, Table, TableSort} from '@gu/models';
+import {Column, ExtensiveCell, Table, TableSort} from '@gu/models';
 import {TableService} from './table.service';
 import {TableButtonClickEvent, TableSortEvent} from './table';
+import {Choice} from '@gu/components';
 
 
 /**
@@ -189,4 +190,13 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
         }
         this.sortOutput.emit(output as TableSortEvent);
     }
+
+    /**
+     * Gets called when a columns value is changed.
+     * @param {ExtensiveCell} column
+     * @param {Choice} choice
+     */
+      onColumnChanged(column: ExtensiveCell, choice: Choice) {
+        column.onChange(choice);
+      }
 }
