@@ -39,7 +39,7 @@ export class FeaturesStartCaseComponent implements OnInit {
    */
   getContextData(): void {
     this.isLoading = true;
-    this.metaService.getCaseTypes().subscribe(
+    this.metaService.getCaseTypes(true).subscribe(
       (data) => {
         this.isLoading = false;
         this.caseTypes = data.results;

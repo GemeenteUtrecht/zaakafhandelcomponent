@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.urls import reverse
 
 import requests_mock
@@ -470,4 +472,56 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             response.json(),
             ["Kan geen CATALOGUS met `domein`: `some-random-domein` vinden."],
+        )
+
+    def test_get_with_filter_active(self, m):
+        catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
+        )
+        zaaktype_1 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=CATALOGUS_URL,
+            omschrijving="some zaaktype 1",
+            eindeGeldigheid=None,
+        )
+        zaaktype_2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/2a51b38d-efc0-4f7e-9b95-a8c2374c1ac0",
+            identificatie="ZT2",
+            catalogus=CATALOGUS_URL,
+            omschrijving="some zaaktype 2",
+            eindeGeldigheid="2022-12-12",
+        )
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen",
+            json=paginated_response([zaaktype_1, zaaktype_2]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}catalogussen",
+            json=paginated_response([catalogus]),
+        )
+
+        response = self.client.get(self.endpoint, {"active": True})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 1,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "omschrijving": "some zaaktype 1",
+                        "catalogus": {"domein": "some-domein", "url": CATALOGUS_URL},
+                        "identificatie": "ZT1",
+                        "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+                    },
+                ],
+            },
         )

@@ -8,11 +8,15 @@ from zac.utils.filters import ApiFilterSet
 
 class ZaaktypenFilterSet(ApiFilterSet):
     q = fields.CharField(
-        required=False, help_text="`icontains` on `omschrijving` field"
+        required=False, help_text=_("`icontains` on `omschrijving` field")
     )
     domein = fields.CharField(
         required=False,
-        help_text="`iexact` on `domein` field of CATALOGUS related to ZAAKTYPEs.",
+        help_text=_("`iexact` on `domein` field of CATALOGUS related to ZAAKTYPEs."),
+    )
+    active = fields.BooleanField(
+        default=False,
+        help_text=_("If `True` only show the active versions of ZAAKTYPEs."),
     )
 
     def filter_q(self, results, value) -> list:
@@ -36,6 +40,11 @@ class ZaaktypenFilterSet(ApiFilterSet):
             for zaaktype in results
             if zaaktype.catalogus.url == catalogus[0].url
         ]
+
+    def filter_active(self, results, value) -> list:
+        if value:
+            return [zt for zt in results if not zt.einde_geldigheid]
+        return results
 
 
 class EigenschappenFilterSet(ApiFilterSet):
