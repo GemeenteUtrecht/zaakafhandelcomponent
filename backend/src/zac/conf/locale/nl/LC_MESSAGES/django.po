@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-11-24 16:41+0000\n"
+"POT-Creation-Date: 2022-12-01 09:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Ammeraal <danielammeraal@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,7 +58,7 @@ msgid "Human readable name that identifies the group."
 msgstr "Een leesbare naam die de groep identificeert."
 
 #: zac/accounts/api/serializers.py:77 zac/camunda/constants.py:8
-#: zac/camunda/tests/test_fetch_process_instances_view.py:228
+#: zac/camunda/tests/test_fetch_process_instances_view.py:230
 msgid "Group"
 msgstr "Groep"
 
@@ -797,9 +797,11 @@ msgstr "URL-referentie naar de gerelateerde ZAAK."
 
 #: zac/camunda/api/filters.py:15
 msgid ""
-"A boolean flag that allows an end user to explicitely specify only super "
-"level process instances."
-msgstr "Een booleaan die een gebruiker toestaat om expliciet sub processes weg te filteren."
+"A boolean flag that allows an end user to explicitely retrieve (sub) process "
+"instances related to the ZAAK."
+msgstr ""
+"Een booleaan die een gebruiker toestaat om expliciet (sub) processes op te "
+"halen die gerelateerd zijn aan de hoofdZAAK."
 
 #: zac/camunda/api/serializers.py:64
 msgid "The `assigneeType` of the user task."
@@ -957,43 +959,43 @@ msgstr "Een groep met `name` {name} bestaat niet."
 msgid "List process instances for a ZAAK."
 msgstr "Alle process instances voor een ZAAK opvragen."
 
-#: zac/camunda/api/views.py:127
+#: zac/camunda/api/views.py:130
 msgid "Retrieve ZAAK URL for process instance."
 msgstr "Een ZAAK URL voor een process instance opvragen."
 
-#: zac/camunda/api/views.py:162
+#: zac/camunda/api/views.py:165
 msgid "The task with given task `id` does not exist (anymore)."
 msgstr "De taak met de gegeven task `id` bestaat niet (meer)."
 
-#: zac/camunda/api/views.py:201
+#: zac/camunda/api/views.py:204
 msgid "Retrieve user task data and context."
 msgstr "Een specifieke gebruikerstaak data en context opvragen."
 
-#: zac/camunda/api/views.py:222
+#: zac/camunda/api/views.py:225
 msgid "Submit user task data."
 msgstr "Werk een gebruikerstaak data in zijn geheel bij."
 
-#: zac/camunda/api/views.py:291
+#: zac/camunda/api/views.py:294
 msgid "Send BPMN message."
 msgstr "Verstuur een BPMN bericht."
 
-#: zac/camunda/api/views.py:381
+#: zac/camunda/api/views.py:384
 msgid "Change camunda behandelaar."
 msgstr "Verander camunda behandelaar."
 
-#: zac/camunda/api/views.py:503
+#: zac/camunda/api/views.py:506
 msgid "Set task assignee or delegate."
 msgstr "Stel de begunstigde of gedelegeerde in voor de taak."
 
-#: zac/camunda/api/views.py:544
+#: zac/camunda/api/views.py:547
 msgid "Retrieve the XML of the BPMN."
 msgstr "De XML van een specifieke BPMN opvragen."
 
-#: zac/camunda/api/views.py:570
+#: zac/camunda/api/views.py:573
 msgid "Retrieve the historical user task data of the ZAAK."
 msgstr "Een specifieke historische gebruikerstaak data van de ZAAK opvragen."
 
-#: zac/camunda/api/views.py:572
+#: zac/camunda/api/views.py:575
 msgid ""
 "User tasks are reverse sorted on the `created` key. The history array is "
 "sorted alphabetically on the `variable_name` key."
@@ -1002,15 +1004,15 @@ msgstr ""
 "historische array wordt op alfabetische volgorde gesorteerd op de "
 "`variable_name` sleutel."
 
-#: zac/camunda/api/views.py:587
+#: zac/camunda/api/views.py:590
 msgid "Missing the `zaakUrl` query parameter."
 msgstr "Mist de `zaakUrl` query parameter."
 
-#: zac/camunda/api/views.py:606
+#: zac/camunda/api/views.py:609
 msgid "Cancel a camunda user task of the ZAAK."
 msgstr "Annuleer een camunda gebruikerstaak van de ZAAK."
 
-#: zac/camunda/api/views.py:608
+#: zac/camunda/api/views.py:611
 msgid ""
 "Allows a user to cancel the camunda task after it has been (accidentally) "
 "created."
@@ -1542,7 +1544,9 @@ msgstr "Selecter alstublieft tenminste 1 gebruiker of groep."
 msgid ""
 "Users in a serial review request process need to be unique. Please select "
 "unique users."
-msgstr "Gebruikers in een serieel verzoeksproces moeten uniek zijn. Select alstjeblieft unieke gebruikers."
+msgstr ""
+"Gebruikers in een serieel verzoeksproces moeten uniek zijn. Select "
+"alstjeblieft unieke gebruikers."
 
 #: zac/contrib/kownsl/camunda.py:239
 msgid ""
@@ -1792,16 +1796,28 @@ msgstr ""
 "Dit zijn de documenten die bij de ZAAK horen. Selecteer de relevante "
 "documenten."
 
-#: zac/core/api/filters.py:30
+#: zac/core/api/filters.py:11
+msgid "`icontains` on `omschrijving` field"
+msgstr "`icontains` op `omschrijving`-veld"
+
+#: zac/core/api/filters.py:15
+msgid "`iexact` on `domein` field of CATALOGUS related to ZAAKTYPEs."
+msgstr "`iexact` op `domein`-veld van CATALOGUS gerelateerd aan ZAAKTYPEn."
+
+#: zac/core/api/filters.py:19
+msgid "If `True` only show the active versions of ZAAKTYPEs."
+msgstr "Laat alleen actieve versies van ZAAKTYPEn zien als `True` is."
+
+#: zac/core/api/filters.py:34
 #, python-brace-format
 msgid "Could not find a CATALOGUS with `domein`: `{val}`."
 msgstr "Kan geen CATALOGUS met `domein`: `{val}` vinden."
 
-#: zac/core/api/filters.py:45
+#: zac/core/api/filters.py:54
 msgid "URL-reference of related ZAAKTYPE."
 msgstr "URL-referentie naar het gerelateerde ZAAKTYPE."
 
-#: zac/core/api/filters.py:50
+#: zac/core/api/filters.py:59
 msgid ""
 "`identificatie` of ZAAKTYPE, used as an aggregator of different versions of "
 "ZAAKTYPE."
@@ -1809,41 +1825,42 @@ msgstr ""
 "Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator voor de "
 "verschillende versies van ZAAKTYPE."
 
-#: zac/core/api/filters.py:54
+#: zac/core/api/filters.py:63
 msgid "URL-reference of related CATALOGUS."
 msgstr "URL-referentie naar het gerelateerde CATALOGUS."
 
-#: zac/core/api/filters.py:66
+#: zac/core/api/filters.py:75
 msgid ""
 "ZAAKTYPE is mutually exclusive from (`zaaktype_identificatie` and CATALOGUS)."
 msgstr ""
 "ZAAKTYPE en (`zaaktype_identificatie` en CATALOGUS) zijn elkaar uitsluitend."
 
-#: zac/core/api/filters.py:72
+#: zac/core/api/filters.py:81
 msgid ""
 "The CATALOGUS and `zaaktype_identificatie` are both required if one is given."
 msgstr ""
 "De CATALOGUS en `zaaktype_identificatie` zijn beide vereist als 1 is "
 "opgegeven."
 
-#: zac/core/api/filters.py:82
+#: zac/core/api/filters.py:91
 msgid "URL-reference of ZAAKEIGENSCHAP in ZAKEN API."
 msgstr "URL-referentie naar ZAAKEIGENSCHAP in de ZAKEN API."
 
-#: zac/core/api/filters.py:90
+#: zac/core/api/filters.py:99
 msgid ""
 "A boolean flag that allows an end user to exclude or include meta objects."
-msgstr "Een booleaan die een gebruiker toestaat te meta objecten te includeren."
+msgstr ""
+"Een booleaan die een gebruiker toestaat te meta objecten te includeren."
 
-#: zac/core/api/filters.py:99 zac/core/api/views.py:1336
+#: zac/core/api/filters.py:108 zac/core/api/views.py:1336
 msgid "URL-reference of ZAAKOBJECT in ZAKEN API."
 msgstr "URL-referentie naar ZAAKOBJECT in ZAKEN API."
 
-#: zac/core/api/filters.py:105
+#: zac/core/api/filters.py:114
 msgid "URL-reference to ROL in ZAKEN API."
 msgstr "URL-referentie naar ROL in de ZAKEN API."
 
-#: zac/core/api/filters.py:111
+#: zac/core/api/filters.py:120
 msgid "URL-reference to ZAAKTYPE in CATALOGI API."
 msgstr "URL-referentie naar ZAAKTYPE in de CATALOGI API."
 
@@ -1966,7 +1983,6 @@ msgstr ""
 "`RSIN` van 9 nummers zijn en voldoen aan https://nl.wikipedia.org/wiki/"
 "Burgerservicenummer#11-proef."
 
-
 #: zac/core/api/serializers.py:401
 msgid "`identificatie` of ZAAKTYPE."
 msgstr "`identificatie` van het ZAAKTYPE."
@@ -2010,7 +2026,8 @@ msgstr "GeoJSON die de coordinaten van de ZAAK representeert"
 
 #: zac/core/api/serializers.py:518
 msgid "A boolean flag whether a user can force edit the ZAAK or not."
-msgstr "Een booleaan die laat zien of een gebruiker de ZAAK geforceerd kan bewerken."
+msgstr ""
+"Een booleaan die laat zien of een gebruiker de ZAAK geforceerd kan bewerken."
 
 #: zac/core/api/serializers.py:521
 msgid "A boolean flag whether the ZAAK has a process or not."
@@ -2350,7 +2367,8 @@ msgstr "Laat gebruikers een ZAAK aanmaken."
 
 #: zac/core/api/views.py:275
 msgid "Let an application retrieve a direct link to the zaak-detail page."
-msgstr "Laat een applicatie een directe link naar de zaak-detail pagina opvragen."
+msgstr ""
+"Laat een applicatie een directe link naar de zaak-detail pagina opvragen."
 
 #: zac/core/api/views.py:304
 msgid "Retrieve ZAAK."
@@ -3429,6 +3447,10 @@ msgstr "Een service is niet geconfigureerd"
 msgid "User has pending access request for this ZAAK"
 msgstr "Je hebt al een toegangsverzoek voor deze ZAAK"
 
+#: zac/utils/exceptions.py:54
+msgid "User does not have required permissions."
+msgstr "De gebruiker heeft niet de vereiste rechten."
+
 #: zac/utils/exceptions.py:66
 msgid "Boolean indicating if the user can request access for the ZAAK"
 msgstr ""
@@ -3876,9 +3898,6 @@ msgstr "Alle checklistvragen voor groepen van ingelogde gebruiker opvragen."
 
 #~ msgid "channel"
 #~ msgstr "kanaal"
-
-#~ msgid "User doesn't have permissions to request the access"
-#~ msgstr "De gebruiker heeft geen rechten om toegang te vragen"
 
 #~ msgid "permission sets"
 #~ msgstr "rechtencollecties"

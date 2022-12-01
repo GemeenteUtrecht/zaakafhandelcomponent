@@ -51,7 +51,7 @@ def handle_zaak_permission_denied(response, context):
     reason = (
         _("User has pending access request for this ZAAK")
         if has_pending_access_request
-        else ""
+        else _("User does not have required permissions.")
     )
 
     permission_data = {"can_request_access": can_request_access, "reason": reason}
