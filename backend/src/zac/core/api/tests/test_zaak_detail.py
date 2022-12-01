@@ -783,7 +783,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "canRequestAccess": True,
-                "reason": "",
+                "reason": "De gebruiker heeft niet de vereiste rechten.",
             },
         )
 
@@ -816,7 +816,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "canRequestAccess": True,
-                "reason": "",
+                "reason": "De gebruiker heeft niet de vereiste rechten.",
             },
         )
 
@@ -849,7 +849,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(),
             {
                 "canRequestAccess": True,
-                "reason": "",
+                "reason": "De gebruiker heeft niet de vereiste rechten.",
             },
         )
 
