@@ -140,7 +140,7 @@ export class KetenProcessenService {
    * @returns {Observable<any>}
    */
   getProcesses(mainZaakUrl: string): Observable<any> {
-    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaak_url=${mainZaakUrl}`);
+    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaakUrl=${mainZaakUrl}`);
     return this.http.Get(endpoint);
   }
 

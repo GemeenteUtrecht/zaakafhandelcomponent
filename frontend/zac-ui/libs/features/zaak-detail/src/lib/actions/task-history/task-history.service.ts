@@ -19,7 +19,7 @@ export class TaskHistoryService {
    */
   retrieveHistoricalUserTaskDataOfZaak(zaakUrl): Observable<HistoricalUserTaskData[]> {
     const endpoint = encodeURI(`/api/camunda/task-data/historical`);
-    const params = new HttpParams().set('zaak_url', zaakUrl)
+    const params = new HttpParams().set('zaakUrl', zaakUrl)
     return this.http.Get<HistoricalUserTaskData[]>(endpoint, {params: params});
   }
 }
