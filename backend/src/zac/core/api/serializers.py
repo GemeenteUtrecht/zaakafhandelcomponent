@@ -408,6 +408,12 @@ class CreateZaakSerializer(serializers.Serializer):
     zaak_details = CreateZaakDetailsSerializer(
         help_text=_("Relevant details pertaining to the ZAAK.")
     )
+    start_related_business_process = serializers.BooleanField(
+        help_text=_(
+            "Automagically start related business process, if exists, once ZAAK is created."
+        ),
+        default=True,
+    )
 
     def validate(self, data):
         validated_data = super().validate(data)
