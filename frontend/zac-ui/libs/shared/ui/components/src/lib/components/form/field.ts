@@ -174,6 +174,7 @@ export class Field {
  * A fieldset.
  */
 export class Fieldset {
+  key?: string;
   label: string;
   fields: Field[];
   keys: string[];
@@ -183,5 +184,9 @@ export class Fieldset {
     Object.assign(this, fieldsetConfiguration);
     this.fields = form.filter((field: Field) =>
       fieldsetConfiguration.keys.indexOf(new FormService().getKeyFromFieldConfiguration(field)) > -1)
+
+    if(!this.key) {
+      this.key = this.keys.join("-");
+    }
   }
 }

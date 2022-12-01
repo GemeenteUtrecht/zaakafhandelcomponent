@@ -78,6 +78,12 @@ export class FeaturesStartCaseComponent implements OnInit {
         required: false,
         value: '',
       },
+      {
+        checked: true,
+        label: "Process starten",
+        name: 'start_related_business_process',
+        type: 'checkbox',
+      },
     ]
   }
 
@@ -95,7 +101,8 @@ export class FeaturesStartCaseComponent implements OnInit {
       zaakDetails: {
         omschrijving: formData.omschrijving,
         toelichting: formData.toelichting
-      }
+      },
+      start_related_business_process: formData.start_related_business_process
     }
 
     this.zaakService.createCase(createCaseData)

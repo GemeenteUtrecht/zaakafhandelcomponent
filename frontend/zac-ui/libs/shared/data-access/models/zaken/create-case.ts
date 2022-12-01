@@ -4,5 +4,6 @@ export interface CreateCase {
   zaakDetails: {
     omschrijving: string,
     toelichting?: string
-  }
+  },
+  start_related_business_process: boolean
 }
