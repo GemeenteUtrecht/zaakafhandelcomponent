@@ -102,7 +102,7 @@ export class SearchFormComponent {
   handleTabClick(event, tab) {
     event.preventDefault()
     this.setUrl(tab.link);
-    this.activatedChildRoute = tab.link
+    this.activatedChildRoute = tab.link.split('/')[2]
   }
 
   /**
