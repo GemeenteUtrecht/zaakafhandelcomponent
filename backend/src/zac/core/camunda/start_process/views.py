@@ -4,10 +4,13 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 from zgw_consumers.api_models.constants import RolOmschrijving
 
-from zac.camunda.api.utils import delete_zaak_creation_process, start_process
+from zac.accounts.api.permissions import HasTokenAuth
+from zac.accounts.authentication import ApplicationTokenAuthentication
+from zac.camunda.api.utils import start_process
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_rollen
@@ -18,7 +21,12 @@ from .serializers import CreatedProcessInstanceSerializer
 
 
 class StartCamundaProcessView(GetZaakMixin, APIView):
-    permission_classes = (permissions.IsAuthenticated, CanStartCamundaProcess)
+    authentication_classes = [
+        ApplicationTokenAuthentication
+    ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    permission_classes = (
+        HasTokenAuth | (permissions.IsAuthenticated & CanStartCamundaProcess),
+    )
 
     def get_serializer(self, *args, **kwargs):
         return CreatedProcessInstanceSerializer(*args, **kwargs)
@@ -28,11 +36,6 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         self, request: Request, bronorganisatie: str, identificatie: str
     ) -> Response:
         zaak = self.get_object()
-
-        # First check to see if there is a zaak creation
-        # process still running and delete it if so.
-        delete_zaak_creation_process(zaak)
-
         initiator = [
             rol
             for rol in get_rollen(zaak)

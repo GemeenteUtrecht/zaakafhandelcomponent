@@ -1,3 +1,4 @@
+import logging
 import pathlib
 from concurrent.futures import as_completed
 from datetime import datetime
@@ -10,7 +11,10 @@ from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from django_camunda.api import get_process_instance_variable
+from django_camunda.api import (
+    get_all_process_instance_variables,
+    get_process_instance_variable,
+)
 from furl import furl
 from requests.exceptions import HTTPError
 from rest_framework import serializers
@@ -47,7 +51,10 @@ from zac.api.polymorphism import (
     SerializerCls,
 )
 from zac.api.proxy import ProxySerializer
-from zac.camunda.api.utils import get_bptl_app_id_variable
+from zac.camunda.api.utils import (
+    get_bptl_app_id_variable,
+    get_incidents_for_process_instance,
+)
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.dowc.constants import DocFileTypes
@@ -61,7 +68,6 @@ from zac.core.services import (
     get_documenten,
     get_informatieobjecttypen_for_zaak,
     get_rollen,
-    get_roltype,
     get_roltypen,
     get_statustypen,
     get_zaak,
@@ -85,6 +91,8 @@ from .utils import (
     ValidFieldChoices,
 )
 from .validators import EigenschapKeuzeWaardeValidator, ZaakFileValidator
+
+logger = logging.getLogger(__name__)
 
 
 class InformatieObjectTypeSerializer(APIModelSerializer):
@@ -567,13 +575,47 @@ class ZaakDetailSerializer(APIModelSerializer):
 
     def get_has_process(self, obj) -> bool:
         process_instances = get_top_level_process_instances(obj.url)
+
         # Filter out the process instance that started the zaak
-        process_instances = [
+        spawned_process_instances = [
             pi
             for pi in process_instances
             if pi.definition.key != settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
         ]
-        return bool(process_instances)
+        if spawned_process_instances:
+            return True
+
+        # It might be possible that a process is still being spawned.
+        # Check if the process SHOULD spawn child processes.
+
+        parent_process_instance = [
+            pi
+            for pi in process_instances
+            if pi.definition.key == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        ]
+        if len(parent_process_instance) != 1:
+            raise serializers.ValidationError(
+                _(
+                    "Something went wrong. A ZAAK shouldn't be spawned by more than 1 parent."
+                )
+            )
+        parent_process_instance = parent_process_instance[0]
+
+        # Make sure the process doesn't have incidents yet:
+        incidents = get_incidents_for_process_instance(parent_process_instance.id)
+        if incidents:
+            return serializers.ValidationError(
+                _("Something went wrong. An incident was reported in Camunda.")
+            )
+
+        # Make sure the parent process has startRelatedBusinessProcess.
+        if var := get_all_process_instance_variables(parent_process_instance.id).get(
+            "startRelatedBusinessProcess"
+        ):
+            # Make sure the zaaktype of the zaak even has a start_camunda_process_form
+            if var and fetch_start_camunda_process_form(obj.zaaktype):
+                return True
+        return False
 
     def get_is_static(self, obj) -> bool:
         form = fetch_start_camunda_process_form(obj.zaaktype)
