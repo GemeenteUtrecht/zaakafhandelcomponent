@@ -476,9 +476,13 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         self.assertEqual(m.last_request.headers["X-Audit-Toelichting"], "some")
 
-    @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-other-key")
+    @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-start-key")
     @freeze_time("2020-12-26T12:00:00Z")
-    def test_has_process(self, m):
+    @patch(
+        "zac.core.api.serializers.ZaakDetailSerializer.get_is_configured",
+        return_value=None,
+    )
+    def test_has_process(self, m, *othermocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
@@ -490,6 +494,18 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
         )
+
+        ## No process instances -> hasProcess = False
+        with patch(
+            "zac.core.api.serializers.get_top_level_process_instances",
+            return_value=[],
+        ):
+            response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.json()["hasProcess"])
+
+        ## Process instance with definition key other than CREATE_ZAAK_PROCESS_DEFINITION_KEY -> hasProcess = True
         process_instance = mock.MagicMock()
         process_definition = mock.MagicMock()
         type(process_definition).key = mock.PropertyMock(return_value="some-model-key")
@@ -499,41 +515,94 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "zac.core.api.serializers.get_top_level_process_instances",
             return_value=[process_instance],
         ):
+            response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.json()["hasProcess"])
+
+        ## Process instance with definition key same as CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        #  has incidents.
+        process_instance = mock.MagicMock()
+        process_definition = mock.MagicMock()
+        type(process_definition).key = mock.PropertyMock(return_value="some-start-key")
+        process_instance.definition = process_definition
+
+        with patch(
+            "zac.core.api.serializers.get_top_level_process_instances",
+            return_value=[process_instance],
+        ):
             with patch(
-                "zac.core.api.serializers.get_process_instance_variable",
-                return_value=True,
+                "zac.core.api.serializers.get_incidents_for_process_instance",
+                return_value=["some incident"],
             ):
                 response = self.client.get(self.detail_url)
 
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        ## Process instance with definition key same as CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        #  has no incidents but also no variable named startRelatedBusinessProcess.
+        with patch(
+            "zac.core.api.serializers.get_top_level_process_instances",
+            return_value=[process_instance],
+        ):
+            with patch(
+                "zac.core.api.serializers.get_incidents_for_process_instance",
+                return_value=[],
+            ):
+                with patch(
+                    "zac.core.api.serializers.get_all_process_instance_variables",
+                    return_value={},
+                ):
+                    response = self.client.get(self.detail_url)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        expected_response = {
-            "url": f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            "identificatie": "ZAAK-2020-0010",
-            "bronorganisatie": "123456782",
-            "zaaktype": {
-                "url": f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-                "catalogus": f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
-                "omschrijving": self.zaaktype["omschrijving"],
-                "versiedatum": self.zaaktype["versiedatum"],
-            },
-            "omschrijving": self.zaak["omschrijving"],
-            "toelichting": self.zaak["toelichting"],
-            "registratiedatum": self.zaak["registratiedatum"],
-            "startdatum": "2020-12-25",
-            "einddatum": None,
-            "einddatumGepland": None,
-            "uiterlijkeEinddatumAfdoening": "2021-01-04",
-            "vertrouwelijkheidaanduiding": "openbaar",
-            "zaakgeometrie": {"type": "Point", "coordinates": [4.4683077, 51.9236739]},
-            "deadline": "2021-01-04",
-            "deadlineProgress": 10.00,
-            "resultaat": self.resultaat,
-            "kanGeforceerdBijwerken": True,
-            "hasProcess": True,
-            "isStatic": False,
-            "isConfigured": True,
-        }
-        self.assertEqual(response.json(), expected_response)
+        self.assertFalse(response.json()["hasProcess"])
+
+        ## Process instance with definition key same as CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        #  has no incidents and a variable named startRelatedBusinessProcess but no camunda start process form.
+        with patch(
+            "zac.core.api.serializers.get_top_level_process_instances",
+            return_value=[process_instance],
+        ):
+            with patch(
+                "zac.core.api.serializers.get_incidents_for_process_instance",
+                return_value=[],
+            ):
+                with patch(
+                    "zac.core.api.serializers.get_all_process_instance_variables",
+                    return_value={"startRelatedBusinessProcess": True},
+                ):
+                    with patch(
+                        "zac.core.api.serializers.fetch_start_camunda_process_form",
+                        return_value=None,
+                    ):
+                        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.json()["hasProcess"])
+
+        ## Process instance with definition key same as CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        #  has no incidents and a variable named startRelatedBusinessProcess and a camunda start process form.
+        with patch(
+            "zac.core.api.serializers.get_top_level_process_instances",
+            return_value=[process_instance],
+        ):
+            with patch(
+                "zac.core.api.serializers.get_incidents_for_process_instance",
+                return_value=[],
+            ):
+                with patch(
+                    "zac.core.api.serializers.get_all_process_instance_variables",
+                    return_value={"startRelatedBusinessProcess": True},
+                ):
+                    with patch(
+                        "zac.core.api.serializers.fetch_start_camunda_process_form",
+                        return_value=True,
+                    ):
+                        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.json()["hasProcess"])
 
     @freeze_time("2020-12-26T12:00:00Z")
     def test_is_static(self, m):
@@ -1050,5 +1119,4 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         response = self.client.get(self.detail_url)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)

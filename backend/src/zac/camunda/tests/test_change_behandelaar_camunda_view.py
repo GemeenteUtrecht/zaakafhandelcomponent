@@ -7,7 +7,6 @@ from django_camunda.utils import underscoreize
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import RolType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -115,13 +114,6 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(user=self.user)
-
-        get_roltype_patcher = patch(
-            "zac.core.api.serializers.get_roltype",
-            return_value=factory(RolType, self.roltype),
-        )
-        get_roltype_patcher.start()
-        self.addCleanup(get_roltype_patcher.stop)
 
     @requests_mock.Mocker()
     def test_update_camunda_assignees(self, rm):

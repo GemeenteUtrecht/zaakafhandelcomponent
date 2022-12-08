@@ -593,7 +593,10 @@ class ZaakDetailSerializer(APIModelSerializer):
             for pi in process_instances
             if pi.definition.key == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
         ]
-        if len(parent_process_instance) != 1:
+        if not parent_process_instance:
+            return False
+
+        if len(parent_process_instance) > 1:
             raise serializers.ValidationError(
                 _(
                     "Something went wrong. A ZAAK shouldn't be spawned by more than 1 parent."
@@ -604,7 +607,7 @@ class ZaakDetailSerializer(APIModelSerializer):
         # Make sure the process doesn't have incidents yet:
         incidents = get_incidents_for_process_instance(parent_process_instance.id)
         if incidents:
-            return serializers.ValidationError(
+            raise serializers.ValidationError(
                 _("Something went wrong. An incident was reported in Camunda.")
             )
 
