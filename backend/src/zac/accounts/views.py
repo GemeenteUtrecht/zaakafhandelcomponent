@@ -13,7 +13,4 @@ class LoginView(_LoginView):
 
 class LoggedInView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            return self.request.session.pop("login_next")
-        except KeyError:
-            return "/ui/"
+        return self.request.session.pop("login_next", "/ui/")
