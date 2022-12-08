@@ -1,5 +1,5 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import { AbstractControl, FormControl } from '@angular/forms';
+import {Component, EventEmitter, Input, Output, OnInit, OnChanges} from '@angular/core';
+import {AbstractControl, FormControl} from '@angular/forms';
 
 /**
  * <gu-checkbox [control]="formControl">I'm a checkbox</gu-checkbox>
@@ -18,7 +18,7 @@ import { AbstractControl, FormControl } from '@angular/forms';
   templateUrl: './checkbox.component.html',
   styleUrls: ['./checkbox.component.scss']
 })
-export class CheckboxComponent implements OnInit {
+export class CheckboxComponent implements OnInit, OnChanges {
   @Input() control: AbstractControl = new FormControl('');
   @Input() color: 'primary' | 'accent' | 'warn' = 'primary'
   @Input() value: any;
@@ -27,11 +27,32 @@ export class CheckboxComponent implements OnInit {
 
   @Output() change: EventEmitter<any> = new EventEmitter<any>();
 
-  model = false
+  //
+  // Angular lifecycle.
+  //
 
+  /**
+   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
+   * ngOnInit() method to handle any additional initialization tasks.
+   */
   ngOnInit() {
-    this.model = Boolean(this.checked)
+    this.control.setValue(this.checked);
   }
+
+  /**
+   * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
+   * to handle the changes.
+   */
+  ngOnChanges(changes) {
+    if (changes.checked) {
+      const value = changes.checked.currentValue;
+      this.control.setValue(value);
+    }
+  }
+
+  //
+  // Events.
+  //
 
   onChange(event) {
     this.change.emit(event)

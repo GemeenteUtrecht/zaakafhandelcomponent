@@ -235,9 +235,21 @@ export class FormComponent implements OnInit, OnChanges {
         ? this.fieldsets
         : [{label: '', keys: this.formService.getKeysFromForm(this.form)}]
 
-    this._fieldsets = fieldsets.map((fieldsetConfiguration: FieldsetConfiguration|Fieldset): Fieldset => {
+
+    const updatedFieldsets = fieldsets.map((fieldsetConfiguration: FieldsetConfiguration|Fieldset): Fieldset => {
       return new Fieldset(fieldsetConfiguration, this.fields)
     })
+
+    if(!this._fieldsets.length) {
+      this._fieldsets = updatedFieldsets;
+    } else {
+      updatedFieldsets.forEach((fieldset: Fieldset) => {
+        const target = this._fieldsets.find((otherFieldset: Fieldset) => otherFieldset.key === fieldset.key);
+        if(target) {
+          Object.assign(target, fieldset);
+        }
+      })
+    }
   }
 
   /**
@@ -340,7 +352,9 @@ export class FormComponent implements OnInit, OnChanges {
     field.checked = !field.checked;
     this.updateFields();
     this.updateFieldsets();
-    field.onChange(event, field)
+    if(field.onChange) {
+      field.onChange(event, field)
+    }
   }
 
   /**

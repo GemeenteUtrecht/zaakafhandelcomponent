@@ -23,6 +23,12 @@ from zgw.models.zrc import Zaak
 logger = logging.getLogger(__name__)
 
 
+def get_incidents_for_process_instance(pid: CamundaId) -> list[Optional[Dict]]:
+    client = get_client()
+    incidents = client.get(f"incident?processInstanceId={pid}")
+    return incidents
+
+
 def get_bptl_app_id_variable() -> Dict[str, str]:
     """
     Get the name and value of the bptl app ID variable for BPTL.

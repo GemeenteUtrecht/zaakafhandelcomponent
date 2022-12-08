@@ -258,6 +258,22 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
+        # First test with roltype initiator
+        with patch(
+            "zac.core.api.serializers.get_roltypen",
+            return_value=[factory(RolType, roltype)],
+        ):
+            response = self.client.post(self.url, self.data)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            response.json(),
+            {
+                "instanceId": "e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "instanceUrl": "https://some-url.com/",
+            },
+        )
+
         expected_payload = {
             "businessKey": "",
             "withVariablesInReturn": False,
@@ -285,24 +301,10 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "bptlAppId": {"type": "String", "value": ""},
                 "initiator": {"type": "String", "value": f"user:{self.user}"},
                 "organisatieRSIN": {"type": "String", "value": "002220647"},
+                "startRelatedBusinessProcess": {"type": "Boolean", "value": True},
             },
         }
 
-        # First test with roltype initiator
-        with patch(
-            "zac.core.api.serializers.get_roltypen",
-            return_value=[factory(RolType, roltype)],
-        ):
-            response = self.client.post(self.url, self.data)
-
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(
-            response.json(),
-            {
-                "instanceId": "e13e72de-56ba-42b6-be36-5c280e9b30cd",
-                "instanceUrl": "https://some-url.com/",
-            },
-        )
         self.assertEqual(m.last_request.json(), expected_payload)
 
         # Now remove initiator from roltypes

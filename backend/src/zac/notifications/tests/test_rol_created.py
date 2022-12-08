@@ -8,7 +8,7 @@ from django_camunda.utils import underscoreize
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import RolType, ZaakType
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -138,13 +138,6 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.zaak_document.save()
 
         self.refresh_index()
-
-        get_roltype_patcher = patch(
-            "zac.core.api.serializers.get_roltype",
-            return_value=factory(RolType, ROLTYPE_RESPONSE),
-        )
-        get_roltype_patcher.start()
-        self.addCleanup(get_roltype_patcher.stop)
 
     def test_rol_created_indexed_in_es(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
