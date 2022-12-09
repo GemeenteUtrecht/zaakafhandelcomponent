@@ -104,7 +104,7 @@ def get_process_instances(
 
 
 def get_top_level_process_instances(
-    zaak_url: str, include_bijdragezaak: bool = False, exclude_zaak_creation=True
+    zaak_url: str, include_bijdragezaak: bool = False, exclude_zaak_creation=False
 ) -> List[ProcessInstance]:
     process_instances = get_process_instances(
         zaak_url, include_bijdragezaak=include_bijdragezaak
