@@ -54,7 +54,11 @@ export class FeaturesContezzaDocumentSearchComponent implements OnInit, AfterVie
    * ngOnInit() method to handle any additional initialization tasks.
    */
    ngOnInit() {
-     const script = this.renderer2.createElement('script');
+
+    localStorage.setItem('zaakidentificatie', this.zaak.bronorganisatie);
+    localStorage.setItem('zaaknummer', this.zaak.identificatie);
+
+    const script = this.renderer2.createElement('script');
      script.src = '/ui/assets/contezza-zac-doclib.js';
      this.renderer2.appendChild(this.document.body, script);
    }
