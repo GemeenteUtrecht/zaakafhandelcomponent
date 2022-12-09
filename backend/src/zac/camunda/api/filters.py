@@ -16,3 +16,9 @@ class ProcessInstanceFilterSet(ApiFilterSet):
         ),
         default=False,
     )
+    excludeZaakCreation = fields.BooleanField(
+        help_text=_(
+            "A boolean flag that allows an end user to explicitely filter out the process instances related to the ZAAK creation."
+        ),
+        default=True,
+    )

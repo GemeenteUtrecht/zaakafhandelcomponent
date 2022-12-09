@@ -85,6 +85,13 @@ class ProcessInstanceFetchView(APIView):
                 default=False,
                 required=False,
             ),
+            OpenApiParameter(
+                "excludeZaakCreation",
+                OpenApiTypes.BOOL,
+                OpenApiParameter.QUERY,
+                default=True,
+                required=False,
+            ),
         ],
         responses={
             200: serializer_class(many=True),
@@ -112,7 +119,11 @@ class ProcessInstanceFetchView(APIView):
             include_bijdragezaak=filterset.serializer.validated_data[
                 "includeBijdragezaak"
             ],
+            exclude_zaak_creation=filterset.serializer.validated_data[
+                "excludeZaakCreation"
+            ],
         )
+        # Exclude
         serializer = self.serializer_class(
             process_instances,
             many=True,
