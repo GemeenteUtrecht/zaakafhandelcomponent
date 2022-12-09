@@ -1,5 +1,7 @@
 from typing import Dict, List
 
+from django.conf import settings
+
 from django_camunda.camunda_models import ProcessDefinition
 from django_camunda.client import Camunda, get_client
 from django_camunda.types import CamundaId
@@ -102,7 +104,7 @@ def get_process_instances(
 
 
 def get_top_level_process_instances(
-    zaak_url: str, include_bijdragezaak: bool = False
+    zaak_url: str, include_bijdragezaak: bool = False, exclude_zaak_creation=True
 ) -> List[ProcessInstance]:
     process_instances = get_process_instances(
         zaak_url, include_bijdragezaak=include_bijdragezaak
@@ -144,4 +146,10 @@ def get_top_level_process_instances(
     for process in top_level_processes:
         process.messages = def_messages[process.definition_id]
 
+    if exclude_zaak_creation:
+        top_level_processes = [
+            pi
+            for pi in top_level_processes
+            if pi.definition.key != settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        ]
     return top_level_processes

@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.test import override_settings
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
@@ -466,4 +467,115 @@ class ProcessInstanceTests(APITransactionTestCase):
                 "identificatie": zaak["identificatie"],
                 "url": ZAAK_URL,
             },
+        )
+
+    @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-zaak-creation-process")
+    def test_fetch_process_instances_exclude_zaak_creation_process(
+        self, m_messages, m_task_from, m_request
+    ):
+        process_definition_data = [
+            {
+                "id": f"{key}:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+                "key": key,
+                "category": "http://bpmn.io/schema/bpmn",
+                "description": None,
+                "name": None,
+                "version": 8,
+                "resource": f"{key}.bpmn",
+                "deployment_id": "c76a10fd-c766-11ea-86dc-e22fafe5f405",
+                "diagram": None,
+                "suspended": False,
+                "tenant_id": None,
+                "version_tag": None,
+                "history_time_to_live": None,
+                "startable_in_tasklist": True,
+            }
+            for key in ["some-zaak-creation-process", "accorderen", "Bezwaar_indienen"]
+        ]
+        process_instance_data = [
+            {
+                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
+                "definitionId": process_definition_data[0]["id"],
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+            {
+                "id": "905abd5f-d26f-11ea-86dc-e22fafe5f405",
+                "definitionId": process_definition_data[1]["id"],
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+            {
+                "id": "010fe90d-c122-11ea-a817-b6551116eb32",
+                "definitionId": process_definition_data[2]["id"],
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        ]
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
+            json=process_instance_data,
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn=some-zaak-creation-process%3A8%3Ac76c8200-c766-11ea-86dc-e22fafe5f405%2Caccorderen%3A8%3Ac76c8200-c766-11ea-86dc-e22fafe5f405%2CBezwaar_indienen%3A8%3Ac76c8200-c766-11ea-86dc-e22fafe5f405",
+            json=process_definition_data,
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance?superProcessInstance={process_instance_data[0]['id']}&variables=zaakUrl_eq_{ZAAK_URL}",
+            json=[],
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance?superProcessInstance={process_instance_data[1]['id']}&variables=zaakUrl_eq_{ZAAK_URL}",
+            json=[],
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance?superProcessInstance={process_instance_data[2]['id']}&variables=zaakUrl_eq_{ZAAK_URL}",
+            json=[],
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}task?processInstanceId={process_instance_data[0]['id']}",
+            json=[],
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}task?processInstanceId={process_instance_data[1]['id']}",
+            json=[],
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}task?processInstanceId={process_instance_data[2]['id']}",
+            json=[],
+        )
+
+        url = reverse("fetch-process-instances")
+        response = self.client.get(
+            url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
+        )
+
+        # Make sure the some-zaak-creation-process process instance isn't returned.
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "905abd5f-d26f-11ea-86dc-e22fafe5f405",
+                    "definitionId": "accorderen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+                    "title": "accorderen",
+                    "subProcesses": [],
+                    "messages": ["Annuleer behandeling", "Advies vragen"],
+                    "tasks": [],
+                },
+                {
+                    "id": "010fe90d-c122-11ea-a817-b6551116eb32",
+                    "definitionId": "Bezwaar_indienen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+                    "title": "Bezwaar_indienen",
+                    "subProcesses": [],
+                    "messages": ["Annuleer behandeling", "Advies vragen"],
+                    "tasks": [],
+                },
+            ],
         )

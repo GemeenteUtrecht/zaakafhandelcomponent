@@ -18,6 +18,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
+    ApplicationTokenFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
@@ -475,4 +476,53 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             },
         )
         response = self.client.post(self.endpoint, {})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_without_application_token(self, m):
+        self.client.logout()
+        response = self.client.post(self.endpoint, {})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_with_application_token(self, m, *mocks):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.zaaktype)
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaakprocess_starten.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
+            json=[PROCESS_INSTANCE],
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-instance?superProcessInstance={PROCESS_INSTANCE['id']}",
+            json=[],
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[PROCESS_DEFINITION],
+        )
+        m.post(
+            f"{CAMUNDA_URL}process-definition/key/{PROCESS_DEFINITION['key']}/start",
+            status_code=201,
+            json={
+                "links": [{"rel": "self", "href": "https://some-url.com/"}],
+                "id": PROCESS_INSTANCE["id"],
+            },
+        )
+        token = ApplicationTokenFactory.create()
+        self.client.logout()
+        response = self.client.post(
+            self.endpoint, {}, HTTP_AUTHORIZATION=f"ApplicationToken {token.token}"
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
