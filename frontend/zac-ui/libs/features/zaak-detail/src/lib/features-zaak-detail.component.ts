@@ -1,5 +1,5 @@
-import {Component, Input, OnChanges, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {Location} from '@angular/common';
+import { Component, Inject, Input, OnChanges, OnDestroy, OnInit, Renderer2, ViewChild } from '@angular/core';
+import { DOCUMENT, Location } from '@angular/common';
 import {Title} from '@angular/platform-browser';
 import {ActivitiesService, UserService, ZaakService} from '@gu/services';
 import {Observable} from 'rxjs';
@@ -8,7 +8,7 @@ import {ModalService, SnackbarService} from '@gu/components';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
 import {AdviserenAccorderenComponent} from "./actions/adviseren-accorderen/adviseren-accorderen.component";
 import {StatusComponent} from './actions/status/status.component';
-import {ActivatedRoute} from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {UserPermissionsComponent} from './overview/user-permissions/user-permissions.component';
 import {BetrokkenenComponent} from './overview/betrokkenen/betrokkenen.component';
 import {DocumentenComponent} from './documenten/documenten.component';
@@ -116,7 +116,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
 
   /**
    *
-   * @param activitiesService
+   * @param {ActivitiesService} activitiesService
    * @param {FormBuilder} formBuilder
    * @param {ModalService} modalService
    * @param {SnackbarService} snackbarService
@@ -125,7 +125,11 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
    * @param {ZaakService} zaakService
    * @param {Location} location
    * @param {ActivatedRoute} route
+   * @param {Router} router
+   * @param {Renderer2} renderer2
+   * @param {Document} document
    */
+
   constructor(
     private activitiesService: ActivitiesService,
     private formBuilder: FormBuilder,
@@ -136,6 +140,9 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
     private zaakService: ZaakService,
     private location: Location,
     private route: ActivatedRoute,
+    private router: Router,
+    private renderer2: Renderer2,
+    @Inject(DOCUMENT) private document: Document
   ) {
     this.zaakAccessRequestForm = this.formBuilder.group({
       comment: this.formBuilder.control(""),
@@ -192,6 +199,19 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
    */
   ngOnChanges(): void {
     this.getContextData();
+
+    localStorage.setItem('zaakidentificatie', this.bronorganisatie);
+    localStorage.setItem('zaaknummer', this.identificatie);
+
+    /*
+     * /ui/zoeken route is now used for Oauth authorisation and can by configured via app.config.json: "redirectUri": "your_redirect_uri",
+     * 'contezza-zac-doclib' script must by appended to complete Oauth login
+     */
+    if (this.router.url.includes('session_state')) {
+      const script = this.renderer2.createElement('script');
+      script.src = '/ui/assets/contezza-zac-doclib.js';
+      this.renderer2.appendChild(this.document.body, script);
+    }
   }
 
   /**
