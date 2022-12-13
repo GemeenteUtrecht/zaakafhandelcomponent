@@ -14,7 +14,7 @@
     "silentLogin": true,
     "publicUrls": ["**/preview/s/*", "**/settings"],
     "redirectSilentIframeUri": "{protocol}//{hostname}{:port}/ui/assets/silent-refresh.html",
-    "redirectUri": "/ui/zaken/${zaakidentificatie}/${zaaknummer}/acties?modal=document-toevoegen-modal&tab=1",
+    "redirectUri": "/ui/zaken/{zaakidentificatie}/{zaaknummer}/acties?modal=document-toevoegen-modal&tab=1",
     "redirectUriLogout": "/logout"
   },
   "locale": "nl",
