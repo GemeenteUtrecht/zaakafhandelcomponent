@@ -371,7 +371,9 @@ export class InformatieComponent implements OnInit, OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    const message = error.error?.value ? error.error?.value[0] : this.errorMessage;
+    const message = error.error?.value
+      ? error.error?.value[0]
+      : error?.error?.detail || error?.error.reason || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     this.isCaseAPILoading = false;
     this.isPropertyAPILoading = 0;
