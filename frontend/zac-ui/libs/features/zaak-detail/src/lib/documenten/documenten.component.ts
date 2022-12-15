@@ -1,11 +1,9 @@
-import { Component, HostListener, Input, OnChanges } from '@angular/core';
-import { Document, ReadWriteDocument, Table, Zaak } from '@gu/models';
-import {DocumentenService, ZaakService} from '@gu/services';
-import { ModalService, SnackbarService } from '@gu/components';
-import { catchError, switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Location } from '@angular/common';
+import {Component, HostListener, Input, OnChanges} from '@angular/core';
+import {Document, MetaConfidentiality, ReadWriteDocument, Table, Zaak} from '@gu/models';
+import {DocumentenService, MetaService, ZaakService} from '@gu/services';
+import {Choice, FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
+import {ActivatedRoute, Router} from '@angular/router';
+import {Location} from '@angular/common';
 
 /**
  * <gu-documenten [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-documenten>
@@ -38,9 +36,15 @@ export class DocumentenComponent implements OnChanges {
     '',
     'Auteur',
     'Type',
+    'Vertrouwelijkheidaanduiding',
   ]
 
   tableData: Table = new Table(this.tableHead, []);
+  confidentialityForm: FieldConfiguration[] = [{
+    label: "Reden",
+    name: "reason",
+  }]
+
 
   isLoading = true;
 
@@ -48,12 +52,14 @@ export class DocumentenComponent implements OnChanges {
 
   selectedDocument: Document;
   selectedDocumentUrl: string;
+  selectedConfidentialityChoice: Choice;
 
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private location: Location,
     private documentenService: DocumentenService,
+    private metaService: MetaService,
     private modalService: ModalService,
     private zaakService: ZaakService,
     private snackbarService: SnackbarService
@@ -81,17 +87,22 @@ export class DocumentenComponent implements OnChanges {
   fetchDocuments() {
     this.isLoading = true;
 
-    this.zaakService.listCaseDocuments(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe( data => {
-      this.tableData = this.documentenService.formatTableData(data, this.tableHead, this.zaak);
-      this.documentsData = data;
+    this.metaService.listConfidentialityClassifications().subscribe(
+      (metaConfidentialities: MetaConfidentiality[]) => {
+        this.zaakService.listCaseDocuments(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
+          this.tableData = this.documentenService.formatTableData(data, this.tableHead, this.zaak, metaConfidentialities, this.onConfidentialityChange.bind(this));
+          this.documentsData = data;
 
-      this.handleQueryParam();
-      this.isLoading = false;
-    }, res => {
-      const message = res.error.detail || this.errorMessage;
-      this.snackbarService.openSnackBar(message, "Sluiten", 'warn')
-      this.isLoading = false;
-    })
+          this.handleQueryParam();
+          this.isLoading = false;
+        }, res => {
+          const message = res.error.detail || this.errorMessage;
+          this.snackbarService.openSnackBar(message, "Sluiten", 'warn')
+          this.isLoading = false;
+        })
+      },
+      this.reportError.bind(this)
+    )
   }
 
   /**
@@ -112,11 +123,11 @@ export class DocumentenComponent implements OnChanges {
    */
   readDocument(readUrl) {
     this.isLoading = true;
-    this.documentenService.readDocument(readUrl).subscribe( (res: ReadWriteDocument) => {
+    this.documentenService.readDocument(readUrl).subscribe((res: ReadWriteDocument) => {
       this.isLoading = false;
 
       // Check if Microsoft Office application file
-      if (res.magicUrl.substr(0,3) === "ms-") {
+      if (res.magicUrl.substr(0, 3) === "ms-") {
         window.open(res.magicUrl, "_self");
       } else {
         window.open(res.magicUrl, "_blank");
@@ -173,10 +184,10 @@ export class DocumentenComponent implements OnChanges {
    */
   openDocumentEdit(writeUrl) {
     this.isLoading = true;
-    this.documentenService.openDocumentEdit(writeUrl).subscribe( (res: ReadWriteDocument) => {
+    this.documentenService.openDocumentEdit(writeUrl).subscribe((res: ReadWriteDocument) => {
 
       // Check if Microsoft Office application file
-      if (res.magicUrl.substr(0,3) === "ms-") {
+      if (res.magicUrl.substr(0, 3) === "ms-") {
         window.open(res.magicUrl, "_self");
       } else {
         window.open(res.magicUrl, "_blank");
@@ -196,13 +207,13 @@ export class DocumentenComponent implements OnChanges {
    */
   closeDocumentEdit(deleteUrl) {
     this.isLoading = true;
-    this.documentenService.closeDocumentEdit(deleteUrl).subscribe( () => {
-        // Refresh section
-        this.fetchDocuments();
-      }, () => {
-        this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
-        this.isLoading = false;
-      })
+    this.documentenService.closeDocumentEdit(deleteUrl).subscribe(() => {
+      // Refresh section
+      this.fetchDocuments();
+    }, () => {
+      this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
+      this.isLoading = false;
+    })
   }
 
   //
@@ -233,7 +244,7 @@ export class DocumentenComponent implements OnChanges {
       [],
       {
         relativeTo: this.activatedRoute,
-        queryParams: { modal: null, tab: null },
+        queryParams: {modal: null, tab: null},
         queryParamsHandling: 'merge'
       }
     );
@@ -273,7 +284,7 @@ export class DocumentenComponent implements OnChanges {
       [],
       {
         relativeTo: this.activatedRoute,
-        queryParams: { modal: id },
+        queryParams: {modal: id},
         queryParamsHandling: 'merge'
       }
     );
@@ -285,5 +296,41 @@ export class DocumentenComponent implements OnChanges {
    */
   closeModal(id: string) {
     this.modalService.close(id);
+  }
+
+  onConfidentialityChange(document: Document, confidentialityChoice: Choice) {
+    this.selectedDocument = document;
+    this.selectedConfidentialityChoice = confidentialityChoice;
+    this.openModal("document-confidentiality-modal")
+  }
+
+  /**
+   * Gets called when this.confidentialityForm is submitted.
+   * @param {Object} data
+   */
+  onConfidentialitySubmit(data) {
+    this.isLoading = true;
+
+    const choiceValue = this.selectedConfidentialityChoice.value as "openbaar" | "beperkt_openbaar" | "intern" | "zaakvertrouwelijk" | "vertrouwelijk" | "confidentieel" | "geheim" | "zeer_geheim"
+    this.documentenService.setConfidentiality(this.selectedDocument.url, choiceValue, data.reason, this.zaak.url).subscribe(
+      () => this.closeModal("document-confidentiality-modal"),
+      () => this.reportError.bind(this),
+      () => this.isLoading =false,
+    );
+  }
+
+  //
+  // Error handling.
+  //
+
+  /**
+   * Error callback.
+   * @param {*} error
+   */
+  reportError(error: any): void {
+    const message = error?.error?.detail || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
+    this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
+    console.error(error);
+    this.isLoading = false;
   }
 }
