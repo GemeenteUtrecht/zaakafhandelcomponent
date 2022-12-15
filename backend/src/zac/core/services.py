@@ -812,7 +812,7 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     return resultaat
 
 
-@cache_result("rollen:{zaak.url}", alias="request", timeout=10)
+# @cache_result("rollen:{zaak.url}", alias="request", timeout=10)
 def get_rollen(zaak: Zaak) -> List[Rol]:
     perf_logger.info("      Fetching rollen for zaak %s", zaak.identificatie)
     # fetch the rollen
