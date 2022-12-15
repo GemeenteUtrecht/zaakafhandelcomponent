@@ -1,17 +1,15 @@
-from dataclasses import asdict
-
-from django.core.cache import cache, caches
+from django.core.cache import cache
 
 import requests_mock
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.zaken import Rol, Zaak
+from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.cache import invalidate_rollen_cache
-from zac.core.services import fetch_rol, get_rollen
+from zac.core.services import fetch_rol
 from zac.core.tests.utils import ClearCachesMixin
 
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
