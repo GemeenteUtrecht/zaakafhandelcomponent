@@ -36,7 +36,7 @@ export class DocumentenComponent implements OnChanges {
     '',
     'Auteur',
     'Type',
-    'vertrouwelijkheidaanduiding',
+    'Vertrouwelijkheidaanduiding',
   ]
 
   tableData: Table = new Table(this.tableHead, []);
