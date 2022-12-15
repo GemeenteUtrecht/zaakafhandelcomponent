@@ -1218,6 +1218,29 @@ def fetch_document_audit_trail(document_url: str) -> List[AuditTrailData]:
     return factory(AuditTrailData, audit_trail)
 
 
+def get_documenten_all_paginated(
+    client: ZGWClient,
+    query_params: dict = {},
+) -> Tuple[List[Document], dict]:
+    """
+    Fetch all enkelvoudiginformatieobjects from the DRCs in batches.
+    Used to index documenten in ES.
+
+    """
+    response = client.list("enkelvoudiginformatieobject", query_params=query_params)
+    documenten = factory(Document, response["results"])
+
+    if response["next"]:
+        next_url = urlparse(response["next"])
+        query = parse_qs(next_url.query)
+        new_page = int(query["page"][0])
+        query_params["page"] = [new_page]
+    else:
+        query_params["page"] = None
+
+    return documenten, query_params
+
+
 ###################################################
 #                       BRC                       #
 ###################################################

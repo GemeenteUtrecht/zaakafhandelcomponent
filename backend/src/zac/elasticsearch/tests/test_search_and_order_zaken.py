@@ -216,7 +216,7 @@ class SearchZakenTests(ESMixin, TestCase):
         super_user = SuperUserFactory.create()
         request = MagicMock()
         request.user = super_user
-        result = search(request=request, ordering=("-identificatie",))
+        result = search(request=request, ordering=("-identificatie.keyword",))
         self.assertEqual(result[0].url, self.zaak_document2.url)
 
     def test_nested_ordering(self):

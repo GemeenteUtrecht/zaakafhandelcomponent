@@ -177,6 +177,16 @@ class ZaakObjectDocumentSerializer(serializers.Serializer):
     )
 
 
+class ZaakInformatieObjectDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(
+        required=False,
+        help_text=_("URL-reference of the ZAAKINFORMATIEOBJECT in ZAKEN API."),
+    )
+    informatieobject = serializers.URLField(
+        required=False, help_text=_("URL-reference of the INFORMATIEOBJECT in DRC API.")
+    )
+
+
 class ZaakgeometrieSerializer(serializers.Serializer):
     type = serializers.CharField()
     coordinates = serializers.ListField()
@@ -232,7 +242,7 @@ class ZaakDocumentSerializer(serializers.Serializer):
         ),
     )
     eigenschappen = EigenschapDocumentSerializer(
-        many=True, required=False, help_text=_("EIGENSCHAPpen of the ZAAK.")
+        many=True, required=False, help_text=_("EIGENSCHAPs of the ZAAK.")
     )
     status = StatusDocumentSerializer(
         required=False, help_text=_("STATUS of the ZAAK.")
@@ -241,9 +251,14 @@ class ZaakDocumentSerializer(serializers.Serializer):
         required=False, help_text=_("Comment on the ZAAK.")
     )
     zaakobjecten = ZaakObjectDocumentSerializer(
-        many=True, required=False, help_text=_("ZAAKOBJECTen belonging to the ZAAK.")
+        many=True, required=False, help_text=_("ZAAKOBJECTs belonging to the ZAAK.")
     )
     zaakgeometrie = ZaakgeometrieSerializer(
         required=False,
         help_text=_("A GeoJSON containing geometric information related to the ZAAK."),
+    )
+    zaakinformatieobjecten = ZaakInformatieObjectDocumentSerializer(
+        many=True,
+        required=False,
+        help_text=_("ZAAKINFORMATIEOBJECTs belonging to the ZAAK."),
     )

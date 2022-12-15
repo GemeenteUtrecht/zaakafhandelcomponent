@@ -559,7 +559,8 @@ ELASTICSEARCH_DSL = {
     "default": {"hosts": config("ES_HOST", "localhost:9200")},
 }
 ES_INDEX_ZAKEN = "zaken"
-
+ES_INDEX_DOCUMENTEN = "documenten"
+ES_INDEX_OBJECTEN = "objecten"
 
 # SCIM
 SCIM_SERVICE_PROVIDER = {

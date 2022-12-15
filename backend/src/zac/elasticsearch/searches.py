@@ -1,12 +1,16 @@
 import operator
 from functools import reduce
-from typing import List, Optional
+from typing import List, Optional, Union
 from urllib.request import Request
 
-from elasticsearch_dsl import Q
+from django.conf import settings
+
+from elasticsearch_dsl import Q, Search
 from elasticsearch_dsl.query import (
     Bool,
     Exists,
+    Match,
+    MultiMatch,
     Nested,
     Query,
     QueryString,
@@ -20,7 +24,7 @@ from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
-from .documents import ZaakDocument
+from .documents import ObjectDocument, ZaakDocument
 
 
 def query_allowed_for_requester(
@@ -76,7 +80,7 @@ def search(
     urls=None,
     only_allowed=True,
     include_closed=True,
-    ordering=("-identificatie", "-startdatum", "-registratiedatum"),
+    ordering=("-identificatie.keyword", "-startdatum", "-registratiedatum"),
     fields=None,
     object=None,
 ) -> List[ZaakDocument]:
@@ -85,7 +89,7 @@ def search(
     s = ZaakDocument.search()[:size]
 
     if identificatie:
-        s = s.filter(Term(identificatie=identificatie))
+        s = s.query(Match(identificatie={"query": identificatie}))
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
     if omschrijving:
@@ -165,3 +169,81 @@ def autocomplete_zaak_search(
 
     response = search.execute()
     return response.hits
+
+
+from time import time
+
+
+def quick_search(
+    search_term: str,
+    request: Optional[Request] = None,
+    only_allowed: bool = False,
+) -> List[Union[ZaakDocument, ObjectDocument]]:
+    time_then = time()
+    s_zaken = Search(index=[settings.ES_INDEX_ZAKEN]).source(
+        [
+            "bronorganisatie",
+            "identificatie",
+            "omschrijving",
+        ]
+    )
+    s_zaken = s_zaken.query(
+        MultiMatch(
+            query=search_term,
+            fields=[
+                "identificatie^2",
+                "omschrijving",
+            ],
+        ),
+    )
+    s_zaken.extra(size=5)
+
+    s_objecten = Search(index=[settings.ES_INDEX_OBJECTEN])
+    s_objecten = s_objecten.query(
+        MultiMatch(fields=["record_data_text.*"], query=search_term)
+    )
+    s_objecten = s_objecten.filter(~Exists(field="record_data.meta"))
+    s_objecten.extra(size=5)
+
+    s_documenten = Search(index=[settings.ES_INDEX_DOCUMENTEN])
+    s_documenten = s_documenten.query(Match(titel={"query": search_term}))
+    s_documenten.extra(size=5)
+    s_documenten.source(["titel", "url", "related_zaken"])
+    results = {
+        "zaken": s_zaken.execute(),
+        "objecten": s_objecten.execute(),
+        "documenten": s_documenten.execute(),
+    }
+    print(f"SEARCH TOOK {time()-time_then} seconds.")
+    return results
+
+    # s_objecten = Search(index=[settings.ES_INDEX_OBJECTEN])
+    # s_objecten = s_objecten.suggest(
+    #     "data", search_term, completion={"field": "record.data"}
+    # )
+    # s_objecten = s_objecten.suggest(
+    #     "geometry", search_term, completion={"field": "record.geometry"}
+    # )
+    # s_objecten.extra(size=5).sort(["-_score"])
+
+    # s_documenten = Search(index=[settings.ES_INDEX_DOCUMENTEN])
+    # s_documenten = s_documenten.suggest(
+    #     "titel", search_term, completion={"field": "titel"}
+    # )
+    # s_documenten.extra(size=5).sort(["-_score"])
+
+    # if only_allowed:
+    #     allowed_zaken = query_allowed_for_requester(request)
+    #     s_zaken = s_zaken.filter(allowed_zaken)
+    #     s_objecten = s_objecten.filter(
+    #         Nested(
+    #             path="related_zaken",
+    #             query=Bool(filter=Terms(related_zaken__url=allowed_zaken)),
+    #         )
+    #     )
+    #     s_documenten = s_objecten.filter(
+    #         Nested(
+    #             path="related_zaken",
+    #             query=Bool(filter=Terms(related_zaken__url=allowed_zaken)),
+    #         )
+    #     )

@@ -1,23 +1,29 @@
 import logging
 from collections import defaultdict
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 from elasticsearch import exceptions
 from zgw_consumers.api_models.catalogi import StatusType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
 
 from zac.core.rollen import Rol
 from zac.core.services import (
+    get_documenten,
     get_rollen,
     get_status,
     get_statustype,
     get_zaak_eigenschappen,
     get_zaakobjecten,
 )
-from zgw.models.zrc import Zaak
+from zgw.models.zrc import Zaak, ZaakInformatieObject
 
 from .documents import (
+    EnkelvoudigInformatieObjectDocument,
+    ObjectDocument,
+    ObjectTypeDocument,
+    RelatedZaakDocument,
     RolDocument,
     StatusDocument,
     ZaakDocument,
@@ -30,6 +36,11 @@ logger = logging.getLogger(__name__)
 
 def _get_uuid_from_url(url: str):
     return url.strip("/").split("/")[-1]
+
+
+###################################################
+#                       ZRC                       #
+###################################################
 
 
 def create_zaak_document(zaak: Zaak) -> ZaakDocument:
@@ -49,6 +60,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         deadline=zaak.deadline,
         toelichting=zaak.toelichting,
         zaakgeometrie=zaak.zaakgeometrie,
+        identificatie_suggest=zaak.identificatie,
     )
 
     return zaak_document
@@ -95,6 +107,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         toelichting=zaak.toelichting,
         zaakgeometrie=zaak.zaakgeometrie,
         omschrijving=zaak.omschrijving,
+        identificatie_suggest=zaak.identificatie,
     )
     return zaak_document
 
@@ -206,3 +219,59 @@ def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
     zaak_document.save()
 
     return
+
+
+def create_zaakinformatieobject_document(
+    zio: ZaakInformatieObject,
+) -> ZaakObjectDocument:
+    return ZaakObjectDocument(url=zio["url"], informatieobject=zio["informatieobject"])
+
+
+def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> None:
+    zaak.zaakinformatieobjecten = get_documenten(zaak)
+
+    zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
+    zaak_document.zaakinformatieobjecten = [
+        create_zaakinformatieobject_document(zio) for zio in zaak.zaakinformatieobjecten
+    ]
+    zaak_document.save()
+
+    return
+
+
+###################################################
+#                    OBJECTEN                     #
+###################################################
+
+
+def create_objecttype_document(objecttype: Dict) -> ObjectTypeDocument:
+    return ObjectTypeDocument(url=objecttype["url"], name=objecttype["name"])
+
+
+def create_object_document(object: Dict) -> ObjectDocument:
+    return ObjectDocument(
+        url=object["url"],
+        record_data=object["record"]["data"],
+    )
+
+
+def create_related_zaak_document(
+    related_zaak: Union[ZaakDocument, Zaak]
+) -> RelatedZaakDocument:
+    return RelatedZaakDocument(
+        url=related_zaak.url,
+        bronorganisatie=related_zaak.bronorganisatie,
+        omschrijving=related_zaak.omschrijving,
+        identificatie=related_zaak.identificatie,
+    )
+
+
+###################################################
+#                   DOCUMENTEN                    #
+###################################################
+
+
+def create_enkelvoudiginformatieobject_document(
+    document: Document,
+) -> EnkelvoudigInformatieObjectDocument:
+    return EnkelvoudigInformatieObjectDocument(url=document.url, titel=document.titel)

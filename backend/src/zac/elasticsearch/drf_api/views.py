@@ -98,7 +98,7 @@ class SearchView(PerformSearchMixin, views.APIView):
     authentication_classes = [
         ApplicationTokenAuthentication
     ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
-    ordering = ("-identificatie",)
+    ordering = ("-identificatie.keyword",)
     parser_classes = (IgnoreCamelCaseJSONParser,)
     permission_classes = (HasTokenAuth | IsAuthenticated,)
     search_document = ZaakDocument
@@ -192,7 +192,7 @@ class SearchView(PerformSearchMixin, views.APIView):
     ),
 )
 class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
-    ordering = ("-identificatie",)
+    ordering = ("-identificatie.keyword",)
     permission_classes = (IsAuthenticated,)
     queryset = SearchReport.objects.all()
     search_document = ZaakDocument

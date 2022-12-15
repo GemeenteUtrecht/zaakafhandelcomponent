@@ -1,17 +1,10 @@
 import logging
-import os
-from io import StringIO
 from typing import Dict, Iterator, List
 
 from django.conf import settings
 from django.core.management import BaseCommand
-from django.core.management.base import CommandParser, OutputWrapper
 
 import click
-import psutil
-from elasticsearch.helpers import bulk
-from elasticsearch_dsl import Index
-from elasticsearch_dsl.connections import connections
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -21,6 +14,7 @@ from zac.core.services import (
     get_rollen,
     get_status,
     get_zaak_eigenschappen,
+    get_zaak_informatieobjecten,
     get_zaakobjecten,
     get_zaaktypen,
     get_zaken_all_paginated,
@@ -32,6 +26,7 @@ from ...api import (
     create_rol_document,
     create_status_document,
     create_zaak_document,
+    create_zaakinformatieobject_document,
     create_zaakobject_document,
     create_zaaktype_document,
 )
@@ -43,112 +38,21 @@ from ...documents import (
     ZaakObjectDocument,
     ZaakTypeDocument,
 )
-from ...utils import check_if_index_exists
+from ..utils import get_memory_usage
 
 perf_logger = logging.getLogger("performance")
 
-
-def get_memory_usage():
-    process = psutil.Process(os.getpid())
-    mem_bytes = process.memory_info().rss  # in bytes
-    mem_mbytes = mem_bytes / 1024 ** 2
-    return f"{mem_mbytes} MB"
+from .base_index import IndexCommand
 
 
-class ProgressOutputWrapper(OutputWrapper):
-    """Class to manage logs with and without progress bar"""
-
-    def __init__(self, show_progress, *args, **kwargs):
-        self.show_progress = show_progress
-
-        super().__init__(*args, **kwargs)
-
-    def write_without_progress(self, *args, **kwargs):
-        """write in the stdout only if there is no progress bar"""
-        if not self.show_progress:
-            super().write(*args, **kwargs)
-
-    def progress_file(self):
-        return self if self.show_progress else StringIO()
-
-    def start_progress(self):
-        if self.show_progress:
-            self.ending = ""
-
-    def end_progress(self):
-        if self.show_progress:
-            self.ending = "\n"
-
-
-class Command(BaseCommand):
+class Command(IndexCommand, BaseCommand):
     help = "Create documents in ES by indexing all zaken from ZAKEN API"
+    _index = settings.ES_INDEX_ZAKEN
+    _type = "zaak"
+    _document = ZaakDocument
+    _verbose_name_plural = "zaken"
 
-    def add_arguments(self, parser: CommandParser) -> None:
-        super().add_arguments(parser)
-        parser.add_argument(
-            "--max-workers",
-            type=int,
-            help="Indicates the max number of parallel workers (for memory management). Defaults to 4.",
-            default=4,
-        )
-        parser.add_argument(
-            "--reindex-last",
-            type=int,
-            help="Indicates the number of the most recent zaken to be reindexed.",
-        )
-        parser.add_argument(
-            "--progress",
-            "--show-progress",
-            action="store_true",
-            help=(
-                "Show a progress bar. Showing a progress bar disables other "
-                "fine-grained feedback."
-            ),
-        )
-
-    def handle(self, **options):
-        # redefine self.stdout as ProgressOutputWrapper cause logging is dependent whether
-        # we have a progress bar
-        show_progress = options["progress"]
-        self.stdout = ProgressOutputWrapper(show_progress, out=self.stdout._out)
-
-        self.max_workers = options["max_workers"]
-        self.reindex_last = options["reindex_last"]
-        self.es_client = connections.get_connection()
-        if self.reindex_last:
-            self.handle_reindexing()
-        else:
-            self.handle_indexing()
-
-    def handle_reindexing(self):
-        # Make sure the index exists...
-        check_if_index_exists()
-        self.reindexed = (
-            0  # To keep track of how many zaken have already been reindexed.
-        )
-        self.bulk_upsert()
-        self.stdout.write(f"{self.reindex_last} zaken are reindexed.")
-
-    def handle_indexing(self):
-        # If we're indexing everything - clear the index.
-        self.clear_zaken_index()
-        ZaakDocument.init()
-        self.bulk_upsert()
-        count = self.es_client.count()["count"]
-        self.stdout.write(f"{count} zaken are received from Zaken API.")
-
-    def bulk_upsert(self):
-        bulk(
-            self.es_client,
-            self.batch_index_zaken(),
-        )
-
-    def check_if_done_batching(self) -> bool:
-        if self.reindex_last and self.reindex_last - self.reindexed == 0:
-            return True
-        return False
-
-    def batch_index_zaken(self) -> Iterator[ZaakDocument]:
+    def batch_index(self) -> Iterator[ZaakDocument]:
         self.stdout.write("Preloading all case types...")
         zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
         self.stdout.write(f"Fetched {len(zaaktypen)} case types")
@@ -215,7 +119,7 @@ class Command(BaseCommand):
 
                     perf_logger.info("Entering ES documents generator")
                     perf_logger.info("Memory usage: %s", get_memory_usage())
-                    yield from self.zaakdocumenten_generator(zaken)
+                    yield from self.documenten_generator(zaken)
                     perf_logger.info("Exited ES documents generator")
                     perf_logger.info("Memory usage: %s", get_memory_usage())
                     bar.update(len(zaken))
@@ -226,7 +130,7 @@ class Command(BaseCommand):
 
         self.stdout.end_progress()
 
-    def zaakdocumenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
+    def documenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
         perf_logger.info("  In ES documents generator")
         perf_logger.info("    Create zaak documents...")
         zaak_documenten = self.create_zaak_documenten(zaken)
@@ -246,6 +150,11 @@ class Command(BaseCommand):
         perf_logger.info("    Create zaakobject documents...")
         zaakobjecten_documenten = self.create_zaakobject_documenten(zaken)
         perf_logger.info("    Create zaakobject documents finished")
+        perf_logger.info("    Create zaakinformatieobject documents...")
+        zaakinformatieobjecten_documenten = self.create_zaakinformatieobject_documenten(
+            zaken
+        )
+        perf_logger.info("    Create zaakinformatieobject documents finished")
 
         perf_logger.info("    Relating all results for every zaak...")
         for zaak in zaken:
@@ -255,16 +164,15 @@ class Command(BaseCommand):
             zaakdocument.rollen = rollen_documenten.get(zaak.url, [])
             zaakdocument.eigenschappen = eigenschappen_documenten.get(zaak.url, {})
             zaakdocument.zaakobjecten = zaakobjecten_documenten.get(zaak.url, [])
+            zaakdocument.zaakinformatieobjecten = zaakinformatieobjecten_documenten.get(
+                zaak.url, []
+            )
             zd = zaakdocument.to_dict(True)
             yield zd
             if self.reindex_last:
                 self.reindexed += 1
                 if self.check_if_done_batching():
                     return
-
-    def clear_zaken_index(self):
-        zaken = Index(settings.ES_INDEX_ZAKEN)
-        zaken.delete(ignore=404)
 
     def create_zaak_documenten(self, zaken: List[Zaak]) -> Dict[str, ZaakDocument]:
         # Build the zaak_documenten
@@ -299,7 +207,7 @@ class Command(BaseCommand):
             if status
         }
         self.stdout.write_without_progress(
-            f"{len(status_documenten.keys())} statussen are received from Zaken API."
+            f"{len(status_documenten.keys())} statussen are received from ZAKEN API."
         )
         return status_documenten
 
@@ -357,3 +265,23 @@ class Command(BaseCommand):
             f"{num_case_objects} zaakobjecten are found for {len(zaakobjecten_documenten.keys())} zaken."
         )
         return zaakobjecten_documenten
+
+    def create_zaakinformatieobject_documenten(
+        self, zaken: List[Zaak]
+    ) -> Dict[str, ZaakObjectDocument]:
+        # Prefetch zaakinformatieobjecten
+        with parallel(max_workers=self.max_workers) as executor:
+            list_of_zios = list(executor.map(get_zaak_informatieobjecten, zaken))
+
+        print(list_of_zios)
+        zaakinformatieobject_documenten = {
+            zios[0]["zaak"]: [create_zaakinformatieobject_document(zio) for zio in zios]
+            for zios in list_of_zios
+            if zios
+        }
+
+        num_case_zios = sum([len(zio) for zio in list_of_zios])
+        self.stdout.write_without_progress(
+            f"{num_case_zios} zaakinformatieobjecten are found for {len(zaakinformatieobject_documenten.keys())} zaken."
+        )
+        return zaakinformatieobject_documenten
