@@ -253,22 +253,22 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
                 )
 
     @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
-    def test_start_camunda_process_no_process_instance_to_close(self, m, *mocks):
+    def test_start_camunda_process_no_start_camunda_process_form_found(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
+            json=[PROCESS_INSTANCE],
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-instance?superProcessInstance={PROCESS_INSTANCE['id']}",
             json=[],
         )
-        m.post(
-            f"{CAMUNDA_URL}process-definition/key/{PROCESS_DEFINITION['key']}/start",
-            status_code=201,
-            json={
-                "links": [{"rel": "self", "href": "https://some-url.com/"}],
-                "id": PROCESS_INSTANCE["id"],
-            },
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[],
         )
 
         with patch(
@@ -277,14 +277,8 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         ):
             response = self.client.post(self.endpoint, {})
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            response.json(),
-            {
-                "instanceId": PROCESS_INSTANCE["id"],
-                "instanceUrl": "https://some-url.com/",
-            },
-        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.json(), {"detail": "Niet gevonden."})
 
     @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
     def test_start_camunda_process_no_process_definition_found(self, m, *mocks):

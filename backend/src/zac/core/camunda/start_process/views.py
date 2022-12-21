@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
@@ -43,9 +44,15 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         ]
 
         # See if there is a configured camunda_start_process object
-        camunda_start_process = fetch_start_camunda_process_form(zaak.zaaktype)
+        form = fetch_start_camunda_process_form(zaak.zaaktype)
+        if not form:
+            raise Http404(
+                "No start camunda process form found for zaaktype with `identificatie`: `%s`."
+                % zaak.zaaktype.identificatie
+            )
+
         results = start_process(
-            process_key=camunda_start_process.camunda_process_definition_key,
+            process_key=form.camunda_process_definition_key,
             variables={
                 "zaakUrl": zaak.url,
                 "zaakIdentificatie": zaak.identificatie,
