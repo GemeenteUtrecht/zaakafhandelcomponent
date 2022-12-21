@@ -278,7 +278,12 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
             response = self.client.post(self.endpoint, {})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {"detail": "Niet gevonden."})
+        self.assertEqual(
+            response.json(),
+            {
+                "detail": f"No start camunda process form found for zaaktype with `identificatie`: `{self.zaaktype['identificatie']}`."
+            },
+        )
 
     @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
     def test_start_camunda_process_no_process_definition_found(self, m, *mocks):
