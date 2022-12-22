@@ -8,16 +8,23 @@ from rest_framework import exceptions, status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.constants import (
+    RolOmschrijving,
+    VertrouwelijkheidsAanduidingen,
+)
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
+from zac.accounts.tests.factories import (
+    BlueprintPermissionFactory,
+    SuperUserFactory,
+    UserFactory,
+)
 from zac.camunda.data import Task
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from ..api.serializers import SetTaskAssigneeSerializer
@@ -132,7 +139,14 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
-        zaak = generate_oas_component(
+        cls.roltype = generate_oas_component(
+            "ztc",
+            "schemas/RolType",
+            url=f"{CATALOGI_ROOT}roltypen/0b09e1e6-69b8-417f-a740-4109af671955",
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
+            omschrijving="Behandelend ambtenaar",
+        )
+        cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
@@ -146,7 +160,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
 
         cls.patch_get_zaak = patch(
             "zac.camunda.api.views.get_zaak",
-            return_value=factory(Zaak, zaak),
+            return_value=factory(Zaak, cls.zaak),
         )
 
         cls.patch_fetch_zaaktype = patch(
@@ -223,8 +237,7 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         )
 
     @requests_mock.Mocker()
-    @patch("zac.camunda.api.views.SetTaskAssigneeView._create_rol", return_value=None)
-    def test_has_perm_set_assignee_and_delegate(self, m, mock_create_rol):
+    def test_has_perm_set_assignee_and_delegate(self, m):
         self.patch_get_task.start()
         self.addCleanup(self.patch_get_task.stop)
 
@@ -280,3 +293,60 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(m.last_request.json(), expected_payload)
         self.assertIn("delegate", m.last_request.url)
+
+    # @requests_mock.Mocker()
+    # def test_has_perm_set_assignee_and_delegate_and_create_rol(self, m):
+    #     self.patch_get_task.start()
+    #     self.addCleanup(self.patch_get_task.stop)
+    #     mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+    #     mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+    #     mock_resource_get(m, self.zaaktype)
+    #     user = SuperUserFactory.create()
+    #     self.client.force_authenticate(user=user)
+
+    #     m.post(
+    #         f"https://camunda.example.com/engine-rest/task/{self.task.id}/assignee",
+    #         status_code=204,
+    #     )
+
+    #     m.post(
+    #         f"https://camunda.example.com/engine-rest/task/{self.task.id}/delegate",
+    #         status_code=204,
+    #     )
+    #     m.get(
+    #         f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}&omschrijvingGeneriek={RolOmschrijving.behandelaar}",
+    #         json=paginated_response([self.roltype]),
+    #     )
+    #     m.get(
+    #         f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}&betrokkeneIdentificatie__medewerker__identificatie=user:{user}",
+    #         json=paginated_response([]),
+    #     )
+    #     m.post(f"{ZAKEN_ROOT}rollen", status_code=201)
+
+    #     data = {
+    #         "task": self.task.id,
+    #         "assignee": user.username,
+    #         "delegate": "",
+    #     }
+
+    #     # data with assignee
+    #     response = self.client.post(
+    #         self.endpoint,
+    #         data=data,
+    #     )
+
+    #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    #     self.assertEqual(
+    #         m.last_request.json(),
+    #         {
+    #             "zaak": self.zaak["url"],
+    #             "betrokkeneType": "medewerker",
+    #             "roltype": self.roltype["url"],
+    #             "roltoelichting": "Behandelend ambtenaar",
+    #             "betrokkeneIdentificatie": {
+    #                 "identificatie": f"user:{user}",
+    #                 "achternaam": "",
+    #                 "voorletters": "",
+    #             },
+    #         },
+    #     )

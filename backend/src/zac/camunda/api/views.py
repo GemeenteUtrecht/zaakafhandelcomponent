@@ -13,7 +13,7 @@ from rest_framework import exceptions, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from zgw_consumers.api_models.constants import RolOmschrijving
+from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import User
@@ -476,7 +476,9 @@ class SetTaskAssigneeView(APIView):
             return
 
         # fetch roltype
-        roltypen = get_roltypen(zaak.zaaktype, omschrijving_generiek="behandelaar")
+        roltypen = get_roltypen(
+            zaak.zaaktype, omschrijving_generiek=RolOmschrijving.behandelaar
+        )
         if not roltypen:
             return
         roltype = roltypen[0]
@@ -506,9 +508,9 @@ class SetTaskAssigneeView(APIView):
 
         data = {
             "zaak": zaak.url,
-            "betrokkeneType": "medewerker",
+            "betrokkeneType": RolTypes.medewerker,
             "roltype": roltype.url,
-            "roltoelichting": "task claiming",
+            "roltoelichting": roltype.omschrijving,
             "betrokkeneIdentificatie": betrokkene_identificatie,
         }
         zrc_client.create("rol", data)
@@ -536,7 +538,6 @@ class SetTaskAssigneeView(APIView):
         assignee = serializer.validated_data["assignee"]
         if assignee:
             set_assignee(task.id, assignee)
-            self._create_rol(zaak, assignee)
 
         # If delegate is given, set delegate.
         delegate = serializer.validated_data["delegate"]
@@ -545,7 +546,6 @@ class SetTaskAssigneeView(APIView):
                 f"task/{task.id}/delegate",
                 json={"userId": delegate},
             )
-            self._create_rol(zaak, delegate)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
