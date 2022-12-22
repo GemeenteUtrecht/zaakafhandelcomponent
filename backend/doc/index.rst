@@ -17,6 +17,7 @@ Welcome to the documentation for the zaakafhandelcomponent (ZAC).
    forms
    authorization
    developers/index
+   development/index
 
 
 Indices and tables
