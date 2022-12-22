@@ -358,7 +358,7 @@ AUTHENTICATION_BACKENDS = [
 SESSION_COOKIE_NAME = "zac_sessionid"
 
 LOGIN_URL = reverse_lazy("accounts:login")
-LOGIN_REDIRECT_URL = "/ui"
+LOGIN_REDIRECT_URL = reverse_lazy("accounts:logged_in")
 
 #
 # SECURITY settings
