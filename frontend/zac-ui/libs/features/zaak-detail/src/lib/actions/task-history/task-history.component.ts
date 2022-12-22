@@ -70,21 +70,6 @@ export class TaskHistoryComponent implements OnInit {
             created: {date: historicalUserTaskData.created, type: 'date'},
             completed: {date: historicalUserTaskData.completed, type: 'date'},
           },
-          nestedTableData: {
-            headData: ['Label', 'Naam', 'Waarde'],
-            bodyData: historicalUserTaskData.history.map((historicalUserTaskDataItem: HistoricalUserTaskDataItem) => ({
-              cellData: {
-                label: historicalUserTaskDataItem.label,
-                naam: historicalUserTaskDataItem.naam,
-                waarde: {
-                  label: JSON.stringify(historicalUserTaskDataItem.waarde),
-                  target: '_blank',
-                  type: (JSON.stringify(historicalUserTaskDataItem.waarde)?.match('http')) ? 'link' : 'text',
-                  url: historicalUserTaskDataItem.waarde,
-                },
-              }
-            }))
-          }
         }))
     }
   }
