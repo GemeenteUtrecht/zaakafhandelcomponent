@@ -301,7 +301,9 @@ export class DocumentenComponent implements OnChanges {
   onConfidentialityChange(document: Document, confidentialityChoice: Choice) {
     this.selectedDocument = document;
     this.selectedConfidentialityChoice = confidentialityChoice;
-    this.openModal("document-confidentiality-modal")
+    setTimeout(() => {
+      this.openModal("document-confidentiality-modal");
+    })
   }
 
   /**
