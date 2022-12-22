@@ -1,4 +1,4 @@
-.. _forms
+.. _forms:
 
 Available forms
 ===============
@@ -26,7 +26,7 @@ implemented by the ZAC:
     - ``kownslUsers``: a (JSON) list of user identifiers, e.g.: ``["marte004", "beer001"]``
     - ``kownslReviewRequestId``: a (String) reference to the Kownsl review request created.
     - ``kownslFrontendUrl``: the URL for end users to submit their advice.
-    - ``kownslDocuments``: a (JSON) list of document urls, e.g.: ``["https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+    - ``kownslDocuments``: a (JSON) list of document urls, e.g.: ``["https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
     - ``emailNotificationList``: a JSON of usernames or groupnames with an email notification flag (boolean).
 
 - ``zac:configureApprovalRequest``: presents a form to the end user to select documents
@@ -37,7 +37,7 @@ implemented by the ZAC:
     - ``kownslUsers``: a (JSON) list of user identifiers, e.g.: ``["marte004", "beer001"]``
     - ``kownslReviewRequestId``: a (String) reference to the Kownsl review request created.
     - ``kownslFrontendUrl``: the URL for end users to submit their approval.
-    - ``kownslDocuments``: a (JSON) list of document urls, e.g.: ``["https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+    - ``kownslDocuments``: a (JSON) list of document urls, e.g.: ``["https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
     - ``emailNotificationList``: a JSON of usernames or groupnames with an email notification flag (boolean).
 
 - ``zac:doRedirect``: grabs the ``redirectTo`` process variable, and redirects the user
@@ -52,7 +52,7 @@ implemented by the ZAC:
 
   Upon succesful submission, the following process variables are set:
     
-    - ``documenten``: a (JSON) list of document urls, e.g.: ``["https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.utrechtproeftuin.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+    - ``documenten``: a (JSON) list of document urls, e.g.: ``["https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
 
 Form definition
 ---------------

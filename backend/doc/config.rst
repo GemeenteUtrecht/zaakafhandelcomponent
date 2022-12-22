@@ -87,8 +87,8 @@ One needs to add a **Service** for each of them:
 
 .. note::
     The object API (at least up to v1.1.1) and objecttype API (at least up to v1.1.0) included ``/api/v1`` as part of the path of all endpoints (check the API schemas `here`_).
-    This means that the field ``API root url`` should **NOT** include ``/api/v1``. For example, it should be https://objecttypes.nl/
-    and not https://objecttypes.nl/api/v1.
+    This means that the field ``API root url`` should **NOT** include ``/api/v1``. For example, it should be https://objecttypes.cg-intern.utrecht.nl/
+    and not https://objecttypes.cg-intern.utrecht.nl/api/v1.
 
 After configuring the services, the global configuration should be updated to point to a default service for both the
 object and objecttype API. This can be done in the admin ``admin/core/coreconfig/``,
@@ -107,7 +107,7 @@ a container:
 
 .. code-block:: bash
 
-    src/manage.py subscribe_notifications https://zac.gemeente.nl
+    src/manage.py subscribe_notifications https://zac.cg-intern.utrecht.nl/
 
 This will set up the ZAC to receive notifications sent from the other APIs and act
 accordingly.
@@ -148,7 +148,7 @@ like this:
     Authorization: Token fe3f133828faec17036bbb0d2bed547321983bfd
 
 The SCIM API root is available on the ``/scim/v2/`` URL, for example:
-https://zac.utrechtproeftuin.nl/scim/v2/.
+https://zac.cg-intern.utrecht.nl/scim/v2/.
 
-.. _Kownsl: https://github.com/GemeenteUtrecht/kownsl
+.. _Kownsl: https://kownsl.cg-intern.utrecht.nl/api/v1/docs/
 .. _here: https://objects-and-objecttypes-api.readthedocs.io/en/latest/api/index.html

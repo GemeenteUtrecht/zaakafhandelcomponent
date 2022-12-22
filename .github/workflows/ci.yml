@@ -214,3 +214,20 @@ jobs:
         if: github.event_name == 'push'  # exclude PRs
         run: |
           docker push scrumteamzgw/zac-ui:${{ steps.vars.outputs.tag }}\
+
+
+  docs:
+    runs-on: ubuntu-latest
+    name: Documentation build
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install -r backend/requirements/dev.txt pytest
+      - name: Build and test docs
+        run: |
+          pytest check_sphinx.py -v --tb=auto
+        working-directory: backend/doc
