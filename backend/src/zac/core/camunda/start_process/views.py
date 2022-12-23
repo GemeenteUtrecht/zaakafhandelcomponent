@@ -37,11 +37,6 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         self, request: Request, bronorganisatie: str, identificatie: str
     ) -> Response:
         zaak = self.get_object()
-        initiator = [
-            rol
-            for rol in get_rollen(zaak)
-            if rol.omschrijving_generiek.lower() == RolOmschrijving.initiator.lower()
-        ]
 
         # See if there is a configured camunda_start_process object
         form = fetch_start_camunda_process_form(zaak.zaaktype)
@@ -51,19 +46,30 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
                 % zaak.zaaktype.identificatie
             )
 
+        variables = {
+            "zaakUrl": zaak.url,
+            "zaakIdentificatie": zaak.identificatie,
+            "zaakDetails": {
+                "omschrijving": zaak.omschrijving,
+                "zaaktypeOmschrijving": zaak.zaaktype.omschrijving,
+            },
+        }
+
+        initiator = [
+            rol
+            for rol in get_rollen(zaak)
+            if rol.omschrijving_generiek.lower() == RolOmschrijving.initiator.lower()
+        ]
+        if initiator:
+            variables["initiator"] = initiator[0].betrokkene_identificatie[
+                "identificatie"
+            ]
+        elif request.user:
+            variables["initiator"] = f"{AssigneeTypeChoices.user}:{request.user}"
+
         results = start_process(
             process_key=form.camunda_process_definition_key,
-            variables={
-                "zaakUrl": zaak.url,
-                "zaakIdentificatie": zaak.identificatie,
-                "zaakDetails": {
-                    "omschrijving": zaak.omschrijving,
-                    "zaaktypeOmschrijving": zaak.zaaktype.omschrijving,
-                },
-                "initiator": initiator[0].betrokkene_identificatie["identificatie"]
-                if initiator
-                else f"{AssigneeTypeChoices.user}:{request.user}",
-            },
+            variables=variables,
         )
         serializer = self.get_serializer(results)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -315,7 +315,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
                 for i, bijlage in enumerate(self.validated_data["bijlagen"])
             },
             **{
-                rol.roltoelichting: {
+                rol.get_roltype_omschrijving(): {
                     "betrokkeneType": rol.betrokkene_type,
                     "betrokkeneIdentificatie": rol.betrokkene_identificatie,
                     "name": rol.get_name(),
