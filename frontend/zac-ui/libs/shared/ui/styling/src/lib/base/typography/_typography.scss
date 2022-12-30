@@ -104,3 +104,11 @@ p {
   /* Support for IE. */
   font-feature-settings: 'liga';
 }
+
+.mat-checkbox-label {
+  font-family: $font-family-text;
+  font-size: 0.875rem;
+  line-height: $line-height-m;
+  margin-bottom: 0;
+  margin-top: 0;
+}

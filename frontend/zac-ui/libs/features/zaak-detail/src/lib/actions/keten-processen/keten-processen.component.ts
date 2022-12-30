@@ -170,7 +170,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         if (JSON.stringify(this.data) !== JSON.stringify(resData)) {
           currentTaskIds = this.data && this.data.length ? await this.ketenProcessenService.mergeTaskData(this.data) : null;
           // Create array of ids for comparison
-          const currentTaskIdsArray = [...await currentTaskIds?.map(({ id }) => id)];
+          let currentTaskIdsArray = [];
+          if (currentTaskIds?.length > 0) {
+            currentTaskIdsArray = [...await currentTaskIds?.map(({ id }) => id)];
+          }
 
           const newTaskIds = await this.ketenProcessenService.mergeTaskData(resData);
           const newTaskIdsArray = [...await newTaskIds?.map(({ id }) => id)];
@@ -397,6 +400,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
           } else {
             this.checkActionsVisibility();
             this.isStartingProcess = false;
+            if (!this.isPolling) {
+              this.startPollingProcesses();
+            }
           }
         }, 2000)
       }, err => {
@@ -467,7 +473,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   checkActionsVisibility() {
     this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
-    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess;
   }
 
   //
