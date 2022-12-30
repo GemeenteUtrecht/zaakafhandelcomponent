@@ -80,7 +80,7 @@ export class FeaturesStartCaseComponent implements OnInit {
       },
       {
         checked: true,
-        label: "Process starten",
+        label: "Proces opstarten",
         name: 'start_related_business_process',
         type: 'checkbox',
       },
