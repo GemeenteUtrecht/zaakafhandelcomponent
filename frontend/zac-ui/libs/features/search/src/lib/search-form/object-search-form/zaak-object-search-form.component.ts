@@ -13,6 +13,7 @@ import {
 import {ObjectsService, ZaakObjectService} from '@gu/services';
 import {SearchService} from '../../search.service';
 import {MapGeometry, MapMarker} from "../../../../../../shared/ui/components/src/lib/components/map/map";
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 
 
 /** @type {string} The name of utrecht in the provinces object. */
@@ -67,26 +68,38 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.';
 
+  searchForm: FormGroup
+
   /** @type {boolean}} Whether the component is loading. */
   isLoading = true;
 
   /** @type {boolean} Whether to show the zaak objecten. */
   showZaakObjecten = false;
 
-  /** @type {boolean} Whether to include all object types. */
-  includeAllObjectTypes = false;
-
-  /** @tupe {ObjectType[]} The object types. */
+  /** @type {ObjectType[]} The object types. */
   objectTypes: ObjectType[] = [];
 
   /** @type {ObjectTypeVersion} The latest object type version for every object type in this.objectTypes. */
   objectTypeVersions: ObjectTypeVersion[] = []
+
+  /** @tupe {ObjectType[]} The object types. */
+  objectTypesForSpecificCaseType: ObjectType[] = [];
+
+  /** @type {ObjectTypeVersion} The latest object type version for every object type in this.objectTypes. */
+  objectTypesForSpecificCaseTypeVersions: ObjectTypeVersion[] = []
+
+  /** @tupe {ObjectType[]} All the object types. */
+  allObjectTypes: ObjectType[] = [];
+
+  /** @type {ObjectTypeVersion} All the latest object type version for every object type in this.objectTypes. */
+  allObjectTypeVersions: ObjectTypeVersion[] = []
 
   /** @type {ZaakObject[]} The search results for objects. */
   zaakObjects: ZaakObject[] = [];
 
   /**
    * Constructor method.
+   * @param {FormBuilder} fb
    * @param {ObjectsService} objectsService
    * @param {SearchService} searchService
    * @param {ZaakObjectService} zaakObjectService
@@ -94,6 +107,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {ChangeDetectorRef} cdRef
    */
   constructor(
+    private fb: FormBuilder,
     private objectsService: ObjectsService,
     private searchService: SearchService,
     private zaakObjectService: ZaakObjectService,
@@ -105,6 +119,10 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   //
   // Getters / setters.
   //
+
+  get showAllObjectTypesControl(): FormControl {
+    return this.searchForm.get('showAllObjectTypes') as FormControl;
+  };
 
   /**
    *  @type {FieldConfiguration[] Form configuration.
@@ -132,17 +150,6 @@ export class ZaakObjectSearchFormComponent implements OnInit {
         required: false,
         value: '',
       },
-      {
-        activeWhen: () => this.zaaktype,
-        checked: this.includeAllObjectTypes,
-        label: 'Toon objecttypen van alle zaaktypen.',
-        name: 'include_all_object_types',
-        type: 'checkbox',
-        onChange: (e, field) => {
-          this.includeAllObjectTypes = !field.checked;
-          this.getContextData();
-        },
-      },
     ];
   }
 
@@ -155,6 +162,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
+    this.searchForm = this.fb.group({
+      showAllObjectTypes: false,
+    })
     this.getContextData();
     this.fetchObjects()
   }
@@ -167,25 +177,30 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.isLoading = true;
     this.isLoadingResult.emit(true);
 
-    const observable = (this.includeAllObjectTypes || !this.zaaktype)
-      ? this.objectsService.listObjectTypes()
-      : this.objectsService.listObjectTypesForZaakType(this.zaaktype)
 
-    observable.subscribe(
-      this.getObjectTypesContext.bind(this),
-      (error) => {
-        this.reportError(error)
-        this.isLoading = false;
-        this.isLoadingResult.emit(false);
-      }
-    )
+    this.objectsService.listObjectTypes().subscribe(data => {
+      this.getObjectTypesContext(data, true)
+    }, error => {
+      this.reportError(error)
+      this.isLoading = false;
+      this.isLoadingResult.emit(false);
+    })
+
+    this.objectsService.listObjectTypesForZaakType(this.zaaktype).subscribe(data => {
+      this.getObjectTypesContext(data, false)
+    }, error => {
+      this.reportError(error)
+      this.isLoading = false;
+      this.isLoadingResult.emit(false);
+    })
   }
 
   /**
    * Sets/fetches this.objectTypes and this.objectTypeVersions.
    * @param {ObjectType[]} objectTypes.
+   * @param {boolean} isAllObjectTypes.
    */
-  getObjectTypesContext(objectTypes: ObjectType[]): void {
+  getObjectTypesContext(objectTypes: ObjectType[], isAllObjectTypes): void {
     this.objectTypes = [];
     this.objectTypeVersions = [];
     const objectTypeVersions = [];
@@ -209,8 +224,16 @@ export class ZaakObjectSearchFormComponent implements OnInit {
               loadingLength -= 1;
 
               if (loadingLength === 0) {
-                this.objectTypes = objectTypes;
-                this.objectTypeVersions = objectTypeVersions;
+                if (isAllObjectTypes) {
+                  this.allObjectTypes = objectTypes;
+                  this.allObjectTypeVersions = objectTypeVersions
+                }
+                else if (!isAllObjectTypes) {
+                  this.objectTypesForSpecificCaseType = objectTypes;
+                  this.objectTypesForSpecificCaseTypeVersions = objectTypeVersions
+                }
+
+                this.onShowAllObjectTypesChange();
                 this.cdRef.detectChanges();
               }
 
@@ -240,7 +263,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
     return {
       choices: choices,
-      label: 'Object type',
+      label: 'Objecttype',
       name: 'objectType',
       required: false,
       value: choices[0].value,
@@ -333,6 +356,19 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   //
   // Events.
   //
+
+  /**
+   * Show object types according to checked value
+   */
+  onShowAllObjectTypesChange() {
+    if (this.showAllObjectTypesControl.value) {
+      this.objectTypes = this.allObjectTypes;
+      this.objectTypeVersions = this.allObjectTypeVersions
+    } else {
+      this.objectTypes = this.objectTypesForSpecificCaseType;
+      this.objectTypeVersions = this.objectTypesForSpecificCaseTypeVersions
+    }
+  }
 
   /**
    * Gets called when form is changed.
