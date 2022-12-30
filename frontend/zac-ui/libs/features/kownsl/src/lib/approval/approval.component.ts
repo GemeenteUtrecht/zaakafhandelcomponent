@@ -7,7 +7,7 @@ import {ApprovalForm} from '../../models/approval-form';
 import {ActivatedRoute} from '@angular/router';
 import {catchError, switchMap, tap} from 'rxjs/operators';
 import {Observable, of} from 'rxjs';
-import {UserService, ZaakService} from "@gu/services";
+import { AccountsService, UserService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 
 @Component({
@@ -19,6 +19,7 @@ export class ApprovalComponent implements OnInit {
   uuid: string;
   assignee: string;
   zaakUrl: string;
+  requester: string;
 
   approvalData: ReviewRequest;
   zaakData: Zaak;
@@ -36,18 +37,10 @@ export class ApprovalComponent implements OnInit {
 
   approvalForm: FormGroup;
 
-  /**
-   * Returns the stringified version of user.
-   * @param {User} user
-   * @return {string}
-   */
-  getStringifiedUser(user: User|Requester): string {
-    return this.userService.stringifyUser(user as User);
-  }
-
   constructor(
     private fb: FormBuilder,
     private approvalService: ApprovalService,
+    private accountsService: AccountsService,
     private route: ActivatedRoute,
     private userService: UserService,
     private zaakService: ZaakService,
@@ -97,8 +90,23 @@ export class ApprovalComponent implements OnInit {
   setLayout(res) {
     this.setZaakUrl(res.body.zaak);
     this.approvalData = res.body;
+    this.getStringifiedUser(this.approvalData.requester);
     this.tableData = this.createTableData(res.body);
     this.isLoading = false;
+  }
+
+  /**
+   * Returns the stringified version of user.
+   * @param {User} user
+   * @return {string}
+   */
+  getStringifiedUser(user: User|Requester) {
+    this.accountsService.getAccounts(user.username)
+      .subscribe(res => {
+        this.requester = this.userService.stringifyUser(res.results[0] as User)
+      }, err => {
+        this.requester = this.userService.stringifyUser(user as User);
+      })
   }
 
   getZaakDetails(bronorganisatie: string, identificatie: string): Observable<Zaak> {
