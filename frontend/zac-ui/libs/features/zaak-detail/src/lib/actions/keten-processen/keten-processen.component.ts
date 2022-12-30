@@ -107,16 +107,18 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.bronorganisatie = params['bronorganisatie'];
       this.identificatie = params['identificatie'];
 
+      this.checkActionsVisibility()
       this.fetchCurrentUser();
+
       if (JSON.stringify(changes.zaak.currentValue) !== JSON.stringify(changes.zaak.previousValue)) {
-        if (!this.zaak.resultaat && !this.isPolling) {
+        if (!this.zaak.resultaat && !this.isPolling && !this.showOverlay) {
           this.isLoading = true;
           this.fetchProcesses();
+        } else {
+          this.isLoading = false;
         }
       }
     });
-
-    this.checkActionsVisibility();
   }
 
   /**
