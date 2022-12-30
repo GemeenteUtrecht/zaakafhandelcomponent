@@ -10,7 +10,7 @@ import { ZaakDocument } from '../../models/zaak-document';
 import { CloseDocument } from '../../models/close-document';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
-import {UserService, ZaakService} from '@gu/services'
+import { AccountsService, UserService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 
 @Component({
@@ -23,6 +23,7 @@ export class AdviceComponent implements OnInit {
   assignee: string;
   zaakUrl: string;
   bronorganisatie: string;
+  requester: string;
 
   adviceData: ReviewRequest;
   zaakData: Zaak;
@@ -52,18 +53,10 @@ export class AdviceComponent implements OnInit {
 
   get documents(): AbstractControl { return this.adviceForm.get('documents'); }
 
-  /**
-   * Returns the stringified version of user.
-   * @param {User} user
-   * @return {string}
-   */
-  getStringifiedUser(user: User|Requester): string {
-    return this.userService.stringifyUser(user as User);
-  }
-
   constructor(
     private fb: FormBuilder,
     private adviceService: AdviceService,
+    private accountsService: AccountsService,
     private route: ActivatedRoute,
     private userService: UserService,
     private zaakService: ZaakService,
@@ -112,8 +105,23 @@ export class AdviceComponent implements OnInit {
     this.setZaakUrl(res.body.zaak);
     this.bronorganisatie = res.body.zaak.bronorganisatie;
     this.adviceData = res.body;
+    this.getStringifiedUser(this.adviceData.requester);
     this.tableData.bodyData = this.createTableData(res.body.reviews);
     this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
+  }
+
+  /**
+   * Returns the stringified version of user.
+   * @param {User} user
+   * @return {string}
+   */
+  getStringifiedUser(user: User|Requester) {
+    this.accountsService.getAccounts(user.username)
+      .subscribe(res => {
+        this.requester = this.userService.stringifyUser(res.results[0] as User)
+      }, err => {
+        this.requester = this.userService.stringifyUser(user as User);
+      })
   }
 
   getZaakDetails(bronorganisatie: string, identificatie: string): Observable<Zaak> {
