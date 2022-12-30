@@ -76,9 +76,6 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   /** @type {boolean} Whether to show the zaak objecten. */
   showZaakObjecten = false;
 
-  /** @type {boolean} Whether to include all object types. */
-  includeAllObjectTypes = true;
-
   /** @type {ObjectType[]} The object types. */
   objectTypes: ObjectType[] = [];
 
