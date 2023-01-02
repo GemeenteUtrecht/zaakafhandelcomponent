@@ -91,6 +91,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
         )
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak2['url']}", json=[])
         m.get(zaaktype["url"], json=zaaktype)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",

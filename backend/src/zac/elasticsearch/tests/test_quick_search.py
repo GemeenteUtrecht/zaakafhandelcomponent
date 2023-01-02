@@ -8,12 +8,10 @@ from elasticsearch_dsl import Index
 from zac.camunda.constants import AssigneeTypeChoices
 
 from ..documents import (
-    InformatieObjectDocument,
+    EnkelvoudigInformatieObjectDocument,
     ObjectDocument,
-    ObjectRecordDocument,
     ZaakDocument,
     ZaakTypeDocument,
-    edge_ngram_analyzer,
 )
 from ..searches import quick_search
 from .utils import ESMixin
@@ -31,7 +29,7 @@ class QuickSearchTests(ESMixin, TestCase):
 
         if init:
             ObjectDocument.init()
-            InformatieObjectDocument.init()
+            EnkelvoudigInformatieObjectDocument.init()
 
     @staticmethod
     def refresh_index():
@@ -101,19 +99,15 @@ class QuickSearchTests(ESMixin, TestCase):
         )
         self.zaak_document2.save()
 
-        self.record_1 = ObjectRecordDocument(
-            data=["de", "het", "een", "omschrijving", "2022"],
-            geometry={},
-        )
         self.object_document_1 = ObjectDocument(
             url="some-keywoird",
             object_type="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013ab",
-            record=self.record_1,
+            record_data={"some-field": "some omschrijving value"},
             related_zaken=[],
         )
         self.object_document_1.save()
 
-        self.eio_document_1 = InformatieObjectDocument(
+        self.eio_document_1 = EnkelvoudigInformatieObjectDocument(
             url="some-keyword",
             titel="some-titel_omsch_2022-20105.pdf(1)",
             related_zaken=[],
@@ -122,36 +116,9 @@ class QuickSearchTests(ESMixin, TestCase):
         self.refresh_index()
 
     def test_quick_search(self):
-        import time
-
-        time_then = time.time()
         results = quick_search("2022 omsch")
-        print(f"QUERY TOOK {time.time()-time_then}")
         print(results["zaken"].__dict__)
         print("*" * 50)
         print(results["objecten"].__dict__)
         print("*" * 50)
         print(results["documenten"].__dict__)
-
-        # from elasticsearch_dsl import Index
-
-        # index = Index('documenten')
-        # analysis = index.analyze(
-        #     body={
-        #         'text': "some-titel_omsch_2022-20-105.pdf(1)",
-        #         'explain': False,
-        #         'tokenizer': {
-        #             'min_gram': 2,
-        #             'max_gram': 12,
-        #             'type': 'edge_ngram',
-        #             'token_chars': ['letter', 'digit']
-        #         },
-        #         'filter': [
-        #             'lowercase',
-        #             {'stopwords': '_dutch_', 'type': 'stop'}
-        #         ]
-        #     }
-        # )
-
-        # for token in analysis['tokens']:
-        #     print(token['token'])

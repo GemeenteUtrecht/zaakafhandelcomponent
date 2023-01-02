@@ -26,7 +26,6 @@ ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
-
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
@@ -48,26 +47,19 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             identificatie="ZAAK1",
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
         )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen",
-            json={
-                "count": 1,
-                "previous": None,
-                "next": None,
-                "results": [zaaktype],
-            },
-        )
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(
             f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+            json=paginated_response([zaak]),
         )
         m.get(
             f"{ZAKEN_ROOT}rollen",
-            json={"count": 0, "previous": None, "next": None, "results": []},
+            json=paginated_response([]),
         )
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         m.get(zaaktype["url"], json=zaaktype)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
@@ -156,15 +148,16 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         m.get(
             f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
+            json=paginated_response([zaak]),
         )
         m.get(
             f"{ZAKEN_ROOT}rollen",
-            json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
+            json=paginated_response([rol1, rol2]),
         )
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         m.get(zaaktype["url"], json=zaaktype)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
@@ -256,17 +249,12 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "results": [zaaktype],
             },
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
-        )
-        m.get(
-            f"{ZAKEN_ROOT}rollen",
-            json={"count": 1, "previous": None, "next": None, "results": [rol1, rol2]},
-        )
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
+        m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([rol1, rol2]))
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         m.get(zaaktype["url"], json=zaaktype)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
@@ -440,6 +428,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken", stdout=StringIO())
 
@@ -559,6 +548,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
+
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         m.get(zaaktype["url"], json=zaaktype)
         call_command("index_zaken", stdout=StringIO())
 
@@ -655,6 +646,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74",
             json=statustype_response,
         )
+
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
             return_value=[],
@@ -696,17 +689,13 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "results": [zaaktype],
             },
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={"count": 1, "previous": None, "next": None, "results": [zaak]},
-        )
-        m.get(
-            f"{ZAKEN_ROOT}rollen",
-            json={"count": 0, "previous": None, "next": None, "results": []},
-        )
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
+        m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
+
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         m.get(zaaktype["url"], json=zaaktype)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
@@ -725,13 +714,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             status=None,
         )
-        m.get(
-            f"{ZAKEN_ROOT}zaken",
-            json={"count": 2, "previous": None, "next": None, "results": [zaak2, zaak]},
-        )
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak2, zaak]))
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
         )
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak2['url']}", json=[])
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
             return_value=[],
