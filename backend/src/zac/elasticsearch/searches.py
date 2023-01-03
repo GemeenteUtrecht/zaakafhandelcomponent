@@ -157,10 +157,9 @@ def autocomplete_zaak_search(
     only_allowed: bool = True,
 ) -> List[ZaakDocument]:
     search = ZaakDocument.search().query(
-        Regexp(
+        Match(
             identificatie={
-                "value": f".*{identificatie}.*",
-                # "case_insensitive": True,  # 7.10 feature
+                "query": identificatie,
             }
         )
     )

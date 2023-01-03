@@ -273,7 +273,6 @@ class Command(IndexCommand, BaseCommand):
         with parallel(max_workers=self.max_workers) as executor:
             list_of_zios = list(executor.map(get_zaak_informatieobjecten, zaken))
 
-        print(list_of_zios)
         zaakinformatieobject_documenten = {
             zios[0]["zaak"]: [create_zaakinformatieobject_document(zio) for zio in zios]
             for zios in list_of_zios
