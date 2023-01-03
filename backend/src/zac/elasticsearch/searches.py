@@ -14,7 +14,6 @@ from elasticsearch_dsl.query import (
     Nested,
     Query,
     QueryString,
-    Regexp,
     Term,
     Terms,
 )

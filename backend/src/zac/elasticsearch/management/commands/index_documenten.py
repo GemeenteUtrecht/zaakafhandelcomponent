@@ -5,7 +5,6 @@ from django.conf import settings
 from django.core.management import BaseCommand
 
 import click
-from elasticsearch_dsl.connections import get_connection
 from elasticsearch_dsl.query import Bool, Nested, Terms
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
@@ -13,15 +12,8 @@ from zgw_consumers.models import Service
 
 from zac.core.services import get_documenten_all_paginated
 
-from ...api import (
-    create_enkelvoudiginformatieobject_document,
-    create_related_zaak_document,
-)
-from ...documents import (
-    EnkelvoudigInformatieObjectDocument,
-    RelatedZaakDocument,
-    ZaakDocument,
-)
+from ...api import create_informatieobject_document, create_related_zaak_document
+from ...documents import InformatieObjectDocument, RelatedZaakDocument, ZaakDocument
 from ...utils import check_if_index_exists
 from ..utils import get_memory_usage
 from .base_index import IndexCommand
@@ -30,16 +22,16 @@ perf_logger = logging.getLogger("performance")
 
 
 class Command(IndexCommand, BaseCommand):
-    help = "Create documents in ES by indexing all enkelvoudiginformatieobjects from DRC APIs. Requires zaken to already be indexed."
+    help = "Create documents in ES by indexing all informatieobjects from DRC APIs. Requires zaken to already be indexed."
     _index = settings.ES_INDEX_DOCUMENTEN
     _type = "enkelvoudiginformatieobject"
-    _document = EnkelvoudigInformatieObjectDocument
-    _verbose_name_plural = "enkelvoudiginformatieobjecten"
+    _document = InformatieObjectDocument
+    _verbose_name_plural = "informatieobjecten"
 
     def zaken_index_exists(self) -> bool:
         return check_if_index_exists(index=settings.ES_INDEX_ZAKEN)
 
-    def batch_index(self) -> Iterator[EnkelvoudigInformatieObjectDocument]:
+    def batch_index(self) -> Iterator[InformatieObjectDocument]:
         self.zaken_index_exists()
         self.stdout.write(
             f"Starting {self.verbose_name_plural} retrieval from the configured APIs."
@@ -103,7 +95,7 @@ class Command(IndexCommand, BaseCommand):
 
     def documenten_generator(
         self, documenten: List[Document]
-    ) -> Iterator[EnkelvoudigInformatieObjectDocument]:
+    ) -> Iterator[InformatieObjectDocument]:
 
         eio_documenten = self.create_eio_documenten(documenten)
         zaken = (
@@ -159,8 +151,5 @@ class Command(IndexCommand, BaseCommand):
 
     def create_eio_documenten(
         self, documenten: List[Document]
-    ) -> Dict[str, EnkelvoudigInformatieObjectDocument]:
-        return {
-            doc.url: create_enkelvoudiginformatieobject_document(doc)
-            for doc in documenten
-        }
+    ) -> Dict[str, InformatieObjectDocument]:
+        return {doc.url: create_informatieobject_document(doc) for doc in documenten}

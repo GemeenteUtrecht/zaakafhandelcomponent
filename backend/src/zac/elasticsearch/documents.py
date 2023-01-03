@@ -198,7 +198,7 @@ class ObjectDocument(Document):
         )
 
 
-class EnkelvoudigInformatieObjectDocument(Document):
+class InformatieObjectDocument(Document):
     url = field.Keyword()
     titel = field.Text(
         analyzer=edge_ngram_analyzer,

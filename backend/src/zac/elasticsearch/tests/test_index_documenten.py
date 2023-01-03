@@ -14,7 +14,7 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
 from ..documents import (
-    EnkelvoudigInformatieObjectDocument,
+    InformatieObjectDocument,
     ZaakDocument,
     ZaakInformatieObjectDocument,
 )
@@ -31,7 +31,7 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         Index(settings.ES_INDEX_DOCUMENTEN).delete(ignore=404)
 
         if init:
-            EnkelvoudigInformatieObjectDocument.init()
+            InformatieObjectDocument.init()
 
     @staticmethod
     def refresh_index():

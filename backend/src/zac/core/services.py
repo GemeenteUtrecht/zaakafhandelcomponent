@@ -43,6 +43,7 @@ from zac.elasticsearch.searches import search
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
 from zgw.models import Zaak
+from zgw.models.zrc import ZaakInformatieObject
 
 from .api.data import AuditTrailData
 from .api.utils import convert_eigenschap_spec_to_json_schema
@@ -796,6 +797,24 @@ def get_zaakobjecten(zaak: Zaak) -> List[ZaakObject]:
     return factory(ZaakObject, zaakobjecten)
 
 
+def get_zaakobjecten_related_to_object(object_url: str) -> List[ZaakObject]:
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    results = []
+
+    for zrc in zrcs:
+        client = zrc.build_client()
+        result = get_paginated_results(
+            client, "zaakobject", query_params={"object": object_url}
+        )
+
+        if not result:
+            continue
+        else:
+            results += factory(ZaakObject, result)
+
+    return results
+
+
 def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     if not zaak.resultaat:
         return None
@@ -887,6 +906,37 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
 
     new_rol_data = RolSerializer(instance=rol, context={"user": user}).data
     return update_rol(rol_url, new_rol_data)
+
+
+def fetch_zaak_informatieobject(zaak_informatieobject_url: str) -> ZaakInformatieObject:
+    client = _client_from_url(zaak_informatieobject_url)
+    zaak_informatieobject = client.retrieve(
+        "zaak_informatieobject_url", url=zaak_informatieobject_url
+    )
+    zaak_informatieobject = factory(ZaakInformatieObject, zaak_informatieobject)
+    return zaak_informatieobject
+
+
+def get_zaakinformatieobjecten_related_to_informatieobject(
+    informatieobject_url: str,
+) -> List[ZaakInformatieObject]:
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    results = []
+
+    for zrc in zrcs:
+        client = zrc.build_client()
+        result = get_paginated_results(
+            client,
+            "zaakinformatieobject",
+            query_params={"informatieobject": informatieobject_url},
+        )
+
+        if not result:
+            continue
+        else:
+            results += factory(ZaakInformatieObject, result)
+
+    return results
 
 
 def get_zaak_informatieobjecten(zaak: Zaak) -> list:

@@ -64,7 +64,7 @@ def _fetch_objecttype(client: Client, url: str) -> dict:
 
 
 @cache("object:{url}", timeout=A_DAY)
-def _fetch_object(client: Client, url: str) -> dict:
+def fetch_object(client: Client, url: str) -> dict:
     retrieved_item = client.retrieve("object", url=url)
     service = Service.get_service(retrieved_item["type"])
 
@@ -85,10 +85,10 @@ def fetch_objects(urls: List[str]) -> List[Dict]:
         raise RuntimeError("No objects API has been configured yet.")
     object_api_client = object_api.build_client()
 
-    def fetch_object(url):
-        return _fetch_object(object_api_client, url)
+    def _fetch_object(url):
+        return fetch_object(object_api_client, url)
 
     with parallel() as executor:
-        retrieved_objects = list(executor.map(fetch_object, urls))
+        retrieved_objects = list(executor.map(_fetch_object, urls))
 
     return retrieved_objects

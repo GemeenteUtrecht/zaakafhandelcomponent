@@ -1,5 +1,3 @@
-import json
-
 from django.conf import settings
 from django.test import TestCase
 
@@ -8,7 +6,7 @@ from elasticsearch_dsl import Index
 from zac.camunda.constants import AssigneeTypeChoices
 
 from ..documents import (
-    EnkelvoudigInformatieObjectDocument,
+    InformatieObjectDocument,
     ObjectDocument,
     ZaakDocument,
     ZaakTypeDocument,
@@ -29,7 +27,7 @@ class QuickSearchTests(ESMixin, TestCase):
 
         if init:
             ObjectDocument.init()
-            EnkelvoudigInformatieObjectDocument.init()
+            InformatieObjectDocument.init()
 
     @staticmethod
     def refresh_index():
@@ -107,7 +105,7 @@ class QuickSearchTests(ESMixin, TestCase):
         )
         self.object_document_1.save()
 
-        self.eio_document_1 = EnkelvoudigInformatieObjectDocument(
+        self.eio_document_1 = InformatieObjectDocument(
             url="some-keyword",
             titel="some-titel_omsch_2022-20105.pdf(1)",
             related_zaken=[],

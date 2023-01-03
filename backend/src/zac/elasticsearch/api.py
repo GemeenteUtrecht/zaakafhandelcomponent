@@ -2,7 +2,11 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
+from django.conf import settings
+
 from elasticsearch import exceptions
+from elasticsearch_dsl import Index
+from elasticsearch_dsl.query import Bool, Terms
 from zgw_consumers.api_models.catalogi import StatusType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
@@ -10,17 +14,21 @@ from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
 
 from zac.core.rollen import Rol
 from zac.core.services import (
-    get_documenten,
+    get_document,
     get_rollen,
     get_status,
     get_statustype,
     get_zaak_eigenschappen,
+    get_zaak_informatieobjecten,
+    get_zaakinformatieobjecten_related_to_informatieobject,
     get_zaakobjecten,
+    get_zaakobjecten_related_to_object,
 )
+from zac.core.utils import fetch_object
 from zgw.models.zrc import Zaak, ZaakInformatieObject
 
 from .documents import (
-    EnkelvoudigInformatieObjectDocument,
+    InformatieObjectDocument,
     ObjectDocument,
     ObjectTypeDocument,
     RelatedZaakDocument,
@@ -228,7 +236,7 @@ def create_zaakinformatieobject_document(
 
 
 def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> None:
-    zaak.zaakinformatieobjecten = get_documenten(zaak)
+    zaak.zaakinformatieobjecten = get_zaak_informatieobjecten(zaak)
 
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
     zaak_document.zaakinformatieobjecten = [
@@ -242,6 +250,22 @@ def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> None:
 ###################################################
 #                    OBJECTEN                     #
 ###################################################
+
+
+def _get_object_document(
+    object_url: str, create_object: Optional[Dict] = None
+) -> Optional[ObjectDocument]:
+    try:
+        object_document = ObjectDocument.get(url=object_url)
+    except exceptions.NotFoundError as exc:
+        logger.warning("object %s hasn't been indexed in ES", object_url, exc_info=True)
+        if create_object:
+            object_document = create_object_document(create_object)
+            object_document.save()
+        else:
+            return
+
+    return object_document
 
 
 def create_objecttype_document(objecttype: Dict) -> ObjectTypeDocument:
@@ -266,12 +290,76 @@ def create_related_zaak_document(
     )
 
 
+def update_related_zaken_in_object_document(object_url: str) -> None:
+    # Get zaken information from zaken index
+    zaakobjecten = get_zaakobjecten_related_to_object(object_url)
+    zaken_index = Index(settings.ES_INDEX_ZAKEN)
+    s = zaken_index.search().source(
+        ["url", "identificatie", "bronorganisatie", "omschrijving"]
+    )
+    s.filter(Bool(Terms(url=list({zo.zaak for zo in zaakobjecten}))))
+
+    # Fetch object document to be updated
+    object = fetch_object(object_url)
+    object_document = _get_object_document(object_url, create_object=object)
+
+    # Create related_zaak documenten and update object document
+    related_zaken = [create_related_zaak_document(zaak) for zaak in s.execute()]
+    object_document.related_zaken = related_zaken
+    object_document.save()
+    return
+
+
 ###################################################
 #                   DOCUMENTEN                    #
 ###################################################
 
 
-def create_enkelvoudiginformatieobject_document(
+def _get_informatieobject_document(
+    informatieobject_url: str, create_informatieobject: Optional[Document] = None
+) -> Optional[InformatieObjectDocument]:
+    try:
+        object_document = ObjectDocument.get(url=informatieobject_url)
+    except exceptions.NotFoundError as exc:
+        logger.warning(
+            "informatieobject %s hasn't been indexed in ES",
+            informatieobject_url,
+            exc_info=True,
+        )
+        if create_informatieobject:
+            object_document = create_informatieobject_document(create_informatieobject)
+            object_document.save()
+        else:
+            return
+
+    return object_document
+
+
+def create_informatieobject_document(
     document: Document,
-) -> EnkelvoudigInformatieObjectDocument:
-    return EnkelvoudigInformatieObjectDocument(url=document.url, titel=document.titel)
+) -> InformatieObjectDocument:
+    return InformatieObjectDocument(url=document.url, titel=document.titel)
+
+
+def update_related_zaken_in_informatieobject_document(
+    informatieobject_url: str,
+) -> None:
+    # Get zaken information from zaken index
+    zios = get_zaakinformatieobjecten_related_to_informatieobject(informatieobject_url)
+    zaken_index = Index(settings.ES_INDEX_ZAKEN)
+    s = zaken_index.search().source(
+        ["url", "identificatie", "bronorganisatie", "omschrijving"]
+    )
+    s.filter(Bool(Terms(url=list({zio.zaak for zio in zios}))))
+
+    # Fetch object document to be updated
+    informatieobject = get_document(informatieobject_url)
+    informatieobject_document = _get_informatieobject_document(
+        informatieobject_url, create_informatieobject=informatieobject
+    )
+
+    # Create related_zaak documenten and update object document
+    related_zaken = [create_related_zaak_document(zaak) for zaak in s.execute()]
+    informatieobject_document.related_zaken = related_zaken
+    informatieobject_document.save()
+    return

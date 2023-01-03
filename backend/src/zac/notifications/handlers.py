@@ -23,6 +23,8 @@ from zac.core.cache import (
 from zac.core.services import (
     _client_from_url,
     fetch_rol,
+    fetch_zaak_informatieobject,
+    fetch_zaak_object,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
@@ -32,9 +34,12 @@ from zac.elasticsearch.api import (
     delete_zaak_document,
     get_zaak_document,
     update_eigenschappen_in_zaak_document,
+    update_related_zaken_in_informatieobject_document,
+    update_related_zaken_in_object_document,
     update_rollen_in_zaak_document,
     update_status_in_zaak_document,
     update_zaak_document,
+    update_zaakinformatieobjecten_in_zaak_document,
     update_zaakobjecten_in_zaak_document,
 )
 from zgw.models.zrc import Zaak
@@ -71,7 +76,12 @@ class ZakenHandler:
                 self._handle_rol_destroy(data["hoofd_object"])
 
         elif data["resource"] == "zaakobject":
-            self._handle_zaakobject_change(data["hoofd_object"])
+            self._handle_zaakobject_change(data["hoofd_object"], data["resource"])
+
+        elif data["resource"] == "zaakinformatieobject":
+            self._handle_zaakinformatieobject_change(
+                data["hoofd_object"], data["resource"]
+            )
 
     @staticmethod
     def _retrieve_zaak(zaak_url) -> Zaak:
@@ -171,12 +181,30 @@ class ZakenHandler:
         # index in ES
         update_eigenschappen_in_zaak_document(zaak)
 
-    def _handle_zaakobject_change(self, zaak_url: str):
+    def _handle_zaakobject_change(self, zaak_url: str, zaakobject_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaakobjecten_cache(zaak)
 
-        # index in ES
+        # index in zaken
         update_zaakobjecten_in_zaak_document(zaak)
+
+        # index in objecten
+        zaakobject = fetch_zaak_object(zaakobject_url)
+        update_related_zaken_in_object_document(zaakobject.object)
+
+    def _handle_zaakinformatieobject_change(
+        self, zaak_url: str, zaakinformatieobject_url: str
+    ):
+        zaak = self._retrieve_zaak(zaak_url)
+
+        # index in zaken
+        update_zaakinformatieobjecten_in_zaak_document(zaak)
+
+        # index in objecten
+        zaakinformatieobject = fetch_zaak_informatieobject(zaakinformatieobject_url)
+        update_related_zaken_in_informatieobject_document(
+            zaakinformatieobject.informatieobject
+        )
 
 
 class ZaaktypenHandler:
