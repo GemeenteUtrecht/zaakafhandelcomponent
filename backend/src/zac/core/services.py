@@ -38,6 +38,7 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
+from zac.client import Client
 from zac.contrib.brp.models import BRPConfig
 from zac.elasticsearch.searches import search
 from zac.utils.decorators import cache as cache_result
@@ -1352,30 +1353,57 @@ def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocum
 ###################################################
 
 
-def create_object(data: Dict) -> Dict:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
+def get_objects_client() -> Client:
+    config = CoreConfig.get_solo()
+    object_api = config.primary_objects_api
+    if not object_api:
+        raise RuntimeError("No objects API has been configured yet.")
+    object_api_client = object_api.build_client()
+    return object_api_client
 
-    client = object_service.build_client()
+
+def get_objecttypes_client() -> Client:
+    config = CoreConfig.get_solo()
+    objecttypes_api = config.primary_objecttypes_api
+    if not objecttypes_api:
+        raise RuntimeError("No objecttypes API has been configured yet.")
+    objecttypes_api_client = objecttypes_api.build_client()
+    return objecttypes_api_client
+
+
+def create_object(data: Dict) -> Dict:
+    client = get_objects_client()
     object = client.create("object", data=data)
     return object
 
 
-def fetch_object(object_uuid: str) -> Dict:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
+@cache_result("object:{url}", timeout=A_DAY)
+def fetch_object(url: str, client: Optional[Client] = None) -> dict:
+    if not client:
+        client = get_objects_client()
 
-    client = object_service.build_client()
-    object = client.retrieve("object", uuid=object_uuid)
-    return object
+    retrieved_item = client.retrieve("object", url=url)
+
+    retrieved_item["type"] = fetch_objecttype(retrieved_item["type"])
+    return retrieved_item
+
+
+def fetch_objects(urls: List[str]) -> List[Dict]:
+    object_api_client = get_objects_client()
+
+    def _fetch_object(url):
+        return fetch_object(url, client=object_api_client)
+
+    with parallel() as executor:
+        retrieved_objects = list(executor.map(_fetch_object, urls))
+
+    return retrieved_objects
 
 
 def update_object_record_data(
     object: Dict, data: Dict, user: Optional[User] = None
 ) -> Dict:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
-    client = object_service.build_client()
+    client = get_objects_client()
     new_data = {
         "record": {
             **object["record"],
@@ -1392,30 +1420,24 @@ def update_object_record_data(
     return obj
 
 
-def fetch_objecttype(objecttype_url) -> dict:
-    conf = CoreConfig.get_solo()
-    objecttype_service = conf.primary_objecttypes_api
+@cache_result("objecttype:{url}", timeout=AN_HOUR)
+def fetch_objecttype(url: str, client: Optional[Client] = None) -> dict:
+    if not client:
+        client = get_objecttypes_client()
+    object_type = client.retrieve("objecttype", url=url)
 
-    client = objecttype_service.build_client()
-    objecttype = client.retrieve("objecttype", url=objecttype_url)
-    return objecttype
+    return object_type
 
 
 def fetch_objecttypes() -> List[dict]:
-    conf = CoreConfig.get_solo()
-    objecttype_service = conf.primary_objecttypes_api
-
-    client = objecttype_service.build_client()
+    client = get_objecttypes_client()
     objecttypes_data = client.list("objecttype")
 
     return objecttypes_data
 
 
 def fetch_objecttype_version(uuid: str, version: int) -> dict:
-    conf = CoreConfig.get_solo()
-    objecttype_service = conf.primary_objecttypes_api
-
-    client = objecttype_service.build_client()
+    client = get_objecttypes_client()
     objecttypes_version_data = client.retrieve(
         "objectversion", **{"objecttype_uuid": uuid, "version": version}
     )
@@ -1424,10 +1446,7 @@ def fetch_objecttype_version(uuid: str, version: int) -> dict:
 
 
 def search_objects(filters: dict) -> List[dict]:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
-
-    client = object_service.build_client()
+    client = get_objects_client()
     results = client.operation(operation_id="object_search", data=filters)
     return results
 
@@ -1444,6 +1463,7 @@ def relate_object_to_zaak(relation_data: dict) -> dict:
 
 
 def fetch_zaak_object(zaak_object_url: str):
+    print(zaak_object_url)
     client = _client_from_url(zaak_object_url)
     zaak_object = client.retrieve("zaakobject", url=zaak_object_url)
     zaak_object = factory(ZaakObject, zaak_object)

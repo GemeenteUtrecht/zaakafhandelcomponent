@@ -14,6 +14,7 @@ from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
 
 from zac.core.rollen import Rol
 from zac.core.services import (
+    fetch_object,
     get_document,
     get_rollen,
     get_status,
@@ -24,7 +25,6 @@ from zac.core.services import (
     get_zaakobjecten,
     get_zaakobjecten_related_to_object,
 )
-from zac.core.utils import fetch_object
 from zgw.models.zrc import Zaak, ZaakInformatieObject
 
 from .documents import (
@@ -42,7 +42,7 @@ from .documents import (
 logger = logging.getLogger(__name__)
 
 
-def _get_uuid_from_url(url: str):
+def _get_uuid_from_url(url: str) -> str:
     return url.strip("/").split("/")[-1]
 
 
@@ -253,10 +253,10 @@ def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> None:
 
 
 def _get_object_document(
-    object_url: str, create_object: Optional[Dict] = None
+    uuid: str, object_url: str, create_object: Optional[Dict] = None
 ) -> Optional[ObjectDocument]:
     try:
-        object_document = ObjectDocument.get(url=object_url)
+        object_document = ObjectDocument.get(id=uuid)
     except exceptions.NotFoundError as exc:
         logger.warning("object %s hasn't been indexed in ES", object_url, exc_info=True)
         if create_object:
@@ -274,9 +274,26 @@ def create_objecttype_document(objecttype: Dict) -> ObjectTypeDocument:
 
 def create_object_document(object: Dict) -> ObjectDocument:
     return ObjectDocument(
+        meta={"id": object["uuid"]},
         url=object["url"],
         record_data=object["record"]["data"],
     )
+
+
+def update_object_document(object: Dict) -> ObjectDocument:
+    object_document = _get_object_document(
+        object["uuid"], object["url"], create_object=object
+    )
+    object_document.update(
+        refresh=True,
+        record_data=object["record"]["data"],
+    )
+    return object_document
+
+
+def delete_object_document(object_url: str) -> None:
+    object_document = _get_object_document(_get_uuid_from_url(object_url), object_url)
+    object_document.delete()
 
 
 def create_related_zaak_document(
@@ -301,7 +318,9 @@ def update_related_zaken_in_object_document(object_url: str) -> None:
 
     # Fetch object document to be updated
     object = fetch_object(object_url)
-    object_document = _get_object_document(object_url, create_object=object)
+    object_document = _get_object_document(
+        object["uuid"], object_url, create_object=object
+    )
 
     # Create related_zaak documenten and update object document
     related_zaken = [create_related_zaak_document(zaak) for zaak in s.execute()]
@@ -319,7 +338,9 @@ def _get_informatieobject_document(
     informatieobject_url: str, create_informatieobject: Optional[Document] = None
 ) -> Optional[InformatieObjectDocument]:
     try:
-        object_document = ObjectDocument.get(url=informatieobject_url)
+        informatieobject_document = InformatieObjectDocument.get(
+            url=informatieobject_url
+        )
     except exceptions.NotFoundError as exc:
         logger.warning(
             "informatieobject %s hasn't been indexed in ES",
@@ -327,18 +348,33 @@ def _get_informatieobject_document(
             exc_info=True,
         )
         if create_informatieobject:
-            object_document = create_informatieobject_document(create_informatieobject)
-            object_document.save()
+            informatieobject_document = create_informatieobject_document(
+                create_informatieobject
+            )
+            informatieobject_document.save()
         else:
             return
 
-    return object_document
+    return informatieobject_document
 
 
 def create_informatieobject_document(
     document: Document,
 ) -> InformatieObjectDocument:
     return InformatieObjectDocument(url=document.url, titel=document.titel)
+
+
+def update_informatieobject_document(document: Document) -> InformatieObjectDocument:
+    informatieobject_document = _get_informatieobject_document(
+        document.url, create_informatieobject=document
+    )
+    informatieobject_document.update(refresh=True, titel=document.titel)
+    return informatieobject_document
+
+
+def delete_informatieobject_document(document_url: str) -> None:
+    informatieobject_document = _get_informatieobject_document(document_url)
+    informatieobject_document.delete()
 
 
 def update_related_zaken_in_informatieobject_document(

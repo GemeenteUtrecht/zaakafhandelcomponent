@@ -13,6 +13,9 @@ from zac.contrib.board.models import BoardItem
 from zac.contrib.kownsl.api import get_review_requests, lock_review_request
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.cache import (
+    invalidate_document_cache,
+    invalidate_document_url_cache,
+    invalidate_fetch_object_cache,
     invalidate_informatieobjecttypen_cache,
     invalidate_rollen_cache,
     invalidate_zaak_cache,
@@ -22,18 +25,24 @@ from zac.core.cache import (
 )
 from zac.core.services import (
     _client_from_url,
+    fetch_object,
     fetch_rol,
     fetch_zaak_informatieobject,
     fetch_zaak_object,
+    get_document,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
     create_status_document,
     create_zaak_document,
     create_zaaktype_document,
+    delete_informatieobject_document,
+    delete_object_document,
     delete_zaak_document,
     get_zaak_document,
     update_eigenschappen_in_zaak_document,
+    update_informatieobject_document,
+    update_object_document,
     update_related_zaken_in_informatieobject_document,
     update_related_zaken_in_object_document,
     update_rollen_in_zaak_document,
@@ -42,6 +51,7 @@ from zac.elasticsearch.api import (
     update_zaakinformatieobjecten_in_zaak_document,
     update_zaakobjecten_in_zaak_document,
 )
+from zac.elasticsearch.documents import ZaakDocument
 from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
@@ -52,7 +62,7 @@ class ZakenHandler:
         logger.debug("ZAC notification: %r" % data)
         if data["resource"] == "zaak":
             if data["actie"] == "create":
-                self._handle_zaak_creation(data["hoofd_object"])
+                self._handle_zaak_create(data["hoofd_object"])
             elif data["actie"] in ["update", "partial_update"]:
                 self._handle_zaak_update(data["hoofd_object"])
             elif data["actie"] == "destroy":
@@ -62,25 +72,28 @@ class ZakenHandler:
             self._handle_zaakeigenschap_change(data["hoofd_object"])
 
         elif data["resource"] == "status" and data["actie"] == "create":
-            self._handle_status_creation(data["hoofd_object"])
+            self._handle_status_create(data["hoofd_object"])
 
         elif data["resource"] == "resultaat" and data["actie"] == "create":
-            self._handle_related_creation(data["hoofd_object"])
+            self._handle_related_create(data["hoofd_object"])
 
         elif data["resource"] == "rol":
             if data["actie"] == "create":
-                self._handle_rol_creation(
+                self._handle_rol_create(
                     data["hoofd_object"], rol_url=data["resource_url"]
                 )
             elif data["actie"] == "destroy":
                 self._handle_rol_destroy(data["hoofd_object"])
 
         elif data["resource"] == "zaakobject":
-            self._handle_zaakobject_change(data["hoofd_object"], data["resource"])
+            if data['actie'] == 'create':
+                self._handle_zaakobject_create(data["hoofd_object"], data["resource_url"])
+            elif data['actie'] == 'destroy':
+                self._handle_zaakobject_destroy()
 
         elif data["resource"] == "zaakinformatieobject":
             self._handle_zaakinformatieobject_change(
-                data["hoofd_object"], data["resource"]
+                data["hoofd_object"], data["resource_url"]
             )
 
     @staticmethod
@@ -123,7 +136,7 @@ class ZakenHandler:
         # index in ES
         update_zaak_document(zaak)
 
-    def _handle_zaak_creation(self, zaak_url: str):
+    def _handle_zaak_create(self, zaak_url: str):
         client = _client_from_url(zaak_url)
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_list_cache(client, zaak)
@@ -143,18 +156,18 @@ class ZakenHandler:
         # index in ES
         delete_zaak_document(zaak_url)
 
-    def _handle_related_creation(self, zaak_url: str):
+    def _handle_related_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
-    def _handle_status_creation(self, zaak_url: str):
+    def _handle_status_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
         # index in ES
         update_status_in_zaak_document(zaak)
 
-    def _handle_rol_creation(self, zaak_url: str, rol_url: str):
+    def _handle_rol_create(self, zaak_url: str, rol_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_rollen_cache(zaak, rol_urls=[rol_url])
         updated = update_medewerker_identificatie_rol(rol_url)
@@ -181,9 +194,26 @@ class ZakenHandler:
         # index in ES
         update_eigenschappen_in_zaak_document(zaak)
 
-    def _handle_zaakobject_change(self, zaak_url: str, zaakobject_url: str):
+    def _handle_zaakobject_create(self, zaak_url: str, zaakobject_url: str):
+        # Invalidate zaakobjecten cache with zaak
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaakobjecten_cache(zaak)
+
+        # index in zaken
+        update_zaakobjecten_in_zaak_document(zaak)
+
+        # index in objecten
+        zaakobject = fetch_zaak_object(zaakobject_url)
+        update_related_zaken_in_object_document(zaakobject.object)
+
+    def _handle_zaakobject_destroy(self, zaak_url: str, zaakobject_url: str):
+        # Invalidate zaakobjecten cache with zaak
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_zaakobjecten_cache(zaak)
+
+        # Get zaakobject from ZaakDocument
+        zaakdocument = ZaakDocument.get(id=zaak.uuid)
+
 
         # index in zaken
         update_zaakobjecten_in_zaak_document(zaak)
@@ -223,6 +253,32 @@ class InformatieObjecttypenHandler:
                     catalogus=data["kenmerken"]["catalogus"]
                 )
                 invalidate_informatieobjecttypen_cache()
+
+
+class ObjectenHandler:
+    def handle(self, data: dict) -> None:
+        if data["resource"] == "objecten":
+            invalidate_fetch_object_cache(data["hoofd_object"])
+            if data["actie"] in ["create", "update", "partial_update"]:
+                object = fetch_object(data["hoofd_object"])
+                update_object_document(object)
+                update_related_zaken_in_object_document(object["url"])
+            elif data["actie"] == "destroy":
+                delete_object_document(data["hoofd_object"])
+                update_related_zaken_in_object_document(object["url"])
+
+
+class InformatieObjectenHandler:
+    def handle(self, data: dict) -> None:
+        if data["resource"] == "documenten":
+            if data["actie"] in ["create", "update", "partial_update"]:
+                document = get_document(data["hoofd_object"])
+                invalidate_document_cache(document)
+                document = get_document(data["hoofd_object"])
+                update_informatieobject_document(document)
+            elif data["actie"] == "destroy":
+                invalidate_document_url_cache(data["hoofd_object"])
+                delete_informatieobject_document(data["hoofd_object"])
 
 
 class RoutingHandler:

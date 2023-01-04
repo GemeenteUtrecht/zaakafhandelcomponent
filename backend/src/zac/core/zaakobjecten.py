@@ -6,7 +6,7 @@ from zgw_consumers.api_models.zaken import ZaakObject
 
 from zac.contrib.kadaster.bag import fetch_pand, fetch_verblijfsobject
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
-from zac.core.utils import fetch_objects
+from zac.core.services import fetch_objects
 
 
 def noop(url: str) -> str:

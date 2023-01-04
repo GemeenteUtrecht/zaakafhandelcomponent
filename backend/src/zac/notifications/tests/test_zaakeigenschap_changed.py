@@ -22,9 +22,7 @@ from zgw.models.zrc import Zaak
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
-    STATUS,
     STATUS_RESPONSE,
-    STATUSTYPE,
     STATUSTYPE_RESPONSE,
     ZAAK,
     ZAAK_RESPONSE,
