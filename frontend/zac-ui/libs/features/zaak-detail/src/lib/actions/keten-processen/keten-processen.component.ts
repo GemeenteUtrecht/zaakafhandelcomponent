@@ -421,11 +421,13 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         this.showOverlay = false;
       }, 2000)
       this.fetchCaseDetails();
-    }, err => {
+    }, error => {
       this.isLoading = false;
       this.isStartingProcess = false;
-      this.errorMessage = "Het opstarten van het proces is mislukt. Probeer het nog eens."
-      this.reportError(err);
+      this.errorMessage = error.error?.value
+        ? error.error?.value[0]
+        : error?.error?.detail || error?.error.reason || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || "Het opstarten van het proces is mislukt. Probeer het nog eens."
+      this.reportError(error);
     })
   }
 
