@@ -36,7 +36,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
   @Output() isChecklistAvailable: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  readonly errorMessage = 'Er is een fout opgetreden bij het laden van de checklist.'
+  readonly errorMessage = 'Er is een fout opgetreden bij het laden van de takenlijst.'
 
   /** @type {boolean} Whether the API is loading. */
   isLoading = false;
@@ -341,7 +341,9 @@ export class ChecklistComponent implements OnInit, OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    const message = this.errorMessage;
+    const message = error.error?.value
+      ? error.error?.value[0]
+      : error?.error?.detail || error?.error.reason || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     this.isLoading = false;
     console.error(error);
