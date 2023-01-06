@@ -2,15 +2,12 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
-from django.conf import settings
-
 from elasticsearch import exceptions
-from elasticsearch_dsl import Index
-from elasticsearch_dsl.query import Bool, Terms
 from zgw_consumers.api_models.catalogi import StatusType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
+from zgw_consumers.concurrent import parallel
 
 from zac.core.rollen import Rol
 from zac.core.services import (
@@ -19,6 +16,7 @@ from zac.core.services import (
     get_rollen,
     get_status,
     get_statustype,
+    get_zaak,
     get_zaak_eigenschappen,
     get_zaak_informatieobjecten,
     get_zaakinformatieobjecten_related_to_informatieobject,
@@ -232,12 +230,11 @@ def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
 def create_zaakinformatieobject_document(
     zio: ZaakInformatieObject,
 ) -> ZaakObjectDocument:
-    return ZaakObjectDocument(url=zio["url"], informatieobject=zio["informatieobject"])
+    return ZaakObjectDocument(url=zio.url, informatieobject=zio.informatieobject)
 
 
 def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> None:
     zaak.zaakinformatieobjecten = get_zaak_informatieobjecten(zaak)
-
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
     zaak_document.zaakinformatieobjecten = [
         create_zaakinformatieobject_document(zio) for zio in zaak.zaakinformatieobjecten
@@ -310,11 +307,12 @@ def create_related_zaak_document(
 def update_related_zaken_in_object_document(object_url: str) -> None:
     # Get zaken information from zaken index
     zaakobjecten = get_zaakobjecten_related_to_object(object_url)
-    zaken_index = Index(settings.ES_INDEX_ZAKEN)
-    s = zaken_index.search().source(
-        ["url", "identificatie", "bronorganisatie", "omschrijving"]
-    )
-    s.filter(Bool(Terms(url=list({zo.zaak for zo in zaakobjecten}))))
+
+    def _get_zaak(url: str) -> Zaak:
+        return get_zaak(zaak_url=url)
+
+    with parallel() as executor:
+        zaken = list(executor.map(_get_zaak, [zo.zaak for zo in zaakobjecten]))
 
     # Fetch object document to be updated
     object = fetch_object(object_url)
@@ -323,7 +321,7 @@ def update_related_zaken_in_object_document(object_url: str) -> None:
     )
 
     # Create related_zaak documenten and update object document
-    related_zaken = [create_related_zaak_document(zaak) for zaak in s.execute()]
+    related_zaken = [create_related_zaak_document(zaak) for zaak in zaken]
     object_document.related_zaken = related_zaken
     object_document.save()
     return
@@ -339,7 +337,7 @@ def _get_informatieobject_document(
 ) -> Optional[InformatieObjectDocument]:
     try:
         informatieobject_document = InformatieObjectDocument.get(
-            url=informatieobject_url
+            id=_get_uuid_from_url(informatieobject_url)
         )
     except exceptions.NotFoundError as exc:
         logger.warning(
@@ -361,7 +359,11 @@ def _get_informatieobject_document(
 def create_informatieobject_document(
     document: Document,
 ) -> InformatieObjectDocument:
-    return InformatieObjectDocument(url=document.url, titel=document.titel)
+    return InformatieObjectDocument(
+        meta={"id": _get_uuid_from_url(document.url)},
+        url=document.url,
+        titel=document.titel,
+    )
 
 
 def update_informatieobject_document(document: Document) -> InformatieObjectDocument:
@@ -382,11 +384,12 @@ def update_related_zaken_in_informatieobject_document(
 ) -> None:
     # Get zaken information from zaken index
     zios = get_zaakinformatieobjecten_related_to_informatieobject(informatieobject_url)
-    zaken_index = Index(settings.ES_INDEX_ZAKEN)
-    s = zaken_index.search().source(
-        ["url", "identificatie", "bronorganisatie", "omschrijving"]
-    )
-    s.filter(Bool(Terms(url=list({zio.zaak for zio in zios}))))
+
+    def _get_zaak(url: str) -> Zaak:
+        return get_zaak(zaak_url=url)
+
+    with parallel() as executor:
+        zaken = list(executor.map(_get_zaak, [zio.zaak for zio in zios]))
 
     # Fetch object document to be updated
     informatieobject = get_document(informatieobject_url)
@@ -395,7 +398,7 @@ def update_related_zaken_in_informatieobject_document(
     )
 
     # Create related_zaak documenten and update object document
-    related_zaken = [create_related_zaak_document(zaak) for zaak in s.execute()]
+    related_zaken = [create_related_zaak_document(zaak) for zaak in zaken]
     informatieobject_document.related_zaken = related_zaken
     informatieobject_document.save()
     return

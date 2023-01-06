@@ -1,8 +1,11 @@
+from unittest.mock import MagicMock
+
 from django.conf import settings
 from django.test import TestCase
 
 from elasticsearch_dsl import Index
 
+from zac.accounts.tests.factories import UserFactory
 from zac.camunda.constants import AssigneeTypeChoices
 
 from ..documents import (
@@ -86,9 +89,9 @@ class QuickSearchTests(ESMixin, TestCase):
             meta={"id": "a8c8bc90-defa-4548-bacd-793874c013ab"},
             url="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013ab",
             zaaktype=self.zaaktype_document2,
-            identificatie="ZAAK-2022-000000105",
+            identificatie="ZAAK-2021-000000105",
             bronorganisatie="7890",
-            omschrijving="een hele mooie dikke omschrijving",
+            omschrijving="een omschrijving",
             vertrouwelijkheidaanduiding="confidentieel",
             va_order=20,
             rollen=[],
@@ -115,8 +118,42 @@ class QuickSearchTests(ESMixin, TestCase):
 
     def test_quick_search(self):
         results = quick_search("2022 omsch")
-        print(results["zaken"].__dict__)
-        print("*" * 50)
-        print(results["objecten"].__dict__)
-        print("*" * 50)
-        print(results["documenten"].__dict__)
+        self.assertEqual(
+            results["zaken"][0].identificatie, self.zaak_document1.identificatie
+        )
+        self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
+        self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
+
+        results = quick_search("2022")
+        self.assertEqual(
+            results["zaken"][0].identificatie, self.zaak_document1.identificatie
+        )
+        self.assertEqual(len(results["objecten"]), 0)
+        self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
+
+        results = quick_search("2021")
+        self.assertEqual(
+            results["zaken"][0].identificatie, self.zaak_document2.identificatie
+        )
+        self.assertEqual(len(results["objecten"]), 0)
+        self.assertEqual(len(results["documenten"]), 0)
+
+        results = quick_search("2021 omsch")
+        self.assertEqual(
+            results["zaken"][0].identificatie, self.zaak_document2.identificatie
+        )
+        self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
+        self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
+
+    def test_quick_search_permissions(self):
+        user = UserFactory.create()
+        request = MagicMock()
+        request.user = user
+
+        results = quick_search("2022 omsch", only_allowed=True, request=request)
+        print(results)
+        # self.assertEqual(
+        #     results["zaken"][0].identificatie, self.zaak_document1.identificatie
+        # )
+        # self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
+        # self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)

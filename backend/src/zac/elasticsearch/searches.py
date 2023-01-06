@@ -174,8 +174,8 @@ from time import time
 
 def quick_search(
     search_term: str,
-    request: Optional[Request] = None,
     only_allowed: bool = False,
+    request: Optional[Request] = None,
 ) -> List[Union[ZaakDocument, ObjectDocument]]:
     time_then = time()
     s_zaken = Search(index=[settings.ES_INDEX_ZAKEN]).source(
@@ -207,41 +207,29 @@ def quick_search(
     s_documenten = s_documenten.query(Match(titel={"query": search_term}))
     s_documenten.extra(size=5)
     s_documenten.source(["titel", "url", "related_zaken"])
+
+    if only_allowed:
+        if not request:
+            raise RuntimeError("If only_allowed is True a request must be passed.")
+
+        allowed = query_allowed_for_requester(request)
+        s_zaken = s_zaken.filter(allowed)
+        s_objecten = s_objecten.filter(
+            Nested(
+                path="related_zaken",
+                query=allowed,
+            )
+        )
+        s_documenten = s_objecten.filter(
+            Nested(
+                path="related_zaken",
+                query=allowed,
+            )
+        )
+
     results = {
         "zaken": s_zaken.execute(),
         "objecten": s_objecten.execute(),
         "documenten": s_documenten.execute(),
     }
-    print(f"SEARCH TOOK {time()-time_then} seconds.")
     return results
-
-    # s_objecten = Search(index=[settings.ES_INDEX_OBJECTEN])
-    # s_objecten = s_objecten.suggest(
-    #     "data", search_term, completion={"field": "record.data"}
-    # )
-    # s_objecten = s_objecten.suggest(
-    #     "geometry", search_term, completion={"field": "record.geometry"}
-    # )
-    # s_objecten.extra(size=5).sort(["-_score"])
-
-    # s_documenten = Search(index=[settings.ES_INDEX_DOCUMENTEN])
-    # s_documenten = s_documenten.suggest(
-    #     "titel", search_term, completion={"field": "titel"}
-    # )
-    # s_documenten.extra(size=5).sort(["-_score"])
-
-    # if only_allowed:
-    #     allowed_zaken = query_allowed_for_requester(request)
-    #     s_zaken = s_zaken.filter(allowed_zaken)
-    #     s_objecten = s_objecten.filter(
-    #         Nested(
-    #             path="related_zaken",
-    #             query=Bool(filter=Terms(related_zaken__url=allowed_zaken)),
-    #         )
-    #     )
-    #     s_documenten = s_objecten.filter(
-    #         Nested(
-    #             path="related_zaken",
-    #             query=Bool(filter=Terms(related_zaken__url=allowed_zaken)),
-    #         )
-    #     )

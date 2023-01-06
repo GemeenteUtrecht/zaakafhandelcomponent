@@ -926,8 +926,7 @@ def get_zaakinformatieobjecten_related_to_informatieobject(
 
     for zrc in zrcs:
         client = zrc.build_client()
-        result = get_paginated_results(
-            client,
+        result = client.list(
             "zaakinformatieobject",
             query_params={"informatieobject": informatieobject_url},
         )
@@ -935,17 +934,17 @@ def get_zaakinformatieobjecten_related_to_informatieobject(
         if not result:
             continue
         else:
-            results += factory(ZaakInformatieObject, result)
+            results += result
 
-    return results
+    return factory(ZaakInformatieObject, results)
 
 
-def get_zaak_informatieobjecten(zaak: Zaak) -> list:
+def get_zaak_informatieobjecten(zaak: Zaak) -> List[ZaakInformatieObject]:
     client = _client_from_object(zaak)
     zaak_informatieobjecten = client.list(
         "zaakinformatieobject", query_params={"zaak": zaak.url}
     )
-    return zaak_informatieobjecten
+    return factory(ZaakInformatieObject, zaak_informatieobjecten)
 
 
 def get_informatieobjecttypen_for_zaak(url: str) -> List[InformatieObjectType]:
@@ -1463,7 +1462,6 @@ def relate_object_to_zaak(relation_data: dict) -> dict:
 
 
 def fetch_zaak_object(zaak_object_url: str):
-    print(zaak_object_url)
     client = _client_from_url(zaak_object_url)
     zaak_object = client.retrieve("zaakobject", url=zaak_object_url)
     zaak_object = factory(ZaakObject, zaak_object)
