@@ -346,6 +346,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
       : error?.error?.detail || error?.error.reason || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     this.isLoading = false;
+    this.isSubmitting = false;
     console.error(error);
   }
 }
