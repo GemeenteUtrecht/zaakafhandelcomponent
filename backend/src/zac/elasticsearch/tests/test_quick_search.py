@@ -4,9 +4,18 @@ from django.conf import settings
 from django.test import TestCase
 
 from elasticsearch_dsl import Index
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
-from zac.accounts.tests.factories import UserFactory
+from zac.accounts.datastructures import VA_ORDER
+from zac.accounts.tests.factories import (
+    AtomicPermissionFactory,
+    BlueprintPermissionFactory,
+    SuperUserFactory,
+    UserFactory,
+)
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.core.permissions import zaken_inzien
+from zac.elasticsearch.api import create_related_zaak_document
 
 from ..documents import (
     InformatieObjectDocument,
@@ -52,8 +61,8 @@ class QuickSearchTests(ESMixin, TestCase):
             identificatie="ZAAK-2022-0000001010",
             bronorganisatie="123456",
             omschrijving="Some zaak description",
-            vertrouwelijkheidaanduiding="beperkt_openbaar",
-            va_order=16,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            va_order=VA_ORDER[VertrouwelijkheidsAanduidingen.openbaar],
             rollen=[
                 {
                     "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -92,26 +101,28 @@ class QuickSearchTests(ESMixin, TestCase):
             identificatie="ZAAK-2021-000000105",
             bronorganisatie="7890",
             omschrijving="een omschrijving",
-            vertrouwelijkheidaanduiding="confidentieel",
-            va_order=20,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            va_order=VA_ORDER[VertrouwelijkheidsAanduidingen.zaakvertrouwelijk],
             rollen=[],
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
             deadline="2021-12-31",
         )
         self.zaak_document2.save()
 
+        related_zaak_1 = create_related_zaak_document(self.zaak_document1)
         self.object_document_1 = ObjectDocument(
             url="some-keywoird",
             object_type="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013ab",
             record_data={"some-field": "some omschrijving value"},
-            related_zaken=[],
+            related_zaken=[related_zaak_1],
         )
         self.object_document_1.save()
 
+        related_zaak_2 = create_related_zaak_document(self.zaak_document2)
         self.eio_document_1 = InformatieObjectDocument(
             url="some-keyword",
             titel="some-titel_omsch_2022-20105.pdf(1)",
-            related_zaken=[],
+            related_zaken=[related_zaak_2],
         )
         self.eio_document_1.save()
         self.refresh_index()
@@ -145,15 +156,81 @@ class QuickSearchTests(ESMixin, TestCase):
         self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
         self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
 
-    def test_quick_search_permissions(self):
+    def test_quick_search_blueprint_permissions(self):
         user = UserFactory.create()
         request = MagicMock()
         request.user = user
+        request.auth = None
 
         results = quick_search("2022 omsch", only_allowed=True, request=request)
-        print(results)
-        # self.assertEqual(
-        #     results["zaken"][0].identificatie, self.zaak_document1.identificatie
-        # )
-        # self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
-        # self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
+        self.assertEqual(len(results["zaken"]), 0)
+        self.assertEqual(len(results["objecten"]), 0)
+        self.assertEqual(len(results["documenten"]), 0)
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            policy={
+                "catalogus": self.zaaktype_document1.catalogus,
+                "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+            for_user=user,
+        )
+
+        results = quick_search("2022 omsch", only_allowed=True, request=request)
+        self.assertEqual(
+            results["zaken"][0].identificatie, self.zaak_document1.identificatie
+        )
+        self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
+        # Document isn't allowed to be returned because of the lack of
+        # blueprint permissions for zaaktype 2.
+        self.assertEqual(len(results["documenten"]), 0)
+
+        # Now add appropriate blueprint permission for zaaktype 2
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            policy={
+                "catalogus": self.zaaktype_document2.catalogus,
+                "zaaktype_omschrijving": self.zaaktype_document2.omschrijving,
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+            for_user=user,
+        )
+        results = quick_search("2022 omsch", only_allowed=True, request=request)
+
+        self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
+
+    def test_quick_search_atomic_permissions_for_zaak(self):
+        user = UserFactory.create()
+        request = MagicMock()
+        request.user = user
+        request.auth = None
+
+        results = quick_search("2022 omsch", only_allowed=True, request=request)
+        self.assertEqual(len(results["zaken"]), 0)
+        self.assertEqual(len(results["objecten"]), 0)
+        self.assertEqual(len(results["documenten"]), 0)
+
+        AtomicPermissionFactory.create(
+            permission=zaken_inzien.name,
+            object_url=self.zaak_document1.url,
+            for_user=user,
+        )
+
+        results = quick_search("2022 omsch", only_allowed=True, request=request)
+        self.assertEqual(
+            results["zaken"][0].identificatie, self.zaak_document1.identificatie
+        )
+        self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
+        # Document isn't allowed to be returned because of the lack of
+        # atomic permissions for zaak 2.
+        self.assertEqual(len(results["documenten"]), 0)
+
+        AtomicPermissionFactory.create(
+            permission=zaken_inzien.name,
+            object_url=self.zaak_document2.url,
+            for_user=user,
+        )
+
+        results = quick_search("2022 omsch", only_allowed=True, request=request)
+        self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
