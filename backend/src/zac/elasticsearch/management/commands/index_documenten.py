@@ -120,6 +120,7 @@ class Command(IndexCommand, BaseCommand):
                     "bronorganisatie",
                     "zaakinformatieobjecten.informatieobject",
                     "zaaktype",
+                    "vertrouwelijkheidaanduiding",
                 ]
             )
             .execute()

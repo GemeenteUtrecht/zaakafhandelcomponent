@@ -122,7 +122,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         mock_resource_get(m, self.zaak)
 
         patch_find_zaak = patch(
-            "zac.core.services.search", return_value=[self.zaak["url"]]
+            "zac.core.services.search_zaken", return_value=[self.zaak["url"]]
         )
         patch_find_zaak.start()
         self.addCleanup(patch_find_zaak.stop)
@@ -690,7 +690,9 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         m.get(zaak["url"], json=zaak)
 
-        patch_find_zaak = patch("zac.core.services.search", return_value=[zaak["url"]])
+        patch_find_zaak = patch(
+            "zac.core.services.search_zaken", return_value=[zaak["url"]]
+        )
         patch_find_zaak.start()
         self.addCleanup(patch_find_zaak.stop)
 

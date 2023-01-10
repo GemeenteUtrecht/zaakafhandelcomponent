@@ -5,10 +5,12 @@ import requests_mock
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Index
 from rest_framework.test import APITransactionTestCase
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -88,6 +90,8 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="some-omschrijving",
             bronorganisatie="some-bronorganisatie",
             zaakinformatieobjecten=[zio],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            va_order=VA_ORDER[VertrouwelijkheidsAanduidingen.openbaar],
         )
         zd.save()
         self.refresh_index()
@@ -99,9 +103,10 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             index.search().execute()[0].related_zaken,
             [
                 {
-                    "identificatie": "some-identificatie",
-                    "omschrijving": "some-omschrijving",
                     "bronorganisatie": "some-bronorganisatie",
+                    "omschrijving": "some-omschrijving",
+                    "identificatie": "some-identificatie",
+                    "va_order": 27,
                 }
             ],
         )

@@ -81,8 +81,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        choice = VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
-        self.assertEqual(zaak_document.va_order, choice.order)
+        self.assertEqual(
+            zaak_document.va_order, VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
+        )
         self.assertEqual(zaak_document.rollen, [])
 
     def test_index_zaken_with_rollen(self, m):
@@ -177,10 +178,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        choice = VertrouwelijkheidsAanduidingen.get_choice(
-            zaak["vertrouwelijkheidaanduiding"]
+        self.assertEqual(
+            zaak_document.va_order, VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
         )
-        self.assertEqual(zaak_document.va_order, choice.order)
         self.assertEqual(len(zaak_document.rollen), 2)
 
         rollen = zaak_document.rollen
@@ -274,8 +274,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        choice = VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
-        self.assertEqual(zaak_document.va_order, choice.order)
+        self.assertEqual(
+            zaak_document.va_order, VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
+        )
         self.assertEqual(len(zaak_document.rollen), 2)
 
         rollen = zaak_document.rollen

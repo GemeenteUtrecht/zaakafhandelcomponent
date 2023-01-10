@@ -126,6 +126,7 @@ class Command(BaseCommand):
                     "bronorganisatie",
                     "zaakobjecten.object",
                     "zaaktype",
+                    "vertrouwelijkheidaanduiding",
                 ]
             )
             .execute()

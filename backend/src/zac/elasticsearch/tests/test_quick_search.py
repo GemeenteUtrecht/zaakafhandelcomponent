@@ -2,12 +2,22 @@ from unittest.mock import MagicMock
 
 from django.conf import settings
 from django.test import TestCase
+from django.urls import reverse_lazy
 
+import requests_mock
 from elasticsearch_dsl import Index
+from rest_framework import status
+from rest_framework.test import APITransactionTestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
+    ApplicationTokenFactory,
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -15,7 +25,13 @@ from zac.accounts.tests.factories import (
 )
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
-from zac.elasticsearch.api import create_related_zaak_document
+from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.api import (
+    create_related_zaak_document,
+    update_eigenschappen_in_zaak_document,
+    update_zaakobjecten_in_zaak_document,
+)
+from zac.elasticsearch.tests.utils import ESMixin
 
 from ..documents import (
     InformatieObjectDocument,
@@ -30,7 +46,9 @@ CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 
 
-class QuickSearchTests(ESMixin, TestCase):
+class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    endpoint = reverse_lazy("quick-search")
+
     @staticmethod
     def clear_index(init=False):
         ESMixin.clear_index(init=init)
@@ -234,3 +252,33 @@ class QuickSearchTests(ESMixin, TestCase):
 
         results = quick_search("2022 omsch", only_allowed=True, request=request)
         self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
+
+    def test_quick_search_endpoint_superuser(self):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user=user)
+        response = self.client.post(self.endpoint, {"search": "2022 omsch"})
+        self.assertEqual(response.status_code, 200)
+
+        results = response.json()
+        self.assertEqual(
+            results["zaken"][0]["identificatie"], self.zaak_document1.identificatie
+        )
+        self.assertEqual(
+            results["objecten"][0]["recordData"], self.object_document_1.record_data
+        )
+        self.assertEqual(results["documenten"][0]["titel"], self.eio_document_1.titel)
+
+    def test_quick_search_endpoint_not_authenticated(self):
+        response = self.client.post(self.endpoint, {"search": "2022 omsch"})
+        self.assertEqual(response.status_code, 403)
+
+    def test_quick_search_endpoint_authenticated_no_permissions(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        response = self.client.post(self.endpoint, {"search": "2022 omsch"})
+        self.assertEqual(response.status_code, 200)
+
+        results = response.json()
+        self.assertEqual(len(results["zaken"]), 0)
+        self.assertEqual(len(results["objecten"]), 0)
+        self.assertEqual(len(results["documenten"]), 0)

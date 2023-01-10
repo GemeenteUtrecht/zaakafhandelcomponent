@@ -186,15 +186,11 @@ def autocomplete_zaak_search(
     return response.hits
 
 
-from time import time
-
-
 def quick_search(
     search_term: str,
     only_allowed: bool = False,
     request: Optional[Request] = None,
 ) -> List[Union[ZaakDocument, ObjectDocument]]:
-    time_then = time()
     s_zaken = (
         ZaakDocument.search()
         .source(
@@ -213,21 +209,21 @@ def quick_search(
                 ],
             ),
         )
-        .extra(size=5)
+        .extra(size=15)
     )
 
     s_objecten = (
         ObjectDocument.search()
         .query(MultiMatch(fields=["record_data_text.*"], query=search_term))
         .filter(~Exists(field="record_data.meta"))
-        .extra(size=5)
+        .extra(size=15)
     )
 
     s_documenten = (
         InformatieObjectDocument.search()
         .source(["titel", "url", "related_zaken"])
         .query(Match(titel={"query": search_term}))
-        .extra(size=5)
+        .extra(size=15)
     )
 
     if only_allowed:
@@ -246,5 +242,4 @@ def quick_search(
         "objecten": s_objecten.execute(),
         "documenten": s_documenten.execute(),
     }
-    print(f"Query took {time()-time_then}s.")
     return results
