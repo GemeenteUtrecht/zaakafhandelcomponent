@@ -19,7 +19,7 @@ from zac.core.services import get_zaaktypen
 
 from ..documents import ZaakDocument
 from ..models import SearchReport
-from ..searches import autocomplete_zaak_search, search
+from ..searches import autocomplete_zaak_search, search_zaken
 from .filters import ESOrderingFilter
 from .pagination import ESPagination
 from .parsers import IgnoreCamelCaseJSONParser
@@ -90,7 +90,7 @@ class PerformSearchMixin:
 
             search_query["zaaktypen"] = [url for url in set(urls)]
 
-        results = search(**search_query, request=self.request)
+        results = search_zaken(**search_query, request=self.request)
         return results
 
 

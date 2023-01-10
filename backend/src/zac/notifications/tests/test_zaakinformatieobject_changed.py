@@ -13,6 +13,7 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import (
@@ -98,6 +99,9 @@ class ZaakInformatieObjectChangedTests(
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, INFORMATIEOBJECT_RESPONSE)
         mock_resource_get(rm, INFORMATIEOBJECTTYPE_RESPONSE)
+        rm.get(
+            f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([ZAAKTYPE_RESPONSE])
+        )
 
     def test_zaakinformatieobject_created_indexed_in_es(self, rm):
         self._setup_mocks(rm)
@@ -152,11 +156,17 @@ class ZaakInformatieObjectChangedTests(
                     "bronorganisatie": ZAAK_RESPONSE["bronorganisatie"],
                     "omschrijving": ZAAK_RESPONSE["omschrijving"],
                     "identificatie": ZAAK_RESPONSE["identificatie"],
+                    "va_order": VA_ORDER[ZAAK_RESPONSE["vertrouwelijkheidaanduiding"]],
+                    "zaaktype": {
+                        "url": ZAAKTYPE_RESPONSE["url"],
+                        "catalogus": ZAAKTYPE_RESPONSE["catalogus"],
+                        "omschrijving": ZAAKTYPE_RESPONSE["omschrijving"],
+                    },
                 }
             ],
         )
 
-    def test_zaakobject_destroyed_in_es(self, rm):
+    def test_zaakinformatieobject_destroyed_in_es(self, rm):
         self._setup_mocks(rm)
         rm.get(
             f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",

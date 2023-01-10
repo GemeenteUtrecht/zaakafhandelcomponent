@@ -40,7 +40,7 @@ from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
 from zac.client import Client
 from zac.contrib.brp.models import BRPConfig
-from zac.elasticsearch.searches import search
+from zac.elasticsearch.searches import search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
 from zgw.models import Zaak
@@ -562,7 +562,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
     # try local search index first
-    results = search(size=1, only_allowed=False, **query)
+    results = search_zaken(size=1, only_allowed=False, **query)
     if results:
         zaak = get_zaak(zaak_url=results[0].url)
     else:

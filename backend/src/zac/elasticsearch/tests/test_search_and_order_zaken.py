@@ -16,7 +16,7 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
 from ..documents import ZaakDocument, ZaakTypeDocument
-from ..searches import search
+from ..searches import search_zaken
 from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
@@ -91,7 +91,7 @@ class SearchZakenTests(ESMixin, TestCase):
         zaken.refresh()
 
     def test_search_zaaktype(self):
-        result = search(
+        result = search_zaken(
             zaaktypen=[
                 "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
             ],
@@ -102,19 +102,19 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_identificatie(self):
-        result = search(identificatie="ZAAK1", only_allowed=False)
+        result = search_zaken(identificatie="ZAAK1", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_bronorg(self):
-        result = search(bronorganisatie="123456", only_allowed=False)
+        result = search_zaken(bronorganisatie="123456", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_behandelaar(self):
-        result = search(behandelaar="some_username", only_allowed=False)
+        result = search_zaken(behandelaar="some_username", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
@@ -133,7 +133,7 @@ class SearchZakenTests(ESMixin, TestCase):
         request = MagicMock()
         request.user = user
         request.auth = None
-        result = search(request=request, only_allowed=True)
+        result = search_zaken(request=request, only_allowed=True)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
@@ -148,25 +148,25 @@ class SearchZakenTests(ESMixin, TestCase):
         request = MagicMock()
         request.user = user
         request.auth = None
-        result = search(request=request, only_allowed=True)
+        result = search_zaken(request=request, only_allowed=True)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_omschrijving(self):
-        result = search(omschrijving="some", only_allowed=False)
+        result = search_zaken(omschrijving="some", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_omschrijving_part(self):
-        result = search(omschrijving="som", only_allowed=False)
+        result = search_zaken(omschrijving="som", only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_eigenschappen(self):
-        result = search(
+        result = search_zaken(
             eigenschappen={"Beleidsveld": "Asiel\ en\ Integratie"}, only_allowed=False
         )
 
@@ -174,13 +174,15 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_partial_eigenschappen(self):
-        result = search(eigenschappen={"Beleidsveld": "en"}, only_allowed=False)
+        result = search_zaken(eigenschappen={"Beleidsveld": "en"}, only_allowed=False)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
     def test_search_eigenschappen_with_point(self):
-        result = search(eigenschappen={"Bedrag incl. BTW": "aaa"}, only_allowed=False)
+        result = search_zaken(
+            eigenschappen={"Bedrag incl. BTW": "aaa"}, only_allowed=False
+        )
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
@@ -198,7 +200,7 @@ class SearchZakenTests(ESMixin, TestCase):
         )
         request = MagicMock()
         request.user = user
-        result = search(
+        result = search_zaken(
             request=request,
             zaaktypen=[
                 "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa"
@@ -216,12 +218,12 @@ class SearchZakenTests(ESMixin, TestCase):
         super_user = SuperUserFactory.create()
         request = MagicMock()
         request.user = super_user
-        result = search(request=request, ordering=("-identificatie.keyword",))
+        result = search_zaken(request=request, ordering=("-identificatie.keyword",))
         self.assertEqual(result[0].url, self.zaak_document2.url)
 
     def test_nested_ordering(self):
         super_user = SuperUserFactory.create()
         request = MagicMock()
         request.user = super_user
-        result = search(request=request, ordering=("-zaaktype.omschrijving",))
+        result = search_zaken(request=request, ordering=("-zaaktype.omschrijving",))
         self.assertEqual(result[0].url, self.zaak_document2.url)

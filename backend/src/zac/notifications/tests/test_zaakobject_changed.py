@@ -13,6 +13,7 @@ from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -110,6 +111,9 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(rm, OBJECT_RESPONSE)
         mock_resource_get(rm, OBJECTTYPE_RESPONSE)
         mock_resource_get(rm, OBJECTTYPE_VERSION_RESPONSE)
+        rm.get(
+            f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([ZAAKTYPE_RESPONSE])
+        )
 
     def test_zaakobject_created_indexed_in_es(self, rm):
         self._setup_mocks(rm)
@@ -162,6 +166,12 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "bronorganisatie": ZAAK_RESPONSE["bronorganisatie"],
                     "omschrijving": ZAAK_RESPONSE["omschrijving"],
                     "identificatie": ZAAK_RESPONSE["identificatie"],
+                    "va_order": VA_ORDER[ZAAK_RESPONSE["vertrouwelijkheidaanduiding"]],
+                    "zaaktype": {
+                        "url": ZAAKTYPE_RESPONSE["url"],
+                        "catalogus": ZAAKTYPE_RESPONSE["catalogus"],
+                        "omschrijving": ZAAKTYPE_RESPONSE["omschrijving"],
+                    },
                 }
             ],
         )

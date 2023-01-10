@@ -6,11 +6,11 @@ from django.core.management import call_command
 
 import requests_mock
 from rest_framework.test import APITransactionTestCase
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -81,9 +81,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        choice = VertrouwelijkheidsAanduidingen.get_choice(
-            zaak["vertrouwelijkheidaanduiding"]
-        )
+        choice = VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
         self.assertEqual(zaak_document.va_order, choice.order)
         self.assertEqual(zaak_document.rollen, [])
 
@@ -276,9 +274,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         )
 
-        choice = VertrouwelijkheidsAanduidingen.get_choice(
-            zaak["vertrouwelijkheidaanduiding"]
-        )
+        choice = VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
         self.assertEqual(zaak_document.va_order, choice.order)
         self.assertEqual(len(zaak_document.rollen), 2)
 
