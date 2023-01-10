@@ -36,7 +36,7 @@ class Blueprint(Serializer):
     def has_access(self, obj, permission=None):
         raise NotImplementedError("This method must be implemented by a subclass")
 
-    def search_query(self) -> Query:
+    def search_query(self, on_nested_field: Optional[str] = "") -> Query:
         raise NotImplementedError("This method must be implemented by a subclass")
 
     def short_display(self) -> str:

@@ -3,9 +3,7 @@ from functools import reduce
 from typing import List, Optional, Union
 from urllib.request import Request
 
-from django.conf import settings
-
-from elasticsearch_dsl import Q, Search
+from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import (
     Bool,
     Exists,
@@ -23,13 +21,14 @@ from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
-from .documents import ObjectDocument, ZaakDocument
+from .documents import InformatieObjectDocument, ObjectDocument, ZaakDocument
 
 
 def query_allowed_for_requester(
     request: Request,
     object_type: str = PermissionObjectTypeChoices.zaak,
     permission: str = zaken_inzien.name,
+    on_nested_field: Optional[str] = "",
 ) -> Query:
     """
     construct query part to display only allowed zaken
@@ -50,7 +49,13 @@ def query_allowed_for_requester(
             .values_list("atomic_permission__object_url", flat=True)
         )
         if object_urls.count():
-            allowed.append(Terms(url=list(object_urls)))
+            if on_nested_field:
+                terms = {f"{on_nested_field}__url": list(object_urls)}
+                allowed.append(
+                    Nested(path=on_nested_field, query=Bool(filter=(Terms(**terms))))
+                )
+            else:
+                allowed.append(Terms(url=list(object_urls)))
 
     if getattr(request.auth, "has_all_reading_rights", False):
         return Q("match_all")
@@ -59,7 +64,19 @@ def query_allowed_for_requester(
     for blueprint_permission in BlueprintPermission.objects.for_requester(
         request, actual=True
     ).filter(object_type=object_type, role__permissions__contains=[permission]):
-        allowed.append(blueprint_permission.get_search_query())
+        if on_nested_field:
+            allowed.append(
+                Nested(
+                    path=on_nested_field,
+                    query=Bool(
+                        must=blueprint_permission.get_search_query(
+                            on_nested_field=on_nested_field
+                        )
+                    ),
+                )
+            )
+        else:
+            allowed.append(blueprint_permission.get_search_query())
 
     if not allowed:
         return Q("match_none")
@@ -67,7 +84,7 @@ def query_allowed_for_requester(
     return reduce(operator.or_, allowed)
 
 
-def search(
+def search_zaken(
     request=None,
     size=None,
     identificatie=None,
@@ -178,35 +195,40 @@ def quick_search(
     request: Optional[Request] = None,
 ) -> List[Union[ZaakDocument, ObjectDocument]]:
     time_then = time()
-    s_zaken = Search(index=[settings.ES_INDEX_ZAKEN]).source(
-        [
-            "bronorganisatie",
-            "identificatie",
-            "omschrijving",
-        ]
-    )
-    s_zaken = s_zaken.query(
-        MultiMatch(
-            query=search_term,
-            fields=[
-                "identificatie^2",
+    s_zaken = (
+        ZaakDocument.search()
+        .source(
+            [
+                "bronorganisatie",
+                "identificatie",
                 "omschrijving",
-            ],
-        ),
+            ]
+        )
+        .query(
+            MultiMatch(
+                query=search_term,
+                fields=[
+                    "identificatie^2",
+                    "omschrijving",
+                ],
+            ),
+        )
+        .extra(size=5)
     )
-    s_zaken.extra(size=5)
 
-    s_objecten = Search(index=[settings.ES_INDEX_OBJECTEN])
-    s_objecten = s_objecten.query(
-        MultiMatch(fields=["record_data_text.*"], query=search_term)
+    s_objecten = (
+        ObjectDocument.search()
+        .query(MultiMatch(fields=["record_data_text.*"], query=search_term))
+        .filter(~Exists(field="record_data.meta"))
+        .extra(size=5)
     )
-    s_objecten = s_objecten.filter(~Exists(field="record_data.meta"))
-    s_objecten.extra(size=5)
 
-    s_documenten = Search(index=[settings.ES_INDEX_DOCUMENTEN])
-    s_documenten = s_documenten.query(Match(titel={"query": search_term}))
-    s_documenten.extra(size=5)
-    s_documenten.source(["titel", "url", "related_zaken"])
+    s_documenten = (
+        InformatieObjectDocument.search()
+        .source(["titel", "url", "related_zaken"])
+        .query(Match(titel={"query": search_term}))
+        .extra(size=5)
+    )
 
     if only_allowed:
         if not request:
@@ -214,22 +236,15 @@ def quick_search(
 
         allowed = query_allowed_for_requester(request)
         s_zaken = s_zaken.filter(allowed)
-        s_objecten = s_objecten.filter(
-            Nested(
-                path="related_zaken",
-                query=allowed,
-            )
-        )
-        s_documenten = s_objecten.filter(
-            Nested(
-                path="related_zaken",
-                query=allowed,
-            )
-        )
+
+        allowed = query_allowed_for_requester(request, on_nested_field="related_zaken")
+        s_objecten = s_objecten.filter(allowed)
+        s_documenten = s_documenten.filter(allowed)
 
     results = {
         "zaken": s_zaken.execute(),
         "objecten": s_objecten.execute(),
         "documenten": s_documenten.execute(),
     }
+    print(f"Query took {time()-time_then}s.")
     return results
