@@ -3,15 +3,17 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
 from elasticsearch import exceptions
+from elasticsearch_dsl.query import Bool, Nested, Term
 from zgw_consumers.api_models.catalogi import StatusType, ZaakType
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_object,
+    fetch_zaaktype,
     get_document,
     get_rollen,
     get_status,
@@ -22,6 +24,7 @@ from zac.core.services import (
     get_zaakinformatieobjecten_related_to_informatieobject,
     get_zaakobjecten,
     get_zaakobjecten_related_to_object,
+    get_zaaktypen,
 )
 from zgw.models.zrc import Zaak, ZaakInformatieObject
 
@@ -57,9 +60,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         bronorganisatie=zaak.bronorganisatie,
         omschrijving=zaak.omschrijving,
         vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
-        va_order=VertrouwelijkheidsAanduidingen.get_choice(
-            zaak.vertrouwelijkheidaanduiding
-        ).order,
+        va_order=VA_ORDER[zaak.vertrouwelijkheidaanduiding],
         startdatum=zaak.startdatum,
         einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
@@ -103,9 +104,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
         refresh=True,
         bronorganisatie=zaak.bronorganisatie,
         vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
-        va_order=VertrouwelijkheidsAanduidingen.get_choice(
-            zaak.vertrouwelijkheidaanduiding
-        ).order,
+        va_order=VA_ORDER[zaak.vertrouwelijkheidaanduiding],
         startdatum=zaak.startdatum,
         einddatum=zaak.einddatum,
         registratiedatum=zaak.registratiedatum,
@@ -119,8 +118,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
 
 
 def delete_zaak_document(zaak_url: str) -> None:
-    zaak_uuid = _get_uuid_from_url(zaak_url)
-    zaak_document = _get_zaak_document(zaak_uuid, zaak_url)
+    zaak_document = get_zaak_document(zaak_url)
     if zaak_document:
         zaak_document.delete()
 
@@ -296,11 +294,16 @@ def delete_object_document(object_url: str) -> None:
 def create_related_zaak_document(
     related_zaak: Union[ZaakDocument, Zaak]
 ) -> RelatedZaakDocument:
+    if isinstance(related_zaak.zaaktype, str):
+        related_zaak.zaaktype = fetch_zaaktype(related_zaak.zaaktype)
+
     return RelatedZaakDocument(
         url=related_zaak.url,
         bronorganisatie=related_zaak.bronorganisatie,
         omschrijving=related_zaak.omschrijving,
         identificatie=related_zaak.identificatie,
+        zaaktype=create_zaaktype_document(related_zaak.zaaktype),
+        va_order=VA_ORDER[related_zaak.vertrouwelijkheidaanduiding],
     )
 
 
@@ -314,6 +317,12 @@ def update_related_zaken_in_object_document(object_url: str) -> None:
     with parallel() as executor:
         zaken = list(executor.map(_get_zaak, [zo.zaak for zo in zaakobjecten]))
 
+    # resolve zaaktypen
+    zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
+
+    for zaak in zaken:
+        zaak.zaaktype = zaaktypen[zaak.zaaktype]
+
     # Fetch object document to be updated
     object = fetch_object(object_url)
     object_document = _get_object_document(
@@ -324,6 +333,28 @@ def update_related_zaken_in_object_document(object_url: str) -> None:
     related_zaken = [create_related_zaak_document(zaak) for zaak in zaken]
     object_document.related_zaken = related_zaken
     object_document.save()
+    return
+
+
+def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
+    objects = (
+        ObjectDocument.search()
+        .query(
+            Nested(
+                path="related_zaken",
+                query=Bool(filter=[Term(related_zaken__url=zaak.url)]),
+            )
+        )
+        .execute()
+    )
+    related_zaak = create_related_zaak_document(zaak)
+    for obj in objects:
+        related_zaken = [rz for rz in obj.related_zaken if rz.url != zaak.url]
+        related_zaken.append(related_zaak)
+        object_document = ObjectDocument.get(id=obj.id)
+        object_document.related_zaken = related_zaken
+        object_document.save()
+
     return
 
 
@@ -389,7 +420,13 @@ def update_related_zaken_in_informatieobject_document(
         return get_zaak(zaak_url=url)
 
     with parallel() as executor:
-        zaken = list(executor.map(_get_zaak, [zio.zaak for zio in zios]))
+        zaken = list(executor.map(_get_zaak, list({zio.zaak for zio in zios})))
+
+    # resolve zaaktypen
+    zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
+
+    for zaak in zaken:
+        zaak.zaaktype = zaaktypen[zaak.zaaktype]
 
     # Fetch object document to be updated
     informatieobject = get_document(informatieobject_url)
@@ -401,4 +438,26 @@ def update_related_zaken_in_informatieobject_document(
     related_zaken = [create_related_zaak_document(zaak) for zaak in zaken]
     informatieobject_document.related_zaken = related_zaken
     informatieobject_document.save()
+    return
+
+
+def update_related_zaak_in_informatieobject_documents(zaak: Zaak) -> None:
+    ios = (
+        InformatieObjectDocument.search()
+        .query(
+            Nested(
+                path="related_zaken",
+                query=Bool(filter=[Term(related_zaken__url=zaak.url)]),
+            )
+        )
+        .execute()
+    )
+    related_zaak = create_related_zaak_document(zaak)
+    for io in ios:
+        related_zaken = [rz for rz in io.related_zaken if rz.url != zaak.url]
+        related_zaken.append(related_zaak)
+        object_document = InformatieObjectDocument.get(id=io.id)
+        object_document.related_zaken = related_zaken
+        object_document.save()
+
     return
