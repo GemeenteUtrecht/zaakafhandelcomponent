@@ -274,7 +274,7 @@ class Command(IndexCommand, BaseCommand):
             list_of_zios = list(executor.map(get_zaak_informatieobjecten, zaken))
 
         zaakinformatieobject_documenten = {
-            zios[0]["zaak"]: [create_zaakinformatieobject_document(zio) for zio in zios]
+            zios[0].zaak: [create_zaakinformatieobject_document(zio) for zio in zios]
             for zios in list_of_zios
             if zios
         }

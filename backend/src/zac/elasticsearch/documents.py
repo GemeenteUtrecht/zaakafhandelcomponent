@@ -147,7 +147,9 @@ class RelatedZaakDocument(InnerDoc):
     url = field.Keyword()
     identificatie = field.Keyword(index=False)
     bronorganisatie = field.Keyword(index=False)
-    omschrijving = field.Text(fields={"keyword": field.Keyword()}, index=False)
+    omschrijving = field.Text(index=False)
+    zaaktype = field.Object(ZaakTypeDocument)
+    va_order = field.Integer()
 
 
 class ObjectTypeDocument(InnerDoc):

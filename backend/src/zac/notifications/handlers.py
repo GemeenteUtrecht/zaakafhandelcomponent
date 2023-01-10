@@ -1,5 +1,6 @@
 import logging
 
+from elasticsearch.exceptions import NotFoundError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import RolOmschrijving
@@ -43,6 +44,8 @@ from zac.elasticsearch.api import (
     update_eigenschappen_in_zaak_document,
     update_informatieobject_document,
     update_object_document,
+    update_related_zaak_in_informatieobject_documents,
+    update_related_zaak_in_object_documents,
     update_related_zaken_in_informatieobject_document,
     update_related_zaken_in_object_document,
     update_rollen_in_zaak_document,
@@ -144,6 +147,18 @@ class ZakenHandler:
 
         # index in ES
         update_zaak_document(zaak)
+
+        # Update related zaak in objecten indices
+        try:
+            update_related_zaak_in_object_documents(zaak)
+        except NotFoundError as exc:
+            logger.warning("Could not find objecten index.")
+
+        # Update related zaak in informatieobjecten indices
+        try:
+            update_related_zaak_in_informatieobject_documents(zaak)
+        except NotFoundError as exc:
+            logger.warning("Could not find informatieobjecten index.")
 
     def _handle_zaak_create(self, zaak_url: str):
         client = _client_from_url(zaak_url)

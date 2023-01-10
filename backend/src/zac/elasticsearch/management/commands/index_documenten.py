@@ -119,6 +119,7 @@ class Command(IndexCommand, BaseCommand):
                     "omschrijving",
                     "bronorganisatie",
                     "zaakinformatieobjecten.informatieobject",
+                    "zaaktype",
                 ]
             )
             .execute()

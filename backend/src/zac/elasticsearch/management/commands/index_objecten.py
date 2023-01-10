@@ -7,7 +7,7 @@ from django.core.management.base import CommandParser
 
 from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
-from elasticsearch_dsl.connections import connections, get_connection
+from elasticsearch_dsl.connections import connections
 from elasticsearch_dsl.query import Bool, Nested, Terms
 
 from zac.core.models import CoreConfig
@@ -125,6 +125,7 @@ class Command(BaseCommand):
                     "omschrijving",
                     "bronorganisatie",
                     "zaakobjecten.object",
+                    "zaaktype",
                 ]
             )
             .execute()
