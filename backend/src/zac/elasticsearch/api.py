@@ -351,7 +351,7 @@ def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
     for obj in objects:
         related_zaken = [rz for rz in obj.related_zaken if rz.url != zaak.url]
         related_zaken.append(related_zaak)
-        object_document = ObjectDocument.get(id=obj.id)
+        object_document = ObjectDocument.get(id=obj.meta.id)
         object_document.related_zaken = related_zaken
         object_document.save()
 
@@ -456,7 +456,7 @@ def update_related_zaak_in_informatieobject_documents(zaak: Zaak) -> None:
     for io in ios:
         related_zaken = [rz for rz in io.related_zaken if rz.url != zaak.url]
         related_zaken.append(related_zaak)
-        object_document = InformatieObjectDocument.get(id=io.id)
+        object_document = InformatieObjectDocument.get(id=io.meta.id)
         object_document.related_zaken = related_zaken
         object_document.save()
 
