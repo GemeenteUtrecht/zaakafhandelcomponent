@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 
 from django.utils.translation import gettext_lazy as _
 
@@ -94,6 +95,15 @@ class SearchSerializer(serializers.Serializer):
                 )
             validated_data[name] = re.escape(value["value"])
         return validated_data
+
+
+class QuickSearchSerializer(serializers.Serializer):
+    search = serializers.CharField(
+        required=True,
+        help_text=_(
+            "A broad search that looks through ZAAKs, INFORMATIEOBJECTs and OBJECTs."
+        ),
+    )
 
 
 class SearchReportSerializer(serializers.ModelSerializer):
@@ -261,4 +271,54 @@ class ZaakDocumentSerializer(serializers.Serializer):
         many=True,
         required=False,
         help_text=_("ZAAKINFORMATIEOBJECTs belonging to the ZAAK."),
+    )
+
+
+class QSZaakDocumentSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(
+        required=False, help_text=_("Unique identification of the ZAAK.")
+    )
+    bronorganisatie = serializers.CharField(
+        required=True,
+        help_text=_("The RSIN of the organisation that created the ZAAK."),
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("Brief description of the ZAAK.")
+    )
+
+
+class QSObjectDocumentSerializer(serializers.Serializer):
+    related_zaken = QSZaakDocumentSerializer(
+        many=True, help_text=_("ZAAKs that have a ZAAKOBJECT related to this OBJECT.")
+    )
+    record_data = serializers.SerializerMethodField(
+        help_text=_("Record data of OBJECT.")
+    )
+
+    def get_record_data(self, obj) -> Dict:
+        return obj.to_dict().get("record_data", {})
+
+
+class QSInformatieObjectDocumentSerializer(serializers.Serializer):
+    titel = serializers.CharField(
+        required=True,
+        help_text=_("Title of the INFORMATIEOBJECT. Includes the file extension."),
+    )
+    related_zaken = QSZaakDocumentSerializer(
+        many=True,
+        help_text=_(
+            "ZAAKs that have a ZAAKINFORMATIEOBJECT related to this INFORMATIEOBJECT."
+        ),
+    )
+
+
+class QuickSearchResultSerializer(serializers.Serializer):
+    zaken = QSZaakDocumentSerializer(
+        many=True, help_text=_("ZAAKs related to quick search query.")
+    )
+    documenten = QSInformatieObjectDocumentSerializer(
+        many=True, help_text=_("INFORMATIEOBJECTs related to quick search query.")
+    )
+    objecten = QSObjectDocumentSerializer(
+        many=True, help_text=_("OBJECTs related to quick search query.")
     )
