@@ -1,3 +1,7 @@
+import operator
+from functools import reduce
+from typing import Optional
+
 from django.utils.translation import ugettext_lazy as _
 
 from elasticsearch_dsl.query import Query, Range, Term
@@ -69,15 +73,21 @@ class ZaakTypeBlueprint(Blueprint):
             and current_va_order <= max_va_order
         )
 
-    def search_query(self) -> Query:
-        max_va_order = VA_ORDER[self.data["max_va"]]
+    def search_query(self, on_nested_field: Optional[str] = "") -> Query:
+        catalogus_field = "zaaktype__catalogus"
+        omschrijving_field = "zaaktype__omschrijving"
+        va_field = "va_order"
+        if on_nested_field:
+            catalogus_field = f"{on_nested_field}__{catalogus_field}"
+            omschrijving_field = f"{on_nested_field}__{omschrijving_field}"
+            va_field = f"{on_nested_field}__va_order"
 
-        query = (
-            Term(zaaktype__catalogus=self.data["catalogus"])
-            & Term(zaaktype__omschrijving=self.data["zaaktype_omschrijving"])
-            & Range(va_order={"lte": max_va_order})
-        )
-        return query
+        query = [
+            Term(**{catalogus_field: self.data["catalogus"]}),
+            Term(**{omschrijving_field: self.data["zaaktype_omschrijving"]}),
+            Range(**{va_field: {"lte": VA_ORDER[self.data["max_va"]]}}),
+        ]
+        return query if on_nested_field else reduce(operator.and_, query)
 
     def short_display(self):
         return f"{self.data['zaaktype_omschrijving']} ({self.data['max_va']})"

@@ -216,7 +216,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 return_value=[self.task],
             ):
                 with patch(
-                    "zac.werkvoorraad.api.views.search",
+                    "zac.werkvoorraad.api.views.search_zaken",
                     return_value=[],
                 ):
                     response = self.client.get(self.user_endpoint)

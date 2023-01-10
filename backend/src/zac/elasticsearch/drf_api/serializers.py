@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 
 from django.utils.translation import gettext_lazy as _
 
@@ -96,6 +97,15 @@ class SearchSerializer(serializers.Serializer):
         return validated_data
 
 
+class QuickSearchSerializer(serializers.Serializer):
+    search = serializers.CharField(
+        required=True,
+        help_text=_(
+            "A broad search that looks through ZAAKs, INFORMATIEOBJECTs and OBJECTs."
+        ),
+    )
+
+
 class SearchReportSerializer(serializers.ModelSerializer):
     query = SearchSerializer()
 
@@ -177,6 +187,16 @@ class ZaakObjectDocumentSerializer(serializers.Serializer):
     )
 
 
+class ZaakInformatieObjectDocumentSerializer(serializers.Serializer):
+    url = serializers.URLField(
+        required=False,
+        help_text=_("URL-reference of the ZAAKINFORMATIEOBJECT in ZAKEN API."),
+    )
+    informatieobject = serializers.URLField(
+        required=False, help_text=_("URL-reference of the INFORMATIEOBJECT in DRC API.")
+    )
+
+
 class ZaakgeometrieSerializer(serializers.Serializer):
     type = serializers.CharField()
     coordinates = serializers.ListField()
@@ -232,7 +252,7 @@ class ZaakDocumentSerializer(serializers.Serializer):
         ),
     )
     eigenschappen = EigenschapDocumentSerializer(
-        many=True, required=False, help_text=_("EIGENSCHAPpen of the ZAAK.")
+        many=True, required=False, help_text=_("EIGENSCHAPs of the ZAAK.")
     )
     status = StatusDocumentSerializer(
         required=False, help_text=_("STATUS of the ZAAK.")
@@ -241,9 +261,64 @@ class ZaakDocumentSerializer(serializers.Serializer):
         required=False, help_text=_("Comment on the ZAAK.")
     )
     zaakobjecten = ZaakObjectDocumentSerializer(
-        many=True, required=False, help_text=_("ZAAKOBJECTen belonging to the ZAAK.")
+        many=True, required=False, help_text=_("ZAAKOBJECTs belonging to the ZAAK.")
     )
     zaakgeometrie = ZaakgeometrieSerializer(
         required=False,
         help_text=_("A GeoJSON containing geometric information related to the ZAAK."),
+    )
+    zaakinformatieobjecten = ZaakInformatieObjectDocumentSerializer(
+        many=True,
+        required=False,
+        help_text=_("ZAAKINFORMATIEOBJECTs belonging to the ZAAK."),
+    )
+
+
+class QSZaakDocumentSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(
+        required=False, help_text=_("Unique identification of the ZAAK.")
+    )
+    bronorganisatie = serializers.CharField(
+        required=True,
+        help_text=_("The RSIN of the organisation that created the ZAAK."),
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("Brief description of the ZAAK.")
+    )
+
+
+class QSObjectDocumentSerializer(serializers.Serializer):
+    related_zaken = QSZaakDocumentSerializer(
+        many=True, help_text=_("ZAAKs that have a ZAAKOBJECT related to this OBJECT.")
+    )
+    record_data = serializers.SerializerMethodField(
+        help_text=_("Record data of OBJECT.")
+    )
+
+    def get_record_data(self, obj) -> Dict:
+        return obj.to_dict().get("record_data", {})
+
+
+class QSInformatieObjectDocumentSerializer(serializers.Serializer):
+    titel = serializers.CharField(
+        required=True,
+        help_text=_("Title of the INFORMATIEOBJECT. Includes the file extension."),
+    )
+    related_zaken = QSZaakDocumentSerializer(
+        many=True,
+        help_text=_(
+            "ZAAKs that have a ZAAKINFORMATIEOBJECT related to this INFORMATIEOBJECT."
+        ),
+    )
+
+
+class QuickSearchResultSerializer(serializers.Serializer):
+    zaken = QSZaakDocumentSerializer(
+        many=True, help_text=_("ZAAKs related to quick search query.")
+    )
+    documenten = QSInformatieObjectDocumentSerializer(
+        many=True, help_text=_("INFORMATIEOBJECTs related to quick search query.")
+    )
+    objecten = QSObjectDocumentSerializer(
+        many=True, help_text=_("OBJECTs related to quick search query.")
     )

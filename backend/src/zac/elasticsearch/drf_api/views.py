@@ -19,11 +19,13 @@ from zac.core.services import get_zaaktypen
 
 from ..documents import ZaakDocument
 from ..models import SearchReport
-from ..searches import autocomplete_zaak_search, search
+from ..searches import autocomplete_zaak_search, quick_search, search_zaken
 from .filters import ESOrderingFilter
 from .pagination import ESPagination
 from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import (
+    QuickSearchResultSerializer,
+    QuickSearchSerializer,
     SearchReportSerializer,
     SearchSerializer,
     ZaakDocumentSerializer,
@@ -90,7 +92,7 @@ class PerformSearchMixin:
 
             search_query["zaaktypen"] = [url for url in set(urls)]
 
-        results = search(**search_query, request=self.request)
+        results = search_zaken(**search_query, request=self.request)
         return results
 
 
@@ -98,7 +100,7 @@ class SearchView(PerformSearchMixin, views.APIView):
     authentication_classes = [
         ApplicationTokenAuthentication
     ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
-    ordering = ("-identificatie",)
+    ordering = ("-identificatie.keyword",)
     parser_classes = (IgnoreCamelCaseJSONParser,)
     permission_classes = (HasTokenAuth | IsAuthenticated,)
     search_document = ZaakDocument
@@ -128,7 +130,7 @@ class SearchView(PerformSearchMixin, views.APIView):
         return self.paginator.get_paginated_response(data, fields)
 
     @extend_schema(
-        summary=_("Search for ZAAKen in Elasticsearch."),
+        summary=_("Search for ZAAKen in elasticsearch."),
         parameters=[
             es_document_to_ordering_parameters(ZaakDocument),
             OpenApiParameter(
@@ -166,6 +168,35 @@ class SearchView(PerformSearchMixin, views.APIView):
         )
 
 
+class QuickSearchView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = QuickSearchSerializer
+
+    @extend_schema(
+        summary=_(
+            "Quick search through ZAAKs, INFORMATIEOBJECTs and OBJECTs in elasticsearch."
+        ),
+        responses=QuickSearchResultSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Retrieve a list of zaken, objecten and documenten based on input data.
+        The response contains only data the user has permissions to see.
+        Results size is capped to 15 results per type.
+
+        """
+        input_serializer = self.serializer_class(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        results = quick_search(
+            input_serializer.validated_data["search"],
+            only_allowed=True,
+            request=request,
+        )
+        serializer = QuickSearchResultSerializer(results)
+        return Response(serializer.data)
+
+
 @extend_schema_view(
     create=extend_schema(summary=_("Create search report.")),
     destroy=extend_schema(summary=_("Destroy search report.")),
@@ -192,7 +223,7 @@ class SearchView(PerformSearchMixin, views.APIView):
     ),
 )
 class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
-    ordering = ("-identificatie",)
+    ordering = ("-identificatie.keyword",)
     permission_classes = (IsAuthenticated,)
     queryset = SearchReport.objects.all()
     search_document = ZaakDocument

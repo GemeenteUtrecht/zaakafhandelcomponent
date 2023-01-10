@@ -1,6 +1,44 @@
 from django.conf import settings
 
-from elasticsearch_dsl import Document, InnerDoc, MetaField, Nested, field
+from elasticsearch_dsl import (
+    Document,
+    InnerDoc,
+    MetaField,
+    Nested,
+    analyzer,
+    char_filter,
+    field,
+    token_filter,
+    tokenizer,
+)
+
+dutch_stop_filter = token_filter("dutch_stop", type="stop", stopwords="_dutch_")
+edge_ngram_tokenizer = tokenizer(
+    "zacGram", "edge_ngram", min_gram=2, max_gram=12, token_chars=["letter", "digit"]
+)
+
+edge_ngram_analyzer = analyzer(
+    "edge_ngram_analyzer",
+    tokenizer=edge_ngram_tokenizer,
+    filter=["lowercase", dutch_stop_filter],
+)
+strip_leading_zeros_in_zaakidentificatie_filter = char_filter(
+    "strip_leading_zeros",
+    type="pattern_replace",
+    pattern="(^ZAAK-[0-9]+-)(0+)([1-9][0-9]+)",
+    replacement="$1$3",
+)
+strip_leading_zeros_in_zaakidentificatie_analyzer = analyzer(
+    "strip_leading_zeros",
+    tokenizer="standard",
+    filter=["lowercase"],
+    char_filter=[strip_leading_zeros_in_zaakidentificatie_filter],
+)
+standard_analyzer = analyzer(
+    "standard",
+    tokenizer="standard",
+    filter=["lowercase", dutch_stop_filter],
+)
 
 
 class EigenschapDocument(InnerDoc):
@@ -38,12 +76,24 @@ class ZaakObjectDocument(InnerDoc):
     object = field.Keyword()
 
 
+class ZaakInformatieObjectDocument(InnerDoc):
+    url = field.Keyword()
+    informatieobject = field.Keyword()
+
+
 class ZaakDocument(Document):
     url = field.Keyword()
     zaaktype = field.Object(ZaakTypeDocument)
-    identificatie = field.Keyword()
+    identificatie = field.Text(
+        fields={"keyword": field.Keyword()},
+        analyzer=strip_leading_zeros_in_zaakidentificatie_analyzer,
+    )
     bronorganisatie = field.Keyword()
-    omschrijving = field.Text(fields={"keyword": field.Keyword()})
+    omschrijving = field.Text(
+        fields={"keyword": field.Keyword()},
+        analyzer=edge_ngram_analyzer,
+        search_analyzer=standard_analyzer,
+    )
     vertrouwelijkheidaanduiding = field.Text(fields={"keyword": field.Keyword()})
     va_order = field.Integer()
     rollen = Nested(RolDocument)
@@ -55,11 +105,12 @@ class ZaakDocument(Document):
     status = field.Object(StatusDocument)
     toelichting = field.Text(fields={"keyword": field.Keyword()})
     zaakobjecten = Nested(ZaakObjectDocument)
+    zaakinformatieobjecten = Nested(ZaakInformatieObjectDocument)
     zaakgeometrie = field.GeoShape()
 
     class Index:
         name = settings.ES_INDEX_ZAKEN
-        settings = {"index.mapping.ignore_malformed": True}
+        settings = {"index.mapping.ignore_malformed": True, "max_ngram_diff": 10}
 
     class Meta:
         dynamic_templates = MetaField(
@@ -90,3 +141,73 @@ class ZaakDocument(Document):
                 },
             ]
         )
+
+
+class RelatedZaakDocument(InnerDoc):
+    url = field.Keyword()
+    identificatie = field.Keyword(index=False)
+    bronorganisatie = field.Keyword(index=False)
+    omschrijving = field.Text(index=False)
+    zaaktype = field.Object(ZaakTypeDocument)
+    va_order = field.Integer()
+
+
+class ObjectTypeDocument(InnerDoc):
+    name = field.Keyword()
+    url = field.Keyword()
+
+
+class ObjectDocument(Document):
+    url = field.Keyword()
+    type = field.Object(ObjectTypeDocument)
+    record_data = field.Object()
+    related_zaken = Nested(RelatedZaakDocument)
+
+    class Index:
+        name = settings.ES_INDEX_OBJECTEN
+        settings = {
+            "index.mapping.ignore_malformed": True,
+            "max_ngram_diff": 10,
+        }
+        analyzers = [edge_ngram_analyzer, standard_analyzer]
+
+    class Meta:
+        dynamic_templates = MetaField(
+            [
+                {
+                    "record_data": {
+                        "path_match": "record_data.*",
+                        "match_mapping_type": "string",
+                        "mapping": {
+                            "type": "text",
+                            "analyzer": edge_ngram_analyzer,
+                            "search_analyzer": standard_analyzer,
+                            "copy_to": "record_data_text.*",
+                        },
+                    }
+                },
+                {
+                    "record_data_text": {
+                        "path_match": "record_data_text.*",
+                        "mapping": {
+                            "type": "text",
+                            "analyzer": edge_ngram_analyzer,
+                            "search_analyzer": standard_analyzer,
+                        },
+                    },
+                },
+            ]
+        )
+
+
+class InformatieObjectDocument(Document):
+    url = field.Keyword()
+    titel = field.Text(
+        analyzer=edge_ngram_analyzer,
+        search_analyzer=standard_analyzer,
+    )
+    related_zaken = Nested(RelatedZaakDocument)
+
+    class Index:
+        name = settings.ES_INDEX_DOCUMENTEN
+        settings = {"index.mapping.ignore_malformed": True, "max_ngram_diff": 10}

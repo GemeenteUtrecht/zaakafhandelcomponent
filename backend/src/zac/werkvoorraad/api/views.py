@@ -19,7 +19,7 @@ from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
 from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
-from zac.elasticsearch.searches import search
+from zac.elasticsearch.searches import search_zaken
 from zac.objects.services import (
     fetch_all_checklists_for_user,
     fetch_all_checklists_for_user_groups,
@@ -92,7 +92,7 @@ class WorkStackAssigneeCasesView(ListMixin, views.APIView):
 
     def get_objects(self):
         ordering = ESOrderingFilter().get_ordering(self.request, self)
-        zaken = search(
+        zaken = search_zaken(
             request=self.request,
             behandelaar=self.request.user.username,
             ordering=ordering,
@@ -124,7 +124,7 @@ class WorkStackUserTasksView(ListAPIView):
 
         zaken = {
             zaak.url: zaak
-            for zaak in search(
+            for zaak in search_zaken(
                 request=self.request,
                 urls=list({tzu[1] for tzu in task_ids_and_zaak_urls}),
             )

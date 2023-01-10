@@ -11,7 +11,7 @@ from zac.accounts.models import AccessRequest, User
 from zac.camunda.data import Task
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.permissions import zaken_handle_access
-from zac.elasticsearch.searches import search
+from zac.elasticsearch.searches import search_zaken
 
 from .data import ActivityGroup, ChecklistAnswerGroup
 
@@ -55,7 +55,7 @@ def get_access_requests_groups(request: Request):
 
     behandelaar_zaken = {
         zaak.url: zaak
-        for zaak in search(request=request, behandelaar=request.user.username)
+        for zaak in search_zaken(request=request, behandelaar=request.user.username)
     }
     access_requests = AccessRequest.objects.filter(
         result="", zaak__in=list(behandelaar_zaken.keys())
@@ -75,7 +75,7 @@ def get_access_requests_groups(request: Request):
 
 def filter_on_existing_zaken(request: Request, groups: List[Dict]) -> List[Dict]:
     zaak_urls = list({group["zaak_url"] for group in groups})
-    es_results = search(request=request, urls=zaak_urls)
+    es_results = search_zaken(request=request, urls=zaak_urls)
     zaken = {zaak.url: zaak for zaak in es_results}
 
     # Make sure groups without a zaak in elasticsearch are not returned.

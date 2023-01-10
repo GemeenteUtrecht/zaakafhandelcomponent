@@ -1,16 +1,17 @@
 import operator
 from functools import reduce
-from typing import List, Optional
+from typing import List, Optional, Union
 from urllib.request import Request
 
 from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import (
     Bool,
     Exists,
+    Match,
+    MultiMatch,
     Nested,
     Query,
     QueryString,
-    Regexp,
     Term,
     Terms,
 )
@@ -20,13 +21,14 @@ from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
-from .documents import ZaakDocument
+from .documents import InformatieObjectDocument, ObjectDocument, ZaakDocument
 
 
 def query_allowed_for_requester(
     request: Request,
     object_type: str = PermissionObjectTypeChoices.zaak,
     permission: str = zaken_inzien.name,
+    on_nested_field: Optional[str] = "",
 ) -> Query:
     """
     construct query part to display only allowed zaken
@@ -47,7 +49,13 @@ def query_allowed_for_requester(
             .values_list("atomic_permission__object_url", flat=True)
         )
         if object_urls.count():
-            allowed.append(Terms(url=list(object_urls)))
+            if on_nested_field:
+                terms = {f"{on_nested_field}__url": list(object_urls)}
+                allowed.append(
+                    Nested(path=on_nested_field, query=Bool(filter=(Terms(**terms))))
+                )
+            else:
+                allowed.append(Terms(url=list(object_urls)))
 
     if getattr(request.auth, "has_all_reading_rights", False):
         return Q("match_all")
@@ -56,7 +64,19 @@ def query_allowed_for_requester(
     for blueprint_permission in BlueprintPermission.objects.for_requester(
         request, actual=True
     ).filter(object_type=object_type, role__permissions__contains=[permission]):
-        allowed.append(blueprint_permission.get_search_query())
+        if on_nested_field:
+            allowed.append(
+                Nested(
+                    path=on_nested_field,
+                    query=Bool(
+                        must=blueprint_permission.get_search_query(
+                            on_nested_field=on_nested_field
+                        )
+                    ),
+                )
+            )
+        else:
+            allowed.append(blueprint_permission.get_search_query())
 
     if not allowed:
         return Q("match_none")
@@ -64,7 +84,7 @@ def query_allowed_for_requester(
     return reduce(operator.or_, allowed)
 
 
-def search(
+def search_zaken(
     request=None,
     size=None,
     identificatie=None,
@@ -76,7 +96,7 @@ def search(
     urls=None,
     only_allowed=True,
     include_closed=True,
-    ordering=("-identificatie", "-startdatum", "-registratiedatum"),
+    ordering=("-identificatie.keyword", "-startdatum", "-registratiedatum"),
     fields=None,
     object=None,
 ) -> List[ZaakDocument]:
@@ -85,7 +105,7 @@ def search(
     s = ZaakDocument.search()[:size]
 
     if identificatie:
-        s = s.filter(Term(identificatie=identificatie))
+        s = s.query(Match(identificatie={"query": identificatie}))
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
     if omschrijving:
@@ -153,10 +173,9 @@ def autocomplete_zaak_search(
     only_allowed: bool = True,
 ) -> List[ZaakDocument]:
     search = ZaakDocument.search().query(
-        Regexp(
+        Match(
             identificatie={
-                "value": f".*{identificatie}.*",
-                # "case_insensitive": True,  # 7.10 feature
+                "query": identificatie,
             }
         )
     )
@@ -165,3 +184,62 @@ def autocomplete_zaak_search(
 
     response = search.execute()
     return response.hits
+
+
+def quick_search(
+    search_term: str,
+    only_allowed: bool = False,
+    request: Optional[Request] = None,
+) -> List[Union[ZaakDocument, ObjectDocument]]:
+    s_zaken = (
+        ZaakDocument.search()
+        .source(
+            [
+                "bronorganisatie",
+                "identificatie",
+                "omschrijving",
+            ]
+        )
+        .query(
+            MultiMatch(
+                query=search_term,
+                fields=[
+                    "identificatie^2",
+                    "omschrijving",
+                ],
+            ),
+        )
+        .extra(size=15)
+    )
+
+    s_objecten = (
+        ObjectDocument.search()
+        .query(MultiMatch(fields=["record_data_text.*"], query=search_term))
+        .filter(~Exists(field="record_data.meta"))
+        .extra(size=15)
+    )
+
+    s_documenten = (
+        InformatieObjectDocument.search()
+        .source(["titel", "url", "related_zaken"])
+        .query(Match(titel={"query": search_term}))
+        .extra(size=15)
+    )
+
+    if only_allowed:
+        if not request:
+            raise RuntimeError("If only_allowed is True a request must be passed.")
+
+        allowed = query_allowed_for_requester(request)
+        s_zaken = s_zaken.filter(allowed)
+
+        allowed = query_allowed_for_requester(request, on_nested_field="related_zaken")
+        s_objecten = s_objecten.filter(allowed)
+        s_documenten = s_documenten.filter(allowed)
+
+    results = {
+        "zaken": s_zaken.execute(),
+        "objecten": s_objecten.execute(),
+        "documenten": s_documenten.execute(),
+    }
+    return results

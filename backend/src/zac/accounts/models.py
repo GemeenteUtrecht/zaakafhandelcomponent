@@ -3,6 +3,7 @@ import os
 import uuid
 from datetime import date
 from itertools import groupby
+from typing import Optional
 
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
@@ -351,10 +352,10 @@ class BlueprintPermission(models.Model):
         blueprint = blueprint_class(self.policy, context={"user": user})
         return blueprint.has_access(obj, permission)
 
-    def get_search_query(self) -> Query:
+    def get_search_query(self, on_nested_field: Optional[str] = "") -> Query:
         blueprint_class = self.get_blueprint_class()
         blueprint = blueprint_class(self.policy)
-        return blueprint.search_query()
+        return blueprint.search_query(on_nested_field=on_nested_field)
 
 
 class Role(models.Model):

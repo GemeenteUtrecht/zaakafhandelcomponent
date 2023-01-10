@@ -290,7 +290,9 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
 
 class DocumentInfoSerializer(serializers.Serializer):
     document_type = serializers.CharField(source="informatieobjecttype.omschrijving")
-    titel = serializers.CharField()
+    titel = serializers.CharField(
+        help_text=_("Title of the INFORMATIEOBJECT. Includes the file extension.")
+    )
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display"
     )

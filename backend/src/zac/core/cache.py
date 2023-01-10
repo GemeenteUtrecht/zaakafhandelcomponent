@@ -71,6 +71,11 @@ def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
     cache.delete_many(cache_keys)
 
 
+def invalidate_document_url_cache(document_url: str):
+    key = f"document:{document_url}"
+    cache.delete(key)
+
+
 def invalidate_document_cache(document: Document):
     versioned_url = furl(document.url).set({"versie": document.versie}).url
     alfresco_zero_version_url = furl(document.url).set({"versie": 0}).url
@@ -100,4 +105,9 @@ def invalidate_rollen_cache(zaak: Zaak, rol_urls: Optional[List[str]] = None):
 
 def invalidate_zaakobjecten_cache(zaak: Zaak):
     key = f"get_zaak_objecten:{zaak.url}"
+    cache.delete(key)
+
+
+def invalidate_fetch_object_cache(object_url: str):
+    key = f"object:{object_url}"
     cache.delete(key)

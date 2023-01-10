@@ -38,11 +38,13 @@ from zgw_consumers.service import get_paginated_results
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
+from zac.client import Client
 from zac.contrib.brp.models import BRPConfig
-from zac.elasticsearch.searches import search
+from zac.elasticsearch.searches import search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
 from zgw.models import Zaak
+from zgw.models.zrc import ZaakInformatieObject
 
 from .api.data import AuditTrailData
 from .api.utils import convert_eigenschap_spec_to_json_schema
@@ -560,7 +562,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
     # try local search index first
-    results = search(size=1, only_allowed=False, **query)
+    results = search_zaken(size=1, only_allowed=False, **query)
     if results:
         zaak = get_zaak(zaak_url=results[0].url)
     else:
@@ -796,6 +798,24 @@ def get_zaakobjecten(zaak: Zaak) -> List[ZaakObject]:
     return factory(ZaakObject, zaakobjecten)
 
 
+def get_zaakobjecten_related_to_object(object_url: str) -> List[ZaakObject]:
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    results = []
+
+    for zrc in zrcs:
+        client = zrc.build_client()
+        result = get_paginated_results(
+            client, "zaakobject", query_params={"object": object_url}
+        )
+
+        if not result:
+            continue
+        else:
+            results += factory(ZaakObject, result)
+
+    return results
+
+
 def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     if not zaak.resultaat:
         return None
@@ -889,12 +909,42 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     return update_rol(rol_url, new_rol_data)
 
 
-def get_zaak_informatieobjecten(zaak: Zaak) -> list:
+def fetch_zaak_informatieobject(zaak_informatieobject_url: str) -> ZaakInformatieObject:
+    client = _client_from_url(zaak_informatieobject_url)
+    zaak_informatieobject = client.retrieve(
+        "zaak_informatieobject_url", url=zaak_informatieobject_url
+    )
+    zaak_informatieobject = factory(ZaakInformatieObject, zaak_informatieobject)
+    return zaak_informatieobject
+
+
+def get_zaakinformatieobjecten_related_to_informatieobject(
+    informatieobject_url: str,
+) -> List[ZaakInformatieObject]:
+    zrcs = Service.objects.filter(api_type=APITypes.zrc)
+    results = []
+
+    for zrc in zrcs:
+        client = zrc.build_client()
+        result = client.list(
+            "zaakinformatieobject",
+            query_params={"informatieobject": informatieobject_url},
+        )
+
+        if not result:
+            continue
+        else:
+            results += result
+
+    return factory(ZaakInformatieObject, results)
+
+
+def get_zaak_informatieobjecten(zaak: Zaak) -> List[ZaakInformatieObject]:
     client = _client_from_object(zaak)
     zaak_informatieobjecten = client.list(
         "zaakinformatieobject", query_params={"zaak": zaak.url}
     )
-    return zaak_informatieobjecten
+    return factory(ZaakInformatieObject, zaak_informatieobjecten)
 
 
 def get_informatieobjecttypen_for_zaak(url: str) -> List[InformatieObjectType]:
@@ -1218,6 +1268,29 @@ def fetch_document_audit_trail(document_url: str) -> List[AuditTrailData]:
     return factory(AuditTrailData, audit_trail)
 
 
+def get_documenten_all_paginated(
+    client: ZGWClient,
+    query_params: dict = {},
+) -> Tuple[List[Document], dict]:
+    """
+    Fetch all enkelvoudiginformatieobjects from the DRCs in batches.
+    Used to index documenten in ES.
+
+    """
+    response = client.list("enkelvoudiginformatieobject", query_params=query_params)
+    documenten = factory(Document, response["results"])
+
+    if response["next"]:
+        next_url = urlparse(response["next"])
+        query = parse_qs(next_url.query)
+        new_page = int(query["page"][0])
+        query_params["page"] = [new_page]
+    else:
+        query_params["page"] = None
+
+    return documenten, query_params
+
+
 ###################################################
 #                       BRC                       #
 ###################################################
@@ -1279,30 +1352,57 @@ def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocum
 ###################################################
 
 
-def create_object(data: Dict) -> Dict:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
+def get_objects_client() -> Client:
+    config = CoreConfig.get_solo()
+    object_api = config.primary_objects_api
+    if not object_api:
+        raise RuntimeError("No objects API has been configured yet.")
+    object_api_client = object_api.build_client()
+    return object_api_client
 
-    client = object_service.build_client()
+
+def get_objecttypes_client() -> Client:
+    config = CoreConfig.get_solo()
+    objecttypes_api = config.primary_objecttypes_api
+    if not objecttypes_api:
+        raise RuntimeError("No objecttypes API has been configured yet.")
+    objecttypes_api_client = objecttypes_api.build_client()
+    return objecttypes_api_client
+
+
+def create_object(data: Dict) -> Dict:
+    client = get_objects_client()
     object = client.create("object", data=data)
     return object
 
 
-def fetch_object(object_uuid: str) -> Dict:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
+@cache_result("object:{url}", timeout=A_DAY)
+def fetch_object(url: str, client: Optional[Client] = None) -> dict:
+    if not client:
+        client = get_objects_client()
 
-    client = object_service.build_client()
-    object = client.retrieve("object", uuid=object_uuid)
-    return object
+    retrieved_item = client.retrieve("object", url=url)
+
+    retrieved_item["type"] = fetch_objecttype(retrieved_item["type"])
+    return retrieved_item
+
+
+def fetch_objects(urls: List[str]) -> List[Dict]:
+    object_api_client = get_objects_client()
+
+    def _fetch_object(url):
+        return fetch_object(url, client=object_api_client)
+
+    with parallel() as executor:
+        retrieved_objects = list(executor.map(_fetch_object, urls))
+
+    return retrieved_objects
 
 
 def update_object_record_data(
     object: Dict, data: Dict, user: Optional[User] = None
 ) -> Dict:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
-    client = object_service.build_client()
+    client = get_objects_client()
     new_data = {
         "record": {
             **object["record"],
@@ -1319,30 +1419,24 @@ def update_object_record_data(
     return obj
 
 
-def fetch_objecttype(objecttype_url) -> dict:
-    conf = CoreConfig.get_solo()
-    objecttype_service = conf.primary_objecttypes_api
+@cache_result("objecttype:{url}", timeout=AN_HOUR)
+def fetch_objecttype(url: str, client: Optional[Client] = None) -> dict:
+    if not client:
+        client = get_objecttypes_client()
+    object_type = client.retrieve("objecttype", url=url)
 
-    client = objecttype_service.build_client()
-    objecttype = client.retrieve("objecttype", url=objecttype_url)
-    return objecttype
+    return object_type
 
 
 def fetch_objecttypes() -> List[dict]:
-    conf = CoreConfig.get_solo()
-    objecttype_service = conf.primary_objecttypes_api
-
-    client = objecttype_service.build_client()
+    client = get_objecttypes_client()
     objecttypes_data = client.list("objecttype")
 
     return objecttypes_data
 
 
 def fetch_objecttype_version(uuid: str, version: int) -> dict:
-    conf = CoreConfig.get_solo()
-    objecttype_service = conf.primary_objecttypes_api
-
-    client = objecttype_service.build_client()
+    client = get_objecttypes_client()
     objecttypes_version_data = client.retrieve(
         "objectversion", **{"objecttype_uuid": uuid, "version": version}
     )
@@ -1351,10 +1445,7 @@ def fetch_objecttype_version(uuid: str, version: int) -> dict:
 
 
 def search_objects(filters: dict) -> List[dict]:
-    conf = CoreConfig.get_solo()
-    object_service = conf.primary_objects_api
-
-    client = object_service.build_client()
+    client = get_objects_client()
     results = client.operation(operation_id="object_search", data=filters)
     return results
 

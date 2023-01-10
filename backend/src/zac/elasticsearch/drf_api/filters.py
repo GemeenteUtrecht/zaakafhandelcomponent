@@ -16,11 +16,12 @@ class ESOrderingFilter:
     and has a similar interface. It can be used with the 'Document' class of elasticsearch_dsl
     library.
 
-    In our implementation a 'Text' field is a special field that can only be sorted on
-    by using a 'Keyword' field inside the 'fields' of the 'Text' field. The filter
-    will omit any 'Text' fields as sortable field candidates if they are non-compliant.
+    For performance reasons text fields are kept as unsortable unless they include a
+    keywords subfield. The filter will omit any 'Text' fields as sortable field
+    candidates if they are non-compliant.
 
     Note: in this filter ordering = None is the same as ordering = "__all__".
+
     """
 
     ordering_param = api_settings.ORDERING_PARAM
@@ -60,6 +61,7 @@ class ESOrderingFilter:
         Fields that have a 'text' field type could still be searchable if they have a keyword field in their fields attribute.
 
         This adds .keyword to those fields.
+
         """
 
         final_ordering = []
@@ -82,6 +84,7 @@ class ESOrderingFilter:
 
         The `ordering` query parameter can be overridden by
         specifying an `ORDERING_PARAM` value in the API settings.
+
         """
         params = request.query_params.get(self.ordering_param)
         if params:

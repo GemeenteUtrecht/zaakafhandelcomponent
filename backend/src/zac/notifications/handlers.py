@@ -1,5 +1,6 @@
 import logging
 
+from elasticsearch.exceptions import NotFoundError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import RolOmschrijving
@@ -13,6 +14,9 @@ from zac.contrib.board.models import BoardItem
 from zac.contrib.kownsl.api import get_review_requests, lock_review_request
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.cache import (
+    invalidate_document_cache,
+    invalidate_document_url_cache,
+    invalidate_fetch_object_cache,
     invalidate_informatieobjecttypen_cache,
     invalidate_rollen_cache,
     invalidate_zaak_cache,
@@ -22,21 +26,35 @@ from zac.core.cache import (
 )
 from zac.core.services import (
     _client_from_url,
+    fetch_object,
     fetch_rol,
+    fetch_zaak_informatieobject,
+    fetch_zaak_object,
+    get_document,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
     create_status_document,
     create_zaak_document,
     create_zaaktype_document,
+    delete_informatieobject_document,
+    delete_object_document,
     delete_zaak_document,
     get_zaak_document,
     update_eigenschappen_in_zaak_document,
+    update_informatieobject_document,
+    update_object_document,
+    update_related_zaak_in_informatieobject_documents,
+    update_related_zaak_in_object_documents,
+    update_related_zaken_in_informatieobject_document,
+    update_related_zaken_in_object_document,
     update_rollen_in_zaak_document,
     update_status_in_zaak_document,
     update_zaak_document,
+    update_zaakinformatieobjecten_in_zaak_document,
     update_zaakobjecten_in_zaak_document,
 )
+from zac.elasticsearch.documents import ZaakDocument
 from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
@@ -47,7 +65,7 @@ class ZakenHandler:
         logger.debug("ZAC notification: %r" % data)
         if data["resource"] == "zaak":
             if data["actie"] == "create":
-                self._handle_zaak_creation(data["hoofd_object"])
+                self._handle_zaak_create(data["hoofd_object"])
             elif data["actie"] in ["update", "partial_update"]:
                 self._handle_zaak_update(data["hoofd_object"])
             elif data["actie"] == "destroy":
@@ -57,21 +75,38 @@ class ZakenHandler:
             self._handle_zaakeigenschap_change(data["hoofd_object"])
 
         elif data["resource"] == "status" and data["actie"] == "create":
-            self._handle_status_creation(data["hoofd_object"])
+            self._handle_status_create(data["hoofd_object"])
 
         elif data["resource"] == "resultaat" and data["actie"] == "create":
-            self._handle_related_creation(data["hoofd_object"])
+            self._handle_related_create(data["hoofd_object"])
 
         elif data["resource"] == "rol":
             if data["actie"] == "create":
-                self._handle_rol_creation(
+                self._handle_rol_create(
                     data["hoofd_object"], rol_url=data["resource_url"]
                 )
             elif data["actie"] == "destroy":
                 self._handle_rol_destroy(data["hoofd_object"])
 
         elif data["resource"] == "zaakobject":
-            self._handle_zaakobject_change(data["hoofd_object"])
+            if data["actie"] == "create":
+                self._handle_zaakobject_create(
+                    data["hoofd_object"], data["resource_url"]
+                )
+            elif data["actie"] == "destroy":
+                self._handle_zaakobject_destroy(
+                    data["hoofd_object"], data["resource_url"]
+                )
+
+        elif data["resource"] == "zaakinformatieobject":
+            if data["actie"] == "create":
+                self._handle_zaakinformatieobject_create(
+                    data["hoofd_object"], data["resource_url"]
+                )
+            elif data["actie"] == "destroy":
+                self._handle_zaakinformatieobject_destroy(
+                    data["hoofd_object"], data["resource_url"]
+                )
 
     @staticmethod
     def _retrieve_zaak(zaak_url) -> Zaak:
@@ -113,7 +148,19 @@ class ZakenHandler:
         # index in ES
         update_zaak_document(zaak)
 
-    def _handle_zaak_creation(self, zaak_url: str):
+        # Update related zaak in objecten indices
+        try:
+            update_related_zaak_in_object_documents(zaak)
+        except NotFoundError as exc:
+            logger.warning("Could not find objecten index.")
+
+        # Update related zaak in informatieobjecten indices
+        try:
+            update_related_zaak_in_informatieobject_documents(zaak)
+        except NotFoundError as exc:
+            logger.warning("Could not find informatieobjecten index.")
+
+    def _handle_zaak_create(self, zaak_url: str):
         client = _client_from_url(zaak_url)
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_list_cache(client, zaak)
@@ -133,18 +180,18 @@ class ZakenHandler:
         # index in ES
         delete_zaak_document(zaak_url)
 
-    def _handle_related_creation(self, zaak_url: str):
+    def _handle_related_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
-    def _handle_status_creation(self, zaak_url: str):
+    def _handle_status_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
         # index in ES
         update_status_in_zaak_document(zaak)
 
-    def _handle_rol_creation(self, zaak_url: str, rol_url: str):
+    def _handle_rol_create(self, zaak_url: str, rol_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_rollen_cache(zaak, rol_urls=[rol_url])
         updated = update_medewerker_identificatie_rol(rol_url)
@@ -171,12 +218,69 @@ class ZakenHandler:
         # index in ES
         update_eigenschappen_in_zaak_document(zaak)
 
-    def _handle_zaakobject_change(self, zaak_url: str):
+    def _handle_zaakobject_create(self, zaak_url: str, zaakobject_url: str):
+        # Invalidate zaakobjecten cache with zaak
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaakobjecten_cache(zaak)
 
-        # index in ES
+        # index in zaken
         update_zaakobjecten_in_zaak_document(zaak)
+
+        # index in objecten
+        zaakobject = fetch_zaak_object(zaakobject_url)
+        update_related_zaken_in_object_document(zaakobject.object)
+
+    def _handle_zaakobject_destroy(self, zaak_url: str, zaakobject_url: str):
+        # Invalidate zaakobjecten cache with zaak
+        zaak = self._retrieve_zaak(zaak_url)
+        invalidate_zaakobjecten_cache(zaak)
+
+        # Get zaakobject from ZaakDocument
+        zaakdocument = ZaakDocument.get(id=zaak.uuid)
+        object_url = None
+        for zo in zaakdocument.zaakobjecten:
+            if zo.url == zaakobject_url:
+                object_url = zo.object
+
+        # update zaken index
+        update_zaakobjecten_in_zaak_document(zaak)
+
+        # update related_zaken in objecten index
+        update_related_zaken_in_object_document(object_url)
+
+    def _handle_zaakinformatieobject_create(
+        self, zaak_url: str, zaakinformatieobject_url: str
+    ):
+        zaak = self._retrieve_zaak(zaak_url)
+        # No need to invalidate cache as zaakinformatieobjecten aren't cached?
+
+        # update zaken index
+        update_zaakinformatieobjecten_in_zaak_document(zaak)
+
+        # update related_zaken in informatieobjecten index
+        zaakinformatieobject = fetch_zaak_informatieobject(zaakinformatieobject_url)
+        update_related_zaken_in_informatieobject_document(
+            zaakinformatieobject.informatieobject
+        )
+
+    def _handle_zaakinformatieobject_destroy(
+        self, zaak_url: str, zaakinformatieobject_url: str
+    ):
+        zaak = self._retrieve_zaak(zaak_url)
+        # No need to invalidate cache as zaakinformatieobjecten aren't cached?
+
+        # Get zaakobject from ZaakDocument
+        zaakdocument = ZaakDocument.get(id=zaak.uuid)
+        informatieobject_url = None
+        for zio in zaakdocument.zaakinformatieobjecten:
+            if zio.url == zaakinformatieobject_url:
+                informatieobject_url = zio.informatieobject
+
+        # update zaken index
+        update_zaakinformatieobjecten_in_zaak_document(zaak)
+
+        # update related_zaken in informatieobjecten index
+        update_related_zaken_in_informatieobject_document(informatieobject_url)
 
 
 class ZaaktypenHandler:
@@ -197,6 +301,34 @@ class InformatieObjecttypenHandler:
                 invalidate_informatieobjecttypen_cache()
 
 
+class ObjectenHandler:
+    # We dont update related_zaken here - the notification from open zaak takes care of that.
+    def handle(self, data: dict) -> None:
+        if data["resource"] == "objecten":
+            invalidate_fetch_object_cache(data["hoofd_object"])
+            if data["actie"] in ["create", "update", "partial_update"]:
+                object = fetch_object(data["hoofd_object"])
+                update_object_document(object)
+
+            elif data["actie"] == "destroy":
+                delete_object_document(data["hoofd_object"])
+
+
+class InformatieObjectenHandler:
+    # We dont update related_zaken here - the notification from open zaak takes care of that.
+    def handle(self, data: dict) -> None:
+        if data["resource"] == "documenten":
+            if data["actie"] in ["create", "update", "partial_update"]:
+                document = get_document(data["hoofd_object"])
+                invalidate_document_cache(document)
+                document = get_document(data["hoofd_object"])
+                update_informatieobject_document(document)
+
+            elif data["actie"] == "destroy":
+                invalidate_document_url_cache(data["hoofd_object"])
+                delete_informatieobject_document(data["hoofd_object"])
+
+
 class RoutingHandler:
     def __init__(self, config: dict, default=None):
         self.config = config
@@ -215,5 +347,7 @@ handler = RoutingHandler(
         "zaaktypen": ZaaktypenHandler(),
         "informatieobjecttypen": InformatieObjecttypenHandler(),
         "zaken": ZakenHandler(),
+        "objecten": ObjectenHandler(),
+        "documenten": InformatieObjectenHandler(),
     }
 )

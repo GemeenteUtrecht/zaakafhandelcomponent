@@ -1,10 +1,12 @@
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 
 import requests_mock
+from elasticsearch_dsl import Index
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -15,8 +17,17 @@ from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import get_zaak
-from zac.elasticsearch.api import create_zaak_document
-from zac.elasticsearch.documents import RolDocument, ZaakDocument
+from zac.elasticsearch.api import (
+    create_object_document,
+    create_related_zaak_document,
+    create_zaak_document,
+)
+from zac.elasticsearch.documents import (
+    InformatieObjectDocument,
+    ObjectDocument,
+    RolDocument,
+    ZaakDocument,
+)
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
@@ -24,6 +35,7 @@ from zgw.models.zrc import Zaak
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
+    OBJECT_RESPONSE,
     STATUS,
     STATUS_RESPONSE,
     STATUSTYPE,
@@ -55,6 +67,22 @@ class ZaakUpdateTests(ESMixin, APITestCase):
     """
     Test that the appropriate actions happen on zaak-update notifications.
     """
+
+    @staticmethod
+    def clear_index(init=False):
+        ESMixin.clear_index(init=init)
+        Index(settings.ES_INDEX_OBJECTEN).delete(ignore=404)
+        Index(settings.ES_INDEX_DOCUMENTEN).delete(ignore=404)
+
+        if init:
+            ObjectDocument.init()
+            InformatieObjectDocument.init()
+
+    @staticmethod
+    def refresh_index():
+        ESMixin.refresh_index()
+        Index(settings.ES_INDEX_OBJECTEN).refresh()
+        Index(settings.ES_INDEX_DOCUMENTEN).refresh()
 
     @classmethod
     def setUpTestData(cls):
@@ -209,3 +237,58 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         )
         # check that rollen were kept during update
         self.assertEqual(len(zaak_document.rollen), 2)
+
+    def test_zaak_updated_omschrijving_update_in_informatie_and_objecten_indices(
+        self, rm, *mocks
+    ):
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, STATUS_RESPONSE)
+        mock_resource_get(rm, STATUSTYPE_RESPONSE)
+
+        path = reverse("notifications:callback")
+
+        #  create zaak_document in ES
+        zaak = factory(Zaak, ZAAK_RESPONSE)
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
+        zaak_document = create_zaak_document(zaak)
+        zaak_document.save()
+
+        # create object document
+        object_document = create_object_document(OBJECT_RESPONSE)
+        related_zaak_document = create_related_zaak_document(zaak)
+        object_document.related_zaken = [related_zaak_document]
+        object_document.save()
+        self.refresh_index()
+
+        self.assertEqual(zaak_document.omschrijving, ZAAK_RESPONSE["omschrijving"])
+        self.assertEqual(zaak_document.meta.version, 1)
+        self.assertEqual(object_document.related_zaken, [related_zaak_document])
+        self.assertEqual(object_document.meta.version, 1)
+
+        # Update zaak api response
+        new_response = {
+            **ZAAK_RESPONSE,
+            "omschrijving": "some updated omschrijving",
+        }
+        mock_resource_get(rm, new_response)
+
+        response = self.client.post(path, NOTIFICATION)
+        self.refresh_index()
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
+        self.assertEqual(
+            zaak_document.omschrijving,
+            "some updated omschrijving",
+        )
+        self.assertEqual(zaak_document.meta.version, 2)
+
+        object_document = ObjectDocument.get(id=object_document.meta.id)
+        self.assertEqual(
+            object_document.related_zaken[0].omschrijving,
+            "some updated omschrijving",
+        )
+        self.assertEqual(object_document.meta.version, 2)
