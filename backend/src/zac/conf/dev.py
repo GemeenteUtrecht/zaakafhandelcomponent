@@ -108,6 +108,8 @@ ENVIRONMENT = "development"
 
 if "test" in sys.argv:
     ES_INDEX_ZAKEN = "zaken_test"
+    ES_INDEX_DOCUMENTEN = "documenten_test"
+    ES_INDEX_OBJECTEN = "objecten_test"
 
 
 # Override settings with local settings.
