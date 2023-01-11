@@ -12,7 +12,7 @@ urlpatterns = [
     # API schema documentation
     path("", SpectacularJSONAPIView.as_view(schema=None), name="api-schema-json"),
     path("_health/", HealthCheckView.as_view(), name="health-check"),
-    path("_get-remote-schema/", remote_schema_view, name="get-remote-schema"),
+    path("_get-remote-schema", remote_schema_view, name="get-remote-schema"),
     path("schema", SpectacularAPIView.as_view(schema=None), name="api-schema"),
     path(
         "docs/",

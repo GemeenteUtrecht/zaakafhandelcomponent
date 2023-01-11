@@ -28,7 +28,7 @@ def get_domain():
 
 def remote_schema_ref(url: str, fragment_parts: List[str]) -> dict:
     ref = furl(get_domain())
-    ref.path.segments += ["api", "_get-remote-schema", ""]
+    ref.path.segments += ["api", "_get-remote-schema"]
     ref.path.normalize()
     ref.args["schema"] = url
     ref.fragment.path.segments = fragment_parts
