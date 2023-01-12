@@ -1114,7 +1114,7 @@ def get_documenten(
     zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
 
     # retrieve the documents themselves, in parallel
-    zios = [zio["informatieobject"] for zio in zaak_informatieobjecten]
+    zios = [zio.informatieobject for zio in zaak_informatieobjecten]
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
 
     # Add version to zio_url if found in doc_versions
