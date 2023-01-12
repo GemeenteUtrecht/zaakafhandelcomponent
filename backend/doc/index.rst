@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=================
+
 ZAC Documentation
 =================
 
@@ -17,6 +17,7 @@ Welcome to the documentation for the zaakafhandelcomponent (ZAC).
    forms
    authorization
    developers/index
+   development/index
 
 
 Indices and tables
