@@ -12,14 +12,20 @@ from elasticsearch_dsl import (
     tokenizer,
 )
 
+truncate_filter = token_filter(
+    "truncate", type="truncate", length=f"{settings.MAX_GRAM-settings.MIN_GRAM}"
+)
 dutch_stop_filter = token_filter("dutch_stop", type="stop", stopwords="_dutch_")
-edge_ngram_tokenizer = tokenizer(
-    "zacGram", "edge_ngram", min_gram=2, max_gram=12, token_chars=["letter", "digit"]
+ngram_tokenizer = tokenizer(
+    "zacGram",
+    "ngram",
+    min_gram=settings.MIN_GRAM,
+    max_gram=settings.MAX_GRAM,
 )
 
-edge_ngram_analyzer = analyzer(
-    "edge_ngram_analyzer",
-    tokenizer=edge_ngram_tokenizer,
+ngram_analyzer = analyzer(
+    "ngram_analyzer",
+    tokenizer=ngram_tokenizer,
     filter=["lowercase", dutch_stop_filter],
 )
 strip_leading_zeros_in_zaakidentificatie_filter = char_filter(
@@ -34,10 +40,10 @@ strip_leading_zeros_in_zaakidentificatie_analyzer = analyzer(
     filter=["lowercase"],
     char_filter=[strip_leading_zeros_in_zaakidentificatie_filter],
 )
-standard_analyzer = analyzer(
+truncate_standard_analyzer = analyzer(
     "standard",
     tokenizer="standard",
-    filter=["lowercase", dutch_stop_filter],
+    filter=["lowercase", dutch_stop_filter, truncate_filter],
 )
 
 
@@ -91,8 +97,8 @@ class ZaakDocument(Document):
     bronorganisatie = field.Keyword()
     omschrijving = field.Text(
         fields={"keyword": field.Keyword()},
-        analyzer=edge_ngram_analyzer,
-        search_analyzer=standard_analyzer,
+        analyzer=ngram_analyzer,
+        search_analyzer=truncate_standard_analyzer,
     )
     vertrouwelijkheidaanduiding = field.Text(fields={"keyword": field.Keyword()})
     va_order = field.Integer()
@@ -110,7 +116,10 @@ class ZaakDocument(Document):
 
     class Index:
         name = settings.ES_INDEX_ZAKEN
-        settings = {"index.mapping.ignore_malformed": True, "max_ngram_diff": 10}
+        settings = {
+            "index.mapping.ignore_malformed": True,
+            "max_ngram_diff": settings.MAX_GRAM - settings.MIN_GRAM,
+        }
 
     class Meta:
         dynamic_templates = MetaField(
@@ -167,9 +176,9 @@ class ObjectDocument(Document):
         name = settings.ES_INDEX_OBJECTEN
         settings = {
             "index.mapping.ignore_malformed": True,
-            "max_ngram_diff": 10,
+            "max_ngram_diff": settings.MAX_GRAM - settings.MIN_GRAM,
         }
-        analyzers = [edge_ngram_analyzer, standard_analyzer]
+        analyzers = [ngram_analyzer, truncate_standard_analyzer]
 
     class Meta:
         dynamic_templates = MetaField(
@@ -180,8 +189,8 @@ class ObjectDocument(Document):
                         "match_mapping_type": "string",
                         "mapping": {
                             "type": "text",
-                            "analyzer": edge_ngram_analyzer,
-                            "search_analyzer": standard_analyzer,
+                            "analyzer": ngram_analyzer,
+                            "search_analyzer": truncate_standard_analyzer,
                             "copy_to": "record_data_text.*",
                         },
                     }
@@ -191,8 +200,8 @@ class ObjectDocument(Document):
                         "path_match": "record_data_text.*",
                         "mapping": {
                             "type": "text",
-                            "analyzer": edge_ngram_analyzer,
-                            "search_analyzer": standard_analyzer,
+                            "analyzer": ngram_analyzer,
+                            "search_analyzer": truncate_standard_analyzer,
                         },
                     },
                 },
@@ -203,11 +212,14 @@ class ObjectDocument(Document):
 class InformatieObjectDocument(Document):
     url = field.Keyword()
     titel = field.Text(
-        analyzer=edge_ngram_analyzer,
-        search_analyzer=standard_analyzer,
+        analyzer=ngram_analyzer,
+        search_analyzer=truncate_standard_analyzer,
     )
     related_zaken = Nested(RelatedZaakDocument)
 
     class Index:
         name = settings.ES_INDEX_DOCUMENTEN
-        settings = {"index.mapping.ignore_malformed": True, "max_ngram_diff": 10}
+        settings = {
+            "index.mapping.ignore_malformed": True,
+            "max_ngram_diff": settings.MAX_GRAM - settings.MIN_GRAM,
+        }
