@@ -29,7 +29,7 @@
 </ng-container>
 
 <ng-container *ngIf="widgetType==='checkboxGroup'">
-  <span *ngIf="label">{{label}}</span>
+  <span class="select-all-label mb-2" *ngIf="label">{{label}}</span>
   <div class="multiselect__checkbox-group" (change)="onCheckboxGroupChange($event)">
     <label class="multiselect__checkbox-item">
       <input [checked]="getAllChecked()" class="multiselect__select-all" type="checkbox" (click)="toggleCheckAll()"/>

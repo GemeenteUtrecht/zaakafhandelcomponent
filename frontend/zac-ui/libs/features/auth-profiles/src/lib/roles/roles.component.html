@@ -41,6 +41,10 @@
             [title]="(role) ? 'Rol bewerken' : 'Rol toevoegen'"
             size="small"
   >
-    <gu-form *ngIf="permissions" [buttonLabel]="(role) ? 'Rol bewerken' : 'Rol toevoegen'" [form]="form" (formSubmit)="formSubmit($event)"></gu-form>
+    <gu-form *ngIf="permissions"
+             [buttonLabel]="(role) ? 'Rol bewerken' : 'Rol toevoegen'"
+             [form]="form"
+             [resetAfterSubmit]=true
+             (formSubmit)="formSubmit($event)"></gu-form>
   </gu-modal>
 </div>

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Role } from '@gu/models';
 import { FeaturesAuthProfilesService } from './features-auth-profiles.service';
 import { SnackbarService } from '@gu/components';
+import { AccountsService } from '@gu/services';
 
 
 /**
@@ -29,6 +30,7 @@ export class FeaturesAuthProfilesComponent implements OnInit {
 
   constructor(
     private fService: FeaturesAuthProfilesService,
+    private accountsService: AccountsService,
     private snackbarService: SnackbarService
   ) { }
 
@@ -41,7 +43,7 @@ export class FeaturesAuthProfilesComponent implements OnInit {
    */
   getRoles() {
     this.isLoading = true;
-    this.fService.getRoles().subscribe(
+    this.accountsService.getRoles().subscribe(
       (data) => this.roles = data,
       (err) => {
         this.errorMessage = this.getRolesErrorMessage;

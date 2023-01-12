@@ -10,6 +10,11 @@
     line-height: 0;
   }
 }
+.select-all-label {
+  font-size: 1rem;
+  font-weight: bold;
+  display: block;
+}
 ::ng-deep {
   .ng-select {
     font-size: 0.875rem;
@@ -112,4 +117,7 @@ body .ng-dropdown-panel.ng-select-bottom {
   display: flex;
   align-items: center;
   gap: 1em;
+  span {
+    font-size: 0.875rem;
+  }
 }

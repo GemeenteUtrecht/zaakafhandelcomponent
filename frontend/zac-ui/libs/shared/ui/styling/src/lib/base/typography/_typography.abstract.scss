@@ -28,6 +28,10 @@ $h4-font-size-xs: 18px !default;
 $h4-font-size-s: 18px !default;
 $h4-font-size-m: 18px !default;
 
+$h5-font-size-xs: 14px !default;
+$h5-font-size-s: 16px !default;
+$h5-font-size-m: 16px !default;
+
 @mixin heading {
   align-items: center;
   color: $color-text;

@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {ApplicationHttpClient} from '@gu/services';
-import { Permission, UserSearch } from '@gu/models';
+import { Permission, Role, UserSearch } from '@gu/models';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +26,14 @@ export class AccountsService {
   getPermissions(): Observable<Permission[]> {
     const endpoint = encodeURI(`/api/accounts/permissions`);
     return this.http.Get<Permission[]>(endpoint);
+  }
+
+  /**
+   * Request the roles from API.
+   */
+  getRoles(): Observable<Role[]> {
+    const endpoint = encodeURI(`/api/accounts/roles`);
+    return this.http.Get<Role[]>(endpoint);
   }
 
   /**

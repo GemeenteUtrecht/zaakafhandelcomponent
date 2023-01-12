@@ -1,7 +1,7 @@
 <div class="toegang-verlenen">
   <form [formGroup]="grantAccessForm" *ngIf="!submitSuccess">
     <div class="form-group">
-      <p>Selecteer een gebruiker die u toegang wilt verlenen tot deze zaak.</p>
+      <p class="mb-3">Selecteer een gebruiker die u toegang wilt verlenen tot deze zaak.</p>
 
       <!-- Search user -->
       <gu-multiselect (search)="onSearch($event)"
@@ -11,27 +11,30 @@
                       bindLabel="fullName"
                       bindValue="username"
                       label="Gebruiker"
-                      required
+                      required='required'
                       placeholder="Zoek een gebruiker"
-                      class="mb-3"
+                      class="mb-4"
       >
       </gu-multiselect>
 
+      <p class="mb-2">Welke rol(len) wil je toewijzen aan de gebruiker?</p>
+
       <!-- Permissions -->
-      <gu-multiselect *ngIf="permissions"
-                      (change)="updateSelectedPermissions($event)"
-                      [items]="permissions"
-                      [selectedValue]="selectedPermissions"
+      <gu-multiselect *ngIf="multiselectRoles"
+                      (change)="updateSelectedRoles($event)"
+                      [items]="multiselectRoles"
                       [multiple]="true"
                       [required]="true"
                       widgetType="checkboxGroup"
                       bindLabel="name"
                       bindValue="name"
-                      label="Permissies"
+                      label="Rollen"
                       appendTo="body"
-                      class="mb-3"
+                      class="mb-4"
                       required>
       </gu-multiselect>
+
+      <p class="mb-3">Optioneel: selecteer een verloopdatum voor de toegang.</p>
 
       <!-- End date -->
       <gu-datepicker
@@ -42,7 +45,7 @@
     </div>
     <div class="d-flex justify-content-end">
       <button gu-button
-        [disabled]="!grantAccessForm.valid || isSubmitting || !this.selectedPermissions"
+        [disabled]="!grantAccessForm.valid || isSubmitting || this.selectedRoles?.length === 0"
         [loading]="isSubmitting"
         buttonStyle="primary"
         size="large"

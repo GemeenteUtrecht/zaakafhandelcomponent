@@ -39,6 +39,13 @@ h4, .h4 {
   font-size: $h4-font-size-m;
 }
 
+h5, .h5 {
+  @include heading;
+  margin-bottom: space(2);
+  font-family: $font-family-text;
+  font-size: $h5-font-size-m;
+}
+
 p {
   @include text;
   &.p--bold {
