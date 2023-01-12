@@ -143,9 +143,27 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             related_zaken=[related_zaak_2],
         )
         self.eio_document_1.save()
+        self.eio_document_2 = InformatieObjectDocument(
+            url="some-keyword",
+            titel="test.txt",
+            related_zaken=[],
+        )
+        self.eio_document_2.save()
+
         self.refresh_index()
 
     def test_quick_search(self):
+        results = quick_search("test.txt")
+        self.assertEqual(
+            len(results["zaken"]),
+            0,
+        )
+        self.assertEqual(results["documenten"][0].url, self.eio_document_2.url)
+        self.assertEqual(
+            len(results["objecten"]),
+            0,
+        )
+
         results = quick_search("2022 omsch")
         self.assertEqual(
             results["zaken"][0].identificatie, self.zaak_document1.identificatie
