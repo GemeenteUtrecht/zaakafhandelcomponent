@@ -99,14 +99,6 @@ export class FeaturesAuthProfilesService {
   }
 
   /**
-   * Request the roles from API.
-   */
-  getRoles(): Observable<Role[]> {
-    const endpoint = encodeURI(`/api/accounts/roles`);
-    return this.http.Get<Role[]>(endpoint);
-  }
-
-  /**
    * POST role to API
    */
   createRole(data): Observable<Role> {

@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { UserSearchResult, Zaak, Permission } from '@gu/models';
+import { UserSearchResult, Zaak, Role } from '@gu/models';
 import { AccountsService, ApplicationHttpClient } from '@gu/services';
 import {ModalService, SnackbarService} from '@gu/components';
 import { DatePipe } from '@angular/common';
@@ -16,8 +16,10 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
 
   users: UserSearchResult[] = [];
   requesterUser: UserSearchResult;
-  permissions: Permission[];
-  selectedPermissions: string[];
+  allRoles: Role[];
+  multiselectRoles: object[];
+  preselectedPermissions: string[];
+  selectedRoles: string[] = [];
 
   grantAccessForm: FormGroup;
   isSubmitting: boolean;
@@ -41,8 +43,8 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   // Getters / setters.
   //
 
-  get permissionsControl(): FormControl {
-    return this.grantAccessForm.get('permissions') as FormControl;
+  get rolesControl(): FormControl {
+    return this.grantAccessForm.get('roles') as FormControl;
   };
 
   get requesterControl(): FormControl {
@@ -70,22 +72,27 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Fetch user permissions.
+   * Fetch user roles and permissions.
    */
   getContextData() {
+    this.accountsService.getRoles()
+      .subscribe( res => {
+        this.allRoles = res;
+        this.multiselectRoles = res.map(({permissions, ...multiselectAttrs}) => multiselectAttrs)
+      }, error => console.error(error))
+
     this.accountsService.getPermissions()
       .subscribe( res => {
-        this.permissions = res;
-        this.selectedPermissions = this.permissions.map( p => p.name )
+        this.preselectedPermissions = res.map( p => p.name );
       }, error => console.error(error))
   }
 
   /**
-   * Update selected permissions.
+   * Update selected roles.
    * @param event
    */
-  updateSelectedPermissions(event) {
-    this.selectedPermissions = event.map( p => p.name );
+  updateSelectedRoles(event) {
+    this.selectedRoles = event.map( p => p.name );
   }
 
   /**
@@ -114,7 +121,11 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       this.datePipe.transform(this.endDateControl.value, "yyyy-MM-ddT00:00") :
       undefined;
 
-    this.accountsService.addAtomicPermissions(this.zaak, this.requesterControl.value, this.selectedPermissions, endDate).subscribe(res => {
+    const matchedSelectedRoles = this.allRoles.filter(role => this.selectedRoles.includes(role.name))
+    const selectedPermissions =  matchedSelectedRoles.reduce((a, { permissions }) => a.concat(permissions), [])
+    const filteredPermissions = selectedPermissions.filter(permission => !this.preselectedPermissions.includes(permission));
+
+    this.accountsService.addAtomicPermissions(this.zaak, this.requesterControl.value, filteredPermissions, endDate).subscribe(res => {
       this.submitResult = {
         username: res.requester,
         name: this.requesterUser

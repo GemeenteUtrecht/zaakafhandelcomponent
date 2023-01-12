@@ -25,7 +25,7 @@
   <!-- Table -->
   <ng-container *ngIf="relatedObjects && !isLoading">
     <div *ngFor="let table of tables; trackBy: trackRow;">
-      <h3>{{table.title|titlecase}}</h3>
+      <h5>{{table.title|titlecase}}</h5>
       <gu-table [expandable]="true" [table]="table.table" (buttonOutput)="tableButtonClick($event)" class="mb-4"></gu-table>
     </div>
     <p *ngIf="(relatedObjects.length === 0)">Er zijn geen gerelateerde objecten.</p>
