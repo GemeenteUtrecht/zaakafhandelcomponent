@@ -88,6 +88,7 @@ def search_zaken(
     request=None,
     size=None,
     identificatie=None,
+    identificatie_keyword=None,
     bronorganisatie=None,
     omschrijving=None,
     zaaktypen=None,
@@ -106,6 +107,8 @@ def search_zaken(
 
     if identificatie:
         s = s.query(Match(identificatie={"query": identificatie}))
+    if identificatie_keyword:
+        s = s.filter(Term(identificatie__keyword=identificatie_keyword))
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
     if omschrijving:

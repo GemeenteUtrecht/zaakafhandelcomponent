@@ -558,14 +558,19 @@ def search_zaken_for_bsn(bsn: str) -> List[Zaak]:
 def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
     """
     Find the Zaak, uniquely identified by bronorganisatie & identificatie.
-    """
-    query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
 
+    """
     # try local search index first
-    results = search_zaken(size=1, only_allowed=False, **query)
+    results = search_zaken(
+        size=1,
+        only_allowed=False,
+        identificatie_keyword=identificatie,
+        bronorganisatie=bronorganisatie,
+    )
     if results:
         zaak = get_zaak(zaak_url=results[0].url)
     else:
+        query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
         # not in cache -> check it in all known ZRCs
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
         zaak = None
