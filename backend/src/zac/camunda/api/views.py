@@ -319,6 +319,7 @@ class SendMessageView(APIView):
 
         Note that the available/valid messages depend on the specific process
         definition and are validated at run-time.
+
         """
         # First populate message choices from the process instance...
         serializer = self.get_serializer(data=request.data)
