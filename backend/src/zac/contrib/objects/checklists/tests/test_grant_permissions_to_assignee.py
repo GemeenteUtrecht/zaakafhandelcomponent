@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest.mock import patch
 
 from django.urls import reverse_lazy
@@ -128,11 +129,11 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         with patch(
-            "zac.objects.services.fetch_checklisttype_object",
+            "zac.contrib.objects.services.fetch_checklisttype_object",
             return_value=CHECKLISTTYPE_OBJECT,
         ):
             with patch(
-                "zac.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.services.fetch_checklist_object",
                 return_value=[],
             ):
                 response = self.client.post(self.endpoint, data=data)
@@ -171,11 +172,11 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.objects.services.fetch_checklisttype_object",
+            "zac.contrib.objects.services.fetch_checklisttype_object",
             return_value=CHECKLISTTYPE_OBJECT,
         ):
             with patch(
-                "zac.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.services.fetch_checklist_object",
                 return_value=[],
             ):
                 response = self.client.post(self.endpoint, data=data)
@@ -226,11 +227,11 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.objects.services.fetch_checklisttype_object",
+            "zac.contrib.objects.services.fetch_checklisttype_object",
             return_value=CHECKLISTTYPE_OBJECT,
         ):
             with patch(
-                "zac.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.services.fetch_checklist_object",
                 return_value=[],
             ):
                 response = self.client.post(self.endpoint, data=data)
@@ -273,7 +274,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 {"question": "Nee?", "answer": ""},
             ],
         }
-        json_response = {**CHECKLIST_OBJECT}
+        json_response = deepcopy(CHECKLIST_OBJECT)
         json_response["record"]["data"]["answers"] = data["answers"]
         m.patch(
             f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
@@ -285,15 +286,15 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         with patch(
-            "zac.objects.checklists.api.serializers.fetch_checklist_object",
+            "zac.contrib.objects.checklists.api.serializers.fetch_checklist_object",
             return_value=CHECKLIST_OBJECT,
         ):
             with patch(
-                "zac.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.services.fetch_checklist_object",
                 return_value=CHECKLIST_OBJECT,
             ):
                 with patch(
-                    "zac.objects.services.fetch_checklisttype_object",
+                    "zac.contrib.objects.services.fetch_checklisttype_object",
                     return_value=CHECKLISTTYPE_OBJECT,
                 ):
                     response = self.client.put(self.endpoint, data=data)

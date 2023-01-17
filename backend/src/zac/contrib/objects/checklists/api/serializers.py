@@ -11,6 +11,11 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
+from zac.contrib.objects.services import (
+    fetch_checklist,
+    fetch_checklist_object,
+    fetch_checklisttype,
+)
 from zac.core.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
@@ -18,11 +23,6 @@ from zac.core.services import (
     fetch_objecttype,
     relate_object_to_zaak,
     update_object_record_data,
-)
-from zac.objects.services import (
-    fetch_checklist,
-    fetch_checklist_object,
-    fetch_checklisttype,
 )
 
 from ..data import (

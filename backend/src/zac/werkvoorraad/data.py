@@ -5,7 +5,7 @@ from django_camunda.camunda_models import Task
 
 from zac.accounts.models import AccessRequest
 from zac.activities.models import Activity
-from zac.objects.checklists.data import ChecklistAnswer
+from zac.contrib.objects.checklists.data import ChecklistAnswer
 from zgw.models import Zaak
 
 

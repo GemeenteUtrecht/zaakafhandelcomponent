@@ -139,7 +139,7 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         )
         self.client.force_authenticate(self.user)
         with patch(
-            "zac.objects.services.fetch_checklisttype_object",
+            "zac.contrib.objects.services.fetch_checklisttype_object",
             return_value=CHECKLISTTYPE_OBJECT,
         ):
             response = self.client.get(self.endpoint)
@@ -165,7 +165,7 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
 
         self.client.force_authenticate(self.user)
         with patch(
-            "zac.objects.services.fetch_checklisttype_object",
+            "zac.contrib.objects.services.fetch_checklisttype_object",
             return_value=CHECKLISTTYPE_OBJECT,
         ):
             response = self.client.get(self.endpoint)

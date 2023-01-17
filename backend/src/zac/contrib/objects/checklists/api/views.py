@@ -8,9 +8,9 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import permissions, status, views
 from rest_framework.response import Response
 
+from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
 from zac.core.api.permissions import CanForceEditClosedZaken
 from zac.core.services import find_zaak
-from zac.objects.services import fetch_checklist, fetch_checklisttype
 from zgw.models.zrc import Zaak
 
 from ..data import Checklist, ChecklistAnswer, ChecklistType

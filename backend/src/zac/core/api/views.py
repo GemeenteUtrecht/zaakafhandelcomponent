@@ -1,5 +1,6 @@
 import base64
 import logging
+from copy import deepcopy
 from datetime import date, datetime
 from itertools import groupby
 from typing import Dict, List
@@ -40,6 +41,7 @@ from zac.accounts.models import User, UserAtomicPermission
 from zac.camunda.api.utils import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
+from zac.contrib.objects.services import fetch_zaaktypeattributen_objects
 from zac.core.camunda.start_process.serializers import CreatedProcessInstanceSerializer
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
@@ -50,7 +52,6 @@ from zac.core.services import (
     update_document,
     update_zaak_eigenschap,
 )
-from zac.objects.services import fetch_zaaktypeattributen_objects
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -337,7 +338,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         serializer.is_valid(raise_exception=True)
 
         # If no errors are raised - data is valid too.
-        data = {**serializer.data}
+        data = deepcopy(serializer.data)
         reden = data.pop("reden", None)
         request_kwargs = {"headers": {"X-Audit-Toelichting": reden}} if reden else {}
 
@@ -846,8 +847,7 @@ class ZaakDocumentView(views.APIView):
                 }
             )
 
-        document_data = {**document_data, **validated_data}
-        return document_data
+        return {**document_data, **validated_data}
 
     def get_document_audit_trail(self, document: Document) -> Dict[str, datetime]:
         audittrail = fetch_document_audit_trail(document.url)

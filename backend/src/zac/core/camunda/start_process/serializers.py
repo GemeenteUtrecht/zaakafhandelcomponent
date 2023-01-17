@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial
 from typing import Dict, List, Union
@@ -12,6 +13,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
+from zac.contrib.objects.services import fetch_start_camunda_process_form
 from zac.core.api.serializers import (
     EigenschapSerializer,
     InformatieObjectTypeSerializer,
@@ -24,7 +26,6 @@ from zac.core.services import (
     get_zaak_eigenschappen,
     resolve_documenten_informatieobjecttypen,
 )
-from zac.objects.services import fetch_start_camunda_process_form
 
 from .data import (
     ProcessEigenschap,
@@ -287,7 +288,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             doc.url for doc in self.validated_data["bijlagen"]
         ]
         self.validated_data["zaakeigenschappen"] = [
-            {**data}
+            deepcopy(data)
             for data in ZaakEigenschapSerializer(
                 self.validated_data["zaakeigenschappen"], many=True
             ).data
