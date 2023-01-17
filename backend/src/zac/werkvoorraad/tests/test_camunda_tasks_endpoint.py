@@ -101,7 +101,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         with patch(
-            "zac.werkvoorraad.api.views.get_camunda_user_tasks",
+            "zac.werkvoorraad.views.get_camunda_user_tasks",
             return_value=[],
         ):
             response = self.client.get(self.user_endpoint)
@@ -111,11 +111,11 @@ class CamundaTasksTests(ESMixin, APITestCase):
 
     def test_user_tasks_endpoint(self):
         with patch(
-            "zac.werkvoorraad.api.views.get_zaak_url_from_context",
+            "zac.werkvoorraad.views.get_zaak_url_from_context",
             return_value=(self.task.id, self.zaak["url"]),
         ):
             with patch(
-                "zac.werkvoorraad.api.views.get_camunda_user_tasks",
+                "zac.werkvoorraad.views.get_camunda_user_tasks",
                 return_value=[self.task],
             ):
                 response = self.client.get(self.user_endpoint)
@@ -162,11 +162,11 @@ class CamundaTasksTests(ESMixin, APITestCase):
 
     def test_group_tasks_endpoint(self):
         with patch(
-            "zac.werkvoorraad.api.views.get_zaak_url_from_context",
+            "zac.werkvoorraad.views.get_zaak_url_from_context",
             return_value=(self.task.id, self.zaak["url"]),
         ):
             with patch(
-                "zac.werkvoorraad.api.views.get_camunda_group_tasks",
+                "zac.werkvoorraad.views.get_camunda_group_tasks",
                 return_value=[_get_task(**{"assignee": self.groups[0]})],
             ):
                 response = self.client.get(self.group_endpoint)
@@ -208,15 +208,15 @@ class CamundaTasksTests(ESMixin, APITestCase):
 
     def test_user_tasks_endpoint_zaak_cant_be_found(self):
         with patch(
-            "zac.werkvoorraad.api.views.get_zaak_url_from_context",
+            "zac.werkvoorraad.views.get_zaak_url_from_context",
             return_value=(self.task.id, self.zaak["url"]),
         ):
             with patch(
-                "zac.werkvoorraad.api.views.get_camunda_user_tasks",
+                "zac.werkvoorraad.views.get_camunda_user_tasks",
                 return_value=[self.task],
             ):
                 with patch(
-                    "zac.werkvoorraad.api.views.search_zaken",
+                    "zac.werkvoorraad.views.search_zaken",
                     return_value=[],
                 ):
                     response = self.client.get(self.user_endpoint)

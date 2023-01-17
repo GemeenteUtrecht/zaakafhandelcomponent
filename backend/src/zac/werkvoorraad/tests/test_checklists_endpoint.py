@@ -93,7 +93,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user",
+            "zac.werkvoorraad.views.fetch_all_checklists_for_user",
             return_value=[user_checklist],
         ):
             response = self.client.get(self.endpoint)
@@ -133,7 +133,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user",
+            "zac.werkvoorraad.views.fetch_all_checklists_for_user",
             return_value=[user_checklist],
         ):
             response = self.client.get(self.endpoint)
@@ -155,7 +155,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user",
+            "zac.werkvoorraad.views.fetch_all_checklists_for_user",
             return_value=[],
         ):
             response = self.client.get(self.endpoint)
@@ -185,7 +185,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         endpoint = reverse("werkvoorraad:group-checklists")
         with patch(
-            "zac.werkvoorraad.api.views.fetch_all_checklists_for_user_groups",
+            "zac.werkvoorraad.views.fetch_all_checklists_for_user_groups",
             return_value=[group_checklist],
         ):
             response = self.client.get(endpoint)
