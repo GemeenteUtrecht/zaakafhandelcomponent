@@ -130,6 +130,7 @@ def create_zaaktype_document(zaaktype: ZaakType) -> ZaakTypeDocument:
         url=zaaktype.url,
         omschrijving=zaaktype.omschrijving,
         catalogus=zaaktype.catalogus,
+        identificatie=zaaktype.identificatie,
     )
 
     return zaaktype_document

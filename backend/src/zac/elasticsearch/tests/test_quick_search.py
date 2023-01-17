@@ -1,23 +1,14 @@
 from unittest.mock import MagicMock
 
 from django.conf import settings
-from django.test import TestCase
 from django.urls import reverse_lazy
 
-import requests_mock
 from elasticsearch_dsl import Index
-from rest_framework import status
 from rest_framework.test import APITransactionTestCase
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
-    ApplicationTokenFactory,
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -26,11 +17,7 @@ from zac.accounts.tests.factories import (
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import (
-    create_related_zaak_document,
-    update_eigenschappen_in_zaak_document,
-    update_zaakobjecten_in_zaak_document,
-)
+from zac.elasticsearch.api import create_related_zaak_document
 from zac.elasticsearch.tests.utils import ESMixin
 
 from ..documents import (

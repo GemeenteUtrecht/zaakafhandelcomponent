@@ -10,7 +10,7 @@ from ..models import SearchReport
 from .fields import OrderedMultipleChoiceField
 from .utils import get_document_fields, get_document_properties
 
-DEFAULT_ES_FIELDS = [
+DEFAULT_ES_ZAAKDOCUMENT_FIELDS = [
     field[0]
     for field in get_document_fields(
         get_document_properties(ZaakDocument)["properties"]
@@ -62,10 +62,10 @@ class SearchSerializer(serializers.Serializer):
     fields = OrderedMultipleChoiceField(
         required=False,
         help_text=_(
-            "Fields that will be returned with the search results. Default returns all fields. Will always include `identificatie`."
+            "Fields that will be returned with the search results. Default returns all fields. Will always include `identificatie` and `bronorganisatie`."
         ),
-        choices=DEFAULT_ES_FIELDS,
-        default=DEFAULT_ES_FIELDS,
+        choices=DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
+        default=DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
     )
     include_closed = serializers.BooleanField(
         required=False,

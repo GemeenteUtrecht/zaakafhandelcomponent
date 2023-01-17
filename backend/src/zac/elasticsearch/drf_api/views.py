@@ -3,7 +3,7 @@ from typing import List
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import views
+from rest_framework import exceptions, views
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -89,10 +89,13 @@ class PerformSearchMixin:
                         identificatie=identificatie,
                     )
                 ]
+            zaaktypen = [url for url in set(urls)]
 
-            search_query["zaaktypen"] = [url for url in set(urls)]
+            # In case someone does not have the right blueprint permissions
+            # let search_zaken filter out what is allowed and what is not.
+            search_query["zaaktypen"] = zaaktypen
 
-        results = search_zaken(**search_query, request=self.request)
+        results = search_zaken(**search_query, request=self.request, only_allowed=True)
         return results
 
 

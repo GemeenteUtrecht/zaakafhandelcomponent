@@ -24,7 +24,7 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 
 from ..documents import ZaakDocument, ZaakTypeDocument
-from ..drf_api.serializers import DEFAULT_ES_FIELDS
+from ..drf_api.serializers import DEFAULT_ES_ZAAKDOCUMENT_FIELDS
 from ..models import SearchReport
 from .factories import SearchReportFactory
 from .utils import ESMixin
@@ -279,7 +279,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         search_report = SearchReportFactory.create(
             query={
-                "fields": DEFAULT_ES_FIELDS,
+                "fields": DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
             },
         )
 
@@ -426,7 +426,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         search_report = SearchReportFactory.create(
             name="Some-report-0",
             query={
-                "fields": DEFAULT_ES_FIELDS,
+                "fields": DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
                 "zaaktype": {
                     "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                     "omschrijving": "zaaktype1",
