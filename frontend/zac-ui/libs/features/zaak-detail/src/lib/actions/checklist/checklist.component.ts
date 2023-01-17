@@ -291,8 +291,10 @@ export class ChecklistComponent implements OnInit, OnChanges {
         const groupAssigneeKey = `__groupAssignee_${question}`;
         const groupAssignee = answerData[groupAssigneeKey];
 
+        const submitAnswer = !answer || Array.isArray(answer) ? '' : answer as string;
+
         return ({
-          answer: answer as string || '',
+          answer: submitAnswer,
           created: new Date().toISOString(),
           document: documentUrl,
           question: question,
