@@ -27,9 +27,6 @@ from zac.objects.checklists.tests.utils import (
     ZAKEN_ROOT,
 )
 
-from ..api.data import ChecklistAnswerGroup
-from ..api.serializers import WorkStackChecklistAnswerSerializer
-
 
 @freeze_time("2021-12-16T12:00:00Z")
 class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
