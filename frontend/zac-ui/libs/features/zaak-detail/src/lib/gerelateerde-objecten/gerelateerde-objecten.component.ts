@@ -1,8 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
-import { ObjectType, ObjectTypeVersion, RowData, Table, Zaak, ZaakObject, ZaakObjectGroup } from '@gu/models';
+import { ObjectType, RowData, Table, Zaak, ZaakObject, ZaakObjectGroup } from '@gu/models';
 import { ObjectsService, ZaakObjectService, ZaakService } from '@gu/services';
-import { lastValueFrom } from 'rxjs';
 
 /**
  * <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-gerelateerde-objecten>
