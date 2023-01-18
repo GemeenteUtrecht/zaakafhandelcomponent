@@ -1,7 +1,8 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
 import { ObjectType, ObjectTypeVersion, RowData, Table, Zaak, ZaakObject, ZaakObjectGroup } from '@gu/models';
-import {ZaakObjectService, ZaakService} from '@gu/services';
+import { ObjectsService, ZaakObjectService, ZaakService } from '@gu/services';
+import { lastValueFrom } from 'rxjs';
 
 /**
  * <gu-gerelateerde-objecten [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-gerelateerde-objecten>
@@ -34,11 +35,14 @@ export class GerelateerdeObjectenComponent implements OnInit {
   /** @type {boolean} Whether this component is loading. */
   isLoading: boolean;
 
+  /** @type {boolean} Whether this component is loading. */
+  isInitiating: boolean;
+
   /** @type {ZaakObjectGroup[]} The list of groups of objects (Related objects are grouped on objecttype) */
   relatedObjects: ZaakObjectGroup[];
 
-  /** @type {{ title: string; table: Table }[]} The tables to render. */
-  tables: { title: string; table: Table }[] = [];
+  /** @type {{ title: string, table: Table }[]} The tables to render. */
+  tables: { title: string, table: Table }[] = [];
 
   /** @type {FieldConfiguration[]} The (modal) form. */
   form: FieldConfiguration[] = null;
@@ -46,10 +50,17 @@ export class GerelateerdeObjectenComponent implements OnInit {
   /**
    * Constructor method.
    * @param {ModalService} modalService
+   * @param {ObjectsService} objectsService
    * @param {SnackbarService} snackbarService
    * @param {ZaakService} zaakService
+   * @param {ZaakObjectService} zaakObjectService
    */
-  constructor(private modalService: ModalService, private snackbarService: SnackbarService, private zaakService: ZaakService, private zaakObjectService: ZaakObjectService) {
+  constructor(
+    private modalService: ModalService,
+    private objectsService: ObjectsService,
+    private snackbarService: SnackbarService,
+    private zaakService: ZaakService,
+    private zaakObjectService: ZaakObjectService) {
   }
 
   //
@@ -92,15 +103,15 @@ export class GerelateerdeObjectenComponent implements OnInit {
    * Fetches the objects related to a zaak
    */
   getContextData(): void {
-    this.isLoading = true;
+    this.isInitiating = true;
+    this.tables = [];
 
     this.zaakService.listRelatedObjects(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (data) => {
         this.relatedObjects = data;
-        this.tables = this.getTables();
+        this.getTables();
       },
-      this.reportError.bind(this),
-      () => this.isLoading = false
+      this.reportError.bind(this)
     );
   }
 
@@ -108,69 +119,74 @@ export class GerelateerdeObjectenComponent implements OnInit {
    * Returns the tables to render.
    * @returns {{title: string, table: Table}[]}
    */
-  getTables(): { title: string; table: Table }[] {
-    return this.relatedObjects.map((group: ZaakObjectGroup) => {
+   getTables() {
+     this.relatedObjects.map((group: ZaakObjectGroup) => {
       /* Use the latest version of the ObjectType to make the table headers */
       const latestZaakObjectGroup = group.items[0];
       const latestZaakObjectGroupType = latestZaakObjectGroup.type as ObjectType;
-      const objectTypeVersion = latestZaakObjectGroupType.versions[latestZaakObjectGroupType.versions?.length - 1] as ObjectTypeVersion
-      const objectProperties = objectTypeVersion.jsonSchema.required;
 
-      const tableHead: string[] = [
-        ...objectProperties.filter((property): boolean => property !== 'objectid'),
-        'acties',
-      ]
+      let tableGroup;
+      return this.objectsService.readLatestObjectTypeVersion(latestZaakObjectGroupType).subscribe(objectTypeVersion => {
+        const objectProperties = objectTypeVersion.jsonSchema.required;
 
-      const tableBody: RowData[] = group.items.map((relatedObject: ZaakObject) => {
-        const cellData = tableHead.reduce((acc, val: string) => {
-          acc[val] = String(relatedObject.record.data[val] || '');
-          return acc;
-        }, {});
+        const tableHead: string[] = [
+          ...objectProperties.filter((property): boolean => property !== 'objectid'),
+          'acties',
+        ]
 
-        // Hide button if case is closed and the user is not allowed to force edit
-        cellData['acties'] = !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken ? {
-          label: 'Verwijderen',
-          name: 'delete',
-          type: 'button',
-          value: relatedObject,
-        } : ''
-
-        const nestedCellData = Object.entries(relatedObject.record)
-          .filter(([, value]) => value !== null)
-          .filter(([, value]) => !Array.isArray(value))
-          .filter(([, value]) => typeof value !== 'object')
-          .reduce((acc: {}, [key, value]) => {
-
-            // typeVersion -> type version.
-            const _key = key[0] + key.slice(1).replace(
-              /[A-Z]/,
-              (str: string) => ` ${str.toLowerCase()}`
-            )
-
-            // Date
-            if (key.match(/at$/i)) {
-              const _value = {
-                type: 'date',
-                date: value
-              }
-              acc[_key] = _value
-              return acc;
-            }
-
-            acc[_key] = value;
+        const tableBody: RowData[] = group.items.map((relatedObject: ZaakObject) => {
+          const cellData = tableHead.reduce((acc, val: string) => {
+            acc[val] = String(relatedObject.record.data[val] || '');
             return acc;
-          }, {})
+          }, {});
 
-        return {
-          cellData: cellData,
-          nestedTableData: new Table((Object.keys(nestedCellData)), [{
-            cellData: nestedCellData,
-          }]),
-        };
-      });
+          // Hide button if case is closed and the user is not allowed to force edit
+          cellData['acties'] = !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken ? {
+            label: 'Verwijderen',
+            name: 'delete',
+            type: 'button',
+            value: relatedObject,
+          } : ''
 
-      const table = new Table(tableHead, tableBody);
-      return {title: group.label, table: table};
+          const nestedCellData = Object.entries(relatedObject.record)
+            .filter(([, value]) => value !== null)
+            .filter(([, value]) => !Array.isArray(value))
+            .filter(([, value]) => typeof value !== 'object')
+            .reduce((acc: {}, [key, value]) => {
+
+              // typeVersion -> type version.
+              const _key = key[0] + key.slice(1).replace(
+                /[A-Z]/,
+                (str: string) => ` ${str.toLowerCase()}`
+              )
+
+              // Date
+              if (key.match(/at$/i)) {
+                const _value = {
+                  type: 'date',
+                  date: value
+                }
+                acc[_key] = _value
+                return acc;
+              }
+
+              acc[_key] = value;
+              return acc;
+            }, {})
+
+          return {
+            cellData: cellData,
+            nestedTableData: new Table((Object.keys(nestedCellData)), [{
+              cellData: nestedCellData,
+            }]),
+          };
+        });
+
+        const table = new Table(tableHead, tableBody);
+        tableGroup = {title: group.label, table: table};
+
+        this.tables.push(tableGroup)
+      })
     });
   }
 

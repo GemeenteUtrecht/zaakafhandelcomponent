@@ -17,13 +17,13 @@
   </div>
 
   <!-- Loading -->
-  <ng-container *ngIf="isLoading">
+  <ng-container *ngIf="isLoading || (isInitiating && tables.length !== relatedObjects?.length)">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <!-- End loading -->
 
   <!-- Table -->
-  <ng-container *ngIf="relatedObjects && !isLoading">
+  <ng-container *ngIf="relatedObjects && !isLoading && tables.length === relatedObjects?.length">
     <div *ngFor="let table of tables; trackBy: trackRow;">
       <h5>{{table.title|titlecase}}</h5>
       <gu-table [expandable]="true" [table]="table.table" (buttonOutput)="tableButtonClick($event)" class="mb-4"></gu-table>
@@ -38,7 +38,7 @@
             title="Object toevoegen"
             size="medium"
             expandVertical="true">
-    <gu-zaak-object-search-form [zaaktype]="zaak.zaaktype" (selectZaakObject)="selectZaakObject($event)"></gu-zaak-object-search-form>
+    <gu-zaak-object-search-form [showAllObjectTypesCheckbox]="true" [zaaktype]="zaak.zaaktype" (selectZaakObject)="selectZaakObject($event)"></gu-zaak-object-search-form>
   </gu-modal>
   <!-- End modal object search -->
 

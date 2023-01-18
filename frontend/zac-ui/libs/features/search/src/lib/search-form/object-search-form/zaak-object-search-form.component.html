@@ -1,4 +1,5 @@
-<gu-checkbox class="d-inline-block ml-2 mb-2"
+<gu-checkbox *ngIf=showAllObjectTypesCheckbox
+             class="d-inline-block ml-2 mb-2"
              [control]="showAllObjectTypesControl"
              (change)="onShowAllObjectTypesChange()">
   <p class="mb-0">Toon objecttypen van alle zaaktypen</p>

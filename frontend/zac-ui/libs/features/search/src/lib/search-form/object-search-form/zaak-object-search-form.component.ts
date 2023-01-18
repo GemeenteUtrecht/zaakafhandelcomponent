@@ -60,6 +60,7 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
 })
 export class ZaakObjectSearchFormComponent implements OnInit {
   @Input() zaaktype: Zaaktype = null;
+  @Input() showAllObjectTypesCheckbox: boolean = false;
   @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
@@ -361,12 +362,12 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * Show object types according to checked value
    */
   onShowAllObjectTypesChange() {
-    if (this.showAllObjectTypesControl.value) {
-      this.objectTypes = this.allObjectTypes;
-      this.objectTypeVersions = this.allObjectTypeVersions
-    } else {
+    if (this.showAllObjectTypesCheckbox && !this.showAllObjectTypesControl.value) {
       this.objectTypes = this.objectTypesForSpecificCaseType;
       this.objectTypeVersions = this.objectTypesForSpecificCaseTypeVersions
+    } else {
+      this.objectTypes = this.allObjectTypes;
+      this.objectTypeVersions = this.allObjectTypeVersions
     }
   }
 
