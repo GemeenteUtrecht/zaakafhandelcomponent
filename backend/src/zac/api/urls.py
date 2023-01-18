@@ -32,6 +32,6 @@ urlpatterns = [
     path("kownsl/", include("zac.contrib.kownsl.urls")),
     path("landing-page/", include("zac.landing.api.urls")),
     path("search/", include("zac.elasticsearch.drf_api.urls")),
-    path("workstack/", include("zac.werkvoorraad.api.urls")),
+    path("workstack/", include("zac.werkvoorraad.urls")),
     path("", include("zac.notifications.urls")),
 ]

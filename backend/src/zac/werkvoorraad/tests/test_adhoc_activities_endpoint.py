@@ -20,8 +20,8 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 
-from ..api.data import ActivityGroup
-from ..api.serializers import WorkStackAdhocActivitiesSerializer
+from ..data import ActivityGroup
+from ..serializers import WorkStackAdhocActivitiesSerializer
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
