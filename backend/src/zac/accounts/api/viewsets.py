@@ -3,8 +3,9 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import filters, mixins, status, viewsets
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import filters, mixins, serializers, status, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -25,7 +26,7 @@ from ..models import (
     UserAtomicPermission,
     UserAuthorizationProfile,
 )
-from .filters import UserFilter
+from .filters import UserAtomicPermissionFilterSet, UserFilterSet
 from .permissions import (
     CanCreateOrHandleAccessRequest,
     CanForceCreateOrHandleAccessRequest,
@@ -45,6 +46,7 @@ from .serializers import (
     ManageGroupSerializer,
     ReadUserAuthorizationProfileSerializer,
     RoleSerializer,
+    UpdateGrantPermissionSerializer,
     UserAuthorizationProfileSerializer,
     UserSerializer,
 )
@@ -67,7 +69,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
     permission_classes = (HasTokenAuth | IsAuthenticated,)
     search_fields = ["username", "first_name", "last_name", "email"]
-    filterset_class = UserFilter
+    filterset_class = UserFilterSet
 
     @extend_schema(summary=_("Retrieve current logged in user."))
     @action(detail=False)
@@ -145,6 +147,29 @@ class AccessRequestViewSet(
 
 @extend_schema_view(
     retrieve=extend_schema(summary=_("Retrieve atomic permission.")),
+    list=extend_schema(
+        summary=_("List user atomic permissions related to object."),
+        parameters=[
+            OpenApiParameter(
+                name="object_url",
+                required=True,
+                type=OpenApiTypes.URI,
+                description=_(
+                    "URL-reference of object related to user atomic permissions."
+                ),
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="username",
+                required=True,
+                type=OpenApiTypes.STR,
+                description=_("Username of user related to user atomic permissions."),
+                location=OpenApiParameter.QUERY,
+            ),
+        ],
+        request=AtomicPermissionSerializer(many=True),
+        responses={200: AtomicPermissionSerializer(many=True)},
+    ),
     create=extend_schema(
         summary=_("Grant atomic permission to ZAAK."),
         request=GrantPermissionSerializer(many=True),
@@ -155,31 +180,36 @@ class AccessRequestViewSet(
 class AtomicPermissionViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """
-    Create and delete an atomic permission for a particular user
+    Manage atomic permissions for a user.
+
     """
 
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, CanGrantAccess, CanForceGrantAccess]
     queryset = UserAtomicPermission.objects.select_related("user", "atomic_permission")
     serializer_class = AtomicPermissionSerializer
+    filterset_class = UserAtomicPermissionFilterSet
+    allowed_methods = ["get", "put", "post", "delete"]
 
-    def get_serializer(self, **kwargs):
+    def get_serializer(self, *args, **kwargs):
         mapping = {
             "GET": AtomicPermissionSerializer,
+            "PUT": UpdateGrantPermissionSerializer,
             "POST": GrantPermissionSerializer,
             "DELETE": AtomicPermissionSerializer,
         }
-        if self.request.method == "POST":
+        if self.request.method in ["POST", "PUT"]:
             kwargs.update({"many": True})
-        return mapping[self.request.method](**kwargs)
+        return mapping[self.request.method](*args, **kwargs)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, many=True)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         user_atomic_permission = serializer.instance[0]
@@ -197,6 +227,56 @@ class AtomicPermissionViewSet(
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+    def list(self, request, *args, **kwargs):
+        if not self.request.query_params.get("username"):
+            raise serializers.ValidationError(
+                "`username` is a required query parameter."
+            )
+        if not self.request.query_params.get("object_url"):
+            raise serializers.ValidationError(
+                "`object_url` is a required query parameter."
+            )
+
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Partially update multiple user atomic permissions."),
+        request=UpdateGrantPermissionSerializer(many=True),
+        responses={200: AtomicPermissionSerializer(many=True)},
+    )
+    @action(
+        methods=["put"],
+        detail=False,
+        permission_classes=[IsAuthenticated, CanGrantAccess, CanForceGrantAccess],
+        url_name="update",
+    )
+    @transaction.atomic
+    def bulk_update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        qs = self.get_queryset()
+        qs.filter(
+            user=serializer.validated_data[0]["user"],
+            atomic_permission__object_url=serializer.validated_data[0][
+                "atomic_permission"
+            ]["object_url"],
+        ).actual().delete()
+        self.perform_create(serializer)
+
+        user_atomic_permission = serializer.instance[0]
+        # send email
+        transaction.on_commit(
+            lambda: send_email_to_requester(
+                user_atomic_permission.user,
+                zaak_url=user_atomic_permission.atomic_permission.object_url,
+                result=AccessRequestResult.approve,
+                request=request,
+            )
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
     def perform_destroy(self, instance):

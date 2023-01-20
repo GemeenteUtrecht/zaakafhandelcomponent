@@ -27,7 +27,9 @@ logger = logging.getLogger(__name__)
 class GrantAccessMixin:
     def get_object_url(self, serializer) -> str:
         if isinstance(serializer, serializers.ListSerializer):
-            # Do not allow different object_urls at this point.
+            # Do not allow a mix of object_urls at this point.
+            # Only one object can be granted multiple atomic
+            # permissions in the same request.
             objects = {
                 child_serializer["atomic_permission"]["object_url"]
                 for child_serializer in serializer.validated_data
