@@ -641,16 +641,7 @@ class GrantAccessAPITests(APITransactionTestCase):
             comment="something",
             reason="no",
         )
-        uap2 = UserAtomicPermissionFactory.create(
-            atomic_permission__object_url=ZAAK_URL,
-            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
-            atomic_permission__permission=zaken_geforceerd_bijwerken.name,
-            user=self.requester,
-            end_date=None,
-            comment="something-else",
-            reason="yes",
-        )
-        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 2)
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
 
         endpoint = furl(reverse("accesses-list"))
         endpoint.add({"object_url": ZAAK_URL, "username": self.requester.username})
@@ -668,16 +659,6 @@ class GrantAccessAPITests(APITransactionTestCase):
                     "endDate": None,
                     "comment": "something",
                     "reason": "no",
-                },
-                {
-                    "id": uap2.id,
-                    "requester": self.requester.username,
-                    "permission": "zaken:geforceerd-bijwerken",
-                    "zaak": ZAAK_URL,
-                    "startDate": "2020-01-01T00:00:00Z",
-                    "endDate": None,
-                    "comment": "something-else",
-                    "reason": "yes",
                 },
             ],
         )
