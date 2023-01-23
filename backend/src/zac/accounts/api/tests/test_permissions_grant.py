@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import requests_mock
 from freezegun import freeze_time
+from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -520,3 +521,144 @@ class GrantAccessAPITests(APITransactionTestCase):
         zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
         url = f"http://testserver{zaak_detail_path}"
         self.assertIn(url, email.body)
+
+    @requests_mock.Mocker()
+    def test_update_grant_access_success(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=ZAAK_URL,
+            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
+            atomic_permission__permission=zaken_inzien.name,
+            user=self.requester,
+            end_date=None,
+        )
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=ZAAK_URL,
+            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
+            atomic_permission__permission=zaken_geforceerd_bijwerken.name,
+            user=self.requester,
+            end_date=None,
+        )
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 2)
+        data = [
+            {
+                "requester": self.requester.username,
+                "zaak": ZAAK_URL,
+                "comment": "some comment",
+                "permission": "zaken:toegang-verlenen",
+                "end_date": "2020-01-02T00:00:00+00:00",
+            },
+        ]
+        endpoint = reverse("accesses-update")
+        response = self.client.put(endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Make sure old objects are deleted.
+        self.assertEqual(
+            UserAtomicPermission.objects.filter(user=self.requester).count(), 1
+        )
+
+        # Make sure new object is the one that was 'PUT' there.
+        self.assertEqual(
+            UserAtomicPermission.objects.get().end_date.isoformat(),
+            "2020-01-02T00:00:00+00:00",
+        )
+        self.assertEqual(
+            UserAtomicPermission.objects.get().atomic_permission.permission,
+            "zaken:toegang-verlenen",
+        )
+
+    @requests_mock.Mocker()
+    def test_list_user_atomic_permissions_no_user_query_parameter(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+        endpoint = furl(reverse("accesses-list"))
+        endpoint.add({"object_url": ZAAK_URL})
+        response = self.client.get(endpoint.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json(), ["`username` is a required query parameter."])
+
+    @requests_mock.Mocker()
+    def test_list_user_atomic_permissions_no_object_url_query_parameter(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+
+        endpoint = furl(reverse("accesses-list"))
+        endpoint.add({"username": self.requester.username})
+        response = self.client.get(endpoint.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(), ["`object_url` is a required query parameter."]
+        )
+
+    @requests_mock.Mocker()
+    def test_list_user_atomic_permissions_different_user(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=ZAAK_URL,
+            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
+            atomic_permission__permission=zaken_inzien.name,
+            user=self.requester,
+            end_date=None,
+        )
+        UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=ZAAK_URL,
+            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
+            atomic_permission__permission=zaken_geforceerd_bijwerken.name,
+            user=self.requester,
+            end_date=None,
+        )
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 2)
+
+        endpoint = furl(reverse("accesses-list"))
+        endpoint.add(
+            {"object_url": ZAAK_URL, "username": "some-non-existent-harry-potter-user"}
+        )
+        response = self.client.get(endpoint.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), [])
+
+    @requests_mock.Mocker()
+    def test_list_user_atomic_permissions_success(self, m):
+        # mock ZRC data
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+
+        uap = UserAtomicPermissionFactory.create(
+            atomic_permission__object_url=ZAAK_URL,
+            atomic_permission__object_type=PermissionObjectTypeChoices.zaak,
+            atomic_permission__permission=zaken_inzien.name,
+            user=self.requester,
+            end_date=None,
+            comment="something",
+            reason="no",
+        )
+        self.assertEqual(AtomicPermission.objects.for_user(self.requester).count(), 1)
+
+        endpoint = furl(reverse("accesses-list"))
+        endpoint.add({"object_url": ZAAK_URL, "username": self.requester.username})
+        response = self.client.get(endpoint.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": uap.id,
+                    "requester": self.requester.username,
+                    "permission": "zaken:inzien",
+                    "zaak": ZAAK_URL,
+                    "startDate": "2020-01-01T00:00:00Z",
+                    "endDate": None,
+                    "comment": "something",
+                    "reason": "no",
+                },
+            ],
+        )

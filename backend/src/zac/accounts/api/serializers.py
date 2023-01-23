@@ -226,6 +226,14 @@ class GrantPermissionSerializer(AtomicPermissionSerializer):
         return user_atomic_permission
 
 
+class UpdateGrantPermissionSerializer(GrantPermissionSerializer):
+    # We want the same behavior as GrantPermissionSerializer
+    # minus the duplicate validation check because we're deleting
+    # the old objects anyway.
+    def validate(self, attrs):
+        return attrs
+
+
 class ZaakShortSerializer(APIModelSerializer):
     class Meta:
         model = Zaak
