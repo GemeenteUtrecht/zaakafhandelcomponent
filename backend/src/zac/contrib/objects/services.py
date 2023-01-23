@@ -11,10 +11,10 @@ from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import User
+from zac.contrib.objects.checklists.data import Checklist, ChecklistType
 from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import fetch_catalogus, get_zaakobjecten, search_objects
-from zac.objects.checklists.data import Checklist, ChecklistType
 from zgw.models import Zaak
 
 logger = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ def fetch_checklist_object(
 def fetch_checklist(zaak: Zaak) -> Optional[Checklist]:
     checklist_object_data = fetch_checklist_object(zaak)
     if checklist_object_data:
-        from zac.objects.checklists.api.serializers import ChecklistSerializer
+        from zac.contrib.objects.checklists.api.serializers import ChecklistSerializer
 
         serializer = ChecklistSerializer(
             data=underscoreize(

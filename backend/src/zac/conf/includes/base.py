@@ -157,7 +157,7 @@ INSTALLED_APPS = [
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
     "zac.contrib.dowc",
-    "zac.objects.checklists",
+    "zac.contrib.objects.checklists",
     "zac.core.camunda.start_process",
 ]
 
@@ -538,7 +538,7 @@ if SENTRY_DSN:
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
 ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
     os.path.join(DJANGO_PROJECT_DIR, "tests", "schemas"),
-    os.path.join(DJANGO_PROJECT_DIR, "objects", "tests", "schemas"),
+    os.path.join(DJANGO_PROJECT_DIR, "contrib", "objects", "tests", "schemas"),
 ]
 
 # Django-Hijack

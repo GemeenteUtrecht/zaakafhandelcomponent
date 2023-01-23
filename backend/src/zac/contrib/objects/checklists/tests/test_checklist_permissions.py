@@ -176,7 +176,8 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         checklist = factory(Checklist, checklist)
         with patch(
-            "zac.objects.checklists.api.views.fetch_checklist", return_value=checklist
+            "zac.contrib.objects.checklists.api.views.fetch_checklist",
+            return_value=checklist,
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -235,11 +236,11 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         cls.checklisttype = factory(ChecklistType, cls.checklisttype)
         cls.patch_fetch_checklisttype = patch(
-            "zac.objects.checklists.api.serializers.fetch_checklisttype",
+            "zac.contrib.objects.checklists.api.serializers.fetch_checklisttype",
             return_value=cls.checklisttype,
         )
         cls.patch_fetch_objecttype = patch(
-            "zac.objects.checklists.api.serializers.fetch_objecttype",
+            "zac.contrib.objects.checklists.api.serializers.fetch_objecttype",
             return_value={
                 "versions": [
                     f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1"
@@ -250,16 +251,17 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
         cls.patch_fetch_checklist = patch(
-            "zac.objects.checklists.api.serializers.fetch_checklist", return_value=None
+            "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
+            return_value=None,
         )
 
         cls.patch_create_object = patch(
-            "zac.objects.checklists.api.serializers.create_object",
+            "zac.contrib.objects.checklists.api.serializers.create_object",
             return_value={"url": "some-url"},
         )
 
         cls.patch_relate_object_to_zaak = patch(
-            "zac.objects.checklists.api.serializers.relate_object_to_zaak",
+            "zac.contrib.objects.checklists.api.serializers.relate_object_to_zaak",
             return_value=None,
         )
 
@@ -561,11 +563,11 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         cls.checklisttype = factory(ChecklistType, cls.checklisttype)
         cls.patch_fetch_checklisttype = patch(
-            "zac.objects.checklists.api.serializers.fetch_checklisttype",
+            "zac.contrib.objects.checklists.api.serializers.fetch_checklisttype",
             return_value=cls.checklisttype,
         )
         cls.patch_fetch_objecttype = patch(
-            "zac.objects.checklists.api.serializers.fetch_objecttype",
+            "zac.contrib.objects.checklists.api.serializers.fetch_objecttype",
             return_value={
                 "versions": [
                     f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1"
@@ -592,20 +594,21 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         cls.checklist = factory(Checklist, cls.checklist)
         cls.patch_fetch_checklist_views = patch(
-            "zac.objects.checklists.api.views.fetch_checklist",
+            "zac.contrib.objects.checklists.api.views.fetch_checklist",
             return_value=cls.checklist,
         )
         cls.patch_fetch_checklist_serializers = patch(
-            "zac.objects.checklists.api.serializers.fetch_checklist", return_value=None
+            "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
+            return_value=None,
         )
 
         cls.patch_fetch_checklist_object = patch(
-            "zac.objects.checklists.api.serializers.fetch_checklist_object",
+            "zac.contrib.objects.checklists.api.serializers.fetch_checklist_object",
             return_value={"uuid": "some-uuid"},
         )
 
         cls.patch_update_object_record_data = patch(
-            "zac.objects.checklists.api.serializers.update_object_record_data",
+            "zac.contrib.objects.checklists.api.serializers.update_object_record_data",
             return_value={"zaak": cls.zaak["url"]},
         )
 

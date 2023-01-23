@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, patch
+from copy import deepcopy
+from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -15,10 +16,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.core.permissions import zaken_inzien
-from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.tests.utils import ESMixin
-from zac.objects.checklists.tests.utils import (
+from zac.contrib.objects.checklists.tests.utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
     CHECKLIST_OBJECT,
@@ -26,6 +24,9 @@ from zac.objects.checklists.tests.utils import (
     ZAAK_URL,
     ZAKEN_ROOT,
 )
+from zac.core.permissions import zaken_inzien
+from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.tests.utils import ESMixin
 
 
 @freeze_time("2021-12-16T12:00:00Z")
@@ -86,7 +87,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        user_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        user_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
@@ -126,7 +127,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         self.refresh_index()
 
         self.client.force_authenticate(user=self.user)
-        user_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        user_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
@@ -148,7 +149,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
 
-        user_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        user_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
@@ -177,7 +178,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        group_checklist = {**CHECKLIST_OBJECT["record"]["data"]}
+        group_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
         group_checklist["answers"][0]["group_assignee"] = self.group_1.name
         self.client.force_authenticate(user=self.user)
         endpoint = reverse("werkvoorraad:group-checklists")

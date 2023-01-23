@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import exceptions, serializers
 
+from zac.contrib.objects.services import fetch_zaaktypeattributen_objects
 from zac.core.services import (
     get_documenten,
     get_eigenschap,
@@ -12,7 +13,6 @@ from zac.core.services import (
     get_zaak,
     get_zaaktype,
 )
-from zac.objects.services import fetch_zaaktypeattributen_objects
 from zgw.models.zrc import Zaak
 
 from .constants import ACCEPTABLE_CONTENT_TYPES, RE_PROG

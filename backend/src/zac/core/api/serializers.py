@@ -59,6 +59,10 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.contrib.objects.services import (
+    fetch_start_camunda_process_form,
+    fetch_zaaktypeattributen_objects,
+)
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import (
@@ -74,10 +78,6 @@ from zac.core.services import (
     get_zaaktypen,
 )
 from zac.core.utils import build_absolute_url
-from zac.objects.services import (
-    fetch_start_camunda_process_form,
-    fetch_zaaktypeattributen_objects,
-)
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup

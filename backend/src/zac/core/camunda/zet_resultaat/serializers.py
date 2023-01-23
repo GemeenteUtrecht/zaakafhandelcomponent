@@ -15,10 +15,10 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.kownsl.serializers import ZaakRevReqSummarySerializer
+from zac.contrib.objects.checklists.api.serializers import ChecklistQuestionSerializer
+from zac.contrib.objects.checklists.data import ChecklistQuestion
 from zac.core.api.serializers import ResultaatTypeSerializer
 from zac.core.services import get_resultaattypen
-from zac.objects.checklists.api.serializers import ChecklistQuestionSerializer
-from zac.objects.checklists.data import ChecklistQuestion
 
 
 @dataclass

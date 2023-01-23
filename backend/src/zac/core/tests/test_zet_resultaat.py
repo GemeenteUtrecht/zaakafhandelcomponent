@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest.mock import patch
 
 import requests_mock
@@ -55,7 +56,10 @@ TASK_DATA = {
     "tenantId": "aTenantId",
 }
 
-from zac.objects.checklists.tests.utils import CHECKLIST_OBJECT, CHECKLISTTYPE_OBJECT
+from zac.contrib.objects.checklists.tests.utils import (
+    CHECKLIST_OBJECT,
+    CHECKLISTTYPE_OBJECT,
+)
 
 
 def _get_task(**overrides):
@@ -179,13 +183,15 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             f"{CATALOGI_ROOT}resultaattypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.resultaattype]),
         )
-        checklist = {**CHECKLIST_OBJECT}
+        checklist = deepcopy(CHECKLIST_OBJECT)
         checklist["record"]["data"]["answers"][0]["answer"] = ""
+
         with patch(
-            "zac.objects.services.fetch_checklist_object", return_value=checklist
+            "zac.contrib.objects.services.fetch_checklist_object",
+            return_value=checklist,
         ):
             with patch(
-                "zac.objects.services.fetch_checklisttype_object",
+                "zac.contrib.objects.services.fetch_checklisttype_object",
                 return_value=CHECKLISTTYPE_OBJECT,
             ):
                 task_data = UserTaskData(task=task, context=_get_context(task))

@@ -1,4 +1,3 @@
-from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
@@ -13,9 +12,9 @@ from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.camunda.api.utils import start_process
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.contrib.objects.services import fetch_start_camunda_process_form
 from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_rollen
-from zac.objects.services import fetch_start_camunda_process_form
 
 from .permissions import CanStartCamundaProcess
 from .serializers import CreatedProcessInstanceSerializer

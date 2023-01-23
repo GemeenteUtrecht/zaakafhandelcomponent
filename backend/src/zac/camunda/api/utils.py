@@ -1,5 +1,6 @@
 import logging
 from collections import OrderedDict
+from copy import deepcopy
 from typing import Any, Dict, Optional, Union
 
 from django.conf import settings
@@ -40,7 +41,7 @@ def get_bptl_app_id_variable() -> Dict[str, str]:
 
 
 def ordered_dict_to_dict(variables: OrderedDict) -> Dict:
-    variables = {**variables}
+    variables = dict(deepcopy(variables))
     for key, value in variables.items():
         if type(value) == OrderedDict:
             variables[key] = ordered_dict_to_dict(value)
@@ -69,7 +70,7 @@ def start_process(
     # Make sure variable is of type Dict and not OrderedDict as django_camunda can't handle ordereddicts
     _variables = {}
     for key, value in camelize(variables, **api_settings.JSON_UNDERSCOREIZE).items():
-        if type(value) == OrderedDict:
+        if type(value) is OrderedDict:
             value = ordered_dict_to_dict(value)
         _variables[key] = serialize_variable(value)
 

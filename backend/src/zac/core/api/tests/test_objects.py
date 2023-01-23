@@ -151,14 +151,15 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
             omschrijving="ZT1",
         )
         mock_resource_get(m, zaaktype)
-        ot_1 = {
-            **self.objecttype_1,
-            "labels": {"zaaktypeIdentificaties": [zaaktype["identificatie"]]},
-        }
-        ot_2 = {**self.objecttype_2}
         m.get(
             f"{OBJECTTYPES_ROOT}objecttypes",
-            json=[ot_1, ot_2],
+            json=[
+                {
+                    **self.objecttype_1,
+                    "labels": {"zaaktypeIdentificaties": [zaaktype["identificatie"]]},
+                },
+                self.objecttype_2,
+            ],
         )
 
         config = CoreConfig.get_solo()
