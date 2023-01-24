@@ -86,7 +86,7 @@ export class InformatieComponent implements OnInit, OnChanges {
       ...this.caseDetailsFieldConfigurations,
       ...this.propertyFieldConfigurations,
       {
-        label: 'Reden wijziging',
+        label: 'Toelichting',
         placeholder: ' ',
         name: 'toelichting',
         required: false,
