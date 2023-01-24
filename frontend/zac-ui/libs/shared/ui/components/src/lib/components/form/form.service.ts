@@ -120,12 +120,12 @@ export class FormService {
    * @param {boolean} [editable] Whether the form is editable.
    * @return {Field[]}
    */
-  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form), editable: boolean = true): Field[] {
+  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form), editable: any = true): Field[] {
     return keys
       .map(key => {
         const fieldConfiguration = this.getFieldConfigurationByKey(form, key);
         fieldConfiguration.control = formGroup.controls[key];
-        fieldConfiguration.readonly = (typeof editable === 'boolean') ? !editable : fieldConfiguration.readonly;
+        fieldConfiguration.readonly = (typeof editable === 'boolean') && !fieldConfiguration.readonly ? !editable : fieldConfiguration.readonly;
         return new Field(fieldConfiguration);
       });
   }
