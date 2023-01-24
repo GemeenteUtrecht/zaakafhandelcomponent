@@ -18,6 +18,18 @@ export class ZaakSearchService {
   }
 
   /**
+   * Creates a request for suggestions for cases partially matching indentifier `query`.
+   * @param {string} query
+   */
+  quickSearch(query: string): Observable<HttpResponse<any>> {
+    const body = {
+      search: query
+    }
+    const endpoint = encodeURI(`/api/search/quick-search`);
+    return this.http.Post<any>(endpoint, body);
+  }
+
+  /**
    * Given results `suggestions` from `this.autocomplete()`, returns the data as (select) choices.
    * @param suggestions
    */

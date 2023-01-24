@@ -32,6 +32,7 @@ export class ZaakSelectComponent {
         (suggestions) => this.choices = this.zaakSearchService.suggestionsAsChoices(suggestions),
         (error) => console.error(error)
       );
+      this.zaakSearchService.quickSearch(query).subscribe(res => console.log(res))
 
       this.search.emit(query);
     }
