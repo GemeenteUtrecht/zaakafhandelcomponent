@@ -18,7 +18,7 @@ from zac.core.services import find_document, get_document
 
 from .api import create_doc, patch_and_destroy_doc
 from .exceptions import DOWCCreateError
-from .serializers import DowcResponseSerializer, DowcSerializer
+from .serializers import DowcResponseSerializer, DowcSerializer, OpenDowcFileSerializer
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:
@@ -27,18 +27,6 @@ def _cast(value: Optional[Any], type_: type) -> Any:
     return type_(value)
 
 
-@extend_schema(
-    summary=_("Retrieve a document."),
-    parameters=[
-        OpenApiParameter(
-            name="versie",
-            required=False,
-            type=OpenApiTypes.URI,
-            description=_("Version of the document."),
-            location=OpenApiParameter.QUERY,
-        ),
-    ],
-)
 class OpenDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
@@ -53,14 +41,33 @@ class OpenDowcView(APIView):
         document = find_document(bronorganisatie, identificatie, versie=versie)
         return document
 
+    @extend_schema(
+        summary=_("Retrieve a document."),
+        parameters=[
+            OpenApiParameter(
+                name="versie",
+                required=False,
+                type=OpenApiTypes.URI,
+                description=_("Version of the document."),
+                location=OpenApiParameter.QUERY,
+            ),
+        ],
+        request=OpenDowcFileSerializer,
+        responses={201: DowcResponseSerializer, 200: DowcResponseSerializer},
+    )
     def post(self, request, bronorganisatie, identificatie, purpose):
         """
         Create a dowc object in the dowc API and expose the document through a URL.
+
         """
         document = self.get_object(bronorganisatie, identificatie)
         referer = request.headers.get("referer", "")
+        serializer = OpenDowcFileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         try:
-            response, status_code = create_doc(request.user, document, purpose, referer)
+            response, status_code = create_doc(
+                request.user, document, purpose, referer, serializer.data["zaak"]
+            )
         except DOWCCreateError as err:
             raise ValidationError(err.args[0])
 

@@ -28,6 +28,7 @@ class ZetResultaatContext(Context):
     review_requests: List[Optional[ReviewRequest]]
     tasks: List[Optional[Task]]
     result_types: List[Optional[ResultaatType]]
+    open_documenten: int
 
 
 @usertask_context_serializer
@@ -59,6 +60,9 @@ class ZetResultaatContextSerializer(APIModelSerializer):
         required=True,
         help_text=_("RESULTAATTYPEs for ZAAKTYPE of ZAAK."),
     )
+    open_documenten = serializers.IntegerField(
+        help_text=_("Number of open documents."), required=True
+    )
 
     class Meta:
         model = ZetResultaatContext
@@ -68,6 +72,7 @@ class ZetResultaatContextSerializer(APIModelSerializer):
             "taken",
             "verzoeken",
             "resultaattypen",
+            "open_documenten",
         )
 
 
@@ -81,6 +86,7 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
     Serializes the `resultaat` for the user task.
 
     Requires ``task`` to be in serializer ``context``.
+
     """
 
     resultaat = serializers.CharField(

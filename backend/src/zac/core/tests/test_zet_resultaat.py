@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory, APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.constants import APITypes
+from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
@@ -16,6 +16,7 @@ from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
+from zac.contrib.dowc.models import DowcConfig
 from zac.contrib.kownsl.models import KownslConfig
 from zac.contrib.kownsl.tests.utils import REVIEW_REQUEST
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -30,6 +31,7 @@ CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 KOWNSL_ROOT = "https://kownsl.nl/"
+DOWC_API_ROOT = "https://dowc.nl/api/v1/"
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
 TASK_DATA = {
@@ -82,6 +84,21 @@ class GetZetResultaatContextSerializersTests(APITestCase):
         kownsl_config = KownslConfig.get_solo()
         kownsl_config.service = kownsl
         kownsl_config.save()
+
+        cls.dowc_service = Service.objects.create(
+            label="dowc",
+            api_type=APITypes.orc,
+            api_root=DOWC_API_ROOT,
+            auth_type=AuthTypes.zgw,
+            client_id="zac",
+            secret="supersecret",
+            oas=f"{DOWC_API_ROOT}/api/v1",
+            user_id="zac",
+        )
+
+        dowc_config = DowcConfig.get_solo()
+        dowc_config.service = cls.dowc_service
+        dowc_config.save()
 
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -156,7 +173,11 @@ class GetZetResultaatContextSerializersTests(APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-
+        mock_service_oas_get(m, DOWC_API_ROOT, "dowc", oas_url=self.dowc_service.oas)
+        m.get(
+            f"{DOWC_API_ROOT}documenten/count?zaak={self.zaak['url']}",
+            json={"count": 0},
+        )
         task = _get_task(**{"formKey": "zac:zetResultaat"})
         m.get(
             f"{CAMUNDA_URL}task/{task.id}/variables/zaakUrl?deserializeValue=false",
@@ -273,3 +294,4 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                 }
             ],
         )
+        self.assertEqual(serializer.data["context"]["open_documenten"], 0)

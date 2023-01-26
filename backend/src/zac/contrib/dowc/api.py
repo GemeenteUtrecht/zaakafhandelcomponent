@@ -19,7 +19,7 @@ from .exceptions import DOWCCreateError
 from .models import DowcConfig
 
 
-def get_client(user: User) -> Client:
+def get_client(user: Optional[User] = None) -> Client:
     config = DowcConfig.get_solo()
     assert config.service, "The DoWC service must be configured first"
     service = config.service
@@ -27,7 +27,7 @@ def get_client(user: User) -> Client:
     # override the actual logged in user in the `user_id` claim, so that Do.W.C. is
     # aware of the actual end user
     claims = {}
-    if user is not None:
+    if user:
         service.user_id = user.username
         claims["email"] = user.email
 
@@ -41,10 +41,7 @@ def get_client(user: User) -> Client:
 
 @optional_service
 def create_doc(
-    user: User,
-    document: Document,
-    purpose: str,
-    referer: str,
+    user: User, document: Document, purpose: str, referer: str, zaak: str
 ) -> Tuple[DowcResponse, int]:
 
     drc_url = furl(document.url).add({"versie": document.versie}).url
@@ -104,3 +101,22 @@ def patch_and_destroy_doc(user: User, uuid: str) -> Dict[str, str]:
 
     except ClientError:
         raise Http404(f"DocumentFile with id {uuid} does not exist.")
+
+
+@optional_service
+def get_open_documenten_for_zaak(zaak: str) -> Optional[Dict]:
+    client = get_client()
+    operation_id = "documenten_count_retrieve"
+    url = get_operation_url(client.schema, operation_id)
+    url = furl(url).add(
+        {
+            "zaak": zaak,
+        }
+    )
+    try:
+        response = client.request(
+            url.url, operation_id, method="GET", expected_status=200
+        )
+        return response
+    except ClientError:
+        return None
