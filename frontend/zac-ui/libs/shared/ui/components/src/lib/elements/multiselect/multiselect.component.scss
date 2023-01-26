@@ -17,6 +17,7 @@
 }
 ::ng-deep {
   .ng-select {
+    overflow: visible;
     font-size: 0.875rem;
     .ng-select-container {
       border-color: $color-border-input;
