@@ -1,10 +1,11 @@
 <div class="toegang-verlenen">
   <form [formGroup]="grantAccessForm" *ngIf="!submitSuccess">
     <div class="form-group">
-      <p class="mb-3">Selecteer een gebruiker die u toegang wilt verlenen tot deze zaak.</p>
+      <p class="mb-3">Selecteer een gebruiker die je rechten wilt verlenen tot deze zaak.</p>
 
       <!-- Search user -->
       <gu-multiselect (search)="onSearch($event)"
+                      (change)="onUserSelect($event)"
                       [items]="users"
                       [multiple]="false"
                       [control]="requesterControl"
@@ -17,46 +18,48 @@
       >
       </gu-multiselect>
 
-      <p class="mb-2">Welke rol(len) wil je toewijzen aan de gebruiker?</p>
+      <ng-container *ngIf="selectedUser">
+        <p class="mb-2">Welke rechten wil je toewijzen aan de gebruiker?</p>
 
-      <!-- Permissions -->
-      <gu-multiselect *ngIf="multiselectRoles"
-                      (change)="updateSelectedRoles($event)"
-                      [items]="multiselectRoles"
-                      [multiple]="true"
-                      [required]="true"
-                      widgetType="checkboxGroup"
-                      bindLabel="name"
-                      bindValue="name"
-                      label="Rollen"
-                      appendTo="body"
-                      class="mb-4"
-                      required>
-      </gu-multiselect>
+        <!-- Permissions -->
+        <gu-multiselect *ngIf="permissions && requesterControl.value"
+                        (change)="updateSelectedPermissions($event)"
+                        [items]="permissions"
+                        [selectedValue]="preselectedPermissions"
+                        [multiple]="true"
+                        [required]="true"
+                        widgetType="checkboxGroup"
+                        bindLabel="name"
+                        bindValue="name"
+                        label="Rechten"
+                        appendTo="body"
+                        class="mb-4"
+                        required>
+        </gu-multiselect>
 
-      <p class="mb-3">Optioneel: selecteer een verloopdatum voor de toegang.</p>
+        <p class="mb-3">Optioneel: selecteer een verloopdatum voor de toegang.</p>
 
-      <!-- End date -->
-      <gu-datepicker
-        label='Verloopdatum toegang'
-        [control]="endDateControl"
-        class='d-block mb-4'
-      ></gu-datepicker>
+        <!-- End date -->
+        <gu-datepicker
+          label='Verloopdatum toegang'
+          [control]="endDateControl"
+          class='d-block mb-2'
+        ></gu-datepicker>
+        <div class="d-flex justify-content-end">
+          <button gu-button
+                  [disabled]="!grantAccessForm.valid || isSubmitting || this.selectedPermissions?.length === 0"
+                  [loading]="isSubmitting"
+                  buttonStyle="primary"
+                  size="large"
+                  (click)="submitForm()">
+            Versturen
+          </button>
+        </div>
+      </ng-container>
     </div>
-    <div class="d-flex justify-content-end">
-      <button gu-button
-        [disabled]="!grantAccessForm.valid || isSubmitting || this.selectedRoles?.length === 0"
-        [loading]="isSubmitting"
-        buttonStyle="primary"
-        size="large"
-        (click)="submitForm()">
-        Versturen
-      </button>
-    </div>
-    <gu-message *ngIf="submitHasError && submitErrorMessage" type="warn" [message]="submitErrorMessage" class="d-block mt-2"></gu-message>
   </form>
   <gu-success *ngIf="submitSuccess">
-    <p class="mb-4">U heeft gebruiker {{requesterUser.fullName}} succesvol toegang verleend tot <strong>{{zaak.identificatie}}</strong></p>
-    <button gu-button buttonStyle="tertiary" size="small" (click)="submitSuccess=false">Nog een gebruiker toegang verlenen</button>
+    <p class="mb-4">U heeft gebruiker {{requesterUser.fullName}} succesvol rechten verleend tot <strong>{{zaak.identificatie}}</strong></p>
+    <button gu-button buttonStyle="tertiary" size="small" (click)="submitSuccess=false">Nog een gebruiker rechten verlenen</button>
   </gu-success>
 </div>

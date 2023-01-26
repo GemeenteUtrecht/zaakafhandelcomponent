@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { UserSearchResult, Zaak, Role } from '@gu/models';
+import { UserSearchResult, Zaak, Permission, UserPermission, User } from '@gu/models';
 import { AccountsService, ApplicationHttpClient } from '@gu/services';
 import {ModalService, SnackbarService} from '@gu/components';
 import { DatePipe } from '@angular/common';
@@ -12,14 +12,18 @@ import { DatePipe } from '@angular/common';
 })
 export class ToegangVerlenenComponent implements OnInit, OnChanges {
   @Input() zaak: Zaak;
+  @Input() userPermissions: UserPermission[];
+
   @Output() reload: EventEmitter<any> = new EventEmitter<any>();
 
   users: UserSearchResult[] = [];
   requesterUser: UserSearchResult;
-  allRoles: Role[];
-  multiselectRoles: object[];
+  selectedUser: User;
+
+  allPermissions: Permission[];
+  permissions: Permission[];
+  selectedPermissions: string[];
   preselectedPermissions: string[];
-  selectedRoles: string[] = [];
 
   grantAccessForm: FormGroup;
   isSubmitting: boolean;
@@ -34,6 +38,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private http: ApplicationHttpClient,
     private accountsService: AccountsService,
+    private cdRef: ChangeDetectorRef,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
     private datePipe: DatePipe,
@@ -43,8 +48,8 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   // Getters / setters.
   //
 
-  get rolesControl(): FormControl {
-    return this.grantAccessForm.get('roles') as FormControl;
+  get permissionsControl(): FormControl {
+    return this.grantAccessForm.get('permissions') as FormControl;
   };
 
   get requesterControl(): FormControl {
@@ -72,27 +77,23 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Fetch user roles and permissions.
+   * Fetch user user permissions.
    */
   getContextData() {
-    this.accountsService.getRoles()
-      .subscribe( res => {
-        this.allRoles = res;
-        this.multiselectRoles = res.map(({permissions, ...multiselectAttrs}) => multiselectAttrs)
-      }, error => console.error(error))
-
     this.accountsService.getPermissions()
       .subscribe( res => {
+        this.allPermissions = res;
+        this.permissions = res;
         this.preselectedPermissions = res.map( p => p.name );
       }, error => console.error(error))
   }
 
   /**
-   * Update selected roles.
+   * Update selected permissions.
    * @param event
    */
-  updateSelectedRoles(event) {
-    this.selectedRoles = event.map( p => p.name );
+  updateSelectedPermissions(event) {
+    this.selectedPermissions = event.map( p => p.name );
   }
 
   /**
@@ -104,6 +105,24 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       this.users = res.results;
     }, error => this.reportError(error)
     );
+  }
+
+  /**
+   * Show permissions according to user
+   * @param user
+   */
+  onUserSelect(user) {
+    this.selectedUser = user;
+
+    if (user) {
+      const filteredUserPermissions = this.userPermissions.filter(permissionObject => permissionObject.username === user.username)
+
+      // Check if selected user already has permissions
+      if (filteredUserPermissions?.length > 0) {
+        const userPermissions = filteredUserPermissions[0].permissions.map(zaakPermission => zaakPermission.permission);
+        this.permissions = this.allPermissions.filter(permission => !userPermissions.includes(permission.name))
+      }
+    }
   }
 
   /**
@@ -121,11 +140,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       this.datePipe.transform(this.endDateControl.value, "yyyy-MM-ddT00:00") :
       undefined;
 
-    const matchedSelectedRoles = this.allRoles.filter(role => this.selectedRoles.includes(role.name))
-    const selectedPermissions =  matchedSelectedRoles.reduce((a, { permissions }) => a.concat(permissions), [])
-    const filteredPermissions = selectedPermissions.filter(permission => !this.preselectedPermissions.includes(permission));
-
-    this.accountsService.addAtomicPermissions(this.zaak, this.requesterControl.value, filteredPermissions, endDate).subscribe(res => {
+    this.accountsService.addAtomicPermissions(this.zaak, this.requesterControl.value, this.selectedPermissions, endDate).subscribe(res => {
       this.submitResult = {
         username: res.requester,
         name: this.requesterUser
@@ -147,8 +162,7 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
         this.submitErrorMessage = 'Er is een fout opgetreden';
       }
 
-
-      this.reportError(error);
+      this.getContextData();
       this.modalService.close('add-person-modal');
     })
   }

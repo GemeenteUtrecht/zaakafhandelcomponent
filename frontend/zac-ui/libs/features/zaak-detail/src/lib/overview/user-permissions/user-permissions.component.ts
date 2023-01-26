@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import {ZaakPermission, UserPermission, Table, Zaak} from '@gu/models';
 import {ZaakService} from "@gu/services";
 import {PermissionsService} from './permissions.service';
@@ -40,7 +40,7 @@ export class UserPermissionsComponent implements OnInit {
   shortTable: Table = null;
 
   /** @type {UserPermission[]} The user permissions. */
-  userPermissions: UserPermission[] = [];
+  userPermissions: UserPermission[];
 
   /** @type {boolean} Wether table rows are all shown */
   isExpanded = false;
@@ -94,6 +94,7 @@ export class UserPermissionsComponent implements OnInit {
   getContextData(): void {
     this.zaakService.listCaseUsers(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (userPermissions: UserPermission[]): void => {
+        this.userPermissions = userPermissions;
         this.table = this.userPermissionsAsTable(userPermissions);
 
         this.shortTable = {...this.table};

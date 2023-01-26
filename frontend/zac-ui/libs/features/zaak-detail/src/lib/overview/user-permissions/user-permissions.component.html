@@ -34,8 +34,10 @@
   </div>
 
   <!-- Modals -->
-  <gu-modal [closeIcon]="true" id="add-person-modal" title="Toegang verlenen" size="small">
-    <gu-toegang-verlenen [zaak]=""></gu-toegang-verlenen>
+  <gu-modal *ngIf="userPermissions" [closeIcon]="true" id="add-person-modal" title="Rechten verlenen" size="small">
+    <gu-toegang-verlenen [zaak]="zaak"
+                         [userPermissions]="userPermissions"
+    ></gu-toegang-verlenen>
   </gu-modal>
 
   <gu-modal [closeIcon]="true" id="delete-permission-modal" title="Gebruikersrecht verwijderen">
