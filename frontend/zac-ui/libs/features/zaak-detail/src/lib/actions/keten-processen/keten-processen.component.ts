@@ -311,8 +311,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       const sendMessageConfirmation = 'De taak wordt aangemaakt, een moment geduld.'
       this.snackbarService.openSnackBar(sendMessageConfirmation, 'Sluiten', 'primary')
     }, errorRes => {
-      this.isLoading = false;
-      this.isLoadingAction = false;
       this.errorMessage = errorRes?.error?.detail || 'Het openen van de actie is niet gelukt. Controleer of de actie al actief is in het "Acties" blok hierboven.';
       this.reportError(errorRes);
     })
@@ -466,7 +464,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   handleStartProcessSuccess(): void {
     this.isLoading = true;
     this.update.emit();
-    this.showActions = true;
+    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
     this.closeModal();
   }
 
@@ -475,7 +473,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   checkActionsVisibility() {
     this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
-    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess;
+    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
   }
 
   //
