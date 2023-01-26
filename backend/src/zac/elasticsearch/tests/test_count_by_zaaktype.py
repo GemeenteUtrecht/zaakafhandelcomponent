@@ -16,7 +16,6 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 
-from ..data import DocCountByKey
 from ..documents import ZaakDocument, ZaakTypeDocument
 from ..searches import count_by_zaaktype
 from .utils import ESMixin
@@ -120,9 +119,12 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
 
         results = count_by_zaaktype(request=request)
         self.assertEqual(
-            [DocCountByKey(key=self.zaaktype_document1.identificatie, doc_count=1)],
-            results,
+            results[0].key,
+            "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
         )
+        self.assertEqual(results[0].doc_count, 1)
+        self.assertEqual(results[0].child.buckets[0].key, "zaaktype1")
+        self.assertEqual(results[0].child.buckets[0].doc_count, 1)
 
         # Now add appropriate blueprint permission for zaaktype 2
         BlueprintPermissionFactory.create(
@@ -135,15 +137,12 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
             for_user=user,
         )
         results = count_by_zaaktype(request=request)
-        self.assertTrue(len(results) == 2)
-        self.assertIn(
-            DocCountByKey(key=self.zaaktype_document1.identificatie, doc_count=1),
-            results,
+        self.assertEqual(
+            results[0].key,
+            "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
         )
-        self.assertIn(
-            DocCountByKey(key=self.zaaktype_document2.identificatie, doc_count=1),
-            results,
-        )
+        self.assertEqual(results[0].doc_count, 2)
+        self.assertTrue(len(results[0].child.buckets) == 2)
 
     def test_count_by_zaaktype_atomic_permissions_for_zaak(self):
         user = UserFactory.create()
@@ -161,9 +160,12 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         )
         results = count_by_zaaktype(request=request)
         self.assertEqual(
-            [DocCountByKey(key=self.zaaktype_document1.identificatie, doc_count=1)],
-            results,
+            results[0].key,
+            "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
         )
+        self.assertEqual(results[0].doc_count, 1)
+        self.assertEqual(results[0].child.buckets[0].key, "zaaktype1")
+        self.assertEqual(results[0].child.buckets[0].doc_count, 1)
 
         # Now add appropriate atomic permission for zaaktype 2
         AtomicPermissionFactory.create(
@@ -172,15 +174,12 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
             for_user=user,
         )
         results = count_by_zaaktype(request=request)
-        self.assertTrue(len(results) == 2)
-        self.assertIn(
-            DocCountByKey(key=self.zaaktype_document1.identificatie, doc_count=1),
-            results,
+        self.assertEqual(
+            results[0].key,
+            "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
         )
-        self.assertIn(
-            DocCountByKey(key=self.zaaktype_document2.identificatie, doc_count=1),
-            results,
-        )
+        self.assertEqual(results[0].doc_count, 2)
+        self.assertTrue(len(results[0].child.buckets) == 2)
 
     def test_count_by_zaaktype_superuser(self):
         user = SuperUserFactory.create()
@@ -189,12 +188,9 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         request.auth = None
 
         results = count_by_zaaktype(request=request)
-        self.assertTrue(len(results) == 2)
-        self.assertIn(
-            DocCountByKey(key=self.zaaktype_document1.identificatie, doc_count=1),
-            results,
+        self.assertEqual(
+            results[0].key,
+            "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
         )
-        self.assertIn(
-            DocCountByKey(key=self.zaaktype_document2.identificatie, doc_count=1),
-            results,
-        )
+        self.assertEqual(results[0].doc_count, 2)
+        self.assertTrue(len(results[0].child.buckets) == 2)

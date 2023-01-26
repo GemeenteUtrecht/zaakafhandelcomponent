@@ -58,6 +58,7 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype1",
+            identificatie="id1",
         )
         self.zaak_document1 = ZaakDocument(
             meta={"id": "a522d30c-6c10-47fe-82e3-e9f524c14ca8"},
@@ -98,6 +99,7 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype2",
+            identificatie="id2",
         )
         self.zaak_document2 = ZaakDocument(
             meta={"id": "a8c8bc90-defa-4548-bacd-793874c013ab"},

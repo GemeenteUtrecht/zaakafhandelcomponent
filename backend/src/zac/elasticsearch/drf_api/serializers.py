@@ -35,7 +35,7 @@ class SearchZaaktypeSerializer(serializers.Serializer):
             "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
         )
     )
-    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS."))
+    catalogus = serializers.URLField(help_text=_("URL-reference of related CATALOGUS."))
 
 
 class SearchSerializer(serializers.Serializer):
@@ -160,6 +160,12 @@ class ZaakTypeDocumentSerializer(serializers.Serializer):
     )
     omschrijving = serializers.CharField(
         required=False, help_text=_("Description of the ZAAKTYPE.")
+    )
+    identificatie = serializers.CharField(
+        required=False,
+        help_text=_(
+            "Identificatie of ZAAKTYPE. Unique in related CATALOGUS of CATALOGI API."
+        ),
     )
 
 

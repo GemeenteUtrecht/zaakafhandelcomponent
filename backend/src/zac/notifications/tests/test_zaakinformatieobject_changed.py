@@ -161,6 +161,7 @@ class ZaakInformatieObjectChangedTests(
                         "url": ZAAKTYPE_RESPONSE["url"],
                         "catalogus": ZAAKTYPE_RESPONSE["catalogus"],
                         "omschrijving": ZAAKTYPE_RESPONSE["omschrijving"],
+                        "identificatie": ZAAKTYPE_RESPONSE["identificatie"],
                     },
                 }
             ],
