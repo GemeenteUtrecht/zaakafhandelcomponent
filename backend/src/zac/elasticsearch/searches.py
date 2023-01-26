@@ -1,10 +1,9 @@
 import operator
 from functools import reduce
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 from urllib.request import Request
 
-from elasticsearch_dsl import A, Q, Search
-from elasticsearch_dsl.connections import get_connection
+from elasticsearch_dsl import Q, Search
 from elasticsearch_dsl.query import (
     Bool,
     Exists,

@@ -27,7 +27,9 @@ CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 
 
-class CountByZaakTypeTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+class ManagementDashboardSummaryTests(
+    ClearCachesMixin, ESMixin, APITransactionTestCase
+):
     endpoint = reverse_lazy("management-dashboard-summary")
 
     def setUp(self) -> None:

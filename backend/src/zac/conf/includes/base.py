@@ -159,7 +159,6 @@ INSTALLED_APPS = [
     "zac.contrib.dowc",
     "zac.contrib.objects.checklists",
     "zac.core.camunda.start_process",
-    "django_extensions",
 ]
 
 MIDDLEWARE = [

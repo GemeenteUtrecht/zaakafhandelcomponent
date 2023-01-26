@@ -1,6 +1,6 @@
 from typing import List
 
-from django.utils.translation import gettext as _, ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import authentication
