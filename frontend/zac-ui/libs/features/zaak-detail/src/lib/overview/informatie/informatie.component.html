@@ -4,7 +4,7 @@
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <!-- End loading -->
-  <button class="mb-4" gu-button *ngIf="isVisibleTezzaLink && tezzaLink" icon="open_in_new" (click)="goToLink(tezzaLink);">
+  <button class="mb-4" gu-button *ngIf="tezzaLink" icon="open_in_new" (click)="goToLink(tezzaLink);">
     Bekijk zaak in Tezza
   </button>
 

@@ -44,21 +44,6 @@ export class InformatieComponent implements OnInit, OnChanges {
   /** @type {string} Link to case in Tezza. */
   tezzaLink: string;
 
-  /** @type {boolean} Wether to show the link to Tezza. */
-  isVisibleTezzaLink = false;
-
-  readonly zaaktypenWithTezzaLink = [
-    "Huurafhankelijk opstalrecht (HARVO) behandelen",
-    "Huisvestingsbehoefte behandelen",
-    "Eigendomsdossier",
-    "Routingsproces",
-    "Vastgoedobject beheren",
-    "Vastgoedproject uitvoeren",
-    "Project uitvoeren",
-    "Programma uitvoeren",
-    "VGU Vastgoedproject uitvoeren",
-  ]
-
   /**
    * Constructor method.
    * @param metaService
@@ -187,7 +172,6 @@ export class InformatieComponent implements OnInit, OnChanges {
    * to handle the changes.
    */
   ngOnChanges(): void {
-    this.isVisibleTezzaLink = this.zaaktypenWithTezzaLink.includes(this.zaak.zaaktype?.omschrijving);
     this.getContextData();
   };
 
