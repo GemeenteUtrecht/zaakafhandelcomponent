@@ -104,18 +104,18 @@ def patch_and_destroy_doc(user: User, uuid: str) -> Dict[str, str]:
 
 
 @optional_service
-def get_open_documenten_for_zaak(zaak: str) -> Optional[Dict]:
+def check_document_status(documenten: List[str]) -> Optional[Dict]:
     client = get_client()
-    operation_id = "documenten_count_retrieve"
+    operation_id = "documenten_status_create"
     url = get_operation_url(client.schema, operation_id)
-    url = furl(url).add(
-        {
-            "zaak": zaak,
-        }
-    )
+
     try:
         response = client.request(
-            url.url, operation_id, method="GET", expected_status=200
+            url.url,
+            operation_id,
+            method="POST",
+            expected_status=200,
+            data=[{"document": doc} for doc in documenten],
         )
         return response
     except ClientError:

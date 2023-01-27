@@ -5,12 +5,18 @@ from zac.activities.models import Activity
 from zac.camunda.data import Task
 from zac.camunda.processes import get_top_level_process_instances
 from zac.camunda.user_tasks import register
-from zac.contrib.dowc.api import get_open_documenten_for_zaak
+from zac.contrib.dowc.api import check_document_status
 from zac.contrib.kownsl.api import get_review_requests
 from zac.contrib.objects.checklists.data import ChecklistQuestion
 from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
 from zac.core.camunda.utils import get_process_zaak_url
-from zac.core.services import fetch_zaaktype, get_resultaattypen, get_zaak, get_zaaktype
+from zac.core.services import (
+    fetch_zaaktype,
+    get_documenten,
+    get_resultaattypen,
+    get_zaak,
+    get_zaaktype,
+)
 from zgw.models.zrc import Zaak
 
 from .serializers import (
@@ -65,7 +71,8 @@ def get_context(task: Task) -> ZetResultaatContext:
     review_requests = [
         rr for rr in get_review_requests(zaak) if rr.completed < rr.num_assigned_users
     ] or None
-    open_documenten = get_open_documenten_for_zaak(zaak_url)
+    documenten, gone = get_documenten(zaak)
+    open_documenten = check_document_status([doc.url for doc in documenten])
     zaaktype = fetch_zaaktype(zaak.zaaktype)
 
     all_result_types = get_resultaattypen(zaaktype)

@@ -476,26 +476,30 @@ class GetUserTaskContextViewTests(APITestCase):
         )
 
         with patch(
-            "zac.core.camunda.zet_resultaat.context.get_process_zaak_url",
-            return_value=self.zaak.url,
+            "zac.core.camunda.zet_resultaat.context.check_document_status",
+            return_value=[],
         ):
             with patch(
-                "zac.core.camunda.zet_resultaat.context.get_top_level_process_instances",
-                return_value=[process_instance],
+                "zac.core.camunda.zet_resultaat.context.get_process_zaak_url",
+                return_value=self.zaak.url,
             ):
                 with patch(
-                    "zac.core.camunda.zet_resultaat.context.get_zaak",
-                    return_value=self.zaak,
+                    "zac.core.camunda.zet_resultaat.context.get_top_level_process_instances",
+                    return_value=[process_instance],
                 ):
                     with patch(
-                        "zac.core.camunda.zet_resultaat.context.get_review_requests",
-                        return_value=[review_request],
+                        "zac.core.camunda.zet_resultaat.context.get_zaak",
+                        return_value=self.zaak,
                     ):
                         with patch(
-                            "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
-                            return_value=[factory(ResultaatType, resultaattype)],
+                            "zac.core.camunda.zet_resultaat.context.get_review_requests",
+                            return_value=[review_request],
                         ):
-                            response = self.client.get(self.task_endpoint)
+                            with patch(
+                                "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
+                                return_value=[factory(ResultaatType, resultaattype)],
+                            ):
+                                response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -505,6 +509,7 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertIn("taken", data["context"].keys())
         self.assertIn("verzoeken", data["context"].keys())
         self.assertIn("resultaattypen", data["context"].keys())
+        self.assertIn("openDocumenten", data["context"].keys())
 
 
 @requests_mock.Mocker()

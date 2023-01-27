@@ -18,7 +18,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..api import get_client, get_open_documenten, get_open_documenten_for_zaak
+from ..api import check_document_status, get_client, get_open_documenten
 from ..constants import DocFileTypes
 from ..data import DowcResponse
 from ..models import DowcConfig
@@ -260,18 +260,23 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response, [])
 
-    def test_get_open_documenten_for_zaak(self, m):
+    def test_check_document_status(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
         self.client.force_authenticate(user=self.user)
-        zaak = "https://some-zaak.nl/"
+        doc = "https://some-doc.nl/"
+        _uuid = uuid.uuid4()
         m.get(
-            f"{DOWC_API_ROOT}/api/v1/documenten/count?zaak={zaak}",
+            f"{DOWC_API_ROOT}/api/v1/documenten/status",
             status_code=200,
-            json={"count": 1},
+            json=[{"document": doc, "uuid": str(_uuid)}],
         )
-        response = get_open_documenten_for_zaak(zaak)
+        response = check_document_status([doc])
         self.assertEqual(
-            "https://dowc.nl/api/v1/documenten/count?zaak={zaak}",
+            "https://dowc.nl/api/v1/documenten/status",
             m.last_request.url,
         )
-        self.assertEqual(response, {"count": 1})
+        self.assertEqual(
+            [doc],
+            m.last_request.json(),
+        )
+        self.assertEqual(response, [{"document": doc, "uuid": str(_uuid)}])
