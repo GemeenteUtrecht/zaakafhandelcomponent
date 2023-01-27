@@ -1,9 +1,9 @@
-<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': edit}" [formGroup]="formGroup"
+<form [ngClass]="{'form': true, 'form--toggle': editable==='toggle', 'form--edit': isInEditMode}" [formGroup]="formGroup"
       (ngSubmit)="_formSubmit()">
 
   <!-- button template -->
   <ng-template #button>
-    <button *ngIf="edit" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block"
+    <button *ngIf="isInEditMode" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block"
             [disabled]="!formGroup?.valid || isLoading" [loading]="isLoading">
       {{buttonLabel}}
     </button>
@@ -30,46 +30,48 @@
         icon="edit"
         (click)="toggleClick($event)"
       >
-        {{edit ? 'Annuleren' : 'Bewerken' }}
+        {{isInEditMode ? 'Annuleren' : 'Bewerken' }}
       </button>
     </div>
   </header>
 
 
-  <mat-accordion multi>
+  <mat-accordion multi class="mt-2">
     <ng-container *ngFor="let fieldset of _fieldsets">
       <ng-template #fields>
         <div *ngFor="let field of fieldset.fields; let i = index">
-          <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !edit && showLess">
+          <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !isInEditMode && showLess">
             <!-- Document -->
             <div *ngIf="field.widgetType == 'document'" class="form__document mb-4">
               <!-- Has document -->
-              <div *ngIf="field.value" class="row">
-                <div class="col-12">
-                  <p class="p--bold d-inline">Document:&nbsp;</p>
+              <div *ngIf="field.value" class="mat-form-field-wrapper pb-1">
+                <div class="">
+                  <p class="p--bold p--muted d-inline">Document:&nbsp;</p>
                   <a class="anchor" (click)="onDocumentClick(field.value.readUrl)">{{field.value.titel}}</a>
                 </div>
               </div>
 
               <!-- Selected document -->
-              <div *ngIf="documents[field.name]" class="row">
-                <p class="col-8 mb-4">Document: {{documents[field.name]?.bestandsnaam}}</p>
-                <p class="col-4 mb-4">
-                  <button gu-button
-                          buttonStyle="tertiary"
-                          icon="remove"
-                          size="extrasmall"
-                          type="button"
-                          (click)="removeDocument(field)">
-                    Documentkoppeling verwijderen
-                  </button>
-                </p>
+              <div *ngIf="documents[field.name]" class="mat-form-field-wrapper">
+                <div class="row">
+                  <p class="col-8 mb-4">Document: {{documents[field.name]?.bestandsnaam}}</p>
+                  <p class="col-4 mb-4">
+                    <button gu-button
+                            buttonStyle="tertiary"
+                            icon="remove"
+                            size="extrasmall"
+                            type="button"
+                            (click)="removeDocument(field)">
+                      Documentkoppeling verwijderen
+                    </button>
+                  </p>
+                </div>
 
               </div>
 
               <!-- Allow select -->
-              <div *ngIf="!documents[field.name]" class="row">
-                <div class="col-12 mb-2">
+              <div *ngIf="!documents[field.name]" >
+                <div class="mb-2">
                   <button *ngIf="field.widgetType == 'document'"
                           gu-button
                           buttonStyle="tertiary"
@@ -78,7 +80,7 @@
                           type="button"
                           (click)="field.edit = !field.edit">
                     {{field.value
-                    ? 'Wijzigen'
+                    ? 'Document wijzigen'
                     : field.edit
                       ? 'Annuleren'
                       : field.label
@@ -88,6 +90,7 @@
                   <gu-document-toevoegen *ngIf="field.edit"
                                          [zaak]="zaak"
                                          (uploadedDocument)="onUploadedDocument(field, $event)"
+                                         buttonSize="small"
                                          title=""
                                          description=""
                                          submitLabel="Toevoegen">
@@ -99,17 +102,19 @@
             <!-- Read-only field. -->
             <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
               <div class="col-12">
-                <p class="p--bold mb-0">{{field.label}}</p>
+                <p class="p--bold p--muted mb-0">{{field.label}}</p>
               </div>
 
               <div class="col-12" *ngIf="!field.choices">
                 <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
                 <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
+                <p class="p--pre-wrap" *ngIf="!field.value && !field.placeholder">-</p>
               </div>
 
 
               <div class="col-12" *ngIf="field.choices">
                 <p class="mt-2">
+                  {{getSelectedChoice(field)?.value}}
                   {{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}
                 </p>
               </div>
@@ -118,7 +123,7 @@
 
             <!-- Regular field. -->
             <gu-input
-              *ngIf="field.widgetType == 'input' && edit"
+              *ngIf="field.widgetType == 'input' && isInEditMode"
               [control]="field.control"
               [label]="field.label"
               [maxlength]="field.maxlength"
@@ -136,7 +141,7 @@
             <!-- Checbkox field. -->
             <!-- TODO: Non editable field, required etc. -->
             <gu-checkbox
-              *ngIf="field.widgetType === 'checkbox' && edit"
+              *ngIf="field.widgetType === 'checkbox' && isInEditMode"
               [control]="field.control"
               [value]="field.value"
               [checked]="field.checked"
@@ -146,7 +151,7 @@
 
             <!-- Select field. -->
             <gu-multiselect
-              *ngIf="['checkboxGroup', 'select'].indexOf(field.widgetType) > -1 && edit"
+              *ngIf="['checkboxGroup', 'select'].indexOf(field.widgetType) > -1 && isInEditMode"
               [control]="field.control"
               [items]="field.choices"
               [selectedValue]="field.control.value"
@@ -165,7 +170,7 @@
         </div>
       </ng-template>
 
-      <mat-expansion-panel *ngIf="_fieldsets.length > 1" [expanded]="edit">
+      <mat-expansion-panel *ngIf="_fieldsets.length > 1" [expanded]="isInEditMode">
 
         <mat-expansion-panel-header>
           <mat-panel-title><strong>{{fieldset.label}}</strong></mat-panel-title>
@@ -187,7 +192,7 @@
 
   <div class="d-flex justify-content-end">
     <button gu-button
-            *ngIf="showLess && visibleFields?.length > 4 && !edit"
+            *ngIf="showLess && visibleFields?.length > 4 && !isInEditMode"
             type="button"
             buttonStyle="tertiary"
             size="extrasmall"

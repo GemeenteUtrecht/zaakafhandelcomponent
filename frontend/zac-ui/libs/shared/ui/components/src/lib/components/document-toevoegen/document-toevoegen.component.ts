@@ -34,6 +34,7 @@ export class DocumentToevoegenComponent implements OnInit {
   @Input() activity: string;
   @Input() documentUrl?: string;
   @Input() updateDocument: boolean;
+  @Input() buttonSize: 'extrasmall' | 'small' | 'medium' | 'large' | 'huge' = 'large'
 
   @Input() title = 'Documenttype';
   @Input() description = 'Kies een relevant documenttype. Je ziet de documenttypes die bij het zaaktype horen';

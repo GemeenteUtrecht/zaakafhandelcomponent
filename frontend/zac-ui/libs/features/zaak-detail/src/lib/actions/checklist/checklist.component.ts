@@ -62,6 +62,9 @@ export class ChecklistComponent implements OnInit, OnChanges {
   /** @type {Group[]} */
   groups: UserGroupDetail[] = []
 
+  /** @type {number} */
+  totalDocumentsAdded: number;
+
   /**
    * Constructor method.
    * @param {ChecklistService} checklistService
@@ -88,6 +91,17 @@ export class ChecklistComponent implements OnInit, OnChanges {
   get canForceEdit(): boolean {
     return !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken;
   }
+
+  /**
+   * Whether all documents for the answers are retrieved
+   * @returns {boolean}
+   */
+  get finishedLoadingDocuments(): boolean {
+    if (this.totalDocumentsAdded) {
+      return Object.keys(this.documents).length === this.totalDocumentsAdded;
+    }
+    return;
+}
 
   //
   // Angular lifecycle.
@@ -160,16 +174,18 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
         this.checklistService.retrieveChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
           (checklist: Checklist) => {
-            checklist.answers.filter((checklistAnswer: ChecklistAnswer) => checklistAnswer.document)
-              .forEach((checklistAnswer: ChecklistAnswer) => {
-                this.documentenService.getDocument(checklistAnswer.document).subscribe(
-                  (document: Document) => {
-                    this.documents[checklistAnswer.question] = document
-                    this.isLoading = false;
-                    this.checklistForm = this.getChecklistForm();
-                  }, this.reportError.bind(this)
-                );
-              })
+            const addedDocuments = checklist.answers.filter((checklistAnswer: ChecklistAnswer) => checklistAnswer.document);
+            this.totalDocumentsAdded = addedDocuments.length;
+
+            addedDocuments.forEach((checklistAnswer: ChecklistAnswer) => {
+              this.documentenService.getDocument(checklistAnswer.document).subscribe(
+                (document: Document) => {
+                  this.documents[checklistAnswer.question] = document
+                  this.isLoading = false;
+                  this.checklistForm = this.getChecklistForm();
+                }, this.reportError.bind(this)
+              );
+            })
             this.checklist = checklist;
             this.checklistForm = this.getChecklistForm();
             this.isLoading = false;
