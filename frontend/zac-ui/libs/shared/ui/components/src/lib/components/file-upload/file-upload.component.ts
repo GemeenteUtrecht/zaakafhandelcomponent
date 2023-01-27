@@ -8,6 +8,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 export class FileUploadComponent {
   @Input() disabled: boolean;
   @Input() required: boolean;
+  @Input() buttonSize: 'extrasmall' | 'small' | 'medium' | 'large' | 'huge' = 'large'
 
   @Output() selectedFileOutput: EventEmitter<File> = new EventEmitter();
   @Output() fileValue: EventEmitter<File> = new EventEmitter();

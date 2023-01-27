@@ -38,7 +38,7 @@
               [disabled]="!addDocumentForm.valid || isSubmitting"
               [loading]="isSubmitting"
               buttonStyle="primary"
-              [size]="activity ? 'small' : 'large'"
+              [size]="activity ? 'small' : buttonSize"
               (click)="submitForm()">
         {{submitLabel}}
       </button>

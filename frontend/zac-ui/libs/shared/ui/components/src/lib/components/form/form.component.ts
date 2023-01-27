@@ -56,9 +56,9 @@ export class FormComponent implements OnInit, OnChanges {
   documents: { [index: string]: Document } = {}
 
   /**
-   * @type {boolean} Whether the form is in edit mode.
+   * @type {boolean} Whether the form is in isInEditMode mode.
    */
-  edit: boolean;
+  isInEditMode: boolean;
 
   /**
    * @type {Field[]} The fields to render.
@@ -159,9 +159,9 @@ export class FormComponent implements OnInit, OnChanges {
 
   getContextData(): void {
     if (this.editable === 'toggle') {
-      this.edit = false;
+      this.isInEditMode = false;
     } else {
-      this.edit = Boolean(this.editable);
+      this.isInEditMode = Boolean(this.editable);
     }
 
     this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
@@ -176,7 +176,7 @@ export class FormComponent implements OnInit, OnChanges {
    * @return {Field[]}
    */
   getFieldsFromFormInput(): Field[] {
-    return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.edit)
+    return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.fieldsets, this.isInEditMode)
       .map((field: Field): Field => {
         this.formService.setValidators(this.formGroup, field);
         return field
@@ -322,9 +322,9 @@ export class FormComponent implements OnInit, OnChanges {
     }
 
     if (this.editable === 'toggle') {
-      this.edit = !this.edit;
-      if (!this.edit) {
-        // reset to initial form values when exiting edit mode
+      this.isInEditMode = !this.isInEditMode;
+      if (!this.isInEditMode) {
+        // reset to initial form values when exiting isInEditMode mode
         this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
         this.formGroup = this.formService.formToFormGroup(this.form, this.resolvedKeys);
       }
