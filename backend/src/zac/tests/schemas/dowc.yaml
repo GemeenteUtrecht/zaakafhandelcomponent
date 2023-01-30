@@ -16,28 +16,32 @@ paths:
 
         Each file has a 'magic URL' pointing to the relevant MS Office protocol to
         open the file in a local MS Office client.
-      summary: List available Documenten API files
+      summary: List documentfiles
       parameters:
       - in: query
         name: drc_url
         schema:
           type: string
           format: uri
-          description: URL reference to the source document in the Documents API.
-            May include the 'versie' querystring parameter.
-        description: drc_url
+        description: URL-reference of the document on the DRC
+      - in: query
+        name: info_url
+        schema:
+          type: string
+          format: uri
+        description: Points to the origin of the document's usage.
       - in: query
         name: purpose
         schema:
+          type: string
           enum:
           - read
           - write
-          type: string
-          description: Purpose of requesting the document.
-        description: purpose
+        description: Purpose of making the request.
       tags:
       - documenten
       security:
+      - tokenAuth: []
       - tokenAuth: []
       - ZGWAuthentication: []
       responses:
@@ -56,7 +60,7 @@ paths:
 
         The response contains a 'magic URL' understood by MS Office to view or edit
         the file in a local client.
-      summary: Make Documenten API file available
+      summary: Create documentfile
       tags:
       - documenten
       requestBody:
@@ -72,6 +76,7 @@ paths:
               $ref: '#/components/schemas/DocumentFile'
         required: true
       security:
+      - tokenAuth: []
       - tokenAuth: []
       - ZGWAuthentication: []
       responses:
@@ -84,8 +89,7 @@ paths:
   /api/v1/documenten/{uuid}:
     get:
       operationId: documenten_retrieve
-      description: ''
-      summary: Get local file details
+      summary: Retrieve documentfile
       parameters:
       - in: path
         name: uuid
@@ -97,6 +101,7 @@ paths:
       tags:
       - documenten
       security:
+      - tokenAuth: []
       - tokenAuth: []
       - ZGWAuthentication: []
       responses:
@@ -108,7 +113,7 @@ paths:
           description: ''
     put:
       operationId: documenten_update
-      description: ''
+      summary: Put documentfile
       parameters:
       - in: path
         name: uuid
@@ -133,6 +138,7 @@ paths:
         required: true
       security:
       - tokenAuth: []
+      - tokenAuth: []
       - ZGWAuthentication: []
       responses:
         '200':
@@ -143,7 +149,7 @@ paths:
           description: ''
     patch:
       operationId: documenten_partial_update
-      description: ''
+      summary: Patch documentfile
       parameters:
       - in: path
         name: uuid
@@ -166,6 +172,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedDocumentFile'
       security:
+      - tokenAuth: []
       - tokenAuth: []
       - ZGWAuthentication: []
       responses:
@@ -181,7 +188,7 @@ paths:
         Check in local edits and/or delete local WebDAV file.
 
         The response contains the URL and version of the resulting checked in document.
-      summary: Check in/delete Documenten API file.
+      summary: Delete documentfile
       parameters:
       - in: path
         name: uuid
@@ -194,6 +201,7 @@ paths:
       - documenten
       security:
       - tokenAuth: []
+      - tokenAuth: []
       - ZGWAuthentication: []
       responses:
         '200':
@@ -201,6 +209,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnlockedDocument'
+          description: ''
+  /api/v1/documenten/status:
+    post:
+      operationId: documenten_status_create
+      summary: Retrieve open documents.
+      tags:
+      - documenten
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentStatus'
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - ZGWAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentStatus'
           description: ''
 components:
   schemas:
@@ -210,26 +246,53 @@ components:
         drcUrl:
           type: string
           format: uri
-          writeOnly: true
-          description: URL reference to the source document in the Documents API.
-            May include the 'versie' querystring parameter.
+          description: URL-reference of the document on the DRC
           maxLength: 1000
         purpose:
           allOf:
           - $ref: '#/components/schemas/PurposeEnum'
-          description: Purpose of requesting the document.
+          description: Purpose of requesting the document (read/write).
         magicUrl:
           type: string
           readOnly: true
+          description: The URL that opens the MS Office WebDAV client on the local
+            machine.
         uuid:
           type: string
           format: uuid
           readOnly: true
-          description: A unique UUID for the DocumentFile object.
+          description: Unique identifier of the documentfile.
+        infoUrl:
+          type: string
+          format: uri
+          writeOnly: true
+          description: Referer URL from where the request is made.
+          maxLength: 200
+        unversionedUrl:
+          type: string
+          format: uri
+          readOnly: true
+          description: URL-reference of the document on the DRC without `versie` query
+            parameter.
       required:
       - drcUrl
+      - infoUrl
       - magicUrl
       - purpose
+      - unversionedUrl
+      - uuid
+    DocumentStatus:
+      type: object
+      properties:
+        document:
+          type: string
+          description: URL-reference to document in DRC API.
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Unique identifier of the documentfile.
+      required:
       - uuid
     PatchedDocumentFile:
       type: object
@@ -237,37 +300,52 @@ components:
         drcUrl:
           type: string
           format: uri
-          writeOnly: true
-          description: URL reference to the source document in the Documents API.
-            May include the 'versie' querystring parameter.
+          description: URL-reference of the document on the DRC
           maxLength: 1000
         purpose:
           allOf:
           - $ref: '#/components/schemas/PurposeEnum'
-          description: Purpose of requesting the document.
+          description: Purpose of requesting the document (read/write).
         magicUrl:
           type: string
           readOnly: true
+          description: The URL that opens the MS Office WebDAV client on the local
+            machine.
         uuid:
           type: string
           format: uuid
           readOnly: true
-          description: A unique UUID for the DocumentFile object.
+          description: Unique identifier of the documentfile.
+        infoUrl:
+          type: string
+          format: uri
+          writeOnly: true
+          description: Referer URL from where the request is made.
+          maxLength: 200
+        unversionedUrl:
+          type: string
+          format: uri
+          readOnly: true
+          description: URL-reference of the document on the DRC without `versie` query
+            parameter.
     PurposeEnum:
       enum:
-      - write
       - read
+      - write
       type: string
     UnlockedDocument:
       type: object
       properties:
         url:
           type: string
+          description: URL-reference of the document on the DRC
         versie:
           type: integer
+          description: Version of the document on the DRC
         versionedUrl:
           type: string
           readOnly: true
+          description: URL-reference of the versioned document on the DRC.
       required:
       - url
       - versie
@@ -281,6 +359,6 @@ components:
       type: apiKey
       in: header
       name: Authorization
-      description: Token-based authentication with required prefix "Token"
+      description: Token-based authentication with required prefix "ApplicationToken"
 servers:
-- url: https://dowc.utrechtproeftuin.nl
+- url: https://dowc.cg-intern.ont.utrecht.nl

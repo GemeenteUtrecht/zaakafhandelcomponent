@@ -476,26 +476,36 @@ class GetUserTaskContextViewTests(APITestCase):
         )
 
         with patch(
-            "zac.core.camunda.zet_resultaat.context.get_process_zaak_url",
-            return_value=self.zaak.url,
+            "zac.core.camunda.zet_resultaat.context.get_documenten",
+            return_value=[(), None],
         ):
             with patch(
-                "zac.core.camunda.zet_resultaat.context.get_top_level_process_instances",
-                return_value=[process_instance],
+                "zac.core.camunda.zet_resultaat.context.check_document_status",
+                return_value=[],
             ):
                 with patch(
-                    "zac.core.camunda.zet_resultaat.context.get_zaak",
-                    return_value=self.zaak,
+                    "zac.core.camunda.zet_resultaat.context.get_process_zaak_url",
+                    return_value=self.zaak.url,
                 ):
                     with patch(
-                        "zac.core.camunda.zet_resultaat.context.get_review_requests",
-                        return_value=[review_request],
+                        "zac.core.camunda.zet_resultaat.context.get_top_level_process_instances",
+                        return_value=[process_instance],
                     ):
                         with patch(
-                            "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
-                            return_value=[factory(ResultaatType, resultaattype)],
+                            "zac.core.camunda.zet_resultaat.context.get_zaak",
+                            return_value=self.zaak,
                         ):
-                            response = self.client.get(self.task_endpoint)
+                            with patch(
+                                "zac.core.camunda.zet_resultaat.context.get_review_requests",
+                                return_value=[review_request],
+                            ):
+                                with patch(
+                                    "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
+                                    return_value=[
+                                        factory(ResultaatType, resultaattype)
+                                    ],
+                                ):
+                                    response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -505,6 +515,7 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertIn("taken", data["context"].keys())
         self.assertIn("verzoeken", data["context"].keys())
         self.assertIn("resultaattypen", data["context"].keys())
+        self.assertIn("openDocumenten", data["context"].keys())
 
 
 @requests_mock.Mocker()
@@ -884,18 +895,27 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def test_put_zet_resultaat_user_task(self, m, *mocks):
         self._mock_permissions(m)
         payload = {"resultaat": self.resultaattype["omschrijving"]}
-
+        _uuid = uuid.uuid4()
         m.post(
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
         with patch(
-            "zac.core.camunda.zet_resultaat.serializers.get_zaak_context",
-            return_value=self.zaak_context,
+            "zac.core.camunda.zet_resultaat.serializers.check_document_status",
+            return_value=[{"document": self.document.url, "uuid": str(_uuid)}],
         ):
             with patch(
-                "zac.core.camunda.zet_resultaat.serializers.get_resultaattypen",
-                return_value=[factory(ResultaatType, self.resultaattype)],
-            ):
-                response = self.client.put(self.task_endpoint, payload)
+                "zac.core.camunda.zet_resultaat.serializers.patch_and_destroy_doc",
+                return_value={"some-key": "some-value"},
+            ) as patch_and_destroy_doc:
+                with patch(
+                    "zac.core.camunda.zet_resultaat.serializers.get_zaak_context",
+                    return_value=self.zaak_context,
+                ):
+                    with patch(
+                        "zac.core.camunda.zet_resultaat.serializers.get_resultaattypen",
+                        return_value=[factory(ResultaatType, self.resultaattype)],
+                    ):
+                        response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
+        patch_and_destroy_doc.assert_called_once_with(str(_uuid))

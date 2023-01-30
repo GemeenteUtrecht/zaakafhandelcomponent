@@ -18,7 +18,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 
-from ..api import get_client, get_open_documenten
+from ..api import check_document_status, get_client, get_open_documenten
 from ..constants import DocFileTypes
 from ..data import DowcResponse
 from ..models import DowcConfig
@@ -151,7 +151,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
         ):
             response = self.client.post(
-                self.zac_dowc_url, HTTP_REFERER="http://www.some-referer-url.com/"
+                self.zac_dowc_url,
+                {"zaak": "https://some-zaak.nl/"},
+                HTTP_REFERER="http://www.some-referer-url.com/",
             )
 
         self.assertEqual(
@@ -202,7 +204,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
         ):
             response = self.client.post(
-                self.zac_dowc_url, HTTP_REFERER="http://www.some-referer-url.com/"
+                self.zac_dowc_url,
+                {"zaak": "https://some-zaak.nl/"},
+                HTTP_REFERER="http://www.some-referer-url.com/",
             )
 
         self.assertEqual(response.status_code, 200)
@@ -220,7 +224,9 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
         ):
             response = self.client.post(
-                self.zac_dowc_url, HTTP_REFERER="http://www.some-referer-url.com/"
+                self.zac_dowc_url,
+                {"zaak": "https://some-zaak.nl/"},
+                HTTP_REFERER="http://www.some-referer-url.com/",
             )
 
         self.assertEqual(response.status_code, 400)
@@ -253,3 +259,24 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             m.last_request.url,
         )
         self.assertEqual(response, [])
+
+    def test_check_document_status(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        self.client.force_authenticate(user=self.user)
+        doc = "https://some-doc.nl/"
+        _uuid = uuid.uuid4()
+        m.post(
+            f"{DOWC_API_ROOT}/api/v1/documenten/status",
+            status_code=200,
+            json=[{"document": doc, "uuid": str(_uuid)}],
+        )
+        response = check_document_status([doc])
+        self.assertEqual(
+            "https://dowc.nl/api/v1/documenten/status",
+            m.last_request.url,
+        )
+        self.assertEqual(
+            [{"document": "https://some-doc.nl/"}],
+            m.last_request.json(),
+        )
+        self.assertEqual(response, [{"document": doc, "uuid": str(_uuid)}])
