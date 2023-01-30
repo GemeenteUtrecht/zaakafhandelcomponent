@@ -88,5 +88,5 @@ def get_context(task: Task) -> ZetResultaatContext:
         tasks=tasks,
         review_requests=review_requests,
         result_types=chosen_result_types or all_result_types,
-        open_documenten=open_documenten["count"],
+        open_documenten=open_documenten,
     )

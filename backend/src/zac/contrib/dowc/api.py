@@ -92,8 +92,11 @@ def get_open_documenten(user: User) -> List[Optional[DowcResponse]]:
 
 
 @optional_service
-def patch_and_destroy_doc(user: User, uuid: str) -> Dict[str, str]:
-    client = get_client(user)
+def patch_and_destroy_doc(
+    uuid: str,
+    user: Optional[User] = None,
+) -> Dict[str, str]:
+    client = get_client(user=user)
     operation_id = "documenten_destroy"
     try:
         url = get_operation_url(client.schema, operation_id, uuid=uuid)
@@ -111,11 +114,11 @@ def check_document_status(documenten: List[str]) -> Optional[Dict]:
 
     try:
         response = client.request(
-            url.url,
+            url,
             operation_id,
             method="POST",
             expected_status=200,
-            data=[{"document": doc} for doc in documenten],
+            json=[{"document": doc} for doc in documenten],
         )
         return response
     except ClientError:

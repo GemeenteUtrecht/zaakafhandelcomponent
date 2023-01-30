@@ -265,7 +265,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         doc = "https://some-doc.nl/"
         _uuid = uuid.uuid4()
-        m.get(
+        m.post(
             f"{DOWC_API_ROOT}/api/v1/documenten/status",
             status_code=200,
             json=[{"document": doc, "uuid": str(_uuid)}],
@@ -276,7 +276,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             m.last_request.url,
         )
         self.assertEqual(
-            [doc],
+            [{"document": "https://some-doc.nl/"}],
             m.last_request.json(),
         )
         self.assertEqual(response, [{"document": doc, "uuid": str(_uuid)}])

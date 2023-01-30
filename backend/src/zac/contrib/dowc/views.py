@@ -101,7 +101,9 @@ class DeleteDowcView(APIView):
         """
         serializer = self.serializer_class(data={"uuid": dowc_uuid})
         serializer.is_valid(raise_exception=True)
-        data = patch_and_destroy_doc(request.user, serializer.validated_data["uuid"])
+        data = patch_and_destroy_doc(
+            serializer.validated_data["uuid"], user=request.user
+        )
 
         # Invalidate cache if valid response
         if "versionedUrl" in data:

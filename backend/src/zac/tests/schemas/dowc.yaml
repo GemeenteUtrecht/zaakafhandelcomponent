@@ -38,13 +38,10 @@ paths:
           - read
           - write
         description: Purpose of making the request.
-      - in: query
-        name: zaak
-        schema:
-          type: string
       tags:
       - documenten
       security:
+      - tokenAuth: []
       - tokenAuth: []
       - ZGWAuthentication: []
       responses:
@@ -80,6 +77,7 @@ paths:
         required: true
       security:
       - tokenAuth: []
+      - tokenAuth: []
       - ZGWAuthentication: []
       responses:
         '201':
@@ -103,6 +101,7 @@ paths:
       tags:
       - documenten
       security:
+      - tokenAuth: []
       - tokenAuth: []
       - ZGWAuthentication: []
       responses:
@@ -139,6 +138,7 @@ paths:
         required: true
       security:
       - tokenAuth: []
+      - tokenAuth: []
       - ZGWAuthentication: []
       responses:
         '200':
@@ -173,6 +173,7 @@ paths:
               $ref: '#/components/schemas/PatchedDocumentFile'
       security:
       - tokenAuth: []
+      - tokenAuth: []
       - ZGWAuthentication: []
       responses:
         '200':
@@ -200,6 +201,7 @@ paths:
       - documenten
       security:
       - tokenAuth: []
+      - tokenAuth: []
       - ZGWAuthentication: []
       responses:
         '200':
@@ -208,21 +210,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/UnlockedDocument'
           description: ''
-  /api/v1/documenten/count:
-    get:
-      operationId: documenten_count_retrieve
-      summary: Count open write documentfiles.
-      parameters:
-      - in: query
-        name: zaak
-        schema:
-          type: string
-          format: uri
-        description: URL-reference of ZAAK related to documentfiles.
-        required: true
+  /api/v1/documenten/status:
+    post:
+      operationId: documenten_status_create
+      summary: Retrieve open documents.
       tags:
       - documenten
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentStatus'
       security:
+      - tokenAuth: []
       - tokenAuth: []
       - ZGWAuthentication: []
       responses:
@@ -230,18 +236,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CountDocument'
+                $ref: '#/components/schemas/DocumentStatus'
           description: ''
 components:
   schemas:
-    CountDocument:
-      type: object
-      properties:
-        count:
-          type: integer
-          description: Number of open documentfiles.
-      required:
-      - count
     DocumentFile:
       type: object
       properties:
@@ -282,6 +280,19 @@ components:
       - magicUrl
       - purpose
       - unversionedUrl
+      - uuid
+    DocumentStatus:
+      type: object
+      properties:
+        document:
+          type: string
+          description: URL-reference to document in DRC API.
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+          description: Unique identifier of the documentfile.
+      required:
       - uuid
     PatchedDocumentFile:
       type: object
@@ -348,6 +359,6 @@ components:
       type: apiKey
       in: header
       name: Authorization
-      description: Token-based authentication with required prefix "Token"
+      description: Token-based authentication with required prefix "ApplicationToken"
 servers:
 - url: https://dowc.cg-intern.ont.utrecht.nl

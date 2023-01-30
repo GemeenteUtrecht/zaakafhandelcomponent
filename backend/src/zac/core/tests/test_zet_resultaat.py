@@ -199,6 +199,8 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                 }
             ],
         )
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}", json=[])
+        m.post(f"{DOWC_API_ROOT}documenten/status", json=[])
         mock_resource_get(m, self.zaaktype)
         m.get(
             f"{CATALOGI_ROOT}resultaattypen?zaaktype={self.zaaktype['url']}",
@@ -294,4 +296,4 @@ class GetZetResultaatContextSerializersTests(APITestCase):
                 }
             ],
         )
-        self.assertEqual(serializer.data["context"]["open_documenten"], 0)
+        self.assertEqual(serializer.data["context"]["open_documenten"], [])
