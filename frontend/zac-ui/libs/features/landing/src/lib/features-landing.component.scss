@@ -12,6 +12,7 @@ $landing-spacing: 40px;
 .landing{
   background-color: $landing-color-background;
   height: 100%;
+  min-height: 100vh;
 
   &__header {
     align-items: flex-end;
@@ -112,5 +113,34 @@ $landing-spacing: 40px;
 
   &__body &__navigation &__link:hover &__label {
     text-decoration: underline;
+  }
+
+  .quick-search {
+    ::ng-deep {
+      .ng-placeholder {
+        display: flex;
+        align-content: center;
+      }
+      .ng-select-filtered .ng-placeholder {
+        display: none;
+      }
+      .ng-placeholder::before {
+        font-family: "Material Icons";
+        content: "search";
+        font-size: 20px;
+        margin-right: 8px;
+        line-height: 24px;
+      }
+      .ng-arrow-wrapper {
+        display: none;
+      }
+    }
+  }
+  .quick-search.ng-select-filtered  {
+    ::ng-deep {
+      .ng-placeholder {
+        display: none;
+      }
+    }
   }
 }
