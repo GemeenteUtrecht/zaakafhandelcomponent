@@ -1,5 +1,5 @@
 <div class="toegang-verlenen">
-  <form [formGroup]="grantAccessForm" *ngIf="!submitSuccess">
+  <form [formGroup]="grantAccessForm">
     <div class="form-group">
       <p class="mb-3">Selecteer een gebruiker die je rechten wilt verlenen tot deze zaak.</p>
 
@@ -58,8 +58,4 @@
       </ng-container>
     </div>
   </form>
-  <gu-success *ngIf="submitSuccess">
-    <p class="mb-4">U heeft gebruiker {{requesterUser.fullName}} succesvol rechten verleend tot <strong>{{zaak.identificatie}}</strong></p>
-    <button gu-button buttonStyle="tertiary" size="small" (click)="submitSuccess=false">Nog een gebruiker rechten verlenen</button>
-  </gu-success>
 </div>
