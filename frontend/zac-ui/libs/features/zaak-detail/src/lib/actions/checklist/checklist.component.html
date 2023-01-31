@@ -1,11 +1,11 @@
 <div class="card">
   <!-- Loading -->
-  <ng-container *ngIf="!finishedLoadingDocuments">
+  <ng-container *ngIf="!finishedLoadingDocuments && hasChecklist || (isLoading && !hasChecklist)">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <!-- End loading -->
 
-  <ng-container *ngIf="finishedLoadingDocuments">
+  <ng-container *ngIf="(finishedLoadingDocuments && hasChecklist) || (!isLoading && !hasChecklist)">
     <gu-form *ngIf="!isLoading && checklistForm"
              [editable]="'toggle'"
              [zaak]="zaak"

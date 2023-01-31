@@ -65,6 +65,9 @@ export class ChecklistComponent implements OnInit, OnChanges {
   /** @type {number} */
   totalDocumentsAdded: number;
 
+  /** @type {boolean} Whether a checklist is available for the case*/
+  hasChecklist = false;
+
   /**
    * Constructor method.
    * @param {ChecklistService} checklistService
@@ -174,6 +177,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
         this.checklistService.retrieveChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
           (checklist: Checklist) => {
+            this.hasChecklist = true;
             const addedDocuments = checklist.answers.filter((checklistAnswer: ChecklistAnswer) => checklistAnswer.document);
             this.totalDocumentsAdded = addedDocuments.length;
 
@@ -226,7 +230,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
           value: answer?.remarks,
           readonly: !this.canForceEdit
         }, {
-          label: `Voeg document toe`,
+          label: `Document`,
           name: `__document_${question.question}`,
           required: false,
           type: 'document',
@@ -321,8 +325,11 @@ export class ChecklistComponent implements OnInit, OnChanges {
       });
 
     if (this.checklist) {
-      this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(
-        this.fetchChecklistData.bind(this),
+      this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(() =>{
+        this.fetchChecklistData()
+          this.hasChecklist = false;
+          this.documents = {};
+        },
         this.reportError.bind(this),
         () => this.isSubmitting = false
       );

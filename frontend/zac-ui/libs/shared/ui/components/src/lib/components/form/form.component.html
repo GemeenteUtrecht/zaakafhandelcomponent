@@ -36,7 +36,7 @@
   </header>
 
 
-  <mat-accordion multi class="mt-2">
+  <mat-accordion multi class="d-block mt-2">
     <ng-container *ngFor="let fieldset of _fieldsets">
       <ng-template #fields>
         <div *ngFor="let field of fieldset.fields; let i = index">
@@ -54,7 +54,7 @@
               <!-- Selected document -->
               <div *ngIf="documents[field.name]" class="mat-form-field-wrapper">
                 <div class="row">
-                  <p class="col-8 mb-4">Document: {{documents[field.name]?.bestandsnaam}}</p>
+                  <p class="col-8 mb-2">Geselecteerde document: {{documents[field.name]?.bestandsnaam}}</p>
                   <p class="col-4 mb-4">
                     <button gu-button
                             buttonStyle="tertiary"
@@ -71,7 +71,7 @@
 
               <!-- Allow select -->
               <div *ngIf="!documents[field.name]" >
-                <div class="mb-2">
+                <div class="mb-2" *ngIf="isInEditMode">
                   <button *ngIf="field.widgetType == 'document'"
                           gu-button
                           buttonStyle="tertiary"
@@ -83,7 +83,7 @@
                     ? 'Document wijzigen'
                     : field.edit
                       ? 'Annuleren'
-                      : field.label
+                      : 'Voeg document toe'
                     }}
                   </button>
 
@@ -96,6 +96,11 @@
                                          submitLabel="Toevoegen">
                   </gu-document-toevoegen>
                 </div>
+
+                <ng-container class="p--pre-wrap" *ngIf="!isInEditMode && !field.value">
+                  <p class="p--bold p--muted mb-0">{{field.label}}</p>
+                  <p class="p--pre-wrap">-</p>
+                </ng-container>
               </div>
             </div>
 
