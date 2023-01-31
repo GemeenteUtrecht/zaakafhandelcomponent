@@ -20,7 +20,7 @@ from zac.core.tests.utils import ClearCachesMixin
 
 from ..api import check_document_status, get_client, get_open_documenten
 from ..constants import DocFileTypes
-from ..data import DowcResponse
+from ..data import DowcResponse, OpenDowc
 from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -276,4 +276,6 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             [{"document": "https://some-doc.nl/"}],
             m.last_request.json(),
         )
-        self.assertEqual(response, [{"document": doc, "uuid": str(_uuid)}])
+        self.assertEqual(
+            response, factory(OpenDowc, [{"document": doc, "uuid": str(_uuid)}])
+        )

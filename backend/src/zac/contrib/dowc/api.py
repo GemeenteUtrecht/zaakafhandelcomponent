@@ -14,7 +14,7 @@ from zac.client import Client
 from zac.utils.decorators import optional_service
 
 from .constants import DocFileTypes
-from .data import DowcResponse
+from .data import DowcResponse, OpenDowc
 from .exceptions import DOWCCreateError
 from .models import DowcConfig
 
@@ -107,7 +107,7 @@ def patch_and_destroy_doc(
 
 
 @optional_service
-def check_document_status(documenten: List[str]) -> Optional[Dict]:
+def check_document_status(documenten: List[str]) -> List[OpenDowc]:
     client = get_client()
     operation_id = "documenten_status_create"
     url = get_operation_url(client.schema, operation_id)
@@ -120,6 +120,6 @@ def check_document_status(documenten: List[str]) -> Optional[Dict]:
             expected_status=200,
             json=[{"document": doc} for doc in documenten],
         )
-        return response
+        return factory(OpenDowc, response)
     except ClientError:
-        return None
+        return []
