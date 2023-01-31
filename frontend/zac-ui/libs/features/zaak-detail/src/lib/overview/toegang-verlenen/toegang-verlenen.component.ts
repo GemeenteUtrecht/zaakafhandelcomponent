@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { UserSearchResult, Zaak, Permission, UserPermission, User } from '@gu/models';
 import { AccountsService, ApplicationHttpClient } from '@gu/services';
@@ -10,7 +10,7 @@ import { DatePipe } from '@angular/common';
   templateUrl: './toegang-verlenen.component.html',
   styleUrls: ['./toegang-verlenen.component.scss']
 })
-export class ToegangVerlenenComponent implements OnInit, OnChanges {
+export class ToegangVerlenenComponent implements OnInit {
   @Input() zaak: Zaak;
   @Input() userPermissions: UserPermission[];
 
@@ -27,11 +27,8 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
 
   grantAccessForm: FormGroup;
   isSubmitting: boolean;
-  submitHasError: boolean;
   submitErrorMessage: string;
 
-  submitResult: any;
-  submitSuccess: boolean;
   errorMessage: string;
 
   constructor(
@@ -70,10 +67,6 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       endDate: this.fb.control("")
     })
     this.getContextData();
-  }
-
-  ngOnChanges() {
-    this.submitSuccess = false;
   }
 
   /**
@@ -141,19 +134,17 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
       undefined;
 
     this.accountsService.addAtomicPermissions(this.zaak, this.requesterControl.value, this.selectedPermissions, endDate).subscribe(res => {
-      this.submitResult = {
-        username: res.requester,
-        name: this.requesterUser
-      }
-
-      this.submitSuccess = true;
+      // reset form
       this.grantAccessForm.reset();
-      this.submitHasError = false;
-      this.isSubmitting = false;
+      this.selectedUser = null;
 
+      // reload and close
+      this.modalService.close('add-person-modal');
       this.reload.emit();
-    }, error => {
 
+      this.isSubmitting = false;
+    }, error => {
+      // create error message
       try {
         this.submitErrorMessage = (error?.error?.detail)
             ? error.error.detail
@@ -162,10 +153,17 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
         this.submitErrorMessage = 'Er is een fout opgetreden';
       }
 
+      // reset form
+      this.grantAccessForm.reset();
+      this.selectedUser = null;
       this.getContextData();
+      this.reload.emit();
+
+      // handle error and close
+      this.reportError(error);
       this.modalService.close('add-person-modal');
 
-      this.reload.emit();
+      this.isSubmitting = false;
     })
   }
 
@@ -178,7 +176,6 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    this.submitHasError = true;
     this.snackbarService.openSnackBar(this.submitErrorMessage, 'Sluiten', 'warn');
     console.error(error);
     this.isSubmitting = false;
