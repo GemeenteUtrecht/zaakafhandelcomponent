@@ -18,14 +18,14 @@
       >
       </gu-multiselect>
 
-      <ng-container *ngIf="selectedUser">
+      <p *ngIf="filteredPermissions?.length === 0 && selectedUser">Deze gebruiker heeft al alle rechten die toegewezen mogen worden.</p>
+
+      <ng-container *ngIf="selectedUser && filteredPermissions?.length > 0 && requesterControl.value">
         <p class="mb-2">Welke rechten wil je toewijzen aan de gebruiker?</p>
 
         <!-- Permissions -->
-        <gu-multiselect *ngIf="permissions && requesterControl.value"
-                        (change)="updateSelectedPermissions($event)"
-                        [items]="permissions"
-                        [selectedValue]="preselectedPermissions"
+        <gu-multiselect (change)="updateSelectedPermissions($event)"
+                        [items]="filteredPermissions"
                         [multiple]="true"
                         [required]="true"
                         widgetType="checkboxGroup"
