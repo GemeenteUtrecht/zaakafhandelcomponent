@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { UserSearchResult, Zaak, Permission, UserPermission, User } from '@gu/models';
 import { AccountsService, ApplicationHttpClient } from '@gu/services';
@@ -10,7 +10,7 @@ import { DatePipe } from '@angular/common';
   templateUrl: './toegang-verlenen.component.html',
   styleUrls: ['./toegang-verlenen.component.scss']
 })
-export class ToegangVerlenenComponent implements OnInit {
+export class ToegangVerlenenComponent implements OnInit, OnChanges {
   @Input() zaak: Zaak;
   @Input() userPermissions: UserPermission[];
 
@@ -23,7 +23,6 @@ export class ToegangVerlenenComponent implements OnInit {
   allPermissions: Permission[];
   filteredPermissions: Permission[];
   selectedPermissions: string[];
-  preselectedPermissions: string[];
 
   grantAccessForm: FormGroup;
   isSubmitting: boolean;
@@ -67,6 +66,11 @@ export class ToegangVerlenenComponent implements OnInit {
       endDate: this.fb.control("")
     })
     this.getContextData();
+  }
+
+  ngOnChanges(): void {
+    this.grantAccessForm.reset();
+    this.selectedUser = null;
   }
 
   /**
