@@ -16,6 +16,7 @@ from zac.camunda.api.serializers import TaskSerializer
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.api import check_document_status, patch_and_destroy_doc
+from zac.contrib.dowc.data import OpenDowc
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.kownsl.serializers import ZaakRevReqSummarySerializer
 from zac.contrib.objects.checklists.api.serializers import ChecklistQuestionSerializer
@@ -35,14 +36,14 @@ class ZetResultaatContext(Context):
 
 
 class OpenDocumentSerializer(APIModelSerializer):
-    document = serializers.CharField(
-        source="url",
-        help_text=_("Unversioned URL-reference to informatieobject."),
+    url = serializers.CharField(
+        source="document",
+        help_text=_("Unversioned URL-reference to INFORMATIEOBJECT in DRC API."),
     )
 
     class Meta:
-        model = Document
-        fields = ("document",)
+        model = OpenDowc
+        fields = ("url",)
 
 
 @usertask_context_serializer
@@ -75,7 +76,9 @@ class ZetResultaatContextSerializer(APIModelSerializer):
         help_text=_("RESULTAATTYPEs for ZAAKTYPE of ZAAK."),
     )
     open_documenten = OpenDocumentSerializer(
-        help_text=_("URL-references of open INFORMATIEOBJECTs in DOWC API."),
+        help_text=_(
+            "URL-references of INFORMATIEOBJECTs of DRC API in DOWC API that are currently being edited."
+        ),
         many=True,
         required=True,
     )
@@ -143,6 +146,6 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         with parallel() as executor:
             list(
                 executor.map(
-                    patch_and_destroy_doc, [doc["uuid"] for doc in open_documents]
+                    patch_and_destroy_doc, [str(doc.uuid) for doc in open_documents]
                 )
             )

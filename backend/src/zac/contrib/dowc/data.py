@@ -11,3 +11,9 @@ class DowcResponse(Model):
     purpose: str
     uuid: UUID
     unversioned_url: str
+
+
+@dataclass
+class OpenDowc(Model):
+    document: str
+    uuid: UUID

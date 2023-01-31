@@ -23,6 +23,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
+from zac.contrib.dowc.data import OpenDowc
 from zac.contrib.kownsl.constants import KownslTypes
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.models import CoreConfig
@@ -902,7 +903,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
         with patch(
             "zac.core.camunda.zet_resultaat.serializers.check_document_status",
-            return_value=[{"document": self.document.url, "uuid": str(_uuid)}],
+            return_value=factory(
+                OpenDowc, [{"document": self.document.url, "uuid": str(_uuid)}]
+            ),
         ):
             with patch(
                 "zac.core.camunda.zet_resultaat.serializers.patch_and_destroy_doc",
