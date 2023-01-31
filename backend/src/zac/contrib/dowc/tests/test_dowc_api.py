@@ -152,7 +152,6 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         ):
             response = self.client.post(
                 self.zac_dowc_url,
-                {"zaak": "https://some-zaak.nl/"},
                 HTTP_REFERER="http://www.some-referer-url.com/",
             )
 
@@ -205,7 +204,6 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         ):
             response = self.client.post(
                 self.zac_dowc_url,
-                {"zaak": "https://some-zaak.nl/"},
                 HTTP_REFERER="http://www.some-referer-url.com/",
             )
 
@@ -225,7 +223,6 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         ):
             response = self.client.post(
                 self.zac_dowc_url,
-                {"zaak": "https://some-zaak.nl/"},
                 HTTP_REFERER="http://www.some-referer-url.com/",
             )
 

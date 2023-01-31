@@ -8,10 +8,6 @@ from .constants import DocFileTypes
 from .data import DowcResponse
 
 
-class OpenDowcFileSerializer(serializers.Serializer):
-    zaak = serializers.CharField(help_text=_("URL-reference to ZAAK."), required=True)
-
-
 class DowcResponseSerializer(APIModelSerializer):
     delete_url = serializers.SerializerMethodField(
         label=_("deletion url"),
