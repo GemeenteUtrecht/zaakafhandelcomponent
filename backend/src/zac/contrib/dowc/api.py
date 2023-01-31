@@ -41,7 +41,7 @@ def get_client(user: Optional[User] = None) -> Client:
 
 @optional_service
 def create_doc(
-    user: User, document: Document, purpose: str, referer: str, zaak: str
+    user: User, document: Document, purpose: str, referer: str
 ) -> Tuple[DowcResponse, int]:
 
     drc_url = furl(document.url).add({"versie": document.versie}).url

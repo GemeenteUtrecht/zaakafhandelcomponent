@@ -18,7 +18,7 @@ from zac.core.services import find_document, get_document
 
 from .api import create_doc, patch_and_destroy_doc
 from .exceptions import DOWCCreateError
-from .serializers import DowcResponseSerializer, DowcSerializer, OpenDowcFileSerializer
+from .serializers import DowcResponseSerializer, DowcSerializer
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:
@@ -52,7 +52,7 @@ class OpenDowcView(APIView):
                 location=OpenApiParameter.QUERY,
             ),
         ],
-        request=OpenDowcFileSerializer,
+        request=None,
         responses={201: DowcResponseSerializer, 200: DowcResponseSerializer},
     )
     def post(self, request, bronorganisatie, identificatie, purpose):
@@ -62,12 +62,8 @@ class OpenDowcView(APIView):
         """
         document = self.get_object(bronorganisatie, identificatie)
         referer = request.headers.get("referer", "")
-        serializer = OpenDowcFileSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
         try:
-            response, status_code = create_doc(
-                request.user, document, purpose, referer, serializer.data["zaak"]
-            )
+            response, status_code = create_doc(request.user, document, purpose, referer)
         except DOWCCreateError as err:
             raise ValidationError(err.args[0])
 
