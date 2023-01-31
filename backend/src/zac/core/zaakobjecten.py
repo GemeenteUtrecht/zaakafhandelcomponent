@@ -66,29 +66,30 @@ class ZaakObjectGroup:
             self.items.append(retrieved_item)
 
 
+# TODO
 GROUPS = {
-    "pand": ZaakObjectGroup(
-        object_type="pand",
-        label="Panden",
-        retriever=fetch_pand,
-        template="core/includes/zaakobjecten/pand.html",
-    ),
-    "verblijfsobject": ZaakObjectGroup(
-        object_type="verblijfsobject",
-        label="Verblijfsobjecten",
-        retriever=fetch_verblijfsobject,
-        template="core/includes/zaakobjecten/verblijfsobject.html",
-    ),
-    # Roxit Squit 20/20 POC
-    "adres": ZaakObjectGroup(
-        object_type="adres",
-        label="Adressen",
-        template="core/includes/zaakobjecten/adres.html",
-    ),
-    "omgevingsdossier": ZaakObjectGroup(
-        object_type="omgevingsdossier",
-        label="Omgevingsdossiers",
-        retriever=noop,
-        template="core/includes/zaakobjecten/omgevingsdossier.html",
-    ),
+    # "pand": ZaakObjectGroup(
+    #     object_type="pand",
+    #     label="Panden",
+    #     retriever=fetch_pand,
+    #     template="core/includes/zaakobjecten/pand.html",
+    # ),
+    # "verblijfsobject": ZaakObjectGroup(
+    #     object_type="verblijfsobject",
+    #     label="Verblijfsobjecten",
+    #     retriever=fetch_verblijfsobject,
+    #     template="core/includes/zaakobjecten/verblijfsobject.html",
+    # ),
+    # # Roxit Squit 20/20 POC
+    # "adres": ZaakObjectGroup(
+    #     object_type="adres",
+    #     label="Adressen",
+    #     template="core/includes/zaakobjecten/adres.html",
+    # ),
+    # "omgevingsdossier": ZaakObjectGroup(
+    #     object_type="omgevingsdossier",
+    #     label="Omgevingsdossiers",
+    #     retriever=noop,
+    #     template="core/includes/zaakobjecten/omgevingsdossier.html",
+    # ),
 }
