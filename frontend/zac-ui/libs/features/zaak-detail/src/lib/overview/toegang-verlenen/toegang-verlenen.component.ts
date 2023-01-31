@@ -21,7 +21,7 @@ export class ToegangVerlenenComponent implements OnInit {
   selectedUser: User;
 
   allPermissions: Permission[];
-  permissions: Permission[];
+  filteredPermissions: Permission[];
   selectedPermissions: string[];
   preselectedPermissions: string[];
 
@@ -76,8 +76,6 @@ export class ToegangVerlenenComponent implements OnInit {
     this.accountsService.getPermissions()
       .subscribe( res => {
         this.allPermissions = res;
-        this.permissions = res;
-        this.preselectedPermissions = res.map( p => p.name );
       }, error => console.error(error))
   }
 
@@ -113,7 +111,9 @@ export class ToegangVerlenenComponent implements OnInit {
       // Check if selected user already has permissions
       if (filteredUserPermissions?.length > 0) {
         const userPermissions = filteredUserPermissions[0].permissions.map(zaakPermission => zaakPermission.permission);
-        this.permissions = this.allPermissions.filter(permission => !userPermissions.includes(permission.name))
+        this.filteredPermissions = this.allPermissions.filter(permission => !userPermissions.includes(permission.name))
+      } else if (filteredUserPermissions?.length === 0) {
+        this.filteredPermissions = this.allPermissions;
       }
     }
   }
