@@ -37,12 +37,13 @@
   <gu-modal *ngIf="userPermissions" [closeIcon]="true" id="add-person-modal" title="Rechten verlenen" size="small">
     <gu-toegang-verlenen [zaak]="zaak"
                          [userPermissions]="userPermissions"
+                         (reload)="getContextData()"
     ></gu-toegang-verlenen>
   </gu-modal>
 
-  <gu-modal [closeIcon]="true" id="delete-permission-modal" title="Gebruikersrecht verwijderen">
+  <gu-modal [closeIcon]="true" id="delete-permission-modal" title="Gebruikersrecht verwijderen" size="small">
     <p>U staat op het punt om een gebruikersrecht te verwijderen, wilt u doorgaan?</p>
-    <button gu-button buttonStyle="primary" (click)="closeDeletePermission()">Annuleren</button>
-    <button class="ml-2" gu-button buttonStyle="secondary" (click)="deletePermission()">Verwijderen</button>
+    <button gu-button buttonStyle="secondary" (click)="closeDeletePermission()">Annuleren</button>
+    <button class="ml-2" gu-button buttonStyle="primary" (click)="deletePermission()">Verwijderen</button>
   </gu-modal>
 </div>

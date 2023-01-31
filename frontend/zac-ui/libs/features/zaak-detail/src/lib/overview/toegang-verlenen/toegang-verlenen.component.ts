@@ -164,6 +164,8 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
 
       this.getContextData();
       this.modalService.close('add-person-modal');
+
+      this.reload.emit();
     })
   }
 
