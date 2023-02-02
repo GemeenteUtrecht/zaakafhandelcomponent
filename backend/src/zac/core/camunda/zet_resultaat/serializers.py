@@ -143,9 +143,13 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         open_documents = check_document_status(
             [doc.url for doc in zaakcontext.documents]
         )
+
+        def _patch_and_destroy_doc(uuid: str):
+            return patch_and_destroy_doc(uuid, force=True)
+
         with parallel() as executor:
             list(
                 executor.map(
-                    patch_and_destroy_doc, [str(doc.uuid) for doc in open_documents]
+                    _patch_and_destroy_doc, [str(doc.uuid) for doc in open_documents]
                 )
             )

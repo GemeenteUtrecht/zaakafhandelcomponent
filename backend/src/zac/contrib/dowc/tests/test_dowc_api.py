@@ -40,20 +40,6 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         cls.user = SuperUserFactory.create()
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        cls.service = Service.objects.create(
-            label="dowc",
-            api_type=APITypes.orc,
-            api_root=DOWC_API_ROOT,
-            auth_type=AuthTypes.zgw,
-            client_id="zac",
-            secret="supersecret",
-            oas=f"{DOWC_API_ROOT}/api/v1",
-            user_id="zac",
-        )
-
-        config = DowcConfig.get_solo()
-        config.service = cls.service
-        config.save()
 
         cls.catalogus_url = f"{CATALOGI_ROOT}/catalogussen/{uuid.uuid4()}"
 
@@ -114,6 +100,23 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         self.get_document_patcher.start()
         self.addCleanup(self.get_document_patcher.stop)
 
+        self.service = Service.objects.create(
+            label="dowc",
+            api_type=APITypes.orc,
+            api_root=DOWC_API_ROOT,
+            auth_type=AuthTypes.zgw,
+            header_key="Authorization",
+            header_value="ApplicationToken some-token",
+            client_id="zac",
+            secret="supersecret",
+            oas=f"{DOWC_API_ROOT}/api/v1",
+            user_id="zac",
+        )
+
+        config = DowcConfig.get_solo()
+        config.service = self.service
+        config.save()
+
     def test_client(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
 
@@ -133,6 +136,23 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         self.assertEqual(claims["email"], self.user.email)
         self.assertEqual(len(m.request_history), 1)
         self.assertEqual(m.last_request.url, f"{self.service.oas}?v=3")
+
+        # See if application token is used
+        client = get_client(force=True)
+        self.assertIsNotNone(client.auth_header)
+        self.assertEqual(
+            client.auth_header, {"Authorization": "ApplicationToken some-token"}
+        )
+
+    def test_service_faulty_configuration(self, m):
+        self.service.header_value = ""
+        self.service.save()
+        config = DowcConfig.get_solo()
+        config.service = self.service
+        config.save()
+
+        with self.assertRaises(AssertionError):
+            client = get_client(force=True)
 
     def test_no_permission(self, m):
         response = self.client.post(self.zac_dowc_url)
