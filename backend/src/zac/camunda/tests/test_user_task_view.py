@@ -921,4 +921,4 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                     ):
                         response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
-        patch_and_destroy_doc.assert_called_once_with(str(_uuid))
+        patch_and_destroy_doc.assert_called_once_with(str(_uuid), force=True)

@@ -90,6 +90,8 @@ class GetZetResultaatContextSerializersTests(APITestCase):
             api_type=APITypes.orc,
             api_root=DOWC_API_ROOT,
             auth_type=AuthTypes.zgw,
+            header_value="ApplicationToken some-token",
+            header_key="Authorization",
             client_id="zac",
             secret="supersecret",
             oas=f"{DOWC_API_ROOT}/api/v1",

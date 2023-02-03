@@ -8,6 +8,7 @@ from zds_client.client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.constants import AuthTypes
 
 from zac.accounts.models import User
 from zac.client import Client
@@ -19,7 +20,7 @@ from .exceptions import DOWCCreateError
 from .models import DowcConfig
 
 
-def get_client(user: Optional[User] = None) -> Client:
+def get_client(user: Optional[User] = None, force: bool = False) -> Client:
     config = DowcConfig.get_solo()
     assert config.service, "The DoWC service must be configured first"
     service = config.service
@@ -30,6 +31,12 @@ def get_client(user: Optional[User] = None) -> Client:
     if user:
         service.user_id = user.username
         claims["email"] = user.email
+
+    if force:
+        assert (
+            "ApplicationToken" in service.header_value
+        ), "ApplicationToken must be configured in header value."
+        service.auth_type = AuthTypes.api_key
 
     client = service.build_client(**claims)
     client.operation_suffix_mapping = {
@@ -95,8 +102,9 @@ def get_open_documenten(user: User) -> List[Optional[DowcResponse]]:
 def patch_and_destroy_doc(
     uuid: str,
     user: Optional[User] = None,
+    force: bool = False,
 ) -> Dict[str, str]:
-    client = get_client(user=user)
+    client = get_client(user=user, force=force)
     operation_id = "documenten_destroy"
     try:
         url = get_operation_url(client.schema, operation_id, uuid=uuid)
@@ -107,8 +115,8 @@ def patch_and_destroy_doc(
 
 
 @optional_service
-def check_document_status(documenten: List[str]) -> List[OpenDowc]:
-    client = get_client()
+def check_document_status(documenten: List[str]) -> Optional[Dict]:
+    client = get_client(force=True)
     operation_id = "documenten_status_create"
     url = get_operation_url(client.schema, operation_id)
 
