@@ -1,18 +1,10 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  OnInit,
-  Output,
-  SimpleChanges
-} from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild} from '@angular/core';
 import {FormGroup} from '@angular/forms';
 import {Choice, Field, FieldConfiguration, Fieldset, FieldsetConfiguration} from './field';
 import {FormService} from './form.service';
 import {Document, ReadWriteDocument, Zaak} from '@gu/models';
 import {DocumentenService} from '@gu/services';
+import { DocumentenComponent } from '../../../../../../../features/zaak-detail/src/lib/documenten/documenten.component';
 
 
 /**
@@ -38,6 +30,8 @@ import {DocumentenService} from '@gu/services';
   templateUrl: './form.component.html',
 })
 export class FormComponent implements OnInit, OnChanges {
+  @ViewChild(DocumentenComponent) documentenComponent: DocumentenComponent;
+
   @Input() form: FieldConfiguration[] = [];
   @Input() fieldsets: FieldsetConfiguration[] = [];
   @Input() buttonLabel = 'Opslaan';
@@ -63,6 +57,12 @@ export class FormComponent implements OnInit, OnChanges {
    * @type {Object} Documents mapping.
    */
   documents: { [index: string]: Document } = {}
+
+  /**
+   * Keeps track of unsaved documents
+   * @type {string[]}
+   */
+  selectedDocuments: string[] = [];
 
   /**
    * @type {boolean} Whether the form is in isInEditMode mode.
@@ -95,8 +95,7 @@ export class FormComponent implements OnInit, OnChanges {
    */
   constructor(
     private documentenService: DocumentenService,
-    private formService: FormService,
-    private cdRef: ChangeDetectorRef
+    private formService: FormService
     ) {
   }
 
@@ -308,12 +307,29 @@ export class FormComponent implements OnInit, OnChanges {
   }
 
   /**
+   * Add selected document to array
+   * @param {Field} field
+   */
+  onDocumentSelect(field: Field) {
+    this.selectedDocuments.push(field.name)
+  }
+
+  /**
+   * Remove document from array
+   * @param {Field} field
+   */
+  onDocumentRemove(field: Field) {
+    this.selectedDocuments.filter(e => e !== field.name);
+  }
+
+  /**
    * Gets called when a document is uploaded.
    * @param {Field} field
    * @param {Document} document
    */
   onUploadedDocument(field: Field, document: Document) {
     this.documents[field.name] = document;
+    this.selectedDocuments.filter(e => e !== field.name);
     field.edit = false;
   }
 

@@ -1,5 +1,5 @@
 <div class="file-upload">
-  <button *ngIf="!fileInput" class="file-upload__upload-button" [disabled]="disabled">
+  <button *ngIf="!fileInput" gu-button size="small" icon="folder_open" class="file-upload__upload-button" [disabled]="disabled">
     <span>Selecteer document</span>
     <input
       type="file"
@@ -7,7 +7,7 @@
       (change)="handleFileChangeEvent($event)">
   </button>
   <span *ngIf="required && !fileInput">Verplicht</span>
-  <div class="file-upload__selected-file" *ngIf="fileInput">
+  <div class="file-upload__selected-file ml-1" *ngIf="fileInput">
     <span class="selected-file__name">{{fileInput.name}}</span>
     <mat-icon *ngIf="!disabled" (click)="deleteSelectedFile()">delete</mat-icon>
   </div>
