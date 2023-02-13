@@ -5,7 +5,7 @@
   <p class="mb-0">Toon objecttypen van alle zaaktypen</p>
 </gu-checkbox>
 
-<gu-form class="mb-4" [form]="form" buttonLabel="Zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading"
+<gu-form class="mb-4" *ngIf="objectTypeVersions" [form]="form" buttonLabel="Zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading"
          (formSubmit)="submitForm($event)"></gu-form>
 
 <mat-action-list *ngIf="showZaakObjecten" dense>

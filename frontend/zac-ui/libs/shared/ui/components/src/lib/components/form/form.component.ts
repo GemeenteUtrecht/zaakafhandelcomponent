@@ -1,4 +1,13 @@
-import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
 import {FormGroup} from '@angular/forms';
 import {Choice, Field, FieldConfiguration, Fieldset, FieldsetConfiguration} from './field';
 import {FormService} from './form.service';
@@ -84,7 +93,11 @@ export class FormComponent implements OnInit, OnChanges {
    * Constructor method.
    * @param {FormService} formService
    */
-  constructor(private documentenService: DocumentenService, private formService: FormService) {
+  constructor(
+    private documentenService: DocumentenService,
+    private formService: FormService,
+    private cdRef: ChangeDetectorRef
+    ) {
   }
 
   //
@@ -229,7 +242,7 @@ export class FormComponent implements OnInit, OnChanges {
    * Updates this._fieldsets in place.
    */
   updateFieldsets() {
-    const fieldsets = this._fieldsets.length
+    const fieldsets = this._fieldsets.length && this._fieldsets.keys.length === this.form.length
       ? this._fieldsets
       : this.fieldsets.length
         ? this.fieldsets
@@ -247,6 +260,8 @@ export class FormComponent implements OnInit, OnChanges {
         const target = this._fieldsets.find((otherFieldset: Fieldset) => otherFieldset.key === fieldset.key);
         if(target) {
           Object.assign(target, fieldset);
+        } else {
+          this._fieldsets = updatedFieldsets;
         }
       })
     }
