@@ -42,8 +42,10 @@ export class DocumentToevoegenComponent implements OnInit {
 
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() closeModal: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
   @Output() closeForm: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() uploadedDocument: EventEmitter<Document> = new EventEmitter<Document>();
+  @Output() selectDocument: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() removeDocument: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent
 
@@ -167,6 +169,11 @@ export class DocumentToevoegenComponent implements OnInit {
 
   async handleFileSelect(file: File) {
     this.addDocumentForm.controls['documentFile'].setValue(file);
+    if (file) {
+      this.selectDocument.emit(true)
+    } else {
+      this.removeDocument.emit(true);
+    }
   }
 
   /**

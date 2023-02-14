@@ -1,6 +1,6 @@
 <div class="document-toevoegen">
   <form [formGroup]="addDocumentForm">
-    <div class="form-group" *ngIf="!updateDocument">
+    <div *ngIf="!updateDocument">
       <label *ngIf="title" class="h4 d-inline-block mr-2">{{ title }}</label>
       <p *ngIf="description">{{ description }}</p>
       <gu-multiselect
@@ -9,16 +9,16 @@
         placeholder="Selecteer documenttype"
         bindLabel="omschrijving"
         bindValue="url"
-        class="mb-4"
+        class="mb-2"
         [control]="documentTypeControl"
         appendTo="body"
       >
       </gu-multiselect>
     </div>
-    <div class="form-group">
+    <div>
       <gu-file-upload (selectedFileOutput)="handleFileSelect($event)"></gu-file-upload>
     </div>
-    <div class="form-group mt-4">
+    <div class="form-group mt-2">
       <gu-input *ngIf="updateDocument"
                 [control]="reasonControl"
                 [required]="true"
@@ -38,6 +38,7 @@
               [disabled]="!addDocumentForm.valid || isSubmitting"
               [loading]="isSubmitting"
               buttonStyle="primary"
+              icon="upload"
               [size]="activity ? 'small' : buttonSize"
               (click)="submitForm()">
         {{submitLabel}}

@@ -108,7 +108,7 @@ export class Field {
   checked?: boolean;
   choices: Array<Choice>;
   control: AbstractControl;
-  edit: false;
+  edit: boolean;
   key?: string;
   label: string;
   maxlength?: string;

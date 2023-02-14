@@ -4,11 +4,17 @@
   <!-- button template -->
   <ng-template #button>
     <button *ngIf="isInEditMode" gu-button type="submit" buttonStyle="primary" [size]="buttonSize" class="d-inline-block"
-            [disabled]="!formGroup?.valid || isLoading" [loading]="isLoading">
+            [disabled]="!formGroup?.valid || isLoading || selectedDocuments.length > 0" [loading]="isLoading">
       {{buttonLabel}}
     </button>
   </ng-template>
   <!-- end button template -->
+
+  <!-- Upload document warning template -->
+  <ng-template #saveDocsWarning>
+    <span class="form__toolbar-text" *ngIf="selectedDocuments.length > 0">Alle documenten dienen geüpload te worden voordat de takenlijst kan worden opgeslagen.</span>
+  </ng-template>
+  <!-- end of warning template -->
 
   <header class="form__header">
     <h3 *ngIf="title" class="d-inline-block mr-1">
@@ -17,23 +23,27 @@
     </h3>
 
     <div class="form__toolbar">
-      <ng-container *ngIf="buttonPosition==='top'">
-        <ng-container *ngTemplateOutlet="button"></ng-container>
-      </ng-container>
+        <ng-container *ngIf="buttonPosition==='top'">
+          <ng-container *ngTemplateOutlet="button"></ng-container>
+        </ng-container>
 
-      <button
-        *ngIf="isToggleable()"
-        gu-button
-        class="form__edit-toggle"
-        buttonStyle="tertiary"
-        size="extrasmall"
-        icon="edit"
-        (click)="toggleClick($event)"
-      >
-        {{isInEditMode ? 'Annuleren' : 'Bewerken' }}
-      </button>
+        <button
+          *ngIf="isToggleable()"
+          gu-button
+          class="form__edit-toggle"
+          buttonStyle="tertiary"
+          size="extrasmall"
+          icon="edit"
+          (click)="toggleClick($event)"
+        >
+          {{isInEditMode ? 'Annuleren' : 'Bewerken' }}
+        </button>
     </div>
   </header>
+
+  <ng-container *ngIf="buttonPosition==='top'">
+    <ng-container *ngTemplateOutlet="saveDocsWarning"></ng-container>
+  </ng-container>
 
 
   <mat-accordion multi class="d-block mt-2">
@@ -70,7 +80,7 @@
               </div>
 
               <!-- Allow select -->
-              <div *ngIf="!documents[field.name]" >
+              <div *ngIf="!documents[field.name]" [ngClass]="(field.edit ? 'form__add-docs-wrapper' : '')" >
                 <div class="mb-2" *ngIf="isInEditMode">
                   <button *ngIf="field.widgetType == 'document'"
                           gu-button
@@ -87,13 +97,16 @@
                     }}
                   </button>
 
-                  <gu-document-toevoegen *ngIf="field.edit"
+                  <gu-document-toevoegen class="d-block mt-2"
+                                         *ngIf="field.edit"
                                          [zaak]="zaak"
                                          (uploadedDocument)="onUploadedDocument(field, $event)"
+                                         (selectDocument)="onDocumentSelect(field)"
+                                         (removeDocument)="onDocumentRemove(field)"
                                          buttonSize="small"
                                          title=""
                                          description=""
-                                         submitLabel="Toevoegen">
+                                         submitLabel="Uploaden">
                   </gu-document-toevoegen>
                 </div>
 
@@ -209,6 +222,7 @@
 
   <footer class="form__footer" *ngIf="buttonPosition==='bottom'">
     <ng-container *ngTemplateOutlet="button"></ng-container>
+    <ng-container *ngTemplateOutlet="saveDocsWarning"></ng-container>
   </footer>
 </form>
 

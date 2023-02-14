@@ -7,7 +7,6 @@
   &__upload-button {
     position: relative;
     @include button;
-    @include button--secondary;
   }
   input[type="file"] {
     position: absolute;
