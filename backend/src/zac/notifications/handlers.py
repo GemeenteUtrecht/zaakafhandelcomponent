@@ -198,7 +198,8 @@ class ZakenHandler:
 
         rol = fetch_rol(rol_url=rol_url)
         if not updated and (
-            rol.omschrijving_generiek.lower() == RolOmschrijving.behandelaar.lower()
+            rol.omschrijving_generiek
+            in [RolOmschrijving.behandelaar, RolOmschrijving.initiator]
         ):
             add_permission_for_behandelaar(rol_url)
 

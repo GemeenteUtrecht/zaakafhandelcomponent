@@ -14,6 +14,7 @@ from zac.camunda.api.utils import start_process
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.objects.services import fetch_start_camunda_process_form
 from zac.core.api.views import GetZaakMixin
+from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.core.services import get_rollen
 
 from .permissions import CanStartCamundaProcess
@@ -28,13 +29,7 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         HasTokenAuth | (permissions.IsAuthenticated & CanStartCamundaProcess),
     )
 
-    def get_serializer(self, *args, **kwargs):
-        return CreatedProcessInstanceSerializer(*args, **kwargs)
-
-    @extend_schema(summary=_("Start camunda process for ZAAK."))
-    def post(
-        self, request: Request, bronorganisatie: str, identificatie: str
-    ) -> Response:
+    def get_camunda_form(self) -> StartCamundaProcessForm:
         zaak = self.get_object()
 
         # See if there is a configured camunda_start_process object
@@ -44,6 +39,17 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
                 "No start camunda process form found for zaaktype with `identificatie`: `%s`."
                 % zaak.zaaktype.identificatie
             )
+        return form
+
+    def get_serializer(self, *args, **kwargs):
+        return CreatedProcessInstanceSerializer(*args, **kwargs)
+
+    @extend_schema(summary=_("Start camunda process for ZAAK."))
+    def post(
+        self, request: Request, bronorganisatie: str, identificatie: str
+    ) -> Response:
+        zaak = self.get_object()
+        form = self.get_camunda_form()
 
         variables = {
             "zaakUrl": zaak.url,
@@ -57,7 +63,7 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         initiator = [
             rol
             for rol in get_rollen(zaak)
-            if rol.omschrijving_generiek.lower() == RolOmschrijving.initiator.lower()
+            if rol.omschrijving_generiek == RolOmschrijving.initiator
         ]
         if initiator:
             variables["initiator"] = initiator[0].betrokkene_identificatie[

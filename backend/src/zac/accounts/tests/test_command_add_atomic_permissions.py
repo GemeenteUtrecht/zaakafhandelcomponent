@@ -91,6 +91,61 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         )
         self.assertEqual(atomic_permission.object_url, zaak["url"])
 
+    def test_add_permission_for_initiator(self, m):
+        # mock API requests
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/69e98129-1f0d-497f-bbfb-84b88137edbc",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK1",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            eigenschappen=[],
+        )
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "hoofdbehandelaar",
+            "omschrijvingGeneriek": "initiator",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+            },
+        }
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
+        m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([rol]))
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={zaak['url']}",
+            json=[],
+        )
+
+        call_command("add_atomic_permissions")
+
+        self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
+
+        atomic_permission = AtomicPermission.objects.for_user(self.user).get()
+
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
+        self.assertEqual(atomic_permission.object_url, zaak["url"])
+
     def test_add_permission_for_advisor(self, m):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")

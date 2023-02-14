@@ -14,7 +14,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
-from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import User
 from zac.camunda.api.utils import get_bptl_app_id_variable
@@ -22,13 +21,7 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.api.permissions import CanCreateZaken, CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.camunda.utils import get_process_zaak_url, resolve_assignee
-from zac.core.services import (
-    _client_from_url,
-    fetch_zaaktype,
-    get_rollen,
-    get_roltypen,
-    get_zaak,
-)
+from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
 
 from ..data import Task
@@ -60,7 +53,6 @@ from .utils import (
     get_bptl_app_id_variable,
     set_assignee,
     set_assignee_and_complete_task,
-    update_process_instance_variable,
 )
 
 
@@ -404,66 +396,11 @@ class ChangeBehandelaarTasksView(APIView):
         Changes the assignee from all tasks where the assignee is a behandelaar.
 
         Note: This does not include tasks related to kownsl review requests.
+
         """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        rollen = get_rollen(serializer.validated_data["zaak"])
-        old_behandelaars = "".join(
-            [
-                _rol.betrokkene_identificatie["identificatie"]
-                for _rol in rollen
-                if _rol.omschrijving_generiek.lower()
-                == RolOmschrijving.behandelaar.lower()
-                and _rol.url != serializer.validated_data["rol"].url
-            ]
-        )
-
-        # Get camunda tasks associated to this zaak
-        change_assignee_tasks = []
-        process_instances = get_top_level_process_instances(
-            serializer.validated_data["zaak"].url
-        )
-        for pi in process_instances:
-
-            for task in pi.tasks:
-                if (
-                    (username := getattr(task.assignee, "username", None))
-                    and username in old_behandelaars
-                    and task.name.lower() not in ["adviseren", "accorderen"]
-                ):
-                    change_assignee_tasks.append(
-                        {
-                            "task_id": task.id,
-                            "assignee": serializer.validated_data[
-                                "rol"
-                            ].betrokkene_identificatie["identificatie"],
-                        }
-                    )
-
-        with parallel() as executor:
-            list(
-                executor.map(
-                    lambda var: update_process_instance_variable(**var),
-                    [
-                        {
-                            "pid": pid.id,
-                            "variable_name": "behandelaar",
-                            "variable_value": serializer.validated_data[
-                                "rol"
-                            ].betrokkene_identificatie["identificatie"],
-                        }
-                        for pid in process_instances
-                    ],
-                )
-            )
-            list(
-                executor.map(
-                    lambda task_and_assignee: set_assignee(**task_and_assignee),
-                    change_assignee_tasks,
-                )
-            )
-
+        serializer.perform()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

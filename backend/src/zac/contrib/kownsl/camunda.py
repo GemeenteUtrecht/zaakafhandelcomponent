@@ -263,6 +263,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     def on_task_submission(self) -> None:
         """
         On task submission create the review request in the kownsl.
+
         """
         assert self.is_valid(), "Serializer must be valid"
 

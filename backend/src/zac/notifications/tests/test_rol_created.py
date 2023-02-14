@@ -198,6 +198,43 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         user_atomic_permission = atomic_permission.useratomicpermission_set.get()
         self.assertEqual(user_atomic_permission.reason, PermissionReason.betrokkene)
 
+    def test_rol_created_add_permission_for_initiator(self, rm):
+        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        rol = {
+            **ROL_RESPONSE,
+            "omschrijvingGeneriek": "initiator",
+            "betrokkeneIdentificatie": {
+                "identificatie": self.user.username,
+                "voorletters": "M.Y.",
+                "achternaam": "Surname",
+                "voorvoegsel_achternaam": "",
+            },
+        }
+        rm.get(
+            f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
+            json={"count": 1, "previous": None, "next": None, "results": [rol]},
+        )
+        mock_resource_get(rm, rol)
+
+        response = self.client.post(self.path, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
+
+        atomic_permission = AtomicPermission.objects.for_user(self.user).get()
+
+        self.assertEqual(atomic_permission.object_url, ZAAK)
+        self.assertEqual(
+            atomic_permission.object_type, PermissionObjectTypeChoices.zaak
+        )
+        self.assertEqual(atomic_permission.permission, zaken_inzien.name)
+
+        user_atomic_permission = atomic_permission.useratomicpermission_set.get()
+        self.assertEqual(user_atomic_permission.reason, PermissionReason.betrokkene)
+
     def test_rol_created_destroyed_recreated_with_betrokkene_identificatie(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")

@@ -56,6 +56,8 @@ def start_process(
 ) -> Dict[str, str]:
     """
     Taken from django_camunda.tasks.start_process - removed shared_task decorator.
+    Take care of serialization in this function rather than expecting it to be fed
+    camunda variables.
 
     """
     logger.debug(
@@ -149,6 +151,11 @@ def set_assignee_and_complete_task(
 def update_process_instance_variable(
     pid: CamundaId, variable_name: str, variable_value: Any
 ):
+    """
+    Serializes and updates a variable in a process instance
+    in Camunda.
+
+    """
     camunda_client = get_client()
     camunda_client.put(
         f"process-instance/{pid}/variables/{variable_name}",
