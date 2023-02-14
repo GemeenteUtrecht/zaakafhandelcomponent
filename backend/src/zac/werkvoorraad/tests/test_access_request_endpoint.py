@@ -29,26 +29,25 @@ CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
     """
     Test the access requests API endpoint.
+
     """
 
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.user = UserFactory.create()
-
         cls.endpoint = reverse(
             "werkvoorraad:access-requests",
         )
 
-    def setUp(self):
-        super().setUp()
-        self.client.force_authenticate(user=self.user)
-
     def test_access_requests_no_permission(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 403)
 
     def test_access_requests_permission(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
         catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         zaaktype = generate_oas_component(
             "ztc",
@@ -78,14 +77,15 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
             "betrokkeneType": "medewerker",
             "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
             "omschrijving": "zaak behandelaar",
-            "omschrijvingGeneriek": "behandelaar",
+            "omschrijvingGeneriek": "initiator",
             "roltoelichting": "some description",
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
+                "identificatie": f"{AssigneeTypeChoices.user}:{user}",
             },
         }
+
         zaak_document = self.create_zaak_document(zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(zaaktype)
         zaak_document.rollen = [create_rol_document(factory(Rol, rol_1))]
@@ -99,7 +99,7 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_handle_access.name],
-            for_user=self.user,
+            for_user=user,
             policy={
                 "catalogus": catalogus,
                 "zaaktype_omschrijving": "ZT1",
@@ -108,7 +108,7 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
-            for_user=self.user,
+            for_user=user,
             policy={
                 "catalogus": catalogus,
                 "zaaktype_omschrijving": "ZT1",

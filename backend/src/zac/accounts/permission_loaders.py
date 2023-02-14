@@ -56,7 +56,8 @@ def add_permission_for_behandelaar(
 
     if not (
         rol.betrokkene_type == RolTypes.medewerker
-        and rol.omschrijving_generiek == RolOmschrijving.behandelaar
+        and rol.omschrijving_generiek
+        in [RolOmschrijving.behandelaar, RolOmschrijving.initiator]
         and rol.betrokkene_identificatie
     ):
         return

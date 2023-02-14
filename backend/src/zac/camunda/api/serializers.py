@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from zds_client.client import ClientError
+from zgw_consumers.api_models.constants import RolOmschrijving
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
@@ -18,9 +20,11 @@ from zgw.models.zrc import Zaak
 from ..api.data import HistoricUserTask
 from ..constants import AssigneeTypeChoices
 from ..data import BPMN, Task
+from ..processes import get_top_level_process_instances
 from ..user_tasks.api import get_killability_of_task, get_task
 from ..user_tasks.context import REGISTRY
 from .fields import TaskField
+from .utils import set_assignee, update_process_instance_variable
 from .validators import GroupValidator, OrValidator, UserValidator
 
 
@@ -326,3 +330,96 @@ class ChangeBehandelaarTasksSerializer(serializers.Serializer):
         except ClientError as exc:
             raise serializers.ValidationError(detail=exc.args)
         return rol
+
+    def perform(self):
+        assert self.is_valid(), "Serializer must be valid"
+
+        # Get camunda tasks associated to this zaak
+        change_assignee_tasks = []
+        process_instances = get_top_level_process_instances(
+            self.validated_data["zaak"].url
+        )
+        for pi in process_instances:
+            for task in pi.tasks:
+                if task.name.lower() not in ["adviseren", "accorderen"]:
+                    change_assignee_tasks.append(
+                        {
+                            "task_id": task.id,
+                            "assignee": self.validated_data[
+                                "rol"
+                            ].betrokkene_identificatie["identificatie"],
+                        }
+                    )
+
+        new_rol = {
+            "betrokkeneType": self.validated_data["rol"].betrokkene_type,
+            "betrokkeneIdentificatie": self.validated_data[
+                "rol"
+            ].betrokkene_identificatie,
+            "name": self.validated_data["rol"].get_name(),
+            "omschrijving": self.validated_data["rol"].get_roltype_omschrijving(),
+            "roltoelichting": self.validated_data["rol"].get_roltype_omschrijving(),
+            "identificatie": self.validated_data["rol"].get_identificatie(),
+        }
+
+        with parallel() as executor:
+            # Update 'behandelaar' variable
+            list(
+                executor.map(
+                    lambda var: update_process_instance_variable(**var),
+                    [
+                        {
+                            "pid": pid.id,
+                            "variable_name": "behandelaar",
+                            "variable_value": self.validated_data[
+                                "rol"
+                            ].betrokkene_identificatie["identificatie"],
+                        }
+                        for pid in process_instances
+                    ],
+                )
+            )
+
+            if (
+                self.validated_data["rol"].omschrijving_generiek
+                == RolOmschrijving.initiator
+            ):
+                # Update `initiator` variable
+                list(
+                    executor.map(
+                        lambda var: update_process_instance_variable(**var),
+                        [
+                            {
+                                "pid": pid.id,
+                                "variable_name": "initiator",
+                                "variable_value": self.validated_data[
+                                    "rol"
+                                ].betrokkene_identificatie["identificatie"],
+                            }
+                            for pid in process_instances
+                        ],
+                    )
+                )
+            # Update rol variable
+            list(
+                executor.map(
+                    lambda var: update_process_instance_variable(**var),
+                    [
+                        {
+                            "pid": pid.id,
+                            "variable_name": self.validated_data[
+                                "rol"
+                            ].get_roltype_omschrijving(),
+                            "variable_value": new_rol,
+                        }
+                        for pid in process_instances
+                    ],
+                )
+            )
+            # Change assignee of tasks to match new behandelaar
+            list(
+                executor.map(
+                    lambda task_and_assignee: set_assignee(**task_and_assignee),
+                    change_assignee_tasks,
+                )
+            )

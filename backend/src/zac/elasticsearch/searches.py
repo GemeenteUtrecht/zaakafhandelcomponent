@@ -15,6 +15,7 @@ from elasticsearch_dsl.query import (
     Term,
     Terms,
 )
+from zgw_consumers.api_models.constants import RolOmschrijving
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
@@ -124,7 +125,12 @@ def search_zaken(
                 query=Bool(
                     filter=[
                         Term(rollen__betrokkene_type="medewerker"),
-                        Term(rollen__omschrijving_generiek="behandelaar"),
+                        Terms(
+                            rollen__omschrijving_generiek=[
+                                RolOmschrijving.behandelaar,
+                                RolOmschrijving.initiator,
+                            ]
+                        ),
                         Term(
                             rollen__betrokkene_identificatie__identificatie=f"{AssigneeTypeChoices.user}:{behandelaar}"
                         ),

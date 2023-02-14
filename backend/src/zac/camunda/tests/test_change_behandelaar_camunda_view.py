@@ -121,6 +121,7 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, self.zaak)
         mock_resource_get(rm, self.zaaktype)
+        mock_resource_get(rm, self.roltype)
         user = SuperUserFactory.create(username="other-user")
         new_rol = {
             **self.rol,
@@ -152,12 +153,16 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
             f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/behandelaar",
             status_code=204,
         )
+        rm.put(
+            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/zaak%20behandelaar",
+            status_code=204,
+        )
         rm.post(
             f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
             status_code=204,
         )
         with patch(
-            "zac.camunda.api.views.get_top_level_process_instances",
+            "zac.camunda.api.serializers.get_top_level_process_instances",
             return_value=[process_instance],
         ):
             response = self.client.post(
@@ -177,6 +182,7 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, self.zaak)
         mock_resource_get(rm, self.zaaktype)
+        mock_resource_get(rm, self.roltype)
         user = SuperUserFactory.create(username="other-user")
         new_rol = {
             **self.rol,
@@ -207,12 +213,16 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
             f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/behandelaar",
             status_code=204,
         )
+        rm.put(
+            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/zaak%20behandelaar",
+            status_code=204,
+        )
         rm.post(
             f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
             status_code=204,
         )
         with patch(
-            "zac.camunda.api.views.get_top_level_process_instances",
+            "zac.camunda.api.serializers.get_top_level_process_instances",
             return_value=[process_instance],
         ):
             response = self.client.post(
@@ -223,7 +233,7 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(
             rm.last_request.url,
-            "https://camunda.example.com/engine-rest/process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405/variables/behandelaar",
+            "https://camunda.example.com/engine-rest/process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405/variables/zaak%20behandelaar",
         )
 
     @requests_mock.Mocker()
@@ -312,14 +322,16 @@ class ChangeBehandelaarPermissionTests(APITestCase):
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, 403)
 
-    @patch("zac.camunda.api.views.get_rollen", return_value=[])
-    @patch("zac.camunda.api.views.get_top_level_process_instances", return_value=[])
+    @patch(
+        "zac.camunda.api.serializers.get_top_level_process_instances", return_value=[]
+    )
     def test_user_logged_in_with_permission(self, rm, *mocks):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, self.zaak)
         mock_resource_get(rm, self.zaaktype)
         mock_resource_get(rm, self.rol)
+        mock_resource_get(rm, self.roltype)
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
