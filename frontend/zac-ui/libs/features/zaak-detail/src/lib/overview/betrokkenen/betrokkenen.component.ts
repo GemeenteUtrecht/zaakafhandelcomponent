@@ -12,10 +12,12 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 export class BetrokkenenComponent implements OnChanges {
   @Input() zaak: Zaak;
 
+  readonly omschrijvingGeneriekHoofdbehandelaar = "initiator"
   hiddenRoleData: Betrokkene[];
   alwaysVisibleRoleData: Betrokkene[];
+  hoofdbehandelaar: Betrokkene;
   nBehandelaars: number;
-  allRoleData: any;
+  allRoleData: Betrokkene[];
   isLoading = true;
   isExpanded: boolean;
   errorMessage: string;
@@ -23,7 +25,7 @@ export class BetrokkenenComponent implements OnChanges {
   edit = false;
   users: UserSearchResult[];
   roleTypes: MetaRoltype[];
-  behandelaarType: MetaRoltype;
+  hoofdBehandelaarType: MetaRoltype;
 
   roleForm: FormGroup;
   isSubmitting: boolean;
@@ -84,11 +86,12 @@ export class BetrokkenenComponent implements OnChanges {
     this.isLoading = true;
     this.metaService.getRoleTypes(this.zaak.url).subscribe(roletypes => {
       this.roleTypes = roletypes;
-      this.behandelaarType = this.roleTypes.find(x => x.omschrijvingGeneriek === "behandelaar");
+      this.hoofdBehandelaarType = this.roleTypes.find(x => x.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar);
     })
     this.zaakService.getCaseRoles(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
-      this.allRoleData = data;
-      this.formatRoles(data);
+      this.hoofdbehandelaar = data.find(x => x.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar);
+      this.allRoleData = data.filter(x => x.omschrijvingGeneriek !== this.omschrijvingGeneriekHoofdbehandelaar);
+      this.formatRoles(this.allRoleData);
       this.isLoading = false;
       this.edit = false;
     }, error => {
@@ -199,7 +202,7 @@ export class BetrokkenenComponent implements OnChanges {
 
     this.zaakService.createCaseRole(this.zaak.bronorganisatie, this.zaak.identificatie, formData)
       .subscribe((role) => {
-        if (role?.url && (this.roltypeControl.value === this.behandelaarType.url && this.changeBehandelaarControl.value)) {
+        if (role?.url && (this.roltypeControl.value === this.hoofdBehandelaarType.url && this.changeBehandelaarControl.value)) {
           this.changeBehandelaar(role.url);
         } else {
           setTimeout(() => {

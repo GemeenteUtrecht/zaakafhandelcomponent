@@ -1,12 +1,30 @@
 <div class="betrokkenen card">
   <div class="d-flex justify-content-between">
     <h3 class="mr-1">Betrokkenen</h3>
-    <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="edit"
+    <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="settings"
             (click)="toggleEdit()">
-      {{edit ? 'Annuleren' : 'Bewerken' }}
+      {{edit ? 'Annuleren' : '' }}
     </button>
   </div>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <div class="betrokkenen__role betrokkenen__role--initiator" *ngIf="hoofdbehandelaar">
+    <div>
+      <div class="role-description">
+        <p class="p--bold">{{hoofdbehandelaar.roltypeOmschrijving}}</p>
+      </div>
+      <p class="p--nomargin">{{hoofdbehandelaar.name}}</p>
+    </div>
+    <div *ngIf="hoofdbehandelaar.betrokkeneType === 'medewerker'">
+      <button
+        *ngIf="isRemovableRole(hoofdbehandelaar)"
+        (click)="deleteRole(hoofdbehandelaar.url)"
+        gu-button
+        buttonStyle="tertiary"
+        size="extrasmall"
+        icon="delete_outline">
+      </button>
+    </div>
+  </div>
   <ng-container *ngIf="alwaysVisibleRoleData && hiddenRoleData && !isLoading">
     <div *ngFor="let role of alwaysVisibleRoleData; let i = index">
       <div class="betrokkenen__role">
@@ -42,7 +60,6 @@
             *ngIf="isRemovableRole(role)"
             (click)="deleteRole(role.url)"
             gu-button
-            title="Verwijderen"
             buttonStyle="tertiary"
             size="extrasmall"
             icon="delete_outline">
@@ -96,11 +113,12 @@
                   [required]="true"
                   class="mb-4"
   ></gu-multiselect>
-  <gu-checkbox class="d-inline-block mr-1"
-               *ngIf="roltypeControl.value === behandelaarType?.url"
-               [control]="changeBehandelaarControl">
-    <p class="mb-0">Alle taken van de huidige hoofdbehandelaar overhevelen naar de nieuwe behandelaar</p>
-  </gu-checkbox>
+  <ng-container *ngIf="roltypeControl.value === hoofdBehandelaarType?.url">
+    <gu-checkbox class="d-inline-block mr-1"
+                 [control]="changeBehandelaarControl">
+      <p class="mb-0">Alle taken van de huidige hoofdbehandelaar overhevelen naar de nieuwe hoofdbehandelaar</p>
+    </gu-checkbox>
+  </ng-container>
   <div class="d-flex justify-content-end mb-2">
     <button gu-button
             (click)="submitForm()"
