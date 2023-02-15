@@ -10,5 +10,10 @@
     p {
       margin: 0;
     }
+    &--initiator {
+      background-color: $color-background-lightgrey;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
   }
 }
