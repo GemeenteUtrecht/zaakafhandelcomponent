@@ -134,7 +134,7 @@ OBJECTTYPE_RESPONSE = {
     "updateFrequency": "unknown",
     "providerOrganization": "",
     "documentationUrl": "",
-    "labels": {},
+    "labels": {"stringRepresentation": ["VELD"]},
     "createdAt": "2023-01-02",
     "modifiedAt": "2023-01-02",
     "versions": [
@@ -186,4 +186,5 @@ OBJECT_RESPONSE = {
         "correctionFor": None,
         "correctedBy": None,
     },
+    "stringRepresentation": "1234",
 }

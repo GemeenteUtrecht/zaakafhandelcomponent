@@ -53,7 +53,9 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        Service.objects.create(api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT)
+        objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
@@ -65,6 +67,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         meta_config.save()
         core_config = CoreConfig.get_solo()
         core_config.primary_objects_api = objects_service
+        core_config.primary_objecttypes_api = objecttypes_service
         core_config.save()
 
         catalogus_url = (
@@ -193,7 +196,9 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}informatieobjecttypen",
@@ -287,8 +292,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_resource_get(m, self.catalogus)
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}informatieobjecttypen",
             json=paginated_response([self.informatieobjecttype]),
@@ -344,8 +351,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_resource_get(m, self.catalogus)
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response([]),
@@ -397,8 +406,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_resource_get(m, self.catalogus)
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response(
@@ -452,8 +463,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_resource_get(m, self.catalogus)
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.eigenschap]),

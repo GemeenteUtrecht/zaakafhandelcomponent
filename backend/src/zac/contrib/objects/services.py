@@ -15,10 +15,12 @@ from zac.contrib.objects.checklists.data import Checklist, ChecklistType
 from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import fetch_catalogus, get_zaakobjecten, search_objects
+from zac.utils.decorators import cache
 from zgw.models import Zaak
 
 logger = logging.getLogger(__name__)
 perf_logger = logging.getLogger("performance")
+A_DAY = 60 * 60 * 24
 
 
 def _search_meta_objects(
@@ -69,7 +71,8 @@ def _search_meta_objects(
 ###################################################
 
 
-def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType] = None) -> List[dict]:
+@cache("fetch_zaaktypeattributen_objects:{zaaktype.url}", timeout=A_DAY)
+def fetch_zaaktypeattributen_objects(zaaktype: ZaakType) -> List[dict]:
     if objs := _search_meta_objects("zaaktype_attribute_objecttype", zaaktype=zaaktype):
         return [obj["record"]["data"] for obj in objs]
     return []
@@ -80,6 +83,7 @@ def fetch_zaaktypeattributen_objects(zaaktype: Optional[ZaakType] = None) -> Lis
 ###################################################
 
 
+@cache("fetch_start_camunda_process_form:{zaaktype.identificatie}", timeout=A_DAY)
 def fetch_start_camunda_process_form(
     zaaktype: ZaakType,
 ) -> Optional[StartCamundaProcessForm]:
@@ -99,6 +103,7 @@ def fetch_start_camunda_process_form(
 ###################################################
 
 
+@cache("fetch_checklisttype_object:{zaaktype.identificatie}", timeout=A_DAY)
 def fetch_checklisttype_object(
     zaaktype: ZaakType,
 ) -> Optional[Dict]:

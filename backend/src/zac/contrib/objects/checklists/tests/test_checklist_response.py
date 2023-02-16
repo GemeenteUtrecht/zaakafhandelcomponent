@@ -138,7 +138,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
@@ -148,6 +148,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, CHECKLIST_OBJECTTYPE)
         mock_resource_get(m, CHECKLIST_OBJECTTYPE_LATEST_VERSION)
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[CHECKLIST_OBJECTTYPE])
         m.post(f"{OBJECTS_ROOT}objects", json=CHECKLIST_OBJECT, status_code=201)
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {
@@ -201,7 +202,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
@@ -230,7 +231,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
@@ -277,7 +278,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
@@ -320,7 +321,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
@@ -364,7 +365,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),

@@ -1367,8 +1367,13 @@ def add_string_representation(func):
     """
 
     def _add_string_representation_field(obj: Dict, objecttypes: Dict) -> Dict:
+        ot = (
+            objecttypes.get(obj["type"])
+            if isinstance(obj["type"], str)
+            else obj["type"]
+        )
         if (
-            (ot := objecttypes.get(obj["type"], {}))
+            ot
             and (labels := ot["labels"].get("stringRepresentation", {}))
             and (obj.get("record", {}).get("data", {}).keys())
         ):
@@ -1381,12 +1386,15 @@ def add_string_representation(func):
 
     @wraps(func)
     def wrapper(*args, **kwds):
-        objecttypes = {ot["url"]: ot for ot in fetch_objecttypes()}
         objs = func(*args, **kwds)
-        if isinstance(objs, list):
-            return [_add_string_representation_field(obj, objecttypes) for obj in objs]
-        elif isinstance(objs, dict):
-            return _add_string_representation_field(objs)
+        if objs:
+            objecttypes = {ot["url"]: ot for ot in fetch_objecttypes()}
+            if isinstance(objs, list):
+                return [
+                    _add_string_representation_field(obj, objecttypes) for obj in objs
+                ]
+            elif isinstance(objs, dict):
+                return _add_string_representation_field(objs, objecttypes)
         return objs
 
     return wrapper
