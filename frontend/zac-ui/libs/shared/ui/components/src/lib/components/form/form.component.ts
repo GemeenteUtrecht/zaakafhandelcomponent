@@ -311,7 +311,7 @@ export class FormComponent implements OnInit, OnChanges {
    * @param {Field} field
    */
   onDocumentSelect(field: Field) {
-    this.selectedDocuments.push(field.name)
+    this.selectedDocuments.push(field.name);
   }
 
   /**
@@ -319,7 +319,7 @@ export class FormComponent implements OnInit, OnChanges {
    * @param {Field} field
    */
   onDocumentRemove(field: Field) {
-    this.selectedDocuments.filter(e => e !== field.name);
+    this.selectedDocuments = this.selectedDocuments.filter(e => e !== field.name);
   }
 
   /**
@@ -329,7 +329,7 @@ export class FormComponent implements OnInit, OnChanges {
    */
   onUploadedDocument(field: Field, document: Document) {
     this.documents[field.name] = document;
-    this.selectedDocuments.filter(e => e !== field.name);
+    this.selectedDocuments = this.selectedDocuments.filter(e => e !== field.name);
     field.edit = false;
   }
 

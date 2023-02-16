@@ -112,7 +112,7 @@
 
                 <ng-container class="p--pre-wrap" *ngIf="!isInEditMode && !field.value">
                   <p class="p--bold p--muted mb-0">{{field.label}}</p>
-                  <p class="p--pre-wrap">-</p>
+                  <p class="p--pre-wrap ml-1">-</p>
                 </ng-container>
               </div>
             </div>
@@ -123,17 +123,15 @@
                 <p class="p--bold p--muted mb-0">{{field.label}}</p>
               </div>
 
-              <div class="col-12" *ngIf="!field.choices">
+              <div class="col-12 ml-1" *ngIf="!field.choices">
                 <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
                 <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
                 <p class="p--pre-wrap" *ngIf="!field.value && !field.placeholder">-</p>
               </div>
 
 
-              <div class="col-12" *ngIf="field.choices">
-                <p class="p--pre-wrap">
-                  {{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}
-                </p>
+              <div class="col-12 ml-1" *ngIf="field.choices">
+                <p class="p--pre-wrap">{{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}</p>
               </div>
             </div>
             <!-- End read-only field. -->
