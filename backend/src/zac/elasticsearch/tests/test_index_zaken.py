@@ -78,6 +78,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "url": zaaktype["url"],
                 "omschrijving": zaaktype["omschrijving"],
                 "catalogus": zaaktype["catalogus"],
+                "identificatie": zaaktype["identificatie"],
             },
         )
 
@@ -175,6 +176,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "url": zaaktype["url"],
                 "omschrijving": zaaktype["omschrijving"],
                 "catalogus": zaaktype["catalogus"],
+                "identificatie": zaaktype["identificatie"],
             },
         )
 
@@ -271,6 +273,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "url": zaaktype["url"],
                 "omschrijving": zaaktype["omschrijving"],
                 "catalogus": zaaktype["catalogus"],
+                "identificatie": zaaktype["identificatie"],
             },
         )
 
@@ -440,6 +443,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "url": zaaktype["url"],
                 "omschrijving": zaaktype["omschrijving"],
                 "catalogus": zaaktype["catalogus"],
+                "identificatie": zaaktype["identificatie"],
             },
         )
 
@@ -561,6 +565,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "url": zaaktype["url"],
                 "omschrijving": zaaktype["omschrijving"],
                 "catalogus": zaaktype["catalogus"],
+                "identificatie": zaaktype["identificatie"],
             },
         )
         # check zaak eigenschappen

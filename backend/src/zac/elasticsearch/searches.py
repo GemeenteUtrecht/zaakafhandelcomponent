@@ -3,7 +3,7 @@ from functools import reduce
 from typing import List, Optional, Union
 from urllib.request import Request
 
-from elasticsearch_dsl import Q
+from elasticsearch_dsl import Q, Search
 from elasticsearch_dsl.query import (
     Bool,
     Exists,
@@ -15,6 +15,7 @@ from elasticsearch_dsl.query import (
     Term,
     Terms,
 )
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import RolOmschrijving
 
 from zac.accounts.constants import PermissionObjectTypeChoices
@@ -22,6 +23,7 @@ from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
+from .data import ParentAggregation
 from .documents import InformatieObjectDocument, ObjectDocument, ZaakDocument
 
 
@@ -87,7 +89,7 @@ def query_allowed_for_requester(
 
 def search_zaken(
     request=None,
-    size=None,
+    size=10000,
     identificatie=None,
     identificatie_keyword=None,
     bronorganisatie=None,
@@ -101,10 +103,10 @@ def search_zaken(
     ordering=("-identificatie.keyword", "-startdatum", "-registratiedatum"),
     fields=None,
     object=None,
-) -> List[ZaakDocument]:
+    return_search=False,
+) -> Union[List[ZaakDocument], Search]:
 
-    size = size or 10000
-    s = ZaakDocument.search()[:size]
+    s = ZaakDocument.search()
 
     if identificatie:
         s = s.query(Match(identificatie={"query": identificatie}))
@@ -171,6 +173,11 @@ def search_zaken(
 
     if fields:
         s = s.source(fields)
+
+    s = s.extra(size=size)
+
+    if return_search:
+        return s
 
     response = s.execute()
     return response.hits
@@ -252,3 +259,13 @@ def quick_search(
         "documenten": s_documenten.execute(),
     }
     return results
+
+
+def count_by_zaaktype(request: Optional[Request] = None) -> List[ParentAggregation]:
+    s = search_zaken(size=0, request=request, return_search=True, only_allowed=True)
+
+    # elasticsearch-dsl does not support multiterm aggregation yet - workaround.
+    s.aggs.bucket("parent", "terms", field="zaaktype.catalogus")
+    s.aggs["parent"].bucket("child", "terms", field="zaaktype.identificatie")
+    results = [bucket.to_dict() for bucket in s.execute().aggregations.parent.buckets]
+    return factory(ParentAggregation, results)

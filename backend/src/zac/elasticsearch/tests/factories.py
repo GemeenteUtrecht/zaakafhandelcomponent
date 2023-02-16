@@ -2,11 +2,11 @@ import random
 
 import factory
 
-from ..drf_api.serializers import DEFAULT_ES_FIELDS
+from ..drf_api.serializers import DEFAULT_ES_ZAAKDOCUMENT_FIELDS
 
 
 def get_random_search_query():
-    fields = random.choices(DEFAULT_ES_FIELDS)
+    fields = random.choices(DEFAULT_ES_ZAAKDOCUMENT_FIELDS)
     include_closed = random.choice([False, True])
     return {
         "fields": sorted(fields),

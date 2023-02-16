@@ -1,23 +1,14 @@
 from unittest.mock import MagicMock
 
 from django.conf import settings
-from django.test import TestCase
 from django.urls import reverse_lazy
 
-import requests_mock
 from elasticsearch_dsl import Index
-from rest_framework import status
 from rest_framework.test import APITransactionTestCase
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
-    ApplicationTokenFactory,
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -26,11 +17,7 @@ from zac.accounts.tests.factories import (
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import (
-    create_related_zaak_document,
-    update_eigenschappen_in_zaak_document,
-    update_zaakobjecten_in_zaak_document,
-)
+from zac.elasticsearch.api import create_related_zaak_document
 from zac.elasticsearch.tests.utils import ESMixin
 
 from ..documents import (
@@ -71,6 +58,7 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype1",
+            identificatie="id1",
         )
         self.zaak_document1 = ZaakDocument(
             meta={"id": "a522d30c-6c10-47fe-82e3-e9f524c14ca8"},
@@ -111,6 +99,7 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype2",
+            identificatie="id2",
         )
         self.zaak_document2 = ZaakDocument(
             meta={"id": "a8c8bc90-defa-4548-bacd-793874c013ab"},

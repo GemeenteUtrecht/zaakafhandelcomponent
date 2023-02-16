@@ -113,7 +113,7 @@ def _get_from_catalogus(resource: str, catalogus: str = "", **extra_query) -> Li
     return result
 
 
-@cache_result("zaaktypen:{catalogus}", timeout=AN_HOUR)
+@cache_result("zaaktypen:{catalogus}", timeout=A_DAY)
 def _get_zaaktypen(catalogus: str = "") -> List[ZaakType]:
     """
     Retrieve all the zaaktypen from all catalogi in the configured APIs.

@@ -68,6 +68,7 @@ class ZaakTypeDocument(InnerDoc):
     url = field.Keyword()
     catalogus = field.Keyword()
     omschrijving = field.Keyword()
+    identificatie = field.Keyword()
 
 
 class StatusDocument(InnerDoc):

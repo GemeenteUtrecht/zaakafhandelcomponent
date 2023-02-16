@@ -10,7 +10,7 @@ from ..models import SearchReport
 from .fields import OrderedMultipleChoiceField
 from .utils import get_document_fields, get_document_properties
 
-DEFAULT_ES_FIELDS = [
+DEFAULT_ES_ZAAKDOCUMENT_FIELDS = [
     field[0]
     for field in get_document_fields(
         get_document_properties(ZaakDocument)["properties"]
@@ -35,7 +35,7 @@ class SearchZaaktypeSerializer(serializers.Serializer):
             "Description of ZAAKTYPE, used as an aggregator of different versions of ZAAKTYPE."
         )
     )
-    catalogus = serializers.URLField(help_text=_("Url reference of related CATALOGUS."))
+    catalogus = serializers.URLField(help_text=_("URL-reference of related CATALOGUS."))
 
 
 class SearchSerializer(serializers.Serializer):
@@ -62,10 +62,10 @@ class SearchSerializer(serializers.Serializer):
     fields = OrderedMultipleChoiceField(
         required=False,
         help_text=_(
-            "Fields that will be returned with the search results. Default returns all fields. Will always include `identificatie`."
+            "Fields that will be returned with the search results. Default returns all fields. Will always include `identificatie` and `bronorganisatie`."
         ),
-        choices=DEFAULT_ES_FIELDS,
-        default=DEFAULT_ES_FIELDS,
+        choices=DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
+        default=DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
     )
     include_closed = serializers.BooleanField(
         required=False,
@@ -160,6 +160,12 @@ class ZaakTypeDocumentSerializer(serializers.Serializer):
     )
     omschrijving = serializers.CharField(
         required=False, help_text=_("Description of the ZAAKTYPE.")
+    )
+    identificatie = serializers.CharField(
+        required=False,
+        help_text=_(
+            "Identificatie of ZAAKTYPE. Unique in related CATALOGUS of CATALOGI API."
+        ),
     )
 
 

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from zac.core.api.pagination import BffPagination
 
-from .serializers import DEFAULT_ES_FIELDS
+from .serializers import DEFAULT_ES_ZAAKDOCUMENT_FIELDS
 
 
 class ESPagination(BffPagination):
@@ -25,6 +25,6 @@ class ESPagination(BffPagination):
             "type": "array",
             "items": "string",
             "nullable": False,
-            "default": DEFAULT_ES_FIELDS,
+            "default": DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
         }
         return schema
