@@ -207,7 +207,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     // Check if zaaktype has been filled in
     let zaaktype;
 
-    if (this.zaaktype.value && !Array.isArray(this.zaaktype.value)) {
+    if (this.zaaktype.value) {
       zaaktype = {
         omschrijving: this.zaaktype.value.omschrijving,
         catalogus: this.zaaktype.value.catalogus.url

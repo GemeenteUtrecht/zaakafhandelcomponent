@@ -38,7 +38,12 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
     private modalService: ModalService,
     private snackbarService: SnackbarService,
     private datePipe: DatePipe,
-  ) { }
+  ) {
+    this.grantAccessForm = this.fb.group({
+      requester: this.fb.control("", Validators.required),
+      endDate: this.fb.control("")
+    })
+  }
 
   //
   // Getters / setters.
@@ -61,10 +66,6 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   //
 
   ngOnInit(): void {
-    this.grantAccessForm = this.fb.group({
-      requester: this.fb.control("", Validators.required),
-      endDate: this.fb.control("")
-    })
     this.getContextData();
   }
 

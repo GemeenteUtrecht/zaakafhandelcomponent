@@ -103,7 +103,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
     if (this.totalDocumentsAdded) {
       return Object.keys(this.documents).length === this.totalDocumentsAdded;
     }
-    return;
+    return true
 }
 
   //
@@ -311,10 +311,8 @@ export class ChecklistComponent implements OnInit, OnChanges {
         const groupAssigneeKey = `__groupAssignee_${question}`;
         const groupAssignee = answerData[groupAssigneeKey];
 
-        const submitAnswer = !answer || Array.isArray(answer) ? '' : answer as string;
-
         return ({
-          answer: submitAnswer,
+          answer: answer as string || '',
           created: new Date().toISOString(),
           document: documentUrl,
           question: question,

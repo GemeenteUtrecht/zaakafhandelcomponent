@@ -49,7 +49,7 @@ export class MultiselectComponent implements OnInit, OnChanges {
   @Output() search: EventEmitter<any> = new EventEmitter<any>();
   @Output() change: EventEmitter<any> = new EventEmitter<any>();
 
-  selectedItems: string[] = [];
+  selectedItems: string[];
 
   /**
    * Constructor method.
@@ -68,10 +68,11 @@ export class MultiselectComponent implements OnInit, OnChanges {
    * @return {boolean}
    */
   getAllChecked(): boolean {
-    if(this.widgetType !== 'checkboxGroup') {
+    if(this.widgetType !== 'checkboxGroup' || !this.selectedItems) {
       return false;
     }
-    return this.items.every((item) => this.selectedItems?.indexOf(item[this.bindValue]) > -1);
+
+    return this.items.every((item) => this.selectedItems.indexOf(item[this.bindValue]) > -1);
   }
 
   /**
@@ -80,7 +81,7 @@ export class MultiselectComponent implements OnInit, OnChanges {
    * @return {boolean}
    */
   getIsChecked(item: any): boolean {
-    return this.selectedItems.indexOf(item[this.bindValue]) > -1;
+    return this.selectedItems?.indexOf(item[this.bindValue]) > -1;
   }
 
   //
