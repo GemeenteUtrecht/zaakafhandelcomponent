@@ -6,6 +6,9 @@
     border-width: 2px;
     border-top: 1px solid $color-secondary;
   }
+  .ng-dropdown-panel-items {
+    max-height: 400px !important;
+  }
   .ng-dropdown-panel-items .ng-option.ng-option-disabled .landing__search-result {
     color: $color-text !important;
   }

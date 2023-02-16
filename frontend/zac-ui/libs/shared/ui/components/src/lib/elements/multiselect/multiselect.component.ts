@@ -1,5 +1,16 @@
-import {AfterContentInit, Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
+import {
+  AfterContentInit,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild
+} from '@angular/core';
 import {FormBuilder, FormControl} from '@angular/forms';
+import { NgSelectComponent } from '@ng-select/ng-select';
 
 /**
  * <gu-multiselect [control]="formControl" [items]="items" label="Multiselect"></gu-multiselect>
@@ -29,7 +40,9 @@ import {FormBuilder, FormControl} from '@angular/forms';
   templateUrl: './multiselect.component.html',
   styleUrls: ['./multiselect.component.scss'],
 })
-export class MultiselectComponent implements OnInit, OnChanges {
+export class MultiselectComponent implements OnInit, OnChanges, OnDestroy {
+  @ViewChild('multiselect') select: NgSelectComponent;
+
   @Input() control: FormControl;
   @Input() items = [];
 
@@ -96,6 +109,11 @@ export class MultiselectComponent implements OnInit, OnChanges {
     if (!this.control) {
       this.control = this.fb.control('')
     }
+    window.addEventListener('scroll', this.onScroll, true);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('scroll', this.onScroll, true);
   }
 
   /**
@@ -111,6 +129,15 @@ export class MultiselectComponent implements OnInit, OnChanges {
   //
   // Events.
   //
+
+  private onScroll = (event: any) => {
+    if (this.select && this.select.isOpen) {
+      const isScrollingInScrollHost = (event.target.className as string).indexOf('ng-dropdown-panel-items') > -1;
+      if (isScrollingInScrollHost) { return; }
+      this.select.dropdownPanel.adjustPosition();
+
+    }
+  }
 
   /**
    * Emits value if the user uses the search field.
