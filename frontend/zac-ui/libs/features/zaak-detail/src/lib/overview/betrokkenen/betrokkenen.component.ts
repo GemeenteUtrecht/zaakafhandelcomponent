@@ -60,7 +60,9 @@ export class BetrokkenenComponent implements OnChanges {
    * @returns {boolean}
    */
   isRemovableRole(role) {
-    return this.edit && (role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek === 'behandelaar' && this.nBehandelaars > 1))
+    return this.edit &&
+      ((role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek !== this.omschrijvingGeneriekHoofdbehandelaar)) ||
+        ((role.omschrijvingGeneriek === 'behandelaar' || (role.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar)) && this.nBehandelaars > 1))
   }
 
   ngOnChanges(): void {
@@ -122,7 +124,7 @@ export class BetrokkenenComponent implements OnChanges {
     this.hiddenRoleData = data.slice(0, -3);
     this.alwaysVisibleRoleData = data.slice(-3)
     this.nBehandelaars = data.filter(role => {
-      return role.omschrijvingGeneriek === 'behandelaar'
+      return (role.omschrijvingGeneriek === 'behandelaar') || (role.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar)
     }).length;
   }
 
