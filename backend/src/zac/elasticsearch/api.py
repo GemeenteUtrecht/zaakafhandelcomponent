@@ -272,6 +272,7 @@ def create_object_document(object: Dict) -> ObjectDocument:
         meta={"id": object["uuid"]},
         url=object["url"],
         record_data=object["record"]["data"],
+        string_representation=object["stringRepresentation"],
     )
 
 
@@ -282,6 +283,7 @@ def update_object_document(object: Dict) -> ObjectDocument:
     object_document.update(
         refresh=True,
         record_data=object["record"]["data"],
+        string_representation=object["stringRepresentation"],
     )
     return object_document
 

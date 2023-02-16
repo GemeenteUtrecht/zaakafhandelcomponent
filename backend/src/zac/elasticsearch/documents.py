@@ -171,6 +171,7 @@ class ObjectDocument(Document):
     type = field.Object(ObjectTypeDocument)
     record_data = field.Object()
     related_zaken = Nested(RelatedZaakDocument)
+    string_representation = field.Text(index=False)
 
     class Index:
         name = settings.ES_INDEX_OBJECTEN

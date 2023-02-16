@@ -1346,6 +1346,14 @@ class ObjectProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTS_API_SCHEMA"]
     PROXY_SCHEMA_PATH = ["components", "schemas", "Object"]
 
+    stringRepresentation = serializers.CharField(
+        required=True,
+        allow_blank=True,
+        help_text=_(
+            "Returns a string representation based on `stringRepresentatie` in objecttype labels."
+        ),
+    )
+
 
 class ObjectFilterProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTS_API_SCHEMA"]

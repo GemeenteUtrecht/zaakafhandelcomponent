@@ -11,7 +11,7 @@ from elasticsearch_dsl.connections import connections
 from elasticsearch_dsl.query import Bool, Nested, Terms
 
 from zac.core.models import CoreConfig
-from zac.core.services import fetch_objecttypes
+from zac.core.services import fetch_objects_all, fetch_objecttypes
 
 from ...api import (
     create_object_document,
@@ -93,11 +93,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Fetched {len(ots)} object types.")
         self.stdout.write("Starting object retrieval from the configured OBJECTs API.")
 
-        conf = CoreConfig.get_solo()
-        object_service = conf.primary_objects_api
-        client = object_service.build_client()
-
-        objects = client.list("object")
+        objects = fetch_objects_all()
         for obj in objects:
             obj["type"] = ots[obj["type"]]
 

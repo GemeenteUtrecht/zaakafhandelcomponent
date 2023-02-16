@@ -294,6 +294,11 @@ class QSObjectDocumentSerializer(serializers.Serializer):
     record_data = serializers.SerializerMethodField(
         help_text=_("Record data of OBJECT.")
     )
+    string_representation = serializers.CharField(
+        required=True,
+        allow_blank=True,
+        help_text=_("A user-friendly string representation of the OBJECT."),
+    )
 
     def get_record_data(self, obj) -> Dict:
         return obj.to_dict().get("record_data", {})

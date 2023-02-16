@@ -284,6 +284,10 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(
             results["objecten"][0]["recordData"], self.object_document_1.record_data
         )
+        self.assertEqual(
+            results["objecten"][0]["stringRepresentation"],
+            self.object_document_1.string_representation,
+        )
         self.assertEqual(results["documenten"][0]["titel"], self.eio_document_1.titel)
 
     def test_quick_search_endpoint_not_authenticated(self):

@@ -1,5 +1,6 @@
 import logging
 import warnings
+from functools import wraps
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urljoin, urlparse
 from urllib.request import Request
@@ -1357,6 +1358,40 @@ def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocum
 ###################################################
 
 
+def add_string_representation(func):
+    """
+    Until string representations are supported by objects
+    use this function to add stringRepresentation based on labels
+    of objecttypes.
+
+    """
+
+    def _add_string_representation_field(obj: Dict, objecttypes: Dict) -> Dict:
+        if (
+            (ot := objecttypes.get(obj["type"], {}))
+            and (labels := ot["labels"].get("stringRepresentation", {}))
+            and (obj.get("record", {}).get("data", {}).keys())
+        ):
+            # get the values of the original fields from the object
+            values = [obj["record"]["data"].get(label, "") for label in labels]
+            obj["stringRepresentation"] = ", ".join([val for val in values if val])
+        else:
+            obj["stringRepresentation"] = ""
+        return obj
+
+    @wraps(func)
+    def wrapper(*args, **kwds):
+        objecttypes = {ot["url"]: ot for ot in fetch_objecttypes()}
+        objs = func(*args, **kwds)
+        if isinstance(objs, list):
+            return [_add_string_representation_field(obj, objecttypes) for obj in objs]
+        elif isinstance(objs, dict):
+            return _add_string_representation_field(objs)
+        return objs
+
+    return wrapper
+
+
 def get_objects_client() -> Client:
     config = CoreConfig.get_solo()
     object_api = config.primary_objects_api
@@ -1375,12 +1410,14 @@ def get_objecttypes_client() -> Client:
     return objecttypes_api_client
 
 
+@add_string_representation
 def create_object(data: Dict) -> Dict:
     client = get_objects_client()
     object = client.create("object", data=data)
     return object
 
 
+@add_string_representation
 @cache_result("object:{url}", timeout=A_DAY)
 def fetch_object(url: str, client: Optional[Client] = None) -> dict:
     if not client:
@@ -1424,7 +1461,7 @@ def update_object_record_data(
     return obj
 
 
-@cache_result("objecttype:{url}", timeout=AN_HOUR)
+@cache_result("objecttype:{url}", timeout=A_DAY)
 def fetch_objecttype(url: str, client: Optional[Client] = None) -> dict:
     if not client:
         client = get_objecttypes_client()
@@ -1433,6 +1470,7 @@ def fetch_objecttype(url: str, client: Optional[Client] = None) -> dict:
     return object_type
 
 
+@cache_result("objecttype:all", timeout=A_DAY)
 def fetch_objecttypes() -> List[dict]:
     client = get_objecttypes_client()
     objecttypes_data = client.list("objecttype")
@@ -1440,6 +1478,7 @@ def fetch_objecttypes() -> List[dict]:
     return objecttypes_data
 
 
+@cache_result("objecttype:{uuid}:{version}", timeout=A_DAY)
 def fetch_objecttype_version(uuid: str, version: int) -> dict:
     client = get_objecttypes_client()
     objecttypes_version_data = client.retrieve(
@@ -1449,9 +1488,17 @@ def fetch_objecttype_version(uuid: str, version: int) -> dict:
     return objecttypes_version_data
 
 
+@add_string_representation
 def search_objects(filters: dict) -> List[dict]:
     client = get_objects_client()
     results = client.operation(operation_id="object_search", data=filters)
+    return results
+
+
+@add_string_representation
+def fetch_objects_all() -> List[dict]:
+    client = get_objects_client()
+    results = client.list("object")
     return results
 
 
