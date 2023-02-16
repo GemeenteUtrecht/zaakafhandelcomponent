@@ -1,6 +1,7 @@
 <ng-container *ngIf="widgetType==='select'">
   <span class="has-float-label">
     <ng-select
+      #multiselect
       (click)="$event.stopImmediatePropagation()"
       [items]="items"
       (search)="onSearch($event)"
@@ -18,6 +19,7 @@
       [clearable]="clearable"
       [disabled]="disabled"
       [compareWith]="compareWith"
+      [appendTo]="'body'"
     >
     </ng-select>
     <label>
