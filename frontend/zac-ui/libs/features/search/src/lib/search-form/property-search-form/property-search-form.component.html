@@ -1,6 +1,6 @@
 <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
 <form [formGroup]="searchForm">
-  <div class="row">
+  <div class="row mb-4">
     <div class="col-12">
       <gu-multiselect *ngIf="caseTypeChoices"
                       [control]="domain"
@@ -16,8 +16,8 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-12 mt-4">
+  <div class="row mb-4">
+    <div class="col-12">
       <gu-multiselect *ngIf="caseTypeChoices"
                       [control]="zaaktype"
                       (change)="onZaaktypeSelect($event)"
@@ -32,7 +32,7 @@
   </div>
 
   <div class="row">
-    <div class="col-12 mt-4">
+    <div class="col-12">
       <gu-input type="text"
                 [control]="omschrijving"
                 label="Omschrijving"
@@ -41,8 +41,8 @@
     </div>
   </div>
 
-  <div *ngIf="zaaktypeEigenschappenData.length" class="row">
-    <div class="col-12 mt-4">
+  <div *ngIf="zaaktypeEigenschappenData.length" class="row mb-4">
+    <div class="col-12">
       <gu-multiselect (change)="onPropertySelect($event)"
                       [control]="eigenschapnaam"
                       [searchable]="true"
@@ -55,8 +55,8 @@
     </div>
   </div>
 
-  <div *ngIf="selectedPropertyValue && eigenschapnaam.value && eigenschapwaarde" class="row">
-    <div class="col-12 mt-4">
+  <div *ngIf="selectedPropertyValue && eigenschapnaam.value && eigenschapwaarde" class="row mb-4">
+    <div class="col-12">
       <ng-container [ngSwitch]="selectedPropertyValue.spec.type">
         <ng-container *ngSwitchCase="'string'">
           <ng-container *ngIf="selectedPropertyValue.spec.format !== 'date'">

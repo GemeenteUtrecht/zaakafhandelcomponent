@@ -22,6 +22,7 @@
     .ng-select-container {
       border-color: $color-border-input;
       border-radius: 5px;
+      height: 40px !important;
       &:hover {
         transition: border-color 0.3s ease-out;
         box-sizing: border-box;

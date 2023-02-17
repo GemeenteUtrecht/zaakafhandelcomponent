@@ -206,6 +206,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         this.nPollingFails = 0;
 
         this.isLoading = false;
+        this.isLoadingAction = false;
       }, () => {
         // Add to fail counter
         this.nPollingFails += 1;
