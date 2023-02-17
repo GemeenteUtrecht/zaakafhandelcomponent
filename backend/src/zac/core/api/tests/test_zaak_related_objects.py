@@ -665,6 +665,7 @@ class ZaakObjectTests(APITransactionTestCase):
                 {"$id": "http://mock.example.com/mocked3"},
             ],
         )
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[OBJECTTYPE_1, OBJECTTYPE_2])
 
         self.client.force_authenticate(user)
 

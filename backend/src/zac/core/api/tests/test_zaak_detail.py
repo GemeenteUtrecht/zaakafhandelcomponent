@@ -43,6 +43,7 @@ KOWNSL_ROOT = "https://kownsl.nl/"
 
 from zac.core.camunda.start_process.tests.utils import (
     OBJECTS_ROOT,
+    OBJECTTYPES_ROOT,
     START_CAMUNDA_PROCESS_FORM,
     START_CAMUNDA_PROCESS_FORM_OBJ,
     START_CAMUNDA_PROCESS_FORM_OT,
@@ -66,6 +67,9 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
+        objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
         meta_config = MetaObjectTypesConfig.get_solo()
         meta_config.start_camunda_process_form_objecttype = (
             START_CAMUNDA_PROCESS_FORM_OT["url"]
@@ -73,6 +77,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         meta_config.save()
         core_config = CoreConfig.get_solo()
         core_config.primary_objects_api = objects_service
+        core_config.primary_objecttypes_api = objecttypes_service
         core_config.save()
 
         catalogus_url = (
@@ -486,7 +491,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
-
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)

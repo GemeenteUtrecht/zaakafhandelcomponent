@@ -264,21 +264,46 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-
         cls.objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
+        cls.objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = cls.objects_service
+        config.primary_objecttypes_api = cls.objecttypes_service
+        config.save()
+        cls.objecttype = {
+            "url": f"{OBJECTTYPES_ROOT}objecttypes/1",
+            "name": "Laadpaal",
+            "namePlural": "Laadpalen",
+            "description": "",
+            "data_classification": "",
+            "maintainer_organization": "",
+            "maintainer_department": "",
+            "contact_person": "",
+            "contact_email": "",
+            "source": "",
+            "update_frequency": "",
+            "provider_organization": "",
+            "documentation_url": "",
+            "labels": {"stringRepresentation": ["type", "adres", "status"]},
+            "created_at": "2019-08-24",
+            "modified_at": "2019-08-24",
+            "versions": [],
+        }
 
         cls.object = {
             "url": f"{OBJECTS_ROOT}objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
-            "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
+            "type": cls.objecttype["url"],
             "record": {
                 "index": 1,
                 "typeVersion": 1,
                 "data": {
                     "type": "Laadpaal",
                     "adres": "Utrechtsestraat 41",
-                    "status": "Laadpaal in ontwikkeling",
+                    "status": "In ontwikkeling",
                     "objectid": 2,
                 },
                 "geometry": {
@@ -301,6 +326,8 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
     def test_invalid_filter(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
         m.post(f"{OBJECTS_ROOT}objects/search", status_code=400)
 
         config = CoreConfig.get_solo()
@@ -319,6 +346,8 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
     def test_filter(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
         m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
 
         config = CoreConfig.get_solo()
@@ -355,8 +384,82 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, len(response.json()))
 
+        # Test that stringRepresentation is given
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "url": "http://object.nl/api/v1/objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
+                    "type": "http://objecttype.nl/api/v1/objecttypes/1",
+                    "record": {
+                        "index": 1,
+                        "typeVersion": 1,
+                        "data": {
+                            "type": "Laadpaal",
+                            "adres": "Utrechtsestraat 41",
+                            "status": "In ontwikkeling",
+                            "objectid": 2,
+                        },
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [5.114160150114911, 52.08850095597628],
+                        },
+                        "startAt": "2021-07-09",
+                        "endAt": None,
+                        "registrationAt": "2021-07-09",
+                        "correctionFor": None,
+                        "correctedBy": None,
+                    },
+                    "stringRepresentation": "Laadpaal, Utrechtsestraat 41, In ontwikkeling",
+                }
+            ],
+        )
+
     def test_filter_meta(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+
+        objecttypes = [
+            {
+                "url": f"{OBJECTTYPES_ROOT}objecttypes/1",
+                "name": "Laadpaal",
+                "namePlural": "Laadpalen",
+                "description": "",
+                "data_classification": "",
+                "maintainer_organization": "",
+                "maintainer_department": "",
+                "contact_person": "",
+                "contact_email": "",
+                "source": "",
+                "update_frequency": "",
+                "provider_organization": "",
+                "documentation_url": "",
+                "labels": {"stringRepresentation": ["type", "adres", "status"]},
+                "created_at": "2019-08-24",
+                "modified_at": "2019-08-24",
+                "versions": [],
+            },
+            {
+                "url": f"{OBJECTTYPES_ROOT}objecttypes/2",
+                "name": "zaaktypeattribute",
+                "namePlural": "zaaktypeattributen",
+                "description": "",
+                "data_classification": "",
+                "maintainer_organization": "",
+                "maintainer_department": "",
+                "contact_person": "",
+                "contact_email": "",
+                "source": "",
+                "update_frequency": "",
+                "provider_organization": "",
+                "documentation_url": "",
+                "labels": {},
+                "created_at": "2019-08-24",
+                "modified_at": "2019-08-24",
+                "versions": [],
+            },
+        ]
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=objecttypes)
         objects = [
             {
                 "url": f"{OBJECTS_ROOT}objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
@@ -383,7 +486,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
             },
             {
                 "url": f"{OBJECTS_ROOT}objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
-                "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
+                "type": f"{OBJECTTYPES_ROOT}objecttypes/2",
                 "record": {
                     "index": 1,
                     "typeVersion": 1,
@@ -411,13 +514,21 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         with self.subTest("Test different meta filtering cases"):
-            for object_count, url in zip(
+            for object_count, url, stringRep in zip(
                 [1, 2],
                 [
                     reverse("object-search"),
                     reverse("object-search") + "?include_meta=True",
                 ],
+                [
+                    ["Laadpaal, Utrechtsestraat 41, Laadpaal in ontwikkeling"],
+                    ["", "Laadpaal, Utrechtsestraat 41, Laadpaal in ontwikkeling"],
+                ],
             ):
                 response = self.client.post(url)
                 self.assertEqual(status.HTTP_200_OK, response.status_code)
                 self.assertEqual(object_count, len(response.json()))
+                self.assertEqual(
+                    sorted(stringRep),
+                    sorted([res["stringRepresentation"] for res in response.json()]),
+                )

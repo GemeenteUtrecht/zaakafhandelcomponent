@@ -30,6 +30,7 @@ OBJECTS_ROOT = "http://object.nl/api/v1/"
 ZAAKTYPE_ATTRIBUTE_OBJECTTYPE = (
     "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
 )
+OBJECTTYPES_ROOT = "http://objecttypes.nl/api/v1/"
 
 
 @requests_mock.Mocker()
@@ -606,6 +607,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
@@ -641,6 +643,30 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, zaak_eigenschap)
         mock_resource_get(m, eigenschap)
         m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=[
+                {
+                    "url": "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69",
+                    "name": "zaaktypeAttribute",
+                    "namePlural": "zaaktypeAttributen",
+                    "description": "",
+                    "data_classification": "",
+                    "maintainer_organization": "",
+                    "maintainer_department": "",
+                    "contact_person": "",
+                    "contact_email": "",
+                    "source": "",
+                    "update_frequency": "",
+                    "provider_organization": "",
+                    "documentation_url": "",
+                    "labels": {},
+                    "created_at": "2019-08-24",
+                    "modified_at": "2019-08-24",
+                    "versions": [],
+                },
+            ],
+        )
+        m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([eigenschap]),
         )
@@ -650,7 +676,11 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
+        objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
         core_config.primary_objects_api = objects_service
+        core_config.primary_objecttypes_api = objecttypes_service
         core_config.save()
         meta_config = MetaObjectTypesConfig.get_solo()
         meta_config.zaaktype_attribute_objecttype = ZAAKTYPE_ATTRIBUTE_OBJECTTYPE

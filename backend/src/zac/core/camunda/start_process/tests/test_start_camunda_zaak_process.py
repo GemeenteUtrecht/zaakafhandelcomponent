@@ -32,6 +32,7 @@ from zgw.models.zrc import Zaak
 from .utils import (
     CATALOGI_ROOT,
     OBJECTS_ROOT,
+    OBJECTTYPES_ROOT,
     START_CAMUNDA_PROCESS_FORM,
     START_CAMUNDA_PROCESS_FORM_OBJ,
     START_CAMUNDA_PROCESS_FORM_OT,
@@ -121,6 +122,9 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        objecttypes_service = Service.objects.create(
+            api_type=APITypes.ztc, api_root=OBJECTTYPES_ROOT
+        )
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
@@ -131,6 +135,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         meta_config.save()
         core_config = CoreConfig.get_solo()
         core_config.primary_objects_api = objects_service
+        core_config.primary_objecttypes_api = objecttypes_service
         core_config.save()
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -165,6 +170,8 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
         mock_resource_get(m, self.catalogus)
         m.get(
@@ -256,6 +263,8 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
     def test_start_camunda_process_no_start_camunda_process_form_found(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         m.post(f"{OBJECTS_ROOT}objects/search", json=[])
         mock_resource_get(m, self.catalogus)
         m.get(
@@ -289,6 +298,8 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
     def test_start_camunda_process_no_process_definition_found(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
         mock_resource_get(m, self.catalogus)
         m.get(
@@ -350,6 +361,9 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
+        objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
         meta_config = MetaObjectTypesConfig.get_solo()
         meta_config.start_camunda_process_form_objecttype = (
             START_CAMUNDA_PROCESS_FORM_OT["url"]
@@ -357,6 +371,7 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         meta_config.save()
         core_config = CoreConfig.get_solo()
         core_config.primary_objects_api = objects_service
+        core_config.primary_objecttypes_api = objecttypes_service
         core_config.save()
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -441,6 +456,8 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
     def test_has_perm(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
@@ -486,6 +503,8 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
     def test_with_application_token(self, m, *mocks):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
