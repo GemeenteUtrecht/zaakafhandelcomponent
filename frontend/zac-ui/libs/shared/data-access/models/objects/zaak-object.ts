@@ -20,6 +20,7 @@ export interface ZaakObject {
   url?: string
   uuid?: string,
   zaakobjectUrl?: string,
+  stringRepresentation: string,
 }
 
 export interface ZaakObjectGroup {

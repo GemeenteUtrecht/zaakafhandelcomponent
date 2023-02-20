@@ -10,7 +10,7 @@
 
 <mat-action-list *ngIf="showZaakObjecten" dense>
   <mat-list-item *ngFor="let zaakObject of zaakObjects" (click)="_selectZaakObject($event, zaakObject)">
-    <mat-icon mat-list-icon>article</mat-icon>
-    {{ zaakObject | zaakObjectString }}
+    <mat-icon mat-list-icon>location_on</mat-icon>
+    <div mat-line>{{ zaakObject.stringRepresentation }}</div>
   </mat-list-item>
 </mat-action-list>
