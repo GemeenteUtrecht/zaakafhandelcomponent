@@ -108,7 +108,7 @@ def patch_and_destroy_doc(
     operation_id = "documenten_destroy"
     try:
         url = get_operation_url(client.schema, operation_id, uuid=uuid)
-        return client.request(url, operation_id, method="DELETE", expected_status=200)
+        return client.request(url, operation_id, method="DELETE", expected_status=201)
 
     except ClientError:
         raise Http404(f"DocumentFile with id {uuid} does not exist.")
