@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import authentication, permissions
+from rest_framework import authentication, permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -84,7 +84,7 @@ class DeleteDowcView(APIView):
     @extend_schema(
         summary=_("Update and delete a document."),
         responses={
-            (200, "application/json"): remote_schema_ref(
+            (201, "application/json"): remote_schema_ref(
                 settings.EXTERNAL_API_SCHEMAS["DOWC_API_SCHEMA"],
                 ["components", "schemas", "UnlockedDocument"],
             ),
@@ -106,4 +106,4 @@ class DeleteDowcView(APIView):
             document = get_document(data["versionedUrl"])
             invalidate_document_cache(document)
 
-        return Response(data)
+        return Response(data, status=status.HTTP_201_CREATED)
