@@ -68,11 +68,6 @@ swap out a single app.
 
 Deal with incoming notifications and subscriptions on notification channels.
 
-``zac.reports``
----------------
-
-Export functionality.
-
 ``zac.werkvoorraad``
 --------------------
 

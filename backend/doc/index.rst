@@ -16,6 +16,7 @@ Welcome to the documentation for the zaakafhandelcomponent (ZAC).
    config
    forms
    authorization
+   metaobjecttypes
    developers/index
    development/index
 

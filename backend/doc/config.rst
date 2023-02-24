@@ -9,8 +9,9 @@ do this.
 Configuring the services
 ========================
 
-The ZAC does not copy data, but reads it from the external APIs. These APIs need to be
-configured.
+The ZAC reads it from the external APIs. These APIs need to be
+configured. Some of the data is for performance reasons copied into a read-only 
+elasticsearch database.
 
 Most API's are added as services under **ZGW_Consumers > Services** in the admin
 interface.
@@ -32,6 +33,11 @@ Camunda process engine
 ----------------------
 
 Navigate to **Camunda configuration** in the admin and fill out the details.
+
+BPTL configuration
+------------------
+
+Camunda makes use of the BPTL
 
 BRP configuration
 -----------------
@@ -59,20 +65,36 @@ Kownsl
 `Kownsl`_ manage advices and approvals. Add a **Service** for it:
 
 - Type: ORC (Overige)
-- Authorization type: API Key
-- Header key: ``Authorization``
-- Header value: ``Token <insert kownsl token>``
+- Authorization type: ZGW client_id + secret
+- Client id: ``some-kownsl-id``
+- Client secret: ``some-kownsl-secret``
+.. Open Forms
+.. ----------
 
-Open Forms
-----------
+.. Open Forms is a form builder engine, for which the ZAC has some basic support at the
+.. moment. Add a **Service** for it:
 
-Open Forms is a form builder engine, for which the ZAC has some basic support at the
-moment. Add a **Service** for it:
+.. - Type: ORC (Overige)
+.. - Authorization type: API Key
+.. - Header key: ``Authorization``
+.. - Header value: ``Token <insert open forms token>``
+
+DoWC
+----
+
+`DoWC`_ allows documents to be opened and edited by using the MS Office WebDAV features. Add a **Service** for it:
 
 - Type: ORC (Overige)
-- Authorization type: API Key
+- Authorization type: API Key & ZGW client_id + secret
+- Client id: ``some-dowc-id``
+- Client secret: ``some-dowc-secret``
 - Header key: ``Authorization``
-- Header value: ``Token <insert open forms token>``
+- Header value: ``ApplicationToken <insert DoWC token>``
+
+.. note::
+    The DoWC must be configured to communicate with the same DRC API(s) as the ZAC. The DoWC uses
+    the ZGW client to support username claims in the JWTToken but allows an application like the ZAC
+    to communicate directly through an ApplicationToken Authorization header as well.
 
 Object and Objecttypes
 ----------------------
@@ -150,5 +172,28 @@ like this:
 The SCIM API root is available on the ``/scim/v2/`` URL, for example:
 https://zac.cg-intern.utrecht.nl/scim/v2/.
 
+
+Configuring meta objecttypes
+============================
+
+The ZAC implements the use of objects and objecttypes in conjunction with open-zaak APIs
+to create custom add-on features such as:
+
+* :ref:`Checklist`,
+* :ref:`ChecklistType`, 
+* :ref:`ZaakTypeAttribute`,
+* :ref:`StartCamundaProcessForm`.
+
+After configuring the objects and objecttypes services, one should configure the meta objecttypes
+as well by creating the mapping in the `metaobjecttypesconfig`_.
+
+Global configuration
+====================
+
+After configuring all of the above, the global configuration needs to be :ref:mapped_. 
+
+.. _mapped: https://zac.cg-intern.utrecht.nl/admin/core/coreconfig/
+.. _metaobjecttypesconfig: https://zac.cg-intern.utrecht.nl/admin/core/metaobjecttypesconfig/
 .. _Kownsl: https://kownsl.cg-intern.utrecht.nl/api/v1/docs/
+.. _DoWC: https://dowc.cg-intern.utrecht.nl/api/v1/docs/
 .. _here: https://objects-and-objecttypes-api.readthedocs.io/en/latest/api/index.html
