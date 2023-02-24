@@ -9,7 +9,7 @@ do this.
 Configuring the services
 ========================
 
-The ZAC reads it from the external APIs. These APIs need to be
+The ZAC reads data from the external APIs. These APIs need to be
 configured. Some of the data is for performance reasons copied into a read-only 
 elasticsearch database.
 
