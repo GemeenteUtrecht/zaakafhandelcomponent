@@ -152,14 +152,13 @@
     top: 0;
     height: 100vh;
     max-width: 100%;
-    background: $color-background-lightgrey;
+    background: $color-background-white;
     color: $color-text;
     z-index: 2;
     @include media-breakpoint-down(md) {
       position: absolute;
       transform: translateX(-100%);
       pointer-events: all;
-      background: $color-background-white;
       transition: transform 0.3s;
 
       &.expanded {
@@ -229,7 +228,8 @@
       justify-content: flex-start;
       color: var(--text-default, #141416);
       text-decoration: none;
-      padding: 8px 12px;
+      padding: 10px 12px;
+      font-size: 0.875rem;
       &.selected {
         background-color: $color-background-white;
         color: $color-primary;
@@ -270,4 +270,9 @@
 :host gu-icon {
   display: inline-flex;
   font-size: 1em;
+  ::ng-deep .mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
 }

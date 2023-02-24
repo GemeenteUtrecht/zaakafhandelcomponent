@@ -29,7 +29,7 @@
                                     size="extrasmall"
                                     noPadding
                                     (click)="onButtonClick(column.name, dataRow[column.name].value); $event.stopPropagation()">
-                                {{ dataRow[column.name].label }}
+                              <span>{{ dataRow[column.name].label }}</span>
                             </button>
                             <div
                               *ngIf="dataRow[column.name].buttonInfo"
@@ -78,7 +78,7 @@
 
                     <!-- Table -->
                     <ng-container *ngSwitchCase="'select'">
-                      <gu-multiselect [items]="dataRow[column.name].choices" [selectedValue]="dataRow[column.name].value" bindValue="value" bindLabel="label" (change)="onColumnChanged(dataRow[column.name], $event)"></gu-multiselect>
+                      <gu-multiselect class="mb-1" [items]="dataRow[column.name].choices" [selectedValue]="dataRow[column.name].value" bindValue="value" bindLabel="label" (change)="onColumnChanged(dataRow[column.name], $event)"></gu-multiselect>
                     </ng-container>
 
                     <!-- Table -->
@@ -126,7 +126,8 @@
         <!-- Expanded data rows -->
         <tr class="table__row table__row--expanded-content"
             mat-row
-            *matRowDef="let row; columns: ['_expandedIndent', '_expandedDetail']">
+            *matRowDef="let row; columns: ['_expandedIndent', '_expandedDetail']"
+            [class.hidden]="getDataRowIndex(row) !== expandedIndex">
         </tr>
 
         <!-- No data row -->

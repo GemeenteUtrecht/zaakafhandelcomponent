@@ -7,12 +7,12 @@
   'btn__spinner--tertiary': buttonStyle == 'tertiary'
   }"
 ></span>
-<mat-icon *ngIf="icon || buttonStyle === 'action-link'">
-  {{
-    icon ? icon :
-      buttonStyle === 'action-link' ? 'chevron_right' : null
-  }}
-</mat-icon>
 <span class='d-inline-flex'>
   <ng-content></ng-content>
 </span>
+<mat-icon *ngIf="icon || buttonStyle === 'action-link'">
+  {{
+  icon ? icon :
+    buttonStyle === 'action-link' ? 'chevron_right' : null
+  }}
+</mat-icon>
