@@ -67,6 +67,8 @@
     }
     .ng-clear-wrapper {
       color: $color-text;
+      margin-left: 3px;
+      height: 18px;
       &:hover .ng-clear {
         color: $color-secondary;
       }

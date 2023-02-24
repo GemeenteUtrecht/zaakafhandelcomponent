@@ -6,6 +6,7 @@
     <div class="pt-4">
       <gu-document-toevoegen [zaak]="zaak"
                              (closeModal)="closeModal.emit(true)"
+                             submitLabel="Toevoegen"
                              (reload)="reload.emit(true)">
       </gu-document-toevoegen>
     </div>

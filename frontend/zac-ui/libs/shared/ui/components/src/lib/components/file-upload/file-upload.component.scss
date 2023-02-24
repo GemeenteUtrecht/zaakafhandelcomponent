@@ -1,4 +1,5 @@
 @import '../../elements/button/button.component';
+@import './base/colors/colors';
 
 .file-upload {
   > span {
@@ -28,8 +29,13 @@
     align-items: center;
     .mat-icon {
       cursor: pointer;
-      color: $color-warning;
-      margin-left: 1.25rem;
+      color: $color-secondary;
+      margin-left: 1rem;
+      font-size: 20px;
+      margin-top: 2px;
     }
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: lightgrey;
   }
 }

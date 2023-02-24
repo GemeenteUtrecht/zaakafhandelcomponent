@@ -44,6 +44,8 @@
     line-height: 1;
     padding: 0 2px;
     color: rgba(0, 0, 0, 0.6);
+  }
+  label.multiselect-label {
     &::after {
       content: " ";
       display: block;

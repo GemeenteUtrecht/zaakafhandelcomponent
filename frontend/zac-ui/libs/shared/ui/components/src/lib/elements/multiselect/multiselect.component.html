@@ -22,7 +22,7 @@
       [appendTo]="'body'"
     >
     </ng-select>
-    <label>
+    <label [ngClass]="(label ? 'multiselect-label' : '')">
       {{label}}
       <span class="multiselect-required-marker" *ngIf="required">*</span>
     </label>

@@ -1,6 +1,18 @@
 <div class="gerelateerde-zaken card">
-  <h3 class="d-inline-block mr-1">Gerelateerde zaken</h3>
-  <gu-tooltip type="primary" inline="true">Zaken die gerelateerd zijn aan deze zaak</gu-tooltip>
+  <!-- Add related case button - hide button if case is closed and the user is not allowed to force edit -->
+  <div class="d-flex justify-content-between" *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken">
+
+    <h3 class="d-inline-block mr-1">Gerelateerde zaken
+      <gu-tooltip type="primary" inline="true">Zaken die gerelateerd zijn aan deze zaak</gu-tooltip>
+    </h3>
+    <button gu-button
+            buttonStyle="tertiary"
+            icon="add"
+            (click)="openModal('gerelateerde-zaken-modal')">
+      Relatie toevoegen
+    </button>
+  </div>
+
   <!-- Loading -->
   <ng-container *ngIf="isLoading">
     <gu-loading-indicator></gu-loading-indicator>
@@ -15,16 +27,6 @@
     </gu-table>
     <p *ngIf="(data.length === 0)">Er zijn geen gerelateerde zaken.</p>
   </ng-container>
-
-  <!-- Add related case button - hide button if case is closed and the user is not allowed to force edit -->
-  <div class="d-flex justify-content-end" *ngIf="!zaak.resultaat || zaak.kanGeforceerdBijwerken">
-    <button gu-button
-            buttonStyle="tertiary"
-            icon="add"
-            (click)="openModal('gerelateerde-zaken-modal')">
-      Relatie toevoegen
-    </button>
-  </div>
 </div>
 <gu-modal id="gerelateerde-zaken-modal"
           [closeIcon]="true"
