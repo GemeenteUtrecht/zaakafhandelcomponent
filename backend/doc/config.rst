@@ -68,6 +68,7 @@ Kownsl
 - Authorization type: ZGW client_id + secret
 - Client id: ``some-kownsl-id``
 - Client secret: ``some-kownsl-secret``
+
 .. Open Forms
 .. ----------
 
