@@ -14,7 +14,8 @@ A checklist object is a series of questions, answers and possibly supportive evi
 The checklist is defined by a :ref:`ChecklistType`.
 Any zaak can only have zero or one checklist(s). Current implementation of a checklist objecttype:
 
-.. code-block:: checklist
+.. code-block:: json
+
     {
         "type":"object",
         "title":"Checklist",
@@ -76,7 +77,8 @@ ChecklistType
 A checklisttype defines the shape of a checklist. The checklisttype can be attributed to multiple zaaktypes, but any zaaktype shouldn't have 
 more than one checklisttype. Currently, the checklisttype objecttype is defined as below:
 
-.. code-block:: checklisttype
+.. code-block:: json
+
     {
         "type":"object",
         "title":"ChecklistType",
@@ -144,7 +146,8 @@ A ``ZaakTypeAttribute`` objecttype allows for a flexible ``enum`` object related
 As such, the ZAC will try to corroborate the value of the ``ZaakType.eigenschap`` to a value in the ``ZaakTypeAttribute``.
 The current implementation of the ``ZaakTypeAttribute`` objecttype:
 
-.. code-block:: zaaktypeattribute
+.. code-block:: json
+
     {
         "type":"object",
         "title":"ZaaktypeAttributen",
@@ -190,7 +193,8 @@ To facilitate speedy ``Zaak`` process preconfiguration, a ``StartCamundaProcessF
 The ``StartCamundaProcessForm`` will take care of guiding the user into providing the values necessary for the starting the business process related to the ``Zaak``.
 The current implementation of ``StartCamundaProcessForm``:
 
-.. code-block:: startcamundaprocessform
+.. code-block:: json
+
     {
         "type":"object",
         "title":"StartCamundaProcessForm",
