@@ -399,7 +399,7 @@ class ProcessInstanceTests(APITransactionTestCase):
                                         "id": self.user.pk,
                                         "username": f"{self.user}",
                                         "firstName": "",
-                                        "fullName": "",
+                                        "fullName": self.user.get_full_name(),
                                         "lastName": "",
                                         "isStaff": False,
                                         "email": self.user.email,
