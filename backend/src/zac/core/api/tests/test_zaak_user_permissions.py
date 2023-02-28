@@ -280,6 +280,7 @@ class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
             [
                 {
                     "username": user_permission.user.username,
+                    "fullName": user_permission.user.get_full_name(),
                     "permissions": [
                         {
                             "id": user_permission.id,
@@ -312,6 +313,7 @@ class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
             [
                 {
                     "username": user_permission.user.username,
+                    "fullName": user_permission.user.get_full_name(),
                     "permissions": [
                         {
                             "id": user_permission.id,
@@ -348,6 +350,7 @@ class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
             [
                 {
                     "username": user_permission.user.username,
+                    "fullName": user_permission.user.get_full_name(),
                     "permissions": [
                         {
                             "id": user_permission.id,

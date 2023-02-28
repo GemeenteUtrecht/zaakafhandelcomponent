@@ -66,6 +66,8 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
 
 
 class AuthorSerializer(APIModelSerializer):
+    full_name = serializers.CharField(source="get_full_name")
+
     class Meta:
         model = Author
         fields = ("first_name", "last_name", "username", "full_name")
