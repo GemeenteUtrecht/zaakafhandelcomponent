@@ -92,7 +92,6 @@ export class ApprovalComponent implements OnInit {
     this.approvalData = res.body;
     this.getStringifiedUser(this.approvalData.requester);
     this.tableData = this.createTableData(res.body);
-    this.isLoading = false;
   }
 
   /**
