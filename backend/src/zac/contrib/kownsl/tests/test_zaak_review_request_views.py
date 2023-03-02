@@ -245,11 +245,11 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         )
 
     def test_get_zaak_review_requests_detail(self, m):
+        user = UserFactory.create(username="some-other-author")
         self.get_review_request_patcher.start()
         response = self.client.get(self.endpoint_detail)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
-
         doc_url = reverse(
             "dowc:request-doc",
             kwargs={
@@ -266,6 +266,24 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             {
                 "id": REVIEW_REQUEST["id"],
                 "reviewType": REVIEW_REQUEST["reviewType"],
+                "openReviews": [
+                    {
+                        "deadline": "2022-04-15",
+                        "users": [
+                            {
+                                "id": user.id,
+                                "username": user.username,
+                                "firstName": user.first_name,
+                                "fullName": user.get_full_name(),
+                                "lastName": user.last_name,
+                                "isStaff": user.is_staff,
+                                "email": user.email,
+                                "groups": [],
+                            }
+                        ],
+                        "groups": [],
+                    }
+                ],
                 "advices": [
                     {
                         **advice,

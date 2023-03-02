@@ -5,10 +5,12 @@ from furl import furl
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.models import Group, User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url
+from zac.core.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.core.api.serializers import ZaakSerializer
 
 from .constants import KownslTypes
@@ -162,6 +164,30 @@ class ApprovalReviewsSerializer(serializers.Serializer):
     approvals = ApprovalSerializer(many=True)
 
 
+class OpenReviewSerializer(serializers.Serializer):
+    deadline = serializers.DateField(
+        help_text=_("Deadline date of open review request."), required=True
+    )
+    users = UserSlugRelatedField(
+        many=True,
+        slug_field="username",
+        queryset=User.objects.all(),
+        required=True,
+        help_text=_("`username` of the user assigned to review."),
+        allow_null=True,
+        source="_users",
+    )
+    groups = GroupSlugRelatedField(
+        many=True,
+        slug_field="name",
+        queryset=Group.objects.prefetch_related("user_set").all(),
+        required=True,
+        help_text=_("`name` of the group assigned to review."),
+        allow_null=True,
+        source="_groups",
+    )
+
+
 class ZaakRevReqDetailSerializer(PolymorphicSerializer):
     serializer_mapping = {
         KownslTypes.advice: AdviceReviewsSerializer,
@@ -173,3 +199,4 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
     review_type = serializers.ChoiceField(
         choices=KownslTypes.choices, help_text=_("The review type.")
     )
+    open_reviews = OpenReviewSerializer(many=True, read_only=True)

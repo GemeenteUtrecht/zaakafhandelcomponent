@@ -71,6 +71,13 @@ class ConvertToJsonTests(TestCase):
                     },
                     "locked": REVIEW_REQUEST["locked"],
                     "lock_reason": REVIEW_REQUEST["lockReason"],
+                    "open_reviews": [
+                        {
+                            "deadline": datetime.date(2022, 4, 15),
+                            "users": ["user:some-other-author"],
+                            "groups": [],
+                        }
+                    ],
                 }
             ],
         )
@@ -131,6 +138,13 @@ class ConvertToJsonTests(TestCase):
                     },
                     "locked": REVIEW_REQUEST["locked"],
                     "lock_reason": REVIEW_REQUEST["lockReason"],
+                    "open_reviews": [
+                        {
+                            "deadline": datetime.date(2022, 4, 15),
+                            "users": ["user:some-other-author"],
+                            "groups": [],
+                        }
+                    ],
                 }
             ],
         )
