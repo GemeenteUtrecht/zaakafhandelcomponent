@@ -34,7 +34,7 @@ const menuItems: MenuItem[] = [
   },
   {
     icon: 'open_in_new',
-    label: 'Alfresco',
+    label: 'Tezza',
     to: getEnv('ALFRESCO_PREVIEW_URL', 'https://alfresco-tezza.cg-intern.ont.utrecht.nl/'),
     external: true,
     adminOnly: false,
