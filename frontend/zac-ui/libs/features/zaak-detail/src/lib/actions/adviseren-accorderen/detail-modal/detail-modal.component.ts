@@ -174,7 +174,7 @@ export class DetailModalComponent  {
    * @return {string}
    */
   getAuthorName(author: Author): string {
-    return author['firstName'] ? `${author['firstName']} ${author['lastName']}` : author['username'];
+    return author['fullName'] ? author['fullName'] : author['username'];
   }
 
   //

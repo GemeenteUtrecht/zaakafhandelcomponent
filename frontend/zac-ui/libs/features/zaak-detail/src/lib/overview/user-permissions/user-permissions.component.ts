@@ -118,7 +118,7 @@ export class UserPermissionsComponent implements OnInit {
         cellData: {
           user: {
             type: 'text',
-            label: userPermission.username,
+            label: userPermission.fullName,
           },
           permission: {
             type: 'chip',

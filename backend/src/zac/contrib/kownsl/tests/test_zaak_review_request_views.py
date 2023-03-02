@@ -1,4 +1,4 @@
-import uuid
+from copy import deepcopy
 from unittest.mock import patch
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -258,6 +258,9 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 "purpose": DocFileTypes.read,
             },
         )
+
+        advice = deepcopy(ADVICE)
+        advice["author"] = {**advice["author"], "fullName": "some-author"}
         self.assertEqual(
             response_data,
             {
@@ -265,7 +268,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 "reviewType": REVIEW_REQUEST["reviewType"],
                 "advices": [
                     {
-                        **ADVICE,
+                        **advice,
                         "documents": [
                             {
                                 "adviceVersion": 2,

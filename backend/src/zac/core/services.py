@@ -906,7 +906,7 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     if isinstance(user, Group):
         return
 
-    if not user.get_full_name():
+    if not user.get_full_name() or user.get_full_name() == user.username:
         return
 
     from .api.serializers import RolSerializer

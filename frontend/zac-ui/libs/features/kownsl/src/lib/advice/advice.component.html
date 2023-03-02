@@ -3,7 +3,7 @@
   <h1 class="">Advies gevraagd</h1>
   <ng-template [ngIf]="uuid && !submitSuccess">
     <!-- Loading -->
-    <ng-template [ngIf]="!adviceData && isLoading">
+    <ng-template [ngIf]="isLoading">
       <gu-loading-indicator></gu-loading-indicator>
     </ng-template>
 
@@ -132,7 +132,7 @@
   <!-- Success screen -->
   <ng-template [ngIf]="submitSuccess">
     <gu-success>
-      <h3 class="mb-4">Bedankt voor je reactie</h3>
+      <h3 class="mb-4 justify-content-center">Bedankt voor je reactie</h3>
     </gu-success>
   </ng-template>
 

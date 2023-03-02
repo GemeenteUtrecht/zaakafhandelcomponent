@@ -1325,10 +1325,11 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
         source="zaak_atomic_permissions",
         help_text=_("Atomic permissions for the ZAAK."),
     )
+    full_name = serializers.CharField(source="get_full_name")
 
     class Meta:
         model = User
-        fields = ("username", "permissions")
+        fields = ("username", "permissions", "full_name")
 
 
 class ObjecttypeProxySerializer(ProxySerializer):
