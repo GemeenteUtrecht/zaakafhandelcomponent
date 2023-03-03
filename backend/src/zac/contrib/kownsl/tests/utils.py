@@ -27,8 +27,18 @@ REVIEW_REQUEST = {
     "numAdvices": 1,
     "numApprovals": 0,
     "numAssignedUsers": 1,
+    "openReviews": [
+        {
+            "deadline": "2022-04-15",
+            "users": ["user:some-other-author"],
+            "groups": [],
+        }
+    ],
     "toelichting": "some-toelichting",
-    "userDeadlines": {"user:some-author": "2022-04-14"},
+    "userDeadlines": {
+        "user:some-author": "2022-04-14",
+        "user:some-other-author": "2022-04-15",
+    },
     "requester": {
         "username": "some-user",
         "firstName": "",

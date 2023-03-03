@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from typing import Dict, List
 
 from django.utils.translation import gettext_lazy as _
@@ -8,7 +8,8 @@ from django.utils.translation import gettext_lazy as _
 from djchoices import ChoiceItem, DjangoChoices
 from zgw_consumers.api_models.base import Model
 
-from zac.accounts.models import User
+from zac.accounts.models import Group, User
+from zac.core.camunda.utils import resolve_assignee
 
 
 class KownslTypes(DjangoChoices):
@@ -17,21 +18,37 @@ class KownslTypes(DjangoChoices):
 
 
 @dataclass
+class OpenReview(Model):
+    deadline: date
+    users: List[str]
+    groups: List[str]
+
+    @property
+    def _users(self) -> List[User]:
+        return [resolve_assignee(user) for user in self.users]
+
+    @property
+    def _groups(self) -> List[Group]:
+        return [resolve_assignee(group) for group in self.groups]
+
+
+@dataclass
 class ReviewRequest(Model):
     id: uuid.UUID
-    review_type: str
     num_advices: int
     num_approvals: int
     num_assigned_users: int
+    review_type: str
     created: datetime = datetime.now()
     documents: List[str] = field(default_factory=list)
     for_zaak: str = ""
     frontend_url: str = ""
+    locked: bool = False
+    lock_reason: str = ""
+    open_reviews: List[OpenReview] = field(default_factory=list)
     requester: Dict = field(default_factory=dict)
     toelichting: str = ""
     user_deadlines: Dict = field(default_factory=dict)
-    locked: bool = False
-    lock_reason: str = ""
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]

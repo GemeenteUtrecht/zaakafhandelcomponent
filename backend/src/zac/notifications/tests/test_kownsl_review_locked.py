@@ -27,6 +27,7 @@ REVIEW_REQUEST = {
     "numAdvices": 1,
     "numApprovals": 0,
     "numAssignedUsers": 2,
+    "openReviews": [],
     "toelichting": "https://kownsl.example.com/497f6eca-6276-4993-bfeb-53cbbbba6f08",
     "userDeadlines": {"user:bob": "2020-11-05"},
     "requester": {
