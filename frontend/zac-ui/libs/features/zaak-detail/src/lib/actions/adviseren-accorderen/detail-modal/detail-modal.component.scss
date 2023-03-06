@@ -1,3 +1,10 @@
 .gu-adviseren-accorderen-detail {
   position: relative;
+  .open-reviews {
+    .open-review {
+      span, li {
+        font-size: 0.875rem;
+      }
+    }
+  }
 }

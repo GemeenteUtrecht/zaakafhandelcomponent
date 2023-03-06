@@ -1,17 +1,15 @@
 @import './base/colors/colors';
 
-$landing-border-radius: 28px;
-$landing-color-background: $color-background-lightgrey;
+$landing-border-radius: 20px;
 $landing-color-background-header: $color-background-grey;
 $landing-container-size: 1280px;
 $landing-gutter-size: 0.9rem;
 $landing-font-size-h1: 45px;
-$landing-height-header: 263px;
+$landing-height-header: 160px;
 $landing-spacing: 40px;
 
 .landing{
-  background-color: $landing-color-background;
-  height: 100%;
+  height: auto;
   min-height: 100vh;
 
   &__header {

@@ -3,11 +3,27 @@
   <p *ngIf="reviewRequestSummary?.locked && reviewRequestSummary?.lockReason">
     <b>Reden annulering: </b>{{reviewRequestSummary.lockReason}}
   </p>
+  <div class="gu-adviseren-accorderen-detail__table mb-4">
+    <gu-table [table]="table"
+              [expandable]="true"
+              [wrap]="true"
+              (buttonOutput)="tableClick($event)"
+    >
+    </gu-table>
+  </div>
 
-  <gu-table [table]="table"
-            [expandable]="true"
-            [wrap]="true"
-            (buttonOutput)="tableClick($event)"
-  >
-  </gu-table>
+  <div class="open-reviews" *ngIf="reviewRequestDetails && reviewRequestDetails.openReviews?.length > 0">
+    <h4>Openstaande aanvragen</h4>
+    <div class="open-review" *ngFor="let openReview of reviewRequestDetails.openReviews">
+      <span>Deadline: </span><span><strong>{{openReview.deadline | date:'shortDate'}}</strong></span>
+      <ul>
+        <ng-container *ngFor="let user of openReview.users">
+          <li>{{user.fullName}}</li>
+        </ng-container>
+        <ng-container *ngFor="let group of openReview.groups">
+          <li>{{group.fullName}}</li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
 </div>
