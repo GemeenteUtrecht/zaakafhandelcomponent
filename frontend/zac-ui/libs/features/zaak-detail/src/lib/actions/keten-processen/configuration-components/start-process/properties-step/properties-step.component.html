@@ -47,6 +47,7 @@
           *ngIf="getPropertiesContext(i).eigenschap.specificatie.formaat === ('datum' || 'datum_tijd')"
           [control]="propertyControl(i)"
           [label]="getPropertiesContext(i).label"
+          [minDate]="getPropertiesContext(i).eigenschap.specificatie.groep === 'Einddatum' && getPropertiesContext(i-1)?.eigenschap.specificatie.groep === 'Startdatum' ? propertyControl(i-1).value : null"
           [required]="getPropertiesContext(i).required"
           class="col-8"
         ></gu-datepicker>
