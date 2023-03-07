@@ -36,8 +36,8 @@ export class DocumentToevoegenComponent implements OnInit {
   @Input() updateDocument: boolean;
   @Input() buttonSize: 'extrasmall' | 'small' | 'medium' | 'large' | 'huge' = 'large'
 
-  @Input() title = 'Informatie objecttype';
-  @Input() description = 'Kies een relevante informatie objecttype. Je ziet de informatie objecttypen die bij het zaaktype horen';
+  @Input() title = 'Informatieobjecttype';
+  @Input() description = 'Kies een relevante informatieobjecttype. Je ziet de informatieobjecttypen die bij het zaaktype horen';
   @Input() submitLabel = 'Opslaan';
 
   @Output() reload: EventEmitter<boolean> = new EventEmitter<boolean>();
