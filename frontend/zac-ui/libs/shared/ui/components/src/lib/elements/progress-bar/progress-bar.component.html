@@ -1,11 +1,13 @@
-<div class="progress-bar-container">
-  <div class="progress-bar"
-       [ngStyle]="{'width': progress + '%'}">
-    <ng-container *ngIf="!finished">
-      {{progress.toFixed(0)}}%
-    </ng-container>
-    <ng-container *ngIf="finished && endDate">
-      Afgehandeld op {{endDate}}
-    </ng-container>
+<div class="progress-bar-wrapper">
+  <div class="progress-bar">
+    <div class="progress-bar-status"
+         [ngStyle]="{'width': progress + '%'}">
+      <ng-container *ngIf="!finished">
+        <span>{{progress.toFixed(0)}}%</span>
+      </ng-container>
+      <ng-container *ngIf="finished && endDate">
+        Afgehandeld op {{endDate}}
+      </ng-container>
+    </div>
   </div>
 </div>

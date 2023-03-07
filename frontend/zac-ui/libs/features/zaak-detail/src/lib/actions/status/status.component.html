@@ -36,8 +36,9 @@
           <gu-progress-bar [progress]="finished ? 100 : progress ? progress : 0"
                            [finished]="finished"
                            endDate="{{data[0].datumStatusGezet | date:'shortDate'}}"
-                           class="d-block mb-3"></gu-progress-bar>
-          <div class="d-flex">
+                           class="d-block mb-2"></gu-progress-bar>
+          <hr>
+          <div class="d-flex mt-2">
             <p class="mr-1">Uiterlijke einddatum:</p>
             <p class="p--bold" *ngIf="deadline">{{deadline}}</p>
           </div>

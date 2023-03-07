@@ -107,14 +107,13 @@ export class AdviserenAccorderenComponent implements OnInit {
    * @param {ReviewRequestSummary[]} reviewRequestSummaries
    */
   fetchReviewRequestDetails(reviewRequestSummaries: ReviewRequestSummary[]): void {
-    const relevantUuids = reviewRequestSummaries.filter((r) => !this.reviewRequestsService.isReviewRequestPristine(r))
-      .map((r) => r.id);
+    const reviewRequestUuids = reviewRequestSummaries.map(r => r.id);
 
     this.isDetailsLoading = true;
 
     this.tableData = this.reviewRequestSummaryAsTable(this.reviewRequestSummaries);
 
-    this.reviewRequestsService.retrieveReviewRequestDetailsBatch(relevantUuids).subscribe(
+    this.reviewRequestsService.retrieveReviewRequestDetailsBatch(reviewRequestUuids).subscribe(
       (reviewRequestDetails) => {
         this.reviewRequestDetails[reviewRequestDetails.id] = reviewRequestDetails;
         this.tableData = this.reviewRequestSummaryAsTable(this.reviewRequestSummaries);
@@ -178,7 +177,7 @@ export class AdviserenAccorderenComponent implements OnInit {
           } : '',
         },
 
-        clickOutput: reviewRequestSummary.completed > 0 ? reviewRequestSummary : null
+        clickOutput: reviewRequestSummary
       } as RowData;
     });
 
