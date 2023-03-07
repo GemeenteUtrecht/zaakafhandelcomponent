@@ -36,9 +36,11 @@ export class DatepickerComponent implements OnInit, OnChanges {
   @Input() control: FormControl;
   @Input() label: string;
   @Input() id: string;
-  @Input() minDate: Date = new Date();
+  @Input() minDate: Date;
   @Input() required: boolean;
   @Input() placeholder: string;
+
+  readonly defaultMinDate = new Date();
 
   constructor() { }
 
@@ -47,6 +49,7 @@ export class DatepickerComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes:SimpleChanges) {
+    this.minDate = this.minDate ? this.minDate : this.defaultMinDate;
     this.checkValidValue();
   }
 
