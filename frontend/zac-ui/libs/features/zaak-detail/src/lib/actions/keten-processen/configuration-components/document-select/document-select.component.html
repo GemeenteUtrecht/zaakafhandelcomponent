@@ -17,8 +17,8 @@
               </span>
             </gu-checkbox>
             <div class="mb-2">
-              <p class="d-inline">Documenttype: <strong>{{taskContextData.context.documents[i].documentType}}</strong></p>
-              <button gu-button *ngIf="!openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Documenttype wijzigen</button>
+              <p class="d-inline">Informatie objecttype: <strong>{{taskContextData.context.documents[i].documentType}}</strong></p>
+              <button gu-button *ngIf="!openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Informatie objecttype wijzigen</button>
               <button gu-button *ngIf="openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="closeDocumentTypeSelector(i)">Sluiten</button>
               <ng-container *ngIf="openSelectorsArray.includes(i)">
                 <div class="row">
@@ -30,7 +30,7 @@
                       *ngIf="openSelectorsArray.includes(i)"
                       [multiple]="false"
                       [items]="taskContextData.context.informatieobjecttypen"
-                      placeholder="Selecteer documenttype"
+                      placeholder="Selecteer informatie objecttype"
                       bindLabel="omschrijving"
                       bindValue="omschrijving"
                       class="mb-4"
@@ -40,7 +40,7 @@
                 </div>
               </ng-container>
               <mat-error *ngIf="documentType(i).invalid">
-                Dit documenttype bestaat niet in het vervolgproces. Selecteer een documenttype met "Documenttype wijzigen".
+                Dit informatie objecttype bestaat niet in het vervolgproces. Selecteer een informatie objecttype met "Informatie objecttype wijzigen".
               </mat-error>
             </div>
           </div>

@@ -65,7 +65,7 @@ export class DocumentWijzigenComponent {
         readonly: true,
       },
       {
-        label: 'Documenttype',
+        label: 'Informatie objecttype',
         name: 'documenttype',
         value: this.selectedDocument.titel.split('.').pop(),
         readonly: true,
