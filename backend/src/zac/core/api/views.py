@@ -8,6 +8,7 @@ from typing import Dict, List
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models.query import QuerySet
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -23,9 +24,10 @@ from rest_framework import (
     serializers,
     status,
     views,
+    viewsets,
 )
 from rest_framework.exceptions import APIException, ValidationError
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
@@ -151,6 +153,7 @@ from .serializers import (
     VertrouwelijkheidsAanduidingSerializer,
     ZaakDetailSerializer,
     ZaakEigenschapSerializer,
+    ZaakHistorySerializer,
     ZaakObjectGroupSerializer,
     ZaakObjectProxySerializer,
     ZaakStatusSerializer,
@@ -316,6 +319,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         serializer = self.get_serializer(
             instance=zaak, context={"zaak": self.get_object(), "request": self.request}
         )
+        user = request.user
         return Response(serializer.data)
 
     @extend_schema(
@@ -1359,3 +1363,24 @@ class ZaakObjectChangeView(views.APIView):
         delete_zaak_object(zaak_object.url)
         invalidate_zaakobjecten_cache(zaak)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RecentlyViewedZakenView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadZaken,
+    )
+    serializer_class = ZaakHistorySerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class(instance=request.user)
+        return Response(serializer.data)
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.serializer_class(
+            instance=request.user, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
