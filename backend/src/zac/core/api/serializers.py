@@ -3,12 +3,13 @@ import pathlib
 from concurrent.futures import as_completed
 from datetime import datetime
 from decimal import ROUND_05UP
-from typing import Optional
+from typing import Dict, Optional
 
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from django_camunda.api import (
@@ -1372,3 +1373,43 @@ class ObjectFilterProxySerializer(ProxySerializer):
 class ZaakObjectProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = ["components", "schemas", "ZaakObject"]
+
+
+class ZaakHistorySerializer(serializers.ModelSerializer):
+    zaak = serializers.URLField(
+        required=True,
+        help_text=_("URL-reference of the ZAAK"),
+        allow_blank=False,
+        write_only=True,
+    )
+
+    class Meta:
+        model = User
+        fields = ("zaak", "recently_viewed")
+        extra_kwargs = {"recently_viewed": {"read_only": True}}
+
+    def validate_zaak(self, zaak: str) -> Zaak:
+        try:
+            return get_zaak(zaak_url=zaak)
+        except (ClientError, HTTPError) as exc:
+            raise serializers.ValidationError(detail={"url": exc.args[0]})
+
+    def validate(self, data) -> Dict:
+        validated_data = super().validate(data)
+        return {
+            "visited": timezone.now().isoformat(),
+            "bronorganisatie": validated_data["zaak"].bronorganisatie,
+            "identificatie": validated_data["zaak"].identificatie,
+        }
+
+    def update(self, instance, validated_data):
+        older = instance.recently_viewed
+        older.append(validated_data)
+        return super().update(
+            instance,
+            {
+                "recently_viewed": sorted(
+                    older, key=lambda dat: dat["visited"], reverse=True
+                )
+            },
+        )
