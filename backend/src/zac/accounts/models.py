@@ -37,28 +37,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     Use the built-in user model.
     """
 
-    date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
-    email = models.EmailField(_("email address"), blank=True)
-    first_name = models.CharField(_("first name"), max_length=255, blank=True)
-    last_name = models.CharField(_("last name"), max_length=255, blank=True)
-    is_active = models.BooleanField(
-        _("active"),
-        default=True,
-        help_text=_(
-            "Designates whether this user should be treated as active. "
-            "Unselect this instead of deleting accounts."
-        ),
-    )
-    is_staff = models.BooleanField(
-        _("staff status"),
-        default=False,
-        help_text=_("Designates whether the user can log into this admin site."),
-    )
-    recently_viewed = models.JSONField(
-        _("recently viewed ZAAKs"),
-        default=[],
-        help_text=_("A list of recently viewed ZAAKs."),
-    )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     username = models.CharField(
         _("username"),
@@ -67,19 +45,36 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text=_("Required. 150 characters or fewer."),
         error_messages={"unique": _("A user with that `username` already exists.")},
     )
+    first_name = models.CharField(_("first name"), max_length=255, blank=True)
+    last_name = models.CharField(_("last name"), max_length=255, blank=True)
+    email = models.EmailField(_("email address"), blank=True)
+    is_staff = models.BooleanField(
+        _("staff status"),
+        default=False,
+        help_text=_("Designates whether the user can log into this admin site."),
+    )
+    is_active = models.BooleanField(
+        _("active"),
+        default=True,
+        help_text=_(
+            "Designates whether this user should be treated as active. "
+            "Unselect this instead of deleting accounts."
+        ),
+    )
+    date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
 
     # custom permissions
+    auth_profiles = models.ManyToManyField(
+        "AuthorizationProfile",
+        blank=True,
+        through="UserAuthorizationProfile",
+    )
     atomic_permissions = models.ManyToManyField(
         "AtomicPermission",
         blank=True,
         verbose_name=_("atomic permissions"),
         related_name="users",
         through="UserAtomicPermission",
-    )
-    auth_profiles = models.ManyToManyField(
-        "AuthorizationProfile",
-        blank=True,
-        through="UserAuthorizationProfile",
     )
 
     # Group management
