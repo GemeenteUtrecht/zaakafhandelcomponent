@@ -10,7 +10,6 @@ from .views import (
     ObjectSearchView,
     ObjecttypeListView,
     ObjecttypeVersionReadView,
-    RecentlyViewedZakenView,
     RelatedZakenView,
     RolTypenView,
     StatusTypenView,
@@ -125,5 +124,4 @@ urlpatterns = [
     ),
     path("statustypes", StatusTypenView.as_view(), name="statustypen-list"),
     path("roltypes", RolTypenView.as_view(), name="roltypen-list"),
-    path("recently-viewed", RecentlyViewedZakenView.as_view(), name="recently-viewed"),
 ]
