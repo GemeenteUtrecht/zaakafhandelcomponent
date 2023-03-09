@@ -465,7 +465,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   handleStartProcessSuccess(): void {
     this.isLoading = true;
     this.update.emit();
-    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+    this.showActions = true;
+    this.fetchProcesses();
     this.closeModal();
   }
 
