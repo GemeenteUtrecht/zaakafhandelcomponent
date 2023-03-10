@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0025_user_recently_viewed'),
+        ("accounts", "0025_user_recently_viewed"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='recently_viewed',
-            field=models.JSONField(blank=True, default=list, help_text='A list of recently viewed ZAAKs.', verbose_name='recently viewed ZAAKs'),
+            model_name="user",
+            name="recently_viewed",
+            field=models.JSONField(
+                blank=True,
+                default=list,
+                help_text="A list of recently viewed ZAAKs.",
+                verbose_name="recently viewed ZAAKs",
+            ),
         ),
     ]
