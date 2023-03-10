@@ -206,7 +206,7 @@ export class GerelateerdeObjectenComponent implements OnInit {
       {
         label: 'Beschrijving',
         name: 'objectTypeDescription',
-        pattern: "[a-zA-Z_]{1,100}",
+        pattern: "[a-zA-Z0-9]+[a-zA-Z0-9 ]+",
         placeholder: 'Beschrijving van het type object (maximaal 100 tekens).',
         value: '',
       }
