@@ -5,6 +5,10 @@
   margin-left: 0!important;
 }
 
+::ng-deep .ng-dropdown-panel {
+  opacity: 1 !important;
+}
+
 .gu-sidenav {
   @include media-breakpoint-up(lg) {
     .menu-item__label {
