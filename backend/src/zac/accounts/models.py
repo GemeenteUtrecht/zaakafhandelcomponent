@@ -56,7 +56,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     recently_viewed = models.JSONField(
         _("recently viewed ZAAKs"),
-        default=[],
+        default=list,
+        blank=True,
         help_text=_("A list of recently viewed ZAAKs."),
     )
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
