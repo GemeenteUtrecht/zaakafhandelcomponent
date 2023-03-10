@@ -86,7 +86,7 @@ export class DocumentenService {
 
     tableData.bodyData = data.map((element: Document) => {
       // The "locked" and "currentUserIsEditing" states decide if certain buttons should be shown in the table or not.
-      // If a case is closed (has no "zaak.resultaat" and the user is not allowed to force edit ("zaak.kanGeforceerdBijwerken),
+      // If a case is closed (when "zaak.resultaat" is available) and the user is not allowed to force edit ("zaak.kanGeforceerdBijwerken),
       // the buttons will also be hidden.
       const icon = (element.locked && !element.currentUserIsEditing) ? 'lock' : 'lock_open'
       const iconColor = (element.locked && !element.currentUserIsEditing) ? 'orange' : 'green'
@@ -96,7 +96,7 @@ export class DocumentenService {
       const editButtonStyle = element.currentUserIsEditing ? 'primary' : 'tertiary';
 
       const showEditCell = (!element.locked || element.currentUserIsEditing) && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
-      const showOverwriteCell = !element.locked && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
+      const showOverwriteCell = !element.locked && !zaak.resultaat;
 
       const editCell: ExtensiveCell = {
         type: 'button',
