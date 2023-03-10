@@ -54,7 +54,7 @@ export class MultiselectComponent implements OnInit, OnChanges, OnDestroy {
   @Input() searchable = true;
   @Input() selectedValue: any;
   @Input() label: string;
-  @Input() appendTo: string;
+  @Input() appendTo? = 'body';
   @Input() clearable = true;
   @Input() disabled: boolean;
   @Input() widgetType: 'checkboxGroup' | 'select' = 'select';
