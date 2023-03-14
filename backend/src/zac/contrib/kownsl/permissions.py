@@ -1,17 +1,52 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import permissions
+from rest_framework.request import Request
+from rest_framework.views import APIView
 
 from zac.accounts.models import User
 from zac.api.permissions import DefinitionBasePermission
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.core.api.permissions import BaseConditionalPermission, CanReadZaken
+from zac.core.api.permissions import (
+    BaseConditionalPermission,
+    CanReadZaken,
+    CanUpdateZaken,
+)
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import get_zaak
 
 from .api import retrieve_advices, retrieve_approvals
 from .constants import KownslTypes
 from .data import ReviewRequest
+
+
+class CanUpdateZakenReviewRequests(CanUpdateZaken):
+    def has_object_permission(self, request: Request, view: APIView, obj):
+        if request.user.is_superuser:
+            return True
+
+        if isinstance(obj, ReviewRequest):
+            try:
+                obj = get_zaak(zaak_url=obj.for_zaak)
+            except ObjectDoesNotExist:
+                raise Http404(f"No ZAAK is found for url: {obj.for_zaak}.")
+
+        permission_name = self.get_permission(request).name
+        # first check atomic permissions - this checks both atomic permissions directly attached to the user
+        # and atomic permissions defined to authorization profiles
+        if self.user_atomic_permissions_exists(
+            request, permission_name, obj_url=obj.url
+        ):
+            return True
+
+        # then check blueprint permissions
+        for permission in self.get_blueprint_permissions(request, permission_name):
+            if permission.has_access(obj, request.user, permission_name):
+                return True
+
+        return False
 
 
 class CanLockReview(permissions.BasePermission):
@@ -35,11 +70,13 @@ class CanReadOrLockReviews(BaseConditionalPermission):
 
 class ReviewIsUnlocked(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        requester = obj.requester["full_name"] or obj.requester["username"]
-        self.message = _("Review request is locked by `{requester}`.").format(
-            requester=requester
-        )
-        return not obj.locked
+        if isinstance(obj, ReviewRequest):
+            requester = obj.requester["full_name"] or obj.requester["username"]
+            self.message = _("Review request is locked by `{requester}`.").format(
+                requester=requester
+            )
+            return not obj.locked
+        return True
 
 
 class IsReviewUser(permissions.BasePermission):
@@ -50,6 +87,11 @@ class IsReviewUser(permissions.BasePermission):
         ]
         assignees.append(f"{AssigneeTypeChoices.user}:{request.user.username}")
         return any([assignee in obj.user_deadlines for assignee in assignees])
+
+
+class IsReviewRequester(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.requester["username"] == request.user.username
 
 
 class HasNotReviewed(permissions.BasePermission):
