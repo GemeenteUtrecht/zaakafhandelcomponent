@@ -144,7 +144,11 @@ def get_top_level_process_instances(
         list(executor.map(_get_messages, top_definition_ids))
 
     for process in top_level_processes:
-        process.messages = def_messages[process.definition_id]
+        process.messages = [
+            msg
+            for msg in def_messages[process.definition_id]
+            if not msg.startswith("_")
+        ]
 
     if exclude_zaak_creation:
         top_level_processes = [

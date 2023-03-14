@@ -579,3 +579,72 @@ class ProcessInstanceTests(APITransactionTestCase):
                 },
             ],
         )
+
+    def test_fetch_process_instances_exclude_zaak_creation_process(
+        self, m_messages, m_task_from, m_request
+    ):
+        process_definition_data = [
+            {
+                "id": f"harvo_behandelen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+                "key": "harvo_behandelen",
+                "category": "http://bpmn.io/schema/bpmn",
+                "description": None,
+                "name": None,
+                "version": 8,
+                "resource": f"harvo_behandelen.bpmn",
+                "deployment_id": "c76a10fd-c766-11ea-86dc-e22fafe5f405",
+                "diagram": None,
+                "suspended": False,
+                "tenant_id": None,
+                "version_tag": None,
+                "history_time_to_live": None,
+                "startable_in_tasklist": True,
+            }
+        ]
+        process_instance_data = [
+            {
+                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
+                "definitionId": process_definition_data[0]["id"],
+                "businessKey": "",
+                "caseInstanceId": "",
+                "suspended": False,
+                "tenantId": "",
+            },
+        ]
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
+            json=process_instance_data,
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn=harvo_behandelen%3A8%3Ac76c8200-c766-11ea-86dc-e22fafe5f405",
+            json=process_definition_data,
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}process-instance?superProcessInstance={process_instance_data[0]['id']}&variables=zaakUrl_eq_{ZAAK_URL}",
+            json=[],
+        )
+        m_request.get(
+            f"{CAMUNDA_URL}task?processInstanceId={process_instance_data[0]['id']}",
+            json=[],
+        )
+
+        url = reverse("fetch-process-instances")
+        response = self.client.get(
+            url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
+        )
+
+        # Make sure the _some_secret_message message isn't returned.
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
+                    "definitionId": "harvo_behandelen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+                    "title": "harvo_behandelen",
+                    "subProcesses": [],
+                    "messages": ["Annuleer behandeling", "Advies vragen"],
+                    "tasks": [],
+                }
+            ],
+        )
