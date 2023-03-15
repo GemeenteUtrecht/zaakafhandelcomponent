@@ -1,5 +1,5 @@
 {
-    "ecmHost": "https://alfresco.utrechtproeftuin.nl",
+    "ecmHost": "https://alfresco.cg-intern.utrecht.nl",
     "providers" : "ECM",
     "pagination": {
       "size": 25,
@@ -8,9 +8,9 @@
     "application": {
       "name": "Contezza Elements"
     },
-    "SEARCH_QUERY": "TYPE:'cm:content' AND -ASPECT:'rgbz:enkelvoudigInformatieobject' AND -ASPECT:'tza:eio'",
+    "SEARCH_QUERY": "TYPE:'cm:content' AND NOT ASPECT:'rgbz:enkelvoudigInformatieobject' AND NOT ASPECT:'tza:eio' NOT ASPECT:'cm:workingCopy'",
     "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
-    "ALFRESCO_PREVIEW_URL": "https://alfresco-oz.utrechtproeftuin.nl",
+    "ALFRESCO_PREVIEW_URL": "https://alfresco-oz.cg-intern.utrecht.nl",
     "documentList": {
       "columns": [
         {
