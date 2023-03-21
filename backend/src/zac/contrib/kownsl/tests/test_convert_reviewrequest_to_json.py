@@ -78,6 +78,14 @@ class ConvertToJsonTests(TestCase):
                             "groups": [],
                         }
                     ],
+                    "metadata": {
+                        "task_definition_id": REVIEW_REQUEST["metadata"][
+                            "taskDefinitionId"
+                        ],
+                        "process_instance_id": REVIEW_REQUEST["metadata"][
+                            "processInstanceId"
+                        ],
+                    },
                 }
             ],
         )
@@ -145,6 +153,14 @@ class ConvertToJsonTests(TestCase):
                             "groups": [],
                         }
                     ],
+                    "metadata": {
+                        "task_definition_id": REVIEW_REQUEST["metadata"][
+                            "taskDefinitionId"
+                        ],
+                        "process_instance_id": REVIEW_REQUEST["metadata"][
+                            "processInstanceId"
+                        ],
+                    },
                 }
             ],
         )

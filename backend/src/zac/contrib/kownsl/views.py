@@ -37,7 +37,9 @@ from .api import (
 from .data import ReviewRequest
 from .permissions import (
     CanReadOrLockReviews,
+    CanUpdateZakenReviewRequests,
     HasNotReviewed,
+    IsReviewRequester,
     IsReviewUser,
     ReviewIsUnlocked,
 )
@@ -261,7 +263,7 @@ class ZaakReviewRequestDetailView(APIView):
     def get_object(self) -> ReviewRequest:
         review_request = get_review_request(self.kwargs["request_uuid"])
         try:
-            zaak = get_zaak(review_request.for_zaak)
+            zaak = get_zaak(zaak_url=review_request.for_zaak)
         except ObjectDoesNotExist:
             raise Http404(f"No ZAAK is found for url: {review_request.for_zaak}.")
 
@@ -330,3 +332,35 @@ class ZaakReviewRequestDetailView(APIView):
         review_request = self.get_review_request_metadata(review_request)
         response_serializer = ZaakRevReqDetailSerializer(instance=review_request)
         return Response(response_serializer.data)
+
+
+class ZaakReviewRequestReminderView(APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        IsReviewRequester | CanUpdateZakenReviewRequests,
+        ReviewIsUnlocked,
+    )
+
+    def get_object(self) -> ReviewRequest:
+        review_request = get_review_request(self.kwargs["request_uuid"])
+
+        # Check if review request is locked and if user is a requester or has zaak update rights
+        self.check_object_permissions(self.request, review_request)
+        return review_request
+
+    @extend_schema(
+        summary=_("Send a reminder to reviewees."),
+        request=None,
+        responses={
+            204: None,
+        },
+    )
+    def post(self, request, request_uuid, *args, **kwargs):
+        review_request = self.get_object()
+        self.check_object_permissions(self.request, review_request)
+        send_message(
+            "_kownsl_reminder",
+            [review_request.metadata["process_instance_id"]],
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)

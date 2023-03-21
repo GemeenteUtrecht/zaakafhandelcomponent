@@ -4,6 +4,7 @@ from .views import (
     AdviceRequestView,
     ApprovalRequestView,
     ZaakReviewRequestDetailView,
+    ZaakReviewRequestReminderView,
     ZaakReviewRequestSummaryView,
 )
 
@@ -29,5 +30,10 @@ urlpatterns = [
         "zaak-review-requests/<uuid:request_uuid>/detail",
         ZaakReviewRequestDetailView.as_view(),
         name="zaak-review-requests-detail",
+    ),
+    path(
+        "zaak-review-requests/<uuid:request_uuid>/reminder",
+        ZaakReviewRequestReminderView.as_view(),
+        name="zaak-review-requests-reminder",
     ),
 ]

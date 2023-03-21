@@ -459,6 +459,7 @@ task.execution.setVariable('contractEigenschappen', S(eigenschappen));</camunda:
   </bpmn:category>
   <bpmn:message id="Message_1v396f7" name="Annuleer behandeling" />
   <bpmn:message id="Message_0kuyv0q" name="Advies vragen" />
+  <bpmn:message id="Message_1asd38g" name="_some_secret_message" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0srk2pw">
       <bpmndi:BPMNShape id="Participant_0z4fwdy_di" bpmnElement="Participant_0z4fwdy" isHorizontal="true">
