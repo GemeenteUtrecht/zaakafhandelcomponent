@@ -8,7 +8,7 @@
     "application": {
       "name": "Contezza Elements"
     },
-    "SEARCH_QUERY": "TYPE:'cm:content' AND NOT ASPECT:'rgbz:enkelvoudigInformatieobject' AND NOT ASPECT:'tza:eio' NOT ASPECT:'cm:workingCopy'",
+    "SEARCH_QUERY": "TYPE:'cm:content' AND -TYPE:'cm:authorityContainer' AND NOT ASPECT:'rgbz:enkelvoudigInformatieobject' AND NOT ASPECT:'tza:eio' AND NOT ASPECT:'cm:workingCopy'",
     "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
     "ALFRESCO_PREVIEW_URL": "https://alfresco-oz.cg-intern.utrecht.nl",
     "documentList": {
