@@ -22,7 +22,7 @@
     "size": 25,
     "supportedPageSizes": [5, 10, 25, 50, 100, 150]
   },
-  "SEARCH_QUERY": "TYPE:'cm:content' AND -TYPE:'cm:authorityContainer' AND NOT ASPECT:'rgbz:enkelvoudigInformatieobject' AND NOT ASPECT:'tza:eio' AND NOT ASPECT:'cm:workingCopy'",
+  "SEARCH_QUERY": "TYPE:'cm:content' AND -TYPE:'cm:authorityContainer' AND NOT ASPECT:'rgbz:enkelvoudigInformatieobject' AND NOT ASPECT:'tza:eio' AND NOT ASPECT:'cm:workingCopy' AND (SITE:'objecten' OR SITE:'dossiers')",
   "SEARCH_FIELDS": ["cm:name", "cm:title", "cm:description"],
   "ALFRESCO_PREVIEW_URL": "$ALFRESCO_PREVIEW_URL"
 }
