@@ -1,5 +1,19 @@
 .. _tezza_changelog:
 
+Release 0.7.7
+-------------
+
+Deze release bevat de volgende changes:
+
+* Alfresco platform 7.3.1;
+* Alfresco share 7.3.1;
+* Alfresco search 2.0.6;
+* Alfresco RM 17.137;
+* Tezza module 2.7.2;
+* Migration module 0.3.2;
+* Javascript console 0.9.1;
+* Contezza-apps 2.4.1;
+
 Release 0.6.7
 -------------
 
