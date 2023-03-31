@@ -14,6 +14,8 @@ from .utils import ADVICE, APPROVAL, REVIEW_REQUEST
 
 
 class ConvertToJsonTests(TestCase):
+    maxDiff = None
+
     def test_review_requests_for_advice(self):
         review_request = factory(ReviewRequest, REVIEW_REQUEST)
         advice = factory(Advice, ADVICE)
@@ -25,6 +27,7 @@ class ConvertToJsonTests(TestCase):
             [
                 {
                     "id": uuid.UUID(REVIEW_REQUEST["id"]),
+                    "assigned_users": REVIEW_REQUEST["assignedUsers"],
                     "created": timezone.make_aware(
                         datetime.datetime(2022, 4, 14, 15, 49, 9, 830235)
                     ),
@@ -110,6 +113,7 @@ class ConvertToJsonTests(TestCase):
             [
                 {
                     "id": uuid.UUID(REVIEW_REQUEST["id"]),
+                    "assigned_users": REVIEW_REQUEST["assignedUsers"],
                     "created": timezone.make_aware(
                         datetime.datetime(2022, 4, 14, 15, 49, 9, 830235)
                     ),

@@ -137,10 +137,12 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
-        task_data = UserTaskData(task=task, context=_get_context(task))
+        with patch(
+            "zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None
+        ):
+            task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
         self.assertEqual(
-            serializer.data["context"],
             {
                 "assigned_users": {
                     "user_assignees": [],
@@ -156,13 +158,17 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                         ),
                     }
                 ],
+                "id": None,
+                "previously_assigned_users": [],
+                "review_type": KownslTypes.advice,
+                "selected_documents": [],
+                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
                     "toelichting": self.zaak.toelichting,
                 },
-                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
-                "review_type": KownslTypes.advice,
             },
+            serializer.data["context"],
         )
 
     @requests_mock.Mocker()
@@ -173,7 +179,10 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             json=serialize_variable(["group:some-group"]),
         )
-        task_data = UserTaskData(task=task, context=_get_context(task))
+        with patch(
+            "zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None
+        ):
+            task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
         self.assertEqual(
             serializer.data["context"],
@@ -198,12 +207,15 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                         ),
                     }
                 ],
+                "id": None,
+                "previously_assigned_users": [],
+                "review_type": KownslTypes.approval,
+                "selected_documents": [],
+                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
                     "toelichting": self.zaak.toelichting,
                 },
-                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
-                "review_type": KownslTypes.approval,
             },
         )
 
@@ -217,7 +229,10 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             json=serialize_variable(["user:some-user"]),
         )
-        task_data = UserTaskData(task=task, context=_get_context(task))
+        with patch(
+            "zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None
+        ):
+            task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
         self.assertEqual(
             serializer.data["context"],
@@ -247,12 +262,15 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                         ),
                     }
                 ],
+                "id": None,
+                "previously_assigned_users": [],
+                "review_type": KownslTypes.approval,
+                "selected_documents": [],
+                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
                     "toelichting": self.zaak.toelichting,
                 },
-                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
-                "review_type": KownslTypes.approval,
             },
         )
 

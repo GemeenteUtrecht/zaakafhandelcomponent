@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -39,7 +39,7 @@ def create_review_request(
     review_type: str = "advice",
     num_assigned_users: int = 0,
     toelichting: str = "",
-    user_deadlines: Optional[dict] = None,
+    assigned_users: Optional[dict] = None,
 ) -> ReviewRequest:
     client = get_client(user=requester)
     data = {
@@ -48,14 +48,14 @@ def create_review_request(
         "num_assigned_users": num_assigned_users,
         "documents": documents,
         "toelichting": toelichting,
-        "user_deadlines": user_deadlines,
+        "assigned_users": assigned_users,
     }
-    resp = client.create("review_requests", data=data)
-    rr = factory(ReviewRequest, resp)
+    result = client.create("review_requests", data=data)
+    rr = factory(ReviewRequest, result)
 
     # underscoreize in zgw_consumers.api_models.base.factory is messing
     # with the format of the keys in the user_deadlines dictionary
-    rr.user_deadlines = user_deadlines
+    rr.user_deadlines = result["userDeadlines"]
     return rr
 
 
@@ -118,13 +118,19 @@ def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
 
 
 @optional_service
-def lock_review_request(uuid: str, lock_reason: str) -> Optional[ReviewRequest]:
-    client = get_client()
+def partial_update_review_request(
+    uuid: str, data: Dict = dict
+) -> Optional[ReviewRequest]:
+    client = get_client(user=data.get("requester", None))
+
+    if data.get("lock_reason"):
+        data["locked"] = True
+
     try:
         result = client.partial_update(
             "review_requests",
             uuid=uuid,
-            data={"locked": True, "lock_reason": lock_reason},
+            data=data,
         )
     except ClientError:
         raise Http404(

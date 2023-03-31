@@ -13,9 +13,9 @@ NOTIFICATION = {
     "hoofdObject": "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
     "resource": "reviewRequest",
     "resourceUrl": "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
-    "actie": "reviewLocked",
+    "actie": "update",
     "aanmaakdatum": "2020-11-04T15:24:00+00:00",
-    "kenmerken": {},
+    "kenmerken": {"locked": True},
 }
 
 REVIEW_REQUEST = {
@@ -49,6 +49,7 @@ REVIEW_REQUEST = {
 class ReviewLockedTests(APITestCase):
     """
     Test the correct behaviour when reviews are locked.
+
     """
 
     endpoint = reverse_lazy("notifications:kownsl-callback")

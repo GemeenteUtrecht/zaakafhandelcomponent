@@ -24,7 +24,7 @@ from ..api import (
     create_review_request,
     get_client,
     get_review_requests,
-    lock_review_request,
+    partial_update_review_request,
     retrieve_advices,
     retrieve_approvals,
 )
@@ -143,13 +143,15 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         self.assertEqual(str(request.id), REVIEW_REQUEST["id"])
         self.assertEqual(m.last_request.qs["for_zaak"], [ZAAK_URL])
 
-    def test_lock_review_request(self, m):
+    def test_partial_update_review_request(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.patch(
             f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
             json=REVIEW_REQUEST,
         )
-        review_request = lock_review_request(REVIEW_REQUEST["id"], "some-reason")
+        review_request = partial_update_review_request(
+            REVIEW_REQUEST["id"], data={"lock_reason": "some-reason"}
+        )
         self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
         self.assertEqual(
             m.last_request.json(), {"locked": True, "lock_reason": "some-reason"}

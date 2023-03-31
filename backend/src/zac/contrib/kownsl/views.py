@@ -30,13 +30,13 @@ from .api import (
     get_client,
     get_review_request,
     get_review_requests,
-    lock_review_request,
+    partial_update_review_request,
     retrieve_advices,
     retrieve_approvals,
 )
 from .data import ReviewRequest
 from .permissions import (
-    CanReadOrLockReviews,
+    CanReadOrUpdateReviews,
     CanUpdateZakenReviewRequests,
     HasNotReviewed,
     IsReviewRequester,
@@ -45,7 +45,7 @@ from .permissions import (
 )
 from .serializers import (
     KownslReviewRequestSerializer,
-    LockReviewRequestSerializer,
+    UpdateZaakReviewRequestSerializer,
     ZaakRevReqDetailSerializer,
     ZaakRevReqSummarySerializer,
 )
@@ -77,17 +77,22 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         if data["actie"] == "reviewSubmitted":
             self._handle_review_submitted(data)
 
-        if data["actie"] == "reviewLocked":
-            self._handle_review_locked(data)
+        if data["actie"] == "update":
+            self._handle_review_updated(data)
 
     @staticmethod
-    def _handle_review_locked(data: dict):
+    def _handle_review_updated(data: dict):
         review_request = _get_review_request_for_notification(data)
         # End the current process instance gracefully
-        send_message(
-            "cancel-process",
-            [review_request["metadata"]["processInstanceId"]],
-        )
+        if data["kenmerken"].get("locked"):
+            send_message(
+                "cancel-process",
+                [review_request["metadata"]["processInstanceId"]],
+            )
+        if data["kenmerken"].get("updatedAssignedUsers"):
+            send_message(
+                "change-process"[review_request["metadata"]["processInstanceId"]]
+            )
 
     @staticmethod
     def _handle_review_submitted(data: dict):
@@ -251,12 +256,12 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
 
 class ZaakReviewRequestDetailView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated, CanReadOrLockReviews)
+    permission_classes = (permissions.IsAuthenticated, CanReadOrUpdateReviews)
 
     def get_serializer(self, **kwargs):
         mapping = {
             "GET": ZaakRevReqDetailSerializer,
-            "PATCH": LockReviewRequestSerializer,
+            "PATCH": UpdateZaakReviewRequestSerializer,
         }
         return mapping[self.request.method](**kwargs)
 
@@ -318,7 +323,7 @@ class ZaakReviewRequestDetailView(APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary=_("Lock review request."),
+        summary=_("Partially update the review request."),
         responses={
             "200": ZaakRevReqDetailSerializer,
         },
@@ -328,7 +333,16 @@ class ZaakReviewRequestDetailView(APIView):
         self.check_object_permissions(self.request, review_request)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        review_request = lock_review_request(request_uuid, **serializer.validated_data)
+        if serializer.validated_data.get("lock_reason"):
+            review_request = partial_update_review_request(
+                request_uuid, data=serializer.validated_data
+            )
+
+        elif serializer.validated_data.get("update_users"):
+            send_message(
+                "change-process"[review_request["metadata"]["processInstanceId"]]
+            )
+
         review_request = self.get_review_request_metadata(review_request)
         response_serializer = ZaakRevReqDetailSerializer(instance=review_request)
         return Response(response_serializer.data)

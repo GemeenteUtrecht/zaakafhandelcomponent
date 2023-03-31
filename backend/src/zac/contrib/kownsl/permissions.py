@@ -49,7 +49,7 @@ class CanUpdateZakenReviewRequests(CanUpdateZaken):
         return False
 
 
-class CanLockReview(permissions.BasePermission):
+class CanUpdateReview(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, ReviewRequest):
             requester = obj.requester["full_name"] or obj.requester["username"]
@@ -60,12 +60,12 @@ class CanLockReview(permissions.BasePermission):
         return True
 
 
-class CanReadOrLockReviews(BaseConditionalPermission):
+class CanReadOrUpdateReviews(BaseConditionalPermission):
     def get_permission(self, request) -> DefinitionBasePermission:
         if request.method in permissions.SAFE_METHODS:
             return CanReadZaken()
         else:
-            return CanLockReview()
+            return CanUpdateReview()
 
 
 class ReviewIsUnlocked(permissions.BasePermission):

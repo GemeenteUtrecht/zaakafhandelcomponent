@@ -12,3 +12,4 @@ itself.
    backend
    frontend
    apps
+   kownsl

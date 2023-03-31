@@ -232,7 +232,8 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureAdviceRequest"}),
     )
-    def test_get_configure_advice_review_request_context(self, m, gt):
+    @patch("zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None)
+    def test_get_configure_advice_review_request_context(self, m, gt, grr):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -264,7 +265,16 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertEqual(
             sorted(list(data["context"].keys())),
             sorted(
-                ["assignedUsers", "zaakInformatie", "title", "documents", "reviewType"]
+                [
+                    "assignedUsers",
+                    "zaakInformatie",
+                    "title",
+                    "documents",
+                    "reviewType",
+                    "id",
+                    "previouslyAssignedUsers",
+                    "selectedDocuments",
+                ]
             ),
         )
 
@@ -278,7 +288,8 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureApprovalRequest"}),
     )
-    def test_get_configure_approval_review_request_context(self, m, gt):
+    @patch("zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None)
+    def test_get_configure_approval_review_request_context(self, m, gt, grr):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -288,6 +299,7 @@ class GetUserTaskContextViewTests(APITestCase):
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
+
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
@@ -310,7 +322,16 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertEqual(
             sorted(list(data["context"].keys())),
             sorted(
-                ["assignedUsers", "zaakInformatie", "title", "documents", "reviewType"]
+                [
+                    "assignedUsers",
+                    "zaakInformatie",
+                    "title",
+                    "documents",
+                    "reviewType",
+                    "id",
+                    "previouslyAssignedUsers",
+                    "selectedDocuments",
+                ]
             ),
         )
 
