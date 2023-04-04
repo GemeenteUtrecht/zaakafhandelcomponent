@@ -41,6 +41,29 @@ SerializerClsOrInstance = Union[serializers.Serializer, SerializerCls]
 Primitive = Union[str, int, float]
 
 
+class HiddenDiscriminatorField(serializers.HiddenField):
+    """
+    This field checks for the existence of another field.
+    If it exists the value defaults to True, otherwise False.
+
+    """
+
+    related_field = None
+
+    def _field_exists(self) -> bool:
+        return bool(self.parent.initial_data.get(self.get_related_field()))
+
+    def __init__(self, *args, **kwargs):
+        kwargs["default"] = self._field_exists
+        self.related_field = kwargs.pop("related_field", None)
+        super().__init__(*args, **kwargs)
+
+    def get_related_field(self):
+        if not self.related_field:
+            raise ImproperlyConfigured("`related_field` kwarg must be set on field.")
+        return self.related_field
+
+
 class PolymorphicSerializer(serializers.Serializer):
     # mapping of discriminator value to serializer (instance or class)
     serializer_mapping: Optional[Dict[Primitive, SerializerClsOrInstance]] = None
@@ -137,11 +160,15 @@ class PolymorphicSerializer(serializers.Serializer):
 
     def _get_serializer_from_data(self, data):
         field = self.fields[self.discriminator_field]
+
         # for PATCH
         if self.instance:
             discriminator_value = field.get_attribute(self.instance)
         else:
-            discriminator_value = field.get_value(data)
+            if type(field) != HiddenDiscriminatorField:
+                discriminator_value = field.get_value(data)
+            else:
+                discriminator_value = field.get_default()
         serializer = self._discriminator_serializer(discriminator_value)
         return serializer
 

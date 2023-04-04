@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import date
 from unittest.mock import MagicMock, patch
 
@@ -311,7 +312,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "zac.core.api.validators.get_documenten",
             return_value=([cls.document], []),
         )
-        cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
+        rr = deepcopy(REVIEW_REQUEST)
+        rr["documents"] = [cls.document.url]
+        cls.review_request = factory(ReviewRequest, rr)
         cls.patch_create_review_request = patch(
             "zac.contrib.kownsl.camunda.create_review_request",
             return_value=cls.review_request,

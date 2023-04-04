@@ -16,7 +16,7 @@ from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
-from zac.api.polymorphism import PolymorphicSerializer
+from zac.api.polymorphism import HiddenDiscriminatorField, PolymorphicSerializer
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
@@ -173,6 +173,10 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
         help_text=_("A list of previously selected documents."),
         required=False,
     )
+    toelichting = serializers.CharField(
+        help_text=_("A previously given comment regarding the review request."),
+        required=False,
+    )
     zaak_informatie = ZaakInformatieTaskSerializer()
 
     class Meta:
@@ -185,6 +189,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
             "review_type",
             "selected_documents",
             "title",
+            "toelichting",
             "zaak_informatie",
         )
 
@@ -197,55 +202,32 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
 @dataclass
 class ConfigureReviewRequest:
     assigned_users: List[SelectUsersRevReq]
-    selected_documents: List[str]
-    toelichting: str
+    selected_documents: Optional[List[str]] = field(default_factory=list)
+    toelichting: Optional[str] = ""
     id: Optional[str] = None
 
 
-class ConfigureReviewRequestSerializer(APIModelSerializer):
-    """
-    This serializes configure review requests such as
-    advice and approval review requests.
-
-    Must have a ``task`` and ``request`` in its ``context``.
-    """
-
+class BaseConfigureReviewRequestSerializer(APIModelSerializer):
     assigned_users = SelectUsersRevReqSerializer(
-        many=True, help_text=_("Users assigned to review.")
-    )
-    selected_documents = SelectDocumentsField(
-        help_text=_("Supporting documents for the review request.")
+        many=True,
+        help_text=_("Users assigned to review."),
     )
     toelichting = serializers.CharField(
         allow_blank=True, help_text=_("Comment regarding the review request.")
     )
-    id = serializers.UUIDField(
-        allow_null=True,
-        help_text=_("`uuid` of review request if it already exists."),
-        required=False,
-    )
 
     class Meta:
         model = ConfigureReviewRequest
-        fields = (
+        fields = [
             "assigned_users",
-            "selected_documents",
             "toelichting",
-            "id",
-        )
+        ]
 
     def get_zaak_from_context(self):
         zaak_context = get_zaak_context(self.context["task"])
         return zaak_context.zaak
 
-    def validate_assigned_users(self, assigned_users) -> List:
-        """
-        Validate that:
-            assigned users and groups are unique,
-            at least 1 user or group is selected per step, and
-            deadlines monotonically increase per step.
-
-        """
+    def validate_assigned_users(self, assigned_users):
         users_list = []
         groups_list = []
         for data in assigned_users:
@@ -287,8 +269,63 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                     code="invalid-date",
                 )
             deadline_old = deadline_new
-
         return assigned_users
+
+
+class FirstConfigureReviewRequestSerializer(BaseConfigureReviewRequestSerializer):
+    selected_documents = SelectDocumentsField(
+        help_text=_("Supporting documents for the review request."), required=True
+    )
+
+    class Meta:
+        model = BaseConfigureReviewRequestSerializer.Meta.model
+        fields = BaseConfigureReviewRequestSerializer.Meta.fields + [
+            "selected_documents"
+        ]
+
+
+class ReconfigureReviewRequestSerializer(BaseConfigureReviewRequestSerializer):
+    id = serializers.UUIDField(
+        allow_null=True,
+        help_text=_("`uuid` of review request if it already exists."),
+        required=True,
+    )
+
+    class Meta:
+        model = BaseConfigureReviewRequestSerializer.Meta.model
+        fields = BaseConfigureReviewRequestSerializer.Meta.fields + ["id"]
+
+
+class ConfigureReviewRequestSerializer(PolymorphicSerializer, APIModelSerializer):
+    """
+    This serializes configure review requests such as
+    advice and approval review requests.
+
+    Must have a ``task`` and ``request`` in its ``context``.
+
+    """
+
+    serializer_mapping = {
+        False: FirstConfigureReviewRequestSerializer,
+        True: ReconfigureReviewRequestSerializer,
+    }
+    discriminator_field = "update"
+    fallback_distriminator_value = False
+
+    update = HiddenDiscriminatorField(
+        help_text=_(
+            "A boolean flag to indicate if the review request is being updated."
+        ),
+        related_field="id",
+    )
+
+    class Meta:
+        model = ConfigureReviewRequest
+        fields = ("update",)
+
+    def get_zaak_from_context(self):
+        zaak_context = get_zaak_context(self.context["task"])
+        return zaak_context.zaak
 
     def on_task_submission(self) -> None:
         """
@@ -310,7 +347,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 data={
                     "requester": self.context["request"].user,
                     "num_assigned_users": count_users,
-                    "assigned_users": self.validated_data["assigned_users"],
+                    "assigned_users": self.data["assigned_users"],
                 },
             )
         else:
@@ -324,7 +361,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 review_type=review_type,
                 num_assigned_users=count_users,
                 toelichting=self.validated_data["toelichting"],
-                assigned_users=self.validated_data["assigned_users"],
+                assigned_users=self.data["assigned_users"],
             )
         # add permission for advisors to see the zaak-detail page
         add_permissions_for_advisors(self.review_request)
@@ -365,7 +402,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 email_notification_list[user] = data["email_notification"]
 
         return {
-            "kownslDocuments": self.validated_data["selected_documents"],
+            "kownslDocuments": self.review_request.documents,
             "kownslUsersList": kownsl_users_list,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": kownsl_frontend_url,

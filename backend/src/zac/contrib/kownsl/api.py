@@ -121,10 +121,12 @@ def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
 def partial_update_review_request(
     uuid: str, data: Dict = dict
 ) -> Optional[ReviewRequest]:
-    client = get_client(user=data.get("requester", None))
 
     if data.get("lock_reason"):
         data["locked"] = True
+        client = get_client()
+    else:
+        client = get_client(user=data.get("requester", None))
 
     try:
         result = client.partial_update(
