@@ -37,7 +37,6 @@ def create_review_request(
     requester: User,
     documents: List[str],
     review_type: str = "advice",
-    num_assigned_users: int = 0,
     toelichting: str = "",
     assigned_users: Optional[dict] = None,
 ) -> ReviewRequest:
@@ -45,7 +44,6 @@ def create_review_request(
     data = {
         "for_zaak": zaak_url,
         "review_type": review_type,
-        "num_assigned_users": num_assigned_users,
         "documents": documents,
         "toelichting": toelichting,
         "assigned_users": assigned_users,

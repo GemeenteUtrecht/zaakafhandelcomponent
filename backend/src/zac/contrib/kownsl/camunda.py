@@ -334,19 +334,11 @@ class ConfigureReviewRequestSerializer(PolymorphicSerializer, APIModelSerializer
         """
         assert self.is_valid(), "Serializer must be valid"
 
-        count_users = sum(
-            [
-                len(data["user_assignees"] or []) + len(data["group_assignees"] or [])
-                for data in self.validated_data["assigned_users"]
-            ]
-        )
-
         if id := self.validated_data.get("id"):
             self.review_request = partial_update_review_request(
                 id,
                 data={
                     "requester": self.context["request"].user,
-                    "num_assigned_users": count_users,
                     "assigned_users": self.data["assigned_users"],
                 },
             )
@@ -359,7 +351,6 @@ class ConfigureReviewRequestSerializer(PolymorphicSerializer, APIModelSerializer
                 self.context["request"].user,
                 documents=self.validated_data["selected_documents"],
                 review_type=review_type,
-                num_assigned_users=count_users,
                 toelichting=self.validated_data["toelichting"],
                 assigned_users=self.data["assigned_users"],
             )
