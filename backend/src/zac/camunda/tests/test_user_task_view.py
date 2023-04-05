@@ -1,4 +1,5 @@
 import uuid
+from collections import OrderedDict
 from pathlib import Path
 from unittest.mock import patch
 
@@ -232,7 +233,8 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureAdviceRequest"}),
     )
-    def test_get_configure_advice_review_request_context(self, m, gt):
+    @patch("zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None)
+    def test_get_configure_advice_review_request_context(self, m, gt, grr):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -264,7 +266,16 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertEqual(
             sorted(list(data["context"].keys())),
             sorted(
-                ["assignedUsers", "zaakInformatie", "title", "documents", "reviewType"]
+                [
+                    "assignedUsers",
+                    "zaakInformatie",
+                    "title",
+                    "documents",
+                    "reviewType",
+                    "id",
+                    "previouslyAssignedUsers",
+                    "selectedDocuments",
+                ]
             ),
         )
 
@@ -278,7 +289,8 @@ class GetUserTaskContextViewTests(APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureApprovalRequest"}),
     )
-    def test_get_configure_approval_review_request_context(self, m, gt):
+    @patch("zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None)
+    def test_get_configure_approval_review_request_context(self, m, gt, grr):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
@@ -288,6 +300,7 @@ class GetUserTaskContextViewTests(APITestCase):
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
+
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
@@ -310,7 +323,16 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertEqual(
             sorted(list(data["context"].keys())),
             sorted(
-                ["assignedUsers", "zaakInformatie", "title", "documents", "reviewType"]
+                [
+                    "assignedUsers",
+                    "zaakInformatie",
+                    "title",
+                    "documents",
+                    "reviewType",
+                    "id",
+                    "previouslyAssignedUsers",
+                    "selectedDocuments",
+                ]
             ),
         )
 
@@ -749,6 +771,69 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 ):
                     response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
+
+    @freeze_time("1999-12-31T23:59:59Z")
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "zac:configureApprovalRequest"}),
+    )
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
+    def test_put_reconfigure_advice_review_request_user_task(self, m, gt, ct):
+        self._mock_permissions(m)
+        review_request_data = {
+            "id": uuid.uuid4(),
+            "created": "2020-01-01T15:15:22Z",
+            "forZaak": self.zaak.url,
+            "reviewType": KownslTypes.approval,
+            "documents": [self.document],
+            "frontendUrl": "http://some.kownsl.com/frontendurl/",
+            "numAdvices": 0,
+            "numApprovals": 1,
+            "numAssignedUsers": 1,
+            "toelichting": "some-toelichting",
+            "userDeadlines": {},
+            "requester": {
+                "username": "some-henkie",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
+        }
+        review_request = factory(ReviewRequest, review_request_data)
+        users = UserFactory.create_batch(3)
+        payload = {
+            "id": review_request_data["id"],
+            "assignedUsers": [
+                {
+                    "user_assignees": [user.username for user in users],
+                    "group_assignees": [],
+                    "email_notification": False,
+                    "deadline": "2020-01-01",
+                },
+            ],
+            "toelichting": review_request_data["toelichting"],
+        }
+
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            status_code=201,
+        )
+        with patch(
+            "zac.core.camunda.select_documents.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            with patch(
+                "zac.contrib.kownsl.camunda.get_zaak_context",
+                return_value=self.zaak_context,
+            ):
+                with patch(
+                    "zac.contrib.kownsl.camunda.partial_update_review_request",
+                    return_value=review_request,
+                ) as purr:
+                    response = self.client.put(self.task_endpoint, payload)
+
+        self.assertEqual(response.status_code, 204)
+        purr.assert_called_once()
 
     @patch(
         "zac.camunda.api.views.get_task",

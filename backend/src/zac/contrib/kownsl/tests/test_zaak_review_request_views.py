@@ -335,7 +335,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             response = self.client.get(self.endpoint_summary)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_lock_review_request(self, m):
+    def test_update_review_request_lock(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",

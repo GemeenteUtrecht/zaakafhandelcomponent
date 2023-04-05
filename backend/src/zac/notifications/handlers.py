@@ -11,7 +11,7 @@ from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
-from zac.contrib.kownsl.api import get_review_requests, lock_review_request
+from zac.contrib.kownsl.api import get_review_requests, partial_update_review_request
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.cache import (
     invalidate_document_cache,
@@ -136,14 +136,16 @@ class ZakenHandler:
             zaak_document = get_zaak_document(zaak_url)
             was_closed = None if not zaak_document else zaak_document.einddatum
 
-            def _lock_review_request(rr: ReviewRequest):
-                lock_review_request(str(rr.id), "Zaak is gesloten.")
+            def _partial_update_review_request(rr: ReviewRequest):
+                partial_update_review_request(
+                    str(rr.id), data={"lock_reason": "Zaak is gesloten."}
+                )
 
             # lock all review requests related to zaak
             if is_closed and is_closed != was_closed:
                 review_requests = get_review_requests(zaak)
                 with parallel() as executor:
-                    list(executor.map(_lock_review_request, review_requests))
+                    list(executor.map(_partial_update_review_request, review_requests))
 
         # index in ES
         update_zaak_document(zaak)

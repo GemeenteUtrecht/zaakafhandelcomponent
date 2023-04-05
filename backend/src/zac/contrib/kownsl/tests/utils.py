@@ -18,6 +18,20 @@ ZAAK_DOCUMENT = {
 }
 
 REVIEW_REQUEST = {
+    "assignedUsers": [
+        {
+            "deadline": "2022-04-14",
+            "user_assignees": ["some-author"],
+            "group_assignees": [],
+            "email_notification": False,
+        },
+        {
+            "deadline": "2022-04-15",
+            "user_assignees": ["some-other-author"],
+            "group_assignees": [],
+            "email_notification": False,
+        },
+    ],
     "created": "2022-04-14T15:49:09.830235Z",
     "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
     "forZaak": ZAAK_URL,

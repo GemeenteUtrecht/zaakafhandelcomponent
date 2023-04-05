@@ -32,11 +32,18 @@ class KownslReviewRequestSerializer(ProxySerializer):
     zaak = ZaakSerializer()
 
 
-class LockReviewRequestSerializer(APIModelSerializer):
+class UpdateZaakReviewRequestSerializer(APIModelSerializer):
+    update_users = serializers.BooleanField(
+        required=False,
+        help_text=_(
+            "A boolean flag to indicate whether a change of users is requested in the review request."
+        ),
+    )
+
     class Meta:
         model = ReviewRequest
-        fields = ("lock_reason",)
-        extra_kwargs = {"lock_reason": {"allow_blank": False, "required": True}}
+        fields = ("lock_reason", "update_users")
+        extra_kwargs = {"lock_reason": {"allow_blank": False, "required": False}}
 
 
 class ZaakRevReqSummarySerializer(APIModelSerializer):

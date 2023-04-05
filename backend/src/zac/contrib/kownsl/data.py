@@ -48,8 +48,9 @@ class ReviewRequest(Model):
     open_reviews: List[OpenReview] = field(default_factory=list)
     requester: Dict = field(default_factory=dict)
     toelichting: str = ""
-    user_deadlines: Dict = field(default_factory=dict)
-    metadata: Dict = field(default_factory=dict)
+    assigned_users: dict = field(default_factory=dict)
+    user_deadlines: dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
