@@ -232,15 +232,14 @@ def create_zaakinformatieobject_document(
     return ZaakObjectDocument(url=zio.url, informatieobject=zio.informatieobject)
 
 
-def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> None:
+def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> ZaakDocument:
     zaak.zaakinformatieobjecten = get_zaak_informatieobjecten(zaak)
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
     zaak_document.zaakinformatieobjecten = [
         create_zaakinformatieobject_document(zio) for zio in zaak.zaakinformatieobjecten
     ]
     zaak_document.save()
-
-    return
+    return zaak_document
 
 
 ###################################################

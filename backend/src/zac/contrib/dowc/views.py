@@ -13,7 +13,10 @@ from zgw_consumers.api_models.documenten import Document
 
 from zac.api.utils import remote_schema_ref
 from zac.core.api.permissions import CanOpenDocuments
-from zac.core.cache import invalidate_document_cache
+from zac.core.cache import (
+    invalidate_document_other_cache,
+    invalidate_document_url_cache,
+)
 from zac.core.services import find_document, get_document
 
 from .api import create_doc, patch_and_destroy_doc
@@ -69,7 +72,8 @@ class OpenDowcView(APIView):
 
         serializer = self.serializer_class(response)
 
-        invalidate_document_cache(document)
+        invalidate_document_url_cache(document.url)
+        invalidate_document_other_cache(document)
         return Response(serializer.data, status=status_code)
 
 
@@ -104,6 +108,7 @@ class DeleteDowcView(APIView):
         # Invalidate cache if valid response
         if "versionedUrl" in data:
             document = get_document(data["versionedUrl"])
-            invalidate_document_cache(document)
+            invalidate_document_url_cache(document.url)
+            invalidate_document_other_cache(document)
 
         return Response(data, status=status.HTTP_201_CREATED)

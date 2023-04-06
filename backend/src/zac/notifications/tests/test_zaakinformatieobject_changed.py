@@ -1,4 +1,7 @@
+from copy import deepcopy
+
 from django.conf import settings
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 
@@ -21,13 +24,13 @@ from zac.elasticsearch.api import (
     create_informatieobject_document,
     create_related_zaak_document,
     create_zaak_document,
-    create_zaakinformatieobject_document,
     create_zaaktype_document,
+    update_zaakinformatieobjecten_in_zaak_document,
 )
 from zac.elasticsearch.documents import InformatieObjectDocument, ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
-from zgw.models.zrc import Zaak, ZaakInformatieObject
+from zgw.models.zrc import Zaak
 
 from .utils import (
     CATALOGI_ROOT,
@@ -49,6 +52,15 @@ NOTIFICATION_CREATE = {
     "resource": "zaakinformatieobject",
     "resourceUrl": ZAAKINFORMATIEOBJECT,
     "actie": "create",
+    "aanmaakdatum": timezone.now().isoformat(),
+    "kenmerken": {},
+}
+NOTIFICATION_UPDATE = {
+    "kanaal": "zaken",
+    "hoofdObject": ZAAK,
+    "resource": "zaakinformatieobject",
+    "resourceUrl": ZAAKINFORMATIEOBJECT,
+    "actie": "update",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {},
 }
@@ -107,11 +119,11 @@ class ZaakInformatieObjectChangedTests(
         self._setup_mocks(rm)
         mock_resource_get(rm, ZAAKINFORMATIEOBJECT_RESPONSE)
         rm.get(
-            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?informatieobject={INFORMATIEOBJECT}",
             json=[ZAAKINFORMATIEOBJECT_RESPONSE],
         )
         rm.get(
-            f"{ZAKEN_ROOT}zaakinformatieobjecten?informatieobject={INFORMATIEOBJECT}",
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
             json=[ZAAKINFORMATIEOBJECT_RESPONSE],
         )
 
@@ -132,8 +144,8 @@ class ZaakInformatieObjectChangedTests(
 
         path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_CREATE)
-
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
         zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
         self.assertEqual(
             zaak_document.zaakinformatieobjecten,
@@ -167,28 +179,27 @@ class ZaakInformatieObjectChangedTests(
             ],
         )
 
-    def test_zaakinformatieobject_destroyed_in_es(self, rm):
+    def test_zaakinformatieobject_updated_in_es(self, rm):
         self._setup_mocks(rm)
         rm.get(
             f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
-            json=[],
+            json=[ZAAKINFORMATIEOBJECT_RESPONSE],
         )
         rm.get(
             f"{ZAKEN_ROOT}zaakinformatieobjecten?informatieobject={INFORMATIEOBJECT}",
             json=[],
         )
 
-        # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)
+
+        # create zaak document in ES
         zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
         zaak_document = create_zaak_document(zaak)
         zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
-        zaak_document.zaakinformatieobjecten = [
-            create_zaakinformatieobject_document(
-                factory(ZaakInformatieObject, ZAAKINFORMATIEOBJECT_RESPONSE)
-            )
-        ]
         zaak_document.save()
+        self.refresh_index()
+
+        zaak_document = update_zaakinformatieobjecten_in_zaak_document(zaak)
         self.refresh_index()
 
         # Assert zaakobject is connected to it
@@ -208,6 +219,74 @@ class ZaakInformatieObjectChangedTests(
         )
         informatieobject_document.related_zaken = [create_related_zaak_document(zaak)]
         informatieobject_document.save()
+
+        # mock new situation where zio is updated
+        rm.get(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
+            json=[],
+        )
+
+        path = reverse("notifications:callback")
+        response = self.client.post(path, NOTIFICATION_DESTROY)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Assert zaakinformatieobjecten is empty
+        self.refresh_index()
+        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
+        self.assertEqual(zaak_document.zaakinformatieobjecten, [])
+
+        # Assert related_zaken of informatieobject document is empty.
+        informatieobject_document = InformatieObjectDocument.get(
+            id=_get_uuid_from_url(INFORMATIEOBJECT)
+        )
+        self.assertEqual(informatieobject_document.related_zaken, [])
+
+    def test_zaakinformatieobject_destroyed_in_es(self, rm):
+        self._setup_mocks(rm)
+        rm.get(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
+            json=[ZAAKINFORMATIEOBJECT_RESPONSE],
+        )
+        rm.get(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?informatieobject={INFORMATIEOBJECT}",
+            json=[],
+        )
+
+        zaak = factory(Zaak, ZAAK_RESPONSE)
+
+        # create zaak document in ES
+        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
+        zaak_document = create_zaak_document(zaak)
+        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
+        zaak_document.save()
+        self.refresh_index()
+
+        zaak_document = update_zaakinformatieobjecten_in_zaak_document(zaak)
+        self.refresh_index()
+
+        # Assert zaakobject is connected to it
+        self.assertEqual(
+            zaak_document.zaakinformatieobjecten,
+            [
+                {
+                    "url": ZAAKINFORMATIEOBJECT,
+                    "informatieobject": INFORMATIEOBJECT,
+                }
+            ],
+        )
+
+        # create informatieobject document
+        informatieobject_document = create_informatieobject_document(
+            factory(Document, INFORMATIEOBJECT_RESPONSE)
+        )
+        informatieobject_document.related_zaken = [create_related_zaak_document(zaak)]
+        informatieobject_document.save()
+
+        # mock new situation where zio is deleted
+        rm.get(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
+            json=[],
+        )
 
         path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_DESTROY)
