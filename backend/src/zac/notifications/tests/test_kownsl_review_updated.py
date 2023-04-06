@@ -112,7 +112,7 @@ class ReviewUpdatedTests(APITestCase):
             "https://camunda.example.com/engine-rest/message",
         )
         notification = deepcopy(NOTIFICATION)
-        notification["kenmerken"] = {"locked": "true"}
+        notification["kenmerken"] = {"updated_users": "true"}
 
         response = self.client.post(self.endpoint, notification)
 

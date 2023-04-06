@@ -733,23 +733,49 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "toelichting": "some-toelichting",
         }
         review_request_data = {
-            "id": uuid.uuid4(),
-            "created": "2020-01-01T15:15:22Z",
+            "assignedUsers": [
+                {
+                    "deadline": "2020-01-01",
+                    "user_assignees": [user.username for user in users],
+                    "group_assignees": [],
+                    "email_notification": False,
+                },
+            ],
+            "created": "2022-04-14T15:49:09.830235Z",
+            "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
             "forZaak": self.zaak.url,
-            "reviewType": KownslTypes.approval,
-            "documents": [self.document],
-            "frontendUrl": "http://some.kownsl.com/frontendurl/",
-            "numAdvices": 0,
-            "numApprovals": 1,
+            "reviewType": KownslTypes.advice,
+            "documents": [],
+            "frontendUrl": "https://zac.cg-intern.utrecht.nl/ui/kownsl/14aec7a0-06de-4b55-b839-a1c9a0415b46/",
+            "numAdvices": 1,
+            "numApprovals": 0,
             "numAssignedUsers": 1,
+            "openReviews": [
+                {
+                    "deadline": "2022-04-15",
+                    "users": ["user:some-other-author"],
+                    "groups": [],
+                }
+            ],
             "toelichting": "some-toelichting",
-            "userDeadlines": {},
+            "userDeadlines": {
+                "user:some-author": "2022-04-14",
+                "user:some-other-author": "2022-04-15",
+            },
             "requester": {
-                "username": "some-henkie",
+                "username": "some-user",
                 "firstName": "",
                 "lastName": "",
                 "fullName": "",
             },
+            "metadata": {
+                "taskDefinitionId": "submitAdvice",
+                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+            },
+            "zaakDocuments": [],
+            "reviews": [],
+            "locked": False,
+            "lockReason": "",
         }
         review_request = factory(ReviewRequest, review_request_data)
 
@@ -780,37 +806,56 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     def test_put_reconfigure_advice_review_request_user_task(self, m, gt, ct):
         self._mock_permissions(m)
+        users = UserFactory.create_batch(3)
         review_request_data = {
-            "id": uuid.uuid4(),
-            "created": "2020-01-01T15:15:22Z",
+            "assignedUsers": [
+                {
+                    "deadline": "2020-01-01",
+                    "user_assignees": [user.username for user in users],
+                    "group_assignees": [],
+                    "email_notification": False,
+                },
+            ],
+            "created": "2022-04-14T15:49:09.830235Z",
+            "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
             "forZaak": self.zaak.url,
-            "reviewType": KownslTypes.approval,
-            "documents": [self.document],
-            "frontendUrl": "http://some.kownsl.com/frontendurl/",
-            "numAdvices": 0,
-            "numApprovals": 1,
+            "reviewType": KownslTypes.advice,
+            "documents": [],
+            "frontendUrl": "https://zac.cg-intern.utrecht.nl/ui/kownsl/14aec7a0-06de-4b55-b839-a1c9a0415b46/",
+            "numAdvices": 1,
+            "numApprovals": 0,
             "numAssignedUsers": 1,
+            "openReviews": [
+                {
+                    "deadline": "2022-04-15",
+                    "users": ["user:some-other-author"],
+                    "groups": [],
+                }
+            ],
             "toelichting": "some-toelichting",
-            "userDeadlines": {},
+            "userDeadlines": {
+                "user:some-author": "2022-04-14",
+                "user:some-other-author": "2022-04-15",
+            },
             "requester": {
-                "username": "some-henkie",
+                "username": "some-user",
                 "firstName": "",
                 "lastName": "",
                 "fullName": "",
             },
+            "metadata": {
+                "taskDefinitionId": "submitAdvice",
+                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+            },
+            "zaakDocuments": [],
+            "reviews": [],
+            "locked": False,
+            "lockReason": "",
         }
         review_request = factory(ReviewRequest, review_request_data)
-        users = UserFactory.create_batch(3)
         payload = {
             "id": review_request_data["id"],
-            "assignedUsers": [
-                {
-                    "user_assignees": [user.username for user in users],
-                    "group_assignees": [],
-                    "email_notification": False,
-                    "deadline": "2020-01-01",
-                },
-            ],
+            "assignedUsers": review_request_data["assignedUsers"],
             "toelichting": review_request_data["toelichting"],
         }
 

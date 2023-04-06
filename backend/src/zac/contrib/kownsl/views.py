@@ -89,7 +89,7 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
                 "cancel-process",
                 [review_request["metadata"]["processInstanceId"]],
             )
-        if data["kenmerken"].get("updatedAssignedUsers"):
+        if data["kenmerken"].get("updated_users"):
             send_message(
                 "change-process", [review_request["metadata"]["processInstanceId"]]
             )

@@ -14,7 +14,7 @@ from zac.core.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.core.api.serializers import ZaakSerializer
 
 from .constants import KownslTypes
-from .data import Advice, AdviceDocument, Approval, Author, ReviewRequest
+from .data import Advice, AdviceDocument, Approval, Author, OpenReview, ReviewRequest
 
 
 class KownslReviewRequestSerializer(ProxySerializer):
@@ -171,7 +171,7 @@ class ApprovalReviewsSerializer(serializers.Serializer):
     approvals = ApprovalSerializer(many=True)
 
 
-class OpenReviewSerializer(serializers.Serializer):
+class OpenReviewSerializer(APIModelSerializer):
     deadline = serializers.DateField(
         help_text=_("Deadline date of open review request."), required=True
     )
@@ -182,7 +182,6 @@ class OpenReviewSerializer(serializers.Serializer):
         required=True,
         help_text=_("`username` of the user assigned to review."),
         allow_null=True,
-        source="_users",
     )
     groups = GroupSlugRelatedField(
         many=True,
@@ -191,8 +190,15 @@ class OpenReviewSerializer(serializers.Serializer):
         required=True,
         help_text=_("`name` of the group assigned to review."),
         allow_null=True,
-        source="_groups",
     )
+
+    class Meta:
+        model = OpenReview
+        fields = (
+            "deadline",
+            "users",
+            "groups",
+        )
 
 
 class ZaakRevReqDetailSerializer(PolymorphicSerializer):
