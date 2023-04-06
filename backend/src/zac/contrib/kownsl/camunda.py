@@ -1,7 +1,5 @@
-from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Dict, List, Optional, Union
-from uuid import UUID
 
 from django.conf import settings
 from django.contrib.auth.models import Group
@@ -12,44 +10,33 @@ from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
 from zac.api.polymorphism import HiddenDiscriminatorField, PolymorphicSerializer
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
-from zac.camunda.user_tasks import Context, register, usertask_context_serializer
+from zac.camunda.user_tasks import register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.contrib.kownsl.api import get_review_request
-from zac.core.api.fields import SelectDocumentsField
+from zac.core.api.fields import (
+    GroupSlugRelatedField,
+    SelectDocumentsField,
+    UserSlugRelatedField,
+)
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
 from .api import create_review_request, partial_update_review_request
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
-from .data import ReviewRequest
-
-
-@dataclass
-class UsersRevReq:
-    user_assignees: List[Optional[User]]
-    group_assignees: List[Optional[Group]]
-
-
-@dataclass
-class AdviceApprovalContext(Context):
-    title: str
-    zaak_informatie: Zaak
-    documents: List[Document]
-    review_type: str
-    assigned_users: UsersRevReq
-    id: Optional[UUID] = None
-    selected_documents: list = field(default_factory=list)
-    previously_assigned_users: list = field(default_factory=list)
-    update: bool = False
+from .data import (
+    AdviceApprovalContext,
+    ConfigureReviewRequest,
+    ReviewRequest,
+    SelectUsersRevReq,
+)
 
 
 class ZaakInformatieTaskSerializer(APIModelSerializer):
@@ -80,53 +67,25 @@ class UsersRevReqSerializer(APIModelSerializer):
 
     """
 
-    user_assignees = UserSerializer(many=True)
-    group_assignees = GroupSerializer(many=True)
-
-    class Meta:
-        model = UsersRevReq
-        fields = (
-            "user_assignees",
-            "group_assignees",
-        )
-
-
-@dataclass
-class SelectUsersRevReq(UsersRevReq):
-    deadline: date
-    email_notification: bool = False
-
-
-class SelectUsersRevReqSerializer(APIModelSerializer):
-    """
-    Select users or groups and assign deadlines to those users in the configuration of
-    review requests such as the advice and approval review requests.
-
-    """
-
-    user_assignees = serializers.SlugRelatedField(
+    user_assignees = UserSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
-        help_text=_("Users assigned to the review request."),
+        help_text=_(
+            "Users assigned to the review request from within the camunda process."
+        ),
         many=True,
         allow_null=True,
         required=True,
     )
-    group_assignees = serializers.SlugRelatedField(
+    group_assignees = GroupSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
-        help_text=_("Groups assigned to the review request."),
+        help_text=_(
+            "Groups assigned to the review request from within the camunda process."
+        ),
         many=True,
         allow_null=True,
         required=True,
-    )
-    email_notification = serializers.BooleanField(
-        default=False,
-        help_text=_("Send an email notification about the review request."),
-    )
-    deadline = serializers.DateField(
-        input_formats=["%Y-%m-%d"],
-        help_text=_("On this date the review must be submitted."),
     )
 
     class Meta:
@@ -134,8 +93,6 @@ class SelectUsersRevReqSerializer(APIModelSerializer):
         fields = [
             "user_assignees",
             "group_assignees",
-            "email_notification",
-            "deadline",
         ]
 
     def validate_user_assignees(self, user_assignees):
@@ -147,6 +104,30 @@ class SelectUsersRevReqSerializer(APIModelSerializer):
         if len(group_assignees) > len(set(group_assignees)):
             raise serializers.ValidationError("Assigned groups need to be unique.")
         return group_assignees
+
+
+class SelectUsersRevReqSerializer(UsersRevReqSerializer):
+    """
+    Select users or groups and assign deadlines to those users in the configuration of
+    review requests such as the advice and approval review requests.
+
+    """
+
+    email_notification = serializers.BooleanField(
+        default=False,
+        help_text=_("Send an email notification about the review request."),
+    )
+    deadline = serializers.DateField(
+        input_formats=["%Y-%m-%d"],
+        help_text=_("On this date the review must be submitted."),
+    )
+
+    class Meta:
+        model = UsersRevReqSerializer.Meta.model
+        fields = UsersRevReqSerializer.Meta.fields + [
+            "email_notification",
+            "deadline",
+        ]
 
     def validate(self, attrs):
         if not attrs["group_assignees"] and not attrs["user_assignees"]:
@@ -197,14 +178,6 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
 #
 # Write serializers
 #
-
-
-@dataclass
-class ConfigureReviewRequest:
-    assigned_users: List[SelectUsersRevReq]
-    selected_documents: Optional[List[str]] = field(default_factory=list)
-    toelichting: Optional[str] = ""
-    id: Optional[str] = None
 
 
 class BaseConfigureReviewRequestSerializer(APIModelSerializer):

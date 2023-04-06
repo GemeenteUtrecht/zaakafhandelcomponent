@@ -13,6 +13,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.User"
+        django_get_or_create = ("username",)
 
 
 class GroupFactory(factory.django.DjangoModelFactory):

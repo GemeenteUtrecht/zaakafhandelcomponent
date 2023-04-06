@@ -79,11 +79,14 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             status_code=201,
         )
         user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        self.assertEqual(User.objects.count(), 1)
         review_request = create_review_request(
             ZAAK_URL,
             user,
             documents=["https://doc.nl/123"],
         )
+        # side effect: users created
+        self.assertEqual(User.objects.count(), 3)
 
         self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
         self.assertEqual(review_request.for_zaak, ZAAK_URL)
@@ -92,6 +95,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
     def test_retrieve_advices(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         review_request = factory(ReviewRequest, REVIEW_REQUEST)
+
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests/{review_request.id}/advices",
             json=[ADVICE],
@@ -100,11 +104,6 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         self.assertEqual(len(advices), 1)
         advice = advices[0]
         self.assertEqual(advice.advice, ADVICE["advice"])
-        self.assertEqual(User.objects.count(), 0)
-        # side effect: user created
-        advice.author.user
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, "some-author")
 
     def test_retrieve_approvals(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
@@ -117,6 +116,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                 "numApprovals": 1,
             },
         )
+
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests/{review_request.id}/approvals",
             json=[APPROVAL],
@@ -125,12 +125,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         self.assertEqual(len(approvals), 1)
         approval = approvals[0]
         self.assertEqual(approval.approved, True)
-        self.assertEqual(User.objects.count(), 0)
         self.assertEqual(approval.toelichting, APPROVAL["toelichting"])
-        # side effect: user created
-        approval.author.user
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, "some-author")
 
     def test_get_review_requests(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
