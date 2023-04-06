@@ -5620,7 +5620,7 @@ components:
         assignedUsers:
           type: array
           items:
-            $ref: '#/components/schemas/SelectUsersRevReqRequest'
+            $ref: '#/components/schemas/AssignedUsersRequest'
         selectedDocuments:
           type: array
           items:
@@ -8708,7 +8708,7 @@ components:
       - catalogus
       - omschrijving
       title: SearchZaaktypeRequest
-    SelectUsersRevReqRequest:
+    AssignedUsersRequest:
       type: object
       description: |-
         Select users or groups and assign deadlines to those users in the configuration of
@@ -8738,7 +8738,7 @@ components:
       - deadline
       - groupAssignees
       - userAssignees
-      title: SelectUsersRevReqRequest
+      title: AssignedUsersRequest
     SelectedDocumentRequest:
       type: object
       properties:

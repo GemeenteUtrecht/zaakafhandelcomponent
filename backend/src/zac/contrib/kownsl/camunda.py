@@ -33,9 +33,9 @@ from .api import create_review_request, partial_update_review_request
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
 from .data import (
     AdviceApprovalContext,
+    AssignedUsers,
     ConfigureReviewRequest,
     ReviewRequest,
-    SelectUsersRevReq,
 )
 
 
@@ -61,9 +61,10 @@ class DocumentUserTaskSerializer(APIModelSerializer):
         )
 
 
-class UsersRevReqSerializer(APIModelSerializer):
+class CamundaAssignedUsersSerializer(APIModelSerializer):
     """
-    Allows users or groups to be assigned from within the camunda process.
+    Select users or groups and assign deadlines to those users in the configuration of
+    review requests such as the advice and approval review requests.
 
     """
 
@@ -89,10 +90,56 @@ class UsersRevReqSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = SelectUsersRevReq
+        model = AssignedUsers
         fields = [
             "user_assignees",
             "group_assignees",
+        ]
+
+
+class WriteAssignedUsersSerializer(APIModelSerializer):
+    """
+    Select users or groups and assign deadlines to those users in the configuration of
+    review requests such as the advice and approval review requests.
+
+    """
+
+    user_assignees = serializers.SlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_(
+            "Users assigned to the review request from within the camunda process."
+        ),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    group_assignees = serializers.SlugRelatedField(
+        slug_field="name",
+        queryset=Group.objects.all(),
+        help_text=_(
+            "Groups assigned to the review request from within the camunda process."
+        ),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    email_notification = serializers.BooleanField(
+        default=True,
+        help_text=_("Send an email notification about the review request."),
+    )
+    deadline = serializers.DateField(
+        input_formats=["%Y-%m-%d"],
+        help_text=_("On this date the review must be submitted."),
+    )
+
+    class Meta:
+        model = AssignedUsers
+        fields = [
+            "user_assignees",
+            "group_assignees",
+            "email_notification",
+            "deadline",
         ]
 
     def validate_user_assignees(self, user_assignees):
@@ -105,30 +152,6 @@ class UsersRevReqSerializer(APIModelSerializer):
             raise serializers.ValidationError("Assigned groups need to be unique.")
         return group_assignees
 
-
-class SelectUsersRevReqSerializer(UsersRevReqSerializer):
-    """
-    Select users or groups and assign deadlines to those users in the configuration of
-    review requests such as the advice and approval review requests.
-
-    """
-
-    email_notification = serializers.BooleanField(
-        default=False,
-        help_text=_("Send an email notification about the review request."),
-    )
-    deadline = serializers.DateField(
-        input_formats=["%Y-%m-%d"],
-        help_text=_("On this date the review must be submitted."),
-    )
-
-    class Meta:
-        model = UsersRevReqSerializer.Meta.model
-        fields = UsersRevReqSerializer.Meta.fields + [
-            "email_notification",
-            "deadline",
-        ]
-
     def validate(self, attrs):
         if not attrs["group_assignees"] and not attrs["user_assignees"]:
             raise serializers.ValidationError(
@@ -137,13 +160,46 @@ class SelectUsersRevReqSerializer(UsersRevReqSerializer):
         return attrs
 
 
+class ReadAssignedUsersSerializer(WriteAssignedUsersSerializer):
+    """
+    Select users or groups and assign deadlines to those users in the configuration of
+    review requests such as the advice and approval review requests.
+
+    """
+
+    user_assignees = UserSlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_(
+            "Users assigned to the review request from within the camunda process."
+        ),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    group_assignees = GroupSlugRelatedField(
+        slug_field="name",
+        queryset=Group.objects.all(),
+        help_text=_(
+            "Groups assigned to the review request from within the camunda process."
+        ),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+
+    class Meta:
+        model = WriteAssignedUsersSerializer.Meta.model
+        fields = WriteAssignedUsersSerializer.Meta.fields
+
+
 @usertask_context_serializer
 class AdviceApprovalContextSerializer(APIModelSerializer):
-    assigned_users = UsersRevReqSerializer(
+    camunda_assigned_users = CamundaAssignedUsersSerializer(
         help_text=_("Users or groups assigned from within the camunda process.")
     )
     documents = DocumentUserTaskSerializer(many=True)
-    previously_assigned_users = SelectUsersRevReqSerializer(
+    previously_assigned_users = ReadAssignedUsersSerializer(
         help_text=_("A list of previously assigned users"), many=True, required=False
     )
     review_type = serializers.ChoiceField(
@@ -163,7 +219,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
     class Meta:
         model = AdviceApprovalContext
         fields = (
-            "assigned_users",
+            "camunda_assigned_users",
             "documents",
             "id",
             "previously_assigned_users",
@@ -181,7 +237,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
 
 
 class BaseConfigureReviewRequestSerializer(APIModelSerializer):
-    assigned_users = SelectUsersRevReqSerializer(
+    assigned_users = WriteAssignedUsersSerializer(
         many=True,
         help_text=_("Users assigned to review."),
     )
@@ -397,7 +453,7 @@ def get_review_request_from_task(task: Task) -> Optional[ReviewRequest]:
 def get_review_context(task: Task) -> AdviceApprovalContext:
     zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
     context = {
-        "assigned_users": get_camunda_assigned_users(task),
+        "camunda_assigned_users": get_camunda_assigned_users(task),
         "documents": zaak_context.documents,
         "title": f"{zaak_context.zaaktype.omschrijving} - {zaak_context.zaaktype.versiedatum}",
         "zaak_informatie": zaak_context.zaak,

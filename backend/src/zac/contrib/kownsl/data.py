@@ -105,7 +105,7 @@ class Approval(Model):
 
 
 @dataclass
-class SelectUsersRevReq(Model):
+class AssignedUsers(Model):
     deadline: date
     user_assignees: List[str]
     group_assignees: List[str]
@@ -152,7 +152,7 @@ class SelectUsersRevReq(Model):
 
 @dataclass
 class ConfigureReviewRequest:
-    assigned_users: List[SelectUsersRevReq]
+    assigned_users: List[AssignedUsers]
     selected_documents: Optional[List[str]] = field(default_factory=list)
     toelichting: Optional[str] = ""
     id: Optional[str] = None
@@ -164,7 +164,7 @@ class AdviceApprovalContext(Context):
     zaak_informatie: Zaak
     documents: List[Document]
     review_type: str
-    assigned_users: SelectUsersRevReq
+    camunda_assigned_users: AssignedUsers
     id: Optional[UUID] = None
     selected_documents: list = field(default_factory=list)
     previously_assigned_users: list = field(default_factory=list)
@@ -187,7 +187,7 @@ class ReviewRequest(Model):
     open_reviews: List[OpenReview] = field(default_factory=list)
     requester: Dict = field(default_factory=dict)
     toelichting: str = ""
-    assigned_users: List[SelectUsersRevReq] = field(default_factory=list)
+    assigned_users: List[AssignedUsers] = field(default_factory=list)
     user_deadlines: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
 
