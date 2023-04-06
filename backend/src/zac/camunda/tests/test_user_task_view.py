@@ -267,7 +267,7 @@ class GetUserTaskContextViewTests(APITestCase):
             sorted(list(data["context"].keys())),
             sorted(
                 [
-                    "assignedUsers",
+                    "camundaAssignedUsers",
                     "zaakInformatie",
                     "title",
                     "documents",
@@ -324,7 +324,7 @@ class GetUserTaskContextViewTests(APITestCase):
             sorted(list(data["context"].keys())),
             sorted(
                 [
-                    "assignedUsers",
+                    "camundaAssignedUsers",
                     "zaakInformatie",
                     "title",
                     "documents",

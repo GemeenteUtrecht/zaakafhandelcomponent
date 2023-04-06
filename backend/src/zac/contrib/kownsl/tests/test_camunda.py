@@ -28,7 +28,7 @@ from zgw.models.zrc import Zaak
 from ..camunda import (
     AdviceApprovalContextSerializer,
     ConfigureReviewRequestSerializer,
-    SelectUsersRevReqSerializer,
+    WriteAssignedUsersSerializer,
     ZaakInformatieTaskSerializer,
 )
 from .utils import DOCUMENT_URL, DOCUMENTS_ROOT, REVIEW_REQUEST, ZAAK_URL, ZAKEN_ROOT
@@ -145,7 +145,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
         serializer = AdviceApprovalContextSerializer(instance=task_data)
         self.assertEqual(
             {
-                "assigned_users": {
+                "camunda_assigned_users": {
                     "user_assignees": [],
                     "group_assignees": [],
                 },
@@ -188,7 +188,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
         self.assertEqual(
             serializer.data["context"],
             {
-                "assigned_users": {
+                "camunda_assigned_users": {
                     "user_assignees": [],
                     "group_assignees": [
                         {
@@ -238,7 +238,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
         self.assertEqual(
             serializer.data["context"],
             {
-                "assigned_users": {
+                "camunda_assigned_users": {
                     "user_assignees": [
                         {
                             "username": "some-user",
@@ -347,7 +347,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = SelectUsersRevReqSerializer(data=payload)
+        serializer = WriteAssignedUsersSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
         self.assertEqual(
             sorted(list(serializer.validated_data.keys())),
@@ -373,7 +373,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = SelectUsersRevReqSerializer(data=payload)
+        serializer = WriteAssignedUsersSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError, "Assigned users need to be unique."
         ):
@@ -387,7 +387,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = SelectUsersRevReqSerializer(data=payload)
+        serializer = WriteAssignedUsersSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError, "Assigned groups need to be unique."
         ):
@@ -401,7 +401,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "01-01-2010",
         }
-        serializer = SelectUsersRevReqSerializer(data=payload)
+        serializer = WriteAssignedUsersSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError,
             "Date heeft het verkeerde formaat, gebruik 1 van deze formaten: YYYY-MM-DD.",
