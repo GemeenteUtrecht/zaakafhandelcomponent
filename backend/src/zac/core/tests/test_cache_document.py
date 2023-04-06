@@ -183,8 +183,8 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(result.inhoud, document["inhoud"])
 
         # Clear cache and see if we get the latest inhoud
-        invalidate_document_url_cache(document.url)
-        invalidate_document_other_cache(document)
+        invalidate_document_url_cache(document["url"])
+        invalidate_document_other_cache(factory(Document, document))
         result = find_document("123456782", "DOC-2020-007")
         self.assertEqual(result.inhoud, document_2["inhoud"])
 
