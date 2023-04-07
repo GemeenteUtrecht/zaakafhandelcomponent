@@ -49,7 +49,12 @@ from zgw.models.zrc import ZaakInformatieObject
 
 from .api.data import AuditTrailData
 from .api.utils import convert_eigenschap_spec_to_json_schema
-from .cache import invalidate_document_cache, invalidate_zaak_cache
+from .cache import (
+    cache_document,
+    invalidate_document_other_cache,
+    invalidate_document_url_cache,
+    invalidate_zaak_cache,
+)
 from .models import CoreConfig
 from .rollen import Rol
 
@@ -791,7 +796,7 @@ def get_related_zaken(zaak: Zaak) -> List[Tuple[str, Zaak]]:
     return results
 
 
-@cache_result("get_zaak_objecten:{zaak.url}", timeout=AN_HOUR)
+@cache_result("zaak_objecten:{zaak.url}", timeout=AN_HOUR)
 def get_zaakobjecten(zaak: Zaak) -> List[ZaakObject]:
     client = _client_from_url(zaak.url)
 
@@ -1005,37 +1010,6 @@ def get_rollen_all(**query_params) -> List[Rol]:
 ###################################################
 
 
-def cache_document(
-    url: str,
-    response: Response,
-    timeout: Optional[float] = AN_HOUR / 2,
-):
-    if response.status_code == 200:
-        document = factory(Document, response.json())
-        document_furl = furl(url)
-        versie = document_furl.args.get("versie")
-
-        cache_key = (
-            f"document:{document.bronorganisatie}:{document.identificatie}:{versie}"
-        )
-        if cache_key not in cache:
-            cache.set(cache_key, document, timeout=timeout)
-
-        cache_key_url = f"document:{url}"
-        if cache_key_url not in cache:
-            cache.set(cache_key_url, response, timeout=timeout)
-
-        if not versie:
-            cache_key_versie = f"document:{document.bronorganisatie}:{document.identificatie}:{document.versie}"
-            if cache_key_versie not in cache:
-                cache.set(cache_key_versie, document, timeout=AN_HOUR / 2)
-
-            document_furl.args["versie"] = document.versie
-            cache_key_version_url = f"document:{document_furl.url}"
-            if cache_key_version_url not in cache:
-                cache.set(cache_key_version_url, response, timeout=A_DAY)
-
-
 def _fetch_document(url: str) -> Response:
     """
     Retrieve document by URL from DRC or cache.
@@ -1050,18 +1024,9 @@ def _fetch_document(url: str) -> Response:
     return response
 
 
-def fetch_documents(
-    zios: list, doc_versions: Optional[Dict[str, int]] = None
-) -> Tuple[List[Document], List[str]]:
-    doc_versions = doc_versions or {}
-    document_urls = []
-    for zio in zios:
-        document_furl = furl(zio)
-        if zio in doc_versions:
-            document_furl.args["versie"] = doc_versions[zio]
-        document_urls.append(document_furl.url)
+def fetch_documents(zios: List[str]) -> Tuple[List[Document], List[str]]:
     with parallel() as executor:
-        responses = executor.map(lambda url: _fetch_document(url), document_urls)
+        responses = executor.map(lambda url: _fetch_document(url), zios)
     documenten = []
     gone = []
     for response, zio in zip(responses, zios):
@@ -1111,9 +1076,7 @@ def resolve_documenten_informatieobjecttypen(
     return documents
 
 
-def get_documenten(
-    zaak: Zaak, doc_versions: Optional[Dict[str, int]] = None
-) -> Tuple[List[Document], List[str]]:
+def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
     logger.debug("Retrieving documents linked to zaak %r", zaak)
 
     # get zaakinformatieobjecten
@@ -1124,7 +1087,7 @@ def get_documenten(
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
 
     # Add version to zio_url if found in doc_versions
-    found, gone = fetch_documents(zios, doc_versions)
+    found, gone = fetch_documents(zios)
     return found, gone
 
 
@@ -1242,7 +1205,8 @@ def update_document(url: str, data: dict, audit_line: str) -> Document:
         json={"lock": lock},
     )
     # invalid cache
-    invalidate_document_cache(document)
+    invalidate_document_url_cache(document.url)
+    invalidate_document_other_cache(document)
 
     # refresh new state
     document = get_document(document.url)

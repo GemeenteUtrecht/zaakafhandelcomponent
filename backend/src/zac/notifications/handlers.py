@@ -14,7 +14,7 @@ from zac.contrib.board.models import BoardItem
 from zac.contrib.kownsl.api import get_review_requests, partial_update_review_request
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.cache import (
-    invalidate_document_cache,
+    invalidate_document_other_cache,
     invalidate_document_url_cache,
     invalidate_fetch_object_cache,
     invalidate_informatieobjecttypen_cache,
@@ -101,6 +101,10 @@ class ZakenHandler:
         elif data["resource"] == "zaakinformatieobject":
             if data["actie"] == "create":
                 self._handle_zaakinformatieobject_create(
+                    data["hoofd_object"], data["resource_url"]
+                )
+            elif data["actie"] == "update":
+                self._handle_zaakinformatieobject_update(
                     data["hoofd_object"], data["resource_url"]
                 )
             elif data["actie"] == "destroy":
@@ -255,7 +259,20 @@ class ZakenHandler:
         self, zaak_url: str, zaakinformatieobject_url: str
     ):
         zaak = self._retrieve_zaak(zaak_url)
-        # No need to invalidate cache as zaakinformatieobjecten aren't cached?
+
+        # update zaken index
+        update_zaakinformatieobjecten_in_zaak_document(zaak)
+
+        # update related_zaken in informatieobjecten index
+        zaakinformatieobject = fetch_zaak_informatieobject(zaakinformatieobject_url)
+        update_related_zaken_in_informatieobject_document(
+            zaakinformatieobject.informatieobject
+        )
+
+    def _handle_zaakinformatieobject_update(
+        self, zaak_url: str, zaakinformatieobject_url: str
+    ):
+        zaak = self._retrieve_zaak(zaak_url)
 
         # update zaken index
         update_zaakinformatieobjecten_in_zaak_document(zaak)
@@ -270,7 +287,6 @@ class ZakenHandler:
         self, zaak_url: str, zaakinformatieobject_url: str
     ):
         zaak = self._retrieve_zaak(zaak_url)
-        # No need to invalidate cache as zaakinformatieobjecten aren't cached?
 
         # Get zaakobject from ZaakDocument
         zaakdocument = ZaakDocument.get(id=zaak.uuid)
@@ -320,11 +336,11 @@ class ObjectenHandler:
 class InformatieObjectenHandler:
     # We dont update related_zaken here - the notification from open zaak takes care of that.
     def handle(self, data: dict) -> None:
-        if data["resource"] == "documenten":
+        if data["resource"] == "enkelvoudiginformatieobject":
             if data["actie"] in ["create", "update", "partial_update"]:
+                invalidate_document_url_cache(data["hoofd_object"])
                 document = get_document(data["hoofd_object"])
-                invalidate_document_cache(document)
-                document = get_document(data["hoofd_object"])
+                invalidate_document_other_cache(document)
                 update_informatieobject_document(document)
 
             elif data["actie"] == "destroy":

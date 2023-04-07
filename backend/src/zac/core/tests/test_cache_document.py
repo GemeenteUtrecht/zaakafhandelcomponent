@@ -11,7 +11,10 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.core.cache import invalidate_document_cache
+from zac.core.cache import (
+    invalidate_document_other_cache,
+    invalidate_document_url_cache,
+)
 from zac.core.services import _fetch_document, find_document, get_document
 from zac.core.tests.utils import ClearCachesMixin
 
@@ -97,7 +100,8 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         )
 
         # Clear cache for document
-        invalidate_document_cache(document)
+        invalidate_document_url_cache(document.url)
+        invalidate_document_other_cache(document)
 
         # Cache got cleared
         self.assertFalse(cache.get(f"document:{document_url}"))
@@ -179,7 +183,8 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(result.inhoud, document["inhoud"])
 
         # Clear cache and see if we get the latest inhoud
-        invalidate_document_cache(factory(Document, document))
+        invalidate_document_url_cache(document["url"])
+        invalidate_document_other_cache(factory(Document, document))
         result = find_document("123456782", "DOC-2020-007")
         self.assertEqual(result.inhoud, document_2["inhoud"])
 
