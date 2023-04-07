@@ -162,7 +162,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.advice,
-                "selected_documents": [],
+                "previously_selected_documents": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
@@ -211,7 +211,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
-                "selected_documents": [],
+                "previously_selected_documents": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
@@ -266,7 +266,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
-                "selected_documents": [],
+                "previously_selected_documents": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,

@@ -166,7 +166,7 @@ class AdviceApprovalContext(Context):
     review_type: str
     camunda_assigned_users: AssignedUsers
     id: Optional[UUID] = None
-    selected_documents: list = field(default_factory=list)
+    previously_selected_documents: list = field(default_factory=list)
     previously_assigned_users: list = field(default_factory=list)
     update: bool = False
 
