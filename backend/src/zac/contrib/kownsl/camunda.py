@@ -205,7 +205,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
     review_type = serializers.ChoiceField(
         choices=KownslTypes.choices,
     )
-    selected_documents = serializers.ListField(
+    previously_selected_documents = serializers.ListField(
         child=serializers.URLField(required=False),
         help_text=_("A list of previously selected documents."),
         required=False,
@@ -224,7 +224,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
             "id",
             "previously_assigned_users",
             "review_type",
-            "selected_documents",
+            "previously_selected_documents",
             "title",
             "toelichting",
             "zaak_informatie",
@@ -460,11 +460,12 @@ def get_review_context(task: Task) -> AdviceApprovalContext:
     }
 
     if rr := get_review_request_from_task(task):
+        context["id"] = rr.id
         context["documents"] = [
             doc for doc in zaak_context.documents if doc.url in rr.documents
         ]
         context["previously_assigned_users"] = rr.assigned_users
-        context["selected_documents"] = rr.documents
+        context["previously_selected_documents"] = rr.documents
 
     return context
 

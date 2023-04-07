@@ -274,7 +274,7 @@ class GetUserTaskContextViewTests(APITestCase):
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
-                    "selectedDocuments",
+                    "previouslySelectedDocuments",
                 ]
             ),
         )
@@ -331,7 +331,7 @@ class GetUserTaskContextViewTests(APITestCase):
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
-                    "selectedDocuments",
+                    "previouslySelectedDocuments",
                 ]
             ),
         )
@@ -344,6 +344,146 @@ class GetUserTaskContextViewTests(APITestCase):
         self.assertEqual(
             sorted(list(data["context"]["documents"][0].keys())),
             sorted(["beschrijving", "bestandsnaam", "readUrl", "url"]),
+        )
+
+    @freeze_time("1999-12-31T23:59:59Z")
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(**{"formKey": "zac:configureAdviceRequest"}),
+    )
+    @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
+    def test_get_reconfigure_advice_review_request_user_task(self, m, gt, ct):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaakproces_usertasks.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.catalogus,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        users = UserFactory.create_batch(3)
+        review_request_data = {
+            "assignedUsers": [
+                {
+                    "deadline": "2020-01-01",
+                    "user_assignees": [user.username for user in users],
+                    "group_assignees": [],
+                    "email_notification": False,
+                },
+            ],
+            "created": "2022-04-14T15:49:09.830235Z",
+            "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
+            "forZaak": self.zaak.url,
+            "reviewType": KownslTypes.advice,
+            "documents": [],
+            "frontendUrl": "https://zac.cg-intern.utrecht.nl/ui/kownsl/14aec7a0-06de-4b55-b839-a1c9a0415b46/",
+            "numAdvices": 1,
+            "numApprovals": 0,
+            "numAssignedUsers": 1,
+            "openReviews": [
+                {
+                    "deadline": "2022-04-15",
+                    "users": ["user:some-other-author"],
+                    "groups": [],
+                }
+            ],
+            "toelichting": "some-toelichting",
+            "userDeadlines": {
+                "user:some-author": "2022-04-14",
+                "user:some-other-author": "2022-04-15",
+            },
+            "requester": {
+                "username": "some-user",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
+            "metadata": {
+                "taskDefinitionId": "submitAdvice",
+                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+            },
+            "zaakDocuments": [],
+            "reviews": [],
+            "locked": False,
+            "lockReason": "",
+        }
+        review_request = factory(ReviewRequest, review_request_data)
+        m.get(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            status_code=404,
+        )
+        with patch(
+            "zac.contrib.kownsl.camunda.get_zaak_context",
+            return_value=self.zaak_context,
+        ):
+            with patch(
+                "zac.contrib.kownsl.camunda.get_review_request_from_task",
+                return_value=review_request,
+            ):
+                response = self.client.get(self.task_endpoint)
+
+        data = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            data["context"],
+            {
+                "camundaAssignedUsers": {"userAssignees": [], "groupAssignees": []},
+                "documents": [],
+                "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
+                "previouslyAssignedUsers": [
+                    {
+                        "userAssignees": [
+                            {
+                                "id": users[0].id,
+                                "username": users[0].username,
+                                "firstName": "",
+                                "fullName": users[0].get_full_name(),
+                                "lastName": "",
+                                "isStaff": False,
+                                "email": users[0].email,
+                                "groups": [],
+                            },
+                            {
+                                "id": users[1].id,
+                                "username": users[1].username,
+                                "firstName": "",
+                                "fullName": users[1].get_full_name(),
+                                "lastName": "",
+                                "isStaff": False,
+                                "email": users[1].email,
+                                "groups": [],
+                            },
+                            {
+                                "id": users[2].id,
+                                "username": users[2].username,
+                                "firstName": "",
+                                "fullName": users[2].get_full_name(),
+                                "lastName": "",
+                                "isStaff": False,
+                                "email": users[2].email,
+                                "groups": [],
+                            },
+                        ],
+                        "groupAssignees": [],
+                        "emailNotification": False,
+                        "deadline": "2020-01-01",
+                    }
+                ],
+                "reviewType": "advice",
+                "previouslySelectedDocuments": [],
+                "title": f"{self.zaak_context.zaaktype.omschrijving} - {self.zaak_context.zaaktype.versiedatum}",
+                "zaakInformatie": {
+                    "omschrijving": self.zaak_context.zaak.omschrijving,
+                    "toelichting": self.zaak_context.zaak.toelichting,
+                },
+            },
         )
 
     @patch(
