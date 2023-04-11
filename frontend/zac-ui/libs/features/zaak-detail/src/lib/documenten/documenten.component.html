@@ -53,7 +53,8 @@
           [closeIcon]="true"
           (onClose)="removeQueryParam()"
           size="small">
-  <gu-document-wijzigen [zaak]="zaak"
+  <gu-document-wijzigen *ngIf="selectedDocument"
+                        [zaak]="zaak"
                         [selectedDocument]="selectedDocument"
                         (closeModal)="closeModal('bestandseigenschappen-wijzigen-modal')"
                         (reload)="fetchDocuments()">
