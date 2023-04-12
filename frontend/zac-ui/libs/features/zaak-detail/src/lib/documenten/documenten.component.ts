@@ -240,6 +240,7 @@ export class DocumentenComponent implements OnChanges {
    * Removes all query params
    */
   removeQueryParam() {
+    this.selectedDocument = null;
     this.router.navigate(
       [],
       {

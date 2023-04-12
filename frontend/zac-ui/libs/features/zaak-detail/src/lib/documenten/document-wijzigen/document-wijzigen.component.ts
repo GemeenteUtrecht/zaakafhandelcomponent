@@ -38,7 +38,7 @@ export class DocumentWijzigenComponent {
         name: 'bestandsnaam',
         required: true,
         autocomplete: 'off',
-        value: this.selectedDocument.titel.split('.').slice(0, -1).join('.'),
+        value: this.selectedDocument.titel,
         readonly: !(!this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken),
       },
       {
