@@ -188,7 +188,7 @@ export class FormComponent implements OnInit, OnChanges {
    * @return {Field[]}
    */
   getFieldsFromFormInput(): Field[] {
-    return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.fieldsets, this.isInEditMode)
+    return this.formService.formGroupToFields(this.formGroup, this.form, this.resolvedKeys, this.fieldsets, this.isInEditMode, this.editable)
       .map((field: Field): Field => {
         this.formService.setValidators(this.formGroup, field);
         return field

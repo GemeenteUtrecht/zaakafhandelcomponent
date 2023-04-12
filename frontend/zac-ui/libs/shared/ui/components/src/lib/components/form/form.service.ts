@@ -120,7 +120,7 @@ export class FormService {
    * @param {boolean} [isInEditMode] Whether the form is editable.
    * @return {Field[]}
    */
-  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form), fieldsets = [], isInEditMode: boolean = true): Field[] {
+  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form), fieldsets = [], isInEditMode: boolean = true, editable?: boolean | string): Field[] {
     return keys
       .map(key => {
         const fieldConfiguration = this.getFieldConfigurationByKey(form, key);
@@ -128,7 +128,7 @@ export class FormService {
         if (fieldsets.length > 0) {
           fieldConfiguration.readonly = (typeof isInEditMode === 'boolean') ? !isInEditMode : fieldConfiguration.readonly;
         } else {
-          fieldConfiguration.readonly = (typeof isInEditMode === 'boolean') && !fieldConfiguration.readonly ? !isInEditMode : fieldConfiguration.readonly;
+          fieldConfiguration.readonly = (typeof editable === 'string') && !fieldConfiguration.readonly ? !isInEditMode : fieldConfiguration.readonly;
         }
         return new Field(fieldConfiguration);
       });
