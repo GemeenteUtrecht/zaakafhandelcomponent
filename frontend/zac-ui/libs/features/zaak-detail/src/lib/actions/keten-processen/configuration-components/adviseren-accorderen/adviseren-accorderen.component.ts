@@ -158,8 +158,8 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     let groupAssignees = [];
 
     if (isFirstStep) {
-      userAssignees = this.taskContextData.context.assignedUsers.userAssignees.map(userAssignee => userAssignee.username);
-      groupAssignees = this.taskContextData.context.assignedUsers.groupAssignees.map(groupAssignee => groupAssignee.name);
+      userAssignees = this.taskContextData.context.camundaAssignedUsers.userAssignees.map(userAssignee => userAssignee.username);
+      groupAssignees = this.taskContextData.context.camundaAssignedUsers.groupAssignees.map(groupAssignee => groupAssignee.name);
     }
 
     return this.fb.group({
