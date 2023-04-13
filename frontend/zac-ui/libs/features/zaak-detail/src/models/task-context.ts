@@ -94,7 +94,7 @@ export interface AssignedUsers {
 }
 
 export interface Context {
-  assignedUsers: AssignedUsers;
+  camundaAssignedUsers: AssignedUsers;
   documents?: Document[];
   informatieobjecttypen?: InformatieObjectType[];
   title?: string;
