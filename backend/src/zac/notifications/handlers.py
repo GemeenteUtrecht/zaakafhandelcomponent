@@ -13,6 +13,7 @@ from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
 from zac.contrib.kownsl.api import get_review_requests, partial_update_review_request
 from zac.contrib.kownsl.data import ReviewRequest
+from zac.contrib.objects.cache import invalidate_meta_objects
 from zac.core.cache import (
     invalidate_document_other_cache,
     invalidate_document_url_cache,
@@ -325,6 +326,7 @@ class ObjectenHandler:
     def handle(self, data: dict) -> None:
         if data["resource"] == "objecten":
             invalidate_fetch_object_cache(data["hoofd_object"])
+            invalidate_meta_objects(data)
             if data["actie"] in ["create", "update", "partial_update"]:
                 object = fetch_object(data["hoofd_object"])
                 update_object_document(object)

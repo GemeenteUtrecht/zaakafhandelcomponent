@@ -61,8 +61,8 @@ from zac.camunda.processes import get_top_level_process_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.contrib.objects.services import (
-    fetch_start_camunda_process_form,
-    fetch_zaaktypeattributen_objects,
+    fetch_start_camunda_process_form_for_zaaktype,
+    fetch_zaaktypeattributen_objects_for_zaaktype,
 )
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
@@ -619,12 +619,12 @@ class ZaakDetailSerializer(APIModelSerializer):
             "startRelatedBusinessProcess"
         ):
             # Make sure the zaaktype of the zaak even has a start_camunda_process_form
-            if var and fetch_start_camunda_process_form(obj.zaaktype):
+            if var and fetch_start_camunda_process_form_for_zaaktype(obj.zaaktype):
                 return True
         return False
 
     def get_is_static(self, obj) -> bool:
-        form = fetch_start_camunda_process_form(obj.zaaktype)
+        form = fetch_start_camunda_process_form_for_zaaktype(obj.zaaktype)
         return not form
 
     def get_is_configured(self, obj) -> bool:
@@ -905,7 +905,7 @@ class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
         zaaktype = fetch_zaaktype(zaak.zaaktype)
         zt_attrs = {
             data["naam"]: data
-            for data in fetch_zaaktypeattributen_objects(zaaktype=zaaktype)
+            for data in fetch_zaaktypeattributen_objects_for_zaaktype(zaaktype=zaaktype)
         }
         if self.instance.naam in zt_attrs:
             if enum := zt_attrs[self.instance.naam].get("enum"):

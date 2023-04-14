@@ -579,7 +579,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                     return_value={"startRelatedBusinessProcess": True},
                 ):
                     with patch(
-                        "zac.core.api.serializers.fetch_start_camunda_process_form",
+                        "zac.core.api.serializers.fetch_start_camunda_process_form_for_zaaktype",
                         return_value=None,
                     ):
                         response = self.client.get(self.detail_url)
@@ -602,7 +602,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                     return_value={"startRelatedBusinessProcess": True},
                 ):
                     with patch(
-                        "zac.core.api.serializers.fetch_start_camunda_process_form",
+                        "zac.core.api.serializers.fetch_start_camunda_process_form_for_zaaktype",
                         return_value=True,
                     ):
                         response = self.client.get(self.detail_url)

@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import exceptions, serializers
 
-from zac.contrib.objects.services import fetch_zaaktypeattributen_objects
+from zac.contrib.objects.services import fetch_zaaktypeattributen_objects_for_zaaktype
 from zac.core.services import (
     get_documenten,
     get_eigenschap,
@@ -79,7 +79,9 @@ class EigenschapKeuzeWaardeValidator:
     def _validate_waarde_from_spec_or_camunda_forms(self, eigenschap, waarde):
         zt_attrs = {
             attr["naam"]: attr
-            for attr in fetch_zaaktypeattributen_objects(zaaktype=eigenschap.zaaktype)
+            for attr in fetch_zaaktypeattributen_objects_for_zaaktype(
+                zaaktype=eigenschap.zaaktype
+            )
         }
         if zt_attr := zt_attrs.get(eigenschap.naam):
             if enum := zt_attr.get("enum"):

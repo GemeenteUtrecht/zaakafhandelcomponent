@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from zgw_consumers.api_models.base import factory
 
 from zac.api.context import ZaakContext
-from zac.contrib.objects.services import fetch_zaaktypeattributen_objects
+from zac.contrib.objects.services import fetch_zaaktypeattributen_objects_for_zaaktype
 from zac.core.camunda.start_process.data import ProcessEigenschapChoice
 from zac.core.services import (
     get_eigenschappen,
@@ -113,7 +113,9 @@ def get_required_zaakeigenschappen(
     required_eigenschappen = camunda_start_process.process_eigenschappen
     zaakattributes = {
         data["naam"]: data
-        for data in fetch_zaaktypeattributen_objects(zaaktype=zaak_context.zaaktype)
+        for data in fetch_zaaktypeattributen_objects_for_zaaktype(
+            zaaktype=zaak_context.zaaktype
+        )
     }
     required_process_eigenschappen = []
     for ei in required_eigenschappen:
