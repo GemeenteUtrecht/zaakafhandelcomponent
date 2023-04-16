@@ -1,5 +1,7 @@
 from typing import Dict, Union
+
 from django.core.cache import cache
+
 from zac.core.models import MetaObjectTypesConfig
 
 

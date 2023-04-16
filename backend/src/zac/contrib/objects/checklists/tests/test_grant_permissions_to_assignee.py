@@ -131,7 +131,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=CHECKLISTTYPE_OBJECT,
+            return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -175,7 +175,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=CHECKLISTTYPE_OBJECT,
+            return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -231,7 +231,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=CHECKLISTTYPE_OBJECT,
+            return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -298,7 +298,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             ):
                 with patch(
                     "zac.contrib.objects.services.fetch_checklisttype_object",
-                    return_value=CHECKLISTTYPE_OBJECT,
+                    return_value=[CHECKLISTTYPE_OBJECT],
                 ):
                     response = self.client.put(self.endpoint, data=data)
 

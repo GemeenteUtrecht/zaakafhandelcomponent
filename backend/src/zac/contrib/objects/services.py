@@ -90,10 +90,10 @@ def fetch_zaaktypeattributen_objects_for_zaaktype(zaaktype: ZaakType):
     objs = fetch_zaaktypeattributen_objects()
     catalogus = fetch_catalogus(zaaktype.catalogus)
     return [
-        obj["record"]["data"]
+        obj
         for obj in objs
-        if zaaktype.identificatie in obj["record"]["data"]["zaaktypeIdentificaties"]
-        and catalogus.domein in obj["record"]["data"]["zaaktypeCatalogus"]
+        if zaaktype.identificatie in obj["zaaktypeIdentificaties"]
+        and catalogus.domein in obj["zaaktypeCatalogus"]
     ]
 
 
@@ -103,7 +103,7 @@ def fetch_zaaktypeattributen_objects_for_zaaktype(zaaktype: ZaakType):
 
 
 @cache("start_camunda_process_form_objecttype", timeout=A_DAY)
-def fetch_start_camunda_process_form() -> Optional[StartCamundaProcessForm]:
+def fetch_start_camunda_process_form() -> Optional[List[StartCamundaProcessForm]]:
     """
     Cache the broader group of start camunda process forms to increase performance
     related to fetching meta objects.
@@ -112,14 +112,15 @@ def fetch_start_camunda_process_form() -> Optional[StartCamundaProcessForm]:
     found in zac.core.models.
 
     """
-    start_camunda_process_form = _search_meta_objects(
+    start_camunda_process_forms = _search_meta_objects(
         "start_camunda_process_form_objecttype",
     )
-    if not start_camunda_process_form:
+    if not start_camunda_process_forms:
         return None
 
     return factory(
-        StartCamundaProcessForm, start_camunda_process_form[0]["record"]["data"]
+        StartCamundaProcessForm,
+        [form["record"]["data"] for form in start_camunda_process_forms],
     )
 
 
@@ -127,7 +128,6 @@ def fetch_start_camunda_process_form_for_zaaktype(
     zaaktype: ZaakType,
 ) -> Optional[StartCamundaProcessForm]:
     forms = fetch_start_camunda_process_form()
-
     if not forms:
         return None
 
@@ -138,10 +138,15 @@ def fetch_start_camunda_process_form_for_zaaktype(
         if zaaktype.identificatie in form.zaaktype_identificaties
         and catalogus.domein in form.zaaktype_catalogus
     ]
+
+    if not forms:
+        return None
+
     if len(forms) > 1:
         logger.warning(
             "More than 1 start_camunda_process_form_objecttype object is found."
         )
+
     return forms[0]
 
 
@@ -171,26 +176,29 @@ def fetch_checklisttype(
     zaaktype: ZaakType,
 ) -> Optional[ChecklistType]:
     checklisttypes = fetch_checklisttype_object(zaaktype)
-    if checklisttypes:
-        catalogus = fetch_catalogus(zaaktype.catalogus)
-        checklisttypes = [
-            clt
-            for clt in checklisttypes
-            if zaaktype.identificaties
-            in clt["record"]["data"]["zaaktypeIdentificaties"]
-            and catalogus.domein in clt["record"]["data"]["zaaktypeCatalogus"]
-        ]
-        if len(checklisttypes) > 1:
-            logger.warning("More than 1 checklisttype_objecttype object is found.")
+    if not checklisttypes:
+        return None
 
-        return factory(
-            ChecklistType,
-            underscoreize(
-                checklisttypes[0]["record"]["data"],
-                **api_settings.JSON_UNDERSCOREIZE,
-            ),
-        )
-    return None
+    catalogus = fetch_catalogus(zaaktype.catalogus)
+    checklisttypes = [
+        clt
+        for clt in checklisttypes
+        if zaaktype.identificatie in clt["record"]["data"]["zaaktypeIdentificaties"]
+        and catalogus.domein in clt["record"]["data"]["zaaktypeCatalogus"]
+    ]
+    if not checklisttypes:
+        return None
+
+    if len(checklisttypes) > 1:
+        logger.warning("More than 1 checklisttype_objecttype object is found.")
+
+    return factory(
+        ChecklistType,
+        underscoreize(
+            checklisttypes[0]["record"]["data"],
+            **api_settings.JSON_UNDERSCOREIZE,
+        ),
+    )
 
 
 def fetch_checklist_object(

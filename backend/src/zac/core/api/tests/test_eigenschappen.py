@@ -643,7 +643,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                 {
                     "url": "http://objecttypes.nl/api/v1/objecttypes/1",
                     "name": "zaaktypeAttribute",
-                    "namePlural": "zaaktypeAttributen",
+                    "namePlural": "zaaktypeAttributes",
                     "description": "",
                     "data_classification": "",
                     "maintainer_organization": "",

@@ -83,6 +83,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             "schemas/ZaakType",
             catalogus=catalogus_url,
             url=f"{CATALOGI_ROOT}zaaktypen/4f622c65-5ffe-476e-96ee-f0710bd0c92b",
+            identificatie=START_CAMUNDA_PROCESS_FORM["zaaktypeIdentificaties"][0],
         )
         cls.eigenschap = generate_oas_component(
             "ztc",

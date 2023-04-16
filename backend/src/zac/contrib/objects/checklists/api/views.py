@@ -111,7 +111,9 @@ class ZaakChecklistView(views.APIView):
 
     def get_object(self) -> Checklist:
         zaak = self.get_zaak()
+        print(zaak)
         self.check_object_permissions(self.request, zaak)
+        print(fetch_checklist(zaak))
         if not (checklist := fetch_checklist(zaak)):
             raise Http404("Checklist not found for ZAAK.")
         return checklist

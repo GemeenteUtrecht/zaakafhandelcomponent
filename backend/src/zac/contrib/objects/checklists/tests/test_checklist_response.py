@@ -110,7 +110,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklisttype_object",
-                return_value=CHECKLISTTYPE_OBJECT,
+                return_value=[CHECKLISTTYPE_OBJECT],
             ):
                 response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
@@ -165,7 +165,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=CHECKLISTTYPE_OBJECT,
+            return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -256,7 +256,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=CHECKLISTTYPE_OBJECT,
+            return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -300,7 +300,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=CHECKLISTTYPE_OBJECT,
+            return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -343,7 +343,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=CHECKLISTTYPE_OBJECT,
+            return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -399,7 +399,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             ):
                 with patch(
                     "zac.contrib.objects.services.fetch_checklisttype_object",
-                    return_value=CHECKLISTTYPE_OBJECT,
+                    return_value=[CHECKLISTTYPE_OBJECT],
                 ):
                     response = self.client.put(self.endpoint, data=data)
 

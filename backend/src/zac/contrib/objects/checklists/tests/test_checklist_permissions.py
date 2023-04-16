@@ -56,14 +56,17 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-        cls.catalogus = (
+        cls.catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        )
+        cls.catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=cls.catalogus_url, domein="some-domein"
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus_url,
             omschrijving="ZT1",
             identificatie="ZT1",
         )
@@ -111,7 +114,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[checklists_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus_url,
                 "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -135,7 +138,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[checklists_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus_url,
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -152,6 +155,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak)
         AtomicPermissionFactory.create(

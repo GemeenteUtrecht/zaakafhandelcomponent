@@ -151,6 +151,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
             "schemas/ZaakType",
             catalogus=catalogus_url,
             url=f"{CATALOGI_ROOT}zaaktypen/4f622c65-5ffe-476e-96ee-f0710bd0c92b",
+            identificatie=START_CAMUNDA_PROCESS_FORM["zaaktypeIdentificaties"][0],
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -389,6 +390,7 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/4f622c65-5ffe-476e-96ee-f0710bd0c92b",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             omschrijving="ZT1",
+            identificatie=START_CAMUNDA_PROCESS_FORM["zaaktypeIdentificaties"][0],
         )
         cls.zaak = generate_oas_component(
             "zrc",
