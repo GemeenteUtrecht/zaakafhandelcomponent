@@ -31,7 +31,7 @@ def _search_meta_objects(
     data_attrs: List = [],
 ) -> List[dict]:
     config = MetaObjectTypesConfig.get_solo()
-    ot_url = getattr(config, attribute_name)
+    ot_url = getattr(config, attribute_name, None)
     if not ot_url:
         logger.warning(
             "`{attr}` objecttype is not configured in core configuration or does not exist in the configured objecttype service.".format(
