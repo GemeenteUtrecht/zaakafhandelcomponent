@@ -326,7 +326,7 @@ class ObjectenHandler:
     def handle(self, data: dict) -> None:
         if data["resource"] == "objecten":
             invalidate_fetch_object_cache(data["hoofd_object"])
-            invalidate_meta_objects(data)
+            invalidate_meta_objects(data["kenmerken"])
             if data["actie"] in ["create", "update", "partial_update"]:
                 object = fetch_object(data["hoofd_object"])
                 update_object_document(object)

@@ -12,5 +12,7 @@ def get_field_names_and_values_meta_object_types() -> Dict[Union[int, str], str]
 
 def invalidate_meta_objects(on_data: Dict):
     mapping = get_field_names_and_values_meta_object_types()
-    if key := on_data["object_type"] in mapping.get(on_data["object_type"]):
+    if key := on_data["kenmerken"]["object_type"] in mapping.get(
+        on_data["kenmerken"]["object_type"]
+    ):
         cache.delete(key)
