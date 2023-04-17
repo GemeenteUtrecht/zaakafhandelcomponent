@@ -26,7 +26,9 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30
 
 
 @requests_mock.Mocker()
-@patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+@patch(
+    "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype", return_value=[]
+)
 class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
@@ -199,7 +201,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.endpoint = reverse("eigenschappen")
 
-    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    @patch(
+        "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
+        return_value=[],
+    )
     @requests_mock.Mocker()
     def test_get_eigenschappen_string(self, mock_fetch_ztao, m):
         zaaktype1 = generate_oas_component(
@@ -284,7 +289,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    @patch(
+        "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
+        return_value=[],
+    )
     @requests_mock.Mocker()
     def test_get_eigenschappen_number(self, mock_fetch_ztao, m):
         zaaktype = generate_oas_component(
@@ -345,7 +353,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    @patch(
+        "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
+        return_value=[],
+    )
     def test_get_eigenschappen_with_all_query_params(self, mock_fetch_ztao):
         response = self.client.get(
             self.endpoint,
@@ -364,7 +375,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    @patch(
+        "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
+        return_value=[],
+    )
     def test_get_eigenschappen_without_query_params(self, mock_fetch_ztao):
         response = self.client.get(self.endpoint)
 
@@ -376,7 +390,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    @patch(
+        "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
+        return_value=[],
+    )
     def test_get_eigenschappen_with_invalid_query_param(self, mock_fetch_ztao):
         response = self.client.get(
             self.endpoint, {"catalogus": "some-url", "zaaktype_identificatie": "ZT1"}
@@ -388,7 +405,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"zaaktype": ["Voer een geldige URL in."]})
 
-    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    @patch(
+        "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
+        return_value=[],
+    )
     @requests_mock.Mocker()
     def test_get_eigenschappen_with_same_name_and_spec(self, mock_fetch_ztao, m):
         zaaktype1 = generate_oas_component(
@@ -477,7 +497,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
-    @patch("zac.core.api.views.fetch_zaaktypeattributen_objects", return_value=[])
+    @patch(
+        "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
+        return_value=[],
+    )
     @patch("zac.core.services.logger")
     @requests_mock.Mocker()
     def test_get_eigenschappen_with_same_name_but_different_spec(
@@ -620,7 +643,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                 {
                     "url": "http://objecttypes.nl/api/v1/objecttypes/1",
                     "name": "zaaktypeAttribute",
-                    "namePlural": "zaaktypeAttributen",
+                    "namePlural": "zaaktypeAttributes",
                     "description": "",
                     "data_classification": "",
                     "maintainer_organization": "",

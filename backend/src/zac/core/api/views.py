@@ -8,7 +8,6 @@ from typing import Dict, List
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models.query import QuerySet
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -43,7 +42,7 @@ from zac.accounts.models import User, UserAtomicPermission
 from zac.camunda.api.utils import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
-from zac.contrib.objects.services import fetch_zaaktypeattributen_objects
+from zac.contrib.objects.services import fetch_zaaktypeattributen_objects_for_zaaktype
 from zac.core.camunda.start_process.serializers import CreatedProcessInstanceSerializer
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
@@ -1142,7 +1141,9 @@ class EigenschappenView(ListAPIView):
 
         zaak_attributes = {
             zatr["naam"]: zatr
-            for zatr in fetch_zaaktypeattributen_objects(zaaktype=zaaktypen[0])
+            for zatr in fetch_zaaktypeattributen_objects_for_zaaktype(
+                zaaktype=zaaktypen[0]
+            )
         }
         eigenschappen = get_eigenschappen_for_zaaktypen(zaaktypen)
 

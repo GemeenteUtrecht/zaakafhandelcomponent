@@ -62,6 +62,7 @@ from zac.contrib.objects.checklists.tests.utils import (
     CHECKLIST_OBJECT,
     CHECKLISTTYPE_OBJECT,
 )
+from zac.core.tests.utils import ClearCachesMixin
 
 
 def _get_task(**overrides):
@@ -70,7 +71,7 @@ def _get_task(**overrides):
 
 
 @freeze_time("2013-01-23T11:42:42Z")
-class GetZetResultaatContextSerializersTests(APITestCase):
+class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -105,11 +106,20 @@ class GetZetResultaatContextSerializersTests(APITestCase):
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=catalogus_url,
+            domein=CHECKLISTTYPE_OBJECT["record"]["data"]["zaaktypeCatalogus"][0],
+        )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             catalogus=catalogus_url,
             url=f"{CATALOGI_ROOT}zaaktypen/6496bb11-499e-43d3-a6ca-2a43ed704952",
+            identificatie=CHECKLISTTYPE_OBJECT["record"]["data"][
+                "zaaktypeIdentificaties"
+            ][0],
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -176,6 +186,7 @@ class GetZetResultaatContextSerializersTests(APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         mock_service_oas_get(m, DOWC_API_ROOT, "dowc", oas_url=self.dowc_service.oas)
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{DOWC_API_ROOT}documenten/count?zaak={self.zaak['url']}",
             json={"count": 0},
@@ -217,7 +228,7 @@ class GetZetResultaatContextSerializersTests(APITestCase):
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklisttype_object",
-                return_value=CHECKLISTTYPE_OBJECT,
+                return_value=[CHECKLISTTYPE_OBJECT],
             ):
                 task_data = UserTaskData(task=task, context=_get_context(task))
         factory = APIRequestFactory()

@@ -12,7 +12,7 @@ from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.camunda.api.utils import start_process
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.contrib.objects.services import fetch_start_camunda_process_form
+from zac.contrib.objects.services import fetch_start_camunda_process_form_for_zaaktype
 from zac.core.api.views import GetZaakMixin
 from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.core.services import get_rollen
@@ -33,7 +33,7 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
         zaak = self.get_object()
 
         # See if there is a configured camunda_start_process object
-        form = fetch_start_camunda_process_form(zaak.zaaktype)
+        form = fetch_start_camunda_process_form_for_zaaktype(zaak.zaaktype)
         if not form:
             raise exceptions.NotFound(
                 "No start camunda process form found for zaaktype with `identificatie`: `%s`."

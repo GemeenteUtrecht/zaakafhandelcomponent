@@ -113,6 +113,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, eigenschap)
+        mock_resource_get(m, self.catalogus)
         eigenschappen_url = furl(CATALOGI_ROOT)
         eigenschappen_url.path.segments += ["eigenschappen"]
         eigenschappen_url.path.normalize()
@@ -294,6 +295,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, old_zaak_eigenschap)
         mock_resource_get(m, new_zaak_eigenschap)
         mock_resource_get(m, eigenschap)
+        mock_resource_get(m, self.catalogus)
         eigenschappen_url = furl(CATALOGI_ROOT)
         eigenschappen_url.path.segments += ["eigenschappen"]
         eigenschappen_url.path.normalize()
@@ -379,6 +381,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, old_zaak_eigenschap)
         mock_resource_get(m, new_zaak_eigenschap)
         mock_resource_get(m, eigenschap)
+        mock_resource_get(m, self.catalogus)
         eigenschappen_url = furl(CATALOGI_ROOT)
         eigenschappen_url.path.segments += ["eigenschappen"]
         eigenschappen_url.path.normalize()
@@ -465,6 +468,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, old_zaak_eigenschap)
         mock_resource_get(m, new_zaak_eigenschap)
         mock_resource_get(m, eigenschap)
+        mock_resource_get(m, self.catalogus)
         eigenschappen_url = furl(CATALOGI_ROOT)
         eigenschappen_url.path.segments += ["eigenschappen"]
         eigenschappen_url.path.normalize()
@@ -587,6 +591,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, zaak_eigenschap)
         mock_resource_get(m, eigenschap)
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([eigenschap]),
@@ -642,6 +647,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, zaak_eigenschap)
         mock_resource_get(m, eigenschap)
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{OBJECTTYPES_ROOT}objecttypes",
             json=[
@@ -743,6 +749,9 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
+        cls.catalogus = generate_oas_component(
+            "ztc", "schemas/Catalogus", url=CATALOGUS_URL
+        )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -836,6 +845,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
+        mock_resource_get(m, self.catalogus)
         eigenschappen_url = furl(CATALOGI_ROOT)
         eigenschappen_url.path.segments += ["eigenschappen"]
         eigenschappen_url.path.normalize()
@@ -895,6 +905,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
+        mock_resource_get(m, self.catalogus)
         eigenschappen_url = furl(CATALOGI_ROOT)
         eigenschappen_url.path.segments += ["eigenschappen"]
         eigenschappen_url.path.normalize()

@@ -31,7 +31,7 @@ def _search_meta_objects(
     data_attrs: List = [],
 ) -> List[dict]:
     config = MetaObjectTypesConfig.get_solo()
-    ot_url = getattr(config, attribute_name)
+    ot_url = getattr(config, attribute_name, None)
     if not ot_url:
         logger.warning(
             "`{attr}` objecttype is not configured in core configuration or does not exist in the configured objecttype service.".format(
@@ -71,11 +71,30 @@ def _search_meta_objects(
 ###################################################
 
 
-@cache("fetch_zaaktypeattributen_objects:{zaaktype.url}", timeout=A_DAY)
-def fetch_zaaktypeattributen_objects(zaaktype: ZaakType) -> List[dict]:
-    if objs := _search_meta_objects("zaaktype_attribute_objecttype", zaaktype=zaaktype):
+@cache("zaaktype_attribute_objecttype", timeout=A_DAY)
+def fetch_zaaktypeattributen_objects() -> List[dict]:
+    """
+    Cache the broader group of zaaktype attributes to increase performance
+    related to fetching meta objects.
+
+    The key relates to the field name on MetaObjectsConfig singletonmodel
+    found in zac.core.models.
+
+    """
+    if objs := _search_meta_objects("zaaktype_attribute_objecttype"):
         return [obj["record"]["data"] for obj in objs]
     return []
+
+
+def fetch_zaaktypeattributen_objects_for_zaaktype(zaaktype: ZaakType):
+    objs = fetch_zaaktypeattributen_objects()
+    catalogus = fetch_catalogus(zaaktype.catalogus)
+    return [
+        obj
+        for obj in objs
+        if zaaktype.identificatie in obj["zaaktypeIdentificaties"]
+        and catalogus.domein in obj["zaaktypeCatalogus"]
+    ]
 
 
 ###################################################
@@ -83,19 +102,52 @@ def fetch_zaaktypeattributen_objects(zaaktype: ZaakType) -> List[dict]:
 ###################################################
 
 
-@cache("fetch_start_camunda_process_form:{zaaktype.identificatie}", timeout=A_DAY)
-def fetch_start_camunda_process_form(
-    zaaktype: ZaakType,
-) -> Optional[StartCamundaProcessForm]:
-    start_camunda_process_form = _search_meta_objects(
-        "start_camunda_process_form_objecttype", zaaktype=zaaktype, unique=True
+@cache("start_camunda_process_form_objecttype", timeout=A_DAY)
+def fetch_start_camunda_process_form() -> Optional[List[StartCamundaProcessForm]]:
+    """
+    Cache the broader group of start camunda process forms to increase performance
+    related to fetching meta objects.
+
+    The key relates to the field name on MetaObjectsConfig singletonmodel
+    found in zac.core.models.
+
+    """
+    start_camunda_process_forms = _search_meta_objects(
+        "start_camunda_process_form_objecttype",
     )
-    if not start_camunda_process_form:
+    if not start_camunda_process_forms:
         return None
 
     return factory(
-        StartCamundaProcessForm, start_camunda_process_form[0]["record"]["data"]
+        StartCamundaProcessForm,
+        [form["record"]["data"] for form in start_camunda_process_forms],
     )
+
+
+def fetch_start_camunda_process_form_for_zaaktype(
+    zaaktype: ZaakType,
+) -> Optional[StartCamundaProcessForm]:
+    forms = fetch_start_camunda_process_form()
+    if not forms:
+        return None
+
+    catalogus = fetch_catalogus(zaaktype.catalogus)
+    forms = [
+        form
+        for form in forms
+        if zaaktype.identificatie in form.zaaktype_identificaties
+        and catalogus.domein in form.zaaktype_catalogus
+    ]
+
+    if not forms:
+        return None
+
+    if len(forms) > 1:
+        logger.warning(
+            "More than 1 start_camunda_process_form_objecttype object is found."
+        )
+
+    return forms[0]
 
 
 ###################################################
@@ -103,30 +155,50 @@ def fetch_start_camunda_process_form(
 ###################################################
 
 
-@cache("fetch_checklisttype_object:{zaaktype.identificatie}", timeout=A_DAY)
+@cache("checklisttype_objecttype", timeout=A_DAY)
 def fetch_checklisttype_object(
     zaaktype: ZaakType,
 ) -> Optional[Dict]:
-    if obj := _search_meta_objects(
-        "checklisttype_objecttype", zaaktype=zaaktype, unique=True
-    ):
-        return obj[0]
+    """
+    Cache the broader group of checklisttypes to increase performance
+    related to fetching meta objects.
+
+    The key relates to the field name on MetaObjectsConfig singletonmodel
+    found in zac.core.models.
+
+    """
+    if objs := _search_meta_objects("checklisttype_objecttype"):
+        return objs
     return None
 
 
 def fetch_checklisttype(
     zaaktype: ZaakType,
 ) -> Optional[ChecklistType]:
-    checklisttype = fetch_checklisttype_object(zaaktype)
-    if checklisttype:
-        return factory(
-            ChecklistType,
-            underscoreize(
-                checklisttype["record"]["data"],
-                **api_settings.JSON_UNDERSCOREIZE,
-            ),
-        )
-    return None
+    checklisttypes = fetch_checklisttype_object(zaaktype)
+    if not checklisttypes:
+        return None
+
+    catalogus = fetch_catalogus(zaaktype.catalogus)
+    checklisttypes = [
+        clt
+        for clt in checklisttypes
+        if zaaktype.identificatie in clt["record"]["data"]["zaaktypeIdentificaties"]
+        and catalogus.domein in clt["record"]["data"]["zaaktypeCatalogus"]
+    ]
+    if not checklisttypes:
+        return None
+
+    if len(checklisttypes) > 1:
+        logger.warning("More than 1 checklisttype_objecttype object is found.")
+
+    return factory(
+        ChecklistType,
+        underscoreize(
+            checklisttypes[0]["record"]["data"],
+            **api_settings.JSON_UNDERSCOREIZE,
+        ),
+    )
 
 
 def fetch_checklist_object(
