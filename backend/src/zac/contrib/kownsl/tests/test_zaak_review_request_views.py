@@ -745,3 +745,47 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
                 self.endpoint_detail, {"update_users": True}
             )
         self.assertEqual(response_detail.status_code, status.HTTP_403_FORBIDDEN)
+
+    @requests_mock.Mocker()
+    def test_review_request_locked_get_regression(self, m):
+        """
+        Regression test to make sure users can still GET
+        locked review requests.
+
+        """
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        self.client.force_authenticate(user=user)
+        rr = {**REVIEW_REQUEST, "locked": True, "lock_reason": "zomaar"}
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=rr,
+            status_code=200,
+        )
+        with patch(
+            "zac.contrib.kownsl.views.get_review_request",
+            return_value=factory(ReviewRequest, rr),
+        ):
+            with patch(
+                "zac.contrib.kownsl.views.retrieve_advices", return_value=self.advices
+            ):
+                with patch(
+                    "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
+                ):
+                    response_detail = self.client.get(self.endpoint_detail)
+        self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
