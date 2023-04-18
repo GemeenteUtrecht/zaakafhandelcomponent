@@ -22,6 +22,33 @@ from .constants import KownslTypes
 from .data import ReviewRequest
 
 
+class CanReadZakenReviewRequests(CanReadZaken):
+    def has_object_permission(self, request: Request, view: APIView, obj):
+        if request.user.is_superuser:
+            return True
+
+        if isinstance(obj, ReviewRequest):
+            try:
+                obj = get_zaak(zaak_url=obj.for_zaak)
+            except ObjectDoesNotExist:
+                raise Http404(f"No ZAAK is found for url: {obj.for_zaak}.")
+
+        permission_name = self.get_permission(request).name
+        # first check atomic permissions - this checks both atomic permissions directly attached to the user
+        # and atomic permissions defined to authorization profiles
+        if self.user_atomic_permissions_exists(
+            request, permission_name, obj_url=obj.url
+        ):
+            return True
+
+        # then check blueprint permissions
+        for permission in self.get_blueprint_permissions(request, permission_name):
+            if permission.has_access(obj, request.user, permission_name):
+                return True
+
+        return False
+
+
 class CanUpdateZakenReviewRequests(CanUpdateZaken):
     def has_object_permission(self, request: Request, view: APIView, obj):
         if request.user.is_superuser:
@@ -49,23 +76,12 @@ class CanUpdateZakenReviewRequests(CanUpdateZaken):
         return False
 
 
-class CanUpdateReview(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if isinstance(obj, ReviewRequest):
-            requester = obj.requester["full_name"] or obj.requester["username"]
-            self.message = _(
-                "Review request can only be locked by `{requester}`."
-            ).format(requester=requester)
-            return obj.requester["username"] == request.user.username
-        return True
-
-
 class CanReadOrUpdateReviews(BaseConditionalPermission):
     def get_permission(self, request) -> DefinitionBasePermission:
         if request.method in permissions.SAFE_METHODS:
-            return CanReadZaken()
+            return CanReadZakenReviewRequests()
         else:
-            return CanUpdateReview()
+            return CanUpdateZakenReviewRequests()
 
 
 class ReviewIsUnlocked(permissions.BasePermission):

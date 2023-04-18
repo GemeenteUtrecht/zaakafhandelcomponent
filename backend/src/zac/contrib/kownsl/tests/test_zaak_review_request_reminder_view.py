@@ -318,16 +318,3 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
         response_summary = self.client.post(self.endpoint)
         self.assertEqual(response_summary.status_code, status.HTTP_204_NO_CONTENT)
-
-    @requests_mock.Mocker()
-    def test_is_requester(self, m):
-        m.post(f"{CAMUNDA_URL}message", status_code=status.HTTP_204_NO_CONTENT)
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
-            json=REVIEW_REQUEST,
-        )
-        user = UserFactory.create(username=self.review_request.requester["username"])
-        self.client.force_authenticate(user=user)
-        response_summary = self.client.post(self.endpoint)
-        self.assertEqual(response_summary.status_code, status.HTTP_204_NO_CONTENT)

@@ -25,7 +25,7 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.kownsl.api import get_client
 from zac.contrib.kownsl.data import Advice, KownslTypes, ReviewRequest
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.permissions import zaken_inzien
+from zac.core.permissions import zaken_inzien, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -114,9 +114,6 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-        cls.get_zaak_patcher = patch(
-            "zac.contrib.kownsl.views.get_zaak", return_value=zaak
-        )
         document = factory(Document, cls.document)
         cls.get_document_patcher = patch(
             "zac.contrib.kownsl.views.get_document", return_value=document
@@ -157,8 +154,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
-        self.get_zaak_patcher.start()
-        self.addCleanup(self.get_zaak_patcher.stop)
+        self.addCleanup(self.get_review_request_patcher.stop)
 
         self.get_review_requests_patcher.start()
         self.addCleanup(self.get_review_requests_patcher.stop)
@@ -300,30 +296,17 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                 ],
             },
         )
-        self.get_review_request_patcher.stop()
 
     def test_no_review_request(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
 
         kownsl_client = get_client()
         with patch.object(
-            kownsl_client, "get_operation_url", return_value="", create=True
+            kownsl_client, "retrieve", side_effect=ClientError, create=True
         ):
-            with patch.object(
-                kownsl_client, "request", side_effect=ClientError, create=True
-            ):
-                with patch(
-                    "zac.contrib.kownsl.api.get_client", return_value=kownsl_client
-                ):
-                    response = self.client.get(self.endpoint_detail)
+            with patch("zac.contrib.kownsl.api.get_client", return_value=kownsl_client):
+                response = self.client.get(self.endpoint_detail)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_get_zaak_not_found(self, m):
-        self.get_review_request_patcher.start()
-        with patch("zac.contrib.kownsl.views.get_zaak", side_effect=ObjectDoesNotExist):
-            response = self.client.get(self.endpoint_detail)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.get_review_request_patcher.stop()
 
     def test_no_review_requests(self, m):
         with patch("zac.contrib.kownsl.views.get_review_requests", return_value=[]):
@@ -391,6 +374,32 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send_message.assert_called_once_with(
             "change-process", [self.revreq["metadata"]["processInstanceId"]]
+        )
+
+    def test_update_review_request_lock_and_update_users_fail(self, m):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}/advices",
+            json=[ADVICE],
+        )
+
+        url = reverse(
+            "kownsl:zaak-review-requests-detail",
+            kwargs={"request_uuid": REVIEW_REQUEST["id"]},
+        )
+        body = {"lock_reason": "some-reason", "update_users": True}
+        # log in - we need to see the user ID in the auth from ZAC to Kownsl
+        user = SuperUserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(url, body)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {"nonFieldErrors": ["A locked review request can not be updated."]},
         )
 
 
@@ -463,7 +472,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
         cls.get_zaak_patcher = patch(
-            "zac.contrib.kownsl.views.get_zaak", return_value=zaak
+            "zac.contrib.kownsl.permissions.get_zaak", return_value=zaak
         )
 
         cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
@@ -660,6 +669,29 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
                     response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
 
+    def test_get_zaak_not_found(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_inzien.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        with patch(
+            "zac.contrib.kownsl.views.get_review_request",
+            return_value=self.review_request,
+        ):
+            with patch(
+                "zac.contrib.kownsl.permissions.get_zaak",
+                side_effect=ObjectDoesNotExist,
+            ):
+                response = self.client.get(self.endpoint_detail)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     @requests_mock.Mocker()
     def test_has_lock_perm(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
@@ -671,7 +703,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
+            role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
@@ -699,3 +731,17 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
                         self.endpoint_detail, {"lock_reason": "zomaar"}
                     )
         self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_review_request_is_locked(self, m):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        self.client.force_authenticate(user=user)
+        with patch(
+            "zac.contrib.kownsl.views.get_review_request",
+            return_value=factory(ReviewRequest, {**REVIEW_REQUEST, "locked": True}),
+        ):
+            response_detail = self.client.patch(
+                self.endpoint_detail, {"update_users": True}
+            )
+        self.assertEqual(response_detail.status_code, status.HTTP_403_FORBIDDEN)
