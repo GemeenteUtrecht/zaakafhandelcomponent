@@ -340,7 +340,7 @@ class ZaakReviewRequestDetailView(APIView):
 
         elif serializer.validated_data.get("update_users"):
             send_message(
-                "change-process"[review_request["metadata"]["processInstanceId"]]
+                "change-process", [review_request.metadata["process_instance_id"]]
             )
 
         review_request = self.get_review_request_metadata(review_request)

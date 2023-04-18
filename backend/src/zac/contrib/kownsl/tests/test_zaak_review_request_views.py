@@ -121,8 +121,8 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         cls.get_document_patcher = patch(
             "zac.contrib.kownsl.views.get_document", return_value=document
         )
-
-        review_request = factory(ReviewRequest, REVIEW_REQUEST)
+        cls.revreq = {**REVIEW_REQUEST, "metadata": {"processInstanceId": "123"}}
+        review_request = factory(ReviewRequest, cls.revreq)
         cls.get_review_request_patcher = patch(
             "zac.contrib.kownsl.views.get_review_request", return_value=review_request
         )
@@ -361,6 +361,37 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.client.force_authenticate(user=user)
         response = self.client.patch(url, body)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch("zac.contrib.kownsl.views.send_message", return_value=None)
+    def test_update_review_request_update_users(self, m, mock_send_message):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=self.revreq,
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}/advices",
+            json=[ADVICE],
+        )
+        m.patch(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=self.revreq,
+            status_code=200,
+        )
+
+        url = reverse(
+            "kownsl:zaak-review-requests-detail",
+            kwargs={"request_uuid": REVIEW_REQUEST["id"]},
+        )
+        body = {"update_users": True}
+        # log in - we need to see the user ID in the auth from ZAC to Kownsl
+        user = SuperUserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(url, body)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send_message.assert_called_once_with(
+            "change-process", [self.revreq["metadata"]["processInstanceId"]]
+        )
 
 
 class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
