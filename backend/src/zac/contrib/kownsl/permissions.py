@@ -86,7 +86,9 @@ class CanReadOrUpdateReviews(BaseConditionalPermission):
 
 class ReviewIsUnlocked(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if isinstance(obj, ReviewRequest):
+        if request.method not in permissions.SAFE_METHODS and isinstance(
+            obj, ReviewRequest
+        ):
             requester = obj.requester["full_name"] or obj.requester["username"]
             self.message = _("Review request is locked by `{requester}`.").format(
                 requester=requester
