@@ -36,14 +36,30 @@ class UpdateZaakReviewRequestSerializer(APIModelSerializer):
     update_users = serializers.BooleanField(
         required=False,
         help_text=_(
-            "A boolean flag to indicate whether a change of users is requested in the review request."
+            "A boolean flag to indicate whether a change of users is requested in the review request. If review request is/will be locked - this will fail."
         ),
     )
 
     class Meta:
         model = ReviewRequest
         fields = ("lock_reason", "update_users")
-        extra_kwargs = {"lock_reason": {"allow_blank": False, "required": False}}
+        extra_kwargs = {
+            "lock_reason": {
+                "allow_blank": False,
+                "required": False,
+                "help_text": _(
+                    "If the review request will be locked the users can not be updated."
+                ),
+            }
+        }
+
+    def validate(self, data):
+        validated_data = super().validate(data)
+        if validated_data.get("update_users") and validated_data.get("lock_reason"):
+            raise serializers.ValidationError(
+                _("A locked review request can not be updated.")
+            )
+        return validated_data
 
 
 class ZaakRevReqSummarySerializer(APIModelSerializer):

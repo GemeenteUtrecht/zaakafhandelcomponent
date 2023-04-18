@@ -37,7 +37,6 @@ from .api import (
 from .data import ReviewRequest
 from .permissions import (
     CanReadOrUpdateReviews,
-    CanUpdateZakenReviewRequests,
     HasNotReviewed,
     IsReviewRequester,
     IsReviewUser,
@@ -256,7 +255,11 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
 
 class ZaakReviewRequestDetailView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
-    permission_classes = (permissions.IsAuthenticated, CanReadOrUpdateReviews)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        CanReadOrUpdateReviews,
+        ReviewIsUnlocked,
+    )
 
     def get_serializer(self, **kwargs):
         mapping = {
@@ -267,12 +270,7 @@ class ZaakReviewRequestDetailView(APIView):
 
     def get_object(self) -> ReviewRequest:
         review_request = get_review_request(self.kwargs["request_uuid"])
-        try:
-            zaak = get_zaak(zaak_url=review_request.for_zaak)
-        except ObjectDoesNotExist:
-            raise Http404(f"No ZAAK is found for url: {review_request.for_zaak}.")
-
-        self.check_object_permissions(self.request, zaak)
+        self.check_object_permissions(self.request, review_request)
         return review_request
 
     def get_review_request_metadata(self, review_request: ReviewRequest):
@@ -352,7 +350,7 @@ class ZaakReviewRequestReminderView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
-        IsReviewRequester | CanUpdateZakenReviewRequests,
+        CanReadOrUpdateReviews,
         ReviewIsUnlocked,
     )
 
@@ -372,7 +370,6 @@ class ZaakReviewRequestReminderView(APIView):
     )
     def post(self, request, request_uuid, *args, **kwargs):
         review_request = self.get_object()
-        self.check_object_permissions(self.request, review_request)
         send_message(
             "_kownsl_reminder",
             [review_request.metadata["process_instance_id"]],
