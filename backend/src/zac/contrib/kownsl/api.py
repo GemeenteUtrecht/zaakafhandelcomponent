@@ -116,16 +116,32 @@ def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
 
 
 @optional_service
-def partial_update_review_request(
-    uuid: str, data: Dict = dict
+def lock_review_request(uuid: str, lock_reason: str) -> Optional[ReviewRequest]:
+    client = get_client()
+    try:
+        result = client.partial_update(
+            "review_requests",
+            uuid=uuid,
+            data={"lock_reason": lock_reason, "locked": True},
+        )
+    except ClientError:
+        raise Http404(
+            _("Review request with id {uuid} does not exist.").format(uuid=uuid)
+        )
+
+    review_request = factory(ReviewRequest, result)
+    review_request.user_deadlines = result["userDeadlines"]
+    return review_request
+
+
+@optional_service
+def update_assigned_users_review_request(
+    uuid: str,
+    requester: User,
+    data: Dict = dict,
 ) -> Optional[ReviewRequest]:
 
-    if data.get("lock_reason"):
-        data["locked"] = True
-        client = get_client()
-    else:
-        client = get_client(user=data.get("requester", None))
-
+    client = get_client(user=requester)
     try:
         result = client.partial_update(
             "review_requests",

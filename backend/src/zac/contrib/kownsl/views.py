@@ -30,7 +30,7 @@ from .api import (
     get_client,
     get_review_request,
     get_review_requests,
-    partial_update_review_request,
+    lock_review_request,
     retrieve_advices,
     retrieve_approvals,
 )
@@ -38,7 +38,6 @@ from .data import ReviewRequest
 from .permissions import (
     CanReadOrUpdateReviews,
     HasNotReviewed,
-    IsReviewRequester,
     IsReviewUser,
     ReviewIsUnlocked,
 )
@@ -331,10 +330,8 @@ class ZaakReviewRequestDetailView(APIView):
         self.check_object_permissions(self.request, review_request)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if serializer.validated_data.get("lock_reason"):
-            review_request = partial_update_review_request(
-                request_uuid, data=serializer.validated_data
-            )
+        if lock_reason := serializer.validated_data.get("lock_reason"):
+            review_request = lock_review_request(request_uuid, lock_reason=lock_reason)
 
         elif serializer.validated_data.get("update_users"):
             send_message(

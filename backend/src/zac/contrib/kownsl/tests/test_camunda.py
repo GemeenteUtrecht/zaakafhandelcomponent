@@ -428,6 +428,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
+            "id": None,
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -585,6 +586,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
+            "id": None,
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -630,6 +632,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "selected_documents": [self.document.url],
+            "id": None,
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
