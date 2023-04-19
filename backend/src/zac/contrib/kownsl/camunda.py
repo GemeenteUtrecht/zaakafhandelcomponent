@@ -29,7 +29,7 @@ from zac.core.camunda.utils import resolve_assignee
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
-from .api import create_review_request, partial_update_review_request
+from .api import create_review_request, update_assigned_users_review_request
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
 from .data import (
     AdviceApprovalContext,
@@ -236,19 +236,39 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
 #
 
 
-class BaseConfigureReviewRequestSerializer(APIModelSerializer):
+class ConfigureReviewRequestSerializer(APIModelSerializer):
+    """
+    This serializes configure review requests such as
+    advice and approval review requests.
+
+    Must have a ``task`` and ``request`` in its ``context``.
+
+    """
+
     assigned_users = WriteAssignedUsersSerializer(
         many=True,
         help_text=_("Users assigned to review."),
     )
-    toelichting = serializers.CharField(
-        allow_blank=True, help_text=_("Comment regarding the review request.")
+    id = serializers.UUIDField(
+        allow_null=True,
+        help_text=_(
+            "`uuid` of review request if it already exists and is reconfigured."
+        ),
+        required=True,
+    )
+    selected_documents = SelectDocumentsField(
+        help_text=_(
+            "Supporting documents for the review request. If reconfiguring this field will be ignored."
+        ),
+        required=True,
     )
 
     class Meta:
         model = ConfigureReviewRequest
         fields = [
             "assigned_users",
+            "id",
+            "selected_documents",
             "toelichting",
         ]
 
@@ -300,62 +320,6 @@ class BaseConfigureReviewRequestSerializer(APIModelSerializer):
             deadline_old = deadline_new
         return assigned_users
 
-
-class FirstConfigureReviewRequestSerializer(BaseConfigureReviewRequestSerializer):
-    selected_documents = SelectDocumentsField(
-        help_text=_("Supporting documents for the review request."), required=True
-    )
-
-    class Meta:
-        model = BaseConfigureReviewRequestSerializer.Meta.model
-        fields = BaseConfigureReviewRequestSerializer.Meta.fields + [
-            "selected_documents"
-        ]
-
-
-class ReconfigureReviewRequestSerializer(BaseConfigureReviewRequestSerializer):
-    id = serializers.UUIDField(
-        allow_null=True,
-        help_text=_("`uuid` of review request if it already exists."),
-        required=True,
-    )
-
-    class Meta:
-        model = BaseConfigureReviewRequestSerializer.Meta.model
-        fields = BaseConfigureReviewRequestSerializer.Meta.fields + ["id"]
-
-
-class ConfigureReviewRequestSerializer(PolymorphicSerializer, APIModelSerializer):
-    """
-    This serializes configure review requests such as
-    advice and approval review requests.
-
-    Must have a ``task`` and ``request`` in its ``context``.
-
-    """
-
-    serializer_mapping = {
-        False: FirstConfigureReviewRequestSerializer,
-        True: ReconfigureReviewRequestSerializer,
-    }
-    discriminator_field = "update"
-    fallback_distriminator_value = False
-
-    update = HiddenDiscriminatorField(
-        help_text=_(
-            "A boolean flag to indicate if the review request is being updated."
-        ),
-        related_field="id",
-    )
-
-    class Meta:
-        model = ConfigureReviewRequest
-        fields = ("update",)
-
-    def get_zaak_from_context(self):
-        zaak_context = get_zaak_context(self.context["task"])
-        return zaak_context.zaak
-
     def on_task_submission(self) -> None:
         """
         On task submission create the review request in the kownsl.
@@ -364,10 +328,10 @@ class ConfigureReviewRequestSerializer(PolymorphicSerializer, APIModelSerializer
         assert self.is_valid(), "Serializer must be valid"
 
         if id := self.validated_data.get("id"):
-            self.review_request = partial_update_review_request(
+            self.review_request = update_assigned_users_review_request(
                 id,
+                requester=self.context["request"].user,
                 data={
-                    "requester": self.context["request"].user,
                     "assigned_users": self.data["assigned_users"],
                 },
             )

@@ -24,9 +24,10 @@ from ..api import (
     create_review_request,
     get_client,
     get_review_requests,
-    partial_update_review_request,
+    lock_review_request,
     retrieve_advices,
     retrieve_approvals,
+    update_assigned_users_review_request,
 )
 from ..data import ReviewRequest
 from ..models import KownslConfig
@@ -138,14 +139,56 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         self.assertEqual(str(request.id), REVIEW_REQUEST["id"])
         self.assertEqual(m.last_request.qs["for_zaak"], [ZAAK_URL])
 
-    def test_partial_update_review_request(self, m):
+    def test_update_assigned_users_review_request(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.patch(
             f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
             json=REVIEW_REQUEST,
         )
-        review_request = partial_update_review_request(
-            REVIEW_REQUEST["id"], data={"lock_reason": "some-reason"}
+        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        review_request = update_assigned_users_review_request(
+            REVIEW_REQUEST["id"],
+            requester=user,
+            data={
+                "assigned_users": [
+                    {
+                        "user_assignees": ["some-user"],
+                        "group_assignees": [],
+                        "deadline": "2023-04-19",
+                        "email_notification": True,
+                    }
+                ]
+            },
+        )
+        self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "assigned_users": [
+                    {
+                        "user_assignees": ["some-user"],
+                        "group_assignees": [],
+                        "deadline": "2023-04-19",
+                        "email_notification": True,
+                    }
+                ]
+            },
+        )
+
+        # Check user claim is in headers
+        jwt_token = m.last_request.headers["Authorization"].split(" ")[-1]
+        client = get_client()
+        claims = jwt.decode(jwt_token, client.auth.secret)
+        self.assertEqual(claims["user_id"], user.username)
+
+    def test_lock_review_request(self, m):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.patch(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=REVIEW_REQUEST,
+        )
+        review_request = lock_review_request(
+            REVIEW_REQUEST["id"], lock_reason="some-reason"
         )
         self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
         self.assertEqual(

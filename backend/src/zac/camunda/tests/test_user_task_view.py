@@ -871,6 +871,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             ],
             "selectedDocuments": [self.document.url],
             "toelichting": "some-toelichting",
+            "id": None,
         }
         review_request_data = {
             "assignedUsers": [
@@ -936,6 +937,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                     return_value=review_request,
                 ):
                     response = self.client.put(self.task_endpoint, payload)
+
         self.assertEqual(response.status_code, 204)
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -997,6 +999,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "id": review_request_data["id"],
             "assignedUsers": review_request_data["assignedUsers"],
             "toelichting": review_request_data["toelichting"],
+            "selectedDocuments": [],
         }
 
         m.post(
@@ -1012,7 +1015,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 return_value=self.zaak_context,
             ):
                 with patch(
-                    "zac.contrib.kownsl.camunda.partial_update_review_request",
+                    "zac.contrib.kownsl.camunda.update_assigned_users_review_request",
                     return_value=review_request,
                 ) as purr:
                     response = self.client.put(self.task_endpoint, payload)
