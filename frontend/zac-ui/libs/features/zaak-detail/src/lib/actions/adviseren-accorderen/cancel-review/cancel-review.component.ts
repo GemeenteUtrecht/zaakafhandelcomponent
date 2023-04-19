@@ -39,7 +39,7 @@ export class CancelReviewComponent {
   submitForm(formData) {
     if (this.reviewRequestSummary.canLock) {
       this.isSubmitting = true;
-      this.reviewRequestsService.cancelReviewRequest(this.reviewRequestSummary.id, formData).subscribe(() => {
+      this.reviewRequestsService.updateReviewRequest(this.reviewRequestSummary.id, formData).subscribe(() => {
         this.snackbarService.openSnackBar('De aanvraag is geannuleerd.', 'Sluiten', 'primary');
         this.isSubmitting = false;
         this.successReload.emit(true)

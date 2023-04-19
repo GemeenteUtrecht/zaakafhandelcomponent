@@ -101,7 +101,7 @@ export class ReviewRequestsService {
    */
   getReviewRequestStatus(reviewRequestSummary: ReviewRequestSummary, reviewRequestDetails: ReviewRequestDetails): ReviewRequestStatus {
     const responses = reviewRequestDetails?.approvals || reviewRequestDetails?.advices;
-    
+
     // Locked request
     if (reviewRequestSummary.locked) {
       return REVIEW_REQUEST_STATUSES.LOCKED;
@@ -200,14 +200,13 @@ export class ReviewRequestsService {
     }));
   }
 
-
   /**
-   * Cancel review.
+   * Update review request.
    * @param {string} requestUuid
    * @param {object} formData
    */
-  cancelReviewRequest(requestUuid: string, formData?) {
+  updateReviewRequest(requestUuid: string, formData: any) {
     const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${requestUuid}/detail`);
-    return this.http.Patch(endpoint, formData);
+    return this.http.Patch<ReviewRequestDetails>(endpoint, formData);
   }
 }

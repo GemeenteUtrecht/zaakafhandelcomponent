@@ -4,6 +4,7 @@ import {Author, ReviewRequestDetails, ReviewRequestSummary} from '@gu/kownsl';
 import {ExtensiveCell, ReadWriteDocument, RowData, Table} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {Review, ReviewDocument} from './detail-modal.interface';
+import { ReviewRequestsService } from '../review-requests.service';
 
 
 /**
@@ -23,7 +24,10 @@ export class DetailModalComponent  {
   @Input() reviewRequestSummary: ReviewRequestSummary;
 
 
-  constructor(private http: ApplicationHttpClient) {
+  constructor(
+    private http: ApplicationHttpClient,
+    private reviewRequestService: ReviewRequestsService
+  ) {
   }
 
   //
@@ -175,6 +179,15 @@ export class DetailModalComponent  {
    */
   getAuthorName(author: Author): string {
     return author['fullName'] ? author['fullName'] : author['username'];
+  }
+
+  editReceivers(uuid) {
+    const formData = {
+      updateUsers: true
+    }
+    this.reviewRequestService.updateReviewRequest(uuid, formData).subscribe(res => {
+      console.log(res);
+    })
   }
 
   //

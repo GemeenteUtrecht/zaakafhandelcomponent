@@ -1,7 +1,8 @@
 <h1 *ngIf="title">{{title}}</h1>
 <div class="gu-adviseren-accorderen-detail">
   <p *ngIf="reviewRequestSummary?.locked && reviewRequestSummary?.lockReason">
-    <b>Reden annulering: </b>{{reviewRequestSummary.lockReason}}
+    <b>Deze aanvraag is geannuleerd</b>
+    Reden annulering: {{reviewRequestSummary.lockReason}}
   </p>
   <div class="gu-adviseren-accorderen-detail__table mb-4">
     <gu-table [table]="table"
@@ -25,5 +26,8 @@
         </ng-container>
       </ul>
     </div>
+    <button gu-button *ngIf="!reviewRequestSummary?.locked" class="mb-2" buttonStyle="tertiary" size="small" (click)="editReceivers(reviewRequestDetails.id)">
+      Ontvangers aanpassen
+    </button>
   </div>
 </div>

@@ -111,6 +111,12 @@ export class KetenProcessenService {
         subProcess.tasks.forEach(task => subTasksArray.push(task))
       })
 
+      if ( ketenProcessenData[0].subProcesses[0]) {
+        ketenProcessenData[0].subProcesses[0].subProcesses.forEach(subProcess => {
+          subProcess.tasks.forEach(task => subTasksArray.push(task))
+        })
+      }
+
       const mergedTaskData = ketenProcessenData[0].tasks
         .concat(subTasksArray)
         .sort((a: Task, b: Task) => new Date(b.created).getTime() - new Date(a.created).getTime());
