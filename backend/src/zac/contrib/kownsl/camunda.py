@@ -254,7 +254,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         help_text=_(
             "`uuid` of review request if it already exists and is reconfigured."
         ),
-        required=True,
+        required=False,
     )
     selected_documents = SelectDocumentsField(
         help_text=_(
