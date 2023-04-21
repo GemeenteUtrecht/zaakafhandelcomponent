@@ -333,6 +333,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 requester=self.context["request"].user,
                 data={
                     "assigned_users": self.data["assigned_users"],
+                    "is_being_reconfigured": True,
                 },
             )
         else:

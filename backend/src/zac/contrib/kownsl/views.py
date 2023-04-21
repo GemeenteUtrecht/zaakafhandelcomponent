@@ -9,6 +9,7 @@ from django_camunda.api import send_message
 from django_camunda.client import get_client as get_camunda_client
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from requests.exceptions import HTTPError
 from rest_framework import authentication, exceptions, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -83,14 +84,32 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
         review_request = _get_review_request_for_notification(data)
         # End the current process instance gracefully
         if data["kenmerken"].get("locked"):
-            send_message(
-                "cancel-process",
-                [review_request["metadata"]["processInstanceId"]],
-            )
+            try:
+                send_message(
+                    "cancel-process",
+                    [review_request["metadata"]["processInstanceId"]],
+                )
+            except HTTPError as exc:
+                logger.info(
+                    "Something went wrong. Process instance might not exist anymore.",
+                    exc_info=True,
+                )
+
         if data["kenmerken"].get("updated_users"):
-            send_message(
-                "change-process", [review_request["metadata"]["processInstanceId"]]
-            )
+            # A notification gets sent out to catch the event
+            # that a change in users gets triggered from a different
+            # component than the ZAC.
+            # This will return a 400 bad request if it was triggered
+            # from within the ZAC.
+            try:
+                send_message(
+                    "change-process", [review_request["metadata"]["processInstanceId"]]
+                )
+            except HTTPError as exc:
+                logger.info(
+                    "Something went wrong. Process instance might not exist anymore.",
+                    exc_info=True,
+                )
 
     @staticmethod
     def _handle_review_submitted(data: dict):

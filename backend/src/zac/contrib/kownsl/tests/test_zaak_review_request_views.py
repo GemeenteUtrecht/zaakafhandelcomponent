@@ -186,6 +186,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "canLock": False,
                     "locked": False,
                     "lockReason": "",
+                    "isBeingReconfigured": False,
                 }
             ],
         )
@@ -209,6 +210,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "canLock": True,
                     "locked": False,
                     "lockReason": "",
+                    "isBeingReconfigured": False,
                 }
             ],
         )
@@ -236,6 +238,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                     "canLock": False,
                     "locked": True,
                     "lockReason": "just a reason",
+                    "isBeingReconfigured": False,
                 }
             ],
         )
@@ -262,6 +265,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             {
                 "id": REVIEW_REQUEST["id"],
                 "reviewType": REVIEW_REQUEST["reviewType"],
+                "isBeingReconfigured": False,
                 "openReviews": [
                     {
                         "deadline": "2022-04-15",

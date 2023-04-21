@@ -157,7 +157,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                         "deadline": "2023-04-19",
                         "email_notification": True,
                     }
-                ]
+                ],
+                "is_being_reconfigured": True,
             },
         )
         self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
@@ -171,7 +172,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                         "deadline": "2023-04-19",
                         "email_notification": True,
                     }
-                ]
+                ],
+                "is_being_reconfigured": True,
             },
         )
 
