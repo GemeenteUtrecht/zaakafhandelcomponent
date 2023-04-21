@@ -40,6 +40,7 @@ from .permissions import (
     CanReadOrUpdateReviews,
     HasNotReviewed,
     IsReviewUser,
+    ReviewIsNotBeingReconfigured,
     ReviewIsUnlocked,
 )
 from .serializers import (
@@ -277,6 +278,7 @@ class ZaakReviewRequestDetailView(APIView):
         permissions.IsAuthenticated,
         CanReadOrUpdateReviews,
         ReviewIsUnlocked,
+        ReviewIsNotBeingReconfigured,
     )
 
     def get_serializer(self, **kwargs):

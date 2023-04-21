@@ -741,14 +741,52 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
         self.client.force_authenticate(user=user)
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
         with patch(
             "zac.contrib.kownsl.views.get_review_request",
             return_value=factory(ReviewRequest, {**REVIEW_REQUEST, "locked": True}),
         ):
-            response_detail = self.client.patch(
-                self.endpoint_detail, {"update_users": True}
-            )
-        self.assertEqual(response_detail.status_code, status.HTTP_403_FORBIDDEN)
+            response = self.client.patch(self.endpoint_detail, {"update_users": True})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            response.json(),
+            {"detail": "Verzoek is op slot gezet door `some-user`."},
+        )
+
+    @requests_mock.Mocker()
+    def test_review_request_is_being_reconfigured(self, m):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        self.client.force_authenticate(user=user)
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_wijzigen.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        with patch(
+            "zac.contrib.kownsl.views.get_review_request",
+            return_value=factory(
+                ReviewRequest,
+                {**REVIEW_REQUEST, "is_being_reconfigured": True, "locked": False},
+            ),
+        ):
+            response = self.client.patch(self.endpoint_detail, {"update_users": True})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            response.json(), {"detail": "This review request is being reconfigured."}
+        )
 
     @requests_mock.Mocker()
     def test_review_request_locked_get_regression(self, m):
