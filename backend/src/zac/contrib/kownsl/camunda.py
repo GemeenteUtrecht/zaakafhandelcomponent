@@ -271,6 +271,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "selected_documents",
             "toelichting",
         ]
+        extra_kwargs = {"toelichting": {"required": False, "allow_blank": True}}
 
     def get_zaak_from_context(self):
         zaak_context = get_zaak_context(self.context["task"])
