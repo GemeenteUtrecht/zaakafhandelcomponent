@@ -7,6 +7,7 @@ import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
 import {ReadWriteDocument, UserGroupDetail, UserSearchResult} from "@gu/models";
 import { ModalService, SnackbarService } from '@gu/components';
+import { has } from 'lodash-es';
 
 /**
  * <gu-config-adviseren-accorderen [taskContextData]="taskContextData"></gu-config-adviseren-accorderen>
@@ -43,6 +44,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   isSubmitting: boolean;
   submitSuccess: boolean;
   errorMessage: string;
+  error: any;
 
   constructor(
     private datePipe: DatePipe,
@@ -86,7 +88,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   }
 
   extraStepControl(index: number): FormControl {
-    return this.assignedUsers.at(index).get('extraStep') as FormControl;
+    return this.assignedUsers.at(index)?.get('extraStep') as FormControl;
   }
 
   //
@@ -108,11 +110,14 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    */
   ngOnChanges(changes: SimpleChanges) {
     if (changes.taskContextData.previousValue !== this.taskContextData ) {
+
       this.reviewType = this.taskContextData.context.reviewType;
+      const predefinedUsersArray = [this.addAssignUsersStep(true)];
+
       this.assignUsersForm = this.fb.group({
         documents: this.addDocumentCheckboxes(),
-        assignedUsers: this.fb.array([this.addAssignUsersStep(true)]),
-        toelichting: this.fb.control("", Validators.maxLength(4000))
+        assignedUsers: this.fb.array(predefinedUsersArray),
+        toelichting: this.fb.control("", [Validators.maxLength(4000)])
       })
       this.checkPredefinedAssignees();
     }
@@ -133,7 +138,8 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       this.successReload.emit(true);
     }, error => {
       this.isSubmitting = false;
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
+      this.error = error.error;
       this.reportError(error);
     })
   }
@@ -156,10 +162,24 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   addAssignUsersStep(isFirstStep?: boolean) {
     let userAssignees = [];
     let groupAssignees = [];
+    let hasExtraStep = false;
 
     if (isFirstStep) {
       userAssignees = this.taskContextData.context.camundaAssignedUsers.userAssignees.map(userAssignee => userAssignee.username);
       groupAssignees = this.taskContextData.context.camundaAssignedUsers.groupAssignees.map(groupAssignee => groupAssignee.name);
+      if (userAssignees.length > 0 || groupAssignees.length > 0) {
+        hasExtraStep = userAssignees.length > 0 || groupAssignees.length > 0;
+        this.addAssignUsersStep();
+        return this.fb.group({
+          deadline: [undefined, Validators.required],
+          assignees: this.fb.group({
+            users: [userAssignees],
+            userGroups: [groupAssignees],
+          }, { validators: [this.atLeastOneAssignee]}),
+          emailNotification: [true],
+          extraStep: [hasExtraStep]
+        })
+      }
     }
 
     return this.fb.group({
@@ -169,18 +189,65 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
         userGroups: [groupAssignees],
       }, { validators: [this.atLeastOneAssignee]}),
       emailNotification: [true],
-      extraStep: ['']
+      extraStep: [true]
     })
+  }
+
+  addPreviouslyAssignedUsersStep() {
+    // Check previously assigned users
+    if (this.taskContextData.context.previouslyAssignedUsers.length > 0) {
+      let startIndex = 0
+      this.taskContextData.context.previouslyAssignedUsers.forEach(i => {this.addStep(i, true)})
+
+      // Check camunda pre-assigned users
+      if (this.taskContextData.context.camundaAssignedUsers.userAssignees.length > 0 || this.taskContextData.context.camundaAssignedUsers.groupAssignees.length > 0 ) {
+        startIndex = 1;
+      }
+
+      this.taskContextData.context.previouslyAssignedUsers.forEach((p, index) => {
+        const userAssignees = p.userAssignees.map(userAssignee => userAssignee.username);
+        const groupAssignees = p.groupAssignees.map(groupAssignee => groupAssignee.name);
+
+        this.assignedUsersControl(startIndex + startIndex).patchValue(userAssignees);
+        this.assignedUserGroupControl(startIndex + startIndex).patchValue(groupAssignees);
+        this.assignedEmailNotificationControl(startIndex + startIndex).patchValue(p.emailNotification);
+        this.assignedDeadlineControl(startIndex + startIndex).patchValue(p.deadline);
+      })
+
+      const previouslyAssignedUsersLen = this.taskContextData.context.previouslyAssignedUsers.length;
+
+      return this.taskContextData.context.previouslyAssignedUsers.map((p, i) => {
+        const userAssignees = p.userAssignees.map(userAssignee => userAssignee.username);
+        const groupAssignees = p.groupAssignees.map(groupAssignee => groupAssignee.name);
+        console.log(i);
+        console.log('length total');
+        console.log(previouslyAssignedUsersLen);
+        const hasExtraStep = i + 1 <= previouslyAssignedUsersLen;
+        console.log(hasExtraStep);
+        return this.fb.group({
+          deadline: [undefined, Validators.required],
+          assignees: this.fb.group({
+            users: [userAssignees],
+            userGroups: [groupAssignees],
+          }, { validators: [this.atLeastOneAssignee]}),
+          emailNotification: [p.emailNotification],
+          extraStep: [true]
+        })
+      })
+    } else {
+      return []
+    }
   }
 
   /**
    * Disable fields if preconfigure
    */
   checkPredefinedAssignees() {
-    if (this.assignedUsersControl(0).value.length > 0 || this.assignedUserGroupControl(0).value.length > 0 ) {
+    if (this.taskContextData.context.camundaAssignedUsers.userAssignees.length > 0 || this.taskContextData.context.camundaAssignedUsers.groupAssignees.length > 0 ) {
       this.assignedUsersControl(0).disable();
       this.assignedUserGroupControl(0).disable();
     }
+    this.addPreviouslyAssignedUsersStep();
   }
 
   /**
@@ -205,7 +272,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     if (this.assignedUsers.at(index - 1)) {
       const previousDeadline = this.assignedUsers.at(index - 1).get('deadline').value ? this.assignedUsers.at(index - 1).get('deadline').value : today;
       const dayAfterDeadline = new Date(previousDeadline);
-      dayAfterDeadline.setDate(previousDeadline.getDate() + 1);
+      dayAfterDeadline.setDate(new Date(previousDeadline).getDate() + 1);
       return dayAfterDeadline;
     } else {
       return today
@@ -220,8 +287,9 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    * Adds a step to the form.
    * @param i
    */
-  addStep(i) {
-    if (this.extraStepControl(i).value) {
+  addStep(i, isPreconfig?) {
+    console.log(this.extraStepControl(i));
+    if (this.extraStepControl(i)?.value || isPreconfig) {
       this.steps++
       this.assignedUsers.push(this.addAssignUsersStep());
     } else {
@@ -245,7 +313,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
       window.open(res.magicUrl, "_blank");
     }, error => {
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
       this.reportError(error);
     });
   }
@@ -257,7 +325,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     this.ketenProcessenService.getAccounts('').subscribe(res => {
       this.searchResultUsers = res.results;
     }, error => {
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
       this.reportError(error);
     })
   }
@@ -269,7 +337,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     this.ketenProcessenService.getUserGroups('').subscribe(res => {
       this.searchResultUserGroups = res.results;
     }, error => {
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
       this.reportError(error);
     })
   }
@@ -304,7 +372,8 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       form: this.taskContextData.form,
       assignedUsers: assignedUsers,
       selectedDocuments: selectedDocuments,
-      toelichting: toelichting
+      toelichting: toelichting,
+      id: this.taskContextData.context.previouslyAssignedUsers.length > 0 ? this.taskContextData.task.id : null
     };
 
     this.putForm(formData);
