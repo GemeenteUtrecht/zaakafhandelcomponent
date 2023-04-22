@@ -4,6 +4,8 @@ import {Author, ReviewRequestDetails, ReviewRequestSummary} from '@gu/kownsl';
 import {ExtensiveCell, ReadWriteDocument, RowData, Table} from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {Review, ReviewDocument} from './detail-modal.interface';
+import { ReviewRequestsService } from '../review-requests.service';
+import { ModalService, SnackbarService } from '@gu/components';
 
 
 /**
@@ -23,7 +25,12 @@ export class DetailModalComponent  {
   @Input() reviewRequestSummary: ReviewRequestSummary;
 
 
-  constructor(private http: ApplicationHttpClient) {
+  constructor(
+    private http: ApplicationHttpClient,
+    private reviewRequestService: ReviewRequestsService,
+    private modalService: ModalService,
+    private snackbarService: SnackbarService,
+  ) {
   }
 
   //
@@ -175,6 +182,18 @@ export class DetailModalComponent  {
    */
   getAuthorName(author: Author): string {
     return author['fullName'] ? author['fullName'] : author['username'];
+  }
+
+  editReceivers(uuid) {
+    const formData = { updateUsers: true }
+    const successMessage = 'Er wordt een actie aangemaakt om de ontvangers aan te passen. Een moment geduld.'
+    const errorMessage = 'Fout bij het opstarten van actie voor "Ontvangers aanpassen".'
+    this.reviewRequestService.updateReviewRequest(uuid, formData).subscribe(res => {
+      this.snackbarService.openSnackBar(successMessage, 'Sluiten', 'primary');
+      this.modalService.close('adviseren-accorderen-detail-modal')
+    }, error => {
+      this.snackbarService.openSnackBar(errorMessage, 'Sluiten', 'warn');
+    })
   }
 
   //

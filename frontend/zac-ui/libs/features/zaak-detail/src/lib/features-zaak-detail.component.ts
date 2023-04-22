@@ -6,13 +6,12 @@ import {Observable} from 'rxjs';
 import {Activity, User, Zaak} from '@gu/models';
 import {ModalService, SnackbarService} from '@gu/components';
 import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
-import {AdviserenAccorderenComponent} from "./actions/adviseren-accorderen/adviseren-accorderen.component";
+import {KownslSummaryComponent} from "./actions/adviseren-accorderen/kownsl-summary.component";
 import {StatusComponent} from './actions/status/status.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import {UserPermissionsComponent} from './overview/user-permissions/user-permissions.component';
 import {BetrokkenenComponent} from './overview/betrokkenen/betrokkenen.component';
 import {DocumentenComponent} from './documenten/documenten.component';
-import { delay, retryWhen, take, takeWhile } from 'rxjs/operators';
 
 
 /**
@@ -38,7 +37,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
   /** @type {string} To identify the activity). */
   @Input() activity: string;
 
-  @ViewChild(AdviserenAccorderenComponent) adviserenAccorderenComponent: AdviserenAccorderenComponent;
+  @ViewChild(KownslSummaryComponent) KownslSummaryComponent: KownslSummaryComponent;
   @ViewChild(StatusComponent) statusComponent: StatusComponent;
   @ViewChild(UserPermissionsComponent) UserPermissionsComponent: UserPermissionsComponent;
   @ViewChild(BetrokkenenComponent) betrokkenenComponent: BetrokkenenComponent;
@@ -325,7 +324,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
    */
   ketenProcessenUpdate() {
     this.fetchCaseDetails();
-    this.adviserenAccorderenComponent.update();
+    this.KownslSummaryComponent.update();
     this.statusComponent.update();
     this.betrokkenenComponent.update();
     this.documentenComponent.update();

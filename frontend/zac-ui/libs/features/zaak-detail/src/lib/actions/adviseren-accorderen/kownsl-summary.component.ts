@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import {ModalService, SnackbarService} from '@gu/components';
 import {ExtensiveCell, RowData, Table} from '@gu/models';
 import {ReviewRequestDetails, ReviewRequestSummary} from '@gu/kownsl';
@@ -6,7 +6,7 @@ import {ReviewRequestsService} from './review-requests.service';
 
 
 /**
- * <gu-adviseren-accorderen [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-adviseren-accorderen>
+ * <gu-kownsl-summary [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-adviseren-accorderen>
  *
  * Show review requests for bronorganisatie/identificatie.
  *
@@ -14,14 +14,13 @@ import {ReviewRequestsService} from './review-requests.service';
  * Requires identificatie: string input to identify the case (zaak).
  */
 @Component({
-  selector: 'gu-adviseren-accorderen',
-  templateUrl: './adviseren-accorderen.component.html',
-  styleUrls: ['./adviseren-accorderen.component.scss'],
+  selector: 'gu-kownsl-summary',
+  templateUrl: './kownsl-summary.component.html',
+  styleUrls: ['./kownsl-summary.component.scss'],
 })
-export class AdviserenAccorderenComponent implements OnInit {
+export class KownslSummaryComponent implements OnInit {
   @Input() bronorganisatie: string;
   @Input() identificatie: string;
-
   readonly errorMessage = 'Er is een fout opgetreden bij het laden van advies/akkoord aanvragen.'
 
   /** @type {boolean} Whether the summary is loading. */

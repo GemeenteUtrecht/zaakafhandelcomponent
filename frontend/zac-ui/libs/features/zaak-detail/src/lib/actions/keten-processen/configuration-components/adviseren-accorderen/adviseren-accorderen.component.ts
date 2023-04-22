@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
@@ -7,6 +7,8 @@ import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
 import {ReadWriteDocument, UserGroupDetail, UserSearchResult} from "@gu/models";
 import { ModalService, SnackbarService } from '@gu/components';
+import { KownslSummaryComponent } from '../../../adviseren-accorderen/kownsl-summary.component';
+import { lintInitGenerator } from '@nrwl/linter';
 
 /**
  * <gu-config-adviseren-accorderen [taskContextData]="taskContextData"></gu-config-adviseren-accorderen>
@@ -26,6 +28,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @ViewChild(KownslSummaryComponent) kownslSummaryComponent: KownslSummaryComponent;
 
   readonly assignedUsersTitle = {
     advice: 'Adviseurs',
@@ -43,6 +46,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   isSubmitting: boolean;
   submitSuccess: boolean;
   errorMessage: string;
+  error: any;
 
   constructor(
     private datePipe: DatePipe,
@@ -86,7 +90,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   }
 
   extraStepControl(index: number): FormControl {
-    return this.assignedUsers.at(index).get('extraStep') as FormControl;
+    return this.assignedUsers.at(index)?.get('extraStep') as FormControl;
   }
 
   //
@@ -108,13 +112,17 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    */
   ngOnChanges(changes: SimpleChanges) {
     if (changes.taskContextData.previousValue !== this.taskContextData ) {
+
       this.reviewType = this.taskContextData.context.reviewType;
+      const predefinedUsersArray = [this.addAssignUsersStep(true)];
+
       this.assignUsersForm = this.fb.group({
         documents: this.addDocumentCheckboxes(),
-        assignedUsers: this.fb.array([this.addAssignUsersStep(true)]),
-        toelichting: this.fb.control("", Validators.maxLength(4000))
+        assignedUsers: this.fb.array(predefinedUsersArray),
+        toelichting: this.fb.control("", [Validators.maxLength(4000)])
       })
       this.checkPredefinedAssignees();
+      this.addPreviouslyAssignedUsersStep();
     }
   }
 
@@ -131,9 +139,11 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
+      this.kownslSummaryComponent.update();
     }, error => {
       this.isSubmitting = false;
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
+      this.error = error.error;
       this.reportError(error);
     })
   }
@@ -143,8 +153,9 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    * @returns {FormArray}
    */
   addDocumentCheckboxes() {
-    const arr = this.taskContextData.context.documents.map(() => {
-      return this.fb.control(false);
+    const arr = this.taskContextData.context.documents.map((doc) => {
+      // Set checkbox control on true if the document was selected in previous configuration
+      return this.fb.control(this.taskContextData.context.previouslySelectedDocuments.includes(doc.url));
     });
     return this.fb.array(arr, atleastOneValidator());
   }
@@ -156,28 +167,78 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   addAssignUsersStep(isFirstStep?: boolean) {
     let userAssignees = [];
     let groupAssignees = [];
+    let hasExtraStep = false;
 
     if (isFirstStep) {
       userAssignees = this.taskContextData.context.camundaAssignedUsers.userAssignees.map(userAssignee => userAssignee.username);
       groupAssignees = this.taskContextData.context.camundaAssignedUsers.groupAssignees.map(groupAssignee => groupAssignee.name);
+      hasExtraStep = userAssignees.length > 0 || groupAssignees.length > 0;
+      if (userAssignees.length > 0 || groupAssignees.length > 0) {
+        this.addAssignUsersStep();
+      }
+      return this.fb.group({
+        deadline: [undefined, Validators.required],
+        assignees: this.fb.group({
+          users: [userAssignees],
+          userGroups: [groupAssignees],
+        }, { validators: [this.atLeastOneAssignee]}),
+        emailNotification: [true],
+        extraStep: [hasExtraStep]
+      })
+    } else {
+      return this.fb.group({
+        deadline: [undefined, Validators.required],
+        assignees: this.fb.group({
+          users: [userAssignees],
+          userGroups: [groupAssignees],
+        }, { validators: [this.atLeastOneAssignee]}),
+        emailNotification: [true],
+        extraStep: ['']
+      })
     }
+  }
 
-    return this.fb.group({
-      deadline: [undefined, Validators.required],
-      assignees: this.fb.group({
-        users: [userAssignees],
-        userGroups: [groupAssignees],
-      }, { validators: [this.atLeastOneAssignee]}),
-      emailNotification: [true],
-      extraStep: ['']
-    })
+  /**
+   * Create steps and add values for previous configs.
+   */
+  addPreviouslyAssignedUsersStep() {
+    // Check previously assigned users
+    if (this.taskContextData.context.previouslyAssignedUsers.length > 0) {
+      let startIndex = 0
+      this.taskContextData.context.previouslyAssignedUsers.forEach((user, i) => {
+        if ((this.taskContextData.context.camundaAssignedUsers.userAssignees.length === 0 && this.taskContextData.context.camundaAssignedUsers.groupAssignees.length === 0)) {
+          if (i+1 < this.taskContextData.context.previouslyAssignedUsers.length)
+          this.addStep(i, true)
+        } else {
+          this.addStep(i, true)
+        }
+      })
+
+      // Check camunda pre-assigned users
+      if (this.taskContextData.context.camundaAssignedUsers.userAssignees.length > 0 || this.taskContextData.context.camundaAssignedUsers.groupAssignees.length > 0 ) {
+        startIndex = 1;
+      }
+
+      // Update step values according to previous configuration
+      this.taskContextData.context.previouslyAssignedUsers.forEach((p, index) => {
+        const userAssignees = p.userAssignees.map(userAssignee => userAssignee.username);
+        const groupAssignees = p.groupAssignees.map(groupAssignee => groupAssignee.name);
+
+        this.assignedUsersControl(startIndex + index).patchValue(userAssignees);
+        this.assignedUserGroupControl(startIndex + index).patchValue(groupAssignees);
+        this.assignedEmailNotificationControl(startIndex + index).patchValue(p.emailNotification);
+        this.assignedDeadlineControl(startIndex + index).setValue(p.deadline);
+        this.extraStepControl(startIndex + index)?.patchValue(false);
+      })
+
+    }
   }
 
   /**
    * Disable fields if preconfigure
    */
   checkPredefinedAssignees() {
-    if (this.assignedUsersControl(0).value.length > 0 || this.assignedUserGroupControl(0).value.length > 0 ) {
+    if (this.taskContextData.context.camundaAssignedUsers.userAssignees.length > 0 || this.taskContextData.context.camundaAssignedUsers.groupAssignees.length > 0 ) {
       this.assignedUsersControl(0).disable();
       this.assignedUserGroupControl(0).disable();
     }
@@ -205,7 +266,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     if (this.assignedUsers.at(index - 1)) {
       const previousDeadline = this.assignedUsers.at(index - 1).get('deadline').value ? this.assignedUsers.at(index - 1).get('deadline').value : today;
       const dayAfterDeadline = new Date(previousDeadline);
-      dayAfterDeadline.setDate(previousDeadline.getDate() + 1);
+      dayAfterDeadline.setDate(new Date(previousDeadline).getDate() + 1);
       return dayAfterDeadline;
     } else {
       return today
@@ -220,8 +281,8 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    * Adds a step to the form.
    * @param i
    */
-  addStep(i) {
-    if (this.extraStepControl(i).value) {
+  addStep(i, isPreconfig?) {
+    if (this.extraStepControl(i)?.value || isPreconfig) {
       this.steps++
       this.assignedUsers.push(this.addAssignUsersStep());
     } else {
@@ -245,7 +306,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
       window.open(res.magicUrl, "_blank");
     }, error => {
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
       this.reportError(error);
     });
   }
@@ -257,7 +318,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     this.ketenProcessenService.getAccounts('').subscribe(res => {
       this.searchResultUsers = res.results;
     }, error => {
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
       this.reportError(error);
     })
   }
@@ -269,7 +330,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     this.ketenProcessenService.getUserGroups('').subscribe(res => {
       this.searchResultUserGroups = res.results;
     }, error => {
-      this.errorMessage = error.detail ? error.detail : "Er is een fout opgetreden";
+      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
       this.reportError(error);
     })
   }
@@ -304,7 +365,8 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       form: this.taskContextData.form,
       assignedUsers: assignedUsers,
       selectedDocuments: selectedDocuments,
-      toelichting: toelichting
+      toelichting: toelichting,
+      id: this.taskContextData.context.previouslyAssignedUsers.length > 0 ? this.taskContextData.task.id : null
     };
 
     this.putForm(formData);

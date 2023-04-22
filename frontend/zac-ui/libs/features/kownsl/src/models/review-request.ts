@@ -57,5 +57,6 @@ export interface ReviewRequestDetails {
   reviewType: string,
   approvals?: Approval[],
   advices?: Advice[],
-  openReviews: OpenReview[]
+  openReviews: OpenReview[],
+  isBeingReconfigured: boolean
 }

@@ -271,6 +271,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "selected_documents",
             "toelichting",
         ]
+        extra_kwargs = {"toelichting": {"required": False, "allow_blank": True}}
 
     def get_zaak_from_context(self):
         zaak_context = get_zaak_context(self.context["task"])
@@ -333,6 +334,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 requester=self.context["request"].user,
                 data={
                     "assigned_users": self.data["assigned_users"],
+                    "is_being_reconfigured": True,
                 },
             )
         else:

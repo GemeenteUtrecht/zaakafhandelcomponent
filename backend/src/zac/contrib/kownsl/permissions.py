@@ -97,7 +97,20 @@ class ReviewIsUnlocked(permissions.BasePermission):
         return True
 
 
+class ReviewIsNotBeingReconfigured(permissions.BasePermission):
+    message = _("This review request is being reconfigured.")
+
+    def has_object_permission(self, request, view, obj):
+        if request.method not in permissions.SAFE_METHODS and isinstance(
+            obj, ReviewRequest
+        ):
+            return not obj.is_being_reconfigured
+        return True
+
+
 class IsReviewUser(permissions.BasePermission):
+    message = _("This user is not a reviewer.")
+
     def has_object_permission(self, request, view, obj):
         assignees = [
             f"{AssigneeTypeChoices.group}:{group}"

@@ -59,6 +59,9 @@ class UpdateZaakReviewRequestSerializer(APIModelSerializer):
             raise serializers.ValidationError(
                 _("A locked review request can not be updated.")
             )
+        if validated_data.get("update_users"):
+            # Set is_being_reconfigured field
+            validated_data["is_being_reconfigured"] = True
         return validated_data
 
 
@@ -80,6 +83,7 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
             "can_lock",
             "locked",
             "lock_reason",
+            "is_being_reconfigured",
         )
 
     def get_can_lock(self, obj) -> bool:
@@ -229,3 +233,9 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
         choices=KownslTypes.choices, help_text=_("The review type.")
     )
     open_reviews = OpenReviewSerializer(many=True, read_only=True)
+    is_being_reconfigured = serializers.BooleanField(
+        help_text=_(
+            "Boolean flag to indicate if review request is currently being reconfigured."
+        ),
+        required=True,
+    )

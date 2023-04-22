@@ -7,7 +7,7 @@ import {TabsModule} from 'ngx-bootstrap/tabs';
 import {MultiselectModule, SharedUiComponentsModule} from '@gu/components';
 import {FeaturesSearchModule} from '@gu/search';
 import {ActiviteitenComponent} from './actions/activiteiten/activiteiten.component';
-import {AdviserenAccorderenComponent} from './actions/adviseren-accorderen/adviseren-accorderen.component';
+import {KownslSummaryComponent} from './actions/adviseren-accorderen/kownsl-summary.component';
 import {DetailModalComponent} from './actions/adviseren-accorderen/detail-modal/detail-modal.component';
 import {BetrokkenenComponent} from './overview/betrokkenen/betrokkenen.component';
 import {DocumentenModule} from './documenten/documenten.module';
@@ -45,7 +45,7 @@ import {CancelReviewComponent} from './actions/adviseren-accorderen/cancel-revie
   ],
   declarations: [
     ActiviteitenComponent,
-    AdviserenAccorderenComponent,
+    KownslSummaryComponent,
     BetrokkenenComponent,
     ChecklistComponent,
     DetailModalComponent,

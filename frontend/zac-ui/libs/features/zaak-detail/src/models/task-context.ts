@@ -93,8 +93,17 @@ export interface AssignedUsers {
   groupAssignees: Assignee[]
 }
 
+export interface PreviouslyAssignedUser {
+  deadline: string,
+  emailNotification: boolean,
+  groupAssignees: Assignee[],
+  userAssignees: Assignee[]
+}
+
 export interface Context {
   camundaAssignedUsers: AssignedUsers;
+  previouslyAssignedUsers: PreviouslyAssignedUser[];
+  previouslySelectedDocuments: string[];
   documents?: Document[];
   informatieobjecttypen?: InformatieObjectType[];
   title?: string;

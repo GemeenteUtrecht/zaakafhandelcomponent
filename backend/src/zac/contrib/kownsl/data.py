@@ -178,18 +178,19 @@ class ReviewRequest(Model):
     num_approvals: int
     num_assigned_users: int
     review_type: str
+    assigned_users: List[AssignedUsers] = field(default_factory=list)
     created: datetime = datetime.now()
     documents: List[str] = field(default_factory=list)
     for_zaak: str = ""
     frontend_url: str = ""
+    is_being_reconfigured: bool = False
     locked: bool = False
     lock_reason: str = ""
+    metadata: dict = field(default_factory=dict)
     open_reviews: List[OpenReview] = field(default_factory=list)
     requester: Dict = field(default_factory=dict)
     toelichting: str = ""
-    assigned_users: List[AssignedUsers] = field(default_factory=list)
     user_deadlines: dict = field(default_factory=dict)
-    metadata: dict = field(default_factory=dict)
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
