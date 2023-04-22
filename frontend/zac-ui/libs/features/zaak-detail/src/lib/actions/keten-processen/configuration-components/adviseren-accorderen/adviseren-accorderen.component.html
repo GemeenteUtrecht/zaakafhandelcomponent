@@ -19,6 +19,7 @@
             <div class="col-12" formArrayName="documents" *ngFor="let document of documents.controls; let i = index">
               <gu-checkbox id="kp-adv-acc-docs-{{i}}"
                            [value]="taskContextData.context.documents[i].url"
+                           [checked]="document.value"
                            [control]="document">
                 <span><a class="anchor" (click)="handleDocumentClick(taskContextData.context.documents[i].readUrl)">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
               </gu-checkbox>

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
@@ -7,7 +7,8 @@ import { KetenProcessenService } from '../../keten-processen.service';
 import { atleastOneValidator } from '@gu/utils';
 import {ReadWriteDocument, UserGroupDetail, UserSearchResult} from "@gu/models";
 import { ModalService, SnackbarService } from '@gu/components';
-import { has } from 'lodash-es';
+import { KownslSummaryComponent } from '../../../adviseren-accorderen/kownsl-summary.component';
+import { lintInitGenerator } from '@nrwl/linter';
 
 /**
  * <gu-config-adviseren-accorderen [taskContextData]="taskContextData"></gu-config-adviseren-accorderen>
@@ -27,6 +28,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @ViewChild(KownslSummaryComponent) kownslSummaryComponent: KownslSummaryComponent;
 
   readonly assignedUsersTitle = {
     advice: 'Adviseurs',
@@ -120,6 +122,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
         toelichting: this.fb.control("", [Validators.maxLength(4000)])
       })
       this.checkPredefinedAssignees();
+      this.addPreviouslyAssignedUsersStep();
     }
   }
 
@@ -136,6 +139,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       this.isSubmitting = false;
       this.submitSuccess = true;
       this.successReload.emit(true);
+      this.kownslSummaryComponent.update();
     }, error => {
       this.isSubmitting = false;
       this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
@@ -149,8 +153,9 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    * @returns {FormArray}
    */
   addDocumentCheckboxes() {
-    const arr = this.taskContextData.context.documents.map(() => {
-      return this.fb.control(false);
+    const arr = this.taskContextData.context.documents.map((doc) => {
+      // Set checkbox control on true if the document was selected in previous configuration
+      return this.fb.control(this.taskContextData.context.previouslySelectedDocuments.includes(doc.url));
     });
     return this.fb.array(arr, atleastOneValidator());
   }
@@ -167,75 +172,65 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     if (isFirstStep) {
       userAssignees = this.taskContextData.context.camundaAssignedUsers.userAssignees.map(userAssignee => userAssignee.username);
       groupAssignees = this.taskContextData.context.camundaAssignedUsers.groupAssignees.map(groupAssignee => groupAssignee.name);
+      hasExtraStep = userAssignees.length > 0 || groupAssignees.length > 0;
       if (userAssignees.length > 0 || groupAssignees.length > 0) {
-        hasExtraStep = userAssignees.length > 0 || groupAssignees.length > 0;
         this.addAssignUsersStep();
-        return this.fb.group({
-          deadline: [undefined, Validators.required],
-          assignees: this.fb.group({
-            users: [userAssignees],
-            userGroups: [groupAssignees],
-          }, { validators: [this.atLeastOneAssignee]}),
-          emailNotification: [true],
-          extraStep: [hasExtraStep]
-        })
       }
+      return this.fb.group({
+        deadline: [undefined, Validators.required],
+        assignees: this.fb.group({
+          users: [userAssignees],
+          userGroups: [groupAssignees],
+        }, { validators: [this.atLeastOneAssignee]}),
+        emailNotification: [true],
+        extraStep: [hasExtraStep]
+      })
+    } else {
+      return this.fb.group({
+        deadline: [undefined, Validators.required],
+        assignees: this.fb.group({
+          users: [userAssignees],
+          userGroups: [groupAssignees],
+        }, { validators: [this.atLeastOneAssignee]}),
+        emailNotification: [true],
+        extraStep: ['']
+      })
     }
-
-    return this.fb.group({
-      deadline: [undefined, Validators.required],
-      assignees: this.fb.group({
-        users: [userAssignees],
-        userGroups: [groupAssignees],
-      }, { validators: [this.atLeastOneAssignee]}),
-      emailNotification: [true],
-      extraStep: [true]
-    })
   }
 
+  /**
+   * Create steps and add values for previous configs.
+   */
   addPreviouslyAssignedUsersStep() {
     // Check previously assigned users
     if (this.taskContextData.context.previouslyAssignedUsers.length > 0) {
       let startIndex = 0
-      this.taskContextData.context.previouslyAssignedUsers.forEach(i => {this.addStep(i, true)})
+      this.taskContextData.context.previouslyAssignedUsers.forEach((user, i) => {
+        if ((this.taskContextData.context.camundaAssignedUsers.userAssignees.length === 0 && this.taskContextData.context.camundaAssignedUsers.groupAssignees.length === 0)) {
+          if (i+1 < this.taskContextData.context.previouslyAssignedUsers.length)
+          this.addStep(i, true)
+        } else {
+          this.addStep(i, true)
+        }
+      })
 
       // Check camunda pre-assigned users
       if (this.taskContextData.context.camundaAssignedUsers.userAssignees.length > 0 || this.taskContextData.context.camundaAssignedUsers.groupAssignees.length > 0 ) {
         startIndex = 1;
       }
 
+      // Update step values according to previous configuration
       this.taskContextData.context.previouslyAssignedUsers.forEach((p, index) => {
         const userAssignees = p.userAssignees.map(userAssignee => userAssignee.username);
         const groupAssignees = p.groupAssignees.map(groupAssignee => groupAssignee.name);
 
-        this.assignedUsersControl(startIndex + startIndex).patchValue(userAssignees);
-        this.assignedUserGroupControl(startIndex + startIndex).patchValue(groupAssignees);
-        this.assignedEmailNotificationControl(startIndex + startIndex).patchValue(p.emailNotification);
-        this.assignedDeadlineControl(startIndex + startIndex).patchValue(p.deadline);
+        this.assignedUsersControl(startIndex + index).patchValue(userAssignees);
+        this.assignedUserGroupControl(startIndex + index).patchValue(groupAssignees);
+        this.assignedEmailNotificationControl(startIndex + index).patchValue(p.emailNotification);
+        this.assignedDeadlineControl(startIndex + index).setValue(p.deadline);
+        this.extraStepControl(startIndex + index)?.patchValue(false);
       })
 
-      const previouslyAssignedUsersLen = this.taskContextData.context.previouslyAssignedUsers.length;
-
-      return this.taskContextData.context.previouslyAssignedUsers.map((p, i) => {
-        const userAssignees = p.userAssignees.map(userAssignee => userAssignee.username);
-        const groupAssignees = p.groupAssignees.map(groupAssignee => groupAssignee.name);
-        console.log(i);
-        console.log('length total');
-        console.log(previouslyAssignedUsersLen);
-        const hasExtraStep = i + 1 <= previouslyAssignedUsersLen;
-        console.log(hasExtraStep);
-        return this.fb.group({
-          deadline: [undefined, Validators.required],
-          assignees: this.fb.group({
-            users: [userAssignees],
-            userGroups: [groupAssignees],
-          }, { validators: [this.atLeastOneAssignee]}),
-          emailNotification: [p.emailNotification],
-          extraStep: [true]
-        })
-      })
-    } else {
-      return []
     }
   }
 
@@ -247,7 +242,6 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       this.assignedUsersControl(0).disable();
       this.assignedUserGroupControl(0).disable();
     }
-    this.addPreviouslyAssignedUsersStep();
   }
 
   /**
@@ -288,7 +282,6 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    * @param i
    */
   addStep(i, isPreconfig?) {
-    console.log(this.extraStepControl(i));
     if (this.extraStepControl(i)?.value || isPreconfig) {
       this.steps++
       this.assignedUsers.push(this.addAssignUsersStep());
