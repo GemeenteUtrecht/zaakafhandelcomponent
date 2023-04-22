@@ -12,7 +12,7 @@ from zac.core.tests.utils import ClearCachesMixin
 
 from ..models import KadasterConfig
 
-KADASTER_API_ROOT = "https://some-kadaster.nl/esd/huidigebevragingen/v1/"
+KADASTER_API_ROOT = "https://some-kadaster.nl/lvbag/individuelebevragingen/v2/"
 LOCATION_SERVER_ROOT = "https://location-server-kadaster.nl/"
 
 
@@ -248,26 +248,32 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
         # mock adresseerbaar object from kadaster
         pand_id = "9999999999999994"
-        adresseerbaarobject = generate_oas_component(
+        adres = generate_oas_component(
             "kadaster",
-            "schemas/AdresseerbaarObject",
-            adresseerbaarobject_id=adresseerbaarobject_id,
-            type="verblijfsobject",
+            "schemas/Adres",
+            AdresseerbaarObjectIdentificatie=adresseerbaarobject_id,
             pandIdentificaties=[pand_id],
         )
         m.get(
-            f"{KADASTER_API_ROOT}adresseerbareobjecten/{adresseerbaarobject_id}",
-            json=adresseerbaarobject,
+            f"{KADASTER_API_ROOT}adressen?adresseerbaarObjectIdentificatie={adresseerbaarobject_id}",
+            json={"_embedded": {"adressen": [adres]}},
         )
 
         # mock pand from kadaster
         pand = generate_oas_component(
             "kadaster",
             "schemas/Pand",
+            oorspronkelijkBouwjaar=2023,
             identificatie=pand_id,
-            _links={"self": {"href": f"{KADASTER_API_ROOT}panden/{pand_id}"}},
+            geometrie=[],
         )
-        m.get(f"{KADASTER_API_ROOT}panden/{pand_id}", json=pand)
+        m.get(
+            f"{KADASTER_API_ROOT}panden/{pand_id}",
+            json={
+                "pand": pand,
+                "_links": {"self": {"href": f"{KADASTER_API_ROOT}panden/{pand_id}"}},
+            },
+        )
 
         url = furl(reverse("kadaster:adres-pand"))
         url.args["id"] = address_id
@@ -286,7 +292,7 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
                     "provincienaam": "Some-province",
                 },
                 "bagObject": {
-                    "url": "https://some-kadaster.nl/esd/huidigebevragingen/v1/panden/9999999999999994",
+                    "url": f"{KADASTER_API_ROOT}panden/{pand_id}",
                     "geometrie": pand["geometrie"],
                     "status": pand["status"],
                     "oorspronkelijkBouwjaar": pand["oorspronkelijkBouwjaar"],
@@ -347,26 +353,32 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
         # mock adresseerbaar object from kadaster
         pand_id = "9999999999999994"
-        adresseerbaarobject = generate_oas_component(
+        adres = generate_oas_component(
             "kadaster",
-            "schemas/AdresseerbaarObject",
-            adresseerbaarobject_id=adresseerbaarobject_id,
-            type="verblijfsobject",
+            "schemas/Adres",
+            AdresseerbaarObjectIdentificatie=adresseerbaarobject_id,
             pandIdentificaties=[pand_id],
         )
         m.get(
-            f"{KADASTER_API_ROOT}adresseerbareobjecten/{adresseerbaarobject_id}",
-            json=adresseerbaarobject,
+            f"{KADASTER_API_ROOT}adressen?adresseerbaarObjectIdentificatie={adresseerbaarobject_id}",
+            json={"_embedded": {"adressen": [adres]}},
         )
 
         # mock pand from kadaster
         pand = generate_oas_component(
             "kadaster",
             "schemas/Pand",
+            oorspronkelijkBouwjaar=2023,
             identificatie=pand_id,
-            _links={"self": {"href": f"{KADASTER_API_ROOT}panden/{pand_id}"}},
+            geometrie=[],
         )
-        m.get(f"{KADASTER_API_ROOT}panden/{pand_id}", json=pand)
+        m.get(
+            f"{KADASTER_API_ROOT}panden/{pand_id}",
+            json={
+                "pand": pand,
+                "_links": {"self": {"href": f"{KADASTER_API_ROOT}panden/{pand_id}"}},
+            },
+        )
 
         url = furl(reverse("kadaster:adres-pand"))
         url.args["id"] = address_id
@@ -433,16 +445,16 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
         # mock adresseerbaar object from kadaster
         pand_id = "9999999999999994"
-        adresseerbaarobject = generate_oas_component(
+        adres = generate_oas_component(
             "kadaster",
-            "schemas/AdresseerbaarObject",
+            "schemas/Adres",
             adresseerbaarobject_id=adresseerbaarobject_id,
             type="verblijfsobject",
             pandIdentificaties=[pand_id],
         )
         m.get(
-            f"{KADASTER_API_ROOT}adresseerbareobjecten/{adresseerbaarobject_id}",
-            json=adresseerbaarobject,
+            f"{KADASTER_API_ROOT}adressen?adresseerbaarObjectIdentificatie={adresseerbaarobject_id}",
+            json={"_embedded": {"adressen": [adres]}},
         )
 
         bag_error_response = {
