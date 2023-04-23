@@ -108,10 +108,15 @@ export class KetenProcessenService {
 
       const subTasksArray = [];
       ketenProcessenData[0].subProcesses.forEach(subProcess => {
-        subProcess.tasks.forEach(task => subTasksArray.push(task))
+        subProcess.tasks.forEach(task => subTasksArray.push(task));
+        subProcess.subProcesses.forEach(s => {
+          s.tasks.forEach(t => {
+            subTasksArray.push(t)
+          })
+        });
       })
 
-      if ( ketenProcessenData[0].subProcesses[0]) {
+      if (ketenProcessenData[0].subProcesses.length > 0) {
         ketenProcessenData[0].subProcesses[0].subProcesses.forEach(subProcess => {
           subProcess.tasks.forEach(task => subTasksArray.push(task))
         })
