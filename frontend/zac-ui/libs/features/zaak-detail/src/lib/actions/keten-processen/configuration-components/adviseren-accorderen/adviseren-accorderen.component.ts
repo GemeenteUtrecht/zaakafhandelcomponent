@@ -207,8 +207,9 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       let startIndex = 0
       this.taskContextData.context.previouslyAssignedUsers.forEach((user, i) => {
         if ((this.taskContextData.context.camundaAssignedUsers.userAssignees.length === 0 && this.taskContextData.context.camundaAssignedUsers.groupAssignees.length === 0)) {
-          if (i+1 < this.taskContextData.context.previouslyAssignedUsers.length)
-          this.addStep(i, true)
+          if (i+1 < this.taskContextData.context.previouslyAssignedUsers.length) {
+            this.addStep(i, true)
+          }
         } else {
           this.addStep(i, true)
         }
@@ -228,7 +229,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
         this.assignedUserGroupControl(startIndex + index).patchValue(groupAssignees);
         this.assignedEmailNotificationControl(startIndex + index).patchValue(p.emailNotification);
         this.assignedDeadlineControl(startIndex + index).setValue(p.deadline);
-        this.extraStepControl(startIndex + index)?.patchValue(false);
+        this.extraStepControl(startIndex + index)?.patchValue(index+1 < this.taskContextData.context.previouslyAssignedUsers.length);
       })
 
     }
