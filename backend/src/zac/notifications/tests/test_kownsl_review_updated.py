@@ -85,7 +85,7 @@ class ReviewUpdatedTests(APITestCase):
         )
 
         notification = deepcopy(NOTIFICATION)
-        notification["kenmerken"] = {"locked": "true"}
+        notification["kenmerken"] = {"actie": "locked"}
 
         response = self.client.post(self.endpoint, notification)
 
@@ -112,7 +112,7 @@ class ReviewUpdatedTests(APITestCase):
             "https://camunda.example.com/engine-rest/message",
         )
         notification = deepcopy(NOTIFICATION)
-        notification["kenmerken"] = {"updated_users": "true"}
+        notification["kenmerken"] = {"actie": "updated_users"}
 
         response = self.client.post(self.endpoint, notification)
 

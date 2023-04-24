@@ -34,6 +34,7 @@ from .api import (
     lock_review_request,
     retrieve_advices,
     retrieve_approvals,
+    update_assigned_users_review_request,
 )
 from .data import ReviewRequest
 from .permissions import (
@@ -83,34 +84,37 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
     @staticmethod
     def _handle_review_updated(data: dict):
         review_request = _get_review_request_for_notification(data)
-        # End the current process instance gracefully
-        if data["kenmerken"].get("locked"):
-            try:
-                send_message(
-                    "cancel-process",
-                    [review_request["metadata"]["processInstanceId"]],
-                )
-            except HTTPError as exc:
-                logger.info(
-                    "Something went wrong. Process instance might not exist anymore.",
-                    exc_info=True,
-                )
 
-        if data["kenmerken"].get("updated_users"):
-            # A notification gets sent out to catch the event
-            # that a change in users gets triggered from a different
-            # component than the ZAC.
-            # This will return a 400 bad request if it was triggered
-            # from within the ZAC.
-            try:
-                send_message(
-                    "change-process", [review_request["metadata"]["processInstanceId"]]
-                )
-            except HTTPError as exc:
-                logger.info(
-                    "Something went wrong. Process instance might not exist anymore.",
-                    exc_info=True,
-                )
+        if actie := data["kenmerken"].get("actie"):
+            if "locked" in actie:
+                # End the current process instance gracefully
+                try:
+                    send_message(
+                        "cancel-process",
+                        [review_request["metadata"]["processInstanceId"]],
+                    )
+                except HTTPError as exc:
+                    logger.info(
+                        "Something went wrong. Process instance might not exist anymore.",
+                        exc_info=True,
+                    )
+
+            elif "updated_users" in actie:
+                # A notification gets sent out from kownsl to catch the event
+                # that a change in users gets triggered from a different
+                # component than the ZAC.
+                # This will return a 400 bad request if it was triggered
+                # from within the ZAC.
+                try:
+                    send_message(
+                        "change-process",
+                        [review_request["metadata"]["processInstanceId"]],
+                    )
+                except HTTPError as exc:
+                    logger.info(
+                        "Something went wrong. Process instance might not exist anymore.",
+                        exc_info=True,
+                    )
 
     @staticmethod
     def _handle_review_submitted(data: dict):
@@ -357,6 +361,13 @@ class ZaakReviewRequestDetailView(APIView):
         elif serializer.validated_data.get("update_users"):
             send_message(
                 "change-process", [review_request.metadata["process_instance_id"]]
+            )
+            review_request = update_assigned_users_review_request(
+                review_request.id,
+                requester=request.user,
+                data={
+                    "is_being_reconfigured": True,
+                },
             )
 
         review_request = self.get_review_request_metadata(review_request)
