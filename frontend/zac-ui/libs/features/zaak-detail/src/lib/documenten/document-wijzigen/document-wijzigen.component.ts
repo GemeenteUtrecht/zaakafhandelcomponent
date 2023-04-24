@@ -42,7 +42,7 @@ export class DocumentWijzigenComponent {
         readonly: !(!this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken),
       },
       {
-        label: 'Beschrijving',
+        label: 'Titel',
         placeholder: '-',
         name: 'beschrijving',
         autocomplete: 'off',
@@ -66,8 +66,8 @@ export class DocumentWijzigenComponent {
       },
       {
         label: 'Informatieobjecttype',
-        name: 'documenttype',
-        value: this.selectedDocument.titel.split('.').pop(),
+        name: 'informatieobjecttype',
+        value: this.selectedDocument.informatieobjecttype.omschrijving,
         readonly: true,
       },
       {
