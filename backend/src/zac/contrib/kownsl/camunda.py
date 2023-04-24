@@ -13,7 +13,6 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
-from zac.api.polymorphism import HiddenDiscriminatorField, PolymorphicSerializer
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import register, usertask_context_serializer
@@ -29,7 +28,12 @@ from zac.core.camunda.utils import resolve_assignee
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
-from .api import create_review_request, update_assigned_users_review_request
+from .api import (
+    create_review_request,
+    retrieve_advices,
+    retrieve_approvals,
+    update_assigned_users_review_request,
+)
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
 from .data import (
     AdviceApprovalContext,
@@ -413,7 +417,43 @@ def get_camunda_assigned_users(task: Task) -> Dict[str, List]:
 
 def get_review_request_from_task(task: Task) -> Optional[ReviewRequest]:
     rr_id = task.get_variable("kownslReviewRequestId", "")
-    return get_review_request(rr_id) if rr_id else None
+    if review_request := get_review_request(rr_id) if rr_id else None:
+        # filter out users that have already given a review so they won't be
+        # seen as editable previously assigned users.
+        review_request.advices = []
+        if review_request.num_advices:
+            review_request.advices = retrieve_advices(review_request)
+
+        review_request.approvals = []
+        if review_request.num_approvals:
+            review_request.approvals = retrieve_approvals(review_request)
+
+        for given_review in review_request.advices + review_request.approvals:
+            remove_this = (
+                given_review.group
+                if given_review.group
+                else given_review.author.username
+            )
+            filtered_assigned_users = []
+            for review_step in review_request.assigned_users:
+                review_step.user_assignees = [
+                    user
+                    for user in review_step.user_assignees
+                    if user.username != remove_this
+                ]
+                review_step.group_assignees = [
+                    group
+                    for group in review_step.group_assignees
+                    if group.name != remove_this
+                ]
+
+                if review_step.user_assignees or review_step.group_assignees:
+                    filtered_assigned_users.append(review_step)
+
+            # assign filtered users again to be filtered agains the next given review
+            review_request.assigned_users = filtered_assigned_users
+
+    return review_request
 
 
 def get_review_context(task: Task) -> AdviceApprovalContext:
