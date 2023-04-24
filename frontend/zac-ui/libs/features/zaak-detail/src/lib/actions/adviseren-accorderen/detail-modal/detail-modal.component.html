@@ -29,6 +29,6 @@
     <button gu-button *ngIf="!reviewRequestSummary?.locked && !reviewRequestDetails.isBeingReconfigured" class="mb-2" buttonStyle="tertiary" size="small" (click)="editReceivers(reviewRequestDetails.id)">
       Ontvangers aanpassen
     </button>
-    <p class="p--danger" *ngIf="reviewRequestDetails.isBeingReconfigured">Er staat actie klaar om de ontvangers van deze aanvraag aan te passen.</p>
+    <p class="p--danger" *ngIf="reviewRequestDetails.isBeingReconfigured">Er staat een actie klaar om de ontvangers van deze aanvraag aan te passen.</p>
   </div>
 </div>
