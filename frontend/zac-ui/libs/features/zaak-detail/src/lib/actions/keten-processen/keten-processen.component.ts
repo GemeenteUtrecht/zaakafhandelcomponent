@@ -79,7 +79,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
   // Tabs
   selectedTabIndex = null;
-  selectedTaskId: string;
 
   // Links
   doRedirectTarget: '_blank' | '_self';
@@ -353,7 +352,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.cancelPolling() // stop polling data;
 
     this.selectedTabIndex = tabIndex;
-    this.selectedTaskId = taskId;
     this.fetchFormLayout(taskId);
   }
 

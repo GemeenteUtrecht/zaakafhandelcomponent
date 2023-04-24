@@ -26,8 +26,6 @@ import { lintInitGenerator } from '@nrwl/linter';
 })
 export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   @Input() taskContextData: TaskContextData;
-  @Input() taskId: string;
-
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild(KownslSummaryComponent) kownslSummaryComponent: KownslSummaryComponent;
 
@@ -368,7 +366,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       assignedUsers: assignedUsers,
       selectedDocuments: selectedDocuments,
       toelichting: toelichting,
-      id: this.taskContextData.context.previouslyAssignedUsers.length > 0 ? this.taskId : null
+      id: this.taskContextData.context.previouslyAssignedUsers.length > 0 ? this.taskContextData.context.id : null
     };
 
     this.putForm(formData);

@@ -101,6 +101,7 @@ export interface PreviouslyAssignedUser {
 }
 
 export interface Context {
+  id: string,
   camundaAssignedUsers: AssignedUsers;
   previouslyAssignedUsers: PreviouslyAssignedUser[];
   previouslySelectedDocuments: string[];
