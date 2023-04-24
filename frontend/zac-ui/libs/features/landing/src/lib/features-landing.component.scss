@@ -141,4 +141,9 @@ $landing-spacing: 40px;
       }
     }
   }
+
+  ul li {
+    list-style: none;
+    display: flex;
+  }
 }

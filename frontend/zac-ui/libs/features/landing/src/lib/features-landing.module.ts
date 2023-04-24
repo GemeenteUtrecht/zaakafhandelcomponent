@@ -7,9 +7,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { FilterResultsPipe } from './landing.pipe';
+import { SharedUtilsModule } from '@gu/utils';
 
 @NgModule({
-  imports: [CommonModule, MultiselectModule, NgSelectModule, SharedUiComponentsModule, FormsModule, RouterModule, MatButtonToggleModule, ReactiveFormsModule],
+  imports: [CommonModule, MultiselectModule, NgSelectModule, SharedUiComponentsModule, FormsModule, RouterModule, MatButtonToggleModule, ReactiveFormsModule, SharedUtilsModule],
   declarations: [FeaturesLandingComponent, FilterResultsPipe],
   exports: [FeaturesLandingComponent],
   providers: [TitleCasePipe]

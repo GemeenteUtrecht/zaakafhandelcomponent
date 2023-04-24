@@ -7,82 +7,95 @@
 
   <section class="landing__body card" *ngIf="!isLoading">
     <div>
-      <h3>
-        Snel zoeken
-        <gu-tooltip type="primary" inline="true">Hiermee zoek je naar zaken, documenten of objecten.</gu-tooltip>
-      </h3>
-      <ng-select class="quick-search"
-                 [items]="filteredResults"
-                 [searchFn]="searchFunction"
-                 [placeholder]="'Typ om te zoeken...'"
-                 [notFoundText]="notFoundText"
-                 [searchable]="true"
-                 [groupBy]="'type'"
-                 (search)="onSearch($event)">
-        <ng-template ng-header-tmp>
-          <mat-button-toggle-group  [(ngModel)]="selectedFilter" aria-label="Results Filter">
-            <mat-button-toggle value="all" (click)="onFilterResults()">Toon alle ({{searchResults.length}})</mat-button-toggle>
-            <mat-button-toggle value="Zaken" (click)="onFilterResults()">Zaken ({{(searchResults | filterResultsPipe: 'Zaken').length}})</mat-button-toggle>
-            <mat-button-toggle value="Documenten" (click)="onFilterResults()">Documenten ({{(searchResults | filterResultsPipe: 'Documenten').length}})</mat-button-toggle>
-            <mat-button-toggle value="Objecten" (click)="onFilterResults()">Objecten ({{(searchResults | filterResultsPipe: 'Objecten').length}})</mat-button-toggle>
-          </mat-button-toggle-group>
-        </ng-template>
-        <ng-template ng-option-tmp let-item="item">
+      <div class="mb-2">
+        <h3>Recent bezochte zaken</h3>
+        <ul>
+          <li *ngFor="let recentlyViewed of recentlyViewedCases">
+            <p>
+              <a class="mr-2" [href]="createRouteLink(recentlyViewed)">{{recentlyViewed.identificatie}}</a><small>{{recentlyViewed.visited | niceDateFormatPipe}}</small>
+            </p>
+          </li>
+        </ul>
+      </div>
+      <hr class="mb-4">
+      <div>
+        <h3>
+          Snel zoeken
+          <gu-tooltip type="primary" inline="true">Hiermee zoek je naar zaken, documenten of objecten.</gu-tooltip>
+        </h3>
+        <ng-select class="quick-search"
+                   [items]="filteredResults"
+                   [searchFn]="searchFunction"
+                   [placeholder]="'Typ om te zoeken...'"
+                   [notFoundText]="notFoundText"
+                   [searchable]="true"
+                   [groupBy]="'type'"
+                   (search)="onSearch($event)">
+          <ng-template ng-header-tmp>
+            <mat-button-toggle-group  [(ngModel)]="selectedFilter" aria-label="Results Filter">
+              <mat-button-toggle value="all" (click)="onFilterResults()">Toon alle ({{searchResults.length}})</mat-button-toggle>
+              <mat-button-toggle value="Zaken" (click)="onFilterResults()">Zaken ({{(searchResults | filterResultsPipe: 'Zaken').length}})</mat-button-toggle>
+              <mat-button-toggle value="Documenten" (click)="onFilterResults()">Documenten ({{(searchResults | filterResultsPipe: 'Documenten').length}})</mat-button-toggle>
+              <mat-button-toggle value="Objecten" (click)="onFilterResults()">Objecten ({{(searchResults | filterResultsPipe: 'Objecten').length}})</mat-button-toggle>
+            </mat-button-toggle-group>
+          </ng-template>
+          <ng-template ng-option-tmp let-item="item">
 
-          <!-- Zaken results  -->
-          <div class="landing__search-result" *ngIf="item.type === 'Zaken' && (selectedFilter === 'Zaken' || selectedFilter === 'all') ">
-            <div class="landing__search-option d-flex justify-content-between">
-              <span>{{item.identificatie}}: {{item.omschrijving}}</span>
-              <a class="anchor mb-2 task-link" [routerLink]="createRouteLink(item)">
-                Naar zaak
-              </a>
-            </div>
-          </div>
-
-          <!-- Documenten results  -->
-          <div class="landing__search-result" *ngIf="item.type === 'Documenten' && (selectedFilter === 'Documenten' || selectedFilter === 'all')">
-            <div class="landing__search-option d-flex justify-content-between">
-              <div class="landing__search-documenten">
-                {{item.titel}}
-              </div>
-              <div class="landing__search-object-link" *ngIf="item.relatedZaken?.length > 0">
-                <p class="p p--bold mb-1">Gerelateerde zaken</p>
-                <a *ngFor="let relatedZaak of item.relatedZaken" class="anchor mb-2 task-link" [routerLink]="createRouteLink(relatedZaak)">
-                  {{ relatedZaak.identificatie }}
+            <!-- Zaken results  -->
+            <div class="landing__search-result" *ngIf="item.type === 'Zaken' && (selectedFilter === 'Zaken' || selectedFilter === 'all') ">
+              <div class="landing__search-option d-flex justify-content-between">
+                <span>{{item.identificatie}}: {{item.omschrijving}}</span>
+                <a class="anchor mb-2 task-link" [routerLink]="createRouteLink(item)">
+                  Naar zaak
                 </a>
               </div>
-              <div *ngIf="item.relatedZaken?.length === 0">
-                <p class="p p--muted mb-2">Geen gerelateerde zaken</p>
-              </div>
             </div>
-          </div>
 
-          <!-- Objecten results  -->
-          <div class="landing__search-result" *ngIf="item.type === 'Objecten' && (selectedFilter === 'Objecten' || selectedFilter === 'all')">
-            <div class="landing__search-option d-flex justify-content-between">
-              <div class="landing__search-objects">
-                <div *ngFor="let record of item.recordData | keyvalue">
-                  <span>{{record.key}}: {{record.value}}</span>
-                  <br>
+            <!-- Documenten results  -->
+            <div class="landing__search-result" *ngIf="item.type === 'Documenten' && (selectedFilter === 'Documenten' || selectedFilter === 'all')">
+              <div class="landing__search-option d-flex justify-content-between">
+                <div class="landing__search-documenten">
+                  {{item.titel}}
                 </div>
-              </div>
-              <div class="landing__search-object-link" *ngIf="item.relatedZaken?.length > 0">
-                <p class="p p--bold mb-1">Gerelateerde zaken</p>
-                <ng-container *ngFor="let relatedZaak of item.relatedZaken" >
-                  <a class="anchor mb-2 task-link" [routerLink]="createRouteLink(relatedZaak)">
+                <div class="landing__search-object-link" *ngIf="item.relatedZaken?.length > 0">
+                  <p class="p p--bold mb-1">Gerelateerde zaken</p>
+                  <a *ngFor="let relatedZaak of item.relatedZaken" class="anchor mb-2 task-link" [routerLink]="createRouteLink(relatedZaak)">
                     {{ relatedZaak.identificatie }}
                   </a>
-                  <br>
-                </ng-container>
-              </div>
-              <div *ngIf="item.relatedZaken?.length === 0">
-                <p class="p p--muted mb-2">Geen gerelateerde zaken</p>
+                </div>
+                <div *ngIf="item.relatedZaken?.length === 0">
+                  <p class="p p--muted mb-2">Geen gerelateerde zaken</p>
+                </div>
               </div>
             </div>
-          </div>
-          <hr>
-        </ng-template>
-      </ng-select>
+
+            <!-- Objecten results  -->
+            <div class="landing__search-result" *ngIf="item.type === 'Objecten' && (selectedFilter === 'Objecten' || selectedFilter === 'all')">
+              <div class="landing__search-option d-flex justify-content-between">
+                <div class="landing__search-objects">
+                  <div *ngFor="let record of item.recordData | keyvalue">
+                    <span>{{record.key}}: {{record.value}}</span>
+                    <br>
+                  </div>
+                </div>
+                <div class="landing__search-object-link" *ngIf="item.relatedZaken?.length > 0">
+                  <p class="p p--bold mb-1">Gerelateerde zaken</p>
+                  <ng-container *ngFor="let relatedZaak of item.relatedZaken" >
+                    <a class="anchor mb-2 task-link" [routerLink]="createRouteLink(relatedZaak)">
+                      {{ relatedZaak.identificatie }}
+                    </a>
+                    <br>
+                  </ng-container>
+                </div>
+                <div *ngIf="item.relatedZaken?.length === 0">
+                  <p class="p p--muted mb-2">Geen gerelateerde zaken</p>
+                </div>
+              </div>
+            </div>
+            <hr>
+          </ng-template>
+        </ng-select>
+      </div>
     </div>
     <nav class="landing__navigation landing__navigation--primary">
       <aside class="card" *ngFor="let section of landingPage.sections">

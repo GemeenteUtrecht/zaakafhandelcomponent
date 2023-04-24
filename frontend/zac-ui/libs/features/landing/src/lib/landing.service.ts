@@ -3,6 +3,7 @@ import {Observable} from 'rxjs';
 import {ApplicationHttpClient} from '@gu/services';
 import {LandingPage} from '../models/landing-page';
 import { HttpResponse } from '@angular/common/http';
+import { RecentlyViewedCases } from '../models/recently-viewed';
 
 
 @Injectable({
@@ -19,6 +20,15 @@ export class LandingService {
   landingPageRetrieve(): Observable<LandingPage> {
     const endpoint = encodeURI('/api/landing-page');
     return this.http.Get<LandingPage>(endpoint);
+  }
+
+  /**
+   * Retrieves recently viewed cases.
+   * @returns {Observable<any>}
+   */
+  retrieveRecentlyViewedCases() {
+    const endpoint = encodeURI('/api/core/recently-viewed');
+    return this.http.Get<RecentlyViewedCases>(endpoint);
   }
 
   /**

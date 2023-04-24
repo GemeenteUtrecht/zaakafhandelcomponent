@@ -13,6 +13,7 @@ import {LandingPage} from '../models/landing-page';
 import {SnackbarService} from '@gu/components';
 import { TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { RecentlyViewed, RecentlyViewedCases } from '../models/recently-viewed';
 
 /**
  * Landing page component.
@@ -34,6 +35,7 @@ export class FeaturesLandingComponent implements OnInit {
 
   /** @type {(LandingPage|null)} The landing page once retrieved. */
   landingPage: LandingPage | null = null;
+  recentlyViewedCases: RecentlyViewed[] = [];
 
   searchResults: any = [];
   filteredResults: any = [];
@@ -85,6 +87,12 @@ export class FeaturesLandingComponent implements OnInit {
   getContextData() {
     this.landingService.landingPageRetrieve().subscribe(
       (landingPage) => this.landingPage = landingPage,
+      (error) => this.reportError(error),
+      () => this.isLoading = false,
+    )
+
+    this.landingService.retrieveRecentlyViewedCases().subscribe(
+      (recentlyViewedCases) => this.recentlyViewedCases = recentlyViewedCases.recentlyViewed,
       (error) => this.reportError(error),
       () => this.isLoading = false,
     )
