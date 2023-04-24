@@ -199,7 +199,7 @@
   </ng-container>
 
   <!-- Loaded -->
-  <ng-container *ngIf="!isLoadingContext && taskContextData && selectedTaskId" [ngSwitch]="taskContextData.form">
+  <ng-container *ngIf="!isLoadingContext && taskContextData" [ngSwitch]="taskContextData.form">
     <gu-tab-group alignTabs="center" [selectedIndex]="selectedTabIndex || 0">
 
       <!-- Execute task -->
@@ -207,7 +207,6 @@
         <div class="p-4">
           <gu-config-adviseren-accorderen *ngSwitchCase="['zac:configureAdviceRequest', 'zac:configureApprovalRequest'].includes(taskContextData.form) ? taskContextData.form : !taskContextData.form"
                                           [taskContextData]="taskContextData"
-                                          [taskId]="selectedTaskId"
                                           (successReload)="closeModal()"
           ></gu-config-adviseren-accorderen>
 

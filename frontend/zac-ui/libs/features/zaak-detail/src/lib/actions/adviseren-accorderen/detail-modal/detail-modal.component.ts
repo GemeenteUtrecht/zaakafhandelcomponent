@@ -187,7 +187,7 @@ export class DetailModalComponent  {
   editReceivers(uuid) {
     const formData = { updateUsers: true }
     const successMessage = 'Er wordt een actie aangemaakt om de ontvangers aan te passen. Een moment geduld.'
-    const errorMessage = 'Fout bij het opstarten van actie voor "Ontvangers aanpassen".'
+    const errorMessage = 'Fout bij het opstarten van actie voor "Ontvangers aanpassen". Probeer het nogmaals'
     this.reviewRequestService.updateReviewRequest(uuid, formData).subscribe(res => {
       this.snackbarService.openSnackBar(successMessage, 'Sluiten', 'primary');
       this.modalService.close('adviseren-accorderen-detail-modal')
