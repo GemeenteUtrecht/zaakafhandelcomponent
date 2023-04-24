@@ -243,6 +243,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
       .subscribe( res => {
         this.zaakData = res;
         this.mainZaakUrl = res.url ? res.url : null;
+        this.zaakService.updateRecentlyViewedCase(res.url).subscribe();
         this.fetchActivities(this.zaakData.url);
       }, err => {
         this.showErrorBlock = true;

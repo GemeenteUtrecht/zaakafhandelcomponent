@@ -292,4 +292,15 @@ export class ZaakService {
     return this.http.Delete<any>(endpoint);
   }
 
+  /**
+   * Patch zaak url to api
+   * @param url
+   * @returns {Observable<any>}
+   */
+  updateRecentlyViewedCase(url) {
+    const formData = {zaak: url}
+    const endpoint = encodeURI('/api/core/recently-viewed');
+    return this.http.Patch<any>(endpoint, formData);
+  }
+
 }
