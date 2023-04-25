@@ -1415,13 +1415,16 @@ class ZaakHistorySerializer(serializers.ModelSerializer):
             else:
                 new_history[key] = old_entry
 
+        recently_viewed = sorted(
+            list(new_history.values()),
+            key=lambda dat: dat["visited"],
+            reverse=True,
+        )
+        # only keep last 10 visited
+        if len(recently_viewed) > 10:
+            recently_viewed = recently_viewed[:10]
+
         return super().update(
             instance,
-            {
-                "recently_viewed": sorted(
-                    list(new_history.values()),
-                    key=lambda dat: dat["visited"],
-                    reverse=True,
-                )
-            },
+            {"recently_viewed": recently_viewed},
         )
