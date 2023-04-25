@@ -1,41 +1,24 @@
-from unittest import mock
-from unittest.mock import patch
-
-from django.core.cache import cache
-from django.test import override_settings
 from django.urls import reverse
 
 import requests_mock
 from freezegun import freeze_time
-from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ResultaatType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.zaken import Resultaat
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
-    AccessRequestFactory,
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
 )
-from zac.contrib.kownsl.models import KownslConfig
-from zac.core.models import CoreConfig, MetaObjectTypesConfig
-from zac.core.permissions import (
-    zaken_geforceerd_bijwerken,
-    zaken_inzien,
-    zaken_wijzigen,
-)
+from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import mock_resource_get, paginated_response
-from zgw.models.zrc import Zaak
+from zac.tests.utils import mock_resource_get
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 BRONORGANISATIE = "123456782"
@@ -46,11 +29,11 @@ IDENTIFICATIE = "ZAAK-2020-0010"
 class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
     """
     Test the API response body for recently-viewed endpoint.
+
     """
 
     @classmethod
     def setUpTestData(cls):
-        super().setUpTestData()
         cls.user = SuperUserFactory.create(
             recently_viewed=[
                 {
@@ -66,6 +49,7 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
         )
 
     def setUp(self):
+        super().setUp()
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
@@ -75,7 +59,7 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630952",
             identificatie=IDENTIFICATIE,
             bronorganisatie=BRONORGANISATIE,
         )
@@ -101,7 +85,7 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630953",
             identificatie="ZAAK-1234",
             bronorganisatie="1234",
         )
@@ -127,17 +111,41 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
         )
 
     @freeze_time("2020-12-26T13:00:00+00:00")
-    def test_cant_find_zaak(self, m, *mocks):
+    def test_set_recently_viewed_make_sure_its_unique(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie="ZAAK-1234",
-            bronorganisatie="1234",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630952",
+            identificatie=IDENTIFICATIE,
+            bronorganisatie=BRONORGANISATIE,
         )
-        m.get(zaak["url"], status_code=404)
+        mock_resource_get(m, zaak)
         response = self.client.patch(self.url, {"zaak": zaak["url"]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "recentlyViewed": [
+                    {
+                        "visited": "2020-12-26T13:00:00+00:00",
+                        "bronorganisatie": BRONORGANISATIE,
+                        "identificatie": IDENTIFICATIE,
+                    },
+                ]
+            },
+        )
+
+    @freeze_time("2020-12-26T13:00:00+00:00")
+    def test_cant_find_zaak(self, m, *mocks):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630952", status_code=404
+        )
+        response = self.client.patch(
+            self.url,
+            {"zaak": f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630952"},
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
