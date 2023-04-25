@@ -7,8 +7,8 @@ class ClearCachesMixin:
     def setUp(self):
         super().setUp()
 
-        for cache in caches.all():
-            cache.clear()
-            self.addCleanup(cache.clear)
+        for _cache in caches.all():
+            _cache.clear()
+            self.addCleanup(_cache.clear)
 
         schema_fetcher.cache._local_cache = {}

@@ -1403,13 +1403,25 @@ class ZaakHistorySerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
-        older = instance.recently_viewed
-        older.append(validated_data)
+        old_history = instance.recently_viewed
+        old_history.append(validated_data)
+        new_history = {}
+        for old_entry in old_history:
+            key = (old_entry["bronorganisatie"] + old_entry["identificatie"]).lower()
+            if new_entry := new_history.get(key):
+                new_history[key]["visited"] = max(
+                    [old_entry["visited"], new_entry["visited"]]
+                )
+            else:
+                new_history[key] = old_entry
+
         return super().update(
             instance,
             {
                 "recently_viewed": sorted(
-                    older, key=lambda dat: dat["visited"], reverse=True
+                    list(new_history.values()),
+                    key=lambda dat: dat["visited"],
+                    reverse=True,
                 )
             },
         )
