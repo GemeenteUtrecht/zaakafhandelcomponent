@@ -344,11 +344,11 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                     if given_review.group
                     else given_review.author.username
                 )
-                for review_step in review_request.assigned_users:
+                for review_step in validated_data["assigned_users"]:
                     if already_reviewed in [
-                        user.username for user in review_step.user_assignees
+                        user.username for user in review_step["user_assignees"]
                     ] or already_reviewed in [
-                        group.name for group in review_step.group_assignees
+                        group.name for group in review_step["group_assignees"]
                     ]:
                         raise serializers.ValidationError(
                             _("User or group already reviewed.")
