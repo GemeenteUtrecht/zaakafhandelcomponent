@@ -8,6 +8,7 @@ import requests_mock
 from django_camunda.utils import serialize_variable, underscoreize
 from freezegun import freeze_time
 from rest_framework import exceptions
+from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
@@ -724,3 +725,64 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "Must call on_task_submission before getting process variables.",
         ) as err:
             serializer.get_process_variables()
+
+    @freeze_time("1999-12-31T23:59:59Z")
+    @requests_mock.Mocker()
+    def test_reconfigure_review_request_serializer_user_already_reviewed(self, m):
+        service = Service.objects.create(
+            label="Kownsl",
+            api_type=APITypes.orc,
+            api_root=KOWNSL_ROOT,
+            auth_type=AuthTypes.zgw,
+            client_id="zac",
+            secret="supersecret",
+            user_id="zac",
+        )
+        config = KownslConfig.get_solo()
+        config.service = service
+        config.save()
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}/advices",
+            json=[ADVICE],
+        )
+        user = UserFactory.create(username=ADVICE["author"]["username"])
+        assigned_users = [
+            {
+                "user_assignees": [user.username for user in self.users_1]
+                + [user.username],
+                "group_assignees": [self.group.name],
+                "email_notification": False,
+                "deadline": "2020-01-01",
+            },
+            {
+                "user_assignees": [user.username for user in self.users_2],
+                "group_assignees": [],
+                "email_notification": False,
+                "deadline": "2020-01-02",
+            },
+        ]
+        payload = {
+            "assigned_users": assigned_users,
+            "toelichting": "some-toelichting",
+            "selected_documents": [self.document.url],
+            "id": REVIEW_REQUEST["id"],
+        }
+
+        task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
+
+        serializer = ConfigureReviewRequestSerializer(
+            data=payload, context={"task": task}
+        )
+
+        with self.assertRaises(ValidationError) as exc:
+            serializer.is_valid(raise_exception=True)
+
+        self.assertEqual(
+            exc.exception.detail["non_field_errors"][0],
+            "User or group already reviewed.",
+        )

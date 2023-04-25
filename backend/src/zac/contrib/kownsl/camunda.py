@@ -325,6 +325,36 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             deadline_old = deadline_new
         return assigned_users
 
+    def validate(self, data):
+        validated_data = super().validate(data)
+        # Make sure new assignees haven't already reviewed
+        if rr_id := validated_data.get("id"):
+            review_request = get_review_request(rr_id)
+            review_request.advices = []
+            if review_request.num_advices:
+                review_request.advices = retrieve_advices(review_request)
+
+            review_request.approvals = []
+            if review_request.num_approvals:
+                review_request.approvals = retrieve_approvals(review_request)
+
+            for given_review in review_request.advices + review_request.approvals:
+                already_reviewed = (
+                    given_review.group
+                    if given_review.group
+                    else given_review.author.username
+                )
+                for review_step in review_request.assigned_users:
+                    if already_reviewed in [
+                        user.username for user in review_step.user_assignees
+                    ] or already_reviewed in [
+                        group.name for group in review_step.group_assignees
+                    ]:
+                        raise serializers.ValidationError(
+                            _("User or group already reviewed.")
+                        )
+        return validated_data
+
     def on_task_submission(self) -> None:
         """
         On task submission create the review request in the kownsl.

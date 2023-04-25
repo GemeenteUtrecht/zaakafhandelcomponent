@@ -1015,13 +1015,27 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 return_value=self.zaak_context,
             ):
                 with patch(
-                    "zac.contrib.kownsl.camunda.update_assigned_users_review_request",
+                    "zac.contrib.kownsl.camunda.get_review_request",
                     return_value=review_request,
-                ) as purr:
-                    response = self.client.put(self.task_endpoint, payload)
+                ):
+                    with patch(
+                        "zac.contrib.kownsl.camunda.retrieve_advices",
+                        return_value=[],
+                    ) as radv:
+                        with patch(
+                            "zac.contrib.kownsl.camunda.retrieve_approvals",
+                            return_value=[],
+                        ) as rapp:
+                            with patch(
+                                "zac.contrib.kownsl.camunda.update_assigned_users_review_request",
+                                return_value=review_request,
+                            ) as purr:
+                                response = self.client.put(self.task_endpoint, payload)
 
         self.assertEqual(response.status_code, 204)
         purr.assert_called_once()
+        rapp.assert_not_called()
+        radv.assert_called()
 
     @patch(
         "zac.camunda.api.views.get_task",
