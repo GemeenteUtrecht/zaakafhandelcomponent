@@ -1184,21 +1184,29 @@ class DestroyRolSerializer(APIModelSerializer):
         if not any([rol.url == url for rol in rollen]):
             raise serializers.ValidationError(_("ROL does not belong to ZAAK."))
 
+        print(rollen)
         rol = fetch_rol(url)
-        if (rol.omschrijving_generiek.lower() == RolOmschrijving.behandelaar) and (
+        if (
+            rol.omschrijving_generiek
+            in [RolOmschrijving.behandelaar, RolOmschrijving.initiator]
+        ) and (
             len(
                 [
                     _rol
                     for _rol in rollen
-                    if _rol.omschrijving_generiek.lower() == RolOmschrijving.behandelaar
+                    if _rol.omschrijving_generiek
+                    in [RolOmschrijving.behandelaar, RolOmschrijving.initiator]
                 ]
             )
             == 1
         ):
             raise serializers.ValidationError(
                 _(
-                    "A ZAAK always requires at least one ROL with `omschrijving_generiek`: `{omschrijving}`."
-                ).format(omschrijving=RolOmschrijving.behandelaar)
+                    "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `{behandelaar}` or `{initiator}`."
+                ).format(
+                    behandelaar=RolOmschrijving.behandelaar,
+                    initiator=RolOmschrijving.initiator,
+                )
             )
 
         return url

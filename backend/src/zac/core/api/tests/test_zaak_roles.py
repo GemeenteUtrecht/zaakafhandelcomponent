@@ -448,7 +448,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 204)
 
-    def test_fail_destroy_rol(self, m):
+    def test_fail_destroy_rol_only_one_behandelaar(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaaktype)
@@ -470,6 +470,78 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             self.endpoint + "?url=" + rol["url"],
         )
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "url": [
+                    "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`."
+                ]
+            },
+        )
+
+    def test_fail_destroy_rol_only_one_initiator(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaaktype)
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
+            betrokkeneIdentificatie={"identificatie": self.user.username},
+            omschrijvingGeneriek=RolOmschrijving.initiator,
+        )
+        mock_resource_get(m, rol)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+
+        response = self.client.delete(
+            self.endpoint + "?url=" + rol["url"],
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "url": [
+                    "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`."
+                ]
+            },
+        )
+
+    def test_destroy_rol_one_behandelaar_and_one_initiator(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaaktype)
+        initiator = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d443/",
+            betrokkeneIdentificatie={"identificatie": self.user.username},
+            omschrijvingGeneriek=RolOmschrijving.initiator,
+        )
+        behandelaar = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
+            betrokkeneIdentificatie={"identificatie": self.user.username},
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
+        )
+        mock_resource_get(m, initiator)
+        mock_resource_get(m, behandelaar)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([initiator, behandelaar]),
+        )
+
+        m.delete(initiator["url"], status_code=status.HTTP_204_NO_CONTENT)
+        response = self.client.delete(
+            self.endpoint + "?url=" + initiator["url"],
+        )
+        self.assertEqual(response.status_code, 204)
 
     def test_destroy_rol_missing_url(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
