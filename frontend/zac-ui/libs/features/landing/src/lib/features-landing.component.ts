@@ -13,7 +13,7 @@ import {LandingPage} from '../models/landing-page';
 import {SnackbarService} from '@gu/components';
 import { TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { RecentlyViewed, RecentlyViewedCases } from '../models/recently-viewed';
+import { RecentlyViewed } from '../models/recently-viewed';
 
 /**
  * Landing page component.
