@@ -44,6 +44,7 @@ from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
 from zac.contrib.objects.services import fetch_zaaktypeattributen_objects_for_zaaktype
 from zac.core.camunda.start_process.serializers import CreatedProcessInstanceSerializer
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
     fetch_objecttype_version,
@@ -141,6 +142,7 @@ from .serializers import (
     ObjecttypeVersionProxySerializer,
     ReadRolSerializer,
     RelatedZaakSerializer,
+    RolMedewerkerSerializer,
     RolSerializer,
     RolTypeSerializer,
     SearchEigenschapSerializer,
@@ -676,6 +678,26 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         serializer.is_valid(raise_exception=True)
         delete_rol(serializer.validated_data["url"])
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RolBetrokkeneIdentificatieView(GetZaakMixin, views.APIView):
+    authentication_classes = (ApplicationTokenAuthentication,)
+    permission_classes = (HasTokenAuth,)
+    serializer_class = RolMedewerkerSerializer
+
+    @extend_schema(
+        summary=_("Retrieve `betrokkene_identificatie` of ZAC `medewerker`."),
+        tags=["meta"],
+        request=RolMedewerkerSerializer,
+        responses={"200": RolMedewerkerSerializer},
+    )
+    def post(self, request):
+        user = resolve_assignee(
+            request.data["betrokkene_identificatie"]["identificatie"]
+        )
+        serializer = self.serializer_class(data=request.data, context={"user": user})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
 
 
 class ZaakObjectsView(GetZaakMixin, views.APIView):
