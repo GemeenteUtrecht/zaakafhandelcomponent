@@ -154,25 +154,25 @@ class AuthorizationProfile(models.Model):
     def __str__(self):
         return self.name
 
-    @property
-    def group_permissions(self) -> list:
-        """
-        Permissions are grouped by role and object_type
-        """
-        permissions = self.blueprint_permissions.order_by()
+    # @property
+    # def group_permissions(self) -> list:
+    #     """
+    #     Permissions are grouped by role and object_type
+    #     """
+    #     permissions = self.blueprint_permissions.order_by()
 
-        groups = []
-        for (role, object_type), permissions in groupby(
-            permissions, key=lambda a: (a.role, a.object_type)
-        ):
-            groups.append(
-                {
-                    "role": role,
-                    "object_type": object_type,
-                    "policies": [perm.policy for perm in permissions],
-                }
-            )
-        return groups
+    #     groups = []
+    #     for (role, object_type), permissions in groupby(
+    #         permissions, key=lambda a: (a.role, a.object_type)
+    #     ):
+    #         groups.append(
+    #             {
+    #                 "role": role,
+    #                 "object_type": object_type,
+    #                 "policies": [perm.policy for perm in permissions],
+    #             }
+    #         )
+    #     return groups
 
 
 class UserAuthorizationProfile(models.Model):
