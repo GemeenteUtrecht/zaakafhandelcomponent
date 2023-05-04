@@ -105,24 +105,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                             "email": self.user.email,
                             "groups": [],
                         },
-                        "authProfile": {
-                            "url": f"http://testserver/api/accounts/auth-profiles/{auth_profile.uuid}",
-                            "uuid": str(auth_profile.uuid),
-                            "name": auth_profile.name,
-                            "blueprintPermissions": [
-                                {
-                                    "objectType": "zaak",
-                                    "role": role.id,
-                                    "policies": [
-                                        {
-                                            "catalogus": CATALOGUS_URL,
-                                            "zaaktypeOmschrijving": "ZT1",
-                                            "maxVa": VertrouwelijkheidsAanduidingen.zeer_geheim,
-                                        }
-                                    ],
-                                }
-                            ],
-                        },
+                        "authProfile": str(auth_profile.uuid),
                     }
                 ],
             },
@@ -165,24 +148,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "email": self.user.email,
                     "groups": [],
                 },
-                "authProfile": {
-                    "url": f"http://testserver/api/accounts/auth-profiles/{auth_profile.uuid}",
-                    "uuid": str(auth_profile.uuid),
-                    "name": auth_profile.name,
-                    "blueprintPermissions": [
-                        {
-                            "objectType": "zaak",
-                            "role": role.id,
-                            "policies": [
-                                {
-                                    "catalogus": CATALOGUS_URL,
-                                    "zaaktypeOmschrijving": "ZT1",
-                                    "maxVa": VertrouwelijkheidsAanduidingen.zeer_geheim,
-                                }
-                            ],
-                        }
-                    ],
-                },
+                "authProfile": str(auth_profile.uuid),
             },
         )
 

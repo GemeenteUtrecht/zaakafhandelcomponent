@@ -1,7 +1,12 @@
+from datetime import datetime
+
 from django.contrib.auth.models import Group
-from django.contrib.postgres.aggregates import JSONBAgg
+from django.contrib.postgres.aggregates import ArrayAgg, JSONBAgg
 from django.db import transaction
-from django.db.models import F, Prefetch, Window
+from django.db.models import Case, F, Prefetch, Value, Window
+from django.db.models.functions import JSONObject, Now
+from django.db.models.lookups import GreaterThan, LessThanOrEqual
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
@@ -429,22 +434,7 @@ class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
         .prefetch_related(
             Prefetch(
                 "auth_profile",
-                queryset=AuthorizationProfile.objects.prefetch_related(
-                    Prefetch(
-                        "blueprint_permissions",
-                        queryset=(
-                            BlueprintPermission.objects.select_related("role")
-                            .annotate(
-                                policies=Window(
-                                    expression=JSONBAgg("policy"),
-                                    partition_by=[F("role"), F("object_type")],
-                                )
-                            )
-                            .all()
-                        ),
-                        to_attr="group_permissions",
-                    )
-                ).all(),
+                queryset=AuthorizationProfile.objects.all(),
             )
         )
         .all()
@@ -463,40 +453,3 @@ class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
             "DELETE": UserAuthorizationProfileSerializer,
         }
         return mapping[self.request.method]
-
-    def create(self, request, *args, **kwargs):
-        """
-        Viewset create is modified to use annotated field
-
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        serializer = self.get_serializer(
-            instance=self.get_queryset().get(pk=instance.pk)
-        )
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
-    def update(self, request, *args, **kwargs):
-        """
-        Viewset update is modified to use annotated field
-
-        """
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        serializer = self.get_serializer(
-            instance=self.get_queryset().get(pk=instance.pk)
-        )
-
-        if getattr(instance, "_prefetched_objects_cache", None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)

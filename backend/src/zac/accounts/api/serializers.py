@@ -619,9 +619,11 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
     user = serializers.SlugRelatedField(
         read_only=False,
         slug_field="username",
+        help_text=_("User related to the authorization profile."),
         queryset=User.objects.all(),
     )
     auth_profile = serializers.SlugRelatedField(
+        help_text=_("Authorization profile related to the user."),
         read_only=False,
         slug_field="uuid",
         queryset=AuthorizationProfile.objects.all(),
@@ -636,8 +638,11 @@ class ReadUserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
     user = UserSerializer(
         help_text=_("User related to the authorization profile."), required=True
     )
-    auth_profile = AuthProfileSerializer(
-        help_text=_("Authorization profile related to the user."), required=True
+    auth_profile = serializers.SlugRelatedField(
+        help_text=_("Authorization profile related to the user."),
+        read_only=False,
+        slug_field="uuid",
+        queryset=AuthorizationProfile.objects.all(),
     )
 
     class Meta(BaseUserAuthProfileSerializer.Meta):
