@@ -4,10 +4,11 @@ from typing import List
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, now
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
@@ -632,6 +633,17 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
     class Meta(BaseUserAuthProfileSerializer.Meta):
         model = BaseUserAuthProfileSerializer.Meta.model
         fields = BaseUserAuthProfileSerializer.Meta.fields
+        validators = [
+            UniqueTogetherValidator(
+                queryset=UserAuthorizationProfile.objects.filter(
+                    start__lte=now(), end__gt=now()
+                ).all(),
+                fields=["user", "auth_profile"],
+                message=_(
+                    "A user authorization profile can not be active concurrently to a similar user authorization profile. Please change the start and end dates."
+                ),
+            )
+        ]
 
 
 class ReadUserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):

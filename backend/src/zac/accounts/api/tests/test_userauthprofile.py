@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from django.urls import reverse_lazy
+from django.utils.timezone import make_aware
 
 from freezegun import freeze_time
 from rest_framework import status
@@ -94,7 +97,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     {
                         "id": userauthprofile.id,
                         "start": "1999-12-31T23:59:59Z",
-                        "end": None,
+                        "end": "2999-12-31T00:00:00Z",
                         "user": {
                             "id": self.user.id,
                             "username": self.user.username,
@@ -137,7 +140,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             {
                 "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
-                "end": None,
+                "end": "2999-12-31T00:00:00Z",
                 "user": {
                     "id": self.user.id,
                     "username": self.user.username,
@@ -172,7 +175,6 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             "user": self.user.username,
             "authProfile": auth_profile.uuid,
             "start": "1999-12-31T23:59:59Z",
-            "end": None,
         }
         self.assertEqual(UserAuthorizationProfile.objects.count(), 0)
         response = self.client.post(url, data)
@@ -184,9 +186,118 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             {
                 "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
-                "end": None,
+                "end": "2999-12-31T00:00:00Z",
                 "user": self.user.username,
                 "authProfile": str(auth_profile.uuid),
+            },
+        )
+
+    def test_fail_create_user_auth_profile_duplicate(self):
+        role = RoleFactory.create()
+        blueprint_permission = BlueprintPermissionFactory.create(
+            role=role,
+            object_type=PermissionObjectTypeChoices.zaak,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        auth_profile = AuthorizationProfileFactory.create()
+        auth_profile.blueprint_permissions.add(blueprint_permission)
+
+        url = reverse_lazy("userauthorizationprofile-list")
+
+        data = {
+            "user": self.user.username,
+            "authProfile": auth_profile.uuid,
+            "start": "1999-12-31T23:59:59Z",
+        }
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 0)
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
+        userauthprofile = UserAuthorizationProfile.objects.get()
+        self.assertEqual(
+            response.json(),
+            {
+                "id": userauthprofile.id,
+                "start": "1999-12-31T23:59:59Z",
+                "end": "2999-12-31T00:00:00Z",
+                "user": self.user.username,
+                "authProfile": str(auth_profile.uuid),
+            },
+        )
+        data = {
+            "user": self.user.username,
+            "authProfile": auth_profile.uuid,
+            "start": "2001-12-31T23:59:59Z",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "A user authorization profile can not be active concurrently to a similar user authorization profile. Please change the start and end dates."
+                ]
+            },
+        )
+
+    def test_create_user_auth_profile_duplicate_but_different_time_period(self):
+        role = RoleFactory.create()
+        blueprint_permission = BlueprintPermissionFactory.create(
+            role=role,
+            object_type=PermissionObjectTypeChoices.zaak,
+            policy={
+                "catalogus": CATALOGUS_URL,
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+        auth_profile = AuthorizationProfileFactory.create()
+        auth_profile.blueprint_permissions.add(blueprint_permission)
+
+        url = reverse_lazy("userauthorizationprofile-list")
+
+        data = {
+            "user": self.user.username,
+            "authProfile": auth_profile.uuid,
+            "start": "1999-12-31T23:59:59Z",
+            "end": "2001-12-31T00:00:00Z",
+        }
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 0)
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
+        userauthprofile = UserAuthorizationProfile.objects.get()
+        self.assertEqual(
+            response.json(),
+            {
+                "id": userauthprofile.id,
+                "start": "1999-12-31T23:59:59Z",
+                "end": "2001-12-31T00:00:00Z",
+                "user": self.user.username,
+                "authProfile": str(auth_profile.uuid),
+            },
+        )
+        data = {
+            "user": self.user.username,
+            "authProfile": auth_profile.uuid,
+            "start": "2001-12-31T23:59:59Z",
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 2)
+        userauthprofile2 = UserAuthorizationProfile.objects.filter(
+            start__exact=make_aware(datetime(2001, 12, 31, 23, 59, 59))
+        ).get()
+        self.assertEqual(
+            response.json(),
+            {
+                "authProfile": str(auth_profile.uuid),
+                "end": "2999-12-31T00:00:00Z",
+                "id": userauthprofile2.id,
+                "start": "2001-12-31T23:59:59Z",
+                "user": self.user.username,
             },
         )
 
@@ -222,7 +333,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             {
                 "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
-                "end": None,
+                "end": "2999-12-31T00:00:00Z",
                 "user": user2.username,
                 "authProfile": str(auth_profile.uuid),
             },

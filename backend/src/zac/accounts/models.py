@@ -1,7 +1,7 @@
 import binascii
 import os
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
@@ -159,7 +159,9 @@ class UserAuthorizationProfile(models.Model):
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 
     start = models.DateTimeField(_("start"), default=timezone.now)
-    end = models.DateTimeField(_("end"), blank=True, null=True)
+    end = models.DateTimeField(
+        _("end"), default=timezone.make_aware(datetime(2999, 12, 31))
+    )
 
 
 class AccessRequest(models.Model):
