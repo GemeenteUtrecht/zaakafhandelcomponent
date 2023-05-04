@@ -1,5 +1,7 @@
 from django.contrib.auth.models import Group
+from django.contrib.postgres.aggregates import JSONBAgg
 from django.db import transaction
+from django.db.models import F, Prefetch, Window
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
@@ -21,6 +23,7 @@ from ..email import send_email_to_requester
 from ..models import (
     AccessRequest,
     AuthorizationProfile,
+    BlueprintPermission,
     Role,
     User,
     UserAtomicPermission,
@@ -311,10 +314,60 @@ class AtomicPermissionViewSet(
 class AuthProfileViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = AuthorizationProfile.objects.all()
+    queryset = AuthorizationProfile.objects.prefetch_related(
+        Prefetch(
+            "blueprint_permissions",
+            queryset=(
+                BlueprintPermission.objects.select_related("role")
+                .annotate(
+                    policies=Window(
+                        expression=JSONBAgg("policy"),
+                        partition_by=[F("role"), F("object_type")],
+                    )
+                )
+                .distinct("role", "object_type")
+                .order_by("role", "object_type")
+                .all()
+            ),
+            to_attr="group_permissions",
+        )
+    ).all()
     serializer_class = AuthProfileSerializer
     lookup_field = "uuid"
     http_method_names = ["get", "post", "put", "delete"]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Viewset action is modified to use annotated field
+
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = self.get_serializer(
+            instance=self.get_queryset().get(pk=instance.pk)
+        )
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = self.get_serializer(
+            instance=self.get_queryset().get(pk=instance.pk)
+        )
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
 
 @extend_schema_view(
@@ -362,8 +415,38 @@ class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = (
-        UserAuthorizationProfile.objects.select_related("user")
-        .select_related("auth_profile")
+        UserAuthorizationProfile.objects.prefetch_related(
+            Prefetch(
+                "user",
+                queryset=User.objects.defer("atomic_permissions", "auth_profiles")
+                .prefetch_related(
+                    Prefetch("manages_groups", queryset=Group.objects.all())
+                )
+                .prefetch_related(Prefetch("groups", queryset=Group.objects.all()))
+                .all(),
+            )
+        )
+        .prefetch_related(
+            Prefetch(
+                "auth_profile",
+                queryset=AuthorizationProfile.objects.prefetch_related(
+                    Prefetch(
+                        "blueprint_permissions",
+                        queryset=(
+                            BlueprintPermission.objects.select_related("role")
+                            .annotate(
+                                policies=Window(
+                                    expression=JSONBAgg("policy"),
+                                    partition_by=[F("role"), F("object_type")],
+                                )
+                            )
+                            .all()
+                        ),
+                        to_attr="group_permissions",
+                    )
+                ).all(),
+            )
+        )
         .all()
         .order_by("user", "auth_profile")
     )
@@ -380,3 +463,40 @@ class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
             "DELETE": UserAuthorizationProfileSerializer,
         }
         return mapping[self.request.method]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Viewset create is modified to use annotated field
+
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = self.get_serializer(
+            instance=self.get_queryset().get(pk=instance.pk)
+        )
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def update(self, request, *args, **kwargs):
+        """
+        Viewset update is modified to use annotated field
+
+        """
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = self.get_serializer(
+            instance=self.get_queryset().get(pk=instance.pk)
+        )
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
