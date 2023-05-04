@@ -23,7 +23,7 @@ SITE_ID = config("SITE_ID", default=1)
 SECRET_KEY = config("SECRET_KEY")
 
 # NEVER run with DEBUG=True in production-like environments
-DEBUG = config("DEBUG", default=True)
+DEBUG = config("DEBUG", default=False)
 
 # = domains we're running on
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", split=True)
@@ -159,11 +159,9 @@ INSTALLED_APPS = [
     "zac.contrib.dowc",
     "zac.contrib.objects.checklists",
     "zac.core.camunda.start_process",
-    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "axes.middleware.AxesMiddleware",
@@ -331,14 +329,6 @@ LOGGING = {
         },
     },
 }
-
-#
-# Django debug toolbar
-#
-
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
 
 #
 # AUTH settings - user accounts, passwords, backends...
