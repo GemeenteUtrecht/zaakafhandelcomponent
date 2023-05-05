@@ -1,8 +1,7 @@
 import binascii
 import os
 import uuid
-from datetime import date
-from itertools import groupby
+from datetime import date, datetime
 from typing import Optional
 
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
@@ -154,33 +153,15 @@ class AuthorizationProfile(models.Model):
     def __str__(self):
         return self.name
 
-    # @property
-    # def group_permissions(self) -> list:
-    #     """
-    #     Permissions are grouped by role and object_type
-    #     """
-    #     permissions = self.blueprint_permissions.order_by()
-
-    #     groups = []
-    #     for (role, object_type), permissions in groupby(
-    #         permissions, key=lambda a: (a.role, a.object_type)
-    #     ):
-    #         groups.append(
-    #             {
-    #                 "role": role,
-    #                 "object_type": object_type,
-    #                 "policies": [perm.policy for perm in permissions],
-    #             }
-    #         )
-    #     return groups
-
 
 class UserAuthorizationProfile(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 
     start = models.DateTimeField(_("start"), default=timezone.now)
-    end = models.DateTimeField(_("end"), blank=True, null=True)
+    end = models.DateTimeField(
+        _("end"), default=timezone.make_aware(datetime(2999, 12, 31))
+    )
 
 
 class AccessRequest(models.Model):
