@@ -1,15 +1,11 @@
-from datetime import datetime
-
 from django.contrib.auth.models import Group
-from django.contrib.postgres.aggregates import ArrayAgg, JSONBAgg
+from django.contrib.postgres.aggregates import JSONBAgg
 from django.db import transaction
-from django.db.models import Case, F, Prefetch, Value, Window
-from django.db.models.functions import JSONObject, Now
-from django.db.models.lookups import GreaterThan, LessThanOrEqual
-from django.utils import timezone
+from django.db.models import F, Prefetch, Window
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import filters, mixins, serializers, status, viewsets
@@ -34,7 +30,11 @@ from ..models import (
     UserAtomicPermission,
     UserAuthorizationProfile,
 )
-from .filters import UserAtomicPermissionFilterSet, UserFilterSet
+from .filters import (
+    UserAtomicPermissionFilterSet,
+    UserAuthorizationProfileFilterSet,
+    UserFilterSet,
+)
 from .permissions import (
     CanCreateOrHandleAccessRequest,
     CanForceCreateOrHandleAccessRequest,
@@ -417,6 +417,11 @@ class RoleViewSet(
     destroy=extend_schema(summary=_("Delete user authorization profile.")),
 )
 class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
+    """
+    A filter is *required* on list request and ignored on all other requests.
+
+    """
+
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = (
@@ -441,8 +446,10 @@ class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
         .order_by("user", "auth_profile")
     )
     pagination_class = BffPagination
-    filter_backends = [filters.OrderingFilter]
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
+    filterset_class = UserAuthorizationProfileFilterSet
     ordering_fields = ["user", "auth_profile"]
+    filter_fields = ["user", "auth_profile"]
 
     def get_serializer_class(self):
         mapping = {
@@ -453,3 +460,12 @@ class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
             "DELETE": UserAuthorizationProfileSerializer,
         }
         return mapping[self.request.method]
+
+    def filter_queryset(self, queryset):
+        """
+        Only filter on list action
+
+        """
+        if self.action != "list":
+            self.filterset_class = None
+        return super().filter_queryset(queryset)
