@@ -52,13 +52,13 @@ class UserAtomicPermissionFilterSet(filters.FilterSet):
 class UserAuthorizationProfileFilterSet(filters.FilterSet):
     username = filters.CharFilter(
         field_name="user__username",
-        help_text=_("Username of user that is filtered on."),
-        min_length=1,
+        help_text=_("Username of user that is filtered on. Cannot be empty if given."),
     )
     auth_profile = filters.CharFilter(
         field_name="auth_profile__uuid",
-        help_text=_("`uuid` of authorization profile that is filtered on."),
-        min_length=1,
+        help_text=_(
+            "`uuid` of authorization profile that is filtered on. Cannot be empty if given."
+        ),
     )
 
     class Meta:
@@ -70,7 +70,6 @@ class UserAuthorizationProfileFilterSet(filters.FilterSet):
         any_valid_fields = {
             param: val for param, val in self.data.items() if param in valid_fields
         }
-        print(any_valid_fields)
         if not any_valid_fields:
             raise ValidationError(
                 _(
