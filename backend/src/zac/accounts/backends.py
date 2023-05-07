@@ -2,7 +2,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 
+from zgw_consumers.api_models.documenten import Document
+
+from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
+from zgw.models.zrc import Zaak
 
 
 class UserModelEmailBackend(ModelBackend):
@@ -20,6 +24,11 @@ class UserModelEmailBackend(ModelBackend):
             return None
 
 
+MAPPING = {
+    Zaak: PermissionObjectTypeChoices.zaak,
+    Document: PermissionObjectTypeChoices.document,
+}
+
 # Deprecated
 # this class is used only to support legacy SSR views
 # All DRF views should use zac.api.permissions.DefinitionBasePermission and its subclasses
@@ -31,13 +40,24 @@ class PermissionsBackend:
         if not user_obj.is_active:
             return False
 
+        bp_filters = {
+            "role__permissions__contains": [perm],
+        }
+        uap_filters = {
+            "user": user_obj,
+            "atomic_permission__permission": perm,
+        }
+        if obj and (ot := MAPPING.get(type(obj), None)):
+            bp_filters["object_type"] = ot
+            uap_filters["atomic_permission__object_type"] = ot
+
         blueprint_permissions = BlueprintPermission.objects.for_user(
             user_obj, actual=True
-        ).filter(role__permissions__contains=[perm])
+        ).filter(**bp_filters)
 
         user_atomic_permissions = (
             UserAtomicPermission.objects.select_related("atomic_permission")
-            .filter(user=user_obj, atomic_permission__permission=perm)
+            .filter(**uap_filters)
             .actual()
         )
 

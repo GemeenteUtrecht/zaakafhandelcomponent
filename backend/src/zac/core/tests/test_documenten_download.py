@@ -166,3 +166,41 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         response = self.app.get(self.download_url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, self.inhoud_1)
+
+    def test_full_permission_blueprint_permission_with_zaak_objecttype(self, m):
+        """
+        Regression test to make sure BlueprintPermissions with different
+        objecttypes than in zac.accounts.backends.MAPPING are ignored/handled
+        accordingly.
+
+        """
+        self._set_up_mocks(m)
+
+        user = UserFactory.create()
+        BlueprintPermissionFactory.create(
+            object_type=PermissionObjectTypeChoices.zaak,
+            role__permissions=[zaken_download_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.iot_1["catalogus"],
+                "iotype_omschrijving": "Test Omschrijving 1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        response = self.app.get(self.download_url, user=user, status=403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        BlueprintPermissionFactory.create(
+            object_type=PermissionObjectTypeChoices.document,
+            role__permissions=[zaken_download_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.iot_1["catalogus"],
+                "iotype_omschrijving": "Test Omschrijving 1",
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            },
+        )
+
+        response = self.app.get(self.download_url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

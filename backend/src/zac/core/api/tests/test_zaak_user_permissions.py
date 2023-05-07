@@ -107,7 +107,7 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": user.username,
+                "identificatie": f"user:{user}",
             },
         }
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -146,7 +146,7 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": user.username,
+                "identificatie": f"user:{user}",
             },
         }
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -188,7 +188,50 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
             "registratiedatum": "2020-09-01T00:00:00Z",
             "indicatieMachtiging": "",
             "betrokkeneIdentificatie": {
-                "identificatie": user.username,
+                "identificatie": f"user:{user}",
+            },
+        }
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_handle_access.name],
+            for_user=user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @requests_mock.Mocker()
+    def test_has_perm_and_initiator(self, m):
+        """
+        Regression test for user with only initiator as rol
+
+        """
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        user = UserFactory.create()
+        rol = {
+            "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
+            "zaak": self.zaak["url"],
+            "betrokkene": None,
+            "betrokkeneType": "medewerker",
+            "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
+            "omschrijving": "zaak behandelaar",
+            "omschrijvingGeneriek": "initiator",
+            "roltoelichting": "some description",
+            "registratiedatum": "2020-09-01T00:00:00Z",
+            "indicatieMachtiging": "",
+            "betrokkeneIdentificatie": {
+                "identificatie": f"user:{user}",
             },
         }
         m.get(
