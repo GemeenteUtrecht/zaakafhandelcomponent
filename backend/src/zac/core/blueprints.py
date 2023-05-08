@@ -44,9 +44,11 @@ class ZaakTypeBlueprint(Blueprint):
         user_rollen = [
             rol
             for rol in get_rollen(zaak)
-            if rol.omschrijving_generiek == RolOmschrijving.behandelaar
+            if rol.omschrijving_generiek
+            in [RolOmschrijving.behandelaar, RolOmschrijving.initiator]
             and rol.betrokkene_type == RolTypes.medewerker
-            and rol.betrokkene_identificatie.get("identificatie") == user.username
+            and user.username.lower()
+            in rol.betrokkene_identificatie.get("identificatie", "").lower()
         ]
         return bool(user_rollen)
 
