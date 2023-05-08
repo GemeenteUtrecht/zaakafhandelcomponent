@@ -1383,6 +1383,21 @@ class ZaakObjectProxySerializer(ProxySerializer):
     PROXY_SCHEMA_PATH = ["components", "schemas", "ZaakObject"]
 
 
+class RecentlyViewedSerializer(serializers.Serializer):
+    visited = serializers.DateTimeField(help_text=_("Datetime of last visit"))
+    url = serializers.SerializerMethodField(
+        help_text=_("URL of the ZAAK detail page in the zaakafhandelcomponent."),
+    )
+
+    def get_url(self, obj: Dict) -> str:
+        path = furl(settings.UI_ROOT_URL).path.segments + [
+            "zaken",
+            obj["bronorganisatie"],
+            obj["identificatie"],
+        ]
+        return build_absolute_url(path, request=self.context["request"])
+
+
 class ZaakHistorySerializer(serializers.ModelSerializer):
     zaak = serializers.URLField(
         required=True,
@@ -1390,11 +1405,15 @@ class ZaakHistorySerializer(serializers.ModelSerializer):
         allow_blank=False,
         write_only=True,
     )
+    recently_viewed = RecentlyViewedSerializer(
+        help_text=_("URL of the ZAAK detail page in the zaakafhandelcomponent."),
+        read_only=True,
+        many=True,
+    )
 
     class Meta:
         model = User
         fields = ("zaak", "recently_viewed")
-        extra_kwargs = {"recently_viewed": {"read_only": True}}
 
     def validate_zaak(self, zaak: str) -> Zaak:
         try:

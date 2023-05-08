@@ -72,8 +72,7 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
                 "recentlyViewed": [
                     {
                         "visited": "2020-12-26T12:00:00+00:00",
-                        "bronorganisatie": "123456782",
-                        "identificatie": "ZAAK-2020-0010",
+                        "url": "http://testserver/ui/zaken/123456782/ZAAK-2020-0010",
                     }
                 ]
             },
@@ -98,13 +97,11 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
                 "recentlyViewed": [
                     {
                         "visited": "2020-12-26T13:00:00+00:00",
-                        "bronorganisatie": "1234",
-                        "identificatie": "ZAAK-1234",
+                        "url": "http://testserver/ui/zaken/1234/ZAAK-1234",
                     },
                     {
                         "visited": "2020-12-26T12:00:00+00:00",
-                        "bronorganisatie": "123456782",
-                        "identificatie": "ZAAK-2020-0010",
+                        "url": "http://testserver/ui/zaken/123456782/ZAAK-2020-0010",
                     },
                 ]
             },
@@ -129,8 +126,7 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
                 "recentlyViewed": [
                     {
                         "visited": "2020-12-26T13:00:00+00:00",
-                        "bronorganisatie": BRONORGANISATIE,
-                        "identificatie": IDENTIFICATIE,
+                        "url": "http://testserver/ui/zaken/123456782/ZAAK-2020-0010",
                     },
                 ]
             },

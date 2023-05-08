@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-from zgw_consumers.api_models.base import Model, factory
+from zgw_consumers.api_models.base import Model
 
 
 @dataclass
