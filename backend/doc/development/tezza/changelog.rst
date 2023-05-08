@@ -1,5 +1,20 @@
 .. _tezza_changelog:
 
+Release 0.7.9
+-------------
+
+Deze release bevat de volgende changes:
+
+* Secure Share module 0.4.0;
+* Contezza-apps 2.4.6;
+
+Release 0.7.8
+-------------
+
+Deze release bevat de volgende changes:
+
+* Tezza module 2.8.3;
+
 Release 0.7.7
 -------------
 
