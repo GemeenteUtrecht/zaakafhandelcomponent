@@ -14,8 +14,8 @@ from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks.api import get_killable_camunda_tasks
 from zac.contrib.objects.services import (
-    fetch_all_checklists_for_user,
     fetch_all_checklists_for_user_groups,
+    fetch_all_unanswered_checklists_for_user,
 )
 from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
@@ -88,7 +88,7 @@ class WorkStackAssigneeCasesView(ListMixin, views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
-    ordering = ("-deadline",)
+    ordering = ("-identificatie.keyword",)
 
     def get_objects(self):
         ordering = ESOrderingFilter().get_ordering(self.request, self)
@@ -162,17 +162,20 @@ class WorkStackChecklistQuestionsView(views.APIView):
     filter_backends = ()
 
     def get_assigned_checklist_answers(self) -> List[Dict]:
-        checklists = fetch_all_checklists_for_user(self.request.user)
-        answers_grouped_by_zaak = []
-        for checklist in checklists:
-            answer_group = {"zaak_url": checklist["zaak"], "checklist_answers": []}
-            for answer in checklist["answers"]:
-                if answer.get("user_assignee") == self.request.user.username:
-                    answer_group["checklist_answers"].append(answer)
-
-            answers_grouped_by_zaak.append(answer_group)
-
-        return answers_grouped_by_zaak
+        checklists = fetch_all_unanswered_checklists_for_user(self.request.user)
+        answers_grouped_by_zaak_url = [
+            {
+                "zaak_url": checklist["zaak"],
+                "checklist_answers": [
+                    answer
+                    for answer in checklist["answers"]
+                    if self.request.user.username in answer.get("user_assignee", "")
+                    and not answer["answer"]
+                ],
+            }
+            for checklist in checklists
+        ]
+        return answers_grouped_by_zaak_url
 
     def get(self, request, *args, **kwargs):
         grouped_checklist_answers = self.get_assigned_checklist_answers()
@@ -189,14 +192,16 @@ class WorkStackChecklistQuestionsView(views.APIView):
 class WorkStackGroupChecklistQuestionsView(WorkStackChecklistQuestionsView):
     def get_assigned_checklist_answers(self) -> List[Dict]:
         checklists = fetch_all_checklists_for_user_groups(self.request.user)
-        answers_grouped_by_zaak = []
         groups = self.request.user.groups.all().values_list("name", flat=True)
-        for checklist in checklists:
-            answer_group = {"zaak_url": checklist["zaak"], "checklist_answers": []}
-            for answer in checklist["answers"]:
-                if answer.get("group_assignee") in groups:
-                    answer_group["checklist_answers"].append(answer)
-
-            answers_grouped_by_zaak.append(answer_group)
-
-        return answers_grouped_by_zaak
+        answers_grouped_by_zaak_url = [
+            {
+                "zaak_url": checklist["zaak"],
+                "checklist_answers": [
+                    answer
+                    for answer in checklist["answers"]
+                    if answer.get("group_assignee") in groups and not answer["answer"]
+                ],
+            }
+            for checklist in checklists
+        ]
+        return answers_grouped_by_zaak_url

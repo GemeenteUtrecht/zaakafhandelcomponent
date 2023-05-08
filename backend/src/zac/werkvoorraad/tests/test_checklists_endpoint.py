@@ -89,9 +89,10 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
 
         user_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
         user_checklist["answers"][0]["user_assignee"] = self.user.username
+        user_checklist["answers"][0]["answer"] = ""
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.werkvoorraad.views.fetch_all_checklists_for_user",
+            "zac.werkvoorraad.views.fetch_all_unanswered_checklists_for_user",
             return_value=[user_checklist],
         ):
             response = self.client.get(self.endpoint)
@@ -131,7 +132,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.werkvoorraad.views.fetch_all_checklists_for_user",
+            "zac.werkvoorraad.views.fetch_all_unanswered_checklists_for_user",
             return_value=[user_checklist],
         ):
             response = self.client.get(self.endpoint)
@@ -153,7 +154,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
-            "zac.werkvoorraad.views.fetch_all_checklists_for_user",
+            "zac.werkvoorraad.views.fetch_all_unanswered_checklists_for_user",
             return_value=[],
         ):
             response = self.client.get(self.endpoint)
@@ -180,6 +181,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
 
         group_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
         group_checklist["answers"][0]["group_assignee"] = self.group_1.name
+        group_checklist["answers"][0]["answer"] = ""
         self.client.force_authenticate(user=self.user)
         endpoint = reverse("werkvoorraad:group-checklists")
         with patch(

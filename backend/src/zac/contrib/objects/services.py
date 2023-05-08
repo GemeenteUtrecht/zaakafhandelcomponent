@@ -156,9 +156,7 @@ def fetch_start_camunda_process_form_for_zaaktype(
 
 
 @cache("checklisttype_objecttype", timeout=A_DAY)
-def fetch_checklisttype_object(
-    zaaktype: ZaakType,
-) -> Optional[Dict]:
+def fetch_checklisttype_object() -> Optional[Dict]:
     """
     Cache the broader group of checklisttypes to increase performance
     related to fetching meta objects.
@@ -175,7 +173,7 @@ def fetch_checklisttype_object(
 def fetch_checklisttype(
     zaaktype: ZaakType,
 ) -> Optional[ChecklistType]:
-    checklisttypes = fetch_checklisttype_object(zaaktype)
+    checklisttypes = fetch_checklisttype_object()
     if not checklisttypes:
         return None
 
@@ -225,24 +223,34 @@ def fetch_checklist(zaak: Zaak) -> Optional[Checklist]:
     return None
 
 
-def fetch_all_checklists_for_user(user: User) -> List[dict]:
-    data_attrs = [f"answers__answer__userAssignee__exact__{user.username}"]
+def fetch_all_unanswered_checklists_for_user(user: User) -> List[dict]:
+    data_attrs = [f"answers__icontains__{user.username}"]
     if objs := _search_meta_objects("checklist_objecttype", data_attrs=data_attrs):
-        return [
+        checklists = [
             underscoreize(
                 obj["record"]["data"],
                 **api_settings.JSON_UNDERSCOREIZE,
             )
             for obj in objs
         ]
+        filtered = []
+        for checklist in checklists:
+            if any(
+                [
+                    answer
+                    for answer in checklist["answers"]
+                    if user.username == answer.get("user_assignee")
+                    and not answer["answer"]
+                ]
+            ):
+                filtered.append(checklist)
+        return filtered
     return []
 
 
 def fetch_all_checklists_for_user_groups(user: User) -> List[dict]:
-    data_attrs_list = [
-        [f"answers__answer__groupAssignee__exact__{group.name}"]
-        for group in user.groups.all()
-    ]
+    groupnames = user.groups.all().values_list("name", flat=True)
+    data_attrs_list = [[f"answers__icontains__{group}"] for group in groupnames]
 
     def _search_checklists_objects(data_attrs: List[str]) -> List[dict]:
         if objs := _search_meta_objects("checklist_objecttype", data_attrs=data_attrs):
@@ -257,11 +265,21 @@ def fetch_all_checklists_for_user_groups(user: User) -> List[dict]:
 
     with parallel() as executor:
         results = executor.map(_search_checklists_objects, data_attrs_list)
-
     final_results = []
     for result in results:
         if result:
-            final_results += result
+            filtered = []
+            for checklist in result:
+                if any(
+                    [
+                        answer
+                        for answer in checklist["answers"]
+                        if answer.get("group_assignee") in groupnames
+                        and not answer["answer"]
+                    ]
+                ):
+                    filtered.append(checklist)
+            final_results += filtered
     return final_results
 
 
