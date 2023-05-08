@@ -131,8 +131,8 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         urls = [result["url"] for result in data]
-        self.assertEqual(urls[0], zaak_1["url"])
-        self.assertEqual(urls[1], zaak_2["url"])
+        self.assertEqual(urls[0], zaak_2["url"])
+        self.assertEqual(urls[1], zaak_1["url"])
 
     @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_cases_ordering_endpoint(self, m, *mocks):

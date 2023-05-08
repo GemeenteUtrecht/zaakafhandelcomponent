@@ -8,6 +8,7 @@ from django_camunda.client import get_client
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.permissions import zaken_handle_access
@@ -19,14 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 def get_camunda_user_tasks(user: User) -> List[Task]:
-    tasks = get_camunda_tasks(f"user:{user.username}")
-    if not tasks:  # Try to get tasks the old way to not create breaking changes
-        tasks = get_camunda_tasks(user.username)
+    tasks = get_camunda_tasks(f"{AssigneeTypeChoices.user}:{user.username}")
+    # Deprecated 2023-05-08
+    # if not tasks:  # Try to get tasks the old way to not create breaking changes
+    #     tasks = get_camunda_tasks(user.username)
     return tasks
 
 
 def get_camunda_group_tasks(user: User) -> List[Task]:
-    groups = [f"group:{group.name}" for group in user.groups.all()]
+    groups = [
+        f"group:{group}" for group in user.groups.all().values_list("name", flat=True)
+    ]
     with parallel(
         max_workers=10
     ) as executor:  # 10 parallel requests per user may be too much for camunda if lots of users are making requests - lower this if camunda starts returning 429 errors or similar
