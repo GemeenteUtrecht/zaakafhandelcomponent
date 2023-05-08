@@ -122,11 +122,9 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         response = self.client.get(self.endpoint)
 
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-
-        self.assertEqual(len(data), 1)
+        self.assertEqual(response.json()["count"], 1)
         self.assertEqual(
-            data,
+            response.json()["results"],
             [
                 {
                     "accessRequests": [

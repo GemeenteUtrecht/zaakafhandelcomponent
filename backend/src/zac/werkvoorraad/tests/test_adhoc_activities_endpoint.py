@@ -133,7 +133,7 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()["results"]
 
         self.assertEqual(
             data,
@@ -167,9 +167,7 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-
-        self.assertEqual(data, [])
+        self.assertEqual(response.json()["results"], [])
 
     def test_other_user_logging_in(self):
         zaak_document = self.create_zaak_document(self.zaak)
@@ -182,15 +180,14 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
 
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), [])
+        self.assertEqual(response.json()["results"], [])
 
     def test_workstack_adhoc_group_activities_no_group_specified_in_url(self):
         endpoint = reverse("werkvoorraad:group-activities")
         self.client.force_authenticate(user=self.user)
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data, [])
+        self.assertEqual(response.json()["results"], [])
 
     def test_workstack_adhoc_group_activities_user_not_part_of_group(self):
         zaak_document = self.create_zaak_document(self.zaak)
@@ -212,8 +209,7 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data, [])
+        self.assertEqual(response.json()["results"], [])
 
     def test_workstack_adhoc_group_activities_group_specified(self):
         self.user.groups.add(self.group_1)
@@ -237,9 +233,8 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
-        data = response.json()
         self.assertEqual(
-            data,
+            response.json()["results"],
             [
                 {
                     "activities": [
@@ -287,6 +282,5 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data, [])
+        self.assertEqual(response.json()["results"], [])
         self.user.groups.remove(self.group_2)
