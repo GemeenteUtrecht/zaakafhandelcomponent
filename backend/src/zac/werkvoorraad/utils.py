@@ -8,11 +8,11 @@ from django_camunda.client import get_client
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest, User
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.permissions import zaken_handle_access
 from zac.elasticsearch.searches import search_zaken
-from zac.camunda.constants import AssigneeTypeChoices
 
 from .data import ActivityGroup, ChecklistAnswerGroup
 
@@ -28,7 +28,9 @@ def get_camunda_user_tasks(user: User) -> List[Task]:
 
 
 def get_camunda_group_tasks(user: User) -> List[Task]:
-    groups = [f"group:{group}" for group in user.groups.all().values_list('name', flat=True)]
+    groups = [
+        f"group:{group}" for group in user.groups.all().values_list("name", flat=True)
+    ]
     with parallel(
         max_workers=10
     ) as executor:  # 10 parallel requests per user may be too much for camunda if lots of users are making requests - lower this if camunda starts returning 429 errors or similar
