@@ -111,8 +111,7 @@ export class ZaakObjectService {
     return new Observable((subscriber: Subscriber<MapMarker>) => {
       const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
       const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
-        contentProperties: Object.entries(zaakObject.record.data)
-          .filter(([, value]) => !value.match('http://bag.basisregistraties.overheid.nl')),  // 404 (see: @GemeenteUtrecht/ZGW #1858))
+        contentProperties: Object.entries(zaakObject.record.data),
         coordinates: zaakObjectGeometry?.coordinates?.length > 1
           ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
           : [],
