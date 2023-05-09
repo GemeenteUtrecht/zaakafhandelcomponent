@@ -23,7 +23,6 @@ from rest_framework import (
     serializers,
     status,
     views,
-    viewsets,
 )
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
@@ -1397,12 +1396,17 @@ class RecentlyViewedZakenView(views.APIView):
     serializer_class = ZaakHistorySerializer
 
     def get(self, request, *args, **kwargs):
-        serializer = self.serializer_class(instance=request.user)
+        serializer = self.serializer_class(
+            instance=request.user, context={"request": request}
+        )
         return Response(serializer.data)
 
     def patch(self, request, *args, **kwargs):
         serializer = self.serializer_class(
-            instance=request.user, data=request.data, partial=True
+            instance=request.user,
+            data=request.data,
+            partial=True,
+            context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()

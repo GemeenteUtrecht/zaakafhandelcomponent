@@ -1,7 +1,7 @@
 export interface RecentlyViewed {
   "visited": Date,
   "identificatie": string,
-  "bronorganisatie": string
+  "url": string
 }
 
 export interface RecentlyViewedCases {

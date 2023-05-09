@@ -12,7 +12,7 @@
         <ul>
           <li *ngFor="let recentlyViewed of recentlyViewedCases">
             <p>
-              <a class="mr-2" [routerLink]="createRouteLink(recentlyViewed)">{{recentlyViewed.identificatie}}</a><small>{{recentlyViewed.visited | niceDateFormatPipe}}</small>
+              <a class="mr-2" href="{{recentlyViewed.url}}">{{recentlyViewed.url.split('/').pop()}}</a><small>{{recentlyViewed.visited | niceDateFormatPipe}}</small>
             </p>
           </li>
         </ul>
