@@ -1184,7 +1184,6 @@ class DestroyRolSerializer(APIModelSerializer):
         if not any([rol.url == url for rol in rollen]):
             raise serializers.ValidationError(_("ROL does not belong to ZAAK."))
 
-        print(rollen)
         rol = fetch_rol(url)
         if (
             rol.omschrijving_generiek

@@ -15,6 +15,7 @@ import requests
 from furl import furl
 from requests.models import Response
 from zds_client import ClientError
+from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.besluiten import Besluit, BesluitDocument
 from zgw_consumers.api_models.catalogi import (
@@ -1323,9 +1324,6 @@ def add_string_representation(func):
 
     """
 
-    def _fetch_object_types() -> Dict[str, Dict]:
-        return {ot["url"]: ot for ot in fetch_objecttypes()}
-
     def _add_string_representation_field(obj: Dict, objecttypes: Dict) -> Dict:
         ot = (
             objecttypes.get(obj["type"])
@@ -1344,27 +1342,32 @@ def add_string_representation(func):
             obj["stringRepresentation"] = ""
         return obj
 
+    def _fetch_object_types() -> Dict[str, Dict]:
+        return {ot["url"]: ot for ot in fetch_objecttypes()}
+
+    def if_list(objs: List[Dict]) -> List[Dict]:
+        ots = _fetch_object_types()
+        return [_add_string_representation_field(obj, ots) for obj in objs]
+
+    def if_dict(objs: Dict) -> Dict:
+        if "results" in objs and objs["results"]:
+            ots = _fetch_object_types()
+            objs["results"] = [
+                _add_string_representation_field(obj, ots) for obj in objs["results"]
+            ]
+            return objs
+        elif "results" not in objs:
+            return _add_string_representation_field(objs, _fetch_object_types())
+        return objs
+
     @wraps(func)
     def wrapper(*args, **kwds):
         objs = func(*args, **kwds)
-        if objs:
-            if isinstance(objs, list):
-                objecttypes = _fetch_object_types()
-                return [
-                    _add_string_representation_field(obj, objecttypes) for obj in objs
-                ]
-            elif isinstance(objs, dict):
-                if "results" in objs:
-                    objecttypes = _fetch_object_types()
-                    objs["results"] = [
-                        _add_string_representation_field(obj, objecttypes)
-                        for obj in objs["results"]
-                    ]
-                    return objs
-                else:
-                    objecttypes = _fetch_object_types()
-                    return _add_string_representation_field(objs, objecttypes)
-        return objs
+        mapping = {
+            list: lambda objects: if_list(objects),
+            dict: lambda objects: if_dict(objects),
+        }
+        return mapping[type(objs)](objs)
 
     return wrapper
 
@@ -1463,19 +1466,20 @@ def fetch_objecttype_version(uuid: str, version: int) -> dict:
     return objecttypes_version_data
 
 
-def search_objects(
-    filters: dict, query_params: Dict = dict()
-) -> Tuple[List[dict], Dict]:
+def search_objects(filters: dict, query_params: Dict = dict) -> Tuple[List[dict], Dict]:
     client = get_objects_client()
+    operation_id = "object_search"
+    url = get_operation_url(client.schema, operation_id, base_url=client.base_url)
+    url = furl(url).set(query_params).url
     response = add_string_representation(client.operation)(
-        operation_id="object_search", query_params=query_params, data=filters
+        url=url, operation_id=operation_id, query_params=query_params, data=filters
     )
     query_params = fetch_next_url_pagination(response, query_params=query_params)
     return response, query_params
 
 
 def fetch_objects_all_paginated(
-    client: ZGWClient, query_params: Dict = dict()
+    client: ZGWClient, query_params: Dict = dict
 ) -> Tuple[List[dict], Dict]:
     response = add_string_representation(client.list)(
         "object", query_params=query_params

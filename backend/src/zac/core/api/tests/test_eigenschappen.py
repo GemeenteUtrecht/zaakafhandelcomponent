@@ -688,7 +688,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         m.post(
             f"{objects_service.api_root}objects/search",
-            json=[enum_obj],
+            json=paginated_response([enum_obj]),
         )
 
         response = self.client.get(

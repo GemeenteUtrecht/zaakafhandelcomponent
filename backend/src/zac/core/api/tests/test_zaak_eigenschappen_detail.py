@@ -718,7 +718,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
 
         m.post(
             f"{objects_service.api_root}objects/search",
-            json=[enum_obj],
+            json=paginated_response([enum_obj]),
         )
 
         response = self.client.patch(self.endpoint, data={"waarde": 4})

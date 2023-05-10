@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict, List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
@@ -46,6 +47,7 @@ def build_absolute_url(
 
 
 def fetch_next_url_pagination(response: Dict, query_params: Dict = dict()) -> Dict:
+    query_params = deepcopy(query_params)
     if response["next"]:
         next_url = urlparse(response["next"])
         query = parse_qs(next_url.query)
