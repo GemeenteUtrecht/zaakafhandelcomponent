@@ -55,7 +55,16 @@ def _search_meta_objects(
         object_filters["data_attrs"] += data_attrs
 
     object_filters["data_attrs"] = ",".join(object_filters["data_attrs"])
-    meta_objects = search_objects(object_filters)
+
+    query_params = {"pageSize": 100}
+    get_more = True
+    meta_objects = []
+    while get_more:
+        response, query_params = search_objects(
+            object_filters, query_params=query_params
+        )
+        meta_objects += response["results"]
+        get_more = query_params.get("page", None)
 
     if not meta_objects:
         logger.warning("No `{url}` object is found.".format(url=ot_url))

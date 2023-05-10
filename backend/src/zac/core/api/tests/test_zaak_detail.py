@@ -173,7 +173,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([]))
 
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
@@ -220,7 +220,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([]))
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456782&identificatie=ZAAK-2020-0010",
             json=paginated_response([self.zaak]),
@@ -332,7 +332,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
 
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([]))
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(
@@ -493,7 +493,10 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(
@@ -616,7 +619,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
 
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([]))
         mock_resource_get(m, self.catalogus)
         mock_resource_get(
             m, {**self.zaaktype, "identificatie": "some-other-identificatie"}
@@ -664,7 +667,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
 
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([]))
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(
@@ -718,7 +721,7 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
 
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([]))
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(

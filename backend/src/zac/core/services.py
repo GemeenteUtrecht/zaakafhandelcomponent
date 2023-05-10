@@ -57,6 +57,7 @@ from .cache import (
 )
 from .models import CoreConfig
 from .rollen import Rol
+from .utils import fetch_next_url_pagination
 
 logger = logging.getLogger(__name__)
 perf_logger = logging.getLogger("performance")
@@ -438,8 +439,8 @@ def _find_zaken(
 
 def get_zaken_all_paginated(
     client: ZGWClient,
-    query_params: dict = {},
-) -> Tuple[List[Zaak], dict]:
+    query_params: Dict = dict(),
+) -> Tuple[List[Zaak], Dict]:
     """
     Fetch all zaken from the ZRCs in batches.
     Used to index Zaken in ES.
@@ -447,15 +448,7 @@ def get_zaken_all_paginated(
     """
     response = client.list("zaak", query_params=query_params)
     zaken = factory(Zaak, response["results"])
-
-    if response["next"]:
-        next_url = urlparse(response["next"])
-        query = parse_qs(next_url.query)
-        new_page = int(query["page"][0])
-        query_params["page"] = [new_page]
-    else:
-        query_params["page"] = None
-
+    query_params = fetch_next_url_pagination(response, query_params=query_params)
     return zaken, query_params
 
 
@@ -1330,6 +1323,9 @@ def add_string_representation(func):
 
     """
 
+    def _fetch_object_types() -> Dict[str, Dict]:
+        return {ot["url"]: ot for ot in fetch_objecttypes()}
+
     def _add_string_representation_field(obj: Dict, objecttypes: Dict) -> Dict:
         ot = (
             objecttypes.get(obj["type"])
@@ -1352,13 +1348,22 @@ def add_string_representation(func):
     def wrapper(*args, **kwds):
         objs = func(*args, **kwds)
         if objs:
-            objecttypes = {ot["url"]: ot for ot in fetch_objecttypes()}
             if isinstance(objs, list):
+                objecttypes = _fetch_object_types()
                 return [
                     _add_string_representation_field(obj, objecttypes) for obj in objs
                 ]
             elif isinstance(objs, dict):
-                return _add_string_representation_field(objs, objecttypes)
+                if "results" in objs:
+                    objecttypes = _fetch_object_types()
+                    objs["results"] = [
+                        _add_string_representation_field(obj, objecttypes)
+                        for obj in objs["results"]
+                    ]
+                    return objs
+                else:
+                    objecttypes = _fetch_object_types()
+                    return _add_string_representation_field(objs, objecttypes)
         return objs
 
     return wrapper
@@ -1394,9 +1399,7 @@ def create_object(data: Dict) -> Dict:
 def fetch_object(url: str, client: Optional[Client] = None) -> dict:
     if not client:
         client = get_objects_client()
-
     retrieved_item = client.retrieve("object", url=url)
-
     retrieved_item["type"] = fetch_objecttype(retrieved_item["type"])
     return retrieved_item
 
@@ -1460,18 +1463,25 @@ def fetch_objecttype_version(uuid: str, version: int) -> dict:
     return objecttypes_version_data
 
 
-@add_string_representation
-def search_objects(filters: dict) -> List[dict]:
+def search_objects(
+    filters: dict, query_params: Dict = dict()
+) -> Tuple[List[dict], Dict]:
     client = get_objects_client()
-    results = client.operation(operation_id="object_search", data=filters)
-    return results
+    response = add_string_representation(client.operation)(
+        operation_id="object_search", query_params=query_params, data=filters
+    )
+    query_params = fetch_next_url_pagination(response, query_params=query_params)
+    return response, query_params
 
 
-@add_string_representation
-def fetch_objects_all() -> List[dict]:
-    client = get_objects_client()
-    results = client.list("object")
-    return results
+def fetch_objects_all_paginated(
+    client: ZGWClient, query_params: Dict = dict()
+) -> Tuple[List[dict], Dict]:
+    response = add_string_representation(client.list)(
+        "object", query_params=query_params
+    )
+    query_params = fetch_next_url_pagination(response, query_params=query_params)
+    return response, query_params
 
 
 def relate_object_to_zaak(relation_data: dict) -> dict:

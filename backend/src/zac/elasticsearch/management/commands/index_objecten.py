@@ -10,8 +10,11 @@ from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 from elasticsearch_dsl.query import Bool, Nested, Terms
 
-from zac.core.models import CoreConfig
-from zac.core.services import fetch_objects_all, fetch_objecttypes
+from zac.core.services import (
+    fetch_objects_all_paginated,
+    fetch_objecttypes,
+    get_objects_client,
+)
 
 from ...api import (
     create_object_document,
@@ -92,12 +95,20 @@ class Command(BaseCommand):
         ots = {ot["url"]: ot for ot in fetch_objecttypes()}
         self.stdout.write(f"Fetched {len(ots)} object types.")
         self.stdout.write("Starting object retrieval from the configured OBJECTs API.")
+        client = get_objects_client()
 
-        objects = fetch_objects_all()
-        for obj in objects:
-            obj["type"] = ots[obj["type"]]
+        query_params = {"pageSize": 20}
+        get_more = True
+        while get_more:
+            objects, query_params = fetch_objects_all_paginated(
+                client, query_params=query_params
+            )
+            perf_logger.info("Fetched %d objects", len(objects["results"]))
+            get_more = query_params.get("page", None)
+            for obj in objects["results"]:
+                obj["type"] = ots[obj["type"]]
 
-        yield from self.documenten_generator(objects)
+            yield from self.documenten_generator(objects["results"])
 
     def documenten_generator(self, objects: List[Dict]) -> Iterator[ObjectDocument]:
         object_documenten = self.create_objecten_documenten(objects)

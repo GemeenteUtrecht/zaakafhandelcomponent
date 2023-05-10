@@ -25,7 +25,7 @@ from rest_framework import (
     views,
 )
 from rest_framework.exceptions import APIException, ValidationError
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
@@ -97,7 +97,6 @@ from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import (
     EigenschappenFilterSet,
-    MetaObjectFilterSet,
     ObjectTypeFilterSet,
     ZaakEigenschappenFilterSet,
     ZaakObjectFilterSet,
@@ -136,9 +135,9 @@ from .serializers import (
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
     ObjectFilterProxySerializer,
-    ObjectProxySerializer,
     ObjecttypeProxySerializer,
     ObjecttypeVersionProxySerializer,
+    PaginatedObjectProxySerializer,
     ReadRolSerializer,
     RelatedZaakSerializer,
     RolMedewerkerSerializer,
@@ -1288,34 +1287,33 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
 @extend_schema(
     summary=_("Search OBJECTs."),
     description=_("Search for OBJECTs in the OBJECTS API."),
-    responses={(200, "application/json"): ObjectProxySerializer},
+    responses={(200, "application/json"): PaginatedObjectProxySerializer},
     tags=["objects"],
 )
 class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ObjectFilterProxySerializer
-    filterset_class = MetaObjectFilterSet
 
     def post(self, request):
+        """
+        Does not include `meta` objects.
+
+        """
         try:
-            objects = search_objects(filters=request.data)
+            objects, _qp = search_objects(
+                filters=request.data,
+                query_params=request.query_params,
+            )
         except ClientError as exc:
             raise ValidationError(detail=exc.args)
 
-        filterset = self.filterset_class(
-            data=self.request.query_params, request=self.request
-        )
-        if not filterset.is_valid():
-            raise exceptions.ValidationError(filterset.errors)
-        if not filterset.data.get("include_meta"):
-            objects = [
-                obj
-                for obj in objects
-                if not obj.get("record", {}).get("data", {}).get("meta", False)
-            ]
-
-        object_serializer = ObjectProxySerializer(objects, many=True)
+        objects["results"] = [
+            obj
+            for obj in objects["results"]
+            if not obj.get("record", {}).get("data", {}).get("meta", False)
+        ]
+        object_serializer = PaginatedObjectProxySerializer(objects)
         return Response(object_serializer.data)
 
 

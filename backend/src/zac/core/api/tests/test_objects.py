@@ -11,7 +11,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import UserFactory
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 
 OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
 OBJECTS_ROOT = "http://object.nl/api/v1/"
@@ -348,7 +348,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[self.object])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([self.object]))
 
         config = CoreConfig.get_solo()
         config.primary_objects_api = self.objects_service
@@ -386,7 +386,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
         # Test that stringRepresentation is given
         self.assertEqual(
-            response.json(),
+            response.json()["results"],
             [
                 {
                     "url": "http://object.nl/api/v1/objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
@@ -504,7 +504,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                 },
             },
         ]
-        m.post(f"{OBJECTS_ROOT}objects/search", json=objects)
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response(objects))
 
         config = CoreConfig.get_solo()
         config.primary_objects_api = self.objects_service
@@ -530,5 +530,10 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                 self.assertEqual(object_count, len(response.json()))
                 self.assertEqual(
                     sorted(stringRep),
-                    sorted([res["stringRepresentation"] for res in response.json()]),
+                    sorted(
+                        [
+                            res["stringRepresentation"]
+                            for res in response.json()["results"]
+                        ]
+                    ),
                 )

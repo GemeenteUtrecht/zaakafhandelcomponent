@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional, Union
+from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.http import HttpRequest
@@ -42,3 +43,14 @@ def build_absolute_url(
         domain.args.update(params)
 
     return domain.url
+
+
+def fetch_next_url_pagination(response: Dict, query_params: Dict = dict()) -> Dict:
+    if response["next"]:
+        next_url = urlparse(response["next"])
+        query = parse_qs(next_url.query)
+        new_page = int(query["page"][0])
+        query_params["page"] = [new_page]
+    else:
+        query_params["page"] = None
+    return query_params
