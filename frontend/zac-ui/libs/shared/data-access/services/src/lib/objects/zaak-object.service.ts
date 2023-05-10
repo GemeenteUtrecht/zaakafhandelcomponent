@@ -127,7 +127,8 @@ export class ZaakObjectService {
       // Assign options to created marker.
       Object.assign(mapMarker, options);
 
-      // Find pand if referenced.
+      // TODO: Check if pand data is used?
+/*      // Find pand if referenced.
       if (zaakObject.record.data['BAGNR_PAND']) {
         this.kadasterService.retrievePandByPandId(zaakObject.record.data['BAGNR_PAND']).subscribe(
           // Add resolved pand details to map MapMarker.
@@ -147,9 +148,10 @@ export class ZaakObjectService {
         );
       } else {
         // Complete without pand.
-        subscriber.next(mapMarker);
-        subscriber.complete();
-      }
+      }*/
+      
+      subscriber.next(mapMarker);
+      subscriber.complete();
     });
   }
 
