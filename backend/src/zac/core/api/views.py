@@ -1294,13 +1294,13 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
         OpenApiParameter(
             name=ObjectProxyPagination().page_size_query_param,
             default=ObjectProxyPagination().page_size,
-            type=OpenApiTypes.URI,
+            type=OpenApiTypes.INT,
             description=_("Number of results to return per paginated response."),
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
             name=ObjectProxyPagination().page_query_param,
-            type=OpenApiTypes.STR,
+            type=OpenApiTypes.INT,
             description=_("Page number of paginated response."),
             location=OpenApiParameter.QUERY,
         ),

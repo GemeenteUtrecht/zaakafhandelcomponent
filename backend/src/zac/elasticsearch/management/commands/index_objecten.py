@@ -97,7 +97,7 @@ class Command(BaseCommand):
         self.stdout.write("Starting object retrieval from the configured OBJECTs API.")
         client = get_objects_client()
 
-        query_params = {"pageSize": 20}
+        query_params = {"pageSize": 100}
         get_more = True
         while get_more:
             objects, query_params = fetch_objects_all_paginated(
