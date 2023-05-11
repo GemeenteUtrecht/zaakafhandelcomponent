@@ -151,11 +151,13 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "zaak": f"{ZAKEN_ROOT}zaken/456",
             "file": file,
         }
-        response = self.client.post(self.endpoint, post_data, format="multipart")
+
+        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+            response = self.client.post(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_create_logged_in_with_perms(self, m):
+    def test_create_logged_in_with_perms(self, m, *mocks):
         user = UserFactory.create()
         self.client.force_authenticate(user)
         self._setupMocks(m)
@@ -217,25 +219,27 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-        with patch(
-            "zac.core.api.views.get_open_documenten",
-            return_value=[
-                DowcResponse(
-                    drc_url=document["url"],
-                    magic_url="",
-                    purpose="write",
-                    uuid=uuid4(),
-                    unversioned_url=document["url"],
-                )
-            ],
-        ):
+
+        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
             with patch(
-                "zac.core.api.views.fetch_document_audit_trail",
-                return_value=[audit_trail],
+                "zac.core.api.views.get_open_documenten",
+                return_value=[
+                    DowcResponse(
+                        drc_url=document["url"],
+                        magic_url="",
+                        purpose="write",
+                        uuid=uuid4(),
+                        unversioned_url=document["url"],
+                    )
+                ],
             ):
-                response = self.client.post(
-                    self.endpoint, post_data, format="multipart"
-                )
+                with patch(
+                    "zac.core.api.views.fetch_document_audit_trail",
+                    return_value=[audit_trail],
+                ):
+                    response = self.client.post(
+                        self.endpoint, post_data, format="multipart"
+                    )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @requests_mock.Mocker()
@@ -746,17 +750,18 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             aanmaakdatum="2022-03-04T12:11:39.293+01:00",
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-        with patch(
-            "zac.core.api.views.get_open_documenten",
-            return_value=[],
-        ):
+        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
             with patch(
-                "zac.core.api.views.fetch_document_audit_trail",
-                return_value=[audit_trail],
+                "zac.core.api.views.get_open_documenten",
+                return_value=[],
             ):
-                response = self.client.post(
-                    self.endpoint, post_data, format="multipart"
-                )
+                with patch(
+                    "zac.core.api.views.fetch_document_audit_trail",
+                    return_value=[audit_trail],
+                ):
+                    response = self.client.post(
+                        self.endpoint, post_data, format="multipart"
+                    )
 
         called_urls = [req.url for req in m.request_history]
         # Check that informatieobjecttype url was called
@@ -808,6 +813,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
     def test_add_document_with_file_without_iotype(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)
+        self._setupMocks(m)
+
         file = BytesIO(b"foobar")
         file.name = "some-name.txt"
         post_data = {
@@ -815,7 +822,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "file": file,
         }
 
-        response = self.client.post(self.endpoint, post_data, format="multipart")
+        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+            response = self.client.post(self.endpoint, post_data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -835,6 +843,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             versie=1,
             vertrouwelijkheidaanduiding="openbaar",
             informatieobjecttype=self.informatieobjecttype["url"],
+            bestandsnaam="some-bestandsnaam.extension",
         )
 
         m.get(DOCUMENT_URL, json=document)
@@ -861,17 +870,19 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             aanmaakdatum="2022-03-04T12:11:39.293+01:00",
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-        with patch(
-            "zac.core.api.views.get_open_documenten",
-            return_value=[],
-        ):
+
+        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
             with patch(
-                "zac.core.api.views.fetch_document_audit_trail",
-                return_value=[audit_trail],
+                "zac.core.api.views.get_open_documenten",
+                return_value=[],
             ):
-                response = self.client.post(
-                    self.endpoint, post_data, format="multipart"
-                )
+                with patch(
+                    "zac.core.api.views.fetch_document_audit_trail",
+                    return_value=[audit_trail],
+                ):
+                    response = self.client.post(
+                        self.endpoint, post_data, format="multipart"
+                    )
 
         # Check that zaakinformatieobjecten url was called
         called_urls = [req.url for req in m.request_history]
@@ -928,8 +939,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "zaak": f"{ZAKEN_ROOT}zaken/456",
             "url": DOCUMENT_URL,
         }
-
-        response = self.client.post(self.endpoint, post_data, format="multipart")
+        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+            response = self.client.post(self.endpoint, post_data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue("url" in response.json())
@@ -948,7 +959,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "url": DOCUMENT_URL,
         }
 
-        response = self.client.post(self.endpoint, post_data, format="multipart")
+        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+            response = self.client.post(self.endpoint, post_data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -972,6 +984,51 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(
             response.json()["nonFieldErrors"],
             ["Either 'url' or 'file' should be provided."],
+        )
+
+    def test_add_document_with_file_filename_already_exists(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            versie=1,
+            vertrouwelijkheidaanduiding="openbaar",
+            bestandsnaam="some-name.txt",
+        )
+
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
+            json=document,
+            status_code=201,
+        )
+        m.post(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten",
+            json={"url": "https://example.com"},
+            status_code=201,
+        )
+
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
+        post_data = {
+            "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+        }
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.post(self.endpoint, post_data, format="multipart")
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "`bestandsnaam`: `some-name.txt` already exists. Please choose a unique `bestandsnaam`."
+                ]
+            },
         )
 
     def test_patch_document_no_url_no_reden(self, m):
@@ -1124,34 +1181,22 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             purpose="write",
             uuid=uuid4(),
         )
+
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=factory(
-                Document,
-                {
-                    **document,
-                    **{
-                        "bestandsnaam": "some-other-bestandsnaam.extension",
-                        "titel": "some-other-bestandsnaam.extension",
-                    },
-                },
-            ),
+            return_value=[[factory(Document, document)], []],
         ):
             with patch(
-                "zac.core.api.serializers.get_documenten",
-                return_value=[[factory(Document, document)], []],
+                "zac.core.api.views.get_open_documenten",
+                return_value=[dowc_obj],
             ):
                 with patch(
-                    "zac.core.api.views.get_open_documenten",
-                    return_value=[dowc_obj],
+                    "zac.core.api.views.fetch_document_audit_trail",
+                    return_value=[audit_trail],
                 ):
-                    with patch(
-                        "zac.core.api.views.fetch_document_audit_trail",
-                        return_value=[audit_trail],
-                    ):
-                        response = self.client.patch(
-                            self.endpoint, post_data, format="multipart"
-                        )
+                    response = self.client.patch(
+                        self.endpoint, post_data, format="multipart"
+                    )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -1193,6 +1238,55 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(data, expected_data)
+
+    def test_patch_document_filename_already_exists(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        doc1 = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            versie=1,
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            locked=False,
+            bestandsnaam="some-bestandsnaam.extension",
+        )
+        doc2 = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b5",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            versie=1,
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            locked=False,
+            bestandsnaam="some-bestandsnaam-2.extension",
+        )
+        mock_resource_get(m, doc1)
+        mock_resource_get(m, doc1)
+
+        post_data = {
+            "reden": "daarom",
+            "url": doc1["url"],
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "bestandsnaam": "some-bestandsnaam-2.extension",
+        }
+
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[factory(Document, [doc1, doc2]), []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "`bestandsnaam`: `some-bestandsnaam-2.extension` already exists. Please choose a unique `bestandsnaam`."
+                ]
+            },
+        )
 
     def test_add_document_with_unallowed_file_extension(self, m):
         user = SuperUserFactory.create()

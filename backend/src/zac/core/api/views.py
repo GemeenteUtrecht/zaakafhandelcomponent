@@ -911,6 +911,7 @@ class ZaakDocumentView(views.APIView):
 
         audit_line = serializer.validated_data.pop("reden")
         document_url = serializer.validated_data.pop("url")
+        document = get_document(document_url)
 
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         document_data = self.get_document_data(serializer.validated_data, zaak)
