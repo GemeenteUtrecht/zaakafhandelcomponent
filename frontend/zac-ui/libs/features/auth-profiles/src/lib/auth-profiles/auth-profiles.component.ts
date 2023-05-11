@@ -21,7 +21,7 @@ export class AuthProfilesComponent implements OnInit {
   authProfiles: AuthProfile[];
   selectedAuthProfile: AuthProfile;
   selectedUserAuthProfiles: UserAuthProfile[];
-  userAuthProfiles: UserAuthProfile[];
+  userAuthProfiles: UserAuthProfile[] = [];
   caseTypes: MetaZaaktype;
 
   isLoading: boolean;
@@ -31,12 +31,11 @@ export class AuthProfilesComponent implements OnInit {
     private fService: FeaturesAuthProfilesService,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
-    private metaService: MetaService
+    private metaService: MetaService,
   ) { }
 
   ngOnInit(): void {
     this.getAuthProfiles();
-    this.getUserAuthProfiles();
     this.getCaseTypes();
   }
 
@@ -97,7 +96,7 @@ export class AuthProfilesComponent implements OnInit {
   }
 
   filterUserAuthProfiles(uuid) {
-    return this.userAuthProfiles.filter((profile) => profile.authProfile.uuid === uuid)
+    return this.userAuthProfiles.filter((profile) => profile.authProfile === uuid)
       .sort((a,b) => ((a.user.fullName || a.user.username) > (b.user.fullName || b.user.username)) ? 1 : (((b.user.fullName || b.user.username) > (a.user.fullName || a.user.username)) ? -1 : 0));
   }
 
@@ -128,19 +127,24 @@ export class AuthProfilesComponent implements OnInit {
   /**
    * Retrieve auth profiles.
    */
-  getUserAuthProfiles() {
-    this.isLoading = true;
-    this.fService.getUserAuthProfiles().subscribe(
-      (data: UserAuthProfiles) => {
-        this.isLoading = false;
-        this.userAuthProfiles = data.results;
-      },
-      (err) => {
-        this.isLoading = false;
-        this.errorMessage = this.getAuthProfilesErrorMessage;
-        this.reportError(err);
-      }
-    );
+  getUserAuthProfiles(uuid) {
+    const checkUuid = obj => obj.authProfile === uuid;
+
+    // Check if the uuid is present in previously requested userAuthProfiles
+    if (!this.userAuthProfiles.some(checkUuid)) {
+      this.isLoading = true;
+      this.fService.getUserAuthProfiles(uuid).subscribe(
+        (data: UserAuthProfiles) => {
+          this.isLoading = false;
+          this.userAuthProfiles = this.userAuthProfiles.concat(data.results);
+        },
+        (err) => {
+          this.isLoading = false;
+          this.errorMessage = this.getAuthProfilesErrorMessage;
+          this.reportError(err);
+        }
+      );
+    }
   }
 
   /**

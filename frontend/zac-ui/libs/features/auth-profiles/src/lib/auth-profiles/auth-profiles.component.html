@@ -7,10 +7,10 @@
     </button>
   </div>
   <p>Autorisatieprofielen bestaan uit één of meerdere rollen met daarbij horende zaaktypen.</p>
-  <mat-accordion *ngIf="authProfiles && userAuthProfiles && caseTypes" multi>
+  <mat-accordion *ngIf="authProfiles && caseTypes" multi>
     <ng-container *ngFor="let authProfile of authProfiles">
       <!-- Only show if the auth profile has at least one blue print permission with object type "zaak" -->
-      <mat-expansion-panel *ngIf="showAuthProfile(authProfile)">
+      <mat-expansion-panel *ngIf="showAuthProfile(authProfile)" (opened)="getUserAuthProfiles(authProfile.uuid)">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <gu-icon class="group-icon mr-2">groups</gu-icon>
@@ -46,7 +46,6 @@
               <p>Dit profiel heeft geen rollen.</p>
             </ng-container>
           </div>
-
           <div class="col-md-auto">
             <!-- Inner accordion to show assign users for auth profile-->
             <p class="mb-2">Gebruikers</p>
@@ -84,7 +83,7 @@
             size="medium"
             title="Autorisatieprofiel aanmaken"
   >
-    <gu-add-auth-profile *ngIf="roles" [roles]="roles" [type]="'create'" (reload)="getAuthProfiles(); getUserAuthProfiles()"></gu-add-auth-profile>
+    <gu-add-auth-profile *ngIf="roles" [roles]="roles" [type]="'create'" (reload)="getAuthProfiles(); userAuthProfiles = []"></gu-add-auth-profile>
   </gu-modal>
 
   <!-- Edit auth profile -->
@@ -100,7 +99,7 @@
                          [selectedAuthProfile]="selectedAuthProfile"
                          [selectedAuthProfileUuid]="selectedAuthProfile.uuid"
                          [preselectedUsers]="filterUserAuthProfileUsers(selectedAuthProfile.uuid)"
-                         (reload)="getAuthProfiles(); getUserAuthProfiles()">
+                         (reload)="getAuthProfiles(); userAuthProfiles = []">
     </gu-add-auth-profile>
   </gu-modal>
 
