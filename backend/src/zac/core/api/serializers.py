@@ -214,20 +214,36 @@ class AddZaakDocumentSerializer(serializers.Serializer):
                 "Either 'url' or 'file' should be provided."
             )
 
+        documenten, gone = get_documenten(get_zaak(zaak_url=zaak))
+        filenames = [doc.bestandsnaam.lower() for doc in documenten]
+
         if file:
+            bestandsnaam = file.name
             informatieobjecttype_url = data.get("informatieobjecttype")
             if not informatieobjecttype_url:
                 raise serializers.ValidationError(
                     "'informatieobjecttype' is required when 'file' is provided"
                 )
-
         else:
             try:
                 document = get_document(document_url)
             except (ClientError, HTTPError) as exc:
                 raise serializers.ValidationError(detail={"url": exc.args[0]})
 
+            bestandsnaam = document.bestandsnaam
             informatieobjecttype_url = document.informatieobjecttype
+
+        if not bestandsnaam:
+            raise serializers.ValidationError(
+                _("A `file` or `document` needs a `bestandsnaam`.")
+            )
+
+        if bestandsnaam.lower() in filenames:
+            raise serializers.ValidationError(
+                _(
+                    "`bestandsnaam`: `{bestandsnaam}` already exists. Please choose a unique `bestandsnaam`."
+                ).format(bestandsnaam=bestandsnaam)
+            )
 
         # check that zaaktype relates to iotype
         informatieobjecttypen = get_informatieobjecttypen_for_zaak(zaak)
@@ -272,18 +288,33 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         document_url = data.get("url")
         zaak = get_zaak(zaak_url=data["zaak"])
         documenten, gone = get_documenten(zaak)
-        documenten = {document.url: document for document in documenten}
+        doc_urls = {document.url: document for document in documenten}
+        other_filenames = [
+            doc.bestandsnaam.lower() for doc in documenten if doc.url != document_url
+        ]
+        if file := data.get("file"):
+            bestandsnaam = file.name
 
-        if document := documenten.get(document_url):
-            if new_fn := data.get("bestandsnaam"):
-                suffixes = pathlib.Path(document.bestandsnaam).suffixes
-                data["bestandsnaam"] = new_fn + "".join(suffixes)
-                data["titel"] = data["bestandsnaam"]
+        if document := doc_urls.get(document_url):
+            if bestandsnaam := data.get("bestandsnaam"):
+                bestandsnaam = pathlib.Path(bestandsnaam).stem
+                bestandsnaam = bestandsnaam + "".join(
+                    pathlib.Path(document.bestandsnaam).suffixes
+                )
+                data["bestandsnaam"] = bestandsnaam
+                data["titel"] = bestandsnaam
         else:
             raise serializers.ValidationError(
                 _("The document is unrelated to {zaak}.").format(
                     zaak=zaak.identificatie
                 )
+            )
+
+        if bestandsnaam and bestandsnaam.lower() in other_filenames:
+            raise serializers.ValidationError(
+                _(
+                    "`bestandsnaam`: `{bestandsnaam}` already exists. Please choose a unique `bestandsnaam`."
+                ).format(bestandsnaam=bestandsnaam)
             )
 
         return data
@@ -1184,7 +1215,6 @@ class DestroyRolSerializer(APIModelSerializer):
         if not any([rol.url == url for rol in rollen]):
             raise serializers.ValidationError(_("ROL does not belong to ZAAK."))
 
-        print(rollen)
         rol = fetch_rol(url)
         if (
             rol.omschrijving_generiek
