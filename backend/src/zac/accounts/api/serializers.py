@@ -42,6 +42,7 @@ from ..models import (
     UserAuthorizationProfile,
 )
 from ..permissions import object_type_registry, registry
+from .utils import group_permissions
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -485,42 +486,13 @@ class GroupBlueprintSerializer(GroupPolymorphicSerializer):
     discriminator_field = "object_type"
     group_field = "policies"
     group_field_kwargs = {"many": True, "help_text": _("List of blueprint shapes")}
-
-    role = serializers.PrimaryKeyRelatedField(
-        queryset=Role.objects.all(), help_text=_("Name of the role")
-    )
     object_type = serializers.ChoiceField(
         choices=PermissionObjectTypeChoices.choices,
         help_text=_("Type of the permission object"),
     )
-
-
-def generate_document_policies(zaaktype_policy: dict) -> List[dict]:
-    zaaktype_omschrijving = zaaktype_policy.get("zaaktype_omschrijving")
-    catalogus = zaaktype_policy.get("catalogus")
-
-    if not zaaktype_omschrijving or not catalogus:
-        return []
-
-    # find zaaktype
-    zaaktypen = get_zaaktypen(catalogus=catalogus, omschrijving=zaaktype_omschrijving)
-
-    # find related iotypen
-    document_policies = []
-    for zaaktype in zaaktypen:
-        if not zaaktype.informatieobjecttypen:
-            continue
-
-        iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
-        document_policies += [
-            {
-                "catalogus": iotype.catalogus,
-                "iotype_omschrijving": iotype.omschrijving,
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            }
-            for iotype in iotypen
-        ]
-    return document_policies
+    role = serializers.PrimaryKeyRelatedField(
+        queryset=Role.objects.all(), help_text=_("Name of the role")
+    )
 
 
 class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
@@ -554,18 +526,7 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         Permissions are grouped by role and object_type
         """
         permissions = auth_profile.blueprint_permissions.order_by().all()
-        groups = []
-        for (role, object_type), permissions in groupby(
-            permissions, key=lambda a: (a.role, a.object_type)
-        ):
-            groups.append(
-                {
-                    "role": role,
-                    "object_type": object_type,
-                    "policies": [perm.policy for perm in permissions],
-                }
-            )
-        return groups
+        return group_permissions(permissions)
 
     @transaction.atomic
     def create(self, validated_data):

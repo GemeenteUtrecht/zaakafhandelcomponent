@@ -1,7 +1,6 @@
 from django.contrib.auth.models import Group
-from django.contrib.postgres.aggregates import JSONBAgg
 from django.db import transaction
-from django.db.models import F, Prefetch, Window
+from django.db.models import F, Prefetch
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
@@ -58,6 +57,7 @@ from .serializers import (
     UserAuthorizationProfileSerializer,
     UserSerializer,
 )
+from .utils import group_permissions
 
 
 @extend_schema_view(
@@ -322,24 +322,28 @@ class AuthProfileViewSet(viewsets.ModelViewSet):
     queryset = AuthorizationProfile.objects.prefetch_related(
         Prefetch(
             "blueprint_permissions",
-            queryset=(
-                BlueprintPermission.objects.select_related("role")
-                .annotate(
-                    policies=Window(
-                        expression=JSONBAgg("policy"),
-                        partition_by=[F("role"), F("object_type")],
-                    )
-                )
-                .distinct("role", "object_type")
-                .order_by("role", "object_type")
-                .all()
-            ),
-            to_attr="group_permissions",
+            queryset=BlueprintPermission.objects.select_related("role").all(),
         )
     ).all()
     serializer_class = AuthProfileSerializer
     lookup_field = "uuid"
     http_method_names = ["get", "post", "put", "delete"]
+
+    def get_object(self):
+        obj = super().get_object()
+        permissions = obj.blueprint_permissions.select_related("role").all()
+        obj.group_permissions = group_permissions(permissions)
+        return obj
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action == "list":
+            for auth_profile in qs:
+                auth_profile.group_permissions = group_permissions(
+                    auth_profile.blueprint_permissions.all()
+                )
+
+        return qs
 
 
 @extend_schema_view(
