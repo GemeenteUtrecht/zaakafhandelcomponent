@@ -179,6 +179,22 @@ class CamundaTasksTests(ESMixin, APITestCase):
             ],
         )
 
+    def test_group_tasks_endpoint_no_groups(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        with patch(
+            "zac.werkvoorraad.views.get_zaak_urls_from_tasks",
+            return_value={self.task.id: self.zaak["url"]},
+        ):
+            response = self.client.get(self.group_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()["results"]
+        self.assertEqual(
+            data,
+            [],
+        )
+
     def test_user_tasks_endpoint_zaak_cant_be_found(self):
         with patch(
             "zac.werkvoorraad.views.get_zaak_urls_from_tasks",

@@ -108,7 +108,7 @@ class WorkStackAssigneeCasesView(ListAPIView):
 
 @extend_schema(summary=_("List user tasks for logged in user."))
 class WorkStackUserTasksView(ListAPIView):
-    authentication_classes = (authentication.SessionAuthentication,)
+    authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackTaskSerializer
     filter_backends = ()
@@ -131,9 +131,15 @@ class WorkStackUserTasksView(ListAPIView):
     def get_queryset(self):
         if not hasattr(self, "_qs"):
             tasks = {task.id: task for task in self.get_camunda_tasks()}
+            if not tasks:
+                return []
+
             task_ids_and_zaak_urls = get_zaak_urls_from_tasks(
                 tasks.values(), client=self.get_client()
             )
+            if not task_ids_and_zaak_urls:
+                return []
+
             zaken = {
                 zaak.url: zaak
                 for zaak in search_zaken(
@@ -141,7 +147,7 @@ class WorkStackUserTasksView(ListAPIView):
                     urls=list({url for url in task_ids_and_zaak_urls.values()}),
                 )
             }
-            task_zaken = {}
+            task_zaken = dict()
             for task_id, zaak_url in task_ids_and_zaak_urls.items():
                 if not (zaak := zaken.get(zaak_url)):
                     logger.warning(

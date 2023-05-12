@@ -31,11 +31,9 @@ def get_camunda_user_tasks(
 def get_camunda_group_tasks(
     user: User, client: Optional[CAMUNDA_CLIENT_CLASS] = None
 ) -> List[Task]:
+    groups = list(user.groups.all().values_list("name", flat=True))
     return get_camunda_tasks(
-        [
-            f"{AssigneeTypeChoices.group}:{group}"
-            for group in user.groups.all().values_list("name", flat=True)
-        ],
+        [f"{AssigneeTypeChoices.group}:{group}" for group in groups],
         client=client,
     )
 
@@ -43,6 +41,9 @@ def get_camunda_group_tasks(
 def get_camunda_tasks(
     assignees: List[str], client: Optional[CAMUNDA_CLIENT_CLASS] = None
 ) -> List[Task]:
+    if not assignees:
+        return []
+
     if not client:
         client = get_client()
     tasks = client.post("task", json={"assigneeIn": assignees})
@@ -54,6 +55,9 @@ def get_camunda_tasks(
 
 
 def get_camunda_variables(pis: List[str], client: CAMUNDA_CLIENT_CLASS) -> List[Dict]:
+    if not pis:
+        return []
+
     return client.post(
         "variable-instance",
         json={
@@ -65,7 +69,10 @@ def get_camunda_variables(pis: List[str], client: CAMUNDA_CLIENT_CLASS) -> List[
 
 def get_zaak_urls_from_tasks(
     tasks: List[Task], client: Optional[CAMUNDA_CLIENT_CLASS] = None
-) -> Dict[str, str]:
+) -> Optional[Dict[str, str]]:
+    if not tasks:
+        return None
+
     if not client:
         client = get_client()
 
@@ -77,7 +84,7 @@ def get_zaak_urls_from_tasks(
     return {
         pids_and_tasks[process_instance_id].id: url
         for process_instance_id, url in pids_and_urls.items()
-        if url
+        if url and process_instance_id in pids_and_tasks
     }
 
 
