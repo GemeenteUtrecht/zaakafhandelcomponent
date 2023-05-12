@@ -349,6 +349,9 @@ class AuthProfileViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+
+        # Grab instance from queryset rather than the instance itself
+        # to make use of annotated field.
         serializer = self.get_serializer(
             instance=self.get_queryset().get(pk=instance.pk)
         )
@@ -363,6 +366,9 @@ class AuthProfileViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+
+        # Grab instance from queryset rather than the instance itself
+        # to make use of annotated field.
         serializer = self.get_serializer(
             instance=self.get_queryset().get(pk=instance.pk)
         )

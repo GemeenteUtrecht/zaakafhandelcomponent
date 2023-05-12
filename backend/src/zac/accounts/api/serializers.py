@@ -541,10 +541,10 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         for group in group_permissions:
             policies = group["policies"]
 
-            # generate related iotype policies
-            with parallel(max_workers=10) as executor:
-                _document_policies = executor.map(generate_document_policies, policies)
-                document_policies = sum(list(_document_policies), [])
+            # # generate related iotype policies
+            # with parallel(max_workers=10) as executor:
+            #     _document_policies = executor.map(generate_document_policies, policies)
+            #     document_policies = sum(list(_document_policies), [])
 
             # create permissions
             for policy in policies:
@@ -553,13 +553,13 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
                 )
                 blueprint_permissions.append(permission)
 
-            for policy in document_policies:
-                permission, created = BlueprintPermission.objects.get_or_create(
-                    role=group["role"],
-                    object_type=PermissionObjectTypeChoices.document,
-                    policy=policy,
-                )
-                blueprint_permissions.append(permission)
+            # for policy in document_policies:
+            #     permission, created = BlueprintPermission.objects.get_or_create(
+            #         role=group["role"],
+            #         object_type=PermissionObjectTypeChoices.document,
+            #         policy=policy,
+            #     )
+            #     blueprint_permissions.append(permission)
 
         return blueprint_permissions
 
