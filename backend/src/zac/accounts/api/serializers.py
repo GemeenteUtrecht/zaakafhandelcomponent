@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from itertools import groupby
 from typing import List
 
 from django.contrib.auth.models import Group
@@ -537,31 +538,34 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
     @staticmethod
     def create_blueprint_permissions(group_permissions):
         blueprint_permissions = []
-
         for group in group_permissions:
             policies = group["policies"]
-
-            # # generate related iotype policies
-            # with parallel(max_workers=10) as executor:
-            #     _document_policies = executor.map(generate_document_policies, policies)
-            #     document_policies = sum(list(_document_policies), [])
-
             # create permissions
             for policy in policies:
                 permission, created = BlueprintPermission.objects.get_or_create(
                     role=group["role"], object_type=group["object_type"], policy=policy
                 )
                 blueprint_permissions.append(permission)
-
-            # for policy in document_policies:
-            #     permission, created = BlueprintPermission.objects.get_or_create(
-            #         role=group["role"],
-            #         object_type=PermissionObjectTypeChoices.document,
-            #         policy=policy,
-            #     )
-            #     blueprint_permissions.append(permission)
-
         return blueprint_permissions
+
+    @staticmethod
+    def get_group_permissions(auth_profile) -> list:
+        """
+        Permissions are grouped by role and object_type
+        """
+        permissions = auth_profile.blueprint_permissions.order_by().all()
+        groups = []
+        for (role, object_type), permissions in groupby(
+            permissions, key=lambda a: (a.role, a.object_type)
+        ):
+            groups.append(
+                {
+                    "role": role,
+                    "object_type": object_type,
+                    "policies": [perm.policy for perm in permissions],
+                }
+            )
+        return groups
 
     @transaction.atomic
     def create(self, validated_data):
@@ -570,7 +574,7 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
 
         blueprint_permissions = self.create_blueprint_permissions(group_permissions)
         auth_profile.blueprint_permissions.add(*blueprint_permissions)
-
+        auth_profile.group_permissions = self.get_group_permissions(auth_profile)
         return auth_profile
 
     @transaction.atomic
@@ -581,7 +585,7 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         auth_profile.blueprint_permissions.clear()
         blueprint_permissions = self.create_blueprint_permissions(group_permissions)
         auth_profile.blueprint_permissions.add(*blueprint_permissions)
-
+        auth_profile.group_permissions = self.get_group_permissions(auth_profile)
         return auth_profile
 
 
