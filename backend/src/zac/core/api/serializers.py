@@ -1395,6 +1395,12 @@ class ObjectProxySerializer(ProxySerializer):
     )
 
 
+class PaginatedObjectProxySerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTS_API_SCHEMA"]
+    PROXY_SCHEMA_PATH = ["components", "schemas", "PaginatedObjectList"]
+    results = ObjectProxySerializer(many=True)
+
+
 class ObjectFilterProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTS_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [

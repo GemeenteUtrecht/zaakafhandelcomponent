@@ -6,9 +6,9 @@ import {
   getProvinceByName,
   getTownshipByName,
   ObjectType,
-  ObjectTypeVersion, Position,
+  ObjectTypeVersion, PaginatedZaakObjects, Position, RowData, Table,
   UtrechtNeighbourhoods,
-  ZaakObject, Zaaktype,
+  ZaakObject, Zaaktype
 } from '@gu/models';
 import {ObjectsService, ZaakObjectService} from '@gu/services';
 import {SearchService} from '../../search.service';
@@ -97,6 +97,29 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
   /** @type {ZaakObject[]} The search results for objects. */
   zaakObjects: ZaakObject[] = [];
+
+  /** @type {string} The string representation of the selected zaak object. */
+  selectedZaakObject: string;
+
+  /** @type {*} Search criteria. */
+  fetchObjectData: {
+    geometry: Geometry,
+    objectType: string,
+    property: string,
+    query: string
+  };
+
+  /** @type {string[]} Table head */
+  readonly tableHead = ['Objectbeschrijving', ''];
+
+  /** @type {Table} Table for the zaak objects */
+  zaakObjectsTableData: Table = new Table(this.tableHead, [])
+
+  /** @type {number} Page number */
+  page = 1;
+
+  /** @type {number} Number of results */
+  resultLength = 0;
 
   /**
    * Constructor method.
@@ -309,19 +332,23 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {string} objectType
    * @param {string} [property] Object type property.
    * @param {string} [query]
+   * @param {number} [page]
    */
-  fetchObjects(geometry = null, objectType = null, property = null, query = null): void {
-    this.zaakObjectService.searchObjects(geometry, objectType, property, query).subscribe(
-      (zaakObjects: ZaakObject[]) => {
-        this.zaakObjects = zaakObjects;
+  fetchObjects(geometry = null, objectType = null, property = null, query = null, page = 1): void {
+    this.zaakObjectService.searchObjects(geometry, objectType, property, query, page).subscribe(
+      (zaakObjects: PaginatedZaakObjects) => {
+        this.zaakObjects = zaakObjects.results;
 
         let activeMapMarkers = []
 
-        if (!zaakObjects.length) {
+        if (!zaakObjects.results.length) {
           this.isLoading = false;
           this.isLoadingResult.emit(false);
           return;
         }
+
+        this.resultLength = zaakObjects.count;
+        this.zaakObjectsTableData = new Table(this.tableHead, this.formatObjectsTable(zaakObjects.results));
 
         // Fetch zaak objects.
         this.zaakObjects.forEach((zaakObject: ZaakObject) => {
@@ -354,9 +381,40 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     );
   }
 
+  /**
+   * Create table data
+   * @param {ZaakObject[]} data
+   * @returns {RowData[]}
+   */
+  formatObjectsTable(data: ZaakObject[]) {
+    return data.map((element) => {
+      const cellData: RowData = {
+        cellData: {
+          object: element.stringRepresentation,
+          search: {
+            type: 'button',
+            label: 'Gerelateerde zaken zoeken',
+            value: element
+          },
+        }
+      };
+      return cellData;
+    });
+  }
+
   //
   // Events.
   //
+
+  /**
+   * When paginator gets fired.
+   * @param page
+   */
+  onPageSelect(page) {
+    this.page = page.pageIndex + 1;
+    this.fetchObjects(this.fetchObjectData.geometry, this.fetchObjectData.objectType, this.fetchObjectData.property, this.fetchObjectData.query, this.page)
+  }
+
 
   /**
    * Show object types according to checked value
@@ -385,6 +443,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {Object} data
    */
   submitForm(data): void {
+    this.selectedZaakObject = null;
     this.searchObjects.emit();
     this.isLoading = true;
     this.isLoadingResult.emit(true);
@@ -393,7 +452,14 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.zaakObjects = [];
     this.showZaakObjecten = true;
 
-    this.fetchObjects(geometry, data.objectType, data.property, data.query)
+    this.fetchObjectData = {
+      geometry: geometry,
+      objectType: data.objectType,
+      property: data.property,
+      query: data.query
+    }
+
+    this.fetchObjects(this.fetchObjectData.geometry, this.fetchObjectData.objectType, this.fetchObjectData.property, this.fetchObjectData.query)
   }
 
   /**
@@ -401,8 +467,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {Event} event
    * @param {ZaakObject} zaakObject
    */
-  _selectZaakObject(event: Event, zaakObject: ZaakObject): void {
-    this.selectZaakObject.emit(zaakObject);
+  _selectZaakObject(event: Event, zaakObject: any): void {
+    this.selectedZaakObject = zaakObject.search.stringRepresentation
+    this.selectZaakObject.emit(zaakObject.search);
     this.showZaakObjecten = false;
   }
 

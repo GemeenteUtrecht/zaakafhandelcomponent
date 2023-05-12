@@ -234,7 +234,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             "https://camunda.example.com/engine-rest/task/598347ee-62fc-46a2-913a-6e0788bc1b8c/complete",
             status_code=204,
         )
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
 
         with patch(
             "zac.core.camunda.start_process.serializers.get_zaak_context",
@@ -305,7 +308,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}",
             json=[self.zaakinformatieobject],
         )
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
 
         zaakcontext = ZaakContext(
             zaak=self.zaak_context.zaak,
@@ -365,7 +371,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.roltype]),
         )
         mock_resource_get(m, self.roltype)
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
 
         with patch(
             "zac.core.camunda.start_process.serializers.get_zaak_context",
@@ -421,7 +430,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.roltype]),
         )
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
 
         mock_resource_get(m, self.roltype)
         with patch(
@@ -476,7 +488,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
             json=[],
         )
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
 
         with patch(
             "zac.core.camunda.start_process.serializers.get_zaak_context",

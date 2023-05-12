@@ -1,7 +1,7 @@
 import {HttpParams} from "@angular/common/http";
 import {Injectable} from '@angular/core';
 import {Observable, Subscriber} from 'rxjs';
-import {Geometry, User, Zaak, ZaakObject, ZaakObjectRelation} from "@gu/models";
+import { Geometry, PaginatedZaakObjects, User, Zaak, ZaakObject, ZaakObjectRelation } from '@gu/models';
 import {ApplicationHttpClient, KadasterService} from '@gu/services';
 import {MapMarker} from "../../../../../ui/components/src/lib/components/map/map";
 import {ClearCacheOnMethodCall} from "@gu/utils";
@@ -48,10 +48,12 @@ export class ZaakObjectService {
    * @param {string} objectTypeUrl
    * @param {string} [property] Object type property.
    * @param {string} [query]
+   * @param {number} [page]
    * @return {Observable}
    */
-  searchObjects(geometry: Geometry, objectTypeUrl: string, property: string = '', query: string = ''): Observable<ZaakObject[]> {
-    const endpoint = encodeURI('/api/core/objects');
+  searchObjects(geometry: Geometry, objectTypeUrl: string, property: string = '', query: string = '', page: number): Observable<PaginatedZaakObjects> {
+    const pageValue = `?page=${page}`;
+    const endpoint = encodeURI(`/api/core/objects${pageValue}`);
     const search = {
       type: objectTypeUrl,
     }
@@ -69,7 +71,7 @@ export class ZaakObjectService {
       search['data_icontains'] = query;
     }
 
-    return this.http.Post<ZaakObject[]>(endpoint, search);
+    return this.http.Post<PaginatedZaakObjects>(endpoint, search);
   }
 
   /**

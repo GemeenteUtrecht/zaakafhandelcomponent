@@ -499,7 +499,7 @@ EXTERNAL_API_SCHEMAS = {
     ),
     "OBJECTS_API_SCHEMA": config(
         "OBJECTS_API_SCHEMA",
-        "https://objects.cg-intern.ont.utrecht.nl/api/v1",
+        "https://objects.cg-intern.ont.utrecht.nl/api/v2",
     ),
     "OBJECTTYPES_API_SCHEMA": config(
         "OBJECTTYPES_API_SCHEMA",

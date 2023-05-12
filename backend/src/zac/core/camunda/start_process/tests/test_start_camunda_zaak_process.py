@@ -173,7 +173,10 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
@@ -266,7 +269,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[])
+        m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([]))
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
@@ -301,7 +304,10 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
@@ -462,7 +468,10 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
             role__permissions=[zaakprocess_starten.name],
@@ -509,7 +518,10 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
             role__permissions=[zaakprocess_starten.name],

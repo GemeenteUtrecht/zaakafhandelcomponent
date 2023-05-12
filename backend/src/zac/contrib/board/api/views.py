@@ -88,10 +88,7 @@ class ManagementDashboardDetailView(PerformSearchMixin, APIView):
 
         """
         if not hasattr(self, "_paginator"):
-            if self.pagination_class is None:
-                self._paginator = None
-            else:
-                self._paginator = self.pagination_class()
+            self._paginator = self.pagination_class()
         return self._paginator
 
     def paginate_results(self, results):

@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_protect
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from furl import furl
 from rest_framework import (
     authentication,
     exceptions,
@@ -25,7 +26,7 @@ from rest_framework import (
     views,
 )
 from rest_framework.exceptions import APIException, ValidationError
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
@@ -97,7 +98,6 @@ from ..zaakobjecten import GROUPS, ZaakObjectGroup, noop
 from .data import VertrouwelijkheidsAanduidingData
 from .filters import (
     EigenschappenFilterSet,
-    MetaObjectFilterSet,
     ObjectTypeFilterSet,
     ZaakEigenschappenFilterSet,
     ZaakObjectFilterSet,
@@ -105,7 +105,7 @@ from .filters import (
     ZaaktypenFilterSet,
 )
 from .mixins import ListMixin, RetrieveMixin
-from .pagination import BffPagination
+from .pagination import BffPagination, ObjectProxyPagination
 from .permissions import (
     CanAddOrUpdateZaakDocuments,
     CanAddRelations,
@@ -136,9 +136,9 @@ from .serializers import (
     GetZaakDocumentSerializer,
     InformatieObjectTypeSerializer,
     ObjectFilterProxySerializer,
-    ObjectProxySerializer,
     ObjecttypeProxySerializer,
     ObjecttypeVersionProxySerializer,
+    PaginatedObjectProxySerializer,
     ReadRolSerializer,
     RelatedZaakSerializer,
     RolMedewerkerSerializer,
@@ -1289,35 +1289,56 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
 @extend_schema(
     summary=_("Search OBJECTs."),
     description=_("Search for OBJECTs in the OBJECTS API."),
-    responses={(200, "application/json"): ObjectProxySerializer},
+    responses={(200, "application/json"): PaginatedObjectProxySerializer},
     tags=["objects"],
+    parameters=[
+        OpenApiParameter(
+            name=ObjectProxyPagination().page_size_query_param,
+            default=ObjectProxyPagination().page_size,
+            type=OpenApiTypes.INT,
+            description=_("Number of results to return per paginated response."),
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name=ObjectProxyPagination().page_query_param,
+            type=OpenApiTypes.INT,
+            description=_("Page number of paginated response."),
+            location=OpenApiParameter.QUERY,
+        ),
+    ],
 )
 class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ObjectFilterProxySerializer
-    filterset_class = MetaObjectFilterSet
+    pagination_class = ObjectProxyPagination
 
     def post(self, request):
+        """
+        Does not include `meta` objects.
+
+        """
+        pc = self.pagination_class()
+        qp = {pc.page_size_query_param: pc.get_page_size(request)}
+        if page := request.query_params.get(pc.page_query_param):
+            qp[pc.page_query_param] = page
+
         try:
-            objects = search_objects(filters=request.data)
+            objects, _qp = search_objects(
+                filters=request.data,
+                query_params=qp,
+            )
         except ClientError as exc:
-            raise ValidationError(detail=exc.args)
+            raise ValidationError(detail=exc.args[0])
 
-        filterset = self.filterset_class(
-            data=self.request.query_params, request=self.request
-        )
-        if not filterset.is_valid():
-            raise exceptions.ValidationError(filterset.errors)
-        if not filterset.data.get("include_meta"):
-            objects = [
-                obj
-                for obj in objects
-                if not obj.get("record", {}).get("data", {}).get("meta", False)
-            ]
-
-        object_serializer = ObjectProxySerializer(objects, many=True)
-        return Response(object_serializer.data)
+        # Filter out meta objects for now...
+        # TODO: add meta field to all objecttypes so we can filter at source
+        objects["results"] = [
+            obj
+            for obj in objects["results"]
+            if not obj.get("record", {}).get("data", {}).get("meta", False)
+        ]
+        return pc.get_paginated_response(request, objects)
 
 
 class ZaakObjectChangeView(views.APIView):

@@ -13,6 +13,7 @@ from zgw_consumers.test import mock_service_oas_get
 from zac.accounts.datastructures import VA_ORDER
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import paginated_response
 
 from ..documents import ObjectDocument, ZaakDocument, ZaakObjectDocument
 from .utils import ESMixin
@@ -77,7 +78,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 f"{OBJECTTYPES_ROOT}objecttypes/1ddc6ea4-6d7f-4573-8f2d-6473eb1ceb5e/versions/1"
             ],
         }
-        object = {
+        obj = {
             "url": f"{OBJECTS_ROOT}objects/f8a7573a-758f-4a19-aa22-245bb8f4712e",
             "uuid": "f8a7573a-758f-4a19-aa22-245bb8f4712e",
             "type": objecttype["url"],
@@ -99,7 +100,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         }
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[objecttype])
-        m.get(f"{OBJECTS_ROOT}objects", json=[object])
+        m.get(f"{OBJECTS_ROOT}objects", json=paginated_response([obj]))
         index = Index(settings.ES_INDEX_OBJECTEN)
         self.refresh_index()
         self.assertEqual(index.search().count(), 0)
@@ -154,7 +155,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             },
         }
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[objecttype])
-        m.get(f"{OBJECTS_ROOT}objects", json=[object])
+        m.get(f"{OBJECTS_ROOT}objects", json=paginated_response([object]))
         zaakobject = ZaakObjectDocument(
             url="https://some-url.com/", object=object["url"]
         )

@@ -204,7 +204,10 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
             json=[self.zaakeigenschap],
         )
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
 
         with patch(
             "zac.core.camunda.start_process.serializers.get_zaak_context",
@@ -284,7 +287,10 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
             f"{ZAKEN_ROOT}zaken/{self.zaak['id']}/zaakeigenschappen",
             json=[],
         )
-        m.post(f"{OBJECTS_ROOT}objects/search", json=[START_CAMUNDA_PROCESS_FORM_OBJ])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
 
         zaak_context = ZaakContext(
             zaak=self.zaak_context.zaak,

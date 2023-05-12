@@ -5,12 +5,22 @@
   <p class="mb-0">Toon objecttypen van alle zaaktypen</p>
 </gu-checkbox>
 
-<gu-form class="mb-4" *ngIf="objectTypeVersions" [form]="form" buttonLabel="Zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading"
+<gu-form class="d-block mb-4" *ngIf="objectTypeVersions" [form]="form" buttonLabel="Object zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading" [buttonSize]="'small'"
          (formSubmit)="submitForm($event)"></gu-form>
 
-<mat-action-list *ngIf="showZaakObjecten" dense>
-  <mat-list-item *ngFor="let zaakObject of zaakObjects" (click)="_selectZaakObject($event, zaakObject)">
-    <mat-icon mat-list-icon>location_on</mat-icon>
-    <div mat-line>{{ zaakObject.stringRepresentation }}</div>
-  </mat-list-item>
-</mat-action-list>
+<div *ngIf="zaakObjects.length > 0 && !selectedZaakObject">
+  <gu-table [table]="zaakObjectsTableData"
+            [sortable]="false"
+            [expandable]="true"
+            [wrap]="true"
+            (buttonOutput)="_selectZaakObject($event, $event)"
+  ></gu-table>
+  <gu-paginator (page)="onPageSelect($event)"
+                [pageSize]="20"
+                [length]="resultLength"
+  ></gu-paginator>
+
+</div>
+<div class="selected-object" *ngIf="selectedZaakObject">
+  <p class="p--nomargin">Gerelateerde zaken voor: <strong>{{selectedZaakObject}}</strong></p>
+</div>
