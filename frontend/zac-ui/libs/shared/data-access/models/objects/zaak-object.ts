@@ -1,6 +1,13 @@
 import {Geometry} from '../geojson/geojson';
 import {ObjectType} from '../objects/objecttype';
+import { Zaak } from '../zaken/zaak';
 
+export interface PaginatedZaakObjects {
+  count: number,
+  next: string,
+  previous: string,
+  results: ZaakObject[]
+}
 
 export interface ZaakObject {
   record: {
