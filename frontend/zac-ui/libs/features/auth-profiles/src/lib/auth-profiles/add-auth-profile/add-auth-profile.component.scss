@@ -1,6 +1,11 @@
 @import './base/colors/colors';
 
 .add-auth-profile {
+  &__formgroup {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid $color-border-input;
+  }
   .bperm-title {
     span {
       font-size: 0.825rem;
@@ -22,5 +27,10 @@
   .auth-profile-user {
     list-style: none;
     display: flex;
+  }
+  .bluePrintPermissions {
+    padding: 10px;
+    background-color: $color-background-lightgrey;
+    border-radius: 10px;
   }
 }

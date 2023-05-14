@@ -43,6 +43,7 @@
   >
     <gu-form *ngIf="permissions"
              [buttonLabel]="(role) ? 'Rol bewerken' : 'Rol toevoegen'"
+             buttonSize="small"
              [form]="form"
              [resetAfterSubmit]=true
              (formSubmit)="formSubmit($event)"></gu-form>
