@@ -1,6 +1,5 @@
 import logging
 import pathlib
-from concurrent.futures import as_completed
 from datetime import datetime
 from decimal import ROUND_05UP
 from typing import Dict, Optional
@@ -12,10 +11,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from django_camunda.api import (
-    get_all_process_instance_variables,
-    get_process_instance_variable,
-)
 from furl import furl
 from requests.exceptions import HTTPError
 from rest_framework import serializers
@@ -41,7 +36,6 @@ from zgw_consumers.api_models.constants import (
 )
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
-from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
@@ -57,7 +51,7 @@ from zac.camunda.api.utils import (
     get_incidents_for_process_instance,
 )
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.camunda.processes import get_top_level_process_instances
+from zac.camunda.variable_instances import get_camunda_variable_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.contrib.objects.services import (
@@ -547,7 +541,7 @@ class FetchZaakDetailUrlSerializer(serializers.Serializer):
 
 
 class ZaakDetailSerializer(APIModelSerializer):
-    zaaktype = ZaakTypeSerializer()
+    zaaktype = ZaakTypeSerializer(help_text=_("Expanded ZAAKTYPE of ZAAK."))
     deadline = serializers.DateField(read_only=True)
     deadline_progress = serializers.FloatField(
         label=_("Progress towards deadline"),
@@ -608,7 +602,7 @@ class ZaakDetailSerializer(APIModelSerializer):
         )
 
     def get_has_process(self, obj) -> bool:
-        process_instances = get_top_level_process_instances(obj.url)
+        process_instances = self.context["process_instances"]
 
         # Filter out the process instance that started the zaak
         spawned_process_instances = [
@@ -631,7 +625,7 @@ class ZaakDetailSerializer(APIModelSerializer):
             return False
 
         if len(parent_process_instance) > 1:
-            raise serializers.ValidationError(
+            logger.warning(
                 _(
                     "Something went wrong. A ZAAK shouldn't be spawned by more than 1 parent."
                 )
@@ -641,16 +635,19 @@ class ZaakDetailSerializer(APIModelSerializer):
         # Make sure the process doesn't have incidents yet:
         incidents = get_incidents_for_process_instance(parent_process_instance.id)
         if incidents:
-            raise serializers.ValidationError(
-                _("Something went wrong. An incident was reported in Camunda.")
-            )
+            logger.error("Something went wrong. An incident was reported in Camunda.")
 
         # Make sure the parent process has startRelatedBusinessProcess.
-        if var := get_all_process_instance_variables(parent_process_instance.id).get(
-            "startRelatedBusinessProcess"
+        if var := bool(
+            get_camunda_variable_instances(
+                {
+                    "processInstanceIdIn": [parent_process_instance.id],
+                    "variableName": "startRelatedBusinessProcess",
+                }
+            )
         ):
             # Make sure the zaaktype of the zaak even has a start_camunda_process_form
-            if var and fetch_start_camunda_process_form_for_zaaktype(obj.zaaktype):
+            if var and self.context["camunda_form"]:
                 return True
         return False
 
@@ -659,22 +656,13 @@ class ZaakDetailSerializer(APIModelSerializer):
         return not form
 
     def get_is_configured(self, obj) -> bool:
-        process_instances = get_top_level_process_instances(obj.url)
-        is_configured = False
-        with parallel() as executor:
-            futures = [
-                executor.submit(get_process_instance_variable, pid.id, "isConfigured")
-                for pid in process_instances
-            ]
-            for future in as_completed(futures):
-                # catch 404 errors - the variable is not found but we only care about
-                # the variable that is found.
-                try:
-                    is_configured = future.result()
-                    executor.executor.shutdown(wait=False, cancel_futures=True)
-                except HTTPError:
-                    continue
-        return is_configured
+        process_instances = self.context["process_instances"]
+        pids = [p.id for p in process_instances if p.id]
+        return bool(
+            get_camunda_variable_instances(
+                {"processInstanceIdIn": pids, "variableName": "isConfigured"}
+            )
+        )
 
 
 class UpdateZaakDetailSerializer(APIModelSerializer):
@@ -951,15 +939,27 @@ class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
         return waarde
 
 
-class RelatedZaakDetailSerializer(ZaakDetailSerializer):
-    status = ZaakStatusSerializer()
+class RelatedZaakDetailSerializer(APIModelSerializer):
+    status = ZaakStatusSerializer(help_text=_("Expanded STATUS of ZAAK."))
+    zaaktype = ZaakTypeSerializer(help_text=_("Expanded ZAAKTYPE of ZAAK."))
+    resultaat = ResultaatSerializer(help_text=_("Expanded RESULTAAT of ZAAK."))
 
-    class Meta(ZaakDetailSerializer.Meta):
-        fields = ZaakDetailSerializer.Meta.fields + ("status",)
+    class Meta:
+        model = Zaak
+        fields = (
+            "bronorganisatie",
+            "identificatie",
+            "omschrijving",
+            "resultaat",
+            "status",
+            "zaaktype",
+        )
 
 
 class RelatedZaakSerializer(serializers.Serializer):
-    aard_relatie = serializers.CharField()
+    aard_relatie = serializers.CharField(
+        help_text=_("Short description of the nature of the relationship.")
+    )
     zaak = RelatedZaakDetailSerializer()
 
 
