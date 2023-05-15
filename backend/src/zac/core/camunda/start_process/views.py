@@ -10,8 +10,8 @@ from zgw_consumers.api_models.constants import RolOmschrijving
 
 from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
-from zac.camunda.api.utils import start_process
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.processes import start_process
 from zac.contrib.objects.services import fetch_start_camunda_process_form_for_zaaktype
 from zac.core.api.views import GetZaakMixin
 from zac.core.camunda.start_process.data import StartCamundaProcessForm

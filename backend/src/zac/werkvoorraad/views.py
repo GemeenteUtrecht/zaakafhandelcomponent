@@ -11,12 +11,16 @@ from rest_framework.response import Response
 
 from zac.activities.models import Activity
 from zac.camunda.data import Task
-from zac.camunda.user_tasks.api import get_killable_camunda_tasks
+from zac.camunda.user_tasks.api import (
+    get_camunda_group_tasks,
+    get_camunda_user_tasks,
+    get_killable_camunda_tasks,
+    get_zaak_urls_from_tasks,
+)
 from zac.contrib.objects.services import (
     fetch_all_checklists_for_user_groups,
     fetch_all_unanswered_checklists_for_user,
 )
-from zac.core.api.mixins import ListMixin
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
@@ -35,10 +39,7 @@ from .serializers import (
 from .utils import (
     get_access_requests_groups,
     get_activity_groups,
-    get_camunda_group_tasks,
-    get_camunda_user_tasks,
     get_checklist_answers_groups,
-    get_zaak_urls_from_tasks,
 )
 
 logger = logging.getLogger(__name__)

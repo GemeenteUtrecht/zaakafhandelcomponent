@@ -54,6 +54,11 @@ class NullableJsonField(fields.JSONField):
         Nested fields are not supported
         """
 
+        try:  # check if instance is iterable
+            iter(instance)
+        except TypeError:
+            raise fields.SkipField()
+
         if self.source not in instance:
             raise fields.SkipField()
 

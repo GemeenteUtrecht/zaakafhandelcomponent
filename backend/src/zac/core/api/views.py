@@ -16,7 +16,6 @@ from django.views.decorators.csrf import csrf_protect
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from furl import furl
 from rest_framework import (
     authentication,
     exceptions,
@@ -39,10 +38,14 @@ from zgw_consumers.models import Service
 from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.accounts.models import User, UserAtomicPermission
-from zac.camunda.api.utils import start_process
+from zac.camunda.process_instances import get_top_level_process_instances
+from zac.camunda.processes import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
-from zac.contrib.objects.services import fetch_zaaktypeattributen_objects_for_zaaktype
+from zac.contrib.objects.services import (
+    fetch_start_camunda_process_form_for_zaaktype,
+    fetch_zaaktypeattributen_objects_for_zaaktype,
+)
 from zac.core.camunda.start_process.serializers import CreatedProcessInstanceSerializer
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.models import MetaObjectTypesConfig
@@ -304,6 +307,23 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         mapping = {"GET": ZaakDetailSerializer, "PATCH": UpdateZaakDetailSerializer}
         return mapping[self.request.method](**kwargs)
 
+    def get_camunda_context(self, zaak: Zaak):
+        mapping = {
+            "camunda_form": [
+                fetch_start_camunda_process_form_for_zaaktype,
+                zaak.zaaktype,
+            ],
+            "process_instances": [get_top_level_process_instances, zaak.url],
+        }
+        results = {}
+        with parallel() as executor:
+            running_tasks = {
+                key: executor.submit(*task) for key, task in mapping.items()
+            }
+            for key, running_task in running_tasks.items():
+                results[key] = running_task.result()
+        return results
+
     @extend_schema(
         summary=_("Retrieve ZAAK."),
         responses={
@@ -316,10 +336,13 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
     ) -> Response:
         zaak = self.get_object()
         zaak.resultaat = get_resultaat(zaak)
-        serializer = self.get_serializer(
-            instance=zaak, context={"zaak": self.get_object(), "request": self.request}
-        )
-        user = request.user
+        camunda_context = self.get_camunda_context(zaak)
+        context = {
+            **camunda_context,
+            "zaak": zaak,
+            "request": request,
+        }
+        serializer = self.get_serializer(instance=zaak, context=context)
         return Response(serializer.data)
 
     @extend_schema(

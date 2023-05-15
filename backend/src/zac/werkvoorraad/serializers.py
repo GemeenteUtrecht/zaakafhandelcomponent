@@ -5,7 +5,6 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
-from zac.camunda.api.serializers import TaskSerializer
 from zac.contrib.objects.checklists.data import ChecklistAnswer
 from zac.elasticsearch.drf_api.serializers import StatusDocumentSerializer
 

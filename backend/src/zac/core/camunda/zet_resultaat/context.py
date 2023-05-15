@@ -3,7 +3,7 @@ from typing import List
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
 from zac.camunda.data import Task
-from zac.camunda.processes import get_top_level_process_instances
+from zac.camunda.process_instances import get_top_level_process_instances
 from zac.camunda.user_tasks import register
 from zac.contrib.dowc.api import check_document_status
 from zac.contrib.kownsl.api import get_review_requests

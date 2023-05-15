@@ -18,9 +18,9 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
-from zac.camunda.api.utils import set_assignee_and_complete_task
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
+from zac.camunda.user_tasks.api import set_assignee_and_complete_task
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.camunda.utils import resolve_assignee

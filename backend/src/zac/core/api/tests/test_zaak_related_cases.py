@@ -156,7 +156,7 @@ class RelatedCasesResponseTests(APITestCase):
         )
 
         cls.patch_get_top_level_process_instances = patch(
-            "zac.core.api.serializers.get_top_level_process_instances", return_value=[]
+            "zac.core.api.views.get_top_level_process_instances", return_value=[]
         )
 
     def setUp(self):
@@ -168,9 +168,6 @@ class RelatedCasesResponseTests(APITestCase):
         self.get_related_zaken_patcher.start()
         self.addCleanup(self.get_related_zaken_patcher.stop)
 
-        self.patch_get_top_level_process_instances.start()
-        self.addCleanup(self.patch_get_top_level_process_instances.stop)
-
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
@@ -181,60 +178,46 @@ class RelatedCasesResponseTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
 
-        self.maxDiff = None
-        expected = [
-            {
-                "aardRelatie": "bijdrage",
-                "zaak": {
-                    "url": f"{ZAKEN_ROOT}zaken/3fa0292f-f03a-4b30-8ff5-fad60fdd21a1",
-                    "identificatie": "ZAAK-2020-0011",
-                    "bronorganisatie": "123456782",
-                    "zaaktype": {
-                        "url": f"{CATALOGI_ROOT}zaaktypen/743b3537-f458-47ef-a1c5-2aa50e4e1563",
-                        "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
-                        "omschrijving": self.related_zaak.zaaktype.omschrijving,
-                        "versiedatum": self.related_zaak.zaaktype.versiedatum.isoformat(),
-                    },
-                    "omschrijving": self.related_zaak.omschrijving,
-                    "toelichting": self.related_zaak.toelichting,
-                    "registratiedatum": self.related_zaak.registratiedatum.isoformat(),
-                    "startdatum": self.related_zaak.startdatum.isoformat(),
-                    "einddatum": None,
-                    "einddatumGepland": None,
-                    "uiterlijkeEinddatumAfdoening": "2021-01-21",
-                    "vertrouwelijkheidaanduiding": "beperkt_openbaar",
-                    "zaakgeometrie": {},
-                    "deadline": "2021-01-21",
-                    "deadlineProgress": 50.00,
-                    "status": {
-                        "url": f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
-                        "datumStatusGezet": "2021-01-01T00:00:00Z",
-                        "statustoelichting": "",
-                        "statustype": {
-                            "url": f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
-                            "omschrijving": self.related_zaak.status.statustype.omschrijving,
-                            "omschrijvingGeneriek": self.related_zaak.status.statustype.omschrijving_generiek,
-                            "statustekst": self.related_zaak.status.statustype.statustekst,
-                            "volgnummer": 1,
-                            "isEindstatus": self.related_zaak.status.statustype.is_eindstatus,
+        self.assertEqual(
+            response_data,
+            [
+                {
+                    "aardRelatie": "bijdrage",
+                    "zaak": {
+                        "identificatie": "ZAAK-2020-0011",
+                        "bronorganisatie": "123456782",
+                        "zaaktype": {
+                            "url": f"{CATALOGI_ROOT}zaaktypen/743b3537-f458-47ef-a1c5-2aa50e4e1563",
+                            "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                            "omschrijving": self.related_zaak.zaaktype.omschrijving,
+                            "versiedatum": self.related_zaak.zaaktype.versiedatum.isoformat(),
+                        },
+                        "omschrijving": self.related_zaak.omschrijving,
+                        "status": {
+                            "url": f"{ZAKEN_ROOT}statussen/bdab0b31-83b6-452c-9311-9bf40f519de6",
+                            "datumStatusGezet": "2021-01-01T00:00:00Z",
+                            "statustoelichting": "",
+                            "statustype": {
+                                "url": f"{CATALOGI_ROOT}statustypen/81cede80-ef69-40e7-b5a1-f5723b586002",
+                                "omschrijving": self.related_zaak.status.statustype.omschrijving,
+                                "omschrijvingGeneriek": self.related_zaak.status.statustype.omschrijving_generiek,
+                                "statustekst": self.related_zaak.status.statustype.statustekst,
+                                "volgnummer": 1,
+                                "isEindstatus": self.related_zaak.status.statustype.is_eindstatus,
+                            },
+                        },
+                        "resultaat": {
+                            "url": f"{ZAKEN_ROOT}resultaten/c8ebd02f-3265-4f2c-a7d7-f773ad7f589d",
+                            "toelichting": self.related_zaak.resultaat.toelichting,
+                            "resultaattype": {
+                                "url": f"{CATALOGI_ROOT}resultaattypen/362b23eb-d8a9-486f-b236-8adb58ebc18f",
+                                "omschrijving": "geannuleerd",
+                            },
                         },
                     },
-                    "resultaat": {
-                        "url": f"{ZAKEN_ROOT}resultaten/c8ebd02f-3265-4f2c-a7d7-f773ad7f589d",
-                        "toelichting": self.related_zaak.resultaat.toelichting,
-                        "resultaattype": {
-                            "url": f"{CATALOGI_ROOT}resultaattypen/362b23eb-d8a9-486f-b236-8adb58ebc18f",
-                            "omschrijving": "geannuleerd",
-                        },
-                    },
-                    "kanGeforceerdBijwerken": True,
-                    "hasProcess": False,
-                    "isStatic": True,
-                    "isConfigured": False,
-                },
-            }
-        ]
-        self.assertEqual(response_data, expected)
+                }
+            ],
+        )
 
     def test_no_related(self):
         with patch("zac.core.api.views.get_related_zaken", return_value=[]):
