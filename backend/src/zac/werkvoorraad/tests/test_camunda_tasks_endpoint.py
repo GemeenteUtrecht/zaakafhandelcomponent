@@ -101,18 +101,22 @@ class CamundaTasksTests(ESMixin, APITestCase):
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         with patch(
-            "zac.werkvoorraad.views.get_camunda_user_tasks",
-            return_value=[],
+            "zac.werkvoorraad.views.get_zaak_urls_from_tasks",
+            return_value={},
         ):
-            response = self.client.get(self.user_endpoint)
+            with patch(
+                "zac.werkvoorraad.views.get_camunda_user_tasks",
+                return_value=[],
+            ):
+                response = self.client.get(self.user_endpoint)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), [])
+        self.assertEqual(response.json()["results"], [])
 
     def test_user_tasks_endpoint(self):
         with patch(
-            "zac.werkvoorraad.views.get_zaak_url_from_context",
-            return_value=(self.task.id, self.zaak["url"]),
+            "zac.werkvoorraad.views.get_zaak_urls_from_tasks",
+            return_value={self.task.id: self.zaak["url"]},
         ):
             with patch(
                 "zac.werkvoorraad.views.get_camunda_user_tasks",
@@ -121,30 +125,12 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 response = self.client.get(self.user_endpoint)
 
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()["results"]
         self.assertEqual(
             data,
             [
                 {
-                    "task": {
-                        "name": TASK_DATA["name"],
-                        "assignee": {
-                            "email": self.user.email,
-                            "firstName": self.user.first_name,
-                            "fullName": self.user.get_full_name(),
-                            "id": self.user.id,
-                            "isStaff": self.user.is_staff,
-                            "lastName": self.user.last_name,
-                            "username": self.user.username,
-                            "groups": [group.name for group in self.groups],
-                        },
-                        "assigneeType": "user",
-                        "created": TASK_DATA["created"],
-                        "hasForm": False,
-                        "id": TASK_DATA["id"],
-                        "canCancelTask": False,
-                        "formKey": "",
-                    },
+                    "task": TASK_DATA["name"],
                     "zaak": {
                         "bronorganisatie": self.zaak["bronorganisatie"],
                         "identificatie": self.zaak["identificatie"],
@@ -162,8 +148,8 @@ class CamundaTasksTests(ESMixin, APITestCase):
 
     def test_group_tasks_endpoint(self):
         with patch(
-            "zac.werkvoorraad.views.get_zaak_url_from_context",
-            return_value=(self.task.id, self.zaak["url"]),
+            "zac.werkvoorraad.views.get_zaak_urls_from_tasks",
+            return_value={self.task.id: self.zaak["url"]},
         ):
             with patch(
                 "zac.werkvoorraad.views.get_camunda_group_tasks",
@@ -172,25 +158,12 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 response = self.client.get(self.group_endpoint)
 
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()["results"]
         self.assertEqual(
             data,
             [
                 {
-                    "task": {
-                        "name": TASK_DATA["name"],
-                        "assignee": {
-                            "id": self.groups[0].id,
-                            "fullName": f"Groep: {self.groups[0].name}",
-                            "name": self.groups[0].name,
-                        },
-                        "assigneeType": "group",
-                        "created": TASK_DATA["created"],
-                        "hasForm": False,
-                        "id": TASK_DATA["id"],
-                        "canCancelTask": False,
-                        "formKey": "",
-                    },
+                    "task": TASK_DATA["name"],
                     "zaak": {
                         "bronorganisatie": self.zaak["bronorganisatie"],
                         "identificatie": self.zaak["identificatie"],
@@ -206,10 +179,26 @@ class CamundaTasksTests(ESMixin, APITestCase):
             ],
         )
 
+    def test_group_tasks_endpoint_no_groups(self):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        with patch(
+            "zac.werkvoorraad.views.get_zaak_urls_from_tasks",
+            return_value={self.task.id: self.zaak["url"]},
+        ):
+            response = self.client.get(self.group_endpoint)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()["results"]
+        self.assertEqual(
+            data,
+            [],
+        )
+
     def test_user_tasks_endpoint_zaak_cant_be_found(self):
         with patch(
-            "zac.werkvoorraad.views.get_zaak_url_from_context",
-            return_value=(self.task.id, self.zaak["url"]),
+            "zac.werkvoorraad.views.get_zaak_urls_from_tasks",
+            return_value={self.task.id: self.zaak["url"]},
         ):
             with patch(
                 "zac.werkvoorraad.views.get_camunda_user_tasks",
@@ -221,5 +210,5 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 ):
                     response = self.client.get(self.user_endpoint)
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()["results"]
         self.assertEqual(data, [])

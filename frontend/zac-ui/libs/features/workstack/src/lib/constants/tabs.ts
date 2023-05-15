@@ -47,4 +47,16 @@ const tabs: Tab[] = [
   },
 ];
 
-export { tabs }
+
+const tabIndexes = {
+  'zaken': 0,
+  'tasks': 1,
+  'group-tasks': 2,
+  'activities': 3,
+  'group-activities': 4,
+  'access-request': 5,
+  'checklist': 6,
+  'group-checklist': 7
+}
+
+export { tabs, tabIndexes }

@@ -1,4 +1,4 @@
-<h2>Zaken met toegangsverzoeken</h2>
+<h4>Zaken met toegangsverzoeken</h4>
 <div *ngIf="data?.length > 0; else noRequests" class='col-md-6'>
   <div *ngFor="let accessRequest of data" class="access-request mb-2">
     <a [routerLink]="getZaakLink(accessRequest.zaak)" target="_blank" class='d-block p-2 mb-3'>{{accessRequest.zaak.identificatie}}</a>

@@ -130,7 +130,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        urls = [result["url"] for result in data]
+        urls = [result["url"] for result in data["results"]]
         self.assertEqual(urls[0], zaak_2["url"])
         self.assertEqual(urls[1], zaak_1["url"])
 
@@ -234,7 +234,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             response = self.client.get(self.endpoint + "?ordering=startdatum")
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        urls = [result["url"] for result in data]
+        urls = [result["url"] for result in data["results"]]
         self.assertEqual(urls[0], zaak_1["url"])
         self.assertEqual(urls[1], zaak_2["url"])
 
@@ -246,6 +246,6 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             response = self.client.get(self.endpoint + "?ordering=-startdatum")
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        urls = [result["url"] for result in data]
+        urls = [result["url"] for result in data["results"]]
         self.assertEqual(urls[0], zaak_2["url"])
         self.assertEqual(urls[1], zaak_1["url"])

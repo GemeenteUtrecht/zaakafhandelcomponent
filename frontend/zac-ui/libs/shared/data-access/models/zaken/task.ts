@@ -19,6 +19,6 @@ export interface Task {
 }
 
 export interface UserTask {
-  task: Task;
+  task: string;
   zaak: UserTaskZaak;
 }

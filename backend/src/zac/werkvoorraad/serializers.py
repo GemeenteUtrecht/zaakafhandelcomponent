@@ -88,7 +88,9 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
 
 
 class WorkStackTaskSerializer(APIModelSerializer):
-    task = TaskSerializer(help_text=_("Camunda task for the user."))
+    task = serializers.CharField(
+        help_text=_("Camunda task for the user."), source="task.name"
+    )
     zaak = SummaryZaakDocumentSerializer(
         help_text=_("ZAAK that camunda task belongs to.")
     )

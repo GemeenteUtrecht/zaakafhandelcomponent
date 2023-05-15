@@ -3,14 +3,13 @@ from typing import Dict, List
 
 from django.utils.translation import gettext as _
 
+from django_camunda.client import get_client
 from drf_spectacular.utils import extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
-from zac.api.context import get_zaak_url_from_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks.api import get_killable_camunda_tasks
 from zac.contrib.objects.services import (
@@ -26,6 +25,7 @@ from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
 from zac.elasticsearch.searches import search_zaken
 
 from .data import AccessRequestGroup, TaskAndCase
+from .pagination import WorkstackPagination
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
@@ -38,6 +38,7 @@ from .utils import (
     get_camunda_group_tasks,
     get_camunda_user_tasks,
     get_checklist_answers_groups,
+    get_zaak_urls_from_tasks,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class WorkStackAccessRequestsView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated & CanHandleAccessRequests,)
     serializer_class = WorkStackAccessRequestsSerializer
     filter_backends = ()
+    pagination_class = WorkstackPagination
 
     def get_queryset(self):
         access_requests_groups = get_access_requests_groups(self.request)
@@ -61,6 +63,7 @@ class WorkStackAdhocActivitiesView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackAdhocActivitiesSerializer
     filter_backends = ()
+    pagination_class = WorkstackPagination
 
     def get_activities(self) -> List[Dict]:
         return Activity.objects.as_werkvoorraad(user=self.request.user)
@@ -83,21 +86,24 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
     summary=_("List active ZAAKen for logged in user."),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
 )
-class WorkStackAssigneeCasesView(ListMixin, views.APIView):
+class WorkStackAssigneeCasesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
+    pagination_class = WorkstackPagination
     ordering = ("-identificatie.keyword",)
 
-    def get_objects(self):
-        ordering = ESOrderingFilter().get_ordering(self.request, self)
-        zaken = search_zaken(
-            request=self.request,
-            behandelaar=self.request.user.username,
-            ordering=ordering,
-        )
-        return [zaak for zaak in zaken if not zaak.einddatum]
+    def get_queryset(self):
+        if not hasattr(self, "_qs"):
+            ordering = ESOrderingFilter().get_ordering(self.request, self)
+            zaken = search_zaken(
+                request=self.request,
+                behandelaar=self.request.user.username,
+                ordering=ordering,
+            )
+            self._qs = [zaak for zaak in zaken if not zaak.einddatum]
+        return self._qs
 
 
 @extend_schema(summary=_("List user tasks for logged in user."))
@@ -106,6 +112,12 @@ class WorkStackUserTasksView(ListAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackTaskSerializer
     filter_backends = ()
+    pagination_class = WorkstackPagination
+
+    def get_client(self):
+        if not hasattr(self, "_camunda_client"):
+            self._camunda_client = get_client()
+        return self._camunda_client
 
     def get_serializer_context(self) -> Dict:
         context = super().get_serializer_context()
@@ -113,37 +125,47 @@ class WorkStackUserTasksView(ListAPIView):
         return context
 
     def get_camunda_tasks(self) -> List[Task]:
-        return get_camunda_user_tasks(self.request.user)
+        tasks = get_camunda_user_tasks(self.request.user, client=self.get_client())
+        return tasks
 
     def get_queryset(self):
-        tasks = self.get_camunda_tasks()
-        with parallel() as executor:
-            task_ids_and_zaak_urls = list(
-                executor.map(get_zaak_url_from_context, tasks)
-            )
+        if not hasattr(self, "_qs"):
+            tasks = {task.id: task for task in self.get_camunda_tasks()}
+            if not tasks:
+                return []
 
-        zaken = {
-            zaak.url: zaak
-            for zaak in search_zaken(
-                request=self.request,
-                urls=list({tzu[1] for tzu in task_ids_and_zaak_urls}),
+            task_ids_and_zaak_urls = get_zaak_urls_from_tasks(
+                tasks.values(), client=self.get_client()
             )
-        }
-        task_zaken = {}
-        for task_id, zaak_url in task_ids_and_zaak_urls:
-            if not (zaak := zaken.get(zaak_url)):
-                logger.warning(
-                    "Couldn't find a ZAAK in Elasticsearch for task with id %s."
-                    % task_id
+            if not task_ids_and_zaak_urls:
+                return []
+
+            zaken = {
+                zaak.url: zaak
+                for zaak in search_zaken(
+                    request=self.request,
+                    urls=list({url for url in task_ids_and_zaak_urls.values()}),
                 )
+            }
+            task_zaken = dict()
+            for task_id, zaak_url in task_ids_and_zaak_urls.items():
+                if not (zaak := zaken.get(zaak_url)):
+                    logger.warning(
+                        "Couldn't find a ZAAK in Elasticsearch for task with id %s."
+                        % task_id
+                    )
+                task_zaken[task_id] = zaak
+            self._qs = sorted(
+                [
+                    TaskAndCase(task=tasks[task_id], zaak=task_zaken[task_id])
+                    for task_id in task_ids_and_zaak_urls
+                    if task_zaken[task_id]
+                ],
+                key=lambda tac: tac.zaak.identificatie,
+                reverse=True,
+            )
 
-            task_zaken[task_id] = zaak
-
-        return [
-            TaskAndCase(task=task, zaak=task_zaken[task.id])
-            for task in tasks
-            if task_zaken[task.id]
-        ]
+        return self._qs
 
 
 @extend_schema(
@@ -151,7 +173,7 @@ class WorkStackUserTasksView(ListAPIView):
 )
 class WorkStackGroupTasksView(WorkStackUserTasksView):
     def get_camunda_tasks(self) -> List[Task]:
-        return get_camunda_group_tasks(self.request.user)
+        return get_camunda_group_tasks(self.request.user, client=self.get_client())
 
 
 @extend_schema(summary=_("List checklist questions for logged in user."))
