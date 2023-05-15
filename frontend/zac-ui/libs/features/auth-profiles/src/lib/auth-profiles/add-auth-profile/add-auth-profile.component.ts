@@ -290,9 +290,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
       () => {
         this.closeModal('add-auth-profile-modal');
         this.snackbarService.openSnackBar(this.createAuthProfileSuccessMessage, 'Sluiten', 'primary');
-        this.authProfileForm.reset();
-        this.reload.emit(true)
-        this.isLoading = false;
+        this.resetForm();
       }, this.reportError.bind(this)
     )
   }
@@ -313,12 +311,21 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
           () => {
             this.closeModal('edit-auth-profile-modal');
             this.snackbarService.openSnackBar(this.updateAuthProfileSuccessMessage, 'Sluiten', 'primary');
-            this.authProfileForm.reset();
-            this.reload.emit(true)
-            this.isLoading = false;
+            this.resetForm();
           }, this.reportError.bind(this))
       }, this.reportError.bind(this)
     )
+  }
+
+  /**
+   * Reset the form
+   */
+  resetForm() {
+    this.authProfileForm.reset();
+    this.selectedUsers = [];
+    this.searchResultUsers = [];
+    this.reload.emit(true)
+    this.isLoading = false;
   }
 
   /**

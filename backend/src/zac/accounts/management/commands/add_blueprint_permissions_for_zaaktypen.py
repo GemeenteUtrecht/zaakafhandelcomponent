@@ -1,12 +1,41 @@
+from typing import List
+
 from django.core.management import BaseCommand
 
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
-from zac.accounts.api.serializers import generate_document_policies
-from zac.core.services import get_zaaktypen
+from zac.core.services import get_informatieobjecttypen_for_zaaktype, get_zaaktypen
 
 from ...constants import PermissionObjectTypeChoices
 from ...models import BlueprintPermission, Role
+
+
+def generate_document_policies(zaaktype_policy: dict) -> List[dict]:
+    zaaktype_omschrijving = zaaktype_policy.get("zaaktype_omschrijving")
+    catalogus = zaaktype_policy.get("catalogus")
+
+    if not zaaktype_omschrijving or not catalogus:
+        return []
+
+    # find zaaktype
+    zaaktypen = get_zaaktypen(catalogus=catalogus, omschrijving=zaaktype_omschrijving)
+
+    # find related iotypen
+    document_policies = []
+    for zaaktype in zaaktypen:
+        if not zaaktype.informatieobjecttypen:
+            continue
+
+        iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
+        document_policies += [
+            {
+                "catalogus": iotype.catalogus,
+                "iotype_omschrijving": iotype.omschrijving,
+                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+            }
+            for iotype in iotypen
+        ]
+    return document_policies
 
 
 class Command(BaseCommand):
@@ -26,7 +55,7 @@ class Command(BaseCommand):
                 "zaaktype_omschrijving": zaaktype.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             }
-            document_policies = generate_document_policies(policy)
+            # document_policies = generate_document_policies(policy)
             for role in roles:
                 obj, created = BlueprintPermission.objects.get_or_create(
                     role=role,
@@ -36,12 +65,12 @@ class Command(BaseCommand):
                 if created:
                     added += 1
 
-                for policy in document_policies:
-                    permission, created = BlueprintPermission.objects.get_or_create(
-                        role=role,
-                        object_type=PermissionObjectTypeChoices.document,
-                        policy=policy,
-                    )
-                    if created:
-                        added += 1
+                # for policy in document_policies:
+                #     permission, created = BlueprintPermission.objects.get_or_create(
+                #         role=role,
+                #         object_type=PermissionObjectTypeChoices.document,
+                #         policy=policy,
+                #     )
+                #     if created:
+                #         added += 1
         self.stdout.write(f" {added} blueprint permissions for zaaktypen are added")

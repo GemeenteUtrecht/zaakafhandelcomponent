@@ -1,7 +1,6 @@
 from django.contrib.auth.models import Group
-from django.contrib.postgres.aggregates import JSONBAgg
 from django.db import transaction
-from django.db.models import F, Prefetch, Window
+from django.db.models import F, Prefetch
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
@@ -58,6 +57,7 @@ from .serializers import (
     UserAuthorizationProfileSerializer,
     UserSerializer,
 )
+from .utils import group_permissions
 
 
 @extend_schema_view(
@@ -322,63 +322,28 @@ class AuthProfileViewSet(viewsets.ModelViewSet):
     queryset = AuthorizationProfile.objects.prefetch_related(
         Prefetch(
             "blueprint_permissions",
-            queryset=(
-                BlueprintPermission.objects.select_related("role")
-                .annotate(
-                    policies=Window(
-                        expression=JSONBAgg("policy"),
-                        partition_by=[F("role"), F("object_type")],
-                    )
-                )
-                .distinct("role", "object_type")
-                .order_by("role", "object_type")
-                .all()
-            ),
-            to_attr="group_permissions",
+            queryset=BlueprintPermission.objects.select_related("role").all(),
         )
     ).all()
     serializer_class = AuthProfileSerializer
     lookup_field = "uuid"
     http_method_names = ["get", "post", "put", "delete"]
 
-    def create(self, request, *args, **kwargs):
-        """
-        Viewset action is modified to use annotated field
+    def get_object(self):
+        obj = super().get_object()
+        permissions = obj.blueprint_permissions.select_related("role").all()
+        obj.group_permissions = group_permissions(permissions)
+        return obj
 
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action == "list":
+            for auth_profile in qs:
+                auth_profile.group_permissions = group_permissions(
+                    auth_profile.blueprint_permissions.all()
+                )
 
-        # Grab instance from queryset rather than the instance itself
-        # to make use of annotated field.
-        serializer = self.get_serializer(
-            instance=self.get_queryset().get(pk=instance.pk)
-        )
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-
-        # Grab instance from queryset rather than the instance itself
-        # to make use of annotated field.
-        serializer = self.get_serializer(
-            instance=self.get_queryset().get(pk=instance.pk)
-        )
-
-        if getattr(instance, "_prefetched_objects_cache", None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)
+        return qs
 
 
 @extend_schema_view(

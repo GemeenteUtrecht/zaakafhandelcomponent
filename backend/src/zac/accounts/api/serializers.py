@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from itertools import groupby
 from typing import List
 
 from django.contrib.auth.models import Group
@@ -41,6 +42,7 @@ from ..models import (
     UserAuthorizationProfile,
 )
 from ..permissions import object_type_registry, registry
+from .utils import group_permissions
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -484,42 +486,13 @@ class GroupBlueprintSerializer(GroupPolymorphicSerializer):
     discriminator_field = "object_type"
     group_field = "policies"
     group_field_kwargs = {"many": True, "help_text": _("List of blueprint shapes")}
-
-    role = serializers.PrimaryKeyRelatedField(
-        queryset=Role.objects.all(), help_text=_("Name of the role")
-    )
     object_type = serializers.ChoiceField(
         choices=PermissionObjectTypeChoices.choices,
         help_text=_("Type of the permission object"),
     )
-
-
-def generate_document_policies(zaaktype_policy: dict) -> List[dict]:
-    zaaktype_omschrijving = zaaktype_policy.get("zaaktype_omschrijving")
-    catalogus = zaaktype_policy.get("catalogus")
-
-    if not zaaktype_omschrijving or not catalogus:
-        return []
-
-    # find zaaktype
-    zaaktypen = get_zaaktypen(catalogus=catalogus, omschrijving=zaaktype_omschrijving)
-
-    # find related iotypen
-    document_policies = []
-    for zaaktype in zaaktypen:
-        if not zaaktype.informatieobjecttypen:
-            continue
-
-        iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
-        document_policies += [
-            {
-                "catalogus": iotype.catalogus,
-                "iotype_omschrijving": iotype.omschrijving,
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
-            }
-            for iotype in iotypen
-        ]
-    return document_policies
+    role = serializers.PrimaryKeyRelatedField(
+        queryset=Role.objects.all(), help_text=_("Name of the role")
+    )
 
 
 class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
@@ -537,31 +510,23 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
     @staticmethod
     def create_blueprint_permissions(group_permissions):
         blueprint_permissions = []
-
         for group in group_permissions:
             policies = group["policies"]
-
-            # # generate related iotype policies
-            # with parallel(max_workers=10) as executor:
-            #     _document_policies = executor.map(generate_document_policies, policies)
-            #     document_policies = sum(list(_document_policies), [])
-
             # create permissions
             for policy in policies:
                 permission, created = BlueprintPermission.objects.get_or_create(
                     role=group["role"], object_type=group["object_type"], policy=policy
                 )
                 blueprint_permissions.append(permission)
-
-            # for policy in document_policies:
-            #     permission, created = BlueprintPermission.objects.get_or_create(
-            #         role=group["role"],
-            #         object_type=PermissionObjectTypeChoices.document,
-            #         policy=policy,
-            #     )
-            #     blueprint_permissions.append(permission)
-
         return blueprint_permissions
+
+    @staticmethod
+    def get_group_permissions(auth_profile) -> list:
+        """
+        Permissions are grouped by role and object_type
+        """
+        permissions = auth_profile.blueprint_permissions.order_by().all()
+        return group_permissions(permissions)
 
     @transaction.atomic
     def create(self, validated_data):
@@ -570,7 +535,7 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
 
         blueprint_permissions = self.create_blueprint_permissions(group_permissions)
         auth_profile.blueprint_permissions.add(*blueprint_permissions)
-
+        auth_profile.group_permissions = self.get_group_permissions(auth_profile)
         return auth_profile
 
     @transaction.atomic
@@ -581,7 +546,7 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         auth_profile.blueprint_permissions.clear()
         blueprint_permissions = self.create_blueprint_permissions(group_permissions)
         auth_profile.blueprint_permissions.add(*blueprint_permissions)
-
+        auth_profile.group_permissions = self.get_group_permissions(auth_profile)
         return auth_profile
 
 
