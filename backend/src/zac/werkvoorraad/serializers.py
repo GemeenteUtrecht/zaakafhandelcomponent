@@ -17,7 +17,7 @@ class SummaryZaakDocumentSerializer(serializers.Serializer):
         help_text=_("URL reference of the ZAAK in Zaken API."),
     )
     identificatie = serializers.CharField(
-        help_text=_("Unique identification of the ZAAK.")
+        help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
     )
     bronorganisatie = serializers.CharField(
         help_text=_("The RSIN of the organisation that created the the ZAAK.")
