@@ -1315,7 +1315,7 @@ class ObjectSearchView(views.APIView):
 
     def post(self, request):
         """
-        Does not include `meta` objects.
+        EXCLUDES `meta` objects.
 
         """
         pc = self.pagination_class()
@@ -1323,21 +1323,22 @@ class ObjectSearchView(views.APIView):
         if page := request.query_params.get(pc.page_query_param):
             qp[pc.page_query_param] = page
 
+        filters = deepcopy(request.data)
+        if "data_attrs" in filters:
+            filters["data_attrs"] = ",".join(
+                filters["data_attrs"].split(",") + ["meta__exact__false"]
+            )
+        else:
+            filters["data_attrs"] = "meta__exact__false"
+
         try:
             objects, _qp = search_objects(
-                filters=request.data,
+                filters=filters,
                 query_params=qp,
             )
         except ClientError as exc:
             raise ValidationError(detail=exc.args[0])
 
-        # Filter out meta objects for now...
-        # TODO: add meta field to all objecttypes so we can filter at source
-        objects["results"] = [
-            obj
-            for obj in objects["results"]
-            if not obj.get("record", {}).get("data", {}).get("meta", False)
-        ]
         return pc.get_paginated_response(request, objects)
 
 
