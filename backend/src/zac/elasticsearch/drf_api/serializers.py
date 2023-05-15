@@ -222,7 +222,8 @@ class ZaakDocumentSerializer(serializers.Serializer):
         required=False, help_text=_("ZAAKTYPE of the ZAAK.")
     )
     identificatie = serializers.CharField(
-        required=False, help_text=_("Unique identification of the ZAAK.")
+        required=False,
+        help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
     )
     bronorganisatie = serializers.CharField(
         required=True,
@@ -282,7 +283,8 @@ class ZaakDocumentSerializer(serializers.Serializer):
 
 class QSZaakDocumentSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
-        required=False, help_text=_("Unique identification of the ZAAK.")
+        required=False,
+        help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
     )
     bronorganisatie = serializers.CharField(
         required=True,

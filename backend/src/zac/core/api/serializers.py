@@ -1424,6 +1424,9 @@ class RecentlyViewedSerializer(serializers.Serializer):
     url = serializers.SerializerMethodField(
         help_text=_("URL of the ZAAK detail page in the zaakafhandelcomponent."),
     )
+    identificatie = serializers.CharField(
+        help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
+    )
 
     def get_url(self, obj: Dict) -> str:
         path = furl(settings.UI_ROOT_URL).path.segments + [
