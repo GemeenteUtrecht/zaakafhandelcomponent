@@ -1,91 +1,15 @@
 import logging
 from itertools import groupby
-from typing import Dict, List, Optional
+from typing import Dict, List
 from urllib.request import Request
 
-from django_camunda.camunda_models import factory
-from django_camunda.client import get_client, get_client_class
-
-from zac.accounts.models import AccessRequest, User
-from zac.camunda.constants import AssigneeTypeChoices
-from zac.camunda.data import Task
-from zac.core.camunda.utils import resolve_assignee
+from zac.accounts.models import AccessRequest
 from zac.core.permissions import zaken_handle_access
 from zac.elasticsearch.searches import search_zaken
 
 from .data import ActivityGroup, ChecklistAnswerGroup
 
 logger = logging.getLogger(__name__)
-
-CAMUNDA_CLIENT_CLASS = get_client_class()
-
-
-def get_camunda_user_tasks(
-    user: User, client: Optional[CAMUNDA_CLIENT_CLASS] = None
-) -> List[Task]:
-    return get_camunda_tasks(
-        [f"{AssigneeTypeChoices.user}:{user.username}"], client=client
-    )
-
-
-def get_camunda_group_tasks(
-    user: User, client: Optional[CAMUNDA_CLIENT_CLASS] = None
-) -> List[Task]:
-    groups = list(user.groups.all().values_list("name", flat=True))
-    return get_camunda_tasks(
-        [f"{AssigneeTypeChoices.group}:{group}" for group in groups],
-        client=client,
-    )
-
-
-def get_camunda_tasks(
-    assignees: List[str], client: Optional[CAMUNDA_CLIENT_CLASS] = None
-) -> List[Task]:
-    if not assignees:
-        return []
-
-    if not client:
-        client = get_client()
-    tasks = client.post("task", json={"assigneeIn": assignees})
-    tasks = factory(Task, tasks)
-    assignees = {assignee: resolve_assignee(assignee) for assignee in assignees}
-    for task in tasks:
-        task.assignee = assignees[task.assignee]
-    return tasks
-
-
-def get_camunda_variables(pis: List[str], client: CAMUNDA_CLIENT_CLASS) -> List[Dict]:
-    if not pis:
-        return []
-
-    return client.post(
-        "variable-instance",
-        json={
-            "processInstanceIdIn": pis,
-            "variableName": "zaakUrl",
-        },
-    )
-
-
-def get_zaak_urls_from_tasks(
-    tasks: List[Task], client: Optional[CAMUNDA_CLIENT_CLASS] = None
-) -> Optional[Dict[str, str]]:
-    if not tasks:
-        return None
-
-    if not client:
-        client = get_client()
-
-    pids_and_tasks = {str(task.process_instance_id): task for task in tasks}
-    variables = get_camunda_variables(list(pids_and_tasks.keys()), client=client)
-    pids_and_urls = {
-        variable["process_instance_id"]: variable["value"] for variable in variables
-    }
-    return {
-        pids_and_tasks[process_instance_id].id: url
-        for process_instance_id, url in pids_and_urls.items()
-        if url and process_instance_id in pids_and_tasks
-    }
 
 
 def get_access_requests_groups(request: Request):

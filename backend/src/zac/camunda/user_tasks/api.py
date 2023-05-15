@@ -1,15 +1,20 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from django.utils.translation import gettext_lazy as _
 
-from django_camunda.api import get_task as _get_task
-from django_camunda.client import get_client as get_camunda_client
+from django_camunda.api import complete_task, get_task as _get_task
+from django_camunda.camunda_models import factory
+from django_camunda.client import get_client, get_client as get_camunda_client
 from django_camunda.types import CamundaId
 from rest_framework.exceptions import ValidationError
 
+from zac.accounts.models import User
+from zac.camunda.client import CAMUNDA_CLIENT_CLASS
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.forms import extract_task_form
 from zac.camunda.models import KillableTask
+from zac.camunda.variable_instances import get_camunda_variable_instances
 from zac.core.camunda.utils import FORM_KEYS, resolve_assignee
 
 
@@ -62,3 +67,90 @@ def cancel_activity_instance_of_task(task: Task):
     client.post(
         f"process-instance/{str(task.process_instance_id)}/modification", json=data
     )
+
+
+def set_assignee(task_id: str, assignee: str):
+    camunda_client = get_client()
+    camunda_client.post(
+        f"task/{task_id}/assignee",
+        json={"userId": assignee},
+    )
+
+
+def set_assignee_and_complete_task(
+    task: Task, user_assignee: User, variables: dict = dict
+):
+    # First make sure the task has the right assignee for historical purposes
+    if (
+        not task.assignee
+        or task.assignee != user_assignee
+        or task.assignee_type == AssigneeTypeChoices.group
+    ):
+        set_assignee(task.id, user_assignee)
+
+    # Then complete the task.
+    complete_task(
+        task.id,
+        variables=variables,
+    )
+
+
+def get_camunda_user_tasks(
+    user: User, client: Optional[CAMUNDA_CLIENT_CLASS] = None
+) -> List[Task]:
+    return get_camunda_tasks(
+        [f"{AssigneeTypeChoices.user}:{user.username}"], client=client
+    )
+
+
+def get_camunda_group_tasks(
+    user: User, client: Optional[CAMUNDA_CLIENT_CLASS] = None
+) -> List[Task]:
+    groups = list(user.groups.all().values_list("name", flat=True))
+    return get_camunda_tasks(
+        [f"{AssigneeTypeChoices.group}:{group}" for group in groups],
+        client=client,
+    )
+
+
+def get_camunda_tasks(
+    assignees: List[str], client: Optional[CAMUNDA_CLIENT_CLASS] = None
+) -> List[Task]:
+    if not assignees:
+        return []
+
+    if not client:
+        client = get_client()
+    tasks = client.post("task", json={"assigneeIn": assignees})
+    tasks = factory(Task, tasks)
+    assignees = {assignee: resolve_assignee(assignee) for assignee in assignees}
+    for task in tasks:
+        task.assignee = assignees[task.assignee]
+    return tasks
+
+
+def get_zaak_urls_from_tasks(
+    tasks: List[Task], client: Optional[CAMUNDA_CLIENT_CLASS] = None
+) -> Optional[Dict[str, str]]:
+    if not tasks:
+        return None
+
+    if not client:
+        client = get_client()
+
+    pids_and_tasks = {str(task.process_instance_id): task for task in tasks}
+    pids = list(pids_and_tasks.keys())
+    if not pids:
+        return None
+
+    variables = get_camunda_variable_instances(
+        {"processInstanceIdIn": pids, "variableName": "zaakUrl"}, client=client
+    )
+    pids_and_urls = {
+        variable["process_instance_id"]: variable["value"] for variable in variables
+    }
+    return {
+        pids_and_tasks[process_instance_id].id: url
+        for process_instance_id, url in pids_and_urls.items()
+        if url and process_instance_id in pids_and_tasks
+    }

@@ -18,21 +18,30 @@ from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
 from zac.accounts.models import User
 from zac.camunda.api.utils import get_bptl_app_id_variable
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.data import Task
+from zac.camunda.messages import get_messages
+from zac.camunda.process_instances import (
+    get_process_instance,
+    get_top_level_process_instances,
+)
+from zac.camunda.user_tasks import (
+    UserTaskData,
+    get_context,
+    get_registry_item,
+    get_task,
+)
+from zac.camunda.user_tasks.api import (
+    cancel_activity_instance_of_task,
+    get_killable_camunda_tasks,
+    set_assignee,
+    set_assignee_and_complete_task,
+)
 from zac.core.api.permissions import CanCreateZaken, CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.camunda.utils import get_process_zaak_url, resolve_assignee
 from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
 
-from ..data import Task
-from ..messages import get_messages
-from ..process_instances import get_process_instance
-from ..processes import get_top_level_process_instances
-from ..user_tasks import UserTaskData, get_context, get_registry_item, get_task
-from ..user_tasks.api import (
-    cancel_activity_instance_of_task,
-    get_killable_camunda_tasks,
-)
 from ..user_tasks.history import get_camunda_history_for_zaak
 from .filters import ProcessInstanceFilterSet
 from .permissions import CanPerformTasks, CanSendMessages
@@ -49,11 +58,7 @@ from .serializers import (
     SubmitUserTaskSerializer,
     UserTaskContextSerializer,
 )
-from .utils import (
-    get_bptl_app_id_variable,
-    set_assignee,
-    set_assignee_and_complete_task,
-)
+from .utils import get_bptl_app_id_variable
 
 
 class ProcessInstanceFetchView(APIView):

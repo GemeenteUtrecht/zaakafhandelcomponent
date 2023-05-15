@@ -25,7 +25,7 @@ CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 
 @patch("zac.camunda.forms.extract_task_form", return_value=None)
 @patch(
-    "zac.camunda.processes.get_messages",
+    "zac.camunda.process_instances.get_messages",
     return_value=["Annuleer behandeling", "Advies vragen"],
 )
 @requests_mock.Mocker()
