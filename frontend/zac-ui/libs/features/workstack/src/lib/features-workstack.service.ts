@@ -13,12 +13,14 @@ export class FeaturesWorkstackService {
   /**
    * Receive all workstack tabs.
    * @param {Tab[]} tabs
+   * @param {number} page
    * @returns {Observable<any>}
    */
-  getWorkstack(tabs: Tab[]): Observable<any> {
+  getWorkstack(tabs: Tab[], page: number = 1): Observable<any> {
     const observables = [];
+    const pageValue = `?page=${page}`;
     tabs.forEach((tab) => {
-      const endpoint = encodeURI(tab.endpoint);
+      const endpoint = encodeURI(`${tab.endpoint}${pageValue}`);
       observables.push(this.http.Get<any>(endpoint).pipe(catchError(error => of(error))));
     });
     return forkJoin(observables);

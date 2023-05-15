@@ -1,4 +1,4 @@
-const tableHead = [
+const zakenTableHead = [
   'Zaaknummer',
   'Omschrijving',
   'Zaaktype',
@@ -17,4 +17,4 @@ const tableHeadMapping = {
   'Vertrouwelijkheid': 'vertrouwelijkheidaanduiding'
 }
 
-export { tableHead, tableHeadMapping }
+export { zakenTableHead }
