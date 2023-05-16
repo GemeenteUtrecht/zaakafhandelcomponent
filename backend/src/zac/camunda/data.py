@@ -46,7 +46,6 @@ class Task(_Task):
     end_time: Optional[datetime] = None
     activity_instance_id: Optional[CamundaId] = None
     form = None
-    messages: list = field(default_factory=list)
 
     def has_form(self) -> bool:
         return bool(self.form)

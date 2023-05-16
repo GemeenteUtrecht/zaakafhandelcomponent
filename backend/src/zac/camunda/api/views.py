@@ -176,9 +176,7 @@ class TaskFetchView(APIView):
             raise exceptions.ValidationError(filterset.errors)
         tasks = get_camunda_user_tasks_for_zaak(
             zaak_url=filterset.serializer.validated_data["zaakUrl"],
-            exclude_zaak_creation=filterset.serializer.validated_data[
-                "excludeZaakCreation"
-            ],
+            exclude_zaak_creation=True,
         )
         serializer = self.serializer_class(tasks, many=True)
 

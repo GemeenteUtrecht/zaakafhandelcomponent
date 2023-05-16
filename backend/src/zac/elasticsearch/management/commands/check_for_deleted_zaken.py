@@ -11,6 +11,8 @@ from zac.core.services import get_zaken_all
 
 from ...utils import check_if_index_exists
 
+logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     help = "Delete documents from ES by checking if they exist in the ZAKEN API"
@@ -28,7 +30,7 @@ class Command(BaseCommand):
             _source=False,
         ):
             if zd["_id"] not in self.zaken_uuids:
-                logging.info("Zaak with uuid %s has been deleted.", zd["_id"])
+                logger.info("Zaak with uuid %s has been deleted.", zd["_id"])
                 zd["_op_type"] = "delete"
                 del zd["_type"]  # To shutup ElasticsearchDeprecation warnings
                 yield zd

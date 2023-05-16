@@ -58,11 +58,13 @@ def get_process_tasks(process: ProcessInstance) -> List[Task]:
     client = get_client()
     tasks = client.get("task", {"processInstanceId": process.id})
     tasks = factory(Task, tasks)
-
+    assignees = {
+        task.assignee: resolve_assignee(task.assignee)
+        for task in tasks
+        if task.assignee
+    }
     for task in tasks:
-        if task.assignee:
-            task.assignee = resolve_assignee(task.assignee)
-
+        task.assignee = assignees.get(task.assignee, "")
         task.form = extract_task_form(task, FORM_KEYS)
     return tasks
 

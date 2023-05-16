@@ -107,11 +107,13 @@ def get_camunda_user_tasks(
 
     # Group assignees in dictionary for performance
     assignees = list({task.assignee for task in tasks})
-    assignees = {assignee: resolve_assignee(assignee) for assignee in assignees}
+    assignees = {
+        assignee: resolve_assignee(assignee) for assignee in assignees if assignee
+    }
 
     # Resolve assignees from dictionary
     for task in tasks:
-        task.assignee = assignees[task.assignee]
+        task.assignee = assignees.get(task.assignee)
         task.form = extract_task_form(task, FORM_KEYS)
 
     return tasks

@@ -151,21 +151,10 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             "history_time_to_live": None,
             "startable_in_tasklist": True,
         }
-        process_instance = factory(
-            ProcessInstance,
-            {
-                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
-                "definitionId": "beleid_opstellen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
-                "businessKey": "",
-                "caseInstanceId": "",
-                "suspended": False,
-                "tenantId": "",
-            },
-        )
-        process_instance.tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
+        tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
         cls.get_top_level_process_instances_patcher = patch(
-            "zac.core.camunda.zet_resultaat.context.get_top_level_process_instances",
-            return_value=[process_instance],
+            "zac.core.camunda.zet_resultaat.context.get_camunda_user_tasks_for_zaak",
+            return_value=tasks,
         )
         cls.resultaattype = generate_oas_component(
             "ztc", "schemas/ResultaatType", zaaktype=cls.zaaktype["url"]
