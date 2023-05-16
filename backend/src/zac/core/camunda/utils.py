@@ -31,23 +31,27 @@ def resolve_assignee(name: str) -> Union[Group, User]:
         user_or_group, _name = name.split(":", 1)
         if user_or_group == AssigneeTypeChoices.group:
             try:
-                group = Group.objects.get(name=_name)
+                assignee = Group.objects.get(name=_name)
             except Group.DoesNotExist:
-                group = Group.objects.create(name=_name)
-                logger.info(f"Created group {group.name}.")
-            return group
+                assignee = Group.objects.create(name=_name)
+                logger.info(f"Created group {assignee.name}.")
+            return assignee
         else:
             try:
-                user = User.objects.get(username=_name)
+                assignee = User.objects.get(username=_name)
             except User.DoesNotExist:
-                user = User.objects.create_user(username=_name)
-            return user
+                assignee = User.objects.create_user(username=_name)
+            return assignee
     except ValueError:
         try:
-            user = User.objects.get(username=name)
+            assignee = User.objects.get(username=name)
         except User.DoesNotExist:
-            user = User.objects.create_user(username=name)
-        return user
+            try:
+                assignee = Group.objects.get(name=name)
+            except Group.DoesNotExist:
+                assignee = User.objects.create_user(username=name)
+                logger.info(f"Created user {assignee}.")
+        return assignee
 
 
 def get_process_tasks(process: ProcessInstance) -> List[Task]:
