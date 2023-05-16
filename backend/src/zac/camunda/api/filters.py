@@ -5,7 +5,7 @@ from rest_framework import fields
 from zac.utils.filters import ApiFilterSet
 
 
-class ProcessInstanceFilterSet(ApiFilterSet):
+class CamundaFilterSet(ApiFilterSet):
     zaakUrl = fields.URLField(
         required=True, help_text=_("URL-reference of related ZAAK.")
     )

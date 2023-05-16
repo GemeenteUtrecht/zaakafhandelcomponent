@@ -109,7 +109,10 @@ def add_subprocesses(
 
 
 def get_process_instances(
-    zaak_url: str, historic: bool = False, include_bijdragezaak: bool = False
+    zaak_url: str,
+    historic: bool = False,
+    include_bijdragezaak: bool = False,
+    exclude_zaak_creation: bool = True,
 ) -> Dict[CamundaId, ProcessInstance]:
     client = get_client()
 
@@ -119,7 +122,13 @@ def get_process_instances(
     else:
         url = "process-instance"
 
-    response = client.get(url, {"variables": f"zaakUrl_eq_{zaak_url}"})
+    query_params = {"variables": f"zaakUrl_eq_{zaak_url}"}
+    if exclude_zaak_creation:
+        query_params[
+            "processDefinitionKeyNotIn"
+        ] = settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+
+    response = client.get(url, query_params)
 
     process_instances = {
         data["id"]: factory(ProcessInstance, {**data, "historical": historic})
@@ -146,10 +155,14 @@ def get_process_instances(
 
 
 def get_top_level_process_instances(
-    zaak_url: str, include_bijdragezaak: bool = False, exclude_zaak_creation=False
+    zaak_url: str,
+    include_bijdragezaak: bool = False,
+    exclude_zaak_creation: bool = True,
 ) -> List[ProcessInstance]:
     process_instances = get_process_instances(
-        zaak_url, include_bijdragezaak=include_bijdragezaak
+        zaak_url,
+        include_bijdragezaak=include_bijdragezaak,
+        exclude_zaak_creation=exclude_zaak_creation,
     )
     # add definitions add user tasks
     definition_ids = [p.definition_id for p in process_instances.values()]
@@ -187,18 +200,8 @@ def get_top_level_process_instances(
         list(executor.map(_get_messages, top_definition_ids))
 
     for process in top_level_processes:
-        process.messages = [
-            msg
-            for msg in def_messages[process.definition_id]
-            if not msg.startswith("_")
-        ]
+        process.messages = def_messages[process.definition_id]
 
-    if exclude_zaak_creation:
-        top_level_processes = [
-            pi
-            for pi in top_level_processes
-            if pi.definition.key != settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
-        ]
     return top_level_processes
 
 

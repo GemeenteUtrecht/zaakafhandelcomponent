@@ -586,18 +586,7 @@ class GetUserTaskContextViewTests(APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        process_instance = factory(
-            ProcessInstance,
-            {
-                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
-                "definitionId": "beleid_opstellen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
-                "businessKey": "",
-                "caseInstanceId": "",
-                "suspended": False,
-                "tenantId": "",
-            },
-        )
-        process_instance.tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
+        tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
         review_request_data = {
             "id": uuid.uuid4(),
             "created": "2020-01-01T15:15:22Z",
@@ -651,8 +640,8 @@ class GetUserTaskContextViewTests(APITestCase):
                     return_value=self.zaak.url,
                 ):
                     with patch(
-                        "zac.core.camunda.zet_resultaat.context.get_top_level_process_instances",
-                        return_value=[process_instance],
+                        "zac.core.camunda.zet_resultaat.context.get_camunda_user_tasks_for_zaak",
+                        return_value=tasks,
                     ):
                         with patch(
                             "zac.core.camunda.zet_resultaat.context.get_zaak",

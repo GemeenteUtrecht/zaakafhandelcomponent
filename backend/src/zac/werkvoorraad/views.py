@@ -10,10 +10,11 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
 from zac.activities.models import Activity
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.user_tasks.api import (
-    get_camunda_group_tasks,
-    get_camunda_user_tasks,
+    get_camunda_user_tasks_for_assignee,
+    get_camunda_user_tasks_for_user_groups,
     get_killable_camunda_tasks,
     get_zaak_urls_from_tasks,
 )
@@ -126,7 +127,10 @@ class WorkStackUserTasksView(ListAPIView):
         return context
 
     def get_camunda_tasks(self) -> List[Task]:
-        tasks = get_camunda_user_tasks(self.request.user, client=self.get_client())
+        tasks = get_camunda_user_tasks_for_assignee(
+            [f"{AssigneeTypeChoices.user}:{self.request.user.username}"],
+            client=self.get_client(),
+        )
         return tasks
 
     def get_queryset(self):
@@ -174,7 +178,9 @@ class WorkStackUserTasksView(ListAPIView):
 )
 class WorkStackGroupTasksView(WorkStackUserTasksView):
     def get_camunda_tasks(self) -> List[Task]:
-        return get_camunda_group_tasks(self.request.user, client=self.get_client())
+        return get_camunda_user_tasks_for_user_groups(
+            self.request.user, client=self.get_client()
+        )
 
 
 @extend_schema(summary=_("List checklist questions for logged in user."))
