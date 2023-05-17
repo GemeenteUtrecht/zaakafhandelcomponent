@@ -76,7 +76,7 @@ class TaskSerializer(PolymorphicSerializer):
 
 
 class ProcessInstanceSerializer(serializers.Serializer):
-    id = serializers.UUIDField()
+    id = serializers.UUIDField(help_text=_("Process instance `id`."))
     definition_id = serializers.CharField(max_length=1000)
     title = serializers.CharField(max_length=100)
     sub_processes = RecursiveField(many=True)
@@ -84,6 +84,15 @@ class ProcessInstanceSerializer(serializers.Serializer):
         child=serializers.CharField(max_length=100), allow_empty=True
     )
     tasks = TaskSerializer(many=True)
+
+
+class ProcessInstanceMessageSerializer(serializers.Serializer):
+    id = serializers.UUIDField(
+        help_text=_("Process instance `id`. Used to correlate message to.")
+    )
+    messages = serializers.ListField(
+        child=serializers.CharField(max_length=100), allow_empty=True
+    )
 
 
 class ChoiceFieldNoValidation(serializers.ChoiceField):
@@ -338,7 +347,7 @@ class ChangeBehandelaarTasksSerializer(serializers.Serializer):
         # Get camunda tasks associated to this zaak
         change_assignee_tasks = []
         process_instances = get_top_level_process_instances(
-            self.validated_data["zaak"].url
+            self.validated_data["zaak"].url, exclude_zaak_creation=True
         )
         for pi in process_instances:
             for task in pi.tasks:

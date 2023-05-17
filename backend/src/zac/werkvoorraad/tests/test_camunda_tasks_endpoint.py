@@ -105,7 +105,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
             return_value={},
         ):
             with patch(
-                "zac.werkvoorraad.views.get_camunda_user_tasks",
+                "zac.werkvoorraad.views.get_camunda_user_tasks_for_assignee",
                 return_value=[],
             ):
                 response = self.client.get(self.user_endpoint)
@@ -119,7 +119,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
             return_value={self.task.id: self.zaak["url"]},
         ):
             with patch(
-                "zac.werkvoorraad.views.get_camunda_user_tasks",
+                "zac.werkvoorraad.views.get_camunda_user_tasks_for_assignee",
                 return_value=[self.task],
             ):
                 response = self.client.get(self.user_endpoint)
@@ -152,7 +152,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
             return_value={self.task.id: self.zaak["url"]},
         ):
             with patch(
-                "zac.werkvoorraad.views.get_camunda_group_tasks",
+                "zac.werkvoorraad.views.get_camunda_user_tasks_for_user_groups",
                 return_value=[_get_task(**{"assignee": self.groups[0]})],
             ):
                 response = self.client.get(self.group_endpoint)
@@ -201,7 +201,7 @@ class CamundaTasksTests(ESMixin, APITestCase):
             return_value={self.task.id: self.zaak["url"]},
         ):
             with patch(
-                "zac.werkvoorraad.views.get_camunda_user_tasks",
+                "zac.werkvoorraad.views.get_camunda_user_tasks_for_assignee",
                 return_value=[self.task],
             ):
                 with patch(

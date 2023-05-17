@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import complete_task, get_task as _get_task
@@ -96,37 +97,56 @@ def set_assignee_and_complete_task(
 
 
 def get_camunda_user_tasks(
-    user: User, client: Optional[CAMUNDA_CLIENT_CLASS] = None
+    payload: Dict, client: Optional[CAMUNDA_CLIENT_CLASS] = None
 ) -> List[Task]:
-    return get_camunda_tasks(
-        [f"{AssigneeTypeChoices.user}:{user.username}"], client=client
-    )
+    if not client:
+        client = get_client()
+
+    tasks = client.post("task", json=payload)
+    tasks = factory(Task, tasks)
+
+    # Group assignees in dictionary for performance
+    assignees = list({task.assignee for task in tasks})
+    assignees = {
+        assignee: resolve_assignee(assignee) for assignee in assignees if assignee
+    }
+
+    # Resolve assignees from dictionary
+    for task in tasks:
+        task.assignee = assignees.get(task.assignee)
+        task.form = extract_task_form(task, FORM_KEYS)
+
+    return tasks
 
 
-def get_camunda_group_tasks(
+def get_camunda_user_tasks_for_zaak(
+    zaak_url: str, exclude_zaak_creation: bool
+) -> List[Task]:
+    payload = {"variables": [{"name": "zaakUrl", "operator": "eq", "value": zaak_url}]}
+    if exclude_zaak_creation:
+        payload[
+            "processDefinitionKeyNotIn"
+        ] = settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+    return get_camunda_user_tasks(payload=payload)
+
+
+def get_camunda_user_tasks_for_user_groups(
     user: User, client: Optional[CAMUNDA_CLIENT_CLASS] = None
 ) -> List[Task]:
     groups = list(user.groups.all().values_list("name", flat=True))
-    return get_camunda_tasks(
+    return get_camunda_user_tasks_for_assignee(
         [f"{AssigneeTypeChoices.group}:{group}" for group in groups],
         client=client,
     )
 
 
-def get_camunda_tasks(
+def get_camunda_user_tasks_for_assignee(
     assignees: List[str], client: Optional[CAMUNDA_CLIENT_CLASS] = None
 ) -> List[Task]:
     if not assignees:
         return []
 
-    if not client:
-        client = get_client()
-    tasks = client.post("task", json={"assigneeIn": assignees})
-    tasks = factory(Task, tasks)
-    assignees = {assignee: resolve_assignee(assignee) for assignee in assignees}
-    for task in tasks:
-        task.assignee = assignees[task.assignee]
-    return tasks
+    return get_camunda_user_tasks({"assigneeIn": assignees}, client=client)
 
 
 def get_zaak_urls_from_tasks(

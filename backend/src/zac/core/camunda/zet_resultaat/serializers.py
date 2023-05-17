@@ -22,6 +22,7 @@ from zac.contrib.kownsl.serializers import ZaakRevReqSummarySerializer
 from zac.contrib.objects.checklists.api.serializers import ChecklistQuestionSerializer
 from zac.contrib.objects.checklists.data import ChecklistQuestion
 from zac.core.api.serializers import ResultaatTypeSerializer
+from zac.core.cache import invalidate_zaak_cache
 from zac.core.services import get_resultaattypen
 
 
@@ -153,3 +154,6 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
                     _patch_and_destroy_doc, [str(doc.uuid) for doc in open_documents]
                 )
             )
+
+        # Clear all related cache.
+        invalidate_zaak_cache(zaakcontext.zaak)

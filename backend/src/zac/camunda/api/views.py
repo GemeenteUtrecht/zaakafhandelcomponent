@@ -19,7 +19,7 @@ from zac.accounts.models import User
 from zac.camunda.api.utils import get_bptl_app_id_variable
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
-from zac.camunda.messages import get_messages
+from zac.camunda.messages import get_messages, get_process_instances_messages_for_zaak
 from zac.camunda.process_instances import (
     get_process_instance,
     get_top_level_process_instances,
@@ -32,6 +32,7 @@ from zac.camunda.user_tasks import (
 )
 from zac.camunda.user_tasks.api import (
     cancel_activity_instance_of_task,
+    get_camunda_user_tasks_for_zaak,
     get_killable_camunda_tasks,
     set_assignee,
     set_assignee_and_complete_task,
@@ -43,7 +44,7 @@ from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, ge
 from zgw.models import Zaak
 
 from ..user_tasks.history import get_camunda_history_for_zaak
-from .filters import ProcessInstanceFilterSet
+from .filters import CamundaFilterSet
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     BPMNSerializer,
@@ -53,9 +54,11 @@ from .serializers import (
     HistoricUserTaskSerializer,
     MessageSerializer,
     MessageVariablesSerializer,
+    ProcessInstanceMessageSerializer,
     ProcessInstanceSerializer,
     SetTaskAssigneeSerializer,
     SubmitUserTaskSerializer,
+    TaskSerializer,
     UserTaskContextSerializer,
 )
 from .utils import get_bptl_app_id_variable
@@ -64,7 +67,7 @@ from .utils import get_bptl_app_id_variable
 class ProcessInstanceFetchView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ProcessInstanceSerializer
-    filterset_class = ProcessInstanceFilterSet
+    filterset_class = CamundaFilterSet
 
     @extend_schema(
         summary=_("List process instances for a ZAAK."),
@@ -103,6 +106,7 @@ class ProcessInstanceFetchView(APIView):
         `zaakUrl` variable. Process instances return the available message that can be
         sent into the process and the available user tasks. The response includes the
         child-process instances of each matching process instance.
+
         """
 
         filterset = self.filterset_class(
@@ -126,6 +130,97 @@ class ProcessInstanceFetchView(APIView):
             many=True,
             context={"killable_tasks": get_killable_camunda_tasks()},
         )
+
+        return Response(serializer.data)
+
+
+class TaskFetchView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = TaskSerializer
+    filterset_class = CamundaFilterSet
+
+    @extend_schema(
+        summary=_("List tasks for a ZAAK."),
+        parameters=[
+            OpenApiParameter(
+                "zaakUrl",
+                OpenApiTypes.URI,
+                OpenApiParameter.QUERY,
+                required=True,
+            ),
+            OpenApiParameter(
+                "excludeZaakCreation",
+                OpenApiTypes.BOOL,
+                OpenApiParameter.QUERY,
+                default=True,
+            ),
+        ],
+        responses={
+            200: serializer_class(many=True),
+            400: ErrorSerializer,
+        },
+    )
+    def get(self, request: Request, *args, **kwargs):
+        """
+        Get the camunda user tasks for a given ZAAK.
+
+        Retrieve the tasks where the ZAAK-URL matches the process
+        `zaakUrl` variable.
+
+        """
+
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+        tasks = get_camunda_user_tasks_for_zaak(
+            zaak_url=filterset.serializer.validated_data["zaakUrl"],
+            exclude_zaak_creation=True,
+        )
+        serializer = self.serializer_class(tasks, many=True)
+
+        return Response(serializer.data)
+
+
+class ProcessInstanceMessagesView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = ProcessInstanceMessageSerializer
+    filterset_class = CamundaFilterSet
+
+    @extend_schema(
+        summary=_("List messages for a ZAAK."),
+        parameters=[
+            OpenApiParameter(
+                "zaakUrl",
+                OpenApiTypes.URI,
+                OpenApiParameter.QUERY,
+                required=True,
+            ),
+        ],
+        responses={
+            200: serializer_class(many=True),
+            400: ErrorSerializer,
+        },
+    )
+    def get(self, request: Request, *args, **kwargs):
+        """
+        Get the Camunda messages for a given ZAAK.
+
+        Retrieve the messages related to the root process instance where
+        the ZAAK-URL matches the process `zaakUrl` variable.
+
+        """
+
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        if not filterset.is_valid():
+            raise exceptions.ValidationError(filterset.errors)
+        process_instances = get_process_instances_messages_for_zaak(
+            zaak_url=filterset.serializer.validated_data["zaakUrl"],
+        )
+        serializer = self.serializer_class(process_instances, many=True)
 
         return Response(serializer.data)
 

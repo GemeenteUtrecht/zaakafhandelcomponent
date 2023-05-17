@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 import requests_mock
 from django_camunda.models import CamundaConfig
 from django_camunda.utils import serialize_variable
-from rest_framework.test import APITransactionTestCase
+from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -17,10 +17,11 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.core.permissions import zaakproces_usertasks
+from zac.core.tests.utils import ClearCachesMixin
 
 from .factories import KillableTaskFactory
 
-CAMUNDA_ROOT = "https://camunda.example.com/"
+CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
@@ -85,7 +86,7 @@ HISTORY_TASK_DATA = [
 
 
 @requests_mock.Mocker()
-class CancelTaskViewTests(APITransactionTestCase):
+class CancelTaskViewTests(ClearCachesMixin, APITestCase):
     url = reverse_lazy("cancel-task")
 
     def setUp(self) -> None:
@@ -195,7 +196,7 @@ class CancelTaskViewTests(APITransactionTestCase):
         )
 
 
-class CancelTaskPermissionsTests(APITransactionTestCase):
+class CancelTaskPermissionsTests(ClearCachesMixin, APITestCase):
     url = reverse_lazy("cancel-task")
 
     def setUp(self) -> None:

@@ -5,9 +5,11 @@ from .views import (
     ChangeBehandelaarTasksView,
     GetBPMNView,
     ProcessInstanceFetchView,
+    ProcessInstanceMessagesView,
     ProcessInstanceZaakURLView,
     SendMessageView,
     SetTaskAssigneeView,
+    TaskFetchView,
     UserTaskHistoryView,
     UserTaskView,
 )
@@ -17,6 +19,10 @@ urlpatterns = [
         "fetch-process-instances",
         ProcessInstanceFetchView.as_view(),
         name="fetch-process-instances",
+    ),
+    path("fetch-tasks", TaskFetchView.as_view(), name="fetch-tasks"),
+    path(
+        "fetch-messages", ProcessInstanceMessagesView.as_view(), name="fetch-messages"
     ),
     path(
         "fetch-process-instances/<uuid:id>/zaak",

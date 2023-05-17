@@ -3,6 +3,8 @@ from unittest.mock import patch
 from django.urls import reverse_lazy
 
 import requests_mock
+from django_camunda.client import get_client
+from django_camunda.models import CamundaConfig
 from django_camunda.utils import underscoreize
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -17,9 +19,11 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.camunda.data import ProcessInstance, Task
+from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..api.permissions import zaakproces_usertasks
+from .utils import mock_parallel
 
 ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 CATALOGI_ROOT = "https://some.ztc.nl/api/v1/"
@@ -62,7 +66,21 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-class UpdateCamundaBehandelaarViewTests(APITestCase):
+CAMUNDA_ROOT = "https://some.camunda.nl/"
+CAMUNDA_API_PATH = "engine-rest/"
+CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+
+
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
+
+
+@requests_mock.Mocker()
+class UpdateCamundaBehandelaarViewTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -110,12 +128,28 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
                 "voorvoegsel_achternaam": "",
             },
         )
+        cls.patchers = [
+            patch(
+                "zac.camunda.process_instances.get_client",
+                return_value=_get_camunda_client(),
+            ),
+            patch(
+                "zac.camunda.user_tasks.api.get_client",
+                return_value=_get_camunda_client(),
+            ),
+            patch(
+                "zac.camunda.process_instances.parallel", return_value=mock_parallel()
+            ),
+            patch("zac.camunda.api.serializers.parallel", return_value=mock_parallel()),
+        ]
 
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(user=self.user)
+        for patcher in self.patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
-    @requests_mock.Mocker()
     def test_update_camunda_assignees(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -150,15 +184,15 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         process_instance.tasks = [task]
 
         rm.put(
-            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/behandelaar",
+            f"{CAMUNDA_URL}process-instance/{process_instance.id}/variables/behandelaar",
             status_code=204,
         )
         rm.put(
-            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/zaak%20behandelaar",
+            f"{CAMUNDA_URL}process-instance/{process_instance.id}/variables/zaak%20behandelaar",
             status_code=204,
         )
         rm.post(
-            f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
+            f"{CAMUNDA_URL}task/{task.id}/assignee",
             status_code=204,
         )
         with patch(
@@ -173,10 +207,9 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(
             rm.last_request.url,
-            f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
+            f"{CAMUNDA_URL}task/{task.id}/assignee",
         )
 
-    @requests_mock.Mocker()
     def test_update_camunda_assignees_not_updated_kownsl(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -210,15 +243,15 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         task.assignee = self.user
         process_instance.tasks = [task]
         rm.put(
-            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/behandelaar",
+            f"{CAMUNDA_URL}process-instance/{process_instance.id}/variables/behandelaar",
             status_code=204,
         )
         rm.put(
-            f"https://camunda.example.com/engine-rest/process-instance/{process_instance.id}/variables/zaak%20behandelaar",
+            f"{CAMUNDA_URL}process-instance/{process_instance.id}/variables/zaak%20behandelaar",
             status_code=204,
         )
         rm.post(
-            f"https://camunda.example.com/engine-rest/task/{task.id}/assignee",
+            f"{CAMUNDA_URL}task/{task.id}/assignee",
             status_code=204,
         )
         with patch(
@@ -233,10 +266,9 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(
             rm.last_request.url,
-            "https://camunda.example.com/engine-rest/process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405/variables/zaak%20behandelaar",
+            f"{CAMUNDA_URL}process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405/variables/zaak%20behandelaar",
         )
 
-    @requests_mock.Mocker()
     def test_update_camunda_assignees_zaak_does_not_exist(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -248,7 +280,6 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @requests_mock.Mocker()
     def test_update_camunda_assignees_rol_does_not_exist(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -262,7 +293,7 @@ class UpdateCamundaBehandelaarViewTests(APITestCase):
 
 
 @requests_mock.Mocker()
-class ChangeBehandelaarPermissionTests(APITestCase):
+class ChangeBehandelaarPermissionTests(ClearCachesMixin, APITestCase):
     url = reverse_lazy("change-behandelaar")
 
     @classmethod

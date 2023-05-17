@@ -1,48 +1,83 @@
 from unittest.mock import patch
 
 from django.test import override_settings
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 import requests_mock
+from django_camunda.client import get_client
 from django_camunda.models import CamundaConfig
 from django_camunda.utils import serialize_variable
 from rest_framework import status
-from rest_framework.test import APITransactionTestCase
+from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
+from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
+
+from .utils import mock_parallel
 
 ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+CREATE_ZAAK_PROCESS_DEFINITION_KEY = "zaak_aanmaken"
 
 
-@patch("zac.camunda.forms.extract_task_form", return_value=None)
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
+
+
 @patch(
     "zac.camunda.process_instances.get_messages",
     return_value=["Annuleer behandeling", "Advies vragen"],
 )
+@override_settings(
+    CREATE_ZAAK_PROCESS_DEFINITION_KEY=CREATE_ZAAK_PROCESS_DEFINITION_KEY
+)
 @requests_mock.Mocker()
-class ProcessInstanceTests(APITransactionTestCase):
+class ProcessInstanceTests(ClearCachesMixin, APITestCase):
+    url = reverse_lazy("fetch-process-instances")
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = UserFactory.create()
+        cls.group = GroupFactory.create()
+        cls.patchers = [
+            patch(
+                "zac.camunda.messages.get_client", return_value=_get_camunda_client()
+            ),
+            patch("django_camunda.bpmn.get_client", return_value=_get_camunda_client()),
+            patch("django_camunda.api.get_client", return_value=_get_camunda_client()),
+            patch(
+                "zac.camunda.process_instances.get_client",
+                return_value=_get_camunda_client(),
+            ),
+            patch(
+                "zac.core.camunda.utils.get_client", return_value=_get_camunda_client()
+            ),
+            patch(
+                "zac.camunda.process_instances.parallel", return_value=mock_parallel()
+            ),
+        ]
+
     def setUp(self) -> None:
         super().setUp()
-        config = CamundaConfig.get_solo()
-        config.root_url = CAMUNDA_ROOT
-        config.rest_api_path = CAMUNDA_API_PATH
-        config.save()
+        self.client.force_authenticate(self.user)
+        for patcher in self.patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
-        self.user = UserFactory.create()
-        self.group = GroupFactory.create()
-
-        self.client.force_login(self.user)
-
-    def test_fetch_process_instances(self, m_messages, m_task_from, m_request):
+    def test_fetch_process_instances(self, m_messages, m_request):
         process_definition_data = [
             {
                 "id": f"{key}:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
@@ -164,7 +199,7 @@ class ProcessInstanceTests(APITransactionTestCase):
             [],
         ]
         m_request.get(
-            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}&processDefinitionKeyNotIn={CREATE_ZAAK_PROCESS_DEFINITION_KEY}",
             json=[process_instance_data[0]],
         )
         m_request.get(
@@ -181,93 +216,89 @@ class ProcessInstanceTests(APITransactionTestCase):
                 json=task_data[i],
             )
 
-        url = reverse("fetch-process-instances")
         response = self.client.get(
-            url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "true"}
+            self.url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "true"}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()
-        expected_data = [
-            {
-                "id": process_instance_data[0]["id"],
-                "definitionId": process_instance_data[0]["definitionId"],
-                "title": process_definition_data[0]["key"],
-                "messages": ["Annuleer behandeling", "Advies vragen"],
-                "tasks": [],
-                "subProcesses": [
-                    {
-                        "id": process_instance_data[1]["id"],
-                        "definitionId": process_instance_data[1]["definitionId"],
-                        "title": process_definition_data[1]["key"],
-                        "messages": [],
-                        "tasks": [
-                            {
-                                "id": task_data[1][0]["id"],
-                                "name": "Accorderen",
-                                "created": "2020-07-30T14:19:06Z",
-                                "hasForm": False,
-                                "assignee": {
-                                    "username": self.user.username,
-                                    "firstName": self.user.first_name,
-                                    "fullName": self.user.get_full_name(),
-                                    "lastName": self.user.last_name,
-                                    "id": self.user.id,
-                                    "isStaff": self.user.is_staff,
-                                    "email": self.user.email,
-                                    "groups": [],
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "id": process_instance_data[0]["id"],
+                    "definitionId": process_instance_data[0]["definitionId"],
+                    "title": process_definition_data[0]["key"],
+                    "messages": ["Annuleer behandeling", "Advies vragen"],
+                    "tasks": [],
+                    "subProcesses": [
+                        {
+                            "id": process_instance_data[1]["id"],
+                            "definitionId": process_instance_data[1]["definitionId"],
+                            "title": process_definition_data[1]["key"],
+                            "messages": [],
+                            "tasks": [
+                                {
+                                    "id": task_data[1][0]["id"],
+                                    "name": "Accorderen",
+                                    "created": "2020-07-30T14:19:06Z",
+                                    "hasForm": False,
+                                    "assignee": {
+                                        "username": self.user.username,
+                                        "firstName": self.user.first_name,
+                                        "fullName": self.user.get_full_name(),
+                                        "lastName": self.user.last_name,
+                                        "id": self.user.id,
+                                        "isStaff": self.user.is_staff,
+                                        "email": self.user.email,
+                                        "groups": [],
+                                    },
+                                    "assigneeType": "user",
+                                    "canCancelTask": False,
+                                    "formKey": "zac:doRedirect",
                                 },
-                                "assigneeType": "user",
-                                "canCancelTask": False,
-                                "formKey": "zac:doRedirect",
-                            },
-                            {
-                                "id": task_data[1][1]["id"],
-                                "name": "Accorderen",
-                                "created": "2020-07-30T14:19:06Z",
-                                "hasForm": False,
-                                "assignee": {
-                                    "name": self.group.name,
-                                    "fullName": _("Group") + ": " + self.group.name,
-                                    "id": self.group.id,
+                                {
+                                    "id": task_data[1][1]["id"],
+                                    "name": "Accorderen",
+                                    "created": "2020-07-30T14:19:06Z",
+                                    "hasForm": False,
+                                    "assignee": {
+                                        "name": self.group.name,
+                                        "fullName": _("Group") + ": " + self.group.name,
+                                        "id": self.group.id,
+                                    },
+                                    "assigneeType": "group",
+                                    "canCancelTask": False,
+                                    "formKey": "zac:doRedirect",
                                 },
-                                "assigneeType": "group",
-                                "canCancelTask": False,
-                                "formKey": "zac:doRedirect",
-                            },
-                            {
-                                "id": task_data[1][2]["id"],
-                                "name": "Accorderen",
-                                "created": "2020-07-30T14:19:06Z",
-                                "hasForm": False,
-                                "assignee": "",
-                                "assigneeType": "",
-                                "canCancelTask": False,
-                                "formKey": "zac:doRedirect",
-                            },
-                        ],
-                        "subProcesses": [
-                            {
-                                "id": process_instance_data[2]["id"],
-                                "definitionId": process_instance_data[2][
-                                    "definitionId"
-                                ],
-                                "title": process_definition_data[2]["key"],
-                                "messages": [],
-                                "tasks": [],
-                                "subProcesses": [],
-                            }
-                        ],
-                    }
-                ],
-            }
-        ]
+                                {
+                                    "id": task_data[1][2]["id"],
+                                    "name": "Accorderen",
+                                    "created": "2020-07-30T14:19:06Z",
+                                    "hasForm": False,
+                                    "assignee": "",
+                                    "assigneeType": "",
+                                    "canCancelTask": False,
+                                    "formKey": "zac:doRedirect",
+                                },
+                            ],
+                            "subProcesses": [
+                                {
+                                    "id": process_instance_data[2]["id"],
+                                    "definitionId": process_instance_data[2][
+                                        "definitionId"
+                                    ],
+                                    "title": process_definition_data[2]["key"],
+                                    "messages": [],
+                                    "tasks": [],
+                                    "subProcesses": [],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        )
 
-        self.assertEqual(data, expected_data)
-
-    def test_fetch_process_instances_exclude_bijdragezaak(
-        self, m_messages, m_task_from, m_request
-    ):
+    def test_fetch_process_instances_exclude_bijdragezaak(self, m_messages, m_request):
         process_definition_data = [
             {
                 "id": f"{key}:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
@@ -367,9 +398,8 @@ class ProcessInstanceTests(APITransactionTestCase):
             json=task_data[1],
         )
 
-        url = reverse("fetch-process-instances")
         response = self.client.get(
-            url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
+            self.url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -415,17 +445,12 @@ class ProcessInstanceTests(APITransactionTestCase):
             ],
         )
 
-    def test_fail_fetch_process_instances_no_zaak_url(
-        self, m_messages, m_task_from, m_request
-    ):
-        url = reverse("fetch-process-instances")
-        response = self.client.get(url)
+    def test_fail_fetch_process_instances_no_zaak_url(self, m_messages, m_request):
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"zaakUrl": ["Dit veld is vereist."]})
 
-    def test_fetch_zaak_url_from_process_instance(
-        self, m_messages, m_task_from, m_request
-    ):
+    def test_fetch_zaak_url_from_process_instance(self, m_messages, m_request):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         mock_service_oas_get(m_request, ZAKEN_ROOT, "zrc")
 
@@ -456,7 +481,7 @@ class ProcessInstanceTests(APITransactionTestCase):
             kwargs={"id": "205eae6b-d26f-11ea-86dc-e22fafe5f405"},
         )
         superuser = SuperUserFactory.create()
-        self.client.force_login(superuser)
+        self.client.force_authenticate(superuser)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -471,7 +496,7 @@ class ProcessInstanceTests(APITransactionTestCase):
 
     @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-zaak-creation-process")
     def test_fetch_process_instances_exclude_zaak_creation_process(
-        self, m_messages, m_task_from, m_request
+        self, m_messages, m_request
     ):
         process_definition_data = [
             {
@@ -551,9 +576,8 @@ class ProcessInstanceTests(APITransactionTestCase):
             json=[],
         )
 
-        url = reverse("fetch-process-instances")
         response = self.client.get(
-            url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
+            self.url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
         )
 
         # Make sure the some-zaak-creation-process process instance isn't returned.
@@ -581,7 +605,7 @@ class ProcessInstanceTests(APITransactionTestCase):
         )
 
     def test_fetch_process_instances_exclude_zaak_creation_process(
-        self, m_messages, m_task_from, m_request
+        self, m_messages, m_request
     ):
         process_definition_data = [
             {
@@ -628,9 +652,8 @@ class ProcessInstanceTests(APITransactionTestCase):
             json=[],
         )
 
-        url = reverse("fetch-process-instances")
         response = self.client.get(
-            url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
+            self.url, {"zaakUrl": ZAAK_URL, "includeBijdragezaak": "false"}
         )
 
         # Make sure the _some_secret_message message isn't returned.

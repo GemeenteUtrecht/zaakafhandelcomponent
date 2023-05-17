@@ -3,11 +3,12 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
+from django_camunda.client import get_client
 from django_camunda.models import CamundaConfig
 from django_camunda.utils import underscoreize
 from furl import furl
 from requests.exceptions import HTTPError
-from rest_framework.test import APITestCase, APITransactionTestCase
+from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
@@ -24,16 +25,26 @@ from zac.camunda.user_tasks.history import (
     get_task_history,
 )
 from zac.core.permissions import zaken_inzien
+from zac.core.tests.utils import ClearCachesMixin
 
 from .files.harvo_behandelen import HARVO_BEHANDELEN_BPMN
+from .utils import mock_parallel
 
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 ZAAK_URL = "https://some.zrc.nl/api/v1/zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
-CAMUNDA_ROOT = "https://camunda.example.com/"
+CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+
+
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
 
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/history/task/get-task-query/
@@ -68,14 +79,34 @@ COMPLETED_TASK_DATA = {
 
 
 @requests_mock.Mocker()
-class UserTaskHistoryTests(APITransactionTestCase):
+class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = SuperUserFactory.create(username="some-user")
+        cls.patchers = [
+            patch(
+                "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
+            ),
+            # patch("zac.camunda.bpmn.get_client", return_value=_get_camunda_client()),
+            patch(
+                "zac.camunda.user_tasks.history.get_client",
+                return_value=_get_camunda_client(),
+            ),
+            patch(
+                "zac.camunda.process_instances.parallel", return_value=mock_parallel()
+            ),
+            patch(
+                "zac.camunda.user_tasks.history.parallel", return_value=mock_parallel()
+            ),
+        ]
+
     def setUp(self) -> None:
         super().setUp()
-        config = CamundaConfig.get_solo()
-        config.root_url = CAMUNDA_ROOT
-        config.rest_api_path = CAMUNDA_API_PATH
-        config.save()
-        self.user = SuperUserFactory.create(username="some-user")
+
+        for patcher in self.patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def test_success_get_task_history(self, m):
         m.get(
@@ -367,7 +398,7 @@ class UserTaskHistoryTests(APITransactionTestCase):
 
 
 @requests_mock.Mocker()
-class UserTaskHistoryPermissionTests(APITestCase):
+class UserTaskHistoryPermissionTests(ClearCachesMixin, APITestCase):
     def test_no_user_logged_in(self, m):
         url = furl(reverse("user-task-history"))
         url.set({"zaakUrl": ZAAK_URL})

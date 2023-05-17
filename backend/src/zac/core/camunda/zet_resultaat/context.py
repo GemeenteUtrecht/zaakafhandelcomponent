@@ -3,8 +3,8 @@ from typing import List
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
 from zac.camunda.data import Task
-from zac.camunda.process_instances import get_top_level_process_instances
 from zac.camunda.user_tasks import register
+from zac.camunda.user_tasks.api import get_camunda_user_tasks_for_zaak
 from zac.contrib.dowc.api import check_document_status
 from zac.contrib.kownsl.api import get_review_requests
 from zac.contrib.objects.checklists.data import ChecklistQuestion
@@ -66,8 +66,9 @@ def get_context(task: Task) -> ZetResultaatContext:
     )
     zaak = get_zaak(zaak_url=zaak_url)
     checklist_questions = get_unanswered_checklist_questions_for_zaak(zaak) or None
-    process_instances = get_top_level_process_instances(zaak_url)
-    tasks = [task for pi in process_instances for task in pi.tasks] or None
+    tasks = (
+        get_camunda_user_tasks_for_zaak(zaak_url, exclude_zaak_creation=True) or None
+    )
     review_requests = [
         rr for rr in get_review_requests(zaak) if rr.completed < rr.num_assigned_users
     ] or None
