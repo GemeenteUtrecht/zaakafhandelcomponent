@@ -4,6 +4,8 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
+from django_camunda.client import get_client
+from django_camunda.models import CamundaConfig
 from rest_framework import exceptions, status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -16,21 +18,30 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import (
-    BlueprintPermissionFactory,
-    SuperUserFactory,
-    UserFactory,
-)
+from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.camunda.data import Task
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
 from ..api.serializers import SetTaskAssigneeSerializer
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+CAMUNDA_ROOT = "https://some.camunda.nl/"
+CAMUNDA_API_PATH = "engine-rest/"
+CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+
+
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
+
 
 TASK_DATA = {
     "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
@@ -57,7 +68,7 @@ TASK_DATA = {
 }
 
 
-class SetTaskAssigneeSerializerTests(APITestCase):
+class SetTaskAssigneeSerializerTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -102,23 +113,19 @@ class SetTaskAssigneeSerializerTests(APITestCase):
             serializer.is_valid(raise_exception=True)
 
 
-class SetTaskAssigneePermissionAndResponseTests(APITestCase):
+class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-
         cls.task = factory(Task, TASK_DATA)
-
         cls.patch_get_task = patch(
             "zac.camunda.api.fields.get_task",
             return_value=cls.task,
         )
-
         cls.patch_get_process_instance = patch(
             "zac.camunda.api.views.get_process_instance",
             return_value=None,
         )
-
         cls.patch_get_process_zaak_url = patch(
             "zac.camunda.api.views.get_process_zaak_url",
             return_value=None,
@@ -126,7 +133,6 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -157,12 +163,10 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
             startdatum="2020-12-25",
             uiterlijkeEinddatumAfdoening="2021-01-04",
         )
-
         cls.patch_get_zaak = patch(
             "zac.camunda.api.views.get_zaak",
             return_value=factory(Zaak, cls.zaak),
         )
-
         cls.patch_fetch_zaaktype = patch(
             "zac.camunda.api.views.fetch_zaaktype",
             return_value=factory(ZaakType, cls.zaaktype),
@@ -173,6 +177,10 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         cls.core_config = CoreConfig.get_solo()
         cls.core_config.app_id = "http://some-open-zaak-url.nl/with/uuid/"
         cls.core_config.save()
+
+        cls.patch_get_camunda_client = patch(
+            "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
+        )
 
     def setUp(self):
         super().setUp()
@@ -188,6 +196,9 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
 
         self.patch_fetch_zaaktype.start()
         self.addCleanup(self.patch_fetch_zaaktype.stop)
+
+        self.patch_get_camunda_client.start()
+        self.addCleanup(self.patch_get_camunda_client.stop)
 
     def test_not_authenticated(self):
         response = self.client.post(self.endpoint)
@@ -257,12 +268,12 @@ class SetTaskAssigneePermissionAndResponseTests(APITestCase):
         self.client.force_authenticate(user=user)
 
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{self.task.id}/assignee",
+            f"{CAMUNDA_URL}task/{self.task.id}/assignee",
             status_code=204,
         )
 
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{self.task.id}/delegate",
+            f"{CAMUNDA_URL}task/{self.task.id}/delegate",
             status_code=204,
         )
 

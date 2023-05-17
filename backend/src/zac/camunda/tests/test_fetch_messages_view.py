@@ -1,10 +1,13 @@
+from unittest.mock import patch
+
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 import requests_mock
+from django_camunda.client import get_client
 from django_camunda.models import CamundaConfig
 from rest_framework import status
-from rest_framework.test import APITransactionTestCase
+from rest_framework.test import APITestCase
 
 from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin
@@ -19,18 +22,35 @@ CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 
 
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
+
+
 @requests_mock.Mocker()
-class FetchMessagesTests(ClearCachesMixin, APITransactionTestCase):
+class FetchMessagesTests(ClearCachesMixin, APITestCase):
     url = reverse_lazy("fetch-messages")
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = UserFactory.create()
+        cls.patch_get_camunda_client = [
+            patch(
+                "zac.camunda.messages.get_client", return_value=_get_camunda_client()
+            ),
+            patch("django_camunda.bpmn.get_client", return_value=_get_camunda_client()),
+        ]
 
     def setUp(self) -> None:
         super().setUp()
-        config = CamundaConfig.get_solo()
-        config.root_url = CAMUNDA_ROOT
-        config.rest_api_path = CAMUNDA_API_PATH
-        config.save()
-        self.user = UserFactory.create()
-        self.client.force_login(self.user)
+        self.client.force_authenticate(self.user)
+        for patcher in self.patch_get_camunda_client:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def test_not_logged_in(self, m_request):
         self.client.logout()

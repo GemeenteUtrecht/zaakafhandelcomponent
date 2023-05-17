@@ -1,11 +1,12 @@
 import uuid
-from collections import OrderedDict
 from pathlib import Path
 from unittest.mock import patch
 
 from django.urls import reverse
 
 import requests_mock
+from django_camunda.client import get_client
+from django_camunda.models import CamundaConfig
 from django_camunda.utils import serialize_variable, underscoreize
 from freezegun import freeze_time
 from rest_framework.test import APITestCase
@@ -33,11 +34,21 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
-from ..data import ProcessInstance
-
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
+CAMUNDA_ROOT = "https://some.camunda.nl/"
+CAMUNDA_API_PATH = "engine-rest/"
+CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+
+
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
+
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
 TASK_DATA = {
@@ -71,7 +82,7 @@ def _get_task(**overrides):
 
 
 @requests_mock.Mocker()
-class GetUserTaskContextViewTests(APITestCase):
+class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -151,6 +162,9 @@ class GetUserTaskContextViewTests(APITestCase):
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
+        cls.patch_get_camunda_client = [
+            patch("django_camunda.api.get_client", return_value=_get_camunda_client())
+        ]
 
     def setUp(self):
         super().setUp()
@@ -164,6 +178,10 @@ class GetUserTaskContextViewTests(APITestCase):
 
         self.patch_get_informatieobjecttypen_for_zaaktype.start()
         self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
+
+        for patcher in self.patch_get_camunda_client:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     @patch(
         "zac.camunda.api.views.get_task",
@@ -241,7 +259,7 @@ class GetUserTaskContextViewTests(APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         m.get(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
         BlueprintPermissionFactory.create(
@@ -297,7 +315,7 @@ class GetUserTaskContextViewTests(APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         m.get(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
 
@@ -416,7 +434,7 @@ class GetUserTaskContextViewTests(APITestCase):
         }
         review_request = factory(ReviewRequest, review_request_data)
         m.get(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
         with patch(
@@ -614,7 +632,7 @@ class GetUserTaskContextViewTests(APITestCase):
             catalogus=self.zaaktype["catalogus"],
         )
         m.get(
-            "https://camunda.example.com/engine-rest/task/598347ee-62fc-46a2-913a-6e0788bc1b8c/variables/resultaatTypeKeuzes?deserializeValue=false",
+            f"{CAMUNDA_URL}task/598347ee-62fc-46a2-913a-6e0788bc1b8c/variables/resultaatTypeKeuzes?deserializeValue=false",
             json=serialize_variable([resultaattype["omschrijving"]]),
         )
         BlueprintPermissionFactory.create(
@@ -747,6 +765,9 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
+        cls.patch_get_camunda_client = [
+            patch("django_camunda.api.get_client", return_value=_get_camunda_client())
+        ]
 
     def setUp(self):
         super().setUp()
@@ -757,6 +778,10 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         self.patch_fetch_zaaktype.start()
         self.addCleanup(self.patch_fetch_zaaktype.stop)
+
+        for patcher in self.patch_get_camunda_client:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def _mock_permissions(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -807,15 +832,15 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         }
 
         m.get(
-            f"https://camunda.example.com/engine-rest/process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/zaaktype?deserializeValues=false",
+            f"{CAMUNDA_URL}process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/zaaktype?deserializeValues=false",
             json=serialize_variable(self.zaaktype["url"]),
         )
         m.get(
-            f"https://camunda.example.com/engine-rest/process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/bronorganisatie?deserializeValues=false",
+            f"{CAMUNDA_URL}process-instance/c6a5e447-c58e-4986-a30d-54fce7503bbf/variables/bronorganisatie?deserializeValues=false",
             json=serialize_variable("123456789"),
         )
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
 
@@ -910,7 +935,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         review_request = factory(ReviewRequest, review_request_data)
 
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
         with patch(
@@ -992,7 +1017,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         }
 
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
         with patch(
@@ -1044,7 +1069,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "selectedDocuments": [self.document.url],
         }
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
         with patch(
@@ -1075,12 +1100,12 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 "bpmn20Xml": bpmn.read(),
             }
         m.get(
-            f"https://camunda.example.com/engine-rest/process-definition/aProcDefId/xml",
+            f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
             headers={"Content-Type": "application/json"},
             json=response,
         )
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
         self._mock_permissions(m)
@@ -1104,12 +1129,12 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 "bpmn20Xml": bpmn.read(),
             }
         m.get(
-            f"https://camunda.example.com/engine-rest/process-definition/aProcDefId/xml",
+            f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
             headers={"Content-Type": "application/json"},
             json=response,
         )
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
 
@@ -1146,7 +1171,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         payload = {}
 
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
         with patch(
@@ -1174,7 +1199,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         payload = {"resultaat": self.resultaattype["omschrijving"]}
         _uuid = uuid.uuid4()
         m.post(
-            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
+            f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
         with patch(

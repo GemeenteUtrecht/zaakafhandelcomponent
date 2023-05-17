@@ -4,6 +4,8 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
+from django_camunda.client import get_client
+from django_camunda.models import CamundaConfig
 from django_camunda.utils import serialize_variable
 from rest_framework import exceptions, status
 from rest_framework.test import APITestCase
@@ -17,6 +19,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_send_message
+from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
@@ -25,9 +28,20 @@ from ..data import ProcessInstance
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
+CAMUNDA_ROOT = "https://some.camunda.nl/"
+CAMUNDA_API_PATH = "engine-rest/"
+CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
 
 
-class SendMessageSerializerTests(APITestCase):
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
+
+
+class SendMessageSerializerTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -55,7 +69,7 @@ class SendMessageSerializerTests(APITestCase):
         self.assertEqual(message_serializer.validated_data, self.message)
 
 
-class SendMessagePermissionAndResponseTests(APITestCase):
+class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -96,6 +110,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         }
 
         process_instance = factory(ProcessInstance, cls.process_instance)
+
         cls.patch_get_process_instance = patch(
             "zac.camunda.api.views.get_process_instance",
             return_value=process_instance,
@@ -124,6 +139,10 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         cls.core_config.app_id = "http://some-open-zaak-url.nl/with/uuid/"
         cls.core_config.save()
 
+        cls.patch_get_camunda_client = patch(
+            "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
+        )
+
     def setUp(self):
         super().setUp()
 
@@ -138,6 +157,9 @@ class SendMessagePermissionAndResponseTests(APITestCase):
 
         self.patch_get_zaak.start()
         self.addCleanup(self.patch_get_zaak.stop)
+
+        self.patch_get_camunda_client.start()
+        self.addCleanup(self.patch_get_camunda_client.stop)
 
     def test_not_authenticated(self):
         response = self.client.post(self.endpoint)
@@ -176,7 +198,7 @@ class SendMessagePermissionAndResponseTests(APITestCase):
         self.client.force_authenticate(user=user)
 
         m.post(
-            "https://camunda.example.com/engine-rest/message",
+            f"{CAMUNDA_URL}message",
             status_code=201,
             json=[{"variables": {"waitForIt": serialize_variable(True)}}],
         )
