@@ -1349,10 +1349,10 @@ class ObjectSearchView(views.APIView):
         filters = deepcopy(request.data)
         if "data_attrs" in filters:
             filters["data_attrs"] = ",".join(
-                filters["data_attrs"].split(",") + ["meta__exact__false"]
+                filters["data_attrs"].split(",") + ["meta__icontains__false"]
             )
         else:
-            filters["data_attrs"] = "meta__exact__false"
+            filters["data_attrs"] = "meta__icontains__false"
 
         try:
             objects, _qp = search_objects(
