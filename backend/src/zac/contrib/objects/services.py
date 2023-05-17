@@ -40,7 +40,7 @@ def _search_meta_objects(
         )
         return []
 
-    object_filters = {"type": ot_url, "data_attrs": ["meta__exact__true"]}
+    object_filters = {"type": ot_url, "data_attrs": ["meta__icontains__true"]}
     if zaaktype:
         catalogus = fetch_catalogus(zaaktype.catalogus)
         object_filters["data_attrs"] += [
