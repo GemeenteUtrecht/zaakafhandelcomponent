@@ -134,7 +134,7 @@ class ProcessInstanceFetchView(APIView):
         return Response(serializer.data)
 
 
-class TaskFetchView(APIView):
+class FetchTaskView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = TaskSerializer
     filterset_class = CamundaFilterSet
