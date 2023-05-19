@@ -43,14 +43,20 @@ def resolve_assignee(name: str) -> Union[Group, User]:
                 assignee = User.objects.create_user(username=_name)
             return assignee
     except ValueError:
+        # In this case - break. Creating users and groups here
+        # makes no sense because we don't know whether to
+        # create a user or a group.
         try:
             assignee = User.objects.get(username=name)
         except User.DoesNotExist:
             try:
                 assignee = Group.objects.get(name=name)
             except Group.DoesNotExist:
-                assignee = User.objects.create_user(username=name)
-                logger.info(f"Created user {assignee}.")
+                raise RuntimeError(
+                    "User or group with (user)name {name} does not exist.".format(
+                        name=name
+                    )
+                )
         return assignee
 
 
