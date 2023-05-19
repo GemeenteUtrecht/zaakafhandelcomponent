@@ -3,13 +3,13 @@ from django.urls import path
 from .views import (
     CancelTaskView,
     ChangeBehandelaarTasksView,
+    FetchTaskView,
     GetBPMNView,
     ProcessInstanceFetchView,
     ProcessInstanceMessagesView,
     ProcessInstanceZaakURLView,
     SendMessageView,
     SetTaskAssigneeView,
-    TaskFetchView,
     UserTaskHistoryView,
     UserTaskView,
 )
@@ -20,7 +20,7 @@ urlpatterns = [
         ProcessInstanceFetchView.as_view(),
         name="fetch-process-instances",
     ),
-    path("fetch-tasks", TaskFetchView.as_view(), name="fetch-tasks"),
+    path("fetch-tasks", FetchTaskView.as_view(), name="fetch-tasks"),
     path(
         "fetch-messages", ProcessInstanceMessagesView.as_view(), name="fetch-messages"
     ),
