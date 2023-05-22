@@ -88,7 +88,6 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
             patch(
                 "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
             ),
-            # patch("zac.camunda.bpmn.get_client", return_value=_get_camunda_client()),
             patch(
                 "zac.camunda.user_tasks.history.get_client",
                 return_value=_get_camunda_client(),
@@ -227,7 +226,7 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), ["Mist de `zaakUrl` query parameter."])
 
-    def test_success_get_user_task_history(self, m):
+    def test_success_get_user_task_history_and_exclude_bptlAppId(self, m):
         # Mocks for get_completed_user_tasks_for_zaak
         m.get(
             f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
@@ -283,7 +282,33 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
                     "valueInfo": {},
                     "revision": 0,
                     "errorMessage": None,
-                }
+                },
+                {
+                    "type": "variableUpdate",
+                    "id": "1e653f89-8b57-11ec-baad-6ed7f836cf1f",
+                    "processDefinitionKey": "HARVO_behandelen",
+                    "processDefinitionId": "HARVO_behandelen:61:54586277-7922-11ec-8209-aa9470edda89",
+                    "processInstanceId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
+                    "activityInstanceId": "Activity_0bkealj:1790e563-8b57-11ec-baad-6ed7f836cf1f",
+                    "executionId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
+                    "caseDefinitionKey": None,
+                    "caseDefinitionId": None,
+                    "caseInstanceId": None,
+                    "caseExecutionId": None,
+                    "taskId": None,
+                    "tenantId": None,
+                    "userOperationId": "1e653f88-8b57-11ec-baad-6ed7f836cf1f",
+                    "time": "2022-02-11T16:24:43.001+0000",
+                    "removalTime": None,
+                    "rootProcessInstanceId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
+                    "variableName": "bptlAppId",
+                    "variableInstanceId": "https://some.open.zaak.nl/autorisaties/1e653f87-8b57-11ec-baad-6ed7f836cf1f",
+                    "variableType": "String",
+                    "value": "Ja",
+                    "valueInfo": {},
+                    "revision": 0,
+                    "errorMessage": None,
+                },
             ],
         )
 

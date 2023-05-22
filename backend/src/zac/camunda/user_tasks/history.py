@@ -1,5 +1,7 @@
 from typing import Dict, List, Optional
 
+from django.conf import settings
+
 from django_camunda.client import Camunda, get_client
 from django_camunda.types import CamundaId
 from django_camunda.utils import deserialize_variable
@@ -103,9 +105,12 @@ def get_historic_activity_variables_from_task(
     historic_activity_details = get_historic_activity_details(
         task.activity_instance_id, client=client
     )
-    # If variable_name is not none, the information for now is deemed irrelevant.
+    # If variable_name is none, the information for now is deemed irrelevant.
     historic_activity_details = [
-        detail for detail in historic_activity_details if detail.get("variable_name")
+        detail
+        for detail in historic_activity_details
+        if detail.get("variable_name")
+        and detail.get("variable_name") not in settings.FILTERED_CAMUNDA_VARIABLES
     ]
 
     for detail in historic_activity_details:
