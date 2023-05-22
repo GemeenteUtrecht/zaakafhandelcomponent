@@ -309,10 +309,17 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
             f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}/advices",
             json=[ADVICE],
         )
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+        )
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+        )
 
+        user = UserFactory.create(username="some-other-author")
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
-        user = UserFactory.create(username="some-other-author")
         self.assertEqual(
             {
                 "camunda_assigned_users": {
@@ -390,6 +397,10 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         rr = deepcopy(REVIEW_REQUEST)
         rr["documents"] = [cls.document.url]
+
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(username=rr["assignedUsers"][0]["user_assignees"][0])
+        UserFactory.create(username=rr["assignedUsers"][1]["user_assignees"][0])
         cls.review_request = factory(ReviewRequest, rr)
         cls.patch_create_review_request = patch(
             "zac.contrib.kownsl.camunda.create_review_request",

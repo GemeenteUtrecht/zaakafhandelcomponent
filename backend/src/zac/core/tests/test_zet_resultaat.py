@@ -12,9 +12,10 @@ from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+from zac.accounts.tests.factories import UserFactory
 from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
-from zac.camunda.data import ProcessInstance, Task
+from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.models import DowcConfig
 from zac.contrib.kownsl.models import KownslConfig
@@ -211,6 +212,13 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
         checklist = deepcopy(CHECKLIST_OBJECT)
         checklist["record"]["data"]["answers"][0]["answer"] = ""
 
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+        )
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+        )
         with patch(
             "zac.contrib.objects.services.fetch_checklist_object",
             return_value=checklist,

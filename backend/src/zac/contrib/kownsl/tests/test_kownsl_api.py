@@ -53,6 +53,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         config.save()
         zaak_json = generate_oas_component("zrc", "schemas/Zaak", url=ZAAK_URL)
         cls.zaak = factory(Zaak, zaak_json)
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+        )
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+        )
 
     def test_client(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
@@ -79,16 +86,14 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             json=REVIEW_REQUEST,
             status_code=201,
         )
+
         user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
-        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(User.objects.count(), 3)
         review_request = create_review_request(
             ZAAK_URL,
             user,
             documents=["https://doc.nl/123"],
         )
-        # side effect: users created
-        self.assertEqual(User.objects.count(), 3)
-
         self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
         self.assertEqual(review_request.for_zaak, ZAAK_URL)
         self.assertTrue(m.last_request.headers["Authorization"].startswith("Bearer "))
