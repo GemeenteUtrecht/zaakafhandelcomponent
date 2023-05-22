@@ -100,20 +100,20 @@ class CanForceEditClosedZaken(CanForceEditClosedZaak):
 
 class CanAddRelations(ZaakDefinitionPermission):
     permission = zaken_add_relations
-    object_attr = "main_zaak"
+    object_attr = "hoofdzaak"
 
 
 class CanAddReverseRelations(ZaakDefinitionPermission):
     permission = zaken_add_relations
-    object_attr = "relation_zaak"
+    object_attr = "bijdragezaak"
 
 
 class CanForceAddRelations(CanForceEditClosedZaak):
-    object_attr = "main_zaak"
+    object_attr = "hoofdzaak"
 
 
 class CanForceAddReverseRelations(CanForceEditClosedZaak):
-    object_attr = "relation_zaak"
+    object_attr = "bijdragezaak"
 
 
 class CanReadZaken(DefinitionBasePermission):

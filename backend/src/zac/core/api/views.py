@@ -29,7 +29,6 @@ from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
@@ -130,6 +129,7 @@ from .serializers import (
     CatalogusSerializer,
     CreateZaakEigenschapSerializer,
     CreateZaakSerializer,
+    DeleteZaakRelationSerializer,
     DestroyRolSerializer,
     DocumentInfoSerializer,
     ExpandParamSerializer,
@@ -561,7 +561,7 @@ class RelatedZakenView(GetZaakMixin, views.APIView):
         return Response(serializer.data)
 
 
-class CreateZaakRelationView(views.APIView):
+class ZaakRelationView(views.APIView):
     permission_classes = (
         permissions.IsAuthenticated,
         CanAddRelations,
@@ -571,7 +571,52 @@ class CreateZaakRelationView(views.APIView):
     )
 
     def get_serializer(self, *args, **kwargs):
-        return AddZaakRelationSerializer(*args, **kwargs)
+        mapping = {
+            "POST": AddZaakRelationSerializer,
+            "DELETE": DeleteZaakRelationSerializer,
+        }
+        return mapping[self.request.method](*args, **kwargs)
+
+    def update_in_open_zaak(self, hoofdzaak: Zaak, bijdragezaak: Zaak):
+        client = Service.get_client(hoofdzaak.url)
+        client.partial_update(
+            "zaak",
+            {"relevanteAndereZaken": hoofdzaak.relevante_andere_zaken},
+            url=hoofdzaak.url,
+        )
+        client.partial_update(
+            "zaak",
+            {"relevanteAndereZaken": bijdragezaak.relevante_andere_zaken},
+            url=bijdragezaak.url,
+        )
+        # Invalidate cache immediately
+        invalidate_zaak_cache(hoofdzaak)
+        invalidate_zaak_cache(bijdragezaak)
+
+    def perform_create(self, serializer):
+        # Retrieving the main and bijdrage zaak
+        hoofdzaak_url = serializer.validated_data["hoofdzaak"]
+        bijdragezaak_url = serializer.validated_data["bijdragezaak"]
+        hoofdzaak = get_zaak(zaak_url=hoofdzaak_url)
+        bijdragezaak = get_zaak(zaak_url=bijdragezaak_url)
+        # Add the relation (from to main to related)
+        hoofdzaak.relevante_andere_zaken.append(
+            {
+                "url": bijdragezaak_url,
+                "aardRelatie": serializer.validated_data["aard_relatie"],
+            }
+        )
+        # Add the reverse relation
+        bijdragezaak.relevante_andere_zaken.append(
+            {
+                "url": hoofdzaak_url,
+                "aardRelatie": serializer.validated_data[
+                    "aard_relatie_omgekeerde_richting"
+                ],
+            }
+        )
+        self.update_in_open_zaak(hoofdzaak, bijdragezaak)
+        return serializer
 
     @extend_schema(
         summary=_("Add related ZAAK."),
@@ -580,46 +625,42 @@ class CreateZaakRelationView(views.APIView):
     def post(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        # Retrieving the main and bijdrage zaak
-        main_zaak_url = serializer.validated_data["main_zaak"]
-        bijdrage_zaak_url = serializer.validated_data["relation_zaak"]
-        client = Service.get_client(main_zaak_url)
-        main_zaak = client.retrieve("zaak", url=main_zaak_url)
-        bijdrage_zaak = client.retrieve("zaak", url=bijdrage_zaak_url)
-
-        # Create the relation (from to main to related)
-        main_zaak["relevanteAndereZaken"].append(
-            {
-                "url": bijdrage_zaak_url,
-                "aardRelatie": serializer.validated_data["aard_relatie"],
-            }
-        )
-        client.partial_update(
-            "zaak",
-            {"relevanteAndereZaken": main_zaak["relevanteAndereZaken"]},
-            url=main_zaak_url,
-        )
-
-        # Create the reverse relation
-        bijdrage_zaak["relevanteAndereZaken"].append(
-            {
-                "url": main_zaak_url,
-                "aardRelatie": serializer.validated_data[
-                    "aard_relatie_omgekeerde_richting"
-                ],
-            }
-        )
-        client.partial_update(
-            "zaak",
-            {"relevanteAndereZaken": bijdrage_zaak["relevanteAndereZaken"]},
-            url=bijdrage_zaak_url,
-        )
-
-        invalidate_zaak_cache(factory(Zaak, main_zaak))
-        invalidate_zaak_cache(factory(Zaak, bijdrage_zaak))
-
+        serializer = self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, serializer):
+        # Retrieving the main and bijdrage zaak
+        hoofdzaak_url = serializer.validated_data["hoofdzaak"]
+        bijdragezaak_url = serializer.validated_data["bijdragezaak"]
+        hoofdzaak = get_zaak(zaak_url=hoofdzaak_url)
+        bijdragezaak = get_zaak(zaak_url=bijdragezaak_url)
+
+        # Delete the relation (from to main to related)
+        hoofdzaak.relevante_andere_zaken = [
+            zaakrelatie
+            for zaakrelatie in hoofdzaak.relevante_andere_zaken
+            if zaakrelatie["url"] != bijdragezaak_url
+        ]
+        # Delete the relation (from to related to main)
+        bijdragezaak.relevante_andere_zaken = [
+            zaakrelatie
+            for zaakrelatie in bijdragezaak.relevante_andere_zaken
+            if zaakrelatie["url"] != hoofdzaak_url
+        ]
+        self.update_in_open_zaak(hoofdzaak, bijdragezaak)
+        return serializer
+
+    @extend_schema(
+        summary=_("Delete ZAAK relation."),
+        description=_(
+            "Delete the relationship of a ZAAK to another ZAAK and possible the reverse relation as well."
+        ),
+    )
+    def delete(self, request: Request) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_destroy(serializer)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ZaakRolesView(GetZaakMixin, views.APIView):

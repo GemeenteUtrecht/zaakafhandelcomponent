@@ -389,8 +389,9 @@ class ExtraInfoSubjectSerializer(serializers.Serializer):
 
 
 class AddZaakRelationSerializer(serializers.Serializer):
-    relation_zaak = serializers.URLField(
-        required=True, help_text=_("The ZAAK that is to be related to the main ZAAK.")
+    bijdragezaak = serializers.URLField(
+        required=True,
+        help_text=_("URL-reference to the ZAAK that is to the main ZAAK."),
     )
     aard_relatie = serializers.ChoiceField(
         required=True,
@@ -399,7 +400,7 @@ class AddZaakRelationSerializer(serializers.Serializer):
             "The nature of the relationship between the main ZAAK and the related ZAAK."
         ),
     )
-    main_zaak = serializers.URLField(
+    hoofdzaak = serializers.URLField(
         required=True,
         help_text=_("URL-reference to the main ZAAK in the ZAKEN API."),
     )
@@ -410,19 +411,30 @@ class AddZaakRelationSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
-        """Check that the main zaak and the relation are not the same nor have the same relationship."""
+        """
+        Check that the main zaak and the relation are not the same nor have the same relationship.
 
-        if data["relation_zaak"] == data["main_zaak"]:
+        """
+        if data["bijdragezaak"] == data["hoofdzaak"]:
             raise serializers.ValidationError(
                 _("ZAAKen cannot be related to themselves.")
             )
-
         if data["aard_relatie"] == data["aard_relatie_omgekeerde_richting"]:
             raise serializers.ValidationError(
                 _("The nature of the ZAAK-relations cannot be the same.")
             )
-
         return data
+
+
+class DeleteZaakRelationSerializer(serializers.Serializer):
+    bijdragezaak = serializers.URLField(
+        required=True,
+        help_text=_("URL-reference to the ZAAK that is to the main ZAAK."),
+    )
+    hoofdzaak = serializers.URLField(
+        required=True,
+        help_text=_("URL-reference to the main ZAAK in the ZAKEN API."),
+    )
 
 
 class CreateZaakDetailsSerializer(serializers.Serializer):
@@ -1425,7 +1437,8 @@ class ObjectFilterProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTS_API_SCHEMA"]
     PROXY_SCHEMA_PATH = [
         "paths",
-        "/objects/search",
+        "objects",
+        "search",
         "post",
         "requestBody",
         "content",

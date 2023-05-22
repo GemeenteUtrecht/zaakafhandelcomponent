@@ -3,7 +3,6 @@ from django.urls import include, path
 from ..management.urls import urls as management_urls
 from .views import (
     CatalogiView,
-    CreateZaakRelationView,
     CreateZaakView,
     EigenschappenView,
     InformatieObjectTypeListView,
@@ -25,6 +24,7 @@ from .views import (
     ZaakEigenschappenView,
     ZaakObjectChangeView,
     ZaakObjectsView,
+    ZaakRelationView,
     ZaakRolesView,
     ZaakStatusesView,
     ZaakTypenView,
@@ -68,9 +68,7 @@ urlpatterns = [
         RelatedZakenView.as_view(),
         name="zaak-related",
     ),
-    path(
-        "cases/related-case", CreateZaakRelationView.as_view(), name="add-zaak-relation"
-    ),
+    path("cases/related-case", ZaakRelationView.as_view(), name="manage-zaak-relation"),
     path(
         "cases/<str:bronorganisatie>/<str:identificatie>/roles",
         ZaakRolesView.as_view(),
