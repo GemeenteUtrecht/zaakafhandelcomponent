@@ -84,6 +84,13 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.kownsl.views.get_zaak", return_value=zaak
         )
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+        )
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+        )
         review_request = factory(ReviewRequest, REVIEW_REQUEST)
         cls.get_review_request_patcher = patch(
             "zac.contrib.kownsl.views.get_review_request", return_value=review_request
@@ -204,7 +211,13 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.kownsl.permissions.get_zaak", return_value=zaak
         )
-
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+        )
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+        )
         cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
         cls.endpoint = reverse(
             "kownsl:zaak-review-requests-reminder",

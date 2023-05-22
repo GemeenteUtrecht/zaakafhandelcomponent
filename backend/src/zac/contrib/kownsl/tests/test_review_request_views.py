@@ -58,6 +58,13 @@ class ViewTests(ClearCachesMixin, APITestCase):
             username="some-user", first_name="John", last_name="Doe"
         )
         cls.group = GroupFactory.create(name="some-group")
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+        )
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+        )
 
     def setUp(self):
         super().setUp()

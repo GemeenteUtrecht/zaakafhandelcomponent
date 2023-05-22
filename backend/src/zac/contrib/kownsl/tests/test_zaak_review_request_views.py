@@ -119,6 +119,11 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             "zac.contrib.kownsl.views.get_document", return_value=document
         )
         cls.revreq = {**REVIEW_REQUEST, "metadata": {"processInstanceId": "123"}}
+
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(username=cls.revreq["assignedUsers"][0]["user_assignees"][0])
+        UserFactory.create(username=cls.revreq["assignedUsers"][1]["user_assignees"][0])
+
         review_request = factory(ReviewRequest, cls.revreq)
         cls.get_review_request_patcher = patch(
             "zac.contrib.kownsl.views.get_review_request", return_value=review_request
@@ -477,6 +482,14 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
         cls.get_zaak_patcher = patch(
             "zac.contrib.kownsl.permissions.get_zaak", return_value=zaak
+        )
+
+        # Let resolve_assignee get the right users and groups
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+        )
+        UserFactory.create(
+            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
         )
 
         cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
