@@ -1225,9 +1225,15 @@ def relate_document_to_zaak(document_url: str, zaak_url: str) -> Dict[str, str]:
 def fetch_document_audit_trail(document_url: str) -> List[AuditTrailData]:
     drc_client = _client_from_url(document_url)
     doc_uuid = furl(document_url).path.segments[-1]
-    audit_trail = drc_client.list(
-        "audittrail", enkelvoudiginformatieobject_uuid=doc_uuid
-    )
+    try:
+        audit_trail = drc_client.list(
+            "audittrail", enkelvoudiginformatieobject_uuid=doc_uuid
+        )
+    except ClientError:
+        logger.warning(
+            "No audit trail found for {document}".format(document=document_url)
+        )
+        audit_trail = []
     return factory(AuditTrailData, audit_trail)
 
 
