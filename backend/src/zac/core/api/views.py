@@ -832,14 +832,15 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
                 )
             )
 
-        editing_history = {}
+        editing_history = dict()
         for at in audittrails:
-            at = sorted(at, key=lambda obj: obj.aanmaakdatum, reverse=True)
-            bumped_versions = [edit for edit in at if edit.was_bumped] or at
-            bumped_version = bumped_versions[0]
-            editing_history[
-                bumped_version.resource_url
-            ] = bumped_version.last_edited_date
+            if at:
+                at = sorted(at, key=lambda obj: obj.aanmaakdatum, reverse=True)
+                bumped_versions = [edit for edit in at if edit.was_bumped] or at
+                bumped_version = bumped_versions[0]
+                editing_history[
+                    bumped_version.resource_url
+                ] = bumped_version.last_edited_date
 
         serializer = self.serializer_class(
             instance=resolved_documenten,
