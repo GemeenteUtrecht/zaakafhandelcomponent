@@ -105,8 +105,19 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "The URL required to save edits and delete the DOWC object related to the DOCUMENT."
         )
     )
-    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
-    write_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.write, allow_blank=True)
+    read_url = DowcUrlFieldReadOnly(
+        purpose=DocFileTypes.read,
+        help_text=_(
+            "URL to read document. Opens the appropriate Microsoft Office application."
+        ),
+    )
+    write_url = DowcUrlFieldReadOnly(
+        purpose=DocFileTypes.write,
+        allow_blank=True,
+        help_text=_(
+            "URL to write document. Opens the appropriate Microsoft Office application."
+        ),
+    )
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display",
         help_text=_("Vertrouwelijkheidaanduiding of DOCUMENT."),
@@ -324,7 +335,12 @@ class DocumentInfoSerializer(serializers.Serializer):
     )
     bestandsgrootte = serializers.SerializerMethodField()
 
-    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
+    read_url = DowcUrlFieldReadOnly(
+        purpose=DocFileTypes.read,
+        help_text=_(
+            "URL to read document. Opens the appropriate Microsoft Office application."
+        ),
+    )
 
     def get_bestandsgrootte(self, obj):
         return filesizeformat(obj.bestandsomvang)

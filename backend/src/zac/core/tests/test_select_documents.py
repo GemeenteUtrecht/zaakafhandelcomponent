@@ -16,7 +16,7 @@ from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url
+from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.core.models import CoreConfig
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -170,7 +170,9 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                 "bestandsomvang": self.document.bestandsomvang,
                 "document_type": self.document.informatieobjecttype.omschrijving,
                 "url": self.document.url,
-                "read_url": get_dowc_url(self.document, purpose=DocFileTypes.read),
+                "read_url": get_dowc_url_from_obj(
+                    self.document, purpose=DocFileTypes.read
+                ),
                 "versie": self.document.versie,
             },
         )
@@ -190,7 +192,9 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                     "bestandsomvang": self.document.bestandsomvang,
                     "document_type": self.document.informatieobjecttype.omschrijving,
                     "url": self.document.url,
-                    "read_url": get_dowc_url(self.document, purpose=DocFileTypes.read),
+                    "read_url": get_dowc_url_from_obj(
+                        self.document, purpose=DocFileTypes.read
+                    ),
                     "versie": self.document.versie,
                 }
             ],

@@ -4,7 +4,7 @@ from rest_framework import fields
 from zgw_consumers.api_models.documenten import Document
 
 from .constants import DocFileTypes
-from .utils import get_dowc_url
+from .utils import get_dowc_url_from_obj
 
 
 class DowcUrlFieldReadOnly(fields.ReadOnlyField, fields.URLField):
@@ -25,4 +25,4 @@ class DowcUrlFieldReadOnly(fields.ReadOnlyField, fields.URLField):
         ), "This field is only valid for instances of type zgw_consumers.api_models.documenten.Document"
         if self.context.get("zaak_is_closed"):
             return ""
-        return get_dowc_url(instance, self.purpose)
+        return get_dowc_url_from_obj(instance, self.purpose)
