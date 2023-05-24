@@ -25,7 +25,12 @@ from .utils import get_zaaktype_from_identificatie
 
 class DocumentSerializer(APIModelSerializer):
     document_type = serializers.CharField(source="informatieobjecttype.omschrijving")
-    read_url = DowcUrlFieldReadOnly(purpose=DocFileTypes.read)
+    read_url = DowcUrlFieldReadOnly(
+        purpose=DocFileTypes.read,
+        help_text=_(
+            "URL to read document. Opens the appropriate Microsoft Office application."
+        ),
+    )
 
     class Meta:
         model = Document

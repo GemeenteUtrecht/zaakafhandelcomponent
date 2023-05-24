@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.conf import settings
 from django.utils.translation import gettext as _
 
@@ -9,12 +11,41 @@ from zac.accounts.models import Group, User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url
+from zac.contrib.dowc.utils import get_dowc_url_from_obj, get_dowc_url_from_vars
 from zac.core.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.core.api.serializers import ZaakSerializer
 
 from .constants import KownslTypes
 from .data import Advice, AdviceDocument, Approval, Author, OpenReview, ReviewRequest
+
+
+class KownslZaakDocumentSerializer(ProxySerializer):
+    PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["KOWNSL_API_SCHEMA"]
+    PROXY_SCHEMA_PATH = [
+        "components",
+        "schemas",
+        "ZaakDocument",
+    ]
+    read_url = serializers.SerializerMethodField(
+        help_text=_(
+            "URL to read document. Opens the appropriate Microsoft Office application."
+        )
+    )
+    write_url = serializers.SerializerMethodField(
+        help_text=_(
+            "URL to write document. Opens the appropriate Microsoft Office application."
+        )
+    )
+
+    def get_read_url(self, obj: Dict) -> str:
+        return get_dowc_url_from_vars(
+            obj["bronorganisatie"], obj["identificatie"], purpose=DocFileTypes.read
+        )
+
+    def get_write_url(self, obj: Dict) -> str:
+        return get_dowc_url_from_vars(
+            obj["bronorganisatie"], obj["identificatie"], purpose=DocFileTypes.write
+        )
 
 
 class KownslReviewRequestSerializer(ProxySerializer):
@@ -30,6 +61,10 @@ class KownslReviewRequestSerializer(ProxySerializer):
         "schema",
     ]
     zaak = ZaakSerializer()
+    zaakDocuments = KownslZaakDocumentSerializer(
+        help_text=_("The documents with their download url and relevant metadata."),
+        many=True,
+    )
 
 
 class UpdateZaakReviewRequestSerializer(APIModelSerializer):
@@ -150,7 +185,7 @@ class AdviceDocumentSerializer(APIModelSerializer):
         }
 
     def get_url(self, obj, args) -> str:
-        url = furl(get_dowc_url(obj.document, purpose=DocFileTypes.read))
+        url = furl(get_dowc_url_from_obj(obj.document, purpose=DocFileTypes.read))
         url.args = args
         return url.url
 

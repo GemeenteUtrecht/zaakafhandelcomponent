@@ -22,7 +22,7 @@ from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url
+from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
 from zgw.models.zrc import Zaak
 
@@ -155,7 +155,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                         "beschrijving": self.document.beschrijving,
                         "bestandsnaam": self.document.bestandsnaam,
                         "url": DOCUMENT_URL,
-                        "read_url": get_dowc_url(
+                        "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
                         ),
                     }
@@ -204,7 +204,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                         "beschrijving": self.document.beschrijving,
                         "bestandsnaam": self.document.bestandsnaam,
                         "url": DOCUMENT_URL,
-                        "read_url": get_dowc_url(
+                        "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
                         ),
                     }
@@ -259,7 +259,7 @@ class GetConfigureReviewRequestContextSerializersTests(APITestCase):
                         "beschrijving": self.document.beschrijving,
                         "bestandsnaam": self.document.bestandsnaam,
                         "url": DOCUMENT_URL,
-                        "read_url": get_dowc_url(
+                        "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
                         ),
                     }
