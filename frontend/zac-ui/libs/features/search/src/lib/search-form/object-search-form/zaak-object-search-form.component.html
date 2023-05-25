@@ -9,6 +9,7 @@
          (formSubmit)="submitForm($event)"></gu-form>
 
 <div *ngIf="zaakObjects.length > 0 && !selectedZaakObject">
+  <gu-loading-indicator *ngIf="isLoadingResults"></gu-loading-indicator>
   <gu-table [table]="zaakObjectsTableData"
             [sortable]="false"
             [expandable]="true"

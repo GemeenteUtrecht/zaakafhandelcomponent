@@ -122,6 +122,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   /** @type {number} Number of results */
   resultLength = 0;
 
+  /** @type {boolean} loading indicator */
+  isLoadingResults = false;
+
   /**
    * Constructor method.
    * @param {FormBuilder} fb
@@ -344,6 +347,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
         if (!zaakObjects.results.length) {
           this.isLoading = false;
+          this.isLoadingResults = false;
           this.isLoadingResult.emit(false);
           return;
         }
@@ -373,6 +377,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
             () => {
               this.mapMarkers.emit(activeMapMarkers);
               this.isLoading = false;
+              this.isLoadingResults = false;
               this.isLoadingResult.emit(false);
               this.cdRef.detectChanges();
             })
@@ -412,6 +417,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param page
    */
   onPageSelect(page) {
+    this.isLoadingResults = true;
     this.page = page.pageIndex + 1;
     this.fetchObjects(this.fetchObjectData?.geometry, this.fetchObjectData?.objectType, this.fetchObjectData?.property, this.fetchObjectData?.query, this.page)
   }
