@@ -10,13 +10,13 @@
 
   <div class="processen__acties" [ngClass]="{'processen__acties--disabled': showOverlay}">
     <h3 class="d-inline-block mr-1">Acties</h3>
-    <p *ngIf="!(!!data && data.length === 0 && !isLoading) && !zaak.resultaat">Dit zijn acties die uitgevoerd moeten worden om de zaak af te ronden.</p>
+    <p *ngIf="!(!!allTaskData && allTaskData.length === 0 && !isLoading) && !zaak.resultaat">Dit zijn acties die uitgevoerd moeten worden om de zaak af te ronden.</p>
 
     <!-- Result set -->
     <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
 
     <!-- Loaded -->
-    <ng-container *ngIf="!!data && data?.length > 0 && !zaak.resultaat">
+    <ng-container *ngIf="!!allTaskData && allTaskData?.length > 0 && !zaak.resultaat">
       <!-- Task lists -->
       <div *ngIf="allTaskData" class="processen__taken">
 
@@ -135,7 +135,7 @@
     </ng-container>
 
     <!-- Empty message -->
-    <ng-container *ngIf="!!data && data.length === 0 && !isLoading">
+    <ng-container *ngIf="!!allTaskData && allTaskData.length === 0 && !isLoading">
       <p>Er zijn geen acties beschikbaar.</p>
     </ng-container>
   </div>
@@ -149,12 +149,12 @@
 
 </div>
 
-<div class="acties card mt-4" *ngIf="!!data && data?.length > 0 && showActions">
+<div class="acties card mt-4" *ngIf="!!messages && messages?.length > 0 && showActions">
   <h3>Optionele acties</h3>
   <p>Dit zijn acties die op elk moment tijdens de zaak uitgevoerd kunnen worden.</p>
   <!-- Action buttons -->
   <div class="processen__msg-btns-container">
-    <ng-container *ngFor="let message of data[0].messages; let i = index">
+    <ng-container *ngFor="let message of messages; let i = index">
       <button *ngIf="message !== 'Zaak annuleren'"
               gu-button
               (click)="sendMessage(message)"

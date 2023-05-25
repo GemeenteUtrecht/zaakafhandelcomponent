@@ -6,16 +6,14 @@ import {
   AfterViewInit,
   EventEmitter,
   OnDestroy,
-  ViewEncapsulation, SimpleChanges
+  ViewEncapsulation, SimpleChanges, HostListener
 } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../../models/task-context';
 import {KetenProcessenService, SendMessageForm} from './keten-processen.service';
-import {KetenProcessen} from '../../../models/keten-processen';
 import {Task, User, Zaak} from '@gu/models';
 import {UserService, ZaakService} from '@gu/services';
-
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
@@ -51,10 +49,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   @Output() updateCase = new EventEmitter<Zaak>();
   @Output() nTaskDataEvent = new EventEmitter<number>();
 
-  data: KetenProcessen[];
   allTaskData: Task[];
   nVisibleTaskData: number;
   processInstanceId: string;
+  messages: string[];
 
   debugTask: Task = null;
   newestTaskId: string;
@@ -64,8 +62,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   isStartingProcess = false;
   isLoadingAction = false;
   isPolling = false;
+  nPolls = 0;
   nPollingFails = 0;
-  pollingInterval = 5000;
+  pollingInterval = 1000;
 
   errorMessage: string;
 
@@ -74,8 +73,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   isLoadingContext: boolean;
   contextHasError: boolean;
   contextErrorMessage: string;
-  isStatic: boolean;
-  hasProcess: boolean;
+  timeoutId: number;
+
+  maxUserInactivityTime = 30 * 1000; // 30 seconds
+  isUserInactive = false;
 
   // Tabs
   selectedTabIndex = null;
@@ -87,6 +88,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   showActions: boolean;
 
   hasCancelCaseMessage: boolean;
+
+  /** @type {string} Idle state. */
+  idleState = "NOT_STARTED";
 
   constructor(
     public ketenProcessenService: KetenProcessenService,
@@ -114,11 +118,14 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
         if (!this.zaak.resultaat && !this.isPolling && !this.showOverlay) {
           this.isLoading = true;
           this.fetchProcesses();
+          this.fetchMessages();
         } else {
           this.isLoading = false;
         }
       }
     });
+
+    this.checkTimeOut();
   }
 
   /**
@@ -129,7 +136,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
-   * Check if a the url has the param "user-task". If so,
+   * Check if the url has the param "user-task". If so,
    * the user task should be opened in a pop-up.
    */
   ngAfterViewInit(): void {
@@ -156,6 +163,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   startPollingProcesses(): void {
     this.isPolling = true;
+    this.pollingInterval = 1000;
     this.fetchPollProcesses();
   }
 
@@ -166,16 +174,16 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     let currentTaskIds;
     if (this.isPolling) {
       // Fetch processes.
-      this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(async resData => {
-        if (JSON.stringify(this.data) !== JSON.stringify(resData)) {
-          currentTaskIds = this.data && this.data.length ? await this.ketenProcessenService.mergeTaskData(this.data) : null;
+      this.ketenProcessenService.getTasks(this.mainZaakUrl).subscribe(async resData => {
+        if (JSON.stringify(this.allTaskData) !== JSON.stringify(resData)) {
+          currentTaskIds = this.allTaskData && this.allTaskData.length ? this.allTaskData : null;
           // Create array of ids for comparison
           let currentTaskIdsArray = [];
           if (currentTaskIds?.length > 0) {
             currentTaskIdsArray = [...await currentTaskIds?.map(({ id }) => id)];
           }
 
-          const newTaskIds = await this.ketenProcessenService.mergeTaskData(resData);
+          const newTaskIds = resData;
           const newTaskIdsArray = [...await newTaskIds?.map(({ id }) => id)];
 
           // Update data
@@ -202,6 +210,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
           this.fetchPollProcesses();
         }, this.pollingInterval)
 
+        // Set poll interval
+        this.setPollInterval();
+
         // Reset fail counter
         this.nPollingFails = 0;
 
@@ -226,11 +237,24 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
+   * Set polling interval.
+   */
+  setPollInterval() {
+    this.nPolls += 1;
+    if (this.nPolls >= 10 && this.pollingInterval < 5000) {
+      this.pollingInterval += 1000;
+      this.nPolls = 0;
+    }
+  }
+
+  /**
    * Cancels the polling of tasks.
    */
   cancelPolling(): void {
     if (this.isPolling) {
       this.isPolling = false;
+      this.nPolls = 0;
+      this.pollingInterval = 1000;
     }
   }
 
@@ -251,6 +275,16 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.hasCancelCaseMessage = messages.includes('Zaak annuleren');
   }
 
+  fetchMessages() {
+    this.ketenProcessenService.getMessages(this.mainZaakUrl)
+      .subscribe(res => {
+        this.messages = res[0].messages;
+        this.setCloseCaseMessage(this.messages);
+        // Process instance ID for API calls
+        this.processInstanceId = res[0].id;
+      })
+  }
+
   /**
    * Fetch all the related processes from the zaak.
    * @param {boolean} [openTask=false] Whether to automatically execute a newly created task (task not already known).
@@ -259,10 +293,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   async fetchProcesses(openTask: boolean = false, waitForIt?: boolean): Promise<void> {
     if (!this.isPolling) {
       // Known tasks after initialization.
-      const currentTaskIds = openTask && this.data && this.data.length ? await this.ketenProcessenService.mergeTaskData(this.data) : null;
+      const currentTaskIds = openTask && this.allTaskData && this.allTaskData.length ? this.allTaskData : null;
 
       // Fetch processes.
-      this.ketenProcessenService.getProcesses(this.mainZaakUrl).subscribe(async data => {
+      this.ketenProcessenService.getTasks(this.mainZaakUrl).subscribe(async data => {
         // Update data.
         await this.updateProcessData(data, !waitForIt);
 
@@ -324,13 +358,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   async updateProcessData(data, forceUpdateParent = true) {
     // Update data.
-    this.data = data;
-    this.allTaskData = await this.ketenProcessenService.mergeTaskData(data);
-
-    this.setCloseCaseMessage(data[0]?.messages || []);
-
-    // Process instance ID for API calls
-    this.processInstanceId = data.length > 0 ? data[0].id : null;
+    this.allTaskData = data
 
     this.nVisibleTaskData = this.allTaskData.length;
 
@@ -413,6 +441,34 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   // Events.
   //
 
+  /**
+   * Clear time out if user shows activity.
+   */
+  @HostListener('document:mousemove')
+  @HostListener('document:keypress')
+  @HostListener('document:keydown')
+  @HostListener('document:click')
+  @HostListener('document:wheel')
+  resetTimeout() {
+    clearTimeout(this.timeoutId);
+    if (this.isUserInactive) {
+      this.startPollingProcesses();
+      this.isUserInactive = false;
+    }
+    this.checkTimeOut();
+  }
+
+  /**
+   * Log user out after timeout.
+   */
+  checkTimeOut() {
+    // @ts-ignore
+    this.timeoutId = setTimeout(() => {
+      this.cancelPolling();
+      this.isUserInactive = true;
+    }, this.maxUserInactivityTime);
+  }
+
   initiateCamundaProcess() {
     this.isStartingProcess = true;
     this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
@@ -431,7 +487,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   }
 
   /**
-   * Gets called when a task date label is double clicked.
+   * Gets called when a task date label is double-clicked.
    * @param task
    */
   taskDblClick(task) {

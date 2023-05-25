@@ -1,3 +1,4 @@
+export * from './lib/_health/health.service';
 export * from './lib/accounts/accounts.service';
 export * from './lib/activities/activities.service';
 export * from './lib/camunda/camunda.service';

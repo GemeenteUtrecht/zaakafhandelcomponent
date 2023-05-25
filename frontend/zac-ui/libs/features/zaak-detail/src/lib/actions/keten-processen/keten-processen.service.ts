@@ -5,6 +5,7 @@ import { TaskContextData } from '../../../models/task-context';
 import { ReadWriteDocument, Task, User, UserSearch } from '@gu/models';
 import {BpmnXml, KetenProcessen} from '../../../models/keten-processen';
 import { UserGroupList } from '../../../models/user-group-search';
+import { Messages } from '../../../../../../shared/data-access/models/zaken/messages';
 
 
 export interface SendMessageForm {
@@ -126,12 +127,11 @@ export class KetenProcessenService {
 
   /**
    * Returns a new task if present.
-   * @param newData
+   * @param newTaskIds
    * @param currentTaskIds
    * @returns {Task}
    */
-  async findNewTask(newData, currentTaskIds): Promise<Task> {
-    const newTaskIds = await this.mergeTaskData(newData);
+  async findNewTask(newTaskIds, currentTaskIds): Promise<Task> {
 
     if (JSON.stringify(currentTaskIds) !== JSON.stringify(newTaskIds)) {
       return newTaskIds.find((task: Task) => currentTaskIds.indexOf(task.id) === -1);
@@ -144,8 +144,18 @@ export class KetenProcessenService {
    * @param {string} mainZaakUrl
    * @returns {Observable<any>}
    */
-  getProcesses(mainZaakUrl: string): Observable<any> {
-    const endpoint = encodeURI(`/api/camunda/fetch-process-instances?zaakUrl=${mainZaakUrl}`);
+  getTasks(mainZaakUrl: string): Observable<any> {
+    const endpoint = encodeURI(`/api/camunda/fetch-tasks?zaakUrl=${mainZaakUrl}`);
+    return this.http.Get(endpoint);
+  }
+
+  /**
+   * Receive messages to create a new task.
+   * @param {string} mainZaakUrl
+   * @returns {Observable<Messages[]>}
+   */
+  getMessages(mainZaakUrl: string): Observable<Messages[]> {
+    const endpoint = encodeURI(`/api/camunda/fetch-messages?zaakUrl=${mainZaakUrl}`);
     return this.http.Get(endpoint);
   }
 
