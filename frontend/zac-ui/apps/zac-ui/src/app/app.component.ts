@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/cor
 import {NavigationEnd, Router} from '@angular/router';
 import {filter} from 'rxjs/operators';
 import {SnackbarService} from '@gu/components';
-import {UserService, ZaakService} from '@gu/services';
+import { HealthService, UserService, ZaakService } from '@gu/services';
 import {menuItems, MenuItem} from './constants/menu';
 import { User } from '@gu/models';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
@@ -56,10 +56,11 @@ export class AppComponent implements OnInit {
     private snackbarService: SnackbarService,
     private userService: UserService,
     private zaakService: ZaakService,
+    private healthService: HealthService,
     cd: ChangeDetectorRef
   ) {
-    idle.setIdle(5); // how long can they be inactive before considered idle, in seconds
-    idle.setTimeout(10 * 60 * 1000); // how long can they be idle before considered timed out, in seconds (10 minutes)
+    idle.setIdle(5); // how long can they be inactive before considered idle, in seconds (5 sec)
+    idle.setTimeout(10 * 60); // how long can they be idle before considered timed out, in seconds (10 minutes)
     idle.setInterrupts(DEFAULT_INTERRUPTSOURCES); // provide sources that will "interrupt" aka provide events indicating the user is active
 
     // When the user becomes idle
@@ -89,6 +90,9 @@ export class AppComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
+    setInterval(() => {
+      this.checkHealth();
+    }, 1000 * 60);
     this.reset();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -104,6 +108,10 @@ export class AppComponent implements OnInit {
   //
   // Context.
   //
+
+  checkHealth() {
+    this.healthService.checkHealth().subscribe();
+  }
 
   /**
    * Call this method to start/reset the idle process
@@ -143,7 +151,8 @@ export class AppComponent implements OnInit {
   logOutUser() {
     this.userService.logOutUser().subscribe(
       () => {
-        this.router.navigate([''])
+        this.router.navigate(['/']);
+        window.location.reload();
       }, error => {
         this.reportError(error, this.logOutErrorMessage);
       }
