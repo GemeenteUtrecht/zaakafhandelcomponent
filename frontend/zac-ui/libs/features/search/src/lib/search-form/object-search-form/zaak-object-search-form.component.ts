@@ -61,6 +61,7 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
 export class ZaakObjectSearchFormComponent implements OnInit {
   @Input() zaaktype: Zaaktype = null;
   @Input() showAllObjectTypesCheckbox: boolean = false;
+  @Input() isAddObjects: boolean = false;
   @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
@@ -120,6 +121,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
   /** @type {number} Number of results */
   resultLength = 0;
+
+  /** @type {boolean} loading indicator */
+  isLoadingResults = false;
 
   /**
    * Constructor method.
@@ -343,6 +347,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
         if (!zaakObjects.results.length) {
           this.isLoading = false;
+          this.isLoadingResults = false;
           this.isLoadingResult.emit(false);
           return;
         }
@@ -372,6 +377,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
             () => {
               this.mapMarkers.emit(activeMapMarkers);
               this.isLoading = false;
+              this.isLoadingResults = false;
               this.isLoadingResult.emit(false);
               this.cdRef.detectChanges();
             })
@@ -393,7 +399,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
           object: element.stringRepresentation,
           search: {
             type: 'button',
-            label: 'Gerelateerde zaken zoeken',
+            label: this.isAddObjects ? 'Object toevoegen' : 'Gerelateerde zaken zoeken',
             value: element
           },
         }
@@ -411,8 +417,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param page
    */
   onPageSelect(page) {
+    this.isLoadingResults = true;
     this.page = page.pageIndex + 1;
-    this.fetchObjects(this.fetchObjectData.geometry, this.fetchObjectData.objectType, this.fetchObjectData.property, this.fetchObjectData.query, this.page)
+    this.fetchObjects(this.fetchObjectData?.geometry, this.fetchObjectData?.objectType, this.fetchObjectData?.property, this.fetchObjectData?.query, this.page)
   }
 
 

@@ -241,7 +241,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   setPollInterval() {
     this.nPolls += 1;
-    if (this.nPolls >= 10 && this.pollingInterval < 5000) {
+    if (this.nPolls >= 5 && this.pollingInterval < 5000) {
       this.pollingInterval += 1000;
       this.nPolls = 0;
     }
