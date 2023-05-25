@@ -1,8 +1,13 @@
-<ng-template [ngIf]="downloadUrl">
+<ng-template [ngIf]="downloadUrl || readUrl">
   <div class="file">
     <div class="file-name-container">
       <mat-icon aria-hidden="true">insert_drive_file_outline</mat-icon>
-      <a class="file-name file-name--link" href="{{downloadUrl}}">{{fileName}}</a>
+      <ng-container *ngIf="downloadUrl">
+        <a class="file-name file-name--link" href="{{downloadUrl}}">{{fileName}}</a>
+      </ng-container>
+      <ng-container *ngIf="readUrl">
+        <a class="file-name file-name--link" (click)="readDocument()">{{fileName}}</a>
+      </ng-container>
     </div>
   </div>
 </ng-template>
