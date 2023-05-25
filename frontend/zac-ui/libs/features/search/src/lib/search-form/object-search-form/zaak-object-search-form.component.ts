@@ -61,6 +61,7 @@ const OBJECT_SEARCH_GEOMETRY_CHOICES: Choice[] = [
 export class ZaakObjectSearchFormComponent implements OnInit {
   @Input() zaaktype: Zaaktype = null;
   @Input() showAllObjectTypesCheckbox: boolean = false;
+  @Input() isAddObjects: boolean = false;
   @Output() searchObjects: EventEmitter<void> = new EventEmitter<void>();
   @Output() selectZaakObject: EventEmitter<ZaakObject> = new EventEmitter<ZaakObject>();
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
@@ -393,7 +394,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
           object: element.stringRepresentation,
           search: {
             type: 'button',
-            label: 'Gerelateerde zaken zoeken',
+            label: this.isAddObjects ? 'Object toevoegen' : 'Gerelateerde zaken zoeken',
             value: element
           },
         }
@@ -412,7 +413,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    */
   onPageSelect(page) {
     this.page = page.pageIndex + 1;
-    this.fetchObjects(this.fetchObjectData.geometry, this.fetchObjectData.objectType, this.fetchObjectData.property, this.fetchObjectData.query, this.page)
+    this.fetchObjects(this.fetchObjectData?.geometry, this.fetchObjectData?.objectType, this.fetchObjectData?.property, this.fetchObjectData?.query, this.page)
   }
 
 
