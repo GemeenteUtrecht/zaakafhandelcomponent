@@ -15,8 +15,8 @@
         </mat-expansion-panel-header>
         <p class="mb-2">Gebruikers</p>
         <ul>
-          <li *ngFor="let user of prettifyUsers(group.users)">
-            {{user}}
+          <li *ngFor="let user of group.users">
+            {{user.fullName}}
           </li>
         </ul>
         <div class="d-flex justify-content-end align-items-center">
