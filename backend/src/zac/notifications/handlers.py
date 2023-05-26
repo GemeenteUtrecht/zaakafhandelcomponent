@@ -143,7 +143,7 @@ class ZakenHandler:
 
             def _lock_review_request(rr: ReviewRequest):
                 lock_review_request(
-                    str(rr.id), data={"lock_reason": "Zaak is gesloten."}
+                    str(rr.id), lock_reason="Zaak is gesloten."
                 )
 
             # lock all review requests related to zaak
