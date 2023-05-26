@@ -56,6 +56,8 @@ def delete_process_instance(instance_id: CamundaId, query_params: Dict = dict):
 def get_process_definitions(
     definition_ids: list, cache_key: str
 ) -> List[ProcessDefinition]:
+    if not definition_ids:
+        return []
     client = get_client()
     response = client.get(
         "process-definition", {"processDefinitionIdIn": ",".join(definition_ids)}
@@ -113,6 +115,7 @@ def get_process_instances(
     historic: bool = False,
     include_bijdragezaak: bool = False,
     exclude_zaak_creation: bool = True,
+    nest: bool = False,
 ) -> Dict[CamundaId, ProcessInstance]:
     client = get_client()
 
@@ -135,22 +138,31 @@ def get_process_instances(
         for data in response
     }
 
-    # fill in all subprocesses into the dict
-    pids = [process_instance for id, process_instance in process_instances.items()]
+    if nest:
+        # fill in all subprocesses into the dict
+        pids = [process_instance for id, process_instance in process_instances.items()]
 
-    def _add_subprocesses(pid: ProcessInstance):
-        nonlocal process_instances, client, historic, include_bijdragezaak, zaak_url
-        add_subprocesses(
-            pid,
-            process_instances,
-            client,
-            historic=historic,
-            zaak_url="" if include_bijdragezaak else zaak_url,
-        )
+        def _add_subprocesses(pid: ProcessInstance):
+            nonlocal process_instances, client, historic, include_bijdragezaak, zaak_url
+            add_subprocesses(
+                pid,
+                process_instances,
+                client,
+                historic=historic,
+                zaak_url="" if include_bijdragezaak else zaak_url,
+            )
 
-    with parallel() as executor:
-        list(executor.map(_add_subprocesses, pids))
+        with parallel() as executor:
+            list(executor.map(_add_subprocesses, pids))
 
+    definition_ids = [p.definition_id for p in process_instances.values()]
+    cache_key = hash("".join(definition_ids))
+    definitions = {
+        definition.id: definition
+        for definition in get_process_definitions(definition_ids, cache_key)
+    }
+    for id, process_instance in process_instances.items():
+        process_instance.definition = definitions[process_instance.definition_id]
     return process_instances
 
 
@@ -163,17 +175,12 @@ def get_top_level_process_instances(
         zaak_url,
         include_bijdragezaak=include_bijdragezaak,
         exclude_zaak_creation=exclude_zaak_creation,
+        nest=True,
     )
-    # add definitions add user tasks
-    definition_ids = [p.definition_id for p in process_instances.values()]
-    cache_key = hash("".join(definition_ids))
-    definitions = {
-        definition.id: definition
-        for definition in get_process_definitions(definition_ids, cache_key)
-    }
+
+    # add user tasks
     process_instances_without_task = []
     for id, process_instance in process_instances.items():
-        process_instance.definition = definitions[process_instance.definition_id]
         if not process_instance.tasks:
             process_instances_without_task.append(process_instance)
 

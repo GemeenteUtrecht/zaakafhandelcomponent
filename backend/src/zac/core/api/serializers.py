@@ -623,7 +623,7 @@ class ZaakDetailSerializer(APIModelSerializer):
         # Filter out the process instance that started the zaak
         spawned_process_instances = [
             pi
-            for pi in process_instances
+            for pi in process_instances.values()
             if pi.definition.key != settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
         ]
         if spawned_process_instances:
@@ -634,7 +634,7 @@ class ZaakDetailSerializer(APIModelSerializer):
 
         parent_process_instance = [
             pi
-            for pi in process_instances
+            for pi in process_instances.values()
             if pi.definition.key == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
         ]
         if not parent_process_instance:
@@ -657,12 +657,12 @@ class ZaakDetailSerializer(APIModelSerializer):
         if var := bool(
             get_camunda_variable_instances(
                 {
-                    "processInstanceIdIn": [parent_process_instance.id],
+                    "processInstanceIdIn": list(process_instances.keys()),
                     "variableName": "startRelatedBusinessProcess",
                 }
             )
         ):
-            # Make sure the zaaktype of the zaak even has a start_camunda_process_form
+            # Make sure the zaaktype of the zaak has a start_camunda_process_form
             if var and self.context["camunda_form"]:
                 return True
         return False
@@ -673,10 +673,12 @@ class ZaakDetailSerializer(APIModelSerializer):
 
     def get_is_configured(self, obj) -> bool:
         process_instances = self.context["process_instances"]
-        pids = [p.id for p in process_instances if p.id]
         return bool(
             get_camunda_variable_instances(
-                {"processInstanceIdIn": pids, "variableName": "isConfigured"}
+                {
+                    "processInstanceIdIn": list(process_instances.keys()),
+                    "variableName": "isConfigured",
+                }
             )
         )
 

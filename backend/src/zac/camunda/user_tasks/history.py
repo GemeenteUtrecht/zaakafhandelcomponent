@@ -41,8 +41,10 @@ def get_completed_user_tasks_for_zaak(
     if not client:
         client = get_client()
 
-    historic_process_instances = get_process_instances(zaak_url, historic=True)
-    active_process_instances = get_process_instances(zaak_url)
+    historic_process_instances = get_process_instances(
+        zaak_url, historic=True, nest=True
+    )
+    active_process_instances = get_process_instances(zaak_url, nest=True)
     all_process_instances = {**historic_process_instances, **active_process_instances}
 
     tasks = {}

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import Group
 from django.db import transaction
-from django.db.models import F, Prefetch
+from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filter
