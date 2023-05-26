@@ -83,7 +83,18 @@ class GroupViewsetTests(APITestCase):
                 "id": self.groups[0].id,
                 "name": self.groups[0].name,
                 "fullName": "Groep: " + self.groups[0].name,
-                "users": [self.user.username],
+                "users": [
+                    {
+                        "id": self.user.id,
+                        "username": self.user.username,
+                        "firstName": self.user.first_name,
+                        "fullName": self.user.get_full_name(),
+                        "lastName": self.user.last_name,
+                        "isStaff": self.user.is_staff,
+                        "email": self.user.email,
+                        "groups": [self.groups[0].name],
+                    }
+                ],
             },
         )
         self.user.manages_groups.remove(self.groups[0])
@@ -102,6 +113,17 @@ class GroupViewsetTests(APITestCase):
                 "id": self.groups[0].id,
                 "name": self.groups[0].name,
                 "fullName": "Groep: " + self.groups[0].name,
-                "users": [self.user.username],
+                "users": [
+                    {
+                        "id": self.user.id,
+                        "username": self.user.username,
+                        "firstName": self.user.first_name,
+                        "fullName": self.user.get_full_name(),
+                        "lastName": self.user.last_name,
+                        "isStaff": self.user.is_staff,
+                        "email": self.user.email,
+                        "groups": [self.groups[0].name],
+                    }
+                ],
             },
         )

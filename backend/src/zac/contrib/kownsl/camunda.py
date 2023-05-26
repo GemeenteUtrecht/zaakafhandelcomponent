@@ -10,6 +10,7 @@ from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
 from zac.api.context import get_zaak_context
@@ -19,11 +20,7 @@ from zac.camunda.user_tasks import register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
 from zac.contrib.kownsl.api import get_review_request
-from zac.core.api.fields import (
-    GroupSlugRelatedField,
-    SelectDocumentsField,
-    UserSlugRelatedField,
-)
+from zac.core.api.fields import SelectDocumentsField
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak

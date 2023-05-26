@@ -104,9 +104,10 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = ManageGroupSerializer
 
     def get_serializer_class(self):
-        if self.action == "list" and self.request.method == "GET":
-            return GroupSerializer
-        return ManageGroupSerializer
+        mapping = {"GET": {"list": GroupSerializer}}
+        return mapping.get(self.request.method, {}).get(
+            self.action, ManageGroupSerializer
+        )
 
     def perform_create(self, serializer):
         group = serializer.save()

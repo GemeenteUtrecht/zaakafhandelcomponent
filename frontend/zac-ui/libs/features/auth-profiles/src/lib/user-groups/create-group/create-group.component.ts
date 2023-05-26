@@ -87,11 +87,7 @@ export class CreateGroupComponent implements OnChanges {
    */
   setContextEditMode() {
     this.userGroupNameControl.patchValue(this.selectedUserGroup.name);
-    this.fService.getAccounts('').subscribe(users => {
-      this.selectedUsers = users.results.filter(user => this.selectedUserGroup.users.includes(user.username));
-    }, error => {
-      this.reportError(error)
-    })
+    this.selectedUsers = this.selectedUserGroup.users;
   }
 
   /**

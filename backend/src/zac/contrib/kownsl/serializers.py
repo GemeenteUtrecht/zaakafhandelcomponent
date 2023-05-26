@@ -7,12 +7,12 @@ from furl import furl
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
+from zac.accounts.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.accounts.models import Group, User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url_from_obj, get_dowc_url_from_vars
-from zac.core.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.core.api.serializers import ZaakSerializer
 
 from .constants import KownslTypes
