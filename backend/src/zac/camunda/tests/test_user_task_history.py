@@ -77,6 +77,23 @@ COMPLETED_TASK_DATA = {
     "rootProcessInstanceId": "0df2bc16-8b57-11ec-baad-6ed7f836cf1f",
 }
 
+PROCESS_DEFINITION = {
+    "id": f"HARVO_behandelen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
+    "key": "HARVO_behandelen",
+    "category": "http://bpmn.io/schema/bpmn",
+    "description": None,
+    "name": None,
+    "version": 8,
+    "resource": "accorderen.bpmn",
+    "deployment_id": "c76a10fd-c766-11ea-86dc-e22fafe5f405",
+    "diagram": None,
+    "suspended": False,
+    "tenant_id": None,
+    "version_tag": None,
+    "history_time_to_live": None,
+    "startable_in_tasklist": True,
+}
+
 
 @requests_mock.Mocker()
 class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
@@ -141,11 +158,21 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         # Mock historic process instances
         m.get(
             f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_https%3A%2F%2Fsome.zrc.nl%2Fapi%2Fv1%2Fzaken%2Fa955573e-ce3f-4cf3-8ae0-87853d61f47a",
-            json=[{"id": COMPLETED_TASK_DATA["processInstanceId"]}],
+            json=[
+                {
+                    "id": COMPLETED_TASK_DATA["processInstanceId"],
+                    "definitionId": PROCESS_DEFINITION["id"],
+                }
+            ],
         )
         m.get(
             f"{CAMUNDA_URL}history/process-instance?superProcessInstanceId={COMPLETED_TASK_DATA['processInstanceId']}",
             json=[],
+        )
+        # Mock process definitions
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[PROCESS_DEFINITION],
         )
         # Mock current process instances
         m.get(
@@ -230,11 +257,21 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         # Mocks for get_completed_user_tasks_for_zaak
         m.get(
             f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
-            json=[{"id": COMPLETED_TASK_DATA["processInstanceId"]}],
+            json=[
+                {
+                    "id": COMPLETED_TASK_DATA["processInstanceId"],
+                    "definitionId": PROCESS_DEFINITION["id"],
+                }
+            ],
         )
         m.get(
             f"{CAMUNDA_URL}history/process-instance?superProcessInstanceId={COMPLETED_TASK_DATA['processInstanceId']}",
             json=[],
+        )
+        # Mock process definitions
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[PROCESS_DEFINITION],
         )
         # Mock current process instances
         m.get(
@@ -340,11 +377,21 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         # Mocks for get_completed_user_tasks_for_zaak
         m.get(
             f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
-            json=[{"id": COMPLETED_TASK_DATA["processInstanceId"]}],
+            json=[
+                {
+                    "id": COMPLETED_TASK_DATA["processInstanceId"],
+                    "definitionId": PROCESS_DEFINITION["id"],
+                }
+            ],
         )
         m.get(
             f"{CAMUNDA_URL}history/process-instance?superProcessInstanceId={COMPLETED_TASK_DATA['processInstanceId']}",
             json=[],
+        )
+        # Mock process definitions
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[PROCESS_DEFINITION],
         )
         # Mock current process instances
         m.get(

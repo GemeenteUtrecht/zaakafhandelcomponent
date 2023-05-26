@@ -7,7 +7,6 @@ from django.urls import reverse
 
 import requests_mock
 from freezegun import freeze_time
-from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -26,7 +25,6 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
-from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
     zaken_inzien,
@@ -43,9 +41,7 @@ KOWNSL_ROOT = "https://kownsl.nl/"
 
 from zac.core.camunda.start_process.tests.utils import (
     OBJECTS_ROOT,
-    OBJECTTYPES_ROOT,
     START_CAMUNDA_PROCESS_FORM,
-    START_CAMUNDA_PROCESS_FORM_OT,
 )
 
 
@@ -132,8 +128,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        cls.patch_get_top_level_process_instances = patch(
-            "zac.core.api.views.get_top_level_process_instances", return_value=[]
+        cls.patch_get_process_instances = patch(
+            "zac.core.api.views.get_process_instances", return_value=dict()
         )
         cls.patch_views_fetch_start_camunda_process_form_for_zaaktype = patch(
             "zac.core.api.views.fetch_start_camunda_process_form_for_zaaktype",
@@ -152,8 +148,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.patch_get_resultaat.start()
         self.addCleanup(self.patch_get_resultaat.stop)
-        self.patch_get_top_level_process_instances.start()
-        self.addCleanup(self.patch_get_top_level_process_instances.stop)
+        self.patch_get_process_instances.start()
+        self.addCleanup(self.patch_get_process_instances.stop)
         self.patch_views_fetch_start_camunda_process_form_for_zaaktype.start()
         self.addCleanup(
             self.patch_views_fetch_start_camunda_process_form_for_zaaktype.stop
@@ -512,8 +508,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             process_instance.process_definition = process_definition
 
             with patch(
-                "zac.core.api.views.get_top_level_process_instances",
-                return_value=[process_instance],
+                "zac.core.api.views.get_process_instances",
+                return_value={str(process_instance.id): process_instance},
             ):
                 response = self.client.get(self.detail_url)
 
@@ -531,8 +527,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             process_instance.definition = process_definition
 
             with patch(
-                "zac.core.api.views.get_top_level_process_instances",
-                return_value=[process_instance],
+                "zac.core.api.views.get_process_instances",
+                return_value={str(process_instance.id): process_instance},
             ):
                 with patch(
                     "zac.core.api.serializers.get_incidents_for_process_instance",
@@ -555,8 +551,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "Process instance with def key same as settings.CREATE_ZAAK... has no incidents but also no startRelatedBusinessProcess var"
         ):
             with patch(
-                "zac.core.api.views.get_top_level_process_instances",
-                return_value=[process_instance],
+                "zac.core.api.views.get_process_instances",
+                return_value={str(process_instance.id): process_instance},
             ):
                 with patch(
                     "zac.core.api.serializers.get_incidents_for_process_instance",
@@ -578,8 +574,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "Process instance with def key same as settings.CREATE_ZAAK... has no incidents, has startRelatedBusinessProcess var but no form"
         ):
             with patch(
-                "zac.core.api.views.get_top_level_process_instances",
-                return_value=[process_instance],
+                "zac.core.api.views.get_process_instances",
+                return_value={str(process_instance.id): process_instance},
             ):
                 with patch(
                     "zac.core.api.serializers.get_incidents_for_process_instance",
@@ -600,8 +596,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "Process instance with def key same as settings.CREATE_ZAAK.... has no incidents, has startRelatedBusinessProcess and a form"
         ):
             with patch(
-                "zac.core.api.views.get_top_level_process_instances",
-                return_value=[process_instance],
+                "zac.core.api.views.get_process_instances",
+                return_value={str(process_instance.id): process_instance},
             ):
                 with patch(
                     "zac.core.api.serializers.get_incidents_for_process_instance",
@@ -680,8 +676,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         process_instance = mock.MagicMock()
 
         with patch(
-            "zac.core.api.views.get_top_level_process_instances",
-            return_value=[process_instance],
+            "zac.core.api.views.get_process_instances",
+            return_value={str(process_instance.id): process_instance},
         ):
             with patch(
                 "zac.core.api.serializers.get_camunda_variable_instances",
@@ -723,15 +719,12 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
-
         config = KownslConfig.get_solo()
         config.service = kownsl
         config.save()
-
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -756,17 +749,16 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, cls._zaak)
         cls.zaak.zaaktype = cls.zaaktype
-
         cls.find_zaak_patcher = patch(
             "zac.core.api.views.find_zaak", return_value=cls.zaak
         )
-        cls.patch_get_top_level_process_instances = patch(
-            "zac.core.api.views.get_top_level_process_instances", return_value=[]
+        cls.patch_get_process_instances = patch(
+            "zac.core.api.views.get_process_instances",
+            return_value=dict(),
         )
         cls.patch_get_camunda_variable_instances = patch(
             "zac.core.api.serializers.get_camunda_variable_instances", return_value=[]
         )
-
         cls.detail_url = reverse(
             "zaak-detail",
             kwargs={
@@ -781,8 +773,8 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.find_zaak_patcher.start()
         self.addCleanup(self.find_zaak_patcher.stop)
 
-        self.patch_get_top_level_process_instances.start()
-        self.addCleanup(self.patch_get_top_level_process_instances.stop)
+        self.patch_get_process_instances.start()
+        self.addCleanup(self.patch_get_process_instances.stop)
 
         self.patch_get_camunda_variable_instances.start()
         self.addCleanup(self.patch_get_camunda_variable_instances.stop)

@@ -38,7 +38,7 @@ from zgw_consumers.models import Service
 from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.accounts.models import User, UserAtomicPermission
-from zac.camunda.process_instances import get_top_level_process_instances
+from zac.camunda.process_instances import get_process_instances
 from zac.camunda.processes import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
@@ -313,9 +313,9 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
                 fetch_start_camunda_process_form_for_zaaktype,
                 zaak.zaaktype,
             ],
-            "process_instances": [get_top_level_process_instances, zaak.url],
+            "process_instances": [get_process_instances, zaak.url],
         }
-        results = {}
+        results = dict()
         with parallel() as executor:
             running_tasks = {
                 key: executor.submit(*task) for key, task in mapping.items()

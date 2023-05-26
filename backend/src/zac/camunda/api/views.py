@@ -102,7 +102,7 @@ class ProcessInstanceFetchView(APIView):
         """
         Get the Camunda process instances for a given ZAAK.
 
-        Retrieve the process instances where the ZAAK-URL is matches the process
+        Retrieve the process instances where the ZAAK-URL matches the process
         `zaakUrl` variable. Process instances return the available message that can be
         sent into the process and the available user tasks. The response includes the
         child-process instances of each matching process instance.
@@ -494,8 +494,10 @@ class ChangeBehandelaarTasksView(APIView):
     def post(self, request, *args, **kwargs):
         """
         Changes the assignee from all tasks where the assignee is a behandelaar.
+        It also changes the `initiator`, `behandelaar` and `roltype.omschrijving` variables in all process instances
+        related to the zaak if relevant.
 
-        Note: This does not include tasks related to kownsl review requests.
+        In the current implementation we do not adjust kownsl review requests.
 
         """
         serializer = self.serializer_class(data=request.data)
