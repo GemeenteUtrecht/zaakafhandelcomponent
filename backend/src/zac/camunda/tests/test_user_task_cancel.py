@@ -157,8 +157,8 @@ class CancelTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CAMUNDA_URL}task/fc9c465d-b0d7-11ec-a5f0-32fe9303dc32",
             json={**TASK_DATA, "name": killable_task.name},
         )
-        m.get(
-            f"{CAMUNDA_URL}history/task?taskId=fc9c465d-b0d7-11ec-a5f0-32fe9303dc32",
+        m.post(
+            f"{CAMUNDA_URL}history/task",
             json=[{**HISTORY_TASK_DATA[0], "name": killable_task.name}],
         )
         m.post(
