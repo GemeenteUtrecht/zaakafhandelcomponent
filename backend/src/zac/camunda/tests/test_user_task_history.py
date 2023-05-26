@@ -125,8 +125,8 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
             self.addCleanup(patcher.stop)
 
     def test_success_get_task_history(self, m):
-        m.get(
-            f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
+        m.post(
+            f"{CAMUNDA_URL}history/task",
             json=[COMPLETED_TASK_DATA],
         )
         tasks = get_task_history(
@@ -135,13 +135,11 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
                 "finished": "true",
             }
         )
-        self.assertEqual(
-            tasks, {COMPLETED_TASK_DATA["id"]: underscoreize(COMPLETED_TASK_DATA)}
-        )
+        self.assertEqual(tasks, [underscoreize(COMPLETED_TASK_DATA)])
 
     def test_fail_500_on_get_task_history(self, m):
-        m.get(
-            f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
+        m.post(
+            f"{CAMUNDA_URL}history/task",
             json=[],
             status_code=500,
         )
@@ -155,33 +153,9 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         self.assertEqual(exc.exception.response.status_code, 500)
 
     def test_success_get_completed_user_tasks_for_zaak(self, m):
-        # Mock historic process instances
-        m.get(
-            f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_https%3A%2F%2Fsome.zrc.nl%2Fapi%2Fv1%2Fzaken%2Fa955573e-ce3f-4cf3-8ae0-87853d61f47a",
-            json=[
-                {
-                    "id": COMPLETED_TASK_DATA["processInstanceId"],
-                    "definitionId": PROCESS_DEFINITION["id"],
-                }
-            ],
-        )
-        m.get(
-            f"{CAMUNDA_URL}history/process-instance?superProcessInstanceId={COMPLETED_TASK_DATA['processInstanceId']}",
-            json=[],
-        )
-        # Mock process definitions
-        m.get(
-            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
-            json=[PROCESS_DEFINITION],
-        )
-        # Mock current process instances
-        m.get(
-            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_https%3A%2F%2Fsome.zrc.nl%2Fapi%2Fv1%2Fzaken%2Fa955573e-ce3f-4cf3-8ae0-87853d61f47a",
-            json=[],
-        )
         # Mock completed tasks from historic process instances
-        m.get(
-            f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
+        m.post(
+            f"{CAMUNDA_URL}history/task",
             json=[COMPLETED_TASK_DATA],
         )
         tasks = get_completed_user_tasks_for_zaak(ZAAK_URL)
@@ -254,33 +228,9 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.json(), ["Mist de `zaakUrl` query parameter."])
 
     def test_success_get_user_task_history_and_exclude_bptlAppId(self, m):
-        # Mocks for get_completed_user_tasks_for_zaak
-        m.get(
-            f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
-            json=[
-                {
-                    "id": COMPLETED_TASK_DATA["processInstanceId"],
-                    "definitionId": PROCESS_DEFINITION["id"],
-                }
-            ],
-        )
-        m.get(
-            f"{CAMUNDA_URL}history/process-instance?superProcessInstanceId={COMPLETED_TASK_DATA['processInstanceId']}",
-            json=[],
-        )
-        # Mock process definitions
-        m.get(
-            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
-            json=[PROCESS_DEFINITION],
-        )
-        # Mock current process instances
-        m.get(
-            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
-            json=[],
-        )
         # Mock completed tasks from historic process instances
-        m.get(
-            f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
+        m.post(
+            f"{CAMUNDA_URL}history/task",
             json=[COMPLETED_TASK_DATA],
         )
 
@@ -374,34 +324,10 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         )
 
     def test_success_get_user_task_history_if_group(self, m):
-        # Mocks for get_completed_user_tasks_for_zaak
-        m.get(
-            f"{CAMUNDA_URL}history/process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
-            json=[
-                {
-                    "id": COMPLETED_TASK_DATA["processInstanceId"],
-                    "definitionId": PROCESS_DEFINITION["id"],
-                }
-            ],
-        )
-        m.get(
-            f"{CAMUNDA_URL}history/process-instance?superProcessInstanceId={COMPLETED_TASK_DATA['processInstanceId']}",
-            json=[],
-        )
-        # Mock process definitions
-        m.get(
-            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
-            json=[PROCESS_DEFINITION],
-        )
-        # Mock current process instances
-        m.get(
-            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{ZAAK_URL}",
-            json=[],
-        )
         # Mock completed tasks from historic process instances
         group = GroupFactory.create(name="some-group")
-        m.get(
-            f"{CAMUNDA_URL}history/task?processInstanceId={COMPLETED_TASK_DATA['processInstanceId']}&finished=true",
+        m.post(
+            f"{CAMUNDA_URL}history/task",
             json=[{**COMPLETED_TASK_DATA, "assignee": f"group:{group.name}"}],
         )
 

@@ -12,20 +12,14 @@ from zac.camunda.api.data import HistoricUserTask
 from zac.camunda.data import Task
 from zac.camunda.dynamic_forms.context import get_field_definition
 from zac.camunda.forms import extract_task_form_fields, extract_task_form_key
-from zac.camunda.processes import get_process_instances
 
 
-def get_task_history(
-    query: Dict[str, str], client: Optional[Camunda] = None
-) -> Dict[str, Dict]:
+def get_task_history(json: Dict, client: Optional[Camunda] = None) -> Dict[str, Dict]:
     if not client:
         client = get_client()
 
-    results = client.get("history/task", query)
-    tasks = {}
-    for task in results:
-        tasks[task["id"]] = task
-    return tasks
+    results = client.post("history/task", json=json)
+    return results
 
 
 def get_completed_user_tasks_for_zaak(
@@ -41,24 +35,15 @@ def get_completed_user_tasks_for_zaak(
     if not client:
         client = get_client()
 
-    historic_process_instances = get_process_instances(
-        zaak_url, historic=True, nest=True
+    tasks = get_task_history(
+        client=client,
+        json={
+            "processVariables": [
+                {"name": "zaakUrl", "operator": "eq", "value": zaak_url}
+            ],
+            "finished": True,
+        },
     )
-    active_process_instances = get_process_instances(zaak_url, nest=True)
-    all_process_instances = {**historic_process_instances, **active_process_instances}
-
-    tasks = {}
-
-    def _get_historic_tasks(pid: CamundaId):
-        nonlocal client, tasks
-        tasks.update(
-            **get_task_history(
-                {"processInstanceId": pid, "finished": "true"}, client=client
-            )
-        )
-
-    with parallel() as executor:
-        list(executor.map(_get_historic_tasks, all_process_instances.keys()))
 
     # Abuse for factory purposes
     tasks = [
@@ -68,11 +53,11 @@ def get_completed_user_tasks_for_zaak(
                 **task,
                 "created": task["start_time"],
                 "delegation_state": None,
-                "suspended": True,
+                "suspended": False,
                 "form_key": None,
             },
         )
-        for task in tasks.values()
+        for task in tasks
     ]
     return {task.id: task for task in tasks}
 

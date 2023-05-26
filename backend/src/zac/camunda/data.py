@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional
@@ -15,29 +16,51 @@ from .history import get_historical_variable
 
 
 @dataclass
-class ProcessInstance(Model):
+class BaseProcessInstance(Model, ABC):
     id: CamundaId
-    definition_id: str = ""
     business_key: str = ""
     case_instance_id: str = ""
     suspended: bool = False
     tenant_id: str = ""
 
-    definition: str = None
+    definition: Optional[str] = None
     sub_processes: list = field(default_factory=list)
     parent_process: str = None
     messages: list = field(default_factory=list)
     tasks: list = field(default_factory=list)
 
-    historical: bool = False
-
+    @abstractmethod
     def get_variable(self, name: str) -> Any:
+        pass
+
         if self.historical:
             return get_historical_variable(self.id, name)
         return get_process_instance_variable(self.id, name)
 
     def title(self) -> str:
         return self.definition.name or self.definition.key
+
+
+@dataclass
+class ProcessInstance(BaseProcessInstance):
+    definition_id: str = ""
+    historical: bool = False
+
+    def get_variable(self, name: str) -> Any:
+        return get_process_instance_variable(self.id, name)
+
+
+@dataclass
+class HistoricProcessInstance(BaseProcessInstance):
+    process_definition_id: str = ""
+    historical: bool = True
+
+    @property
+    def definition_id(self) -> str:
+        return self.process_definition_id
+
+    def get_variable(self, name: str) -> Any:
+        return get_historical_variable(self.id, name)
 
 
 @dataclass
