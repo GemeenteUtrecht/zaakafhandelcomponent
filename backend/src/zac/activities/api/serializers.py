@@ -4,11 +4,11 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
+from zac.accounts.api.fields import UserSlugRelatedField
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
 from zac.utils.validators import ImmutableFieldValidator
 
-from ...core.api.fields import UserSlugRelatedField
 from ..models import Activity, Event
 from .permission_loaders import add_permissions_for_activity_assignee
 

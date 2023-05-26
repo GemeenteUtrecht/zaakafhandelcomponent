@@ -1,6 +1,4 @@
 from datetime import date, datetime
-from itertools import groupby
-from typing import List
 
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -10,19 +8,12 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.utils import permissions_related_to_user
 from zac.api.polymorphism import GroupPolymorphicSerializer
 from zac.core.permissions import zaken_inzien
-from zac.core.services import (
-    find_zaak,
-    get_informatieobjecttypen_for_zaaktype,
-    get_zaak,
-    get_zaaktypen,
-)
+from zac.core.services import find_zaak, get_zaak
 from zgw.models.zrc import Zaak
 
 from ..constants import (
@@ -81,12 +72,17 @@ class GroupSerializer(serializers.ModelSerializer):
 
 
 class ManageGroupSerializer(GroupSerializer):
-    users = serializers.SlugRelatedField(
-        source="user_set",
-        many=True,
-        read_only=False,
+    from zac.accounts.api.fields import UserSlugRelatedField
+
+    users = UserSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
+        source="user_set",
+        help_text=_(
+            "Users assigned to the review request from within the camunda process."
+        ),
+        many=True,
+        read_only=False,
         required=False,
     )
 
