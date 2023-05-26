@@ -67,8 +67,9 @@ export class ZaakObjectService {
     if (query) {
       if (property) {
         search['data_attrs'] = this._parseQuery(property, query);
+      } else {
+        search['data_icontains'] = query;
       }
-      search['data_icontains'] = query;
     }
 
     return this.http.Post<PaginatedZaakObjects>(endpoint, search);
