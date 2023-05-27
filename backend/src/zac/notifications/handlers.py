@@ -142,9 +142,7 @@ class ZakenHandler:
             was_closed = None if not zaak_document else zaak_document.einddatum
 
             def _lock_review_request(rr: ReviewRequest):
-                lock_review_request(
-                    str(rr.id), data={"lock_reason": "Zaak is gesloten."}
-                )
+                lock_review_request(str(rr.id), lock_reason="Zaak is gesloten.")
 
             # lock all review requests related to zaak
             if is_closed and is_closed != was_closed:
