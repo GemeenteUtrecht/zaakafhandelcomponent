@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from django.conf import settings
 
@@ -10,7 +10,7 @@ from django_camunda.utils import serialize_variable
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 
-from zac.camunda.data import ProcessInstance
+from zac.camunda.data import HistoricProcessInstance, ProcessInstance
 from zac.camunda.messages import get_messages
 from zac.core.camunda.utils import get_process_tasks
 from zac.utils.decorators import cache
@@ -19,7 +19,9 @@ A_DAY = 60 * 60
 
 
 @cache("process-instance:{instance_id}", timeout=2)
-def get_process_instance(instance_id: CamundaId) -> Optional[ProcessInstance]:
+def get_process_instance(
+    instance_id: CamundaId,
+) -> Optional[Union[ProcessInstance, HistoricProcessInstance]]:
     client = get_client()
     try:
         data = client.get(f"process-instance/{instance_id}")
@@ -41,7 +43,9 @@ def get_process_instance(instance_id: CamundaId) -> Optional[ProcessInstance]:
                 "historical": True,
             }
         )
-    return factory(ProcessInstance, data)
+    return factory(
+        ProcessInstance if not data.get("historical") else HistoricProcessInstance, data
+    )
 
 
 def delete_process_instance(instance_id: CamundaId, query_params: Dict = dict):
@@ -58,6 +62,7 @@ def get_process_definitions(
 ) -> List[ProcessDefinition]:
     if not definition_ids:
         return []
+
     client = get_client()
     response = client.get(
         "process-definition", {"processDefinitionIdIn": ",".join(definition_ids)}
@@ -66,8 +71,8 @@ def get_process_definitions(
 
 
 def add_subprocesses(
-    process_instance: ProcessInstance,
-    process_instances: Dict[str, ProcessInstance],
+    process_instance: Union[ProcessInstance, HistoricProcessInstance],
+    process_instances: Dict[str, Union[ProcessInstance, HistoricProcessInstance]],
     client: Camunda,
     historic: bool = False,
     zaak_url: str = "",
@@ -91,7 +96,11 @@ def add_subprocesses(
     # todo restrict for other zaakUrls
     for data in response:
         sub_process_instance = process_instances.get(
-            data["id"], factory(ProcessInstance, {**data, "historical": historic})
+            data["id"],
+            factory(
+                ProcessInstance if not historic else HistoricProcessInstance,
+                {**data, "historical": historic},
+            ),
         )
 
         sub_process_instance.parent_process = process_instance
@@ -116,7 +125,7 @@ def get_process_instances(
     include_bijdragezaak: bool = False,
     exclude_zaak_creation: bool = True,
     nest: bool = False,
-) -> Dict[CamundaId, ProcessInstance]:
+) -> Dict[CamundaId, Union[HistoricProcessInstance, ProcessInstance]]:
     client = get_client()
 
     #  get (historical) process-instances for particular zaak
@@ -134,18 +143,21 @@ def get_process_instances(
     response = client.get(url, query_params)
 
     process_instances = {
-        data["id"]: factory(ProcessInstance, {**data, "historical": historic})
+        data["id"]: factory(
+            ProcessInstance if not historic else HistoricProcessInstance,
+            {**data, "historical": historic},
+        )
         for data in response
     }
 
     if nest:
         # fill in all subprocesses into the dict
-        pids = [process_instance for id, process_instance in process_instances.items()]
+        pis = [process_instance for id, process_instance in process_instances.items()]
 
-        def _add_subprocesses(pid: ProcessInstance):
+        def _add_subprocesses(pi: Union[ProcessInstance, HistoricProcessInstance]):
             nonlocal process_instances, client, historic, include_bijdragezaak, zaak_url
             add_subprocesses(
-                pid,
+                pi,
                 process_instances,
                 client,
                 historic=historic,
@@ -153,16 +165,24 @@ def get_process_instances(
             )
 
         with parallel() as executor:
-            list(executor.map(_add_subprocesses, pids))
+            list(executor.map(_add_subprocesses, pis))
 
-    definition_ids = [p.definition_id for p in process_instances.values()]
+    definition_ids = sorted(
+        list(
+            set(
+                [p.definition_id for p in process_instances.values() if p.definition_id]
+            )
+        )
+    )
     cache_key = hash("".join(definition_ids))
     definitions = {
         definition.id: definition
         for definition in get_process_definitions(definition_ids, cache_key)
     }
     for id, process_instance in process_instances.items():
-        process_instance.definition = definitions[process_instance.definition_id]
+        process_instance.definition = definitions.get(
+            process_instance.definition_id, None
+        )
     return process_instances
 
 
@@ -196,7 +216,9 @@ def get_top_level_process_instances(
     top_level_processes = [
         p for p in process_instances.values() if not p.parent_process
     ]
-    top_definition_ids = {p.definition_id for p in top_level_processes}
+    top_definition_ids = {
+        p.definition_id for p in top_level_processes if p.definition_id
+    }
     def_messages: Dict[str, List[str]] = {}
 
     def _get_messages(definition_id: str):
@@ -207,7 +229,7 @@ def get_top_level_process_instances(
         list(executor.map(_get_messages, top_definition_ids))
 
     for process in top_level_processes:
-        process.messages = def_messages[process.definition_id]
+        process.messages = def_messages.get(process.definition_id, None)
 
     return top_level_processes
 

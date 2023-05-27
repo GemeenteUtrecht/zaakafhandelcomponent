@@ -47,7 +47,6 @@ def get_task_activity_instance_id(task_id: CamundaId) -> str:
     # The task history endpoint exposes the required information.
     # The task endpoint itself does not have this information.
     task_history = get_task_history({"taskId": task_id})
-    task_history = [task for k, task in task_history.items()]
     return str(task_history[0]["activity_instance_id"])
 
 

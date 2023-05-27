@@ -162,7 +162,7 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
                     "owner": None,
                     "parent_task_id": None,
                     "priority": 50,
-                    "process_definition_id": "accorderen:8:c76c8200-c766-11ea-86dc-e22fafe5f404",
+                    "process_definition_id": "accorderen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
                     "process_instance_id": "905abd5f-d26f-11ea-86dc-e22fafe5f404",
                     "task_definition_key": "Activity_0iwp63d",
                     "case_execution_id": None,
@@ -185,7 +185,7 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
                     "owner": None,
                     "parent_task_id": None,
                     "priority": 50,
-                    "process_definition_id": "accorderen:8:c76c8200-c766-11ea-86dc-e22fafe5f403",
+                    "process_definition_id": "accorderen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
                     "process_instance_id": "905abd5f-d26f-11ea-86dc-e22fafe5f403",
                     "task_definition_key": "Activity_0iwp63g",
                     "case_execution_id": None,
@@ -203,7 +203,7 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
             json=[process_instance_data[0]],
         )
         m_request.get(
-            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={','.join([d['id'] for d in process_definition_data])}",
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={','.join([d['id'] for d in sorted(process_definition_data, key=lambda x: x['id'])])}",
             json=process_definition_data,
         )
         for i, process in enumerate(process_instance_data):
