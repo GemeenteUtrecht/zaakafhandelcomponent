@@ -1,5 +1,6 @@
 from django.urls import include, path
 
+from ..management.urls import urls as management_urls
 from .views import (
     CatalogiView,
     CreateZaakRelationView,
@@ -132,4 +133,6 @@ urlpatterns = [
         RolBetrokkeneIdentificatieView.as_view(),
         name="betrokkene-identificatie-retrieve",
     ),
+    # management
+    path("management/", include(management_urls)),
 ]

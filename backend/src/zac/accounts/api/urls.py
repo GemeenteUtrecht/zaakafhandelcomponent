@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
 
+from ..management.urls import urls as management_urls
 from .views import InformatieobjecttypenJSONView, LogoutView, PermissionView
 from .viewsets import (
     AccessRequestViewSet,
@@ -28,6 +29,7 @@ urlpatterns = router.urls + [
         InformatieobjecttypenJSONView.as_view(),
         name="informatieobjecttypen",
     ),
+    path("management/", include(management_urls)),
     path("logout", LogoutView.as_view(), name="logout"),
     path("permissions", PermissionView.as_view(), name="permissions"),
 ]

@@ -130,7 +130,7 @@ class ZaakChecklistView(views.APIView):
     @extend_schema(
         summary=_("Retrieve checklist and related answers."),
         parameters=zaak_checklist_parameters,
-        responses={"200": ChecklistSerializer},
+        responses={200: ChecklistSerializer},
     )
     def get(self, request, *args, **kwargs):
         checklist = self.get_object()
@@ -140,7 +140,7 @@ class ZaakChecklistView(views.APIView):
     @extend_schema(
         summary=_("Create checklist and related answers."),
         parameters=zaak_checklist_parameters,
-        responses={"201": ChecklistSerializer},
+        responses={201: ChecklistSerializer},
     )
     def post(self, request, *args, **kwargs):
         # Permission check
@@ -168,7 +168,7 @@ class ZaakChecklistView(views.APIView):
     @extend_schema(
         summary=_("Update checklist and related answers."),
         parameters=zaak_checklist_parameters,
-        responses={"200": ChecklistSerializer},
+        responses={200: ChecklistSerializer},
     )
     def put(self, request, *args, **kwargs):
         zaak = self.get_zaak()
