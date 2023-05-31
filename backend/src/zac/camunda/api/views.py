@@ -240,7 +240,7 @@ class ProcessInstanceZaakURLView(APIView):
                 description="UUID of process instance",
             ),
         ],
-        responses={"200": ZaakSerializer},
+        responses={200: ZaakSerializer},
     )
     def get(self, request: Request, id: uuid.UUID):
         process_instance = get_process_instance(id)

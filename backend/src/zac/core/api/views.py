@@ -241,7 +241,7 @@ class CreateZaakView(views.APIView):
 
     @extend_schema(
         summary=_("Let users create a ZAAK."),
-        responses={"201": CreatedProcessInstanceSerializer},
+        responses={201: CreatedProcessInstanceSerializer},
     )
     def post(self, request):
         """
@@ -642,7 +642,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     @extend_schema(
         summary=_("List ROLlen of ZAAK."),
         request=ReadRolSerializer,
-        responses={"200": ReadRolSerializer},
+        responses={200: ReadRolSerializer},
     )
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -653,7 +653,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
     @extend_schema(
         summary=_("Add ROL to ZAAK."),
         request=RolSerializer,
-        responses={"201": RolSerializer},
+        responses={201: RolSerializer},
     )
     def post(self, request, *args, **kwargs):
         zaak = self.get_object()
@@ -684,7 +684,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
             )
         ],
         request=DestroyRolSerializer,
-        responses={"204": None},
+        responses={204: None},
     )
     def delete(self, request, *args, **kwargs):
         filterset = self.filterset_class(
@@ -711,7 +711,7 @@ class RolBetrokkeneIdentificatieView(GetZaakMixin, views.APIView):
         summary=_("Retrieve `betrokkene_identificatie` of ZAC `medewerker`."),
         tags=["meta"],
         request=RolMedewerkerSerializer,
-        responses={"200": RolMedewerkerSerializer},
+        responses={200: RolMedewerkerSerializer},
     )
     def post(self, request):
         user = resolve_assignee(
