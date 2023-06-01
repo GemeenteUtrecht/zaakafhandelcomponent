@@ -1,3 +1,4 @@
+from datetime import date
 from io import BytesIO
 from unittest.mock import patch
 from uuid import uuid4
@@ -616,7 +617,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
     endpoint = reverse_lazy("zaak-document")
 
     def setUp(self):
-        self.maxDiff = None
         super().setUp()
 
         Service.objects.create(
@@ -769,6 +769,30 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         # Check that zaakinformatieobjecten url was called
         self.assertTrue(self.ziot_url.url in called_urls)
+
+        # Regression test: check that bestandsomvang is now posted too
+        for req in m.request_history:
+            if (
+                req.url == f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten"
+                and req.method == "POST"
+            ):
+                self.assertEqual(
+                    req.json(),
+                    {
+                        "bronorganisatie": "123456782",
+                        "creatiedatum": date.today().isoformat(),
+                        "auteur": user.username,
+                        "taal": "nld",
+                        "ontvangstdatum": date.today().isoformat(),
+                        "bestandsnaam": file.name,
+                        "formaat": "text/plain",
+                        "inhoud": "Zm9vYmFy",
+                        "titel": file.name,
+                        "bestandsomvang": 6,
+                        "informatieobjecttype": post_data["informatieobjecttype"],
+                        "zaak": post_data["zaak"],
+                    },
+                )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 

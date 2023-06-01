@@ -892,6 +892,7 @@ class ZaakDocumentView(views.APIView):
                         "ascii"
                     ),  # it's base64, so ascii compatible
                     "titel": uploaded_file.name,
+                    "bestandsomvang": uploaded_file.size,
                 }
             )
 

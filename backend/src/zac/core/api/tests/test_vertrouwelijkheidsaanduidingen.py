@@ -1,13 +1,13 @@
 from django.urls import reverse
 
 from rest_framework import status
-from rest_framework.test import APITransactionTestCase
+from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
 from zac.accounts.tests.factories import UserFactory
 
 
-class VertrouwelijkheidsAanduidingenTests(APITransactionTestCase):
+class VertrouwelijkheidsAanduidingenTests(APITestCase):
     def setUp(self):
         super().setUp()
         self.endpoint = reverse("confidentiality-classications")
