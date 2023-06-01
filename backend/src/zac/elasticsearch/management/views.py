@@ -20,6 +20,7 @@ class IndexAllView(APIView):
             "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess. TODO: implement a worker instead of blocking the app."
         ),
         responses={204: None},
+        tags=["management"],
     )
     def post(self, request):
         call_command("index_all")
