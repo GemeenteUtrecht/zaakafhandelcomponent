@@ -347,6 +347,16 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
         )
+        zaak4 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/d66790b7-8b01-4005-a4ba-8fcf2a60f21f",
+            zaaktype=zaaktype_old["url"],
+            identificatie="zaak4",
+            omschrijving="Een zaak met een hele lange beschrijving waar ik op wil zoeken margrietstraat 151515",
+            eigenschappen=[],
+            resultaat=f"{ZAKEN_ROOT}resultaten/f16ce6e3-f6b3-42f9-9c2c-4b6a05f4d7a1",
+        )
 
         ## ZAAKEIGENSCHAPPEN
         zaak1_eigenschap_1 = generate_oas_component(
@@ -397,9 +407,10 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
 
         # Mock zaken objects
-        m.get(zaak1["url"], json=zaak1)
-        m.get(zaak2["url"], json=zaak2)
-        m.get(zaak3["url"], json=zaak3)
+        mock_resource_get(m, zaak1)
+        mock_resource_get(m, zaak2)
+        mock_resource_get(m, zaak3)
+        mock_resource_get(m, zaak4)
 
         # mock zaakobjecten
         m.get(
@@ -414,6 +425,10 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak3['url']}",
             json=paginated_response([]),
         )
+        m.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak4['url']}",
+            json=paginated_response([]),
+        )
         # Mock zaakeigenschappen
         m.get(
             f"{zaak1['url']}/zaakeigenschappen",
@@ -421,6 +436,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         m.get(f"{zaak2['url']}/zaakeigenschappen", json=[])
         m.get(f"{zaak3['url']}/zaakeigenschappen", json=[])
+        m.get(f"{zaak4['url']}/zaakeigenschappen", json=[])
 
         # index documents in es
         zaak1_model = factory(Zaak, zaak1)
@@ -446,6 +462,14 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak3_document = self.create_zaak_document(zaak3_model)
         zaak3_document.zaaktype = self.create_zaaktype_document(zaak3_model.zaaktype)
         zaak3_document.save()
+        self.refresh_index()
+
+        zaak4_model = factory(Zaak, zaak4)
+        zaak4_model.deadline = datetime.date(2020, 1, 4)
+        zaak4_model.zaaktype = factory(ZaakType, zaaktype_old)
+        zaak4_document = self.create_zaak_document(zaak4_model)
+        zaak4_document.zaaktype = self.create_zaaktype_document(zaak4_model.zaaktype)
+        zaak4_document.save()
         self.refresh_index()
 
         with self.subTest("Search without eigenschappen"):
@@ -490,27 +514,30 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             response = self.client.post(self.endpoint)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             data = response.json()
-            self.assertEqual(data["count"], 3)
-            self.assertEqual(data["results"][0]["url"], zaak3["url"])
-            self.assertEqual(data["results"][1]["url"], zaak2["url"])
-            self.assertEqual(data["results"][2]["url"], zaak1["url"])
+            self.assertEqual(data["count"], 4)
+            self.assertEqual(data["results"][0]["url"], zaak4["url"])
+            self.assertEqual(data["results"][1]["url"], zaak3["url"])
+            self.assertEqual(data["results"][2]["url"], zaak2["url"])
+            self.assertEqual(data["results"][3]["url"], zaak1["url"])
 
         with self.subTest("Search with ordering"):
             response = self.client.post(self.endpoint + "?ordering=-deadline")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             data = response.json()
-            self.assertEqual(data["count"], 3)
-            self.assertEqual(data["results"][0]["url"], zaak3["url"])
-            self.assertEqual(data["results"][1]["url"], zaak2["url"])
-            self.assertEqual(data["results"][2]["url"], zaak1["url"])
+            self.assertEqual(data["count"], 4)
+            self.assertEqual(data["results"][0]["url"], zaak4["url"])
+            self.assertEqual(data["results"][1]["url"], zaak3["url"])
+            self.assertEqual(data["results"][2]["url"], zaak2["url"])
+            self.assertEqual(data["results"][3]["url"], zaak1["url"])
 
             response = self.client.post(self.endpoint + "?ordering=deadline")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             data = response.json()
-            self.assertEqual(data["count"], 3)
+            self.assertEqual(data["count"], 4)
             self.assertEqual(data["results"][0]["url"], zaak1["url"])
             self.assertEqual(data["results"][1]["url"], zaak2["url"])
             self.assertEqual(data["results"][2]["url"], zaak3["url"])
+            self.assertEqual(data["results"][3]["url"], zaak4["url"])
 
         with self.subTest("Search on object"):
             data = {"object": zaakobject["object"]}
@@ -532,6 +559,34 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
             data = response.json()
-            self.assertEqual(data["count"], 2)
-            self.assertEqual(data["results"][1]["url"], zaak1["url"])
-            self.assertEqual(data["results"][0]["url"], zaak3["url"])
+            self.assertEqual(data["count"], 3)
+            self.assertEqual(data["results"][2]["url"], zaak1["url"])
+            self.assertEqual(data["results"][1]["url"], zaak3["url"])
+            self.assertEqual(data["results"][0]["url"], zaak4["url"])
+
+        with self.subTest("Search without eigenschappen"):
+            data = {
+                "identificatie": "zaak1",
+                "zaaktypen": {
+                    "omschrijving": "ZT1",
+                    "catalogus": CATALOGUS_URL,
+                },
+                "omschrijving": "some",
+            }
+
+            response = self.client.post(self.endpoint, data=data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            results = response.json()
+            self.assertEqual(results["count"], 1)
+            self.assertEqual(results["results"][0]["url"], zaak1["url"])
+
+        with self.subTest("Search on a very long omschrijving"):
+            data = {
+                "omschrijving": "margrietstraat 151515",
+            }
+
+            response = self.client.post(self.endpoint, data=data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            results = response.json()
+            self.assertEqual(results["count"], 1)
+            self.assertEqual(results["results"][0]["url"], zaak4["url"])
