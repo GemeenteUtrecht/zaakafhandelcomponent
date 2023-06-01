@@ -1,12 +1,12 @@
 from django.urls import reverse_lazy
 
-from rest_framework.test import APITestCase, APITransactionTestCase
+from rest_framework.test import APITestCase
 
 from zac.accounts.models import User
 from zac.accounts.tests.factories import ApplicationTokenFactory, UserFactory
 
 
-class RolBetrokkeneIdentificatieResponseTests(APITransactionTestCase):
+class RolBetrokkeneIdentificatieResponseTests(APITestCase):
     """
     Test the API response body for betrokkene-identificatie-retrieve-url endpoint.
 
