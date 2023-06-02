@@ -22,7 +22,6 @@ ngram_tokenizer = tokenizer(
     min_gram=settings.MIN_GRAM,
     max_gram=settings.MAX_GRAM,
 )
-
 ngram_analyzer = analyzer(
     "ngram_analyzer",
     tokenizer=ngram_tokenizer,
@@ -40,10 +39,10 @@ strip_leading_zeros_in_zaakidentificatie_analyzer = analyzer(
     filter=["lowercase"],
     char_filter=[strip_leading_zeros_in_zaakidentificatie_filter],
 )
-truncate_standard_analyzer = analyzer(
+standard_dutch_analyzer = analyzer(
     "standard",
     tokenizer="standard",
-    filter=["lowercase", dutch_stop_filter, truncate_filter],
+    filter=["lowercase", dutch_stop_filter],
 )
 
 
@@ -99,7 +98,7 @@ class ZaakDocument(Document):
     omschrijving = field.Text(
         fields={"keyword": field.Keyword()},
         analyzer=ngram_analyzer,
-        search_analyzer=truncate_standard_analyzer,
+        search_analyzer=standard_dutch_analyzer,
     )
     vertrouwelijkheidaanduiding = field.Text(fields={"keyword": field.Keyword()})
     va_order = field.Integer()
@@ -121,6 +120,11 @@ class ZaakDocument(Document):
             "index.mapping.ignore_malformed": True,
             "max_ngram_diff": settings.MAX_GRAM - settings.MIN_GRAM,
         }
+        analyzers = [
+            ngram_analyzer,
+            standard_dutch_analyzer,
+            strip_leading_zeros_in_zaakidentificatie_analyzer,
+        ]
 
     class Meta:
         dynamic_templates = MetaField(
@@ -180,7 +184,7 @@ class ObjectDocument(Document):
             "index.mapping.ignore_malformed": True,
             "max_ngram_diff": settings.MAX_GRAM - settings.MIN_GRAM,
         }
-        analyzers = [ngram_analyzer, truncate_standard_analyzer]
+        analyzers = [ngram_analyzer, standard_dutch_analyzer]
 
     class Meta:
         dynamic_templates = MetaField(
@@ -192,7 +196,7 @@ class ObjectDocument(Document):
                         "mapping": {
                             "type": "text",
                             "analyzer": ngram_analyzer,
-                            "search_analyzer": truncate_standard_analyzer,
+                            "search_analyzer": standard_dutch_analyzer,
                             "copy_to": "record_data_text.*",
                         },
                     }
@@ -203,7 +207,7 @@ class ObjectDocument(Document):
                         "mapping": {
                             "type": "text",
                             "analyzer": ngram_analyzer,
-                            "search_analyzer": truncate_standard_analyzer,
+                            "search_analyzer": standard_dutch_analyzer,
                         },
                     },
                 },
@@ -215,7 +219,7 @@ class InformatieObjectDocument(Document):
     url = field.Keyword()
     titel = field.Text(
         analyzer=ngram_analyzer,
-        search_analyzer=truncate_standard_analyzer,
+        search_analyzer=standard_dutch_analyzer,
     )
     related_zaken = Nested(RelatedZaakDocument)
 
