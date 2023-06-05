@@ -141,6 +141,10 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
     def test_create_object_relation(self, m):
         mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
         mock_resource_get(m, self.zaak)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
         m.post(
             f"{ZRC_ROOT}zaakobjecten",
             status_code=201,
@@ -174,6 +178,10 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
     def test_create_object_relation_cache_invalidation(self, m):
         mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
         mock_resource_get(m, self.zaak)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
         m.post(
             f"{ZRC_ROOT}zaakobjecten",
             status_code=201,
@@ -229,6 +237,10 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
     def test_create_object_relation_invalid_data(self, m):
         mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
         mock_resource_get(m, self.zaak)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
         m.post(
             f"{ZRC_ROOT}zaakobjecten",
             status_code=400,
@@ -377,6 +389,10 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
 
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
@@ -401,6 +417,10 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
         m.post(f"{ZRC_ROOT}zaakobjecten", status_code=201, json=self.zaak_object)
 
         user = UserFactory.create()
@@ -426,6 +446,10 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
         mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
         m.post(f"{ZRC_ROOT}zaakobjecten", status_code=201, json=self.zaak_object)
 
         user = UserFactory.create()
@@ -451,6 +475,10 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
         mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
         m.post(f"{ZRC_ROOT}zaakobjecten", status_code=201, json=self.zaak_object)
 
         user = UserFactory.create()
