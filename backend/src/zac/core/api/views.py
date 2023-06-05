@@ -1382,18 +1382,23 @@ class ZaakObjectChangeView(views.APIView):
 
     @extend_schema(
         summary=_("Create ZAAKOBJECT."),
-        description=_("Relate an OBJECT to a ZAAK."),
+        description=_(
+            "Relate an OBJECT to a ZAAK. OBJECT-ZAAK relation has to be unique or a HTTP 400 error will be raised."
+        ),
         responses={(201, "application/json"): ZaakObjectProxySerializer},
         tags=["objects"],
     )
     def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         # check permissions
-        zaak_url = request.data["zaak"]
+        zaak_url = serializer.validated_data["zaak"]
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(self.request, zaak)
 
         try:
-            created_zaakobject = relate_object_to_zaak(request.data)
+            created_zaakobject = relate_object_to_zaak(serializer.validated_data)
         except ClientError as exc:
             raise ValidationError(detail=exc.args)
 

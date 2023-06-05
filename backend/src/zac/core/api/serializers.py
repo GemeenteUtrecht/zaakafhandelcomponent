@@ -70,6 +70,7 @@ from zac.core.services import (
     get_roltypen,
     get_statustypen,
     get_zaak,
+    get_zaakobjecten,
     get_zaaktypen,
 )
 from zac.core.utils import build_absolute_url
@@ -1435,6 +1436,22 @@ class ObjectFilterProxySerializer(ProxySerializer):
 class ZaakObjectProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["ZRC_API_SCHEMA"]
     PROXY_SCHEMA_PATH = ["components", "schemas", "ZaakObject"]
+
+    def validate(self, data):
+        zaak = get_zaak(zaak_url=self.initial_data["zaak"])
+        zaakobjecten = get_zaakobjecten(zaak)
+        for zo in zaakobjecten:
+            if all(
+                [
+                    self.initial_data["object"],
+                    zo["object"],
+                    zo["object"] == self.initial_data["object"],
+                ]
+            ):
+                raise serializers.ValidationError(
+                    _("OBJECT is already related to ZAAK.")
+                )
+        return self.initial_data
 
 
 class RecentlyViewedSerializer(serializers.Serializer):
