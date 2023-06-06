@@ -172,7 +172,6 @@ export class ZaakService {
     return this.http.Get<UserPermission[]>(endpoint);
   }
 
-  @CachedObservableMethod('ZaakService.listRelatedCases')
   listRelatedCases(bronorganisatie: string, identificatie: string): Observable<RelatedCase[]> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/related-cases`);
     return this.http.Get<RelatedCase[]>(endpoint);
