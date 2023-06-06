@@ -55,7 +55,7 @@ class Command(BaseCommand):
                 "zaaktype_omschrijving": zaaktype.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             }
-            # document_policies = generate_document_policies(policy)
+            document_policies = generate_document_policies(policy)
             for role in roles:
                 obj, created = BlueprintPermission.objects.get_or_create(
                     role=role,
@@ -65,12 +65,14 @@ class Command(BaseCommand):
                 if created:
                     added += 1
 
-                # for policy in document_policies:
-                #     permission, created = BlueprintPermission.objects.get_or_create(
-                #         role=role,
-                #         object_type=PermissionObjectTypeChoices.document,
-                #         policy=policy,
-                #     )
-                #     if created:
-                #         added += 1
-        self.stdout.write(f" {added} blueprint permissions for zaaktypen are added")
+                for policy in document_policies:
+                    permission, created = BlueprintPermission.objects.get_or_create(
+                        role=role,
+                        object_type=PermissionObjectTypeChoices.document,
+                        policy=policy,
+                    )
+                    if created:
+                        added += 1
+        self.stdout.write(
+            f" {added} blueprint permissions for zaak- and informatieobjecttypen are added"
+        )
