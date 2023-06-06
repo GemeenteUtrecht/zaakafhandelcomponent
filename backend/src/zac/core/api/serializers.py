@@ -1444,8 +1444,8 @@ class ZaakObjectProxySerializer(ProxySerializer):
             if all(
                 [
                     self.initial_data["object"],
-                    zo["object"],
-                    zo["object"] == self.initial_data["object"],
+                    zo.object,
+                    zo.object == self.initial_data["object"],
                 ]
             ):
                 raise serializers.ValidationError(

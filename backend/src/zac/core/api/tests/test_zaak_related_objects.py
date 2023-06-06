@@ -175,6 +175,45 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
+    def test_create_object_relation_fail_not_unique(self, m):
+        mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
+        mock_resource_get(m, self.zaak)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten",
+            json=paginated_response(
+                [
+                    {
+                        "url": f"{ZRC_ROOT}zaakobjecten/bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                        "uuid": "bcd3f232-2b6b-4830-95a2-b40bc1ee5a73",
+                        "zaak": self.zaak["url"],
+                        "object": f"{OBJECT_1['url']}",
+                        "objectType": "overige",
+                        "objectTypeOverige": "Laadpaal uitbreiding",
+                        "relatieomschrijving": "",
+                        "objectIdentificatie": {
+                            "overigeData": OBJECT_1["record"]["data"]
+                        },
+                    }
+                ]
+            ),
+        )
+
+        response = self.client.post(
+            reverse(
+                "zaakobject-create",
+            ),
+            data={
+                "object": OBJECT_1["url"],
+                "zaak": self.zaak["url"],
+            },
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
     def test_create_object_relation_cache_invalidation(self, m):
         mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
         mock_resource_get(m, self.zaak)
