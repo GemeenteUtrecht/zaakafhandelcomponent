@@ -188,6 +188,15 @@ export class ZaakService {
   }
 
   /**
+   * Deletes a case relation.
+   * @param {Object} data
+   */
+  deleteRelatedCase(formData) {
+    const endpoint = encodeURI("/api/core/cases/related-case");
+    return this.http.Delete<any>(endpoint, formData)
+  }
+
+  /**
    * List related objects of a case.
    * @param {string} bronorganisatie
    * @param {string} identificatie

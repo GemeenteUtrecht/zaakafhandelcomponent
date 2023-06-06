@@ -14,7 +14,7 @@ export class GerelateerdeZakenComponent implements OnChanges {
 
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van gerelateerde zaken.';
 
-  tableData: Table = new Table(['Zaaknummer', 'Zaaktype', 'Omschrijving', 'Aard relatie'], []);
+  tableData: Table = new Table(['Zaaknummer', 'Zaaktype', 'Omschrijving', 'Aard relatie', ''], []);
 
   data: any;
   isLoading = true;
@@ -31,6 +31,13 @@ export class GerelateerdeZakenComponent implements OnChanges {
     this.fetchRelatedCases();
   }
 
+  //
+  // Context
+  //
+
+  /**
+   * Retrieve all related cases
+   */
   fetchRelatedCases() {
     this.isLoading = true;
     this.zaakService.listRelatedCases(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
@@ -40,6 +47,11 @@ export class GerelateerdeZakenComponent implements OnChanges {
     }, this.reportError.bind(this))
   }
 
+  /**
+   * Creates table layout for related cases
+   * @param data
+   * @returns {any}
+   */
   formatTableData(data) {
     return data.map((element: RelatedCase) => {
       const eigenschappenArray = [
@@ -57,12 +69,43 @@ export class GerelateerdeZakenComponent implements OnChanges {
           zaaktype: element.zaak.zaaktype.omschrijving ? element.zaak.zaaktype.omschrijving : '-',
           omschrijving: element.zaak.omschrijving,
           aardRelatie: element.aardRelatie,
+          verwijderen: {
+            type: 'button',
+            label: 'Verwijderen',
+            value: element.zaak.url,
+          },
         },
         expandData: eigenschappen
       }
     })
   }
 
+  //
+  // Events
+  //
+
+  /**
+   * Removes a related case on button click
+   * @param event
+   */
+  onTableButton(event) {
+    if (event.verwijderen) {
+      const formData = {
+        bijdragezaak: event.verwijderen,
+        hoofdzaak: this.zaak.url
+      }
+      this.zaakService.deleteRelatedCase(formData).subscribe(() => {
+        this.fetchRelatedCases();
+      }, error => {
+        this.reportError(error);
+      })
+    }
+  }
+
+  /**
+   * Opens modal
+   * @param {string} id
+   */
   openModal(id: string) {
     this.modalService.open(id);
   }

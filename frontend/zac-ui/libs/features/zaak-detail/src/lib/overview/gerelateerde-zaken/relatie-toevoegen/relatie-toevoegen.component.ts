@@ -75,7 +75,7 @@ export class RelatieToevoegenComponent implements OnInit {
     return [
       {
         label: 'Identificatie',
-        name: 'relation_zaak',
+        name: 'bijdragezaak',
         required: true,
         choices: (zaak) ? [{value: zaak.url, label: zaak.identificatie}] : [],
         onChange: this.updateZaakValue.bind(this),
@@ -96,7 +96,7 @@ export class RelatieToevoegenComponent implements OnInit {
         value: 'onderwerp',
       },
       {
-        name: 'main_zaak',
+        name: 'hoofdzaak',
         type: 'hidden',
         value: this.mainZaakUrl,
       },
@@ -181,9 +181,9 @@ export class RelatieToevoegenComponent implements OnInit {
    */
   submitForm(formData): void {
     // Update due to change to value format.
-    formData.relation_zaak = (typeof formData.relation_zaak === 'string')
-      ? formData.relation_zaak
-      : formData.relation_zaak?.value;
+    formData.bijdragezaak = (typeof formData.bijdragezaak === 'string')
+      ? formData.bijdragezaak
+      : formData.bijdragezaak?.value;
 
     this.isLoading = true;
     this.zaakService.addRelatedCase(formData).subscribe(() => {
