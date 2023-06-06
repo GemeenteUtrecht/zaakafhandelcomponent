@@ -972,6 +972,7 @@ class RelatedZaakDetailSerializer(APIModelSerializer):
             "resultaat",
             "status",
             "zaaktype",
+            "url",
         )
 
 
