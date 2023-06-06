@@ -42,8 +42,8 @@ export class ApplicationHttpClient {
     return this.http.patch<T>(endPoint, params, options);
   }
 
-  public Delete<T>(endPoint: string, options?: IRequestOptions): Observable<T> {
-    options = { withCredentials: true, ...options }
+  public Delete<T>(endPoint: string, params?: any, options?: IRequestOptions): Observable<T> {
+    options = { withCredentials: true, body: params, ...options}
     return this.http.delete<T>(endPoint, options);
   }
 }

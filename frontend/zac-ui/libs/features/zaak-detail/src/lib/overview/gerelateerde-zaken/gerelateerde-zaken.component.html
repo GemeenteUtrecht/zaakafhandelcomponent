@@ -23,6 +23,7 @@
     <gu-table *ngIf="(data.length > 0) && tableData"
               [table]="tableData"
               [expandable]="true"
+              (buttonOutput)="onTableButton($event)"
               class="mb-4">
     </gu-table>
     <p *ngIf="(data.length === 0)">Er zijn geen gerelateerde zaken.</p>

@@ -172,7 +172,6 @@ export class ZaakService {
     return this.http.Get<UserPermission[]>(endpoint);
   }
 
-  @CachedObservableMethod('ZaakService.listRelatedCases')
   listRelatedCases(bronorganisatie: string, identificatie: string): Observable<RelatedCase[]> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/related-cases`);
     return this.http.Get<RelatedCase[]>(endpoint);
@@ -185,6 +184,15 @@ export class ZaakService {
   @ClearCacheOnMethodCall('ZaakService.listRelatedCases')
   addRelatedCase(data: { relationZaak: string, aardRelatie: string, mainZaak: string }): Observable<{ relationZaak: string, aardRelatie: string, mainZaak: string }> {
     return this.http.Post<{ relationZaak: string, aardRelatie: string, mainZaak: string }>(encodeURI("/api/core/cases/related-case"), data);
+  }
+
+  /**
+   * Deletes a case relation.
+   * @param {Object} data
+   */
+  deleteRelatedCase(formData) {
+    const endpoint = encodeURI("/api/core/cases/related-case");
+    return this.http.Delete<any>(endpoint, formData)
   }
 
   /**

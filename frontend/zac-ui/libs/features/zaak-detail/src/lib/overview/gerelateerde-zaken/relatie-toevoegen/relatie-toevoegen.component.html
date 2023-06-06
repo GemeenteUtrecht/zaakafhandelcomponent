@@ -6,7 +6,7 @@
       </div>
     </gu-tab>
 
-    <gu-tab label="Zoeken">
+    <gu-tab label="Zoek een zaak">
       <div class="p-4">
         <gu-property-search-form (loadResult)="onLoadResult($event)" (resultLength)="onResultLength($event)"></gu-property-search-form>
         <gu-search-results [controlled]="true" [resultData]="resultData" [resultLength]="resultLength" (tableOutput)="onTableOutput($event)"></gu-search-results>
