@@ -2,6 +2,7 @@ from django.test import TestCase
 
 import jwt
 import requests_mock
+from zds_client.auth import JWT_ALG
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
@@ -73,7 +74,9 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         # inspect the user_id claim
         token = header.split(" ")[1]
-        claims = jwt.decode(token, verify=False, algorithms=["RS256"])
+        claims = jwt.decode(
+            token, algorithms=[JWT_ALG], options={"verify_signature": False}
+        )
         self.assertEqual(claims["user_id"], "zac")
 
         self.assertEqual(len(m.request_history), 1)
@@ -185,7 +188,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         # Check user claim is in headers
         jwt_token = m.last_request.headers["Authorization"].split(" ")[-1]
         client = get_client()
-        claims = jwt.decode(jwt_token, client.auth.secret, algorithms=["RS256"])
+        claims = jwt.decode(
+            jwt_token,
+            client.auth.secret,
+            algorithms=[JWT_ALG],
+            options={"verify_signature": False},
+        )
+
         self.assertEqual(claims["user_id"], user.username)
 
     def test_lock_review_request(self, m):
