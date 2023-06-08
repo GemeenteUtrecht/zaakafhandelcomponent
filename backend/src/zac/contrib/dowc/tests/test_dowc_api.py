@@ -8,7 +8,6 @@ import requests_mock
 from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zds_client.auth import JWT_ALG
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
@@ -132,9 +131,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
 
         # Inspect the user_id claim
         token = header.split(" ")[1]
-        claims = jwt.decode(
-            token, algorithms=[JWT_ALG], options={"verify_signature": False}
-        )
+        claims = jwt.decode(token, verify=False)
         self.assertEqual(claims["user_id"], self.user.username)
         self.assertEqual(claims["email"], self.user.email)
         self.assertEqual(len(m.request_history), 1)
