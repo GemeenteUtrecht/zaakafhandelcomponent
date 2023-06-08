@@ -215,7 +215,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
         auth_header = m.last_request.headers["Authorization"]
         self.assertTrue(auth_header.startswith("Bearer "))
         token = auth_header.split(" ")[1]
-        claims = jwt.decode(token, verify=False)
+        claims = jwt.decode(token, verify=False, algorithms=["RS256"])
         self.assertEqual(claims["client_id"], "zac")
         self.assertEqual(claims["user_id"], "some-author")
         self.assertEqual(

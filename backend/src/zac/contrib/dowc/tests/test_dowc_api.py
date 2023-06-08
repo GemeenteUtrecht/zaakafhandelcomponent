@@ -131,7 +131,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
 
         # Inspect the user_id claim
         token = header.split(" ")[1]
-        claims = jwt.decode(token, verify=False)
+        claims = jwt.decode(token, verify=False, algorithms=["RS256"])
         self.assertEqual(claims["user_id"], self.user.username)
         self.assertEqual(claims["email"], self.user.email)
         self.assertEqual(len(m.request_history), 1)
