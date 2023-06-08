@@ -94,6 +94,14 @@ CACHES = {
             "IGNORE_EXCEPTIONS": True,
         },
     },
+    "oidc": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{config('CACHE_OIDC', config('CACHE_OAS', 'localhost:6379/1'))}",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,
+        },
+    },
     # cache that resets itself after every request
     "request": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -129,6 +137,8 @@ INSTALLED_APPS = [
     "import_export",
     "django_auth_adfs",
     "django_auth_adfs_db",
+    "mozilla_django_oidc",
+    "mozilla_django_oidc_db",
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
@@ -170,6 +180,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "mozilla_django_oidc_db.middleware.SessionRefresh",
     "zac.accounts.scim.middleware.SCIMAuthMiddleware",
     "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -327,6 +338,11 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "mozilla_django_oidc": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
     },
 }
 
@@ -349,6 +365,7 @@ AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
     # authentication
     "django_auth_adfs_db.backends.AdfsAuthCodeBackend",
+    "mozilla_django_oidc_db.backends.OIDCAuthenticationBackend",
     "zac.accounts.backends.UserModelEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
     # authorization
@@ -418,6 +435,14 @@ CSRF_TRUSTED_ORIGINS = [
 # DJANGO AUTH ADFS
 #
 AUTH_ADFS = {"SETTINGS_CLASS": "django_auth_adfs_db.settings.Settings"}
+
+#
+# MOZILLA DJANGO OIDC DB
+#
+OIDC_AUTHENTICATE_CLASS = "mozilla_django_oidc_db.views.OIDCAuthenticationRequestView"
+OIDC_CALLBACK_CLASS = "mozilla_django_oidc_db.views.OIDCCallbackView"
+MOZILLA_DJANGO_OIDC_DB_CACHE = "oidc"
+MOZILLA_DJANGO_OIDC_DB_CACHE_TIMEOUT = 1
 
 #
 # DRF
