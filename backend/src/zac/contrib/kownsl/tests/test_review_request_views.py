@@ -7,6 +7,7 @@ import requests_mock
 from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zds_client.auth import JWT_ALG
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
@@ -215,7 +216,9 @@ class ViewTests(ClearCachesMixin, APITestCase):
         auth_header = m.last_request.headers["Authorization"]
         self.assertTrue(auth_header.startswith("Bearer "))
         token = auth_header.split(" ")[1]
-        claims = jwt.decode(token, verify=False)
+        claims = jwt.decode(
+            token, algorithms=[JWT_ALG], options={"verify_signature": False}
+        )
         self.assertEqual(claims["client_id"], "zac")
         self.assertEqual(claims["user_id"], "some-author")
         self.assertEqual(
