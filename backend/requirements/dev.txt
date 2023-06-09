@@ -108,7 +108,7 @@ django-appconf==1.0.3
     # via
     #   -r requirements/ci.txt
     #   django-axes
-django-auth-adfs==1.11.6
+django-auth-adfs==1.7.0
     # via
     #   -r requirements/ci.txt
     #   django-auth-adfs-db

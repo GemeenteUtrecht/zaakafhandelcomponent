@@ -87,6 +87,7 @@ if not config("USE_REDIS_CACHE", default=False):
         "axes": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
         "oas": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
         "sessions": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+        "oidc": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
         "request": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
             "LOCATION": "request",

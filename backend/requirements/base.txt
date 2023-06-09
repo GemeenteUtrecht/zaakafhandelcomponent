@@ -68,7 +68,7 @@ django-admin-index==2.0.2
     # via -r requirements/base.in
 django-appconf==1.0.3
     # via django-axes
-django-auth-adfs==1.6.1
+django-auth-adfs==1.7.0
     # via django-auth-adfs-db
 django-auth-adfs-db==0.3.0
     # via -r requirements/base.in
