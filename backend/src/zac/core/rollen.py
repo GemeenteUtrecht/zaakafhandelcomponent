@@ -73,21 +73,36 @@ def get_naam_natuurlijkpersoon(rol: Rol) -> Optional[str]:
 
 
 def get_naam_medewerker(rol: Rol) -> Optional[str]:
+    from zac.core.camunda.utils import resolve_assignee
+
     if rol.betrokkene:
         logger.warning(
             "Don't know how to handle medewerker URLs (got %s)", rol.betrokkene
         )
         return f"NotImplementedError: {rol.betrokkene}"
 
-    bits = [
-        rol.betrokkene_identificatie["voorletters"],
-        rol.betrokkene_identificatie["voorvoegsel_achternaam"],
-        rol.betrokkene_identificatie["achternaam"],
-    ]
-    return (
-        " ".join([bit for bit in bits if bit != ""]).strip()
-        or rol.betrokkene_identificatie["identificatie"]
-    )
+    if username := rol.betrokkene_identificatie.get("identificatie"):
+        # Identificatie of a medewerker only allows voorletters, voorvoegsel_achternaam and achternaam.
+        # This is not unique enough and so we catch the gebruiker by its identificatie whenever possible.
+        try:
+            user = resolve_assignee(username)
+            name = user.get_full_name()
+        except RuntimeError:
+            logger.warning(
+                "Could not resolve betrokkene_identificatie.identificatie to a user. Reverting to information in betrokkene_identificatie.",
+                exc_info=True,
+            )
+            bits = [
+                rol.betrokkene_identificatie["voorletters"],
+                rol.betrokkene_identificatie["voorvoegsel_achternaam"],
+                rol.betrokkene_identificatie["achternaam"],
+            ]
+            name = (
+                " ".join([bit for bit in bits if bit != ""]).strip()
+                or rol.betrokkene_identificatie["identificatie"]
+            )
+
+    return name
 
 
 def get_naam_organisatorische_eenheid(rol: Rol) -> str:

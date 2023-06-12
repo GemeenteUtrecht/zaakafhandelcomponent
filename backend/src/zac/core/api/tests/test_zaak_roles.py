@@ -41,7 +41,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.user = SuperUserFactory.create()
+        cls.user = SuperUserFactory.create(first_name="Hello", last_name="Goodbye")
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -95,7 +95,8 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
-    def test_get_zaak_rollen(self, m):
+    @patch("zac.core.rollen.logger")
+    def test_get_zaak_rollen(self, m, mock_logger):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
@@ -141,6 +142,58 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             }
         ]
         self.assertEqual(response_data, expected)
+        mock_logger.warning.called_once_with(
+            "Could not resolve betrokkene_identificatie.identificatie to a user. Reverting to information in betrokkene_identificatie."
+        )
+
+    @patch("zac.core.rollen.logger")
+    def test_get_zaak_rollen_name_from_user_resolve_assignee(self, m, mock_logger):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        medewerker = generate_oas_component(
+            "zrc",
+            "schemas/RolMedewerker",
+            identificatie=f"user:{self.user}",
+            achternaam="Orange",
+            voorletters="W.",
+            voorvoegselAchternaam="van",
+        )
+
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkene="",
+            betrokkeneType="medewerker",
+            roltype=self.roltype["url"],
+            betrokkeneIdentificatie=medewerker,
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+        mock_resource_get(m, self.roltype)
+        response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        expected = [
+            {
+                "url": rol["url"],
+                "betrokkeneType": "medewerker",
+                "betrokkeneTypeDisplay": "Medewerker",
+                "omschrijving": rol["omschrijving"],
+                "omschrijvingGeneriek": rol["omschrijvingGeneriek"],
+                "roltoelichting": rol["roltoelichting"],
+                "registratiedatum": rol["registratiedatum"].replace("+00:00", "Z"),
+                "name": "Hello Goodbye",
+                "identificatie": f"user:{self.user}",
+                "roltypeOmschrijving": self.roltype["omschrijving"],
+            }
+        ]
+        self.assertEqual(response_data, expected)
+        mock_logger.assert_not_called()
 
     def test_get_rollen_no_roles(self, m):
         with patch("zac.core.api.views.get_rollen", return_value=[]):
@@ -155,6 +208,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_create_rol(self, m):
+        self.maxDiff = None
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(
@@ -220,8 +274,8 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             {
                 "betrokkene": "",
                 "betrokkene_identificatie": {
-                    "voorletters": "",
-                    "achternaam": "",
+                    "voorletters": "H.",
+                    "achternaam": "Goodbye",
                     "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
                     "voorvoegsel_achternaam": "",
                 },
