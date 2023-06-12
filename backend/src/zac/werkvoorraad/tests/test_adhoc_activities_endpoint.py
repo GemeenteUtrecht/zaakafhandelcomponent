@@ -106,10 +106,12 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                     }
                 ],
                 "zaak": {
-                    "url": self.zaak["url"],
                     "identificatie": self.zaak["identificatie"],
                     "bronorganisatie": self.zaak["bronorganisatie"],
+                    "url": self.zaak["url"],
                     "status": None,
+                    "zaaktype": {},
+                    "omschrijving": self.zaak["omschrijving"],
                 },
             },
         )
@@ -147,15 +149,23 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                         }
                     ],
                     "zaak": {
-                        "url": self.zaak["url"],
                         "identificatie": self.zaak["identificatie"],
                         "bronorganisatie": self.zaak["bronorganisatie"],
+                        "url": self.zaak["url"],
                         "status": {
                             "datumStatusGezet": None,
                             "statustoelichting": None,
                             "statustype": None,
                             "url": None,
                         },
+                        "zaaktype": {
+                            "url": self.zaaktype["url"],
+                            "catalogus": self.zaaktype["catalogus"],
+                            "omschrijving": self.zaaktype["omschrijving"],
+                            "identificatie": self.zaaktype["identificatie"],
+                        },
+                        "omschrijving": self.zaak["omschrijving"],
+                        "deadline": "2021-02-17T00:00:00Z",
                     },
                 }
             ],
@@ -245,15 +255,23 @@ class AdhocActivitiesTests(ESMixin, ClearCachesMixin, APITestCase):
                         }
                     ],
                     "zaak": {
-                        "url": self.zaak["url"],
                         "identificatie": self.zaak["identificatie"],
                         "bronorganisatie": self.zaak["bronorganisatie"],
+                        "url": self.zaak["url"],
                         "status": {
                             "datumStatusGezet": None,
                             "statustoelichting": None,
                             "statustype": None,
                             "url": None,
                         },
+                        "zaaktype": {
+                            "url": self.zaaktype["url"],
+                            "catalogus": self.zaaktype["catalogus"],
+                            "omschrijving": self.zaaktype["omschrijving"],
+                            "identificatie": self.zaaktype["identificatie"],
+                        },
+                        "omschrijving": self.zaak["omschrijving"],
+                        "deadline": "2021-02-17T00:00:00Z",
                     },
                 }
             ],

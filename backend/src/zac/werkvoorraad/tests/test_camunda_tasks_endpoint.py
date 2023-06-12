@@ -132,8 +132,8 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 {
                     "task": TASK_DATA["name"],
                     "zaak": {
-                        "bronorganisatie": self.zaak["bronorganisatie"],
                         "identificatie": self.zaak["identificatie"],
+                        "bronorganisatie": self.zaak["bronorganisatie"],
                         "url": self.zaak["url"],
                         "status": {
                             "datumStatusGezet": None,
@@ -141,6 +141,14 @@ class CamundaTasksTests(ESMixin, APITestCase):
                             "statustype": None,
                             "url": None,
                         },
+                        "zaaktype": {
+                            "url": self.zaaktype["url"],
+                            "catalogus": self.zaaktype["catalogus"],
+                            "omschrijving": self.zaaktype["omschrijving"],
+                            "identificatie": self.zaaktype["identificatie"],
+                        },
+                        "omschrijving": self.zaak["omschrijving"],
+                        "deadline": "2021-02-17T00:00:00Z",
                     },
                 },
             ],
@@ -165,8 +173,8 @@ class CamundaTasksTests(ESMixin, APITestCase):
                 {
                     "task": TASK_DATA["name"],
                     "zaak": {
-                        "bronorganisatie": self.zaak["bronorganisatie"],
                         "identificatie": self.zaak["identificatie"],
+                        "bronorganisatie": self.zaak["bronorganisatie"],
                         "url": self.zaak["url"],
                         "status": {
                             "datumStatusGezet": None,
@@ -174,6 +182,14 @@ class CamundaTasksTests(ESMixin, APITestCase):
                             "statustype": None,
                             "url": None,
                         },
+                        "zaaktype": {
+                            "url": self.zaaktype["url"],
+                            "catalogus": self.zaaktype["catalogus"],
+                            "omschrijving": self.zaaktype["omschrijving"],
+                            "identificatie": self.zaaktype["identificatie"],
+                        },
+                        "omschrijving": self.zaak["omschrijving"],
+                        "deadline": "2021-02-17T00:00:00Z",
                     },
                 },
             ],

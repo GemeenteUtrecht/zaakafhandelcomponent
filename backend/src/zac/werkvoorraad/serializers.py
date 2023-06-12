@@ -6,7 +6,10 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.contrib.objects.checklists.data import ChecklistAnswer
-from zac.elasticsearch.drf_api.serializers import StatusDocumentSerializer
+from zac.elasticsearch.drf_api.serializers import (
+    StatusDocumentSerializer,
+    ZaakTypeDocumentSerializer,
+)
 
 from .data import AccessRequestGroup, ActivityGroup, ChecklistAnswerGroup, TaskAndCase
 
@@ -22,6 +25,18 @@ class SummaryZaakDocumentSerializer(serializers.Serializer):
         help_text=_("The RSIN of the organisation that created the the ZAAK.")
     )
     status = StatusDocumentSerializer(help_text=_("STATUS of the ZAAK."))
+    zaaktype = ZaakTypeDocumentSerializer(
+        required=False, help_text=_("ZAAKTYPE of the ZAAK.")
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("Brief description of the ZAAK.")
+    )
+    deadline = serializers.DateTimeField(
+        required=False,
+        help_text=_(
+            "Deadline of the ZAAK: returns `uiterlijke_einddatum_afdoening` if it's known. Otherwise it is calculated from `startdatum` and `doorlooptijd`."
+        ),
+    )
 
 
 class AccessRequestSerializer(serializers.ModelSerializer):
