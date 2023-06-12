@@ -120,7 +120,6 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         self.access_request2 = AccessRequestFactory.create()
 
         response = self.client.get(self.endpoint)
-
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["count"], 1)
         self.assertEqual(
@@ -143,6 +142,14 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                             "statustype": None,
                             "url": None,
                         },
+                        "zaaktype": {
+                            "url": zaaktype["url"],
+                            "catalogus": zaaktype["catalogus"],
+                            "omschrijving": zaaktype["omschrijving"],
+                            "identificatie": zaaktype["identificatie"],
+                        },
+                        "omschrijving": zaak["omschrijving"],
+                        "deadline": "2021-02-17T00:00:00Z",
                     },
                 }
             ],
