@@ -433,3 +433,11 @@ class ChangeBehandelaarTasksSerializer(serializers.Serializer):
                     change_assignee_tasks,
                 )
             )
+
+
+class CountCamundaUserTasks(serializers.Serializer):
+    count = serializers.IntegerField(
+        min_value=0,
+        required=True,
+        help_text=_("Count of open camunda user tasks for user."),
+    )

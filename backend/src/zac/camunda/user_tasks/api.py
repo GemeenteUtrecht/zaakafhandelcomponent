@@ -95,8 +95,19 @@ def set_assignee_and_complete_task(
     )
 
 
-def get_camunda_user_tasks(
+def get_camunda_user_task_count(
     payload: Dict, client: Optional[CAMUNDA_CLIENT_CLASS] = None
+):
+    if not client:
+        client = get_client()
+
+    response = client.post("task/count", json=payload)
+    return response
+
+
+def get_camunda_user_tasks(
+    payload: Dict,
+    client: Optional[CAMUNDA_CLIENT_CLASS] = None,
 ) -> List[Task]:
     if not client:
         client = get_client()
