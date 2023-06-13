@@ -14,7 +14,7 @@ CACHES = {
     "axes": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
     "oas": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     "sessions": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
-    "oidc": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    # "oidc": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
     # cache that resets itself after every request
     "request": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",

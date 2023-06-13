@@ -5,7 +5,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from mozilla_django_oidc_db.views import AdminLoginFailure
+# from mozilla_django_oidc_db.views import AdminLoginFailure
 
 handler500 = "zac.utils.views.server_error"
 handler403 = "zac.utils.views.permission_denied"
@@ -13,12 +13,12 @@ handler403 = "zac.utils.views.permission_denied"
 urlpatterns = [
     path("admin/hijack/", include("hijack.urls")),
     path("admin/", admin.site.urls),
-    path("admin/login/failure/", AdminLoginFailure.as_view(), name="admin-oidc-error"),
+    # path("admin/login/failure/", AdminLoginFailure.as_view(), name="admin-oidc-error"),
     path("adfs/", include("django_auth_adfs.urls")),
     path("api/", include("zac.api.urls")),
     path("accounts/", include("zac.accounts.urls")),
     path("core/", include("zac.core.urls")),
-    path("oidc/", include("mozilla_django_oidc.urls")),
+    # path("oidc/", include("mozilla_django_oidc.urls")),
     path("scim/v2/", include("zac.accounts.scim.urls")),
     path("", RedirectView.as_view(url=settings.UI_ROOT_URL)),
 ]
