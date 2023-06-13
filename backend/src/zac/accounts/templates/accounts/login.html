@@ -15,13 +15,13 @@
     </div>
     <div class="divider divider--short"></div>
 {% endif %}
-{% get_solo 'mozilla_django_oidc_db.OpenIDConnectConfig' as oidc_config %}
+<!-- {% get_solo 'mozilla_django_oidc_db.OpenIDConnectConfig' as oidc_config %}
 {% if oidc_config.enabled %}
     <div class="form form--centered form--centered-content">
         <a href="{% url 'oidc_authentication_init' %}">{% trans "Login with OIDC" %}</a>
     </div>
     <div class="divider divider--short"></div>
-{% endif %}
+{% endif %} -->
 
 {% get_solo 'core.CoreConfig' as core_config %}
 {% if core_config.non_adfs_login_enabled %}

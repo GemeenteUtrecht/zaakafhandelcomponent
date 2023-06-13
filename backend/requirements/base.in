@@ -38,7 +38,6 @@ django-nested-admin
 django-redis
 django-sniplates
 django-scim2
-mozilla-django-oidc-db
 
 # Restful API
 djangorestframework
