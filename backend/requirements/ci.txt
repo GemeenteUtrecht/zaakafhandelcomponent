@@ -56,7 +56,6 @@ django==3.2.12
     # via
     #   -r requirements/base.txt
     #   django-admin-index
-    #   django-appconf
     #   django-auth-adfs
     #   django-auth-adfs-db
     #   django-axes
@@ -88,7 +87,7 @@ django-auth-adfs==1.6.1
     #   django-auth-adfs-db
 django-auth-adfs-db==0.3.0
     # via -r requirements/base.txt
-django-axes==5.0.13
+django-axes[ipware]==6.0.1
     # via -r requirements/base.txt
 django-better-admin-arrayfield==1.4.0
     # via -r requirements/base.txt
@@ -118,7 +117,7 @@ django-hijack-admin==2.1.10
     # via -r requirements/base.txt
 django-import-export==2.7.1
     # via -r requirements/base.txt
-django-ipware==2.1.0
+django-ipware==5.0.0
     # via
     #   -r requirements/base.txt
     #   django-axes
@@ -303,7 +302,6 @@ sentry-sdk==1.4.3
 six==1.16.0
     # via
     #   -r requirements/base.txt
-    #   django-appconf
     #   django-choices
     #   django-compat
     #   django-extra-views

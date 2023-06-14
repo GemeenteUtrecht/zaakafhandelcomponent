@@ -407,17 +407,11 @@ SHOW_ALERT = True
 # DJANGO-AXES
 #
 AXES_CACHE = "axes"
-AXES_LOGIN_FAILURE_LIMIT = 30  # Default: 3
-AXES_LOCK_OUT_AT_FAILURE = True  # Default: True
-AXES_USE_USER_AGENT = False  # Default: False
+AXES_FAILURE_LIMIT = 30  # Default: 3
 AXES_COOLOFF_TIME = 1  # One hour
 AXES_BEHIND_REVERSE_PROXY = IS_HTTPS  # We have either Ingress or Nginx
-AXES_ONLY_USER_FAILURES = (
-    False  # Default: False (you might want to block on username rather than IP)
-)
-AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = (
-    False  # Default: False (you might want to block on username and IP)
-)
+AXES_RESET_ON_SUCCESS = True  # Default: False. After a user has succesfully logged on, we remove their failed attempts. (comparable to bank card pin blocks)
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 
 #
 # CORS-HEADERS - see https://pypi.org/project/django-cors-headers/
