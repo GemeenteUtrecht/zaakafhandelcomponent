@@ -32,6 +32,7 @@ from zac.camunda.user_tasks import (
 )
 from zac.camunda.user_tasks.api import (
     cancel_activity_instance_of_task,
+    get_camunda_user_task_count,
     get_camunda_user_tasks_for_zaak,
     get_killable_camunda_tasks,
     set_assignee,
@@ -50,6 +51,7 @@ from .serializers import (
     BPMNSerializer,
     CancelTaskSerializer,
     ChangeBehandelaarTasksSerializer,
+    CountCamundaUserTasks,
     ErrorSerializer,
     HistoricUserTaskSerializer,
     MessageSerializer,
@@ -672,3 +674,20 @@ class CancelTaskView(APIView):
         self.check_object_permissions(request, zaak)
         cancel_activity_instance_of_task(task)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserTaskCountView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_serializer(self, *args, **kwargs):
+        return CountCamundaUserTasks(*args, **kwargs)
+
+    @extend_schema(
+        summary=_("Retrieve number of open camunda user tasks for user."), request=None
+    )
+    def post(self, request, *args, **kwargs):
+        assignees = [f"{AssigneeTypeChoices.user}:{request.user}"]
+        payload = {"assigneeIn": assignees}
+        data = get_camunda_user_task_count(payload)
+        serializer = self.get_serializer(data)
+        return Response(serializer.data)

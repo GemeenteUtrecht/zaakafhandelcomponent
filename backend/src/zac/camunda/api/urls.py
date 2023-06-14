@@ -10,6 +10,7 @@ from .views import (
     ProcessInstanceZaakURLView,
     SendMessageView,
     SetTaskAssigneeView,
+    UserTaskCountView,
     UserTaskHistoryView,
     UserTaskView,
 )
@@ -50,4 +51,5 @@ urlpatterns = [
         CancelTaskView.as_view(),
         name="cancel-task",
     ),
+    path("tasks/count", UserTaskCountView.as_view(), name="count-tasks"),
 ]
