@@ -181,7 +181,6 @@ export class DocumentToevoegenComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
-    console.log(error);
     let message = error?.error?.detail || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
     message = error?.error?.file ? error?.error?.file[0] : message;
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
