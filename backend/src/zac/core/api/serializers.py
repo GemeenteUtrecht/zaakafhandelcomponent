@@ -1442,7 +1442,7 @@ class ObjectFilterProxySerializer(ProxySerializer):
         "requestBody",
         "content",
         "application/json",
-        "schema"
+        "schema",
     ]
 
 
