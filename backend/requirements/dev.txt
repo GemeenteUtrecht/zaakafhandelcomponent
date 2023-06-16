@@ -98,7 +98,7 @@ django-auth-adfs==1.6.1
     #   django-auth-adfs-db
 django-auth-adfs-db==0.3.0
     # via -r requirements/ci.txt
-django-axes==6.0.1
+django-axes[ipware]==6.0.2
     # via -r requirements/ci.txt
 django-better-admin-arrayfield==1.4.0
     # via -r requirements/ci.txt
@@ -134,6 +134,10 @@ django-hijack-admin==2.1.10
     # via -r requirements/ci.txt
 django-import-export==2.7.1
     # via -r requirements/ci.txt
+django-ipware==5.0.0
+    # via
+    #   -r requirements/ci.txt
+    #   django-axes
 django-nested-admin==3.4.0
     # via -r requirements/ci.txt
 django-ordered-model==3.6
