@@ -77,17 +77,13 @@ django==3.2.12
     #   zgw-consumers
 django-admin-index==2.0.2
     # via -r requirements/base.txt
-django-appconf==1.0.3
-    # via
-    #   -r requirements/base.txt
-    #   django-axes
 django-auth-adfs==1.6.1
     # via
     #   -r requirements/base.txt
     #   django-auth-adfs-db
 django-auth-adfs-db==0.3.0
     # via -r requirements/base.txt
-django-axes[ipware]==6.0.1
+django-axes==6.0.1
     # via -r requirements/base.txt
 django-better-admin-arrayfield==1.4.0
     # via -r requirements/base.txt
@@ -117,10 +113,6 @@ django-hijack-admin==2.1.10
     # via -r requirements/base.txt
 django-import-export==2.7.1
     # via -r requirements/base.txt
-django-ipware==5.0.0
-    # via
-    #   -r requirements/base.txt
-    #   django-axes
 django-nested-admin==3.4.0
     # via -r requirements/base.txt
 django-ordered-model==3.6
@@ -152,7 +144,7 @@ djangorestframework==3.12.2
     #   zgw-consumers
 djangorestframework-camel-case==1.2.0
     # via -r requirements/base.txt
-drf-spectacular==0.21.1
+drf-spectacular==0.26.2
     # via -r requirements/base.txt
 elastic-apm==6.6.0
     # via -r requirements/base.txt
