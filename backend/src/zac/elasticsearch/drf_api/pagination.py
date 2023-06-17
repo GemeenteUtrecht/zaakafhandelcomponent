@@ -23,7 +23,7 @@ class ESPagination(BffPagination):
         schema = super().get_paginated_response_schema(schema)
         schema["properties"]["fields"] = {
             "type": "array",
-            "items": "string",
+            "items": {"type": "string"},
             "nullable": False,
             "default": DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
         }

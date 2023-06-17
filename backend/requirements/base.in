@@ -22,7 +22,7 @@ zgw-consumers[drf]~=0.16.0
 Django
 django-admin-index
 django-auth-adfs-db
-django-axes
+django-axes[ipware]
 django-better-admin-arrayfield
 django-camunda
 django-choices
