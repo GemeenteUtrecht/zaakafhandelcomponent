@@ -17,6 +17,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_send_message
 from zac.core.tests.utils import ClearCachesMixin
@@ -218,7 +219,10 @@ class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
             "messageName": data["message"],
             "processInstanceId": data["process_instance_id"],
             "processVariables": {
-                "bptlAppId": serialize_variable(self.core_config.app_id)
+                "bptlAppId": serialize_variable(self.core_config.app_id),
+                "messageAssignee": serialize_variable(
+                    f"{AssigneeTypeChoices.user}:{user}"
+                ),
             },
             "resultEnabled": True,
             "variablesInResultEnabled": True,
