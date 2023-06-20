@@ -397,6 +397,9 @@ class SendMessageView(APIView):
 
     @extend_schema(
         summary=_("Send BPMN message."),
+        description=_(
+            "Sets the messageAssignee to the user making the request and the bptlAppId variable."
+        ),
         request=MessageSerializer,
         responses={
             201: MessageVariablesSerializer,
@@ -429,6 +432,7 @@ class SendMessageView(APIView):
 
         # Set variables
         variables = get_bptl_app_id_variable()
+        variables["messageAssignee"] = f"{AssigneeTypeChoices.user}:{request.user}"
 
         def _send_message(
             name: str,
