@@ -115,7 +115,9 @@
   ></gu-multiselect>
   <ng-container *ngIf="roltypeControl.value === hoofdBehandelaarType?.url">
     <gu-checkbox class="d-inline-block mr-1"
-                 [control]="changeBehandelaarControl">
+                 [control]="changeBehandelaarControl"
+                 [checked]="true"
+    >
       <p class="mb-0">Alle taken van de huidige hoofdbehandelaar overhevelen naar de nieuwe hoofdbehandelaar</p>
     </gu-checkbox>
   </ng-container>
