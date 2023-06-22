@@ -358,7 +358,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   async updateProcessData(data, forceUpdateParent = true) {
     // Update data.
-    this.allTaskData = data
+    this.allTaskData = data.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
 
     this.nVisibleTaskData = this.allTaskData.length;
 

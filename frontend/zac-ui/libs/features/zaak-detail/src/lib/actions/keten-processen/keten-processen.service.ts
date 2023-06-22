@@ -132,9 +132,8 @@ export class KetenProcessenService {
    * @returns {Task}
    */
   async findNewTask(newTaskIds, currentTaskIds): Promise<Task> {
-
     if (JSON.stringify(currentTaskIds) !== JSON.stringify(newTaskIds)) {
-      return newTaskIds.find((task: Task) => currentTaskIds.indexOf(task.id) === -1);
+      return newTaskIds.filter(item => !currentTaskIds.some(itemToBeRemoved => itemToBeRemoved.id === item.id))[0]
     }
     return;
   }
