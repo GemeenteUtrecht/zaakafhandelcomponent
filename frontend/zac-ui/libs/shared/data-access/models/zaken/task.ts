@@ -1,10 +1,5 @@
 import { Assignee } from './assignee';
-
-export interface UserTaskZaak {
-  bronorganisatie: string;
-  identificatie: string;
-  url: string;
-}
+import { Zaak } from './zaak';
 
 export interface Task {
   id: string;
@@ -20,5 +15,5 @@ export interface Task {
 
 export interface UserTask {
   task: string;
-  zaak: UserTaskZaak;
+  zaak: Zaak;
 }

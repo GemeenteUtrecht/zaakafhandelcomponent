@@ -70,7 +70,7 @@ export class BetrokkenenComponent implements OnChanges {
     this.roleForm = this.fb.group({
       medewerker: this.fb.control("", Validators.required),
       roltype: this.fb.control("", Validators.required),
-      changeBehandelaar: false,
+      changeBehandelaar: true
     })
   }
 
