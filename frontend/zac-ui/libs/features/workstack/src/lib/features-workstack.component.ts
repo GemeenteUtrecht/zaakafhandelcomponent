@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { RowData, Table, UserTask, UserTaskZaak, WorkstackCase } from '@gu/models';
+import { RowData, Table, UserTask, WorkstackCase, Zaak } from '@gu/models';
 import {FeaturesWorkstackService} from './features-workstack.service';
 import { tabs, Tab, tabIndexes } from './constants/tabs';
 import {zakenTableHead} from './constants/zaken-tablehead';
@@ -119,11 +119,17 @@ export class FeaturesWorkstackComponent implements OnInit {
 
         const cellData: RowData = {
           cellData: {
-            task: element.task,
             identificatie: {
               type: 'link',
               label: element.zaak.identificatie,
               url: zaakUrl,
+            },
+            task: element.task,
+            omschrijving: element.zaak.omschrijving,
+            zaaktype: element.zaak.zaaktype.omschrijving,
+            deadline: {
+              type: element.zaak.deadline ? 'date' : 'text',
+              date: element.zaak.deadline
             },
           },
         };
@@ -136,7 +142,7 @@ export class FeaturesWorkstackComponent implements OnInit {
      * @param {Zaak} zaak
      * @return {string}
      */
-    getZaakPath(zaak: UserTaskZaak): string {
+    getZaakPath(zaak: Zaak): string {
         return `/zaken/${zaak.bronorganisatie}/${zaak.identificatie}`;
     }
 
