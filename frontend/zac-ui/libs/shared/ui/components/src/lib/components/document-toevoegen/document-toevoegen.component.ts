@@ -171,6 +171,12 @@ export class DocumentToevoegenComponent implements OnInit {
     this.addDocumentForm.controls['documentFile'].setValue(file);
     if (file) {
       this.selectDocument.emit(true)
+      if (!this.documentTypeControl.value) {
+        this.documentTypeControl.setErrors({'invalid': true})
+        this.documentTypeControl.markAsTouched();
+      } else {
+        this.documentTypeControl.clearValidators();
+      }
     } else {
       this.removeDocument.emit(true);
     }
