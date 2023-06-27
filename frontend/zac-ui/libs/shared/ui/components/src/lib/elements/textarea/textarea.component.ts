@@ -28,4 +28,5 @@ export class TextareaComponent {
   @Input() disabled: boolean;
   @Input() placeholder: string;
   @Input() value: string | number;
+  @Input() maxlength: string;
 }
