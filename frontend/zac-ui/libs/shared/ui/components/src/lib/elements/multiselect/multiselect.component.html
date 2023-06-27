@@ -20,11 +20,12 @@
       [disabled]="disabled"
       [compareWith]="compareWith"
       [appendTo]="appendTo"
+      [ngClass]="(required || error ? 'is-required' : '')"
     >
     </ng-select>
     <label [ngClass]="(label ? 'multiselect-label' : '')">
       {{label}}
-      <span class="multiselect-required-marker" *ngIf="required">*</span>
+      <span class="multiselect-required-marker" *ngIf="required && label">*</span>
     </label>
   </span>
 </ng-container>

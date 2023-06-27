@@ -3,17 +3,21 @@
     <div *ngIf="!updateDocument">
       <label *ngIf="title" class="h4 d-inline-block mr-2">{{ title }}</label>
       <p *ngIf="description">{{ description }}</p>
-      <gu-multiselect
-        [multiple]="false"
-        [items]="documentTypes"
-        placeholder="Selecteer informatieobjecttype"
-        bindLabel="omschrijving"
-        bindValue="url"
-        class="mb-2"
-        [control]="documentTypeControl"
-        appendTo="body"
-      >
-      </gu-multiselect>
+      <div class="mb-2">
+        <gu-multiselect
+          [multiple]="false"
+          [items]="documentTypes"
+          [error]="documentTypeControl.errors?.invalid"
+          [required]="true"
+          placeholder="Selecteer informatieobjecttype"
+          bindLabel="omschrijving"
+          bindValue="url"
+          [control]="documentTypeControl"
+          appendTo="body"
+        >
+        </gu-multiselect>
+        <mat-error *ngIf="documentTypeControl.errors?.invalid">Informatieobjecttype is verplicht</mat-error>
+      </div>
     </div>
     <div>
       <gu-file-upload (selectedFileOutput)="handleFileSelect($event)"></gu-file-upload>
