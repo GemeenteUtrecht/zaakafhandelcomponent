@@ -105,8 +105,14 @@
         <!-- Advice text -->
         <section class="row no-gutters mb-2">
           <div class="col-12 col-lg-8">
-            <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label>
-            <gu-textarea label="Inhoudelijk advies" [control]="adviceControl" class="mb-0" id="textarea_advice"></gu-textarea>
+            <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label><small class="ml-1">(maximaal 1000 karakters)</small>
+            <gu-textarea class="mb-0"
+                         id="textarea_advice"
+                         label="Inhoudelijk advies"
+                         [control]="adviceControl"
+                         [maxlength]="'1000'"
+            >
+            </gu-textarea>
           </div>
         </section>
 
