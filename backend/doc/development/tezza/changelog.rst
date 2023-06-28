@@ -1,5 +1,28 @@
 .. _tezza_changelog:
 
+Release 0.7.27
+-------------
+
+Deze release bevat de volgende changes:
+
+* Alfresco PDF Renderer `3.0.0`;
+* Alfresco Imagemagick `3.0.0`;
+* Alfresco Libreoffice `3.0.0`;
+* Alfresco Tika `3.0.0`;
+* Alfresco Transformmisc `3.0.0`;
+* Alfresco Transform Router `2.0.0`;
+
+* Tezza module `2.8.3`;
+* Migration module `0.3.2`;
+* Contezza-apps `2.7.3`;
+
+Release 0.7.9
+-------------
+
+Deze release bevat de volgende changes:
+
+* Secure Share module `0.4.0`;
+
 Release 0.7.7
 -------------
 
