@@ -7,9 +7,12 @@ components:
         - answers
         - zaak
         - meta
+        - lockedBy
         properties:
           meta: true
           zaak:
+            type: string
+          lockedBy:
             type: string
           answers:
             type: array

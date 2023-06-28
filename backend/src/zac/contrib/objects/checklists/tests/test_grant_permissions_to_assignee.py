@@ -134,10 +134,14 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
                 return_value=[],
             ):
-                response = self.client.post(self.endpoint, data=data)
+                with patch(
+                    "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
+                    return_value=None,
+                ):
+                    response = self.client.post(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(AtomicPermission.objects.count(), 0)
@@ -157,7 +161,6 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, CHECKLIST_OBJECTTYPE)
         mock_resource_get(m, CHECKLIST_OBJECTTYPE_LATEST_VERSION)
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[CHECKLIST_OBJECTTYPE])
-        m.post(f"{OBJECTS_ROOT}objects", json=CHECKLIST_OBJECT, status_code=201)
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {
             "answers": [
@@ -169,6 +172,9 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 },
             ],
         }
+        created = deepcopy(CHECKLIST_OBJECT)
+        created["record"]["data"]["answers"] = data["answers"]
+        m.post(f"{OBJECTS_ROOT}objects", json=created, status_code=201)
 
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
@@ -178,10 +184,14 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
-                return_value=[],
+                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+                return_value=None,
             ):
-                response = self.client.post(self.endpoint, data=data)
+                with patch(
+                    "zac.contrib.objects.services.fetch_checklist_object",
+                    return_value=None,
+                ):
+                    response = self.client.post(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 3)
@@ -234,10 +244,14 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
                 return_value=[],
             ):
-                response = self.client.post(self.endpoint, data=data)
+                with patch(
+                    "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
+                    return_value=None,
+                ):
+                    response = self.client.post(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 3)
@@ -293,7 +307,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=CHECKLIST_OBJECT,
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
                 return_value=CHECKLIST_OBJECT,
             ):
                 with patch(

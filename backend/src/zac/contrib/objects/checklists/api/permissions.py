@@ -1,10 +1,15 @@
 import logging
+from typing import Dict, Union
 
+from django.http import Http404
+
+from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 
 from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
 from zac.core.services import find_zaak
+from zgw.models.zrc import Zaak
 
 from ..permissions import checklists_inzien, checklists_schrijven, checklisttypes_inzien
 
@@ -17,7 +22,7 @@ class CanReadOrWriteChecklistsPermission(ZaakDefinitionPermission):
             return checklists_inzien
         return checklists_schrijven
 
-    def has_permission(self, request: Request, view: ModelViewSet):
+    def has_permission(self, request: Request, view: APIView) -> bool:
         if request.user.is_superuser:
             return True
 
@@ -30,10 +35,34 @@ class CanReadOrWriteChecklistsPermission(ZaakDefinitionPermission):
         return self.has_object_permission(request, view, zaak)
 
 
+class ChecklistIsUnlockedOrLockedByCurrentUser(BasePermission):
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        if request.user.is_superuser:
+            return True
+        try:
+            checklist_object = view.get_checklist_object()
+        except Http404:  # Allow user to create a checklist or return a 404 message instead of 403.
+            return True
+        return self.has_object_permission(request, view, checklist_object)
+
+    def has_object_permission(
+        self, request: Request, view: APIView, obj: Union[Zaak, Dict]
+    ) -> bool:
+        if request.user.is_superuser:
+            return True
+
+        if isinstance(obj, Zaak):
+            obj = view.get_checklist_object()
+
+        if username := obj["record"]["data"]["lockedBy"]:
+            return request.user.username == username
+        return True
+
+
 class CanReadZaakChecklistTypePermission(DefinitionBasePermission):
     permission = checklisttypes_inzien
 
-    def has_permission(self, request: Request, view: ModelViewSet):
+    def has_permission(self, request: Request, view: APIView) -> bool:
         if request.user.is_superuser or request.user.is_staff:
             return True
 

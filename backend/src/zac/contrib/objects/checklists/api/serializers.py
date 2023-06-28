@@ -139,10 +139,17 @@ class ChecklistSerializer(APIModelSerializer):
         many=True,
     )
     meta = serializers.HiddenField(default=True)
+    locked_by = UserSlugRelatedField(
+        help_text=_("Checklist is locked by this user."),
+        slug_field="username",
+        allow_null=True,
+        queryset=User.objects.all(),
+        default=None,
+    )
 
     class Meta:
         model = Checklist
-        fields = ("answers", "meta")
+        fields = ("answers", "meta", "locked_by")
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -211,8 +218,13 @@ class ChecklistSerializer(APIModelSerializer):
         latest_version = fetch_objecttype(max(checklist_obj_type["versions"]))
 
         # Use data from request - the serializer was (ab)used to validate, not serialize.
-        data = {**self.initial_data, "meta": True, "zaak": self.context["zaak"].url}
-        obj = create_object(
+        data = {
+            **self.initial_data,
+            "meta": True,
+            "zaak": self.context["zaak"].url,
+            "locked_by": None,
+        }
+        checklist = create_object(
             {
                 "type": checklist_obj_type["url"],
                 "record": {
@@ -225,7 +237,7 @@ class ChecklistSerializer(APIModelSerializer):
         relate_object_to_zaak(
             {
                 "zaak": self.context["zaak"].url,
-                "object": obj["url"],
+                "object": checklist["url"],
                 "object_type": "overige",
                 "object_type_overige": checklist_obj_type["name"],
                 "object_type_overige_definitie": {
@@ -241,10 +253,33 @@ class ChecklistSerializer(APIModelSerializer):
 
     def update(self) -> Checklist:
         data = {**self.initial_data, "zaak": self.context["zaak"].url, "meta": True}
-        checklist_obj = fetch_checklist_object(self.context["zaak"])
-        checklist = update_object_record_data(
+        checklist_obj = self.context["checklist_object"]
+        update_object_record_data(
             object=checklist_obj,
             data=camelize(data, **api_settings.JSON_UNDERSCOREIZE),
             user=self.context["request"].user,
         )
         return factory(Checklist, self.validated_data)
+
+    def lock(self) -> Checklist:
+        checklist_obj = self.context["checklist_object"]
+        checklist_obj["record"]["data"]["lockedBy"] = self.context[
+            "request"
+        ].user.username
+
+        checklist = update_object_record_data(
+            object=checklist_obj,
+            data=checklist_obj["record"]["data"],
+            user=self.context["request"].user,
+        )
+        return factory(Checklist, checklist["record"]["data"])
+
+    def unlock(self) -> Checklist:
+        checklist_obj = self.context["checklist_object"]
+        checklist_obj["record"]["data"]["lockedBy"] = None
+        checklist = update_object_record_data(
+            object=checklist_obj,
+            data=checklist_obj["record"]["data"],
+            user=self.context["request"].user,
+        )
+        return factory(Checklist, checklist["record"]["data"])

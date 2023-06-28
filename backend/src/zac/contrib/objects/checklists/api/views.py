@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -8,7 +8,11 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import permissions, status, views
 from rest_framework.response import Response
 
-from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
+from zac.contrib.objects.services import (
+    fetch_checklist,
+    fetch_checklist_object,
+    fetch_checklisttype,
+)
 from zac.core.api.permissions import CanForceEditClosedZaken
 from zac.core.services import find_zaak
 from zgw.models.zrc import Zaak
@@ -92,12 +96,12 @@ zaak_checklist_parameters = [
 ]
 
 
-class ZaakChecklistView(views.APIView):
-    permission_classes = (
+class BaseZaakChecklistView(views.APIView):
+    permission_classes = [
         permissions.IsAuthenticated,
         CanReadOrWriteChecklistsPermission,
         CanForceEditClosedZaken,
-    )
+    ]
     serializer_class = ChecklistSerializer
 
     def get_serializer(self, *args, **kwargs):
@@ -109,13 +113,25 @@ class ZaakChecklistView(views.APIView):
         zaak = find_zaak(bronorganisatie, identificatie)
         return zaak
 
+    def get_checklist_object(self) -> Dict:
+        if not hasattr(self, "_checklist_object"):
+            if not (checklist_object := fetch_checklist_object(self.get_zaak())):
+                raise Http404("Checklist not found for ZAAK.")
+            self._checklist_object = checklist_object
+        return self._checklist_object
+
     def get_object(self) -> Checklist:
         zaak = self.get_zaak()
         self.check_object_permissions(self.request, zaak)
-        if not (checklist := fetch_checklist(zaak)):
-            raise Http404("Checklist not found for ZAAK.")
-        return checklist
+        checklist_object = self.get_checklist_object()
+        if not hasattr(self, "_checklist"):
+            self._checklist = fetch_checklist(
+                zaak, checklist_object_data=checklist_object
+            )
+        return self._checklist
 
+
+class ZaakChecklistView(BaseZaakChecklistView):
     def _add_permissions_for_checklist_assignee(
         self, zaak, answers: List[ChecklistAnswer]
     ):
@@ -180,9 +196,58 @@ class ZaakChecklistView(views.APIView):
                 "request": self.request,
                 "view": self,
                 "zaak": zaak,
+                "checklist_object": self.get_checklist_object(),
             },
         )
         serializer.is_valid(raise_exception=True)
         checklist = serializer.update()
         self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
+        return Response(self.get_serializer(checklist).data, status=status.HTTP_200_OK)
+
+
+class LockZaakChecklistView(BaseZaakChecklistView):
+    @extend_schema(
+        summary=_("Lock a checklist."),
+        parameters=zaak_checklist_parameters,
+        responses={200: ChecklistSerializer},
+    )
+    def post(self, request, *args, **kwargs):
+        zaak = self.get_zaak()
+        checklist = self.get_object()
+        serializer = self.get_serializer(
+            instance=checklist,
+            data=request.data,
+            context={
+                "request": self.request,
+                "view": self,
+                "zaak": zaak,
+                "checklist_object": self.get_checklist_object(),
+            },
+        )
+        serializer.is_valid(raise_exception=True)
+        checklist = serializer.lock()
+        return Response(self.get_serializer(checklist).data, status=status.HTTP_200_OK)
+
+
+class UnlockZaakChecklistView(BaseZaakChecklistView):
+    @extend_schema(
+        summary=_("Unlock a checklist."),
+        parameters=zaak_checklist_parameters,
+        responses={200: ChecklistSerializer},
+    )
+    def post(self, request, *args, **kwargs):
+        zaak = self.get_zaak()
+        checklist = self.get_object()
+        serializer = self.get_serializer(
+            instance=checklist,
+            data=request.data,
+            context={
+                "request": self.request,
+                "view": self,
+                "zaak": zaak,
+                "checklist_object": self.get_checklist_object(),
+            },
+        )
+        serializer.is_valid(raise_exception=True)
+        checklist = serializer.unlock()
         return Response(self.get_serializer(checklist).data, status=status.HTTP_200_OK)

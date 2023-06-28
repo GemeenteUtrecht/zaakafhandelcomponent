@@ -216,8 +216,12 @@ def fetch_checklist_object(
     return None
 
 
-def fetch_checklist(zaak: Zaak) -> Optional[Checklist]:
-    checklist_object_data = fetch_checklist_object(zaak)
+def fetch_checklist(
+    zaak: Zaak, checklist_object_data: Optional[Dict] = None
+) -> Optional[Checklist]:
+    if not checklist_object_data:
+        checklist_object_data = fetch_checklist_object(zaak)
+
     if checklist_object_data:
         from zac.contrib.objects.checklists.api.serializers import ChecklistSerializer
 

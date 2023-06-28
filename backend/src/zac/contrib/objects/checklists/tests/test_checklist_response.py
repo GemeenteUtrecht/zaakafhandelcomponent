@@ -105,7 +105,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         with patch(
-            "zac.contrib.objects.services.fetch_checklist_object",
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=CHECKLIST_OBJECT,
         ):
             with patch(
@@ -129,7 +129,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         with patch(
-            "zac.contrib.objects.services.fetch_checklist_object", return_value=[]
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=[],
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 404)
@@ -168,10 +169,15 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
                 return_value=[],
             ):
-                response = self.client.post(self.endpoint, data=data)
+
+                with patch(
+                    "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
+                    return_value=None,
+                ):
+                    response = self.client.post(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
@@ -179,22 +185,23 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             {
                 "answers": [
                     {
+                        "question": "Ja?",
                         "answer": "",
+                        "remarks": "",
                         "document": "",
                         "groupAssignee": None,
-                        "question": "Ja?",
-                        "remarks": "",
                         "userAssignee": None,
                     },
                     {
+                        "question": "Nee?",
                         "answer": "",
+                        "remarks": "",
                         "document": "",
                         "groupAssignee": None,
-                        "question": "Nee?",
-                        "remarks": "",
                         "userAssignee": None,
                     },
-                ]
+                ],
+                "lockedBy": None,
             },
         )
 
@@ -394,7 +401,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=CHECKLIST_OBJECT,
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
                 return_value=CHECKLIST_OBJECT,
             ):
                 with patch(
@@ -424,6 +431,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "groupAssignee": None,
                         "userAssignee": None,
                     },
-                ]
+                ],
+                "lockedBy": None,
             },
         )

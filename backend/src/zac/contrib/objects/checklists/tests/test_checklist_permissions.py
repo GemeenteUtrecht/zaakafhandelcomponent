@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest.mock import patch
 
 from django.urls import reverse_lazy
@@ -20,12 +21,14 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
-from ..data import Checklist, ChecklistType
+from ..data import ChecklistType
 from ..permissions import checklists_inzien, checklists_schrijven
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
+    CHECKLIST_OBJECT,
     IDENTIFICATIE,
+    OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
@@ -164,24 +167,9 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             object_url=self.zaak["url"],
         )
         self.client.force_authenticate(self.user)
-        checklist = generate_oas_component(
-            "checklists_objects",
-            "schemas/Checklist",
-            zaak=ZAAK_URL,
-            answers=[
-                {
-                    "question": "some-question",
-                    "answer": "",
-                    "userAssignee": self.user,
-                    "groupAssignee": None,
-                }
-            ],
-            meta=True,
-        )
-        checklist = factory(Checklist, checklist)
         with patch(
-            "zac.contrib.objects.checklists.api.views.fetch_checklist",
-            return_value=checklist,
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=CHECKLIST_OBJECT,
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -261,7 +249,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         cls.patch_create_object = patch(
             "zac.contrib.objects.checklists.api.serializers.create_object",
-            return_value={"url": "some-url"},
+            return_value=CHECKLIST_OBJECT,
         )
 
         cls.patch_relate_object_to_zaak = patch(
@@ -582,24 +570,9 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        cls.checklist = generate_oas_component(
-            "checklists_objects",
-            "schemas/Checklist",
-            zaak=ZAAK_URL,
-            meta=True,
-            answers=[
-                {
-                    "question": cls.checklisttype.questions[0].question,
-                    "answer": "some-first-answer",
-                    "userAssignee": cls.user,
-                    "groupAssignee": None,
-                }
-            ],
-        )
-        cls.checklist = factory(Checklist, cls.checklist)
-        cls.patch_fetch_checklist_views = patch(
-            "zac.contrib.objects.checklists.api.views.fetch_checklist",
-            return_value=cls.checklist,
+        cls.patch_fetch_checklist_object_views = patch(
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=CHECKLIST_OBJECT,
         )
         cls.patch_fetch_checklist_serializers = patch(
             "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
@@ -608,12 +581,13 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         cls.patch_fetch_checklist_object = patch(
             "zac.contrib.objects.checklists.api.serializers.fetch_checklist_object",
-            return_value={"uuid": "some-uuid"},
+            return_value=CHECKLIST_OBJECT,
         )
-
+        data = deepcopy(CHECKLIST_OBJECT)
+        data["record"]["data"]["zaak"] = cls.zaak["url"]
         cls.patch_update_object_record_data = patch(
             "zac.contrib.objects.checklists.api.serializers.update_object_record_data",
-            return_value={"zaak": cls.zaak["url"]},
+            return_value=data,
         )
 
     def setUp(self):
@@ -625,8 +599,8 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.patch_fetch_objecttype.start()
         self.addCleanup(self.patch_fetch_objecttype.stop)
 
-        self.patch_fetch_checklist_views.start()
-        self.addCleanup(self.patch_fetch_checklist_views.stop)
+        self.patch_fetch_checklist_object_views.start()
+        self.addCleanup(self.patch_fetch_checklist_object_views.stop)
 
         self.patch_fetch_checklist_serializers.start()
         self.addCleanup(self.patch_fetch_checklist_serializers.stop)
