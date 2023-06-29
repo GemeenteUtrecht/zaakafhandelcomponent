@@ -303,18 +303,14 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         with patch(
-            "zac.contrib.objects.checklists.api.serializers.fetch_checklist_object",
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=CHECKLIST_OBJECT,
         ):
             with patch(
-                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                "zac.contrib.objects.services.fetch_checklisttype_object",
+                return_value=[CHECKLISTTYPE_OBJECT],
             ):
-                with patch(
-                    "zac.contrib.objects.services.fetch_checklisttype_object",
-                    return_value=[CHECKLISTTYPE_OBJECT],
-                ):
-                    response = self.client.put(self.endpoint, data=data)
+                response = self.client.put(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, 200)
 

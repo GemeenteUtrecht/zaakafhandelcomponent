@@ -584,21 +584,18 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 "version": 1,
             },
         )
-
+        data = deepcopy(CHECKLIST_OBJECT)
+        data["record"]["data"]["lockedBy"] = cls.user.username
         cls.patch_fetch_checklist_object_views = patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=data,
         )
         cls.patch_fetch_checklist_serializers = patch(
             "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
             return_value=None,
         )
 
-        cls.patch_fetch_checklist_object = patch(
-            "zac.contrib.objects.checklists.api.serializers.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
-        )
-        data = deepcopy(CHECKLIST_OBJECT)
+        data = deepcopy(data)
         data["record"]["data"]["zaak"] = cls.zaak["url"]
         cls.patch_update_object_record_data = patch(
             "zac.contrib.objects.checklists.api.serializers.update_object_record_data",
@@ -619,9 +616,6 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.patch_fetch_checklist_serializers.start()
         self.addCleanup(self.patch_fetch_checklist_serializers.stop)
-
-        self.patch_fetch_checklist_object.start()
-        self.addCleanup(self.patch_fetch_checklist_object.stop)
 
         self.patch_update_object_record_data.start()
         self.addCleanup(self.patch_update_object_record_data.stop)
@@ -823,7 +817,9 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         response = self.client.put(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_update_checklist_logged_in_with_both_atomic_permissions(self, m):
+    def test_update_checklist_logged_in_with_both_atomic_permissions_and_locked_by_updater(
+        self, m
+    ):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -855,6 +851,47 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.put(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_checklist_logged_in_with_both_atomic_permissions_but_not_locked(
+        self, m
+    ):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
+
+        data = {
+            "answers": [
+                {
+                    "question": self.checklisttype.questions[0].question,
+                    "answer": "some-answer",
+                }
+            ],
+        }
+        AtomicPermissionFactory.create(
+            permission=checklists_schrijven.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        AtomicPermissionFactory.create(
+            permission=zaken_geforceerd_bijwerken.name,
+            for_user=self.user,
+            object_url=self.zaak["url"],
+        )
+        self.client.force_authenticate(user=self.user)
+        data = deepcopy(CHECKLIST_OBJECT)
+        data["record"]["data"]["lockedBy"] = None
+        with patch(
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=data,
+        ):
+            response = self.client.put(self.endpoint, data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_checklist_logged_in_with_both_atomic_permissions_but_checklist_is_locked(
         self, m
@@ -907,7 +944,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
 
 @requests_mock.Mocker()
-class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
+class LockAndUnlockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     lock_endpoint = reverse_lazy(
         "lock-zaak-checklist",
         kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
@@ -969,7 +1006,6 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.addCleanup(self.patch_update_object_record_data.stop)
 
     def test_un_lock_checklist_not_logged_in(self, m):
-
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
@@ -986,7 +1022,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_lock_checklist_logged_in_no_permission(self, m):
+    def test_un_lock_checklist_logged_in_no_permission(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -1015,7 +1051,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_lock_checklist_logged_in_with_permissions_for_other_zaak(self, m):
+    def test_un_lock_checklist_logged_in_with_permissions_for_other_zaak(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -1053,7 +1089,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_lock_checklist_logged_in_with_permissions(self, m):
+    def test_un_lock_checklist_logged_in_with_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -1090,7 +1126,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_lock_checklist_logged_in_with_no_force_permission_closed_zaak(self, m):
+    def test_un_lock_checklist_logged_in_with_no_force_permission_closed_zaak(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -1126,7 +1162,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_lock_checklist_logged_in_with_force_permission_closed_zaak(self, m):
+    def test_un_lock_checklist_logged_in_with_force_permission_closed_zaak(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -1172,7 +1208,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_lock_checklist_logged_in_with_insufficient_atomic_permission_closed_zaak(
+    def test_un_lock_checklist_logged_in_with_insufficient_atomic_permission_closed_zaak(
         self, m
     ):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -1207,7 +1243,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_lock_checklist_logged_in_with_both_atomic_permissions(self, m):
+    def test_un_lock_checklist_logged_in_with_both_atomic_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
@@ -1245,7 +1281,7 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_lock_checklist_logged_in_with_permissions_but_checklist_is_already_locked_by_someone_else(
+    def test_un_lock_checklist_logged_in_with_permissions_but_checklist_is_already_locked_by_someone_else(
         self, m
     ):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -1278,10 +1314,18 @@ class LockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=checklist_object,
         ):
-            response = self.client.post(self.lock_endpoint)
+            with self.subTest("LOCK"):
+                response = self.client.post(self.lock_endpoint)
+                self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+                self.assertEqual(
+                    response.json(),
+                    {"detail": f"Checklist is currently locked by `some-other-user`."},
+                )
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(
-            response.json(),
-            {"detail": f"Checklist is currently locked by `some-other-user`."},
-        )
+            with self.subTest("UNLOCK"):
+                response = self.client.post(self.unlock_endpoint)
+                self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+                self.assertEqual(
+                    response.json(),
+                    {"detail": f"Checklist is currently locked by `some-other-user`."},
+                )

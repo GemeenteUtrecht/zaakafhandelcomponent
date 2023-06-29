@@ -23,7 +23,7 @@ from .permission_loaders import add_permissions_for_checklist_assignee
 from .permissions import (
     CanReadOrWriteChecklistsPermission,
     CanReadZaakChecklistTypePermission,
-    ChecklistIsUnlockedOrLockedByCurrentUser,
+    ChecklistIsLockedByCurrentUser,
 )
 from .serializers import ChecklistSerializer, ChecklistTypeSerializer
 
@@ -102,7 +102,7 @@ class BaseZaakChecklistView(views.APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         CanReadOrWriteChecklistsPermission,
-        ChecklistIsUnlockedOrLockedByCurrentUser,
+        ChecklistIsLockedByCurrentUser,
         CanForceEditClosedZaken,
     ]
     serializer_class = ChecklistSerializer

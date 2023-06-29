@@ -248,7 +248,12 @@ class ChecklistSerializer(APIModelSerializer):
         return factory(Checklist, self.validated_data)
 
     def update(self) -> Checklist:
-        data = {**self.initial_data, "zaak": self.context["zaak"].url, "meta": True}
+        data = {
+            **self.initial_data,
+            "zaak": self.context["zaak"].url,
+            "meta": True,
+            "lockedBy": None,
+        }  # unlock the checklist at update
         checklist_obj = self.context["checklist_object"]
         update_object_record_data(
             object=checklist_obj,

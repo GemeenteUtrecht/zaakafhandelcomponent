@@ -37,7 +37,7 @@ class CanReadOrWriteChecklistsPermission(ZaakDefinitionPermission):
         return self.has_object_permission(request, view, zaak)
 
 
-class ChecklistIsUnlockedOrLockedByCurrentUser(BasePermission):
+class ChecklistIsLockedByCurrentUser(BasePermission):
     def has_permission(self, request: Request, view: APIView) -> bool:
         if request.user.is_superuser:
             return True
@@ -59,11 +59,25 @@ class ChecklistIsUnlockedOrLockedByCurrentUser(BasePermission):
             except Http404:  # Allow user to create a checklist or return a 404 message instead of 403.
                 return True
 
-        if username := obj["record"]["data"]["lockedBy"]:
-            self.message = _("Checklist is currently locked by `{username}`.").format(
-                username=username
-            )
-            return request.user.username == username
+        if request.method in [
+            "PUT",
+            "POST",
+        ]:  # At (un)lock and put we need to make sure only the locker has permissions
+            # if lock is attempted, the lock will bounce if it's not the same locker. it's harmless to call lock an extra time.
+            # if unlock is attempted the unlock will bounce if it's not the same locker. an unlock on an unlocked resource is harmless
+            # if put is attempted the put will only be successful if the resource is locked by the updater
+            if username := obj["record"]["data"]["lockedBy"]:
+                self.message = _(
+                    "Checklist is currently locked by `{username}`."
+                ).format(username=username)
+                return request.user.username == username
+
+            # if put is attempted but there is no username the resource wasn't locked - return 403
+            if request.method == "PUT" and not username:
+                self.message = _(
+                    "Checklist needs to be locked before you can update it."
+                )
+                return False
         return True
 
 
