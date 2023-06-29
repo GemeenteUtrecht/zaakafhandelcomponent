@@ -12,11 +12,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.accounts.models import User
-from zac.contrib.objects.services import (
-    fetch_checklist,
-    fetch_checklist_object,
-    fetch_checklisttype,
-)
+from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
     create_object,
@@ -260,26 +256,3 @@ class ChecklistSerializer(APIModelSerializer):
             user=self.context["request"].user,
         )
         return factory(Checklist, self.validated_data)
-
-    def lock(self) -> Checklist:
-        checklist_obj = self.context["checklist_object"]
-        checklist_obj["record"]["data"]["lockedBy"] = self.context[
-            "request"
-        ].user.username
-
-        checklist = update_object_record_data(
-            object=checklist_obj,
-            data=checklist_obj["record"]["data"],
-            user=self.context["request"].user,
-        )
-        return factory(Checklist, checklist["record"]["data"])
-
-    def unlock(self) -> Checklist:
-        checklist_obj = self.context["checklist_object"]
-        checklist_obj["record"]["data"]["lockedBy"] = None
-        checklist = update_object_record_data(
-            object=checklist_obj,
-            data=checklist_obj["record"]["data"],
-            user=self.context["request"].user,
-        )
-        return factory(Checklist, checklist["record"]["data"])

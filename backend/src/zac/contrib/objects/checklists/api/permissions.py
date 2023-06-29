@@ -2,11 +2,13 @@ import logging
 from typing import Dict, Union
 
 from django.http import Http404
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from zac.accounts.models import User
 from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
 from zac.core.services import find_zaak
 from zgw.models.zrc import Zaak
@@ -52,9 +54,15 @@ class ChecklistIsUnlockedOrLockedByCurrentUser(BasePermission):
             return True
 
         if isinstance(obj, Zaak):
-            obj = view.get_checklist_object()
+            try:
+                obj = view.get_checklist_object()
+            except Http404:  # Allow user to create a checklist or return a 404 message instead of 403.
+                return True
 
         if username := obj["record"]["data"]["lockedBy"]:
+            self.message = _("Checklist is currently locked by `{username}`.").format(
+                username=username
+            )
             return request.user.username == username
         return True
 
