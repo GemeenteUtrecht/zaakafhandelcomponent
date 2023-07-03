@@ -52,6 +52,7 @@ export class FormComponent implements OnInit, OnChanges {
 
   @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
+  @Output() formIsInEditMode: EventEmitter<any> = new EventEmitter<any>();
 
   /**
    * @type {Object} Documents mapping.
@@ -354,6 +355,7 @@ export class FormComponent implements OnInit, OnChanges {
 
     if (this.editable === 'toggle') {
       this.isInEditMode = !this.isInEditMode;
+      this.formIsInEditMode.emit(this.isInEditMode);
       if (!this.isInEditMode) {
         // reset to initial form values when exiting isInEditMode mode
         this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);

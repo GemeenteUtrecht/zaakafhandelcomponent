@@ -289,6 +289,18 @@ export class ChecklistComponent implements OnInit, OnChanges {
   //
 
   /**
+   * Lock or unlock checlist according to event
+   * @param formIsInEditMode
+   */
+  onClickEditButton(formIsInEditMode) {
+    if (formIsInEditMode) {
+      this.checklistService.lockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() => {})
+    } else {
+      this.checklistService.unLockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() => {})
+    }
+  }
+
+  /**
    * Gets called when a checklist form is submitted.
    * @param {Object} answerData
    */
