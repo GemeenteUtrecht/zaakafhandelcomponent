@@ -20,6 +20,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.core.models import CoreConfig
 from zac.core.permissions import zaken_aanmaken, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -27,6 +28,8 @@ from zac.tests.utils import mock_resource_get, paginated_response
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 KOWNSL_ROOT = "https://kownsl.nl/"
+OBJECTS_ROOT = "https://objects.nl/api/v2/"
+OBJECTTYPES_ROOT = "https://objecttypes.nl/api/v2/"
 
 
 @requests_mock.Mocker()
@@ -136,6 +139,17 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+        objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = objects_service
+        config.primary_objecttypes_api = objecttypes_service
+        config.save()
+
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -161,10 +175,68 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "toelichting": "some-toelichting",
             },
         }
+        cls.objecttype = {
+            "url": f"{OBJECTTYPES_ROOT}objecttypes/5d7182f4-dc2f-4aaa-b2a2-bdc72a2ce0b4",
+            "uuid": "5d7182f4-dc2f-4aaa-b2a2-bdc72a2ce0b4",
+            "name": "Some Object",
+            "namePlural": "Some Objects",
+            "description": "Describes the json schema of Some Object",
+            "dataClassification": "open",
+            "maintainerOrganization": "",
+            "maintainerDepartment": "",
+            "contactPerson": "",
+            "contactEmail": "",
+            "source": "",
+            "updateFrequency": "unknown",
+            "providerOrganization": "",
+            "documentationUrl": "",
+            "labels": {},
+            "createdAt": "1999-12-31",
+            "modifiedAt": "1999-12-31",
+            "versions": [
+                f"{OBJECTTYPES_ROOT}objecttypes/5d7182f4-dc2f-4aaa-b2a2-bdc72a2ce0b4/versions/1",
+            ],
+        }
+        cls.object = {
+            "url": f"{OBJECTS_ROOT}objects/85e6c250-9f51-4286-8340-25109d0b96d1",
+            "uuid": "85e6c250-9f51-4286-8340-25109d0b96d1",
+            "type": cls.objecttype["url"],
+            "record": {
+                "index": 1,
+                "typeVersion": 1,
+                "data": {"some-key": "some-val"},
+                "geometry": "None",
+                "startAt": "1999-12-31",
+                "endAt": "None",
+                "registrationAt": "1999-12-31",
+                "correctionFor": "None",
+                "correctedBy": "None",
+            },
+        }
 
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(user=self.user)
+
+    def test_create_zaak_object_does_not_exist(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+
+        m.get(self.object["url"], status_code=404, json={"detail": "Not found."})
+        response = self.client.post(
+            self.url, {**self.data, "object": self.object["url"]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "object": [
+                    "Fetching OBJECT with URL: "
+                    "`https://objects.nl/api/v2/objects/85e6c250-9f51-4286-8340-25109d0b96d1` "
+                    "raised a Client Error with detail: `Not found.`."
+                ]
+            },
+        )
 
     def test_create_zaak_wrong_organisatie_rsin(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -232,6 +304,12 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
     @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-model")
     def test_create_zaak(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+
+        m.get(self.object["url"], json=self.object)
+        m.get(self.objecttype["url"], json=self.objecttype)
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
@@ -263,7 +341,9 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             "zac.core.api.serializers.get_roltypen",
             return_value=[factory(RolType, roltype)],
         ):
-            response = self.client.post(self.url, self.data)
+            response = self.client.post(
+                self.url, {**self.data, "object": self.object["url"]}
+            )
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
@@ -302,6 +382,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "initiator": {"type": "String", "value": f"user:{self.user}"},
                 "organisatieRSIN": {"type": "String", "value": "002220647"},
                 "startRelatedBusinessProcess": {"type": "Boolean", "value": True},
+                "object": {"type": "String", "value": self.object["url"]},
             },
         }
 
