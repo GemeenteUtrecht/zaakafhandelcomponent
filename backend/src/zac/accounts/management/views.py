@@ -34,7 +34,7 @@ class AxesResetView(APIView):
         return Response(data=serializer.data, status=HTTP_200_OK)
 
 
-class LoadBlueprintPermissionsSerializer(APIView):
+class LoadBlueprintPermissionsView(APIView):
     permission_classes = (
         IsAuthenticated,
         IsAdminUser,
