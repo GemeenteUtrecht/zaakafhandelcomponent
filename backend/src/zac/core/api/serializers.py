@@ -15,7 +15,6 @@ from furl import furl
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from rest_framework.utils import formatting
-from zds_client import ClientError
 from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
@@ -61,6 +60,7 @@ from zac.contrib.objects.services import (
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import (
+    fetch_object,
     fetch_rol,
     fetch_zaaktype,
     get_document,
@@ -473,12 +473,30 @@ class CreateZaakSerializer(serializers.Serializer):
     zaak_details = CreateZaakDetailsSerializer(
         help_text=_("Relevant details pertaining to the ZAAK.")
     )
+    object = serializers.URLField(
+        help_text=_("URL-reference of OBJECT to be related to ZAAK."),
+        required=False,
+        allow_blank=False,
+    )
     start_related_business_process = serializers.BooleanField(
         help_text=_(
             "Automagically start related business process, if exists, once ZAAK is created."
         ),
         default=True,
     )
+
+    def validate_object(self, object: str) -> str:
+        try:
+            fetch_object(object)
+        except ClientError as exc:
+            raise serializers.ValidationError(
+                _(
+                    "Fetching OBJECT with URL: `{object}` raised a Client Error with detail: `{detail}`.".format(
+                        object=object, detail=exc.args[0]["detail"]
+                    )
+                )
+            )
+        return object
 
     def validate(self, data):
         validated_data = super().validate(data)
