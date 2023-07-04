@@ -7,3 +7,9 @@ class AxesResetSerializer(Serializer):
     count = IntegerField(
         help_text=_("Number of cleared access attempts."), allow_null=True
     )
+
+
+class AddBlueprintPermissionsSerializer(Serializer):
+    count = IntegerField(
+        help_text=_("Number of blueprint permissions added."), allow_null=True
+    )
