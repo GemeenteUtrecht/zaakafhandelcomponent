@@ -236,4 +236,45 @@ export class KetenProcessenService {
   readDocument(endpoint) {
     return this.http.Post<ReadWriteDocument>(endpoint);
   }
+
+  /**
+   * Compare arrays by id
+   * @param arr1
+   * @param arr2
+   * @returns {{areEqual: boolean} | {areEqual: boolean}}
+   */
+  compareArraysById(arr1, arr2) {
+    // Check if the arrays have the same length
+    if (arr1.length !== arr2.length) {
+      return { areEqual: false };
+    }
+
+    // Create sets of the ids from each array
+    const idSet1 = new Set(arr1.map(obj => obj.id));
+    const idSet2 = new Set(arr2.map(obj => obj.id));
+
+    // Check if the sets of ids are equal
+    if (idSet1.size !== idSet2.size || !this.isSetEqual(idSet1, idSet2)) {
+      return { areEqual: false };
+    }
+
+    // All ids are equal, arrays are considered equal
+    return { areEqual: true };
+  }
+
+  /**
+   * Check if sets are equal
+   * @param set1
+   * @param set2
+   * @returns {boolean}
+   */
+  isSetEqual(set1, set2) {
+    for (const item of set1) {
+      if (!set2.has(item)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }
