@@ -175,7 +175,10 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     if (this.isPolling) {
       // Fetch processes.
       this.ketenProcessenService.getTasks(this.mainZaakUrl).subscribe(async resData => {
-        if (JSON.stringify(this.allTaskData) !== JSON.stringify(resData)) {
+
+        const comparisonResult = this.ketenProcessenService.compareArraysById(this.allTaskData, resData);
+
+        if (!comparisonResult.areEqual) {
           currentTaskIds = this.allTaskData && this.allTaskData.length ? this.allTaskData : null;
           // Create array of ids for comparison
           let currentTaskIdsArray = [];
