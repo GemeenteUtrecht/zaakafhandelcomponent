@@ -178,6 +178,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
                     "formaat": old.formaat,
                     "bestandsnaam": old.bestandsnaam,
                     "ontvangstdatum": date.today().isoformat(),
+                    "bestandsomvang": old.bestandsomvang,
                 }
             )
 
