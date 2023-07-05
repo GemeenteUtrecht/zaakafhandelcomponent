@@ -1,3 +1,5 @@
+import logging
+
 from django.core.management import BaseCommand
 
 from zac.contrib.kownsl.api import get_review_requests
@@ -7,6 +9,23 @@ from ...permission_loaders import (
     add_permission_for_behandelaar,
     add_permissions_for_advisors,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def add_atomic_permissions():
+    rollen = get_rollen_all(
+        betrokkeneType="medewerker", omschrijvingGeneriek="behandelaar"
+    )
+    for rol in rollen:
+        add_permission_for_behandelaar(rol)
+    logger.info("permissions for behandelaars are added")
+
+    # give access to zaak reviewers
+    for zaak in get_zaken_all():
+        for review_request in get_review_requests(zaak):
+            add_permissions_for_advisors(review_request)
+    logger.info("permissions for advisors are added")
 
 
 class Command(BaseCommand):
@@ -19,15 +38,4 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         # give access to zaak behandelaars
-        rollen = get_rollen_all(
-            betrokkeneType="medewerker", omschrijvingGeneriek="behandelaar"
-        )
-        for rol in rollen:
-            add_permission_for_behandelaar(rol)
-        self.stdout.write("permissions for behandelaars are added")
-
-        # give access to zaak reviewers
-        for zaak in get_zaken_all():
-            for review_request in get_review_requests(zaak):
-                add_permissions_for_advisors(review_request)
-        self.stdout.write("permissions for advisors are added")
+        add_atomic_permissions()
