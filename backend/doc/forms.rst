@@ -48,6 +48,10 @@ implemented by the ZAC:
   then the page will be opened in a new tab or window, and the end-user can mark the
   task as completed.
 
+  If you set the process/task variable ``endTask`` to the boolean "false" value the 
+  user will not see a window that allows them to finish the task. This is used
+  in the current implementation for opening a related ZAAK from the main ZAAK.
+
 - ``zac:documentSelectie``: presents a form to the end user to select documents for the camunda process.
 
   Upon succesful submission, the following process variables are set:
