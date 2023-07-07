@@ -46,26 +46,26 @@ def add_blueprint_permissions_for_zaaktypen_and_iots():
     roles = Role.objects.all()
     added = 0
     for zaaktype in zaaktypen:
-        policy = {
+        zt_policy = {
             "catalogus": zaaktype.catalogus,
             "zaaktype_omschrijving": zaaktype.omschrijving,
             "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
         }
-        document_policies = generate_document_policies(policy)
+        document_policies = generate_document_policies(zt_policy)
         for role in roles:
             obj, created = BlueprintPermission.objects.get_or_create(
                 role=role,
-                policy=policy,
+                policy=zt_policy,
                 object_type=PermissionObjectTypeChoices.zaak,
             )
             if created:
                 added += 1
 
-            for policy in document_policies:
+            for doc_policy in document_policies:
                 permission, created = BlueprintPermission.objects.get_or_create(
                     role=role,
                     object_type=PermissionObjectTypeChoices.document,
-                    policy=policy,
+                    policy=doc_policy,
                 )
                 if created:
                     added += 1
