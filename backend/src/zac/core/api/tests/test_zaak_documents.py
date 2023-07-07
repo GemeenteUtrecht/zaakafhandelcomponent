@@ -26,7 +26,7 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.data import DowcResponse
 from zac.contrib.kownsl.models import KownslConfig
 from zac.core.api.data import AuditTrailData
-from zac.core.permissions import zaken_download_documents, zaken_inzien
+from zac.core.permissions import zaken_inzien, zaken_list_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -509,8 +509,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.core.api.views.get_documenten", return_value=([self.doc_obj], [])
         ):
             response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), [])
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
     def test_has_perm(self, m):
@@ -519,19 +518,16 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
+            role__permissions=[zaken_inzien.name, zaken_list_documents.name],
             for_user=user,
             policy={
                 "catalogus": self.zaaktype["catalogus"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
+            object_type=PermissionObjectTypeChoices.zaak,
         )
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_download_documents.name],
-            object_type=PermissionObjectTypeChoices.document,
-            for_user=user,
-        )
+
         self.client.force_authenticate(user=user)
 
         with patch(
