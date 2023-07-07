@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from zgw_consumers.api_models.documenten import Document
 
 from zac.api.utils import remote_schema_ref
-from zac.core.api.permissions import CanOpenDocuments
+from zac.core.api.permissions import CanReadDocuments
 from zac.core.cache import (
     invalidate_document_other_cache,
     invalidate_document_url_cache,
@@ -34,7 +34,7 @@ class OpenDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
-        CanOpenDocuments,
+        CanReadDocuments,
     )
     document = None
     serializer_class = DowcResponseSerializer
@@ -42,6 +42,7 @@ class OpenDowcView(APIView):
     def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
         versie = _cast(self.request.GET.get("versie", None), int)
         document = find_document(bronorganisatie, identificatie, versie=versie)
+        self.check_object_permissions(self.request, document)
         return document
 
     @extend_schema(
@@ -81,7 +82,7 @@ class DeleteDowcView(APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
-        CanOpenDocuments,
+        CanReadDocuments,
     )
     serializer_class = DowcSerializer
 

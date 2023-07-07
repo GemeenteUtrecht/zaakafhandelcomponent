@@ -16,8 +16,15 @@ from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import SuperUserFactory
+from zac.accounts.constants import PermissionObjectTypeChoices
+from zac.accounts.tests.factories import (
+    BlueprintPermissionFactory,
+    SuperUserFactory,
+    UserFactory,
+)
+from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 
 from ..api import check_document_status, get_client, get_open_documenten
 from ..constants import DocFileTypes
@@ -33,7 +40,7 @@ IDENTIFICATIE = "DOC-001"
 
 
 @requests_mock.Mocker()
-class DOCAPITests(ClearCachesMixin, APITestCase):
+class DOWCAPITests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -50,7 +57,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}informatieobjecttypen/{uuid.uuid4()}",
             omschrijving="bijlage",
             catalogus=cls.catalogus_url,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
         )
         cls.document = generate_oas_component(
             "drc",
@@ -59,7 +66,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             identificatie=BRONORGANISATIE,
             bronorganisatie=IDENTIFICATIE,
             informatieobjecttype=cls.documenttype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             bestandsomvang=10,
             versie=10,
         )
@@ -157,26 +164,98 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         with self.assertRaises(AssertionError):
             client = get_client(force=True)
 
-    def test_no_permission(self, m):
+    def test_not_authenticated(self, m):
         response = self.client.post(self.zac_dowc_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_create_doc_file_with_all_permissions(self, m):
+    def test_no_permissions(self, m):
+        user = UserFactory.create()
+        self.client.force_authenticate(user)
+        response = self.client.post(self.zac_dowc_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_dowc_file_with_wrong_permissions(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
-        self.client.force_authenticate(user=self.user)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.documenttype)
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
         m.post(
             f"{DOWC_API_ROOT}/api/v1/documenten",
             status_code=201,
             json=self.dowc_response,
         )
 
-        with patch(
-            "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
-        ):
-            response = self.client.post(
-                self.zac_dowc_url,
-                HTTP_REFERER="http://www.some-referer-url.com/",
-            )
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_download_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.catalogus_url,
+                "iotype_omschrijving": "some-other-iot",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+            object_type=PermissionObjectTypeChoices.document,
+        )
+        response = self.client.post(
+            self.zac_dowc_url,
+            HTTP_REFERER="http://www.some-referer-url.com/",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_dowc_file_with_right_permissions_but_wrong_VA(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.documenttype)
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        m.post(
+            f"{DOWC_API_ROOT}/api/v1/documenten",
+            status_code=201,
+            json=self.dowc_response,
+        )
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_download_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.catalogus_url,
+                "iotype_omschrijving": self.documenttype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+            },
+            object_type=PermissionObjectTypeChoices.document,
+        )
+        response = self.client.post(
+            self.zac_dowc_url,
+            HTTP_REFERER="http://www.some-referer-url.com/",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_dowc_file_with_permissions(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.documenttype)
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        m.post(
+            f"{DOWC_API_ROOT}/api/v1/documenten",
+            status_code=201,
+            json=self.dowc_response,
+        )
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_download_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.catalogus_url,
+                "iotype_omschrijving": self.documenttype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+            object_type=PermissionObjectTypeChoices.document,
+        )
+        response = self.client.post(
+            self.zac_dowc_url,
+            HTTP_REFERER="http://www.some-referer-url.com/",
+        )
 
         self.assertEqual(
             response.json(),
@@ -201,7 +280,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
             },
         )
 
-    def test_doc_file_already_exists_same_user(self, m):
+    def test_dowc_file_already_exists_same_user(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
         self.client.force_authenticate(user=self.user)
         m.post(
@@ -223,7 +302,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
+            "zac.contrib.dowc.views.CanReadDocuments.has_permission", return_value=True
         ):
             response = self.client.post(
                 self.zac_dowc_url,
@@ -232,7 +311,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_doc_file_already_exists_different_user(self, m):
+    def test_dowc_file_already_exists_different_user(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
         self.client.force_authenticate(user=self.user)
         m.post(
@@ -242,7 +321,7 @@ class DOCAPITests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.contrib.dowc.views.CanOpenDocuments.has_permission", return_value=True
+            "zac.contrib.dowc.views.CanReadDocuments.has_permission", return_value=True
         ):
             response = self.client.post(
                 self.zac_dowc_url,

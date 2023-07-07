@@ -19,6 +19,7 @@ from ..permissions import (
     zaken_geforceerd_bijwerken,
     zaken_handle_access,
     zaken_inzien,
+    zaken_list_documents,
     zaken_update_documents,
     zaken_wijzigen,
 )
@@ -120,6 +121,10 @@ class CanReadZaken(DefinitionBasePermission):
     permission = zaken_inzien
 
 
+class CanListZaakDocuments(DefinitionBasePermission):
+    permission = zaken_list_documents
+
+
 class CanUpdateZaken(DefinitionBasePermission):
     permission = zaken_wijzigen
 
@@ -141,7 +146,7 @@ class CanCreateZaken(DefinitionBasePermission):
 ###############################
 
 
-class CanOpenDocuments(DefinitionBasePermission):
+class CanReadDocuments(DefinitionBasePermission):
     permission = zaken_download_documents
     object_type = PermissionObjectTypeChoices.document
 

@@ -44,7 +44,10 @@ zaken_create_status = Permission(
     name="zaken:create-status",
     description="Status zetten op zaken.",
 )
-
+zaken_list_documents = Permission(
+    name="zaken:lijst-documenten",
+    description="Inzien documentenlijst bij zaken, exclusief de (binaire) inhoud.",
+)
 zaken_download_documents = Permission(
     name="zaken:download-documents",
     description="Inzien documenten bij zaken, inclusief de (binaire) inhoud.",

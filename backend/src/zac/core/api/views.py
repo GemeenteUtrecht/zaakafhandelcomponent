@@ -118,7 +118,7 @@ from .permissions import (
     CanForceEditClosedZaak,
     CanForceEditClosedZaken,
     CanHandleAccessRequests,
-    CanOpenDocuments,
+    CanListZaakDocuments,
     CanReadOrUpdateZaken,
     CanReadZaken,
     CanUpdateZaken,
@@ -844,25 +844,14 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
     permission_classes = (
         permissions.IsAuthenticated,
         CanReadZaken,
+        CanListZaakDocuments,
     )
     serializer_class = GetZaakDocumentSerializer
-
-    def _filter_for_permissions(self, obj):
-        return CanOpenDocuments().has_permission(
-            self.request, self
-        ) or CanOpenDocuments().has_object_permission(self.request, self, obj)
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
         documents, gone = get_documenten(zaak)
-        filtered_documents = []
-        for document in documents:
-            if self._filter_for_permissions(document):
-                filtered_documents.append(document)
-
-        resolved_documenten = resolve_documenten_informatieobjecttypen(
-            filtered_documents
-        )
+        resolved_documenten = resolve_documenten_informatieobjecttypen(documents)
         open_documenten = get_open_documenten(request.user)
 
         # Resolve audit trail
