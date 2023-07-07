@@ -382,7 +382,8 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "initiator": {"type": "String", "value": f"user:{self.user}"},
                 "organisatieRSIN": {"type": "String", "value": "002220647"},
                 "startRelatedBusinessProcess": {"type": "Boolean", "value": True},
-                "object": {"type": "String", "value": self.object["url"]},
+                "objectUrl": {"type": "String", "value": self.object["url"]},
+                "objectType": {"type": "String", "value": self.objecttype["url"]},
             },
         }
 

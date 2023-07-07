@@ -61,6 +61,7 @@ from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_object,
+    fetch_objecttype,
     fetch_rol,
     fetch_zaaktype,
     get_document,
@@ -474,20 +475,20 @@ class CreateZaakSerializer(serializers.Serializer):
         help_text=_("Relevant details pertaining to the ZAAK.")
     )
     object = serializers.URLField(
-        help_text=_("URL-reference of OBJECT to be related to ZAAK."),
+        help_text=_("URL-reference to OBJECT which is to be related to ZAAK."),
         required=False,
         allow_blank=False,
     )
     start_related_business_process = serializers.BooleanField(
         help_text=_(
-            "Automagically start related business process, if exists, once ZAAK is created."
+            "Automagically start related business process if it exists once ZAAK is created."
         ),
         default=True,
     )
 
-    def validate_object(self, object: str) -> str:
+    def validate_object(self, object: str) -> Dict:
         try:
-            fetch_object(object)
+            object = fetch_object(object)
         except ClientError as exc:
             raise serializers.ValidationError(
                 _(
@@ -500,6 +501,10 @@ class CreateZaakSerializer(serializers.Serializer):
 
     def validate(self, data):
         validated_data = super().validate(data)
+        if object := validated_data.pop("object", None):
+            validated_data["object_type"] = object["type"]["url"]
+            validated_data["object_url"] = object["url"]
+
         zt_identificatie = validated_data["zaaktype_identificatie"]
         zt_catalogus = validated_data["zaaktype_catalogus"]
         zaaktypen = get_zaaktypen(
