@@ -38,6 +38,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() buttonPosition: 'bottom' | 'top' = 'bottom';
   @Input() buttonSize: 'small' | 'large' = 'large';
   @Input() editable: boolean | string = true;
+  @Input() verifyToggle = false;
   @Input() title = '';
   @Input() keys?: string[] = null;
   @Input() resetAfterSubmit = false;
@@ -353,9 +354,17 @@ export class FormComponent implements OnInit, OnChanges {
       e.preventDefault();
     }
 
+    this.formIsInEditMode.emit(this.isInEditMode);
+
+    if (!this.verifyToggle) {
+      this.switchToggle();
+    }
+
+  }
+
+  switchToggle() {
     if (this.editable === 'toggle') {
       this.isInEditMode = !this.isInEditMode;
-      this.formIsInEditMode.emit(this.isInEditMode);
       if (!this.isInEditMode) {
         // reset to initial form values when exiting isInEditMode mode
         this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);

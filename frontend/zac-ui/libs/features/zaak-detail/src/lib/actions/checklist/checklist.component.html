@@ -1,6 +1,6 @@
 <div class="card">
   <!-- Loading -->
-  <ng-container *ngIf="!finishedLoadingDocuments && hasChecklist || (isLoading && !hasChecklist)">
+  <ng-container *ngIf="!finishedLoadingDocuments && hasChecklist || (isLoading && !hasChecklist) || isLocking">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
   <!-- End loading -->
@@ -14,6 +14,7 @@
              [isLoading]="isSubmitting"
              [buttonPosition]="'top'"
              [buttonSize]="'small'"
+             [verifyToggle]='true'
              title="Takenlijst"
              tooltip="In de takenlijst kun je aangeven welke taken uitgevoerd zijn in deze zaak. Deze vragen kunnen op elk moment tijdens het proces beantwoord worden. Het is mogelijk om een taak toe te wijzen aan een collega."
              (formIsInEditMode)="onClickEditButton($event)"
