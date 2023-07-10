@@ -105,7 +105,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         with patch(
-            "zac.contrib.objects.services.fetch_checklist_object",
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=CHECKLIST_OBJECT,
         ):
             with patch(
@@ -129,7 +129,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         with patch(
-            "zac.contrib.objects.services.fetch_checklist_object", return_value=[]
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=[],
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 404)
@@ -168,10 +169,15 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=[CHECKLISTTYPE_OBJECT],
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
+                "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
                 return_value=[],
             ):
-                response = self.client.post(self.endpoint, data=data)
+
+                with patch(
+                    "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
+                    return_value=None,
+                ):
+                    response = self.client.post(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
@@ -179,22 +185,23 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             {
                 "answers": [
                     {
+                        "question": "Ja?",
                         "answer": "",
+                        "remarks": "",
                         "document": "",
                         "groupAssignee": None,
-                        "question": "Ja?",
-                        "remarks": "",
                         "userAssignee": None,
                     },
                     {
+                        "question": "Nee?",
                         "answer": "",
+                        "remarks": "",
                         "document": "",
                         "groupAssignee": None,
-                        "question": "Nee?",
-                        "remarks": "",
                         "userAssignee": None,
                     },
-                ]
+                ],
+                "lockedBy": None,
             },
         )
 
@@ -390,18 +397,14 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # Put checklist
         with patch(
-            "zac.contrib.objects.checklists.api.serializers.fetch_checklist_object",
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=CHECKLIST_OBJECT,
         ):
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                "zac.contrib.objects.services.fetch_checklisttype_object",
+                return_value=[CHECKLISTTYPE_OBJECT],
             ):
-                with patch(
-                    "zac.contrib.objects.services.fetch_checklisttype_object",
-                    return_value=[CHECKLISTTYPE_OBJECT],
-                ):
-                    response = self.client.put(self.endpoint, data=data)
+                response = self.client.put(self.endpoint, data=data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -424,6 +427,127 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "groupAssignee": None,
                         "userAssignee": None,
                     },
-                ]
+                ],
+                "lockedBy": None,
             },
         )
+
+    def test_lock_checklist(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
+
+        m.patch(
+            f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
+            json=CHECKLIST_OBJECT,
+            status_code=200,
+        )
+        self.client.force_authenticate(user=self.user)
+        lock_endpoint = reverse_lazy(
+            "lock-zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
+
+        with patch(
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=deepcopy(CHECKLIST_OBJECT),
+        ):
+            response = self.client.post(lock_endpoint)
+
+        self.assertEqual(response.status_code, 204)
+
+    def test_lock_checklist_but_already_locked(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
+
+        self.client.force_authenticate(user=self.user)
+        lock_endpoint = reverse_lazy(
+            "lock-zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
+        checklist_object = deepcopy(CHECKLIST_OBJECT)
+        checklist_object["record"]["data"]["lockedBy"] = self.user.username
+        with patch(
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=checklist_object,
+        ):
+            response = self.client.post(lock_endpoint)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), ["Checklist is already locked."])
+
+    def test_unlock_checklist(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
+
+        m.patch(
+            f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
+            json=CHECKLIST_OBJECT,
+            status_code=200,
+        )
+        self.client.force_authenticate(user=self.user)
+        unlock_endpoint = reverse_lazy(
+            "unlock-zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
+        checklist_object = deepcopy(CHECKLIST_OBJECT)
+        checklist_object["record"]["data"]["lockedBy"] = self.user.username
+        with patch(
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=checklist_object,
+        ):
+            response = self.client.post(unlock_endpoint)
+
+        self.assertEqual(response.status_code, 204)
+
+    def test_unlock_checklist_but_checklist_is_not_locked(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
+
+        self.client.force_authenticate(user=self.user)
+        unlock_endpoint = reverse_lazy(
+            "unlock-zaak-checklist",
+            kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
+        )
+        with patch(
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            return_value=CHECKLIST_OBJECT,
+        ):
+            response = self.client.post(unlock_endpoint)
+
+        self.assertEqual(response.status_code, 400)

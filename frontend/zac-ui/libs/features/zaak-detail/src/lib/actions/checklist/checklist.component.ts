@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import {FieldConfiguration, FieldsetConfiguration, SnackbarService} from '@gu/components';
 import {
   Checklist,
@@ -16,6 +16,7 @@ import {ChecklistService, DocumentenService, UserService, ZaakService} from '@gu
 import {KetenProcessenService} from '../keten-processen/keten-processen.service';
 import {FormGroup} from '@angular/forms';
 import {HttpErrorResponse} from '@angular/common/http';
+import {FormComponent} from '@gu/components';
 
 
 /**
@@ -31,6 +32,7 @@ import {HttpErrorResponse} from '@angular/common/http';
   templateUrl: './checklist.component.html',
 })
 export class ChecklistComponent implements OnInit, OnChanges {
+  @ViewChild(FormComponent) formComponent: FormComponent;
   /** @type {string} Input to identify the organisation. */
   @Input() zaak: Zaak = null;
 
@@ -40,6 +42,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
   /** @type {boolean} Whether the API is loading. */
   isLoading = false;
+  isLocking = false;
 
   /** @type {boolean} Whether the form is submitting to the API. */
   isSubmitting = false;
@@ -289,6 +292,36 @@ export class ChecklistComponent implements OnInit, OnChanges {
   //
 
   /**
+   * Lock or unlock checlist according to event
+   * @param formIsInEditMode
+   */
+  onClickEditButton(formIsInEditMode) {
+    this.isLocking = true;
+    if (!formIsInEditMode) {
+      this.isLocking = true
+      this.checklistService.lockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
+        {
+          this.formComponent.switchToggle();
+          this.isLocking = false;
+        },
+        error => {
+          this.reportError(error);
+        }
+      )
+    } else {
+      this.checklistService.unLockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
+        {
+          this.formComponent.switchToggle();
+          this.isLocking = false;
+        },
+        error => {
+          this.reportError(error);
+        }
+      )
+    }
+  }
+
+  /**
    * Gets called when a checklist form is submitted.
    * @param {Object} answerData
    */
@@ -364,12 +397,18 @@ export class ChecklistComponent implements OnInit, OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    const message = error.error?.value
+    let message =
+      error.error?.value
       ? error.error?.value[0]
       : error?.error?.detail || error?.error.reason || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || this.errorMessage;
+    if (error.status === 400) {
+      message = error.error ? error.error[0] : this.errorMessage;
+      this.formComponent.switchToggle();
+    }
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     this.isLoading = false;
     this.isSubmitting = false;
+    this.isLocking = false;
     console.error(error);
   }
 }

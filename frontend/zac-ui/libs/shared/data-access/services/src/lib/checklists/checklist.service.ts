@@ -57,4 +57,24 @@ export class ChecklistService {
 
     return this.http.Put<Checklist>(endpoint, params);
   }
+
+  /**
+   * Lock checklist.
+   * @param {string} bronorganisatie
+   * @param {string} identificatie
+   */
+  lockChecklist(bronorganisatie: string, identificatie: string){
+    const endpoint = encodeURI(`/api/checklists/zaak-checklists/${bronorganisatie}/${identificatie}/lock`);
+    return this.http.Post<any>(endpoint);
+  }
+
+  /**
+   * Unlock checklist
+   * @param {string} bronorganisatie
+   * @param {string} identificatie
+   */
+  unLockChecklist(bronorganisatie: string, identificatie: string){
+    const endpoint = encodeURI(`/api/checklists/zaak-checklists/${bronorganisatie}/${identificatie}/unlock`);
+    return this.http.Post<any>(endpoint);
+  }
 }

@@ -15,13 +15,14 @@ class ChecklistAnswer(Model):
     answer: str
     remarks: Optional[str] = ""
     document: Optional[str] = ""
-    user_assignee: Optional[User] = None
-    group_assignee: Optional[Group] = None
+    user_assignee: Optional[str] = None
+    group_assignee: Optional[str] = None
 
 
 @dataclass
 class Checklist(Model):
     answers: List[ChecklistAnswer]
+    locked_by: Optional[str] = None
 
 
 @dataclass

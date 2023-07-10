@@ -38,6 +38,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() buttonPosition: 'bottom' | 'top' = 'bottom';
   @Input() buttonSize: 'small' | 'large' = 'large';
   @Input() editable: boolean | string = true;
+  @Input() verifyToggle = false;
   @Input() title = '';
   @Input() keys?: string[] = null;
   @Input() resetAfterSubmit = false;
@@ -52,6 +53,7 @@ export class FormComponent implements OnInit, OnChanges {
 
   @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
+  @Output() formIsInEditMode: EventEmitter<any> = new EventEmitter<any>();
 
   /**
    * @type {Object} Documents mapping.
@@ -352,6 +354,15 @@ export class FormComponent implements OnInit, OnChanges {
       e.preventDefault();
     }
 
+    this.formIsInEditMode.emit(this.isInEditMode);
+
+    if (!this.verifyToggle) {
+      this.switchToggle();
+    }
+
+  }
+
+  switchToggle() {
     if (this.editable === 'toggle') {
       this.isInEditMode = !this.isInEditMode;
       if (!this.isInEditMode) {

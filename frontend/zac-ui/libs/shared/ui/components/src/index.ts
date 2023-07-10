@@ -5,7 +5,8 @@ export * from './lib/shared-ui-components.module';
 export * from './lib/components/map/map';
 export * from './lib/components/map/map.component';
 export * from './lib/components/file-upload/file-upload.component';
-export * from './lib/components/form/field'
+export * from './lib/components/form/field';
+export * from './lib/components/form/form.component';
 export * from './lib/components/modal/modal.service';
 
 // Elements
