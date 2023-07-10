@@ -383,9 +383,14 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "organisatieRSIN": {"type": "String", "value": "002220647"},
                 "startRelatedBusinessProcess": {"type": "Boolean", "value": True},
                 "objectUrl": {"type": "String", "value": self.object["url"]},
-                "objectType": {"type": "String", "value": self.objecttype["url"]},
+                "objectType": {"type": "String", "value": "overige"},
+                "objectTypeOverige": {
+                    "type": "String",
+                    "value": self.objecttype["name"],
+                },
             },
         }
+        print(m.last_request.json())
 
         self.assertEqual(m.last_request.json(), expected_payload)
 
