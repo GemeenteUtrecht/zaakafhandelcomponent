@@ -479,6 +479,18 @@ class CreateZaakSerializer(serializers.Serializer):
         required=False,
         allow_blank=False,
     )
+    object_type = serializers.CharField(
+        help_text=_(
+            "Type of OBJECT as required by Open Zaak. Defaults to `overige`. Don't change unless you know what you are doing. Only inserted into BPMN if OBJECT URL is also given."
+        ),
+        default="overige",
+    )
+    object_type_overige = serializers.CharField(
+        help_text=_(
+            "Description of OBJECT as required by Open Zaak. Defaults to `name` of OBJECT TYPE related to OBJECT. Only inserted into BPMN if OBJECT URL is also given."
+        ),
+        default=None,
+    )
     start_related_business_process = serializers.BooleanField(
         help_text=_(
             "Automagically start related business process if it exists once ZAAK is created."
@@ -502,8 +514,14 @@ class CreateZaakSerializer(serializers.Serializer):
     def validate(self, data):
         validated_data = super().validate(data)
         if object := validated_data.pop("object", None):
-            validated_data["object_type"] = object["type"]["url"]
+            validated_data["object_type_overige"] = (
+                validated_data["object_type_overige"] or object["type"]["name"]
+            )
             validated_data["object_url"] = object["url"]
+        else:
+            # remove object type (overige)
+            validated_data.pop("object_type", None)
+            validated_data.pop("object_type_overige", None)
 
         zt_identificatie = validated_data["zaaktype_identificatie"]
         zt_catalogus = validated_data["zaaktype_catalogus"]
