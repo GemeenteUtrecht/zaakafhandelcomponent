@@ -8,6 +8,7 @@ from .views import (
     WorkStackGroupAdhocActivitiesView,
     WorkStackGroupChecklistQuestionsView,
     WorkStackGroupTasksView,
+    WorkStackReviewRequestsView,
     WorkStackUserTasksView,
 )
 
@@ -33,5 +34,8 @@ urlpatterns = [
         "group-checklists",
         WorkStackGroupChecklistQuestionsView.as_view(),
         name="group-checklists",
+    ),
+    path(
+        "review-requests", WorkStackReviewRequestsView.as_view(), name="review-requests"
     ),
 ]

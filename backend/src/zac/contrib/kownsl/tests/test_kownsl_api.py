@@ -19,12 +19,13 @@ from zac.contrib.kownsl.tests.utils import (
     ZAAK_URL,
 )
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ..api import (
     create_review_request,
+    get_all_review_requests_for_zaak,
     get_client,
-    get_review_requests,
     lock_review_request,
     retrieve_advices,
     retrieve_approvals,
@@ -136,13 +137,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         self.assertEqual(approval.approved, True)
         self.assertEqual(approval.toelichting, APPROVAL["toelichting"])
 
-    def test_get_review_requests(self, m):
+    def test_get_all_review_requests_for_zaak(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={ZAAK_URL}",
-            json=[REVIEW_REQUEST],
+            json=paginated_response([REVIEW_REQUEST]),
         )
-        review_requests = get_review_requests(self.zaak)
+        review_requests = get_all_review_requests_for_zaak(self.zaak)
         request = review_requests[0]
         self.assertEqual(str(request.id), REVIEW_REQUEST["id"])
         self.assertEqual(m.last_request.qs["for_zaak"], [ZAAK_URL])

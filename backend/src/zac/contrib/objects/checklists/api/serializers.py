@@ -89,7 +89,7 @@ class ChecklistAnswerSerializer(APIModelSerializer):
     )
     user_assignee = UserSlugRelatedField(
         slug_field="username",
-        queryset=User.objects.all(),
+        queryset=User.objects.prefetch_related("groups").all(),
         required=False,
         help_text=_("`username` of the user assigned to answer."),
         allow_null=True,
@@ -139,7 +139,7 @@ class ChecklistSerializer(APIModelSerializer):
         help_text=_("Checklist is locked by this user."),
         slug_field="username",
         allow_null=True,
-        queryset=User.objects.all(),
+        queryset=User.objects.prefetch_related("groups").all(),
         default=None,
     )
 

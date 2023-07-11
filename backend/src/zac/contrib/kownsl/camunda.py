@@ -76,7 +76,7 @@ class CamundaAssignedUsersSerializer(APIModelSerializer):
 
     user_assignees = UserSlugRelatedField(
         slug_field="username",
-        queryset=User.objects.all(),
+        queryset=User.objects.prefetch_related("groups").all(),
         help_text=_(
             "Users assigned to the review request from within the camunda process."
         ),
@@ -86,7 +86,7 @@ class CamundaAssignedUsersSerializer(APIModelSerializer):
     )
     group_assignees = GroupSlugRelatedField(
         slug_field="name",
-        queryset=Group.objects.all(),
+        queryset=Group.objects.prefetch_related("user_set").all(),
         help_text=_(
             "Groups assigned to the review request from within the camunda process."
         ),
@@ -175,7 +175,7 @@ class ReadAssignedUsersSerializer(WriteAssignedUsersSerializer):
 
     user_assignees = UserSlugRelatedField(
         slug_field="username",
-        queryset=User.objects.all(),
+        queryset=User.objects.prefetch_related("groups").all(),
         help_text=_(
             "Users assigned to the review request from within the camunda process."
         ),
@@ -185,7 +185,7 @@ class ReadAssignedUsersSerializer(WriteAssignedUsersSerializer):
     )
     group_assignees = GroupSlugRelatedField(
         slug_field="name",
-        queryset=Group.objects.all(),
+        queryset=Group.objects.prefetch_related("user_set").all(),
         help_text=_(
             "Groups assigned to the review request from within the camunda process."
         ),

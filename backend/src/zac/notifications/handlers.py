@@ -11,7 +11,7 @@ from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
-from zac.contrib.kownsl.api import get_review_requests, lock_review_request
+from zac.contrib.kownsl.api import get_all_review_requests_for_zaak, lock_review_request
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.objects.cache import invalidate_meta_objects
 from zac.core.cache import (
@@ -146,7 +146,7 @@ class ZakenHandler:
 
             # lock all review requests related to zaak
             if is_closed and is_closed != was_closed:
-                review_requests = get_review_requests(zaak)
+                review_requests = get_all_review_requests_for_zaak(zaak)
                 with parallel() as executor:
                     list(executor.map(_lock_review_request, review_requests))
 

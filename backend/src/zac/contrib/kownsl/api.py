@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -8,6 +8,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.client import ZGWClient
 
 from zac.accounts.models import User
+from zac.core.utils import fetch_next_url_pagination
 from zac.utils.decorators import optional_service
 from zgw.models.zrc import Zaak
 
@@ -103,16 +104,47 @@ def get_review_request(uuid: str) -> Optional[ReviewRequest]:
 
 
 @optional_service
-def get_review_requests(zaak: Zaak) -> List[ReviewRequest]:
+def get_review_requests_paginated(
+    query_params: Optional[Dict] = None,
+    zaak: Optional[Zaak] = None,
+    requester: Optional[User] = None,
+) -> Tuple[List[Dict], Dict]:
     client = get_client()
-    results = client.list("review_requests", query_params={"for_zaak": zaak.url})
-    review_requests = factory(ReviewRequest, results)
+
+    if not query_params:
+        query_params = {}
+
+    if zaak:
+        query_params["for_zaak"] = zaak.url
+    if requester:
+        query_params["requester"] = requester.username
+
+    results = client.list("review_requests", query_params=query_params)
+    review_requests = factory(ReviewRequest, results["results"])
+    # fix relation reference
+    for result, review_request in zip(results["results"], review_requests):
+        review_request.user_deadlines = result["userDeadlines"]
+    results["results"] = review_requests
+    query_params = fetch_next_url_pagination(results, query_params=query_params)
+    return results, query_params
+
+
+@optional_service
+def get_all_review_requests_for_zaak(zaak) -> List[ReviewRequest]:
+    get_more = True
+    query_params = {}
+    results = []
+    while get_more:
+        rrs, query_params = get_review_requests_paginated(
+            query_params=query_params, zaak=zaak
+        )
+        results += rrs["results"]
+        get_more = query_params.get("page", None)
 
     # fix relation reference
-    for result, review_request in zip(results, review_requests):
+    for review_request in results:
         review_request.for_zaak = zaak
-        review_request.user_deadlines = result["userDeadlines"]
-    return review_requests
+    return results
 
 
 @optional_service

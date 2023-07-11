@@ -24,6 +24,7 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
+from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
@@ -74,9 +75,10 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-class GetConfigureReviewRequestContextSerializersTests(APITestCase):
+class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.maxDiff = None
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(

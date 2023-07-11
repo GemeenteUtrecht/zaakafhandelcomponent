@@ -11,6 +11,9 @@ from zac.accounts.models import User
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import ProcessInstance, Task
 from zac.camunda.forms import extract_task_form
+from zac.utils.decorators import cache as cache_result
+
+from ..services import A_DAY
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,7 @@ FORM_KEYS = {
 }
 
 
+@cache_result("resolve-assignee:{name}", timeout=A_DAY)
 def resolve_assignee(name: str) -> Union[Group, User]:
     try:  # Encapsulate in a try-except to not cause breaking changes
         user_or_group, _name = name.split(":", 1)

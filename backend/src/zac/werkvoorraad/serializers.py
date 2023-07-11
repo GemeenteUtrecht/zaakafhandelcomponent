@@ -5,6 +5,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
+from zac.contrib.kownsl.serializers import ZaakRevReqDetailSerializer
 from zac.contrib.objects.checklists.data import ChecklistAnswer
 from zac.elasticsearch.drf_api.serializers import (
     StatusDocumentSerializer,
@@ -139,3 +140,12 @@ class WorkStackChecklistAnswerSerializer(APIModelSerializer):
             "checklist_questions",
             "zaak",
         )
+
+
+class WorkStackReviewRequestSerializer(ZaakRevReqDetailSerializer):
+    completed = serializers.IntegerField(
+        label=_("completed requests"), help_text=_("The number of completed requests.")
+    )
+    zaak = SummaryZaakDocumentSerializer(
+        help_text=_("ZAAK that review request belongs to."), source="for_zaak"
+    )

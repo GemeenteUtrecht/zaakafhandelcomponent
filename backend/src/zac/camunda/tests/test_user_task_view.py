@@ -666,7 +666,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                             return_value=self.zaak,
                         ):
                             with patch(
-                                "zac.core.camunda.zet_resultaat.context.get_review_requests",
+                                "zac.core.camunda.zet_resultaat.context.get_all_review_requests_for_zaak",
                                 return_value=[review_request],
                             ):
                                 with patch(

@@ -1,8 +1,6 @@
 import logging
 
 from django.contrib.auth.models import Group
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import send_message
@@ -28,9 +26,9 @@ from zac.core.services import get_document, get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import (
+    get_all_review_requests_for_zaak,
     get_client,
     get_review_request,
-    get_review_requests,
     lock_review_request,
     retrieve_advices,
     retrieve_approvals,
@@ -269,7 +267,7 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     @extend_schema(summary=_("List review requests summary for a ZAAK."))
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
-        review_requests = get_review_requests(zaak)
+        review_requests = get_all_review_requests_for_zaak(zaak)
         serializer = self.get_serializer(
             instance=review_requests, context={"request": request}
         )

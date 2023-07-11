@@ -2,7 +2,7 @@ import logging
 import warnings
 from functools import wraps
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import parse_qs, urljoin, urlparse
+from urllib.parse import urljoin
 from urllib.request import Request
 
 from django.contrib.auth.models import Group
@@ -1248,15 +1248,7 @@ def get_documenten_all_paginated(
     """
     response = client.list("enkelvoudiginformatieobject", query_params=query_params)
     documenten = factory(Document, response["results"])
-
-    if response["next"]:
-        next_url = urlparse(response["next"])
-        query = parse_qs(next_url.query)
-        new_page = int(query["page"][0])
-        query_params["page"] = [new_page]
-    else:
-        query_params["page"] = None
-
+    query_params = fetch_next_url_pagination(response, query_params=query_params)
     return documenten, query_params
 
 

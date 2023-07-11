@@ -390,8 +390,6 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 },
             },
         }
-        print(m.last_request.json())
-
         self.assertEqual(m.last_request.json(), expected_payload)
 
         # Now remove initiator from roltypes

@@ -16,7 +16,7 @@ from .permission_loaders import add_permissions_for_activity_assignee
 class EventSerializer(serializers.ModelSerializer):
     created_by = UserSlugRelatedField(
         slug_field="username",
-        queryset=User.objects.all(),
+        queryset=User.objects.prefetch_related("groups").all(),
         required=False,
         help_text=_("`username` of the user assigned to answer."),
         allow_null=True,
