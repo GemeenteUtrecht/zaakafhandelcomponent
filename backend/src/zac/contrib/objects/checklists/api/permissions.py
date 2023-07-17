@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from zac.accounts.models import User
 from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import find_zaak
 from zgw.models.zrc import Zaak
 
@@ -67,9 +68,10 @@ class ChecklistIsLockedByCurrentUser(BasePermission):
             # if unlock is attempted the unlock will bounce if it's not the same locker. an unlock on an unlocked resource is harmless
             # if put is attempted the put will only be successful if the resource is locked by the updater
             if username := obj["record"]["data"]["lockedBy"]:
-                self.message = _(
-                    "Checklist is currently locked by `{username}`."
-                ).format(username=username)
+                user = resolve_assignee(username)
+                self.message = _("Checklist is currently locked by `{name}`.").format(
+                    name=user.get_full_name()
+                )
                 return request.user.username == username
 
             # if put is attempted but there is no username the resource wasn't locked - return 403
