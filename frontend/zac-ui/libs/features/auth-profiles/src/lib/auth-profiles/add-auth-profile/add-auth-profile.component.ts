@@ -362,12 +362,14 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   searchUsers(isForced?) {
     if ((this.searchValueControl.value !== this.currentSearchValue) || isForced) {
       this.currentSearchValue = this.searchValueControl.value;
-      this.fService.getAccounts(this.currentSearchValue).subscribe(res => {
-        this.searchResultUsers = res.results.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
-        this.cdRef.detectChanges();
-      }, error => {
-        this.reportError(error)
-      })
+      if (this.currentSearchValue) {
+        this.fService.getAccounts(this.currentSearchValue).subscribe(res => {
+          this.searchResultUsers = res.results.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
+          this.cdRef.detectChanges();
+        }, error => {
+          this.reportError(error)
+        })
+      }
     }
   }
 

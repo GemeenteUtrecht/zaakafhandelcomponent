@@ -96,11 +96,13 @@ export class CreateGroupComponent implements OnChanges {
   searchUsers() {
     if (this.searchValueControl.value !== this.currentSearchValue) {
       this.currentSearchValue = this.searchValueControl.value;
-      this.fService.getAccounts(this.currentSearchValue).subscribe(res => {
-        this.searchResultUsers = res.results;
-      }, error => {
-        this.reportError(error)
-      })
+      if (this.currentSearchValue) {
+        this.fService.getAccounts(this.currentSearchValue).subscribe(res => {
+          this.searchResultUsers = res.results;
+        }, error => {
+          this.reportError(error)
+        })
+      }
     }
   }
 
