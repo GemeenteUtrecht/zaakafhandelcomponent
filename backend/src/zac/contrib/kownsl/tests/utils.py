@@ -38,6 +38,7 @@ REVIEW_REQUEST = {
     "reviewType": KownslTypes.advice,
     "documents": [],
     "frontendUrl": f"{KOWNSL_ROOT}kownsl/14aec7a0-06de-4b55-b839-a1c9a0415b46/",
+    "isBeingReconfigured": False,
     "numAdvices": 1,
     "numApprovals": 0,
     "numAssignedUsers": 1,

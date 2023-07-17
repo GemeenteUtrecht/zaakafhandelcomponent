@@ -263,8 +263,8 @@ class WorkStackGroupChecklistQuestionsView(WorkStackChecklistQuestionsView):
     ],
 )
 class WorkStackReviewRequestsView(views.APIView):
-    # authentication_classes = (authentication.SessionAuthentication,)
-    # permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = WorkStackReviewRequestSerializer
     filter_backends = ()
     pagination_class = ProxyPagination
@@ -291,6 +291,7 @@ class WorkStackReviewRequestsView(views.APIView):
             for z in search_zaken(
                 request=self.request,
                 urls=list({rr.for_zaak for rr in review_requests}),
+                only_allowed=False,
             )
         }
         for rr in review_requests:
