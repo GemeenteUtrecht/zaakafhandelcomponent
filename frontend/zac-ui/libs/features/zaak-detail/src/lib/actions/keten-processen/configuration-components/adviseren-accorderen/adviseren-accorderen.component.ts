@@ -101,8 +101,8 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit() {
-    this.searchUsers();
-    this.searchUserGroups();
+    // this.searchUsers();
+    // this.searchUserGroups();
   }
 
   /**
@@ -314,25 +314,33 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   /**
    * Searches for users.
    */
-  searchUsers() {
-    this.ketenProcessenService.getAccounts('').subscribe(res => {
-      this.searchResultUsers = res.results;
-    }, error => {
-      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
-      this.reportError(error);
-    })
+  searchUsers(searchInput) {
+    if (searchInput) {
+      this.ketenProcessenService.getAccounts(searchInput).subscribe(res => {
+        this.searchResultUsers = res.results;
+      }, error => {
+        this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
+        this.reportError(error);
+      })
+    } else {
+      this.searchResultUsers = [];
+    }
   }
 
   /**
    * Searches for user groups.
    */
-  searchUserGroups() {
-    this.ketenProcessenService.getUserGroups('').subscribe(res => {
-      this.searchResultUserGroups = res.results;
-    }, error => {
-      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
-      this.reportError(error);
-    })
+  searchUserGroups(searchInput) {
+    if (searchInput) {
+      this.ketenProcessenService.getUserGroups(searchInput).subscribe(res => {
+        this.searchResultUserGroups = res.results;
+      }, error => {
+        this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
+        this.reportError(error);
+      })
+    } else {
+      this.searchResultUserGroups = [];
+    }
   }
 
   /**

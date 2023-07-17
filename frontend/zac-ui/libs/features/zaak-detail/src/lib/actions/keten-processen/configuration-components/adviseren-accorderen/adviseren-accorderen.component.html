@@ -40,7 +40,7 @@
         <div class="step-container"
              id="kp-adv-acc-user--{{i}}"
              formArrayName="assignedUsers">
-          <div class="row" [formGroupName]="i" *ngIf="searchResultUsers && searchResultUserGroups">
+          <div class="row" [formGroupName]="i">
             <div class="col-md-6 mb-2">
               <gu-multiselect [items]="searchResultUsers"
                               [multiple]="true"
@@ -49,7 +49,9 @@
                               bindLabel="fullName"
                               bindValue="username"
                               [selectedValue]="assignedUsersControl(i).value"
-                              placeholder="Zoek personen...">
+                              placeholder="Zoek personen..."
+                              (search)="searchUsers($event)"
+              >
               </gu-multiselect>
             </div>
             <div class="col-md-6">
@@ -60,7 +62,9 @@
                               bindLabel="name"
                               bindValue="name"
                               [selectedValue]="assignedUserGroupControl(i).value"
-                              placeholder="Zoek groepen...">
+                              placeholder="Zoek groepen..."
+                              (search)="searchUserGroups($event)"
+              >
               </gu-multiselect>
             </div>
             <div class="col-md-6">

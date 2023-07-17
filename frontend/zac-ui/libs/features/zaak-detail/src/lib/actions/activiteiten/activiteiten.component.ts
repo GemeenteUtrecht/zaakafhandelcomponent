@@ -198,12 +198,14 @@ export class ActiviteitenComponent implements OnInit {
    * @param searchInput
    */
   onSearchAccounts(searchInput) {
-    this.actvititeitenService.getAccounts(searchInput).subscribe(res => {
-      this.users = res.results;
-    }, error => {
-      console.error(error);
-      this.reportError(error)
-    });
+    if (searchInput) {
+      this.actvititeitenService.getAccounts(searchInput).subscribe(res => {
+        this.users = res.results;
+      }, error => {
+        console.error(error);
+        this.reportError(error)
+      });
+    }
   }
 
 
