@@ -37,9 +37,8 @@ export class ZaakObjectService {
    */
   @ClearCacheOnMethodCall('ZaakService.listRelatedObjects')
   deleteZaakObjectRelation(zaakObjectRelationUrl: string): Observable<void> {
-    const endpoint = encodeURI('/api/core/zaakobjects');
-    const params = new HttpParams().set('url', zaakObjectRelationUrl);
-    return this.http.Delete<void>(endpoint, {params: params});
+    const endpoint = encodeURI(`/api/core/zaakobjects?url=${zaakObjectRelationUrl}`);
+    return this.http.Delete<void>(endpoint);
   }
 
   /**
