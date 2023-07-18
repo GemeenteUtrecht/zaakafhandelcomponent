@@ -939,7 +939,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(
             response.json(),
-            {"detail": f"Checklist is currently locked by `some-other-user`."},
+            {"detail": f"Checklist is currently locked by `{user.get_full_name()}`."},
         )
 
 
