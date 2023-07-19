@@ -61,12 +61,12 @@ from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_object,
-    fetch_objecttype,
     fetch_rol,
     fetch_zaaktype,
     get_document,
     get_documenten,
     get_informatieobjecttypen_for_zaak,
+    get_informatieobjecttypen_for_zaaktype,
     get_rollen,
     get_roltypen,
     get_statustypen,
@@ -283,15 +283,20 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
     )
     zaak = serializers.URLField(
         required=True,
-        help_text=_("URL-reference of the ZAAK"),
+        help_text=_("URL-reference of the ZAAK."),
         allow_blank=False,
     )
     bestandsnaam = serializers.CharField(
         help_text=_("Filename without extension."),
         required=False,
     )
+    informatieobjecttype = serializers.URLField(
+        help_text=_("URL-reference to INFORMATIEOBJECTTYPE."),
+        required=False,
+    )
 
     def validate(self, data):
+        data = super().validate(data)
         document_url = data.get("url")
         zaak = get_zaak(zaak_url=data["zaak"])
         documenten, gone = get_documenten(zaak)
@@ -323,6 +328,16 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
                     "`bestandsnaam`: `{bestandsnaam}` already exists. Please choose a unique `bestandsnaam`."
                 ).format(bestandsnaam=bestandsnaam)
             )
+
+        if iot := data.get("informatieobjecttype"):
+            zt = fetch_zaaktype(zaak.zaaktype)
+            iots = get_informatieobjecttypen_for_zaaktype(zt)
+            if iot not in [_iot.url for _iot in iots]:
+                raise serializers.ValidationError(
+                    _(
+                        "INFORMATIEOBJECTTYPE `{iot}` is not related to ZAAKTYPE `{zt}`."
+                    ).format(iot=iot, zt=zt.omschrijving)
+                )
 
         return data
 

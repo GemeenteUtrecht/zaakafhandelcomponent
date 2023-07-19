@@ -639,7 +639,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        zaaktype = generate_oas_component(
+        self.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
@@ -652,11 +652,24 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
         )
+        self.informatieobjecttype2 = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1c",
+        )
         ziot = generate_oas_component(
             "ztc",
             "schemas/ZaakTypeInformatieObjectType",
-            zaaktype=zaaktype["url"],
+            zaaktype=self.zaaktype["url"],
             informatieobjecttype=self.informatieobjecttype["url"],
+            volgnummer=1,
+        )
+        ziot2 = generate_oas_component(
+            "ztc",
+            "schemas/ZaakTypeInformatieObjectType",
+            zaaktype=self.zaaktype["url"],
+            informatieobjecttype=self.informatieobjecttype2["url"],
+            volgnummer=2,
         )
 
         m.get(
@@ -665,14 +678,15 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "count": 1,
                 "previous": None,
                 "next": None,
-                "results": [zaaktype],
+                "results": [self.zaaktype],
             },
         )
-        m.get(zaaktype["url"], json=zaaktype)
-        m.get(self.informatieobjecttype["url"], json=self.informatieobjecttype)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.informatieobjecttype)
+        mock_resource_get(m, self.informatieobjecttype2)
 
         self.ziot_url = furl(f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen").set(
-            {"zaaktype": zaaktype["url"]}
+            {"zaaktype": self.zaaktype["url"]}
         )
         m.get(
             self.ziot_url.url,
@@ -680,7 +694,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "count": 1,
                 "next": None,
                 "previous": None,
-                "results": [ziot],
+                "results": [ziot, ziot2],
             },
         )
 
@@ -692,20 +706,13 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             bronorganisatie="123456782",
             identificatie="ZAAK-2020-0010",
         )
-        m.get(zaak["url"], json=zaak)
+        mock_resource_get(m, zaak)
 
         patch_find_zaak = patch(
             "zac.core.services.search_zaken", return_value=[zaak["url"]]
         )
         patch_find_zaak.start()
         self.addCleanup(patch_find_zaak.stop)
-
-        patch_get_iot = patch(
-            "zac.core.api.views.get_informatieobjecttype",
-            return_value=factory(InformatieObjectType, self.informatieobjecttype),
-        )
-        patch_get_iot.start()
-        self.addCleanup(patch_get_iot.stop)
 
     def test_add_document_with_file(self, m):
         user = SuperUserFactory.create()
@@ -717,6 +724,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "schemas/EnkelvoudigInformatieObject",
             versie=1,
             vertrouwelijkheidaanduiding="openbaar",
+            informatieobjecttype=self.informatieobjecttype["url"],
         )
 
         m.post(
@@ -1145,13 +1153,13 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "drc",
             "schemas/EnkelvoudigInformatieObject",
             url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            informatieobjecttype=self.informatieobjecttype["url"],
+            informatieobjecttype=self.informatieobjecttype2["url"],
             versie=1,
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             locked=False,
             bestandsnaam="some-bestandsnaam.extension",
         )
-        m.get(document["url"], json=document)
+        mock_resource_get(m, document)
 
         m.post(
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6/lock",
@@ -1176,6 +1184,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
             "bestandsnaam": "some-other-bestandsnaam.extension",
+            "informatieobjecttype": self.informatieobjecttype2["url"],
         }
         audit_trail = generate_oas_component(
             "drc",
@@ -1235,8 +1244,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             ),
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
-                "url": self.informatieobjecttype["url"],
-                "omschrijving": self.informatieobjecttype["omschrijving"],
+                "url": self.informatieobjecttype2["url"],
+                "omschrijving": self.informatieobjecttype2["omschrijving"],
             },
             "locked": False,
             "readUrl": reverse_lazy(
@@ -1262,6 +1271,45 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
         }
         self.assertEqual(data, expected_data)
+
+    def test_patch_document_wrong_iot(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            versie=1,
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            locked=False,
+            bestandsnaam="some-bestandsnaam.extension",
+        )
+        mock_resource_get(m, document)
+        post_data = {
+            "reden": "daarom",
+            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "bestandsnaam": "some-other-bestandsnaam.extension",
+            "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1d",
+        }
+        with patch(
+            "zac.core.api.serializers.get_documenten",
+            return_value=[[factory(Document, document)], []],
+        ):
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    f'INFORMATIEOBJECTTYPE `https://open-zaak.nl/catalogi/api/v1/informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1d` is not related to ZAAKTYPE `{self.zaaktype["omschrijving"]}`.'
+                ]
+            },
+        )
 
     def test_patch_document_filename_already_exists(self, m):
         user = SuperUserFactory.create()
