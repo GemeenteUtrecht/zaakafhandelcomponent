@@ -7,8 +7,7 @@ from furl import furl
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.accounts.api.fields import GroupSlugRelatedField, UserSlugRelatedField
-from zac.accounts.models import Group, User
+from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.api.proxy import ProxySerializer
 from zac.contrib.dowc.constants import DocFileTypes
@@ -219,31 +218,39 @@ class AdviceSerializer(APIModelSerializer):
 
 
 class AdviceReviewsSerializer(serializers.Serializer):
-    advices = AdviceSerializer(many=True)
+    advices = AdviceSerializer(many=True, source="get_reviews")
 
 
 class ApprovalReviewsSerializer(serializers.Serializer):
-    approvals = ApprovalSerializer(many=True)
+    approvals = ApprovalSerializer(many=True, source="get_reviews")
+
+
+class OpenReviewUserSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        model = UserSerializer.Meta.model
+        fields = ("full_name",)
+
+
+class OpenReviewGroupSerializer(GroupSerializer):
+    class Meta(GroupSerializer.Meta):
+        model = GroupSerializer.Meta.model
+        fields = ("name",)
 
 
 class OpenReviewSerializer(APIModelSerializer):
     deadline = serializers.DateField(
         help_text=_("Deadline date of open review request."), required=True
     )
-    users = UserSlugRelatedField(
+    users = OpenReviewUserSerializer(
         many=True,
-        slug_field="username",
-        queryset=User.objects.all(),
-        required=True,
-        help_text=_("`username` of the user assigned to review."),
+        read_only=True,
+        help_text=_("`full_name` of the users assigned to review."),
         allow_null=True,
     )
-    groups = GroupSlugRelatedField(
+    groups = OpenReviewGroupSerializer(
         many=True,
-        slug_field="name",
-        queryset=Group.objects.prefetch_related("user_set").all(),
-        required=True,
-        help_text=_("`name` of the group assigned to review."),
+        read_only=True,
+        help_text=_("`name` of the groups assigned to review."),
         allow_null=True,
     )
 

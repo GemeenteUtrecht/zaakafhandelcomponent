@@ -76,7 +76,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([rol]))
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={zaak['url']}",
-            json=[],
+            json=paginated_response([]),
         )
 
         call_command("add_atomic_permissions")
@@ -131,7 +131,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([rol]))
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={zaak['url']}",
-            json=[],
+            json=paginated_response([]),
         )
 
         call_command("add_atomic_permissions")
@@ -184,7 +184,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={zaak['url']}",
-            json=[review_request],
+            json=paginated_response([review_request]),
         )
 
         call_command("add_atomic_permissions")

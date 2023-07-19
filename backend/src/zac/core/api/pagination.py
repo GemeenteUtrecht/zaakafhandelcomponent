@@ -3,18 +3,17 @@ from collections import OrderedDict
 from django.utils.translation import gettext_lazy as _
 
 from furl import furl
-from rest_framework import serializers
 from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response
 
 
 class BffPagination(PageNumberPagination):
+    page_size_query_param = "pageSize"
+    page_query_param = "page"
     page_size = 100
 
 
-class ObjectProxyPagination(PageNumberPagination):
-    page_size_query_param = "pageSize"
-    page_query_param = "page"
+class ProxyPagination(BffPagination):
     page_size = 20
 
     def get_page_size(self, request):

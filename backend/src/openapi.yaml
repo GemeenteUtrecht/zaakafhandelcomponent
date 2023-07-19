@@ -496,6 +496,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       - name: search
         required: false
         in: query
@@ -696,6 +702,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/AxesReset'
           description: ''
+  /api/accounts/management/permissions/atomic/add:
+    post:
+      operationId: accounts_management_permissions_atomic_add_create
+      description: 'This is NOT meant for everyday usage but rather an emergency endpoint
+        for solving a hot mess. TODO: implement a worker instead of blocking the app.'
+      summary: Add all atomic permissions for behandelaren and advisors.
+      tags:
+      - management
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          description: No response body
+  /api/accounts/management/permissions/blueprint/load:
+    post:
+      operationId: accounts_management_permissions_blueprint_load_create
+      description: 'This is NOT meant for everyday usage but rather an emergency endpoint
+        for solving a hot mess. TODO: implement a worker instead of blocking the app.'
+      summary: Load all blueprint permissions.
+      tags:
+      - management
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddBlueprintPermissions'
+          description: ''
   /api/accounts/permissions:
     get:
       operationId: accounts_permissions_retrieve
@@ -716,7 +770,11 @@ paths:
                 - 'false'
                 - 'true'
               description: Header displays als de gebruiker is gehijackt.
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+          description: ''
   /api/accounts/roles:
     get:
       operationId: accounts_roles_list
@@ -926,6 +984,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       - in: query
@@ -1196,6 +1260,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       - name: search
@@ -1832,14 +1902,8 @@ paths:
   /api/camunda/send-message:
     post:
       operationId: camunda_send_message_create
-      description: |-
-        Send a BPMN message into a running process instance.
-
-        Typically this will start an embedded sub process in the running process
-        instance.
-
-        Note that the available/valid messages depend on the specific process
-        definition and are validated at run-time.
+      description: Sets the messageAssignee to the user making the request and the
+        bptlAppId variable.
       summary: Verstuur een BPMN bericht.
       tags:
       - camunda
@@ -2265,6 +2329,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/Checklist'
           description: ''
+  /api/checklists/zaak-checklists/{bronorganisatie}/{identificatie}/lock:
+    post:
+      operationId: checklists_zaak_checklists_lock_create
+      summary: Lock a checklist.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        description: Bronorganisatie van de ZAAK met ZAAKTYPE gerelateerd aan het
+          checklisttype.
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        description: Identificatie van de ZAAK met ZAAKTYPE gerelateerd aan het checklisttype.
+        required: true
+      tags:
+      - checklists
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          description: No response body
+  /api/checklists/zaak-checklists/{bronorganisatie}/{identificatie}/unlock:
+    post:
+      operationId: checklists_zaak_checklists_unlock_create
+      summary: Unlock a checklist.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        description: Bronorganisatie van de ZAAK met ZAAKTYPE gerelateerd aan het
+          checklisttype.
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        description: Identificatie van de ZAAK met ZAAKTYPE gerelateerd aan het checklisttype.
+        required: true
+      tags:
+      - checklists
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          description: No response body
   /api/checklists/zaak-checklisttypes/{bronorganisatie}/{identificatie}:
     get:
       operationId: checklists_zaak_checklisttypes_retrieve
@@ -2577,7 +2709,11 @@ paths:
                 - 'false'
                 - 'true'
               description: Header displays als de gebruiker is gehijackt.
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZaakEigenschap'
+          description: ''
   /api/core/cases/{bronorganisatie}/{identificatie}/related-cases:
     get:
       operationId: core_cases_related_cases_retrieve
@@ -3358,7 +3494,11 @@ paths:
                 - 'false'
                 - 'true'
               description: Header displays als de gebruiker is gehijackt.
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjecttypeVersionProxy'
+          description: ''
   /api/core/recently-viewed:
     get:
       operationId: core_recently_viewed_retrieve
@@ -3531,7 +3671,11 @@ paths:
                 - 'false'
                 - 'true'
               description: Header displays als de gebruiker is gehijackt.
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VertrouwelijkheidsAanduiding'
+          description: ''
   /api/core/zaakobjects:
     post:
       operationId: core_zaakobjects_create
@@ -3614,6 +3758,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       - in: query
@@ -4913,6 +5063,12 @@ paths:
         schema:
           type: integer
         description: Page of paginated response.
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - search
       security:
@@ -4981,6 +5137,12 @@ paths:
         schema:
           type: integer
         description: Page of paginated response.
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - search
       requestBody:
@@ -5054,6 +5216,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - workstack
       security:
@@ -5082,6 +5250,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -5149,6 +5323,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - workstack
       security:
@@ -5200,6 +5380,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -5256,6 +5442,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - workstack
       security:
@@ -5275,6 +5467,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedWorkStackTaskList'
           description: ''
+  /api/workstack/review-requests:
+    get:
+      operationId: workstack_review_requests_retrieve
+      summary: List review requests initiated by user.
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        description: Page number of paginated response.
+      - in: query
+        name: pageSize
+        schema:
+          type: integer
+          default: 20
+        description: Number of results to return per paginated response.
+      tags:
+      - workstack
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkStackReviewRequest'
+          description: ''
   /api/workstack/user-tasks:
     get:
       operationId: workstack_user_tasks_list
@@ -5284,6 +5513,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -5384,6 +5619,16 @@ components:
       - url
       - zaak
       title: AccessRequestDetail
+    AddBlueprintPermissions:
+      type: object
+      properties:
+        count:
+          type: integer
+          nullable: true
+          description: Number of blueprint permissions added.
+      required:
+      - count
+      title: AddBlueprintPermissions
     AddZaakDocumentRequest:
       type: object
       properties:
@@ -6275,6 +6520,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChecklistAnswer'
+        lockedBy:
+          type: string
+          title: Gebruikersnaam
+          description: Checklist is locked by this user.
+          nullable: true
       required:
       - answers
       title: Checklist
@@ -6371,6 +6621,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChecklistAnswerRequest'
+        lockedBy:
+          type: string
+          minLength: 1
+          title: Gebruikersnaam
+          description: Checklist is locked by this user.
+          nullable: true
       required:
       - answers
       title: ChecklistRequest
@@ -6637,11 +6893,29 @@ components:
           allOf:
           - $ref: '#/components/schemas/CreateZaakDetailsRequest'
           description: Relevante details over de ZAAK.
+        object:
+          type: string
+          format: uri
+          minLength: 1
+          description: URL-reference to OBJECT which is to be related to ZAAK.
+        objectType:
+          type: string
+          minLength: 1
+          default: overige
+          description: Type of OBJECT as required by Open Zaak. Defaults to `overige`.
+            Don't change unless you know what you are doing. Only inserted into BPMN
+            if OBJECT URL is also given.
+        objectTypeOverige:
+          type: string
+          minLength: 1
+          description: Description of OBJECT as required by Open Zaak. Defaults to
+            `name` of OBJECT TYPE related to OBJECT. Only inserted into BPMN if OBJECT
+            URL is also given.
         startRelatedBusinessProcess:
           type: boolean
           default: true
-          description: Start het gerelateerde business process automagisch op, als
-            het bestaat, als de ZAAK eenmaal is gemaakt.
+          description: Automagically start related business process if it exists once
+            ZAAK is created.
       required:
       - zaakDetails
       - zaaktypeCatalogus
@@ -7169,8 +7443,8 @@ components:
       title: FormEnum
     FormField:
       oneOf:
-      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldDatetime'
+      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldEnum'
       - $ref: '#/components/schemas/FormFieldString'
       - $ref: '#/components/schemas/FormFieldInt'
@@ -7465,8 +7739,8 @@ components:
       title: GroupBlueprintPoliciesZaakTypeBlueprintRequest
     GroupBlueprintRequest:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprintRequest'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprintRequest'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprintRequest'
       discriminator:
         propertyName: objectType
         mapping:
@@ -8020,6 +8294,14 @@ components:
     ObjecttypeProxyExtrasResponse:
       type: object
       title: ObjecttypeProxyExtrasResponse
+    ObjecttypeVersionProxy:
+      allOf:
+      - $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fobjecttypes.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ObjectVersion
+      - $ref: '#/components/schemas/ObjecttypeVersionProxyExtrasResponse'
+      title: ObjecttypeVersionProxy
+    ObjecttypeVersionProxyExtrasResponse:
+      type: object
+      title: ObjecttypeVersionProxyExtrasResponse
     OpenDocument:
       type: object
       properties:
@@ -8039,22 +8321,40 @@ components:
         users:
           type: array
           items:
-            type: string
-            title: Gebruikersnaam
-            nullable: true
-          description: '`username` of the user assigned to review.'
+            $ref: '#/components/schemas/OpenReviewUser'
+          readOnly: true
+          nullable: true
+          description: '`full_name` of the user assigned to review.'
         groups:
           type: array
           items:
-            type: string
-            title: Naam
-            nullable: true
+            $ref: '#/components/schemas/OpenReviewGroup'
+          readOnly: true
+          nullable: true
           description: '`name` of the group assigned to review.'
       required:
       - deadline
       - groups
       - users
       title: OpenReview
+    OpenReviewGroup:
+      type: object
+      properties:
+        name:
+          type: string
+          title: Naam
+          maxLength: 150
+      required:
+      - name
+      title: OpenReviewGroup
+    OpenReviewUser:
+      type: object
+      properties:
+        fullName:
+          type: string
+      required:
+      - fullName
+      title: OpenReviewUser
     PaginatedGroupList:
       type: object
       properties:
@@ -8555,6 +8855,20 @@ components:
           minLength: 1
           description: URL-referentie naar de ZAAK
       title: PatchedZaakHistoryRequest
+    Permission:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the permission
+          maxLength: 100
+        description:
+          type: string
+          description: Beschrijving van het recht
+      required:
+      - description
+      - name
+      title: Permission
     PermissionDenied:
       type: object
       properties:
@@ -8582,6 +8896,7 @@ components:
       - zaken:afsluiten
       - zaken:set-result
       - zaken:create-status
+      - zaken:lijst-documenten
       - zaken:download-documents
       - zaken:update-documents
       - zaken:add-documents
@@ -8606,6 +8921,7 @@ components:
         * `zaken:afsluiten` - Zaken afsluiten (=eindstatus zetten), als er een resultaat gezet is.
         * `zaken:set-result` - Resultaat zetten op zaken.
         * `zaken:create-status` - Status zetten op zaken.
+        * `zaken:lijst-documenten` - Inzien documentenlijst bij zaken, exclusief de (binaire) inhoud.
         * `zaken:download-documents` - Inzien documenten bij zaken, inclusief de (binaire) inhoud.
         * `zaken:update-documents` - Bewerken van eigenschappen van de documenten bij zaken.
         * `zaken:add-documents` - Nieuwe/extra documenten toevoegen bij zaken.
@@ -9125,7 +9441,10 @@ components:
           type: string
         openInNewWindow:
           type: boolean
+        endTask:
+          type: boolean
       required:
+      - endTask
       - openInNewWindow
       - redirectTo
       title: RedirectContext
@@ -9232,12 +9551,12 @@ components:
       title: ReviewTypeEnum
     Rol:
       oneOf:
-      - $ref: '#/components/schemas/RolJSONFieldTaskData'
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
       - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
-      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
-      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
       - $ref: '#/components/schemas/RolRolVestigingTaskData'
+      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolJSONFieldTaskData'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -9496,12 +9815,12 @@ components:
       title: RolOrganisatorischeEenheidTaskDataRequest
     RolRequest:
       oneOf:
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
       - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
-      - $ref: '#/components/schemas/RolJSONFieldTaskDataRequest'
       - $ref: '#/components/schemas/RolRolVestigingTaskDataRequest'
       - $ref: '#/components/schemas/RolRolMedewerkerTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
+      - $ref: '#/components/schemas/RolJSONFieldTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -9850,8 +10169,8 @@ components:
       title: SearchEigenschap
     SearchEigenschapSpecificatie:
       oneOf:
-      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumNumberEnum'
       - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumStringEnum'
+      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumNumberEnum'
       discriminator:
         propertyName: type
         mapping:
@@ -10238,11 +10557,11 @@ components:
     SubmitUserTaskRequest:
       oneOf:
       - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
       - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
       - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
       discriminator:
         propertyName: form
         mapping:
@@ -10400,8 +10719,8 @@ components:
     Task:
       oneOf:
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -10644,13 +10963,13 @@ components:
       title: UserAuthorizationProfileRequest
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
       - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
-      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
       - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -10858,6 +11177,19 @@ components:
         * `geheim` - Geheim
         * `zeer_geheim` - Zeer geheim
       title: VertrouwelijkheidaanduidingEnum
+    VertrouwelijkheidsAanduiding:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Leesbare classificatielabel.
+        value:
+          type: string
+          description: Waarde van classificatie.
+      required:
+      - label
+      - value
+      title: VertrouwelijkheidsAanduiding
     WorkStackAccessRequests:
       type: object
       properties:
@@ -10906,6 +11238,66 @@ components:
       - checklistQuestions
       - zaak
       title: WorkStackChecklistAnswer
+    WorkStackReviewRequest:
+      oneOf:
+      - $ref: '#/components/schemas/WorkStackReviewRequestApprovalReviews'
+      - $ref: '#/components/schemas/WorkStackReviewRequestAdviceReviews'
+      discriminator:
+        propertyName: reviewType
+        mapping:
+          advice: '#/components/schemas/WorkStackReviewRequestAdviceReviews'
+          approval: '#/components/schemas/WorkStackReviewRequestApprovalReviews'
+      title: WorkStackReviewRequest
+    WorkStackReviewRequestAdviceReviews:
+      allOf:
+      - $ref: '#/components/schemas/WorkStackReviewRequestSharedResponse'
+      - $ref: '#/components/schemas/AdviceReviews'
+      title: WorkStackReviewRequestAdviceReviews
+    WorkStackReviewRequestApprovalReviews:
+      allOf:
+      - $ref: '#/components/schemas/WorkStackReviewRequestSharedResponse'
+      - $ref: '#/components/schemas/ApprovalReviews'
+      title: WorkStackReviewRequestApprovalReviews
+    WorkStackReviewRequestSharedResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: De `id` van het verzoek.
+        reviewType:
+          allOf:
+          - $ref: '#/components/schemas/ReviewTypeEnum'
+          description: |-
+            Het verzoekstype.
+
+            * `advice` - Advies
+            * `approval` - Accordering
+        openReviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenReview'
+          readOnly: true
+        isBeingReconfigured:
+          type: boolean
+          description: Boolean flag to indicate if review request is currently being
+            reconfigured.
+        completed:
+          type: integer
+          title: Voltooide verzoeken
+          description: Het aantal voltooide verzoeken.
+        zaak:
+          allOf:
+          - $ref: '#/components/schemas/SummaryZaakDocument'
+          description: ZAAK that review request belongs to.
+      required:
+      - completed
+      - id
+      - isBeingReconfigured
+      - openReviews
+      - reviewType
+      - zaak
+      title: WorkStackReviewRequestSharedResponse
     WorkStackTask:
       type: object
       properties:
@@ -11226,10 +11618,10 @@ components:
       title: ZaakDocumentRequest
     ZaakEigenschap:
       oneOf:
-      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateValue'
       discriminator:
         propertyName: formaat
         mapping:

@@ -1,10 +1,11 @@
 import logging
 from typing import Dict, List
 
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from django_camunda.client import get_client
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
@@ -18,10 +19,13 @@ from zac.camunda.user_tasks.api import (
     get_killable_camunda_tasks,
     get_zaak_urls_from_tasks,
 )
+from zac.contrib.kownsl.api import get_review_requests_paginated
+from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.objects.services import (
     fetch_all_checklists_for_user_groups,
     fetch_all_unanswered_checklists_for_user,
 )
+from zac.core.api.pagination import ProxyPagination
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
@@ -35,6 +39,7 @@ from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
     WorkStackChecklistAnswerSerializer,
+    WorkStackReviewRequestSerializer,
     WorkStackTaskSerializer,
 )
 from .utils import (
@@ -87,6 +92,8 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
 @extend_schema(
     summary=_("List active ZAAKen for logged in user."),
     parameters=[es_document_to_ordering_parameters(ZaakDocument)],
+    request=None,
+    responses={200: ZaakDocumentSerializer(many=True)},
 )
 class WorkStackAssigneeCasesView(ListAPIView):
     authentication_classes = (authentication.SessionAuthentication,)
@@ -234,3 +241,70 @@ class WorkStackGroupChecklistQuestionsView(WorkStackChecklistQuestionsView):
             for checklist in checklists
         ]
         return answers_grouped_by_zaak_url
+
+
+@extend_schema(
+    summary=_("List review requests initiated by user."),
+    parameters=[
+        OpenApiParameter(
+            name=ProxyPagination().page_size_query_param,
+            default=ProxyPagination().page_size,
+            type=OpenApiTypes.INT,
+            description=_("Number of results to return per paginated response."),
+            location=OpenApiParameter.QUERY,
+        ),
+        OpenApiParameter(
+            name=ProxyPagination().page_query_param,
+            type=OpenApiTypes.INT,
+            default=1,
+            description=_("Page number of paginated response."),
+            location=OpenApiParameter.QUERY,
+        ),
+    ],
+)
+class WorkStackReviewRequestsView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = WorkStackReviewRequestSerializer
+    filter_backends = ()
+    pagination_class = ProxyPagination
+
+    @property
+    def paginator(self):
+        if not hasattr(self, "_paginator"):
+            self._paginator = self.pagination_class()
+        return self._paginator
+
+    def get_query_params(self) -> Dict:
+        return {
+            self.paginator.page_size_query_param: self.paginator.get_page_size(
+                self.request
+            ),
+            self.paginator.page_query_param: self.request.query_params.get(
+                self.paginator.page_query_param, 1
+            ),
+        }
+
+    def resolve_zaken(self, review_requests: List[ReviewRequest]) -> Dict:
+        zaken = {
+            z.url: z
+            for z in search_zaken(
+                request=self.request,
+                urls=list({rr.for_zaak for rr in review_requests}),
+                only_allowed=False,
+            )
+        }
+        for rr in review_requests:
+            rr.for_zaak = zaken.get(rr.for_zaak, None)
+        return review_requests
+
+    def get(self, request, *args, **kwargs):
+        results, _query_params = get_review_requests_paginated(
+            query_params=self.get_query_params(),
+            requester=self.request.user,
+        )
+        review_requests = self.resolve_zaken(results["results"])
+        results["results"] = self.serializer_class(
+            instance=review_requests, many=True
+        ).data
+        return self.paginator.get_paginated_response(request, results)

@@ -76,7 +76,7 @@ class ManageGroupSerializer(GroupSerializer):
 
     users = UserSlugRelatedField(
         slug_field="username",
-        queryset=User.objects.all(),
+        queryset=User.objects.prefetch_related("groups").all(),
         source="user_set",
         help_text=_(
             "Users assigned to the review request from within the camunda process."

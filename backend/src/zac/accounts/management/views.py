@@ -25,6 +25,7 @@ class AxesResetView(APIView):
         description=_(
             "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess. TODO: implement a worker instead of blocking the app."
         ),
+        request=None,
         responses={200: AxesResetSerializer},
         tags=["management"],
     )
@@ -45,6 +46,7 @@ class LoadBlueprintPermissionsView(APIView):
         description=_(
             "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess. TODO: implement a worker instead of blocking the app."
         ),
+        request=None,
         responses={200: AddBlueprintPermissionsSerializer},
         tags=["management"],
     )
@@ -65,6 +67,7 @@ class AddAtomicPermissionsView(APIView):
         description=_(
             "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess. TODO: implement a worker instead of blocking the app."
         ),
+        request=None,
         responses={204: None},
         tags=["management"],
     )

@@ -106,8 +106,7 @@ from .filters import (
     ZaakRolFilterSet,
     ZaaktypenFilterSet,
 )
-from .mixins import ListMixin, RetrieveMixin
-from .pagination import BffPagination, ObjectProxyPagination
+from .pagination import BffPagination, ProxyPagination
 from .permissions import (
     CanAddOrUpdateZaakDocuments,
     CanAddRelations,
@@ -416,7 +415,7 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
+class ZaakEigenschappenView(GetZaakMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
@@ -425,9 +424,14 @@ class ZaakEigenschappenView(GetZaakMixin, ListMixin, views.APIView):
     serializer_class = ZaakEigenschapSerializer
     schema_summary = _("List ZAAKEIGENSCHAPpen.")
 
-    def get_objects(self):
+    def get(self, request, **kwargs):
         zaak = self.get_object()
-        return get_zaak_eigenschappen(zaak)
+        serializer = self.serializer_class(
+            instance=get_zaak_eigenschappen(zaak),
+            context={"request": self.request, "view": self},
+            many=True,
+        )
+        return Response(serializer.data)
 
 
 class ZaakEigenschapDetailView(views.APIView):
@@ -1120,7 +1124,7 @@ class ZaakTypenView(ListAPIView):
 
 
 @extend_schema(summary=_("List vertrouwelijkheidaanduidingen."), tags=["meta"])
-class VertrouwelijkheidsAanduidingenView(ListMixin, views.APIView):
+class VertrouwelijkheidsAanduidingenView(views.APIView):
     """
     List the available vertrouwelijkheidaanduidingen.
     """
@@ -1129,11 +1133,15 @@ class VertrouwelijkheidsAanduidingenView(ListMixin, views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = VertrouwelijkheidsAanduidingSerializer
 
-    def get_objects(self):
-        return [
-            VertrouwelijkheidsAanduidingData(label=choice[1], value=choice[0])
-            for choice in VertrouwelijkheidsAanduidingen.choices
-        ]
+    def get(self, request, **kwargs):
+        serializer = self.serializer_class(
+            instance=[
+                VertrouwelijkheidsAanduidingData(label=choice[1], value=choice[0])
+                for choice in VertrouwelijkheidsAanduidingen.choices
+            ],
+            many=True,
+        )
+        return Response(serializer.data)
 
 
 @extend_schema(
@@ -1332,13 +1340,20 @@ class ObjecttypeListView(views.APIView):
     description=_("Read the details of a particular OBJECTTYPE version."),
     tags=["objects"],
 )
-class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
+class ObjecttypeVersionReadView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ObjecttypeVersionProxySerializer
 
     def get_object(self) -> dict:
         return fetch_objecttype_version(**self.kwargs)
+
+    def get(self, request, *args, **kwargs):
+        object = self.get_object()
+        serializer = self.serializer_class(
+            instance=object, context={"request": self.request, "view": self}
+        )
+        return Response(serializer.data)
 
 
 @extend_schema(
@@ -1348,14 +1363,14 @@ class ObjecttypeVersionReadView(RetrieveMixin, views.APIView):
     tags=["objects"],
     parameters=[
         OpenApiParameter(
-            name=ObjectProxyPagination().page_size_query_param,
-            default=ObjectProxyPagination().page_size,
+            name=ProxyPagination().page_size_query_param,
+            default=ProxyPagination().page_size,
             type=OpenApiTypes.INT,
             description=_("Number of results to return per paginated response."),
             location=OpenApiParameter.QUERY,
         ),
         OpenApiParameter(
-            name=ObjectProxyPagination().page_query_param,
+            name=ProxyPagination().page_query_param,
             type=OpenApiTypes.INT,
             description=_("Page number of paginated response."),
             location=OpenApiParameter.QUERY,
@@ -1366,7 +1381,7 @@ class ObjectSearchView(views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = ObjectFilterProxySerializer
-    pagination_class = ObjectProxyPagination
+    pagination_class = ProxyPagination
 
     def post(self, request):
         """

@@ -193,14 +193,16 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[
-                {
-                    **REVIEW_REQUEST,
-                    "numAssignedUsers": REVIEW_REQUEST["numAdvices"]
-                    + REVIEW_REQUEST["numApprovals"]
-                    + 1,
-                }
-            ],
+            json=paginated_response(
+                [
+                    {
+                        **REVIEW_REQUEST,
+                        "numAssignedUsers": REVIEW_REQUEST["numAdvices"]
+                        + REVIEW_REQUEST["numApprovals"]
+                        + 1,
+                    }
+                ]
+            ),
         )
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}", json=[])
         m.post(f"{DOWC_API_ROOT}documenten/status", json=[])

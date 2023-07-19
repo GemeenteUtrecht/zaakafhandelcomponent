@@ -5,7 +5,7 @@ from zac.accounts.constants import (
     PermissionObjectTypeChoices,
 )
 from zac.core.services import get_zaak, get_rollen
-from zac.contrib.kownsl.api import get_review_requests
+from zac.contrib.kownsl.api import get_all_review_requests_for_zaak
 from zac.contrib.kownsl.data import KownslTypes
 
 
@@ -35,7 +35,7 @@ def get_reason(user_atomic_permission) -> str:
         ):
             return PermissionReason.betrokkene
 
-    review_requests = get_review_requests(zaak)
+    review_requests = get_all_review_requests_for_zaak(zaak)
     for review_request in review_requests:
         if user.username in list(review_request.user_deadlines.keys()):
             return (

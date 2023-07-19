@@ -4,9 +4,10 @@ from rest_framework.test import APITestCase
 
 from zac.accounts.models import User
 from zac.accounts.tests.factories import ApplicationTokenFactory, UserFactory
+from zac.core.tests.utils import ClearCachesMixin
 
 
-class RolBetrokkeneIdentificatieResponseTests(APITestCase):
+class RolBetrokkeneIdentificatieResponseTests(ClearCachesMixin, APITestCase):
     """
     Test the API response body for betrokkene-identificatie-retrieve-url endpoint.
 
@@ -57,7 +58,7 @@ class RolBetrokkeneIdentificatieResponseTests(APITestCase):
         )
 
 
-class RolBetrokkeneIdentificatiePermissionsTests(APITestCase):
+class RolBetrokkeneIdentificatiePermissionsTests(ClearCachesMixin, APITestCase):
     """
     Test the API permissions for betrokkene-identificatie-retrieve-url endpoint.
 

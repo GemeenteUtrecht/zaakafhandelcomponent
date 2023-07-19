@@ -2,7 +2,7 @@ import logging
 
 from django.core.management import BaseCommand
 
-from zac.contrib.kownsl.api import get_review_requests
+from zac.contrib.kownsl.api import get_all_review_requests_for_zaak
 from zac.core.services import get_rollen_all, get_zaken_all
 
 from ...permission_loaders import (
@@ -23,7 +23,7 @@ def add_atomic_permissions():
 
     # give access to zaak reviewers
     for zaak in get_zaken_all():
-        for review_request in get_review_requests(zaak):
+        for review_request in get_all_review_requests_for_zaak(zaak):
             add_permissions_for_advisors(review_request)
     logger.info("permissions for advisors are added")
 

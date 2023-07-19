@@ -5,6 +5,13 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
+from zac.contrib.kownsl.constants import KownslTypes
+from zac.contrib.kownsl.data import Advice
+from zac.contrib.kownsl.serializers import (
+    AdviceSerializer,
+    AuthorSerializer,
+    ZaakRevReqDetailSerializer,
+)
 from zac.contrib.objects.checklists.data import ChecklistAnswer
 from zac.elasticsearch.drf_api.serializers import (
     StatusDocumentSerializer,
@@ -139,3 +146,31 @@ class WorkStackChecklistAnswerSerializer(APIModelSerializer):
             "checklist_questions",
             "zaak",
         )
+
+
+class WorkStackAdviceSerializer(AdviceSerializer):
+    class Meta:
+        model = AdviceSerializer.Meta.model
+        fields = ("created", "author", "advice", "group")
+        extra_kwargs = {
+            "created": {"help_text": _("Date review request was created.")},
+            "advice": {"help_text": _("Advice given for review request.")},
+            "group": {"help_text": _("Group that advice was given by.")},
+        }
+
+
+class WorkStackAdviceReviewsSerializer(serializers.Serializer):
+    advices = WorkStackAdviceSerializer(many=True, source="get_reviews")
+
+
+class WorkStackReviewRequestSerializer(ZaakRevReqDetailSerializer):
+    serializer_mapping = {
+        **ZaakRevReqDetailSerializer.serializer_mapping,
+        KownslTypes.advice: WorkStackAdviceReviewsSerializer,
+    }
+    completed = serializers.IntegerField(
+        label=_("completed requests"), help_text=_("The number of completed requests.")
+    )
+    zaak = SummaryZaakDocumentSerializer(
+        help_text=_("ZAAK that review request belongs to."), source="for_zaak"
+    )

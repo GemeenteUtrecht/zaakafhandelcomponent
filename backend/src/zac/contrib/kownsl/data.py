@@ -7,7 +7,7 @@ from uuid import UUID
 from django.utils.translation import gettext_lazy as _
 
 from djchoices import ChoiceItem, DjangoChoices
-from zgw_consumers.api_models.base import Model
+from zgw_consumers.api_models.base import Model, factory
 from zgw_consumers.api_models.documenten import Document
 
 from zac.accounts.models import Group, User
@@ -33,7 +33,7 @@ class OpenReview(Model):
         return self._users
 
     @users.setter
-    def users(self, users: Union[User, str]):
+    def users(self, users: List[Union[User, str]]):
         self._users = [
             resolve_assignee(user) if type(user) == str else user for user in users
         ]
@@ -43,7 +43,7 @@ class OpenReview(Model):
         return self._groups
 
     @groups.setter
-    def groups(self, groups: Union[Group, str]):
+    def groups(self, groups: List[Union[Group, str]]):
         self._groups = [
             resolve_assignee(
                 group
@@ -191,6 +191,7 @@ class ReviewRequest(Model):
     requester: Dict = field(default_factory=dict)
     toelichting: str = ""
     user_deadlines: dict = field(default_factory=dict)
+    reviews: List[dict] = field(default_factory=list)
 
     def get_review_type_display(self):
         return KownslTypes.labels[self.review_type]
@@ -198,3 +199,9 @@ class ReviewRequest(Model):
     @property
     def completed(self) -> int:
         return self.num_advices + self.num_approvals
+
+    def get_reviews(self) -> List[Union[Advice, Approval]]:
+        if self.review_type == KownslTypes.advice:
+            return factory(Advice, self.reviews)
+        else:
+            return factory(Approval, self.reviews)

@@ -6,7 +6,7 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import register
 from zac.camunda.user_tasks.api import get_camunda_user_tasks_for_zaak
 from zac.contrib.dowc.api import check_document_status
-from zac.contrib.kownsl.api import get_review_requests
+from zac.contrib.kownsl.api import get_all_review_requests_for_zaak
 from zac.contrib.objects.checklists.data import ChecklistQuestion
 from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
 from zac.core.camunda.utils import get_process_zaak_url
@@ -70,7 +70,9 @@ def get_context(task: Task) -> ZetResultaatContext:
         get_camunda_user_tasks_for_zaak(zaak_url, exclude_zaak_creation=True) or None
     )
     review_requests = [
-        rr for rr in get_review_requests(zaak) if rr.completed < rr.num_assigned_users
+        rr
+        for rr in get_all_review_requests_for_zaak(zaak)
+        if rr.completed < rr.num_assigned_users
     ] or None
     documenten, gone = get_documenten(zaak)
     open_documenten = check_document_status([doc.url for doc in documenten])

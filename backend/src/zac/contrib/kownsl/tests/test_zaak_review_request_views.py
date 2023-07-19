@@ -43,7 +43,7 @@ from .utils import (
 
 
 @requests_mock.Mocker()
-class ZaakReviewRequestsResponseTests(APITestCase):
+class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
     """
     Test the API response body for zaak-review-requests endpoint.
     """
@@ -128,8 +128,8 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         cls.get_review_request_patcher = patch(
             "zac.contrib.kownsl.views.get_review_request", return_value=review_request
         )
-        cls.get_review_requests_patcher = patch(
-            "zac.contrib.kownsl.views.get_review_requests",
+        cls.get_all_review_requests_for_zaak_patcher = patch(
+            "zac.contrib.kownsl.views.get_all_review_requests_for_zaak",
             return_value=[review_request],
         )
         advices = factory(Advice, [ADVICE])
@@ -161,8 +161,8 @@ class ZaakReviewRequestsResponseTests(APITestCase):
 
         self.addCleanup(self.get_review_request_patcher.stop)
 
-        self.get_review_requests_patcher.start()
-        self.addCleanup(self.get_review_requests_patcher.stop)
+        self.get_all_review_requests_for_zaak_patcher.start()
+        self.addCleanup(self.get_all_review_requests_for_zaak_patcher.stop)
 
         self.get_advices_patcher.start()
         self.addCleanup(self.get_advices_patcher.stop)
@@ -226,7 +226,7 @@ class ZaakReviewRequestsResponseTests(APITestCase):
             {**REVIEW_REQUEST, "locked": True, "lockReason": "just a reason"},
         )
         with patch(
-            "zac.contrib.kownsl.views.get_review_requests",
+            "zac.contrib.kownsl.views.get_all_review_requests_for_zaak",
             return_value=[rr],
         ):
             response = self.client.get(self.endpoint_summary)
@@ -254,17 +254,6 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         response = self.client.get(self.endpoint_detail)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
-        doc_url = reverse(
-            "dowc:request-doc",
-            kwargs={
-                "bronorganisatie": self.document["bronorganisatie"],
-                "identificatie": self.document["identificatie"],
-                "purpose": DocFileTypes.read,
-            },
-        )
-
-        advice = deepcopy(ADVICE)
-        advice["author"] = {**advice["author"], "fullName": "some-author"}
         self.assertEqual(
             response_data,
             {
@@ -276,33 +265,13 @@ class ZaakReviewRequestsResponseTests(APITestCase):
                         "deadline": "2022-04-15",
                         "users": [
                             {
-                                "id": user.id,
-                                "username": user.username,
-                                "firstName": user.first_name,
                                 "fullName": user.get_full_name(),
-                                "lastName": user.last_name,
-                                "isStaff": user.is_staff,
-                                "email": user.email,
-                                "groups": [],
                             }
                         ],
                         "groups": [],
                     }
                 ],
-                "advices": [
-                    {
-                        **advice,
-                        "documents": [
-                            {
-                                "adviceVersion": 2,
-                                "adviceUrl": doc_url + "?versie=2",
-                                "sourceUrl": doc_url + "?versie=1",
-                                "sourceVersion": 1,
-                                "title": self.document["bestandsnaam"],
-                            }
-                        ],
-                    }
-                ],
+                "advices": [],
             },
         )
 
@@ -318,7 +287,9 @@ class ZaakReviewRequestsResponseTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_no_review_requests(self, m):
-        with patch("zac.contrib.kownsl.views.get_review_requests", return_value=[]):
+        with patch(
+            "zac.contrib.kownsl.views.get_all_review_requests_for_zaak", return_value=[]
+        ):
             response = self.client.get(self.endpoint_summary)
         self.assertEqual(response.data, [])
 
@@ -589,7 +560,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         with patch(
-            "zac.contrib.kownsl.views.get_review_requests",
+            "zac.contrib.kownsl.views.get_all_review_requests_for_zaak",
             return_value=[self.review_request],
         ):
             response_summary = self.client.get(self.endpoint_summary)
@@ -633,7 +604,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         with patch(
-            "zac.contrib.kownsl.views.get_review_requests",
+            "zac.contrib.kownsl.views.get_all_review_requests_for_zaak",
             return_value=[self.review_request],
         ):
             response_summary = self.client.get(self.endpoint_summary)
@@ -667,7 +638,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
 
         with patch(
-            "zac.contrib.kownsl.views.get_review_requests",
+            "zac.contrib.kownsl.views.get_all_review_requests_for_zaak",
             return_value=[self.review_request],
         ):
             response_summary = self.client.get(self.endpoint_summary)
