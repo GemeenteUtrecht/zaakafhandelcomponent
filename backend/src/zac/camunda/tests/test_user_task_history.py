@@ -25,10 +25,9 @@ from zac.camunda.user_tasks.history import (
     get_task_history,
 )
 from zac.core.permissions import zaken_inzien
-from zac.core.tests.utils import ClearCachesMixin
+from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 
 from .files.harvo_behandelen import HARVO_BEHANDELEN_BPMN
-from .utils import mock_parallel
 
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"

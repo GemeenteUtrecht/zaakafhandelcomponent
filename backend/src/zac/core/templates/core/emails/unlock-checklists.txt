@@ -1,0 +1,5 @@
+{% load i18n %}{% blocktrans with omschrijving=zaak.omschrijving url=zaak.absolute_url %}Dear {{ user }},
+
+You forgot to save your checklist for {{ omschrijving }} at {{ url }}. It was unlocked automatically.
+
+This is an automatically generated message from the zaakafhandelcomponent; it's not possible to respond to this message.{% endblocktrans %}

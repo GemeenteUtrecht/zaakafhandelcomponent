@@ -310,3 +310,10 @@ def fetch_checklist_zaakobject(
 
     logger.warning("A checklist object was found but wasn't related to the ZAAK.")
     return None
+
+
+def fetch_all_locked_checklists():
+    data_attrs = ["lockedBy__icontains__"]
+    if objs := _search_meta_objects("checklist_objecttype", data_attrs=data_attrs):
+        return objs
+    return []

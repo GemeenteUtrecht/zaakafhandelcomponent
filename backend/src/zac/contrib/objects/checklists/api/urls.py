@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
 
+from ..management.urls import urls as management_urls
 from .views import (
     LockZaakChecklistView,
     UnlockZaakChecklistView,
@@ -13,6 +14,7 @@ router = DefaultRouter(trailing_slash=False)
 
 urlpatterns = router.urls
 urlpatterns += [
+    path("management/", include(management_urls)),
     path(
         "zaak-checklisttypes/<str:bronorganisatie>/<str:identificatie>",
         ZaakChecklistTypeView.as_view(),
