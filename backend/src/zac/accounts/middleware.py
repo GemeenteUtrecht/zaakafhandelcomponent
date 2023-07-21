@@ -11,7 +11,7 @@ class HijackMiddleware:
         response = self.get_response(request)
 
         # add hijack header for FE
-        is_hijacked = request.session.get("is_hijacked_user", False)
+        is_hijacked = getattr(request.user, "is_hijacked", False)
         response[self.header] = "true" if is_hijacked else "false"
 
         return response
