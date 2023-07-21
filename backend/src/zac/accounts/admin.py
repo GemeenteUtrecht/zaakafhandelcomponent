@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
 
-from hijack_admin.admin import HijackUserAdminMixin
+from hijack.contrib.admin import HijackUserAdminMixin
 from nested_admin import NestedModelAdminMixin, NestedTabularInline
 
 from zac.utils.admin import RelatedLinksMixin
@@ -56,7 +56,6 @@ class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
         "is_superuser",
         "get_auth_profiles_display",
         "get_atomic_permissions_display",
-        "hijack_field",
     )
     inlines = [UserAuthorizationProfileInline]
 

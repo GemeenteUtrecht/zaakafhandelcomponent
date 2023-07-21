@@ -40,8 +40,8 @@ class HijackHeaderTests(ESMixin, TestCase):
     def test_response_hijacked(self):
         user_to_hijack = StaffUserFactory.create()
         # hijack the user
-        hijack_url = reverse("hijack:login_with_id", args=[user_to_hijack.id])
-        self.client.post(hijack_url)
+        hijack_url = reverse("hijack:acquire")
+        self.client.post(hijack_url, {"user_pk": user_to_hijack.pk})
 
         for url in self.urls:
             with self.subTest(url):
