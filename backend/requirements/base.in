@@ -30,7 +30,7 @@ django-cors-headers
 django-decorator-include
 django-extra-views
 django-filter
-django-hijack
+django-hijack>=3.0
 django-hijack-admin
 django-import-export
 django-ordered-model
