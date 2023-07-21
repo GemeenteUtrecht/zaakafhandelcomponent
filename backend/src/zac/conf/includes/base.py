@@ -145,8 +145,7 @@ INSTALLED_APPS = [
     "django_filters",
     "extra_views",
     "hijack",
-    "compat",  # Part of hijack
-    "hijack_admin",
+    "hijack.contrib.admin",
     "django_better_admin_arrayfield",
     "django_scim",
     "nested_admin",
@@ -185,6 +184,7 @@ MIDDLEWARE = [
     "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "hijack.middleware.HijackUserMiddleware",
     "zac.accounts.middleware.HijackMiddleware",
     "zac.utils.middleware.ReleaseHeaderMiddleware",
 ]
