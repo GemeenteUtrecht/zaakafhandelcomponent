@@ -19,11 +19,10 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.camunda.data import ProcessInstance, Task
-from zac.core.tests.utils import ClearCachesMixin
+from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..api.permissions import zaakproces_usertasks
-from .utils import mock_parallel
 
 ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 CATALOGI_ROOT = "https://some.ztc.nl/api/v1/"

@@ -119,7 +119,7 @@ CHECKLIST_OBJECTTYPE_LATEST_VERSION = {
     "jsonSchema": {
         "type": "object",
         "title": "Checklist",
-        "required": ["answers", "zaak", "meta"],
+        "required": ["answers", "zaak", "meta", "lockedBy"],
         "properties": {
             "meta": True,
             "zaak": {"type": "string"},
@@ -139,6 +139,7 @@ CHECKLIST_OBJECTTYPE_LATEST_VERSION = {
                     },
                 },
             },
+            "lockedBy": {"type": ["string", "null"]},
         },
     },
     "createdAt": "1999-12-31",

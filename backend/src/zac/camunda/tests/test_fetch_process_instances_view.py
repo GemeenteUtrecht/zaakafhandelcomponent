@@ -15,10 +15,8 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
-from zac.core.tests.utils import ClearCachesMixin
+from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.tests.utils import mock_resource_get
-
-from .utils import mock_parallel
 
 ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"

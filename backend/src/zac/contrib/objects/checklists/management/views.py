@@ -6,25 +6,26 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 
-from .serializers import CacheResetSerializer
+from .commands.unlock_checklists import unlock_command
+from .serializers import UnlockCountSerializer
 
 
-class CacheResetView(APIView):
+class UnlockChecklistsView(APIView):
     permission_classes = (
         IsAuthenticated,
         IsAdminUser,
     )
-    serializer_class = CacheResetSerializer
 
     @extend_schema(
-        summary=_("Clear all cache key-value pairs."),
+        summary=_("Unlock all locked checklists."),
         description=_(
             "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess. TODO: implement a worker instead of blocking the app."
         ),
+        request=None,
+        responses={200: UnlockCountSerializer},
         tags=["management"],
     )
     def post(self, request):
-        serializer = CacheResetSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        count = serializer.perform()
+        count = unlock_command()
+        serializer = UnlockCountSerializer({"count": count})
         return Response(data=serializer.data, status=HTTP_200_OK)

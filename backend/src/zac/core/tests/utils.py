@@ -1,6 +1,12 @@
 from django.core.cache import caches
 
 from zds_client.oas import schema_fetcher
+from zgw_consumers.concurrent import parallel
+
+
+class mock_parallel(parallel):
+    def map(self, fn, *iterables, timeout=None, chunksize=1):
+        return map(fn, *iterables)
 
 
 class ClearCachesMixin:
