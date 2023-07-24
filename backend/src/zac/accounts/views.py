@@ -15,6 +15,6 @@ class LoginView(_LoginView):
 class LoggedInView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         redirect_to = self.request.session.pop("login_next", "/ui")
-        if getattr(self.request.user, "is_hijacked", False):
+        if bool(self.request.session.get("hijack_history", [])):
             return settings.HIJACK_LOGIN_REDIRECT_URL
         return redirect_to
