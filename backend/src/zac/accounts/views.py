@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.views import LoginView as _LoginView
 from django.views.generic import RedirectView
 
@@ -13,4 +14,7 @@ class LoginView(_LoginView):
 
 class LoggedInView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
-        return self.request.session.pop("login_next", "/ui")
+        redirect_to = self.request.session.pop("login_next", "/ui")
+        if getattr(self.request.user, "is_hijacked", False):
+            return settings.HIJACK_LOGIN_REDIRECT_URL
+        return redirect_to
