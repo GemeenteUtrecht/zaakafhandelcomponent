@@ -39,7 +39,7 @@ export class UserService {
    */
   @ClearCacheOnMethodCall('UserService.getCurrentUser')
   releaseHijack(): Observable<any> {
-    const endpoint = encodeURI(`/admin/hijack/release-hijack/`);
+    const endpoint = encodeURI(`/admin/hijack/release/`);
     return this.http.Post<any>(endpoint, {}, {responseType: 'text'});
   }
 
