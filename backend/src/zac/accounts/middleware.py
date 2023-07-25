@@ -1,5 +1,3 @@
-import logging
-
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.crypto import salted_hmac
@@ -8,8 +6,6 @@ from hijack.middleware import HijackUserMiddleware as _HijackUserMiddleware
 from mozilla_django_oidc_db.middleware import SessionRefresh
 
 from zac.accounts.models import User
-
-logger = logging.getLogger(__name__)
 
 
 class FirstRedirectCheckMixin:
