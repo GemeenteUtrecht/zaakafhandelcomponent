@@ -179,9 +179,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "hijack.middleware.HijackUserMiddleware",
+    "zac.accounts.middleware.HijackUserMiddleware",
     "zac.accounts.middleware.HijackSessionRefresh",
-    "zac.accounts.middleware.HijackMiddleware",
     "zac.accounts.scim.middleware.SCIMAuthMiddleware",
     "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -603,4 +602,4 @@ FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptl
 # Django-Hijack
 HIJACK_LOGIN_REDIRECT_URL = UI_ROOT_URL
 HIJACK_HEADER = "X-Is-Hijacked"
-LOGOUT_REDIRECT_URL = LOGIN_URL
+LOGOUT_REDIRECT_URL = UI_ROOT_URL
