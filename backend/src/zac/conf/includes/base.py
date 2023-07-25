@@ -179,13 +179,13 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "mozilla_django_oidc_db.middleware.SessionRefresh",
+    "hijack.middleware.HijackUserMiddleware",
+    "zac.accounts.middleware.HijackSessionRefresh",
+    "zac.accounts.middleware.HijackMiddleware",
     "zac.accounts.scim.middleware.SCIMAuthMiddleware",
     "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "hijack.middleware.HijackUserMiddleware",
-    "zac.accounts.middleware.HijackMiddleware",
     "zac.utils.middleware.ReleaseHeaderMiddleware",
 ]
 
@@ -560,18 +560,6 @@ ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
     os.path.join(DJANGO_PROJECT_DIR, "contrib", "objects", "tests", "schemas"),
 ]
 
-# Django-Hijack
-HIJACK_LOGIN_REDIRECT_URL = "/ui"
-HIJACK_LOGOUT_REDIRECT_URL = reverse_lazy("admin:accounts_user_changelist")
-# The Admin mixin is used because we use a custom User-model.
-HIJACK_REGISTER_ADMIN = False
-# This is a CSRF-security risk.
-# See: http://django-hijack.readthedocs.io/en/latest/configuration/#allowing-get-method-for-hijack-views
-HIJACK_ALLOW_GET_REQUESTS = True
-HIJACK_AUTHORIZE_STAFF = True
-HIJACK_AUTHORIZE_STAFF_TO_HIJACK_STAFF = True
-HIJACK_HEADER = "X-Is-Hijacked"
-
 
 # ELASTICSEARCH CONFIG
 ELASTICSEARCH_DSL = {
@@ -610,3 +598,9 @@ CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
     "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
 )
 FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptlAppId"])
+
+
+# Django-Hijack
+HIJACK_LOGIN_REDIRECT_URL = UI_ROOT_URL
+HIJACK_HEADER = "X-Is-Hijacked"
+LOGOUT_REDIRECT_URL = UI_ROOT_URL
