@@ -47,13 +47,15 @@ class HijackUserMiddleware(FirstRedirectCheckMixin, _HijackUserMiddleware):
 class HijackSessionRefresh(FirstRedirectCheckMixin, SessionRefresh):
     def process_request(self, request):
         first_redirect = request.session.get("first_redirect_after_hijack", False)
-        if first_redirect and first_redirect == self.make_first_redirect_key(
-            request.user
-        ):
+        hijack_history = bool(request.session.get("hijack_history", []))
+        if first_redirect and hijack_history:
+            return
+
+        if first_redirect == self.make_first_redirect_key(request.user):
             del request.session["first_redirect_after_hijack"]
             return
 
-        if bool(request.session.get("hijack_history", [])):
+        if hijack_history:
             return
 
         return super().process_request(request)
