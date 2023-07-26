@@ -32,10 +32,11 @@ class HijackUserMiddleware(FirstRedirectCheckMixin, _HijackUserMiddleware):
 
     def process_request(self, request):
         super().process_request(request)
-        if request.path == self.release_url and request.method == "POST":
-            request.session[
-                "first_redirect_after_hijack"
-            ] = self.make_first_redirect_key(request.user)
+        if request.path == self.release_url:
+            if request.method == "POST":
+                request.session[
+                    "first_redirect_after_hijack"
+                ] = self.make_first_redirect_key(request.user)
 
     def process_response(self, request, response):
         response = super().process_response(request, response)
@@ -46,16 +47,17 @@ class HijackUserMiddleware(FirstRedirectCheckMixin, _HijackUserMiddleware):
 
 class HijackSessionRefresh(FirstRedirectCheckMixin, SessionRefresh):
     def process_request(self, request):
-        first_redirect = request.session.get("first_redirect_after_hijack", False)
-        hijack_history = bool(request.session.get("hijack_history", []))
-        if first_redirect and hijack_history:
-            return
+        if request.user.is_authenticated:
+            first_redirect = request.session.get("first_redirect_after_hijack", False)
+            hijack_history = bool(request.session.get("hijack_history", []))
+            if first_redirect and hijack_history:
+                return
 
-        if first_redirect == self.make_first_redirect_key(request.user):
-            del request.session["first_redirect_after_hijack"]
-            return
+            if first_redirect == self.make_first_redirect_key(request.user):
+                del request.session["first_redirect_after_hijack"]
+                return
 
-        if hijack_history:
-            return
+            if hijack_history:
+                return
 
         return super().process_request(request)
