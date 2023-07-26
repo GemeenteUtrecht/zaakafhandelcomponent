@@ -3,6 +3,7 @@ import { CreateCase, MetaZaaktypeResult, Zaak } from '@gu/models';
 import { Choice, FieldConfiguration, SnackbarService } from '@gu/components';
 import { CamundaService, MetaService, ZaakService } from '@gu/services';
 import { delay, retryWhen, take } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gu-features-start-case',
@@ -18,11 +19,15 @@ export class FeaturesStartCaseComponent implements OnInit {
   isSubmitting: boolean;
   errorMessage: string;
 
+  objectUrl: string;
+  objectStringRepresentation: string;
+
   constructor(
     private metaService: MetaService,
     private camundaService: CamundaService,
     private zaakService: ZaakService,
-    private snackbarService: SnackbarService
+    private snackbarService: SnackbarService,
+    private route: ActivatedRoute
   ) { }
 
 
@@ -31,6 +36,8 @@ export class FeaturesStartCaseComponent implements OnInit {
   //
 
   ngOnInit(): void {
+    this.objectUrl = this.route.snapshot.queryParams["objectUrl"];
+    this.objectStringRepresentation = this.route.snapshot.queryParams["stringRepresentation"];
     this.getContextData();
   }
 
@@ -77,13 +84,7 @@ export class FeaturesStartCaseComponent implements OnInit {
         name: 'toelichting',
         required: false,
         value: '',
-      },
-      {
-        checked: true,
-        label: "Proces opstarten",
-        name: 'start_related_business_process',
-        type: 'checkbox',
-      },
+      }
     ]
   }
 
@@ -102,7 +103,8 @@ export class FeaturesStartCaseComponent implements OnInit {
         omschrijving: formData.omschrijving,
         toelichting: formData.toelichting
       },
-      start_related_business_process: formData.start_related_business_process
+      startRelatedBusinessProcess: true,
+      object: this.objectUrl
     }
 
     this.zaakService.createCase(createCaseData)

@@ -475,8 +475,8 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {ZaakObject} zaakObject
    */
   _selectZaakObject(event: Event, zaakObject: any): void {
-    this.selectedZaakObject = zaakObject.search.stringRepresentation
-    this.selectZaakObject.emit(zaakObject.search);
+    this.selectedZaakObject = zaakObject.stringRepresentation
+    this.selectZaakObject.emit(zaakObject);
     this.showZaakObjecten = false;
   }
 

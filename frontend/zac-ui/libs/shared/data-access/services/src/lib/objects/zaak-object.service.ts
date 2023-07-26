@@ -112,8 +112,9 @@ export class ZaakObjectService {
     // Return observable, this operation is async.
     return new Observable((subscriber: Subscriber<MapMarker>) => {
       const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
+      console.log(zaakObject);
       const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
-        contentProperties: Object.entries(zaakObject.record.data),
+        contentProperties: [ ['stringRepresentation', zaakObject.stringRepresentation], ['start-case', zaakObject.url], ...Object.entries(zaakObject.record.data)],
         coordinates: zaakObjectGeometry?.coordinates?.length > 1
           ? [zaakObjectGeometry.coordinates[1], zaakObjectGeometry.coordinates[0]]
           : [],
@@ -151,7 +152,7 @@ export class ZaakObjectService {
       } else {
         // Complete without pand.
       }*/
-      
+
       subscriber.next(mapMarker);
       subscriber.complete();
     });
