@@ -4,7 +4,14 @@
     <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
     <gu-loading-indicator *ngIf="isSubmitting" loadingText="Je wordt automatisch doorverwezen naar de aangemaakte zaak."></gu-loading-indicator>
     <div class="create-case__form" *ngIf="form">
-      <p>Met het invullen van de gegevens hieronder kun je een nieuwe zaak opstarten van het gewenste zaaktype.</p>
+      <div class="row">
+        <div class="col-md-8 col-lg-6">
+          <p>Met het invullen van de gegevens hieronder kun je een nieuwe zaak opstarten van het gewenste zaaktype.</p>
+          <div class="selected-object mb-4" *ngIf="objectStringRepresentation">
+            <p class="p--nomargin">Zaak starten met object: <strong>{{objectStringRepresentation}}</strong></p>
+          </div>
+        </div>
+      </div>
       <p class="p--bold">Zaakgegevens</p>
       <div class="row">
         <gu-form [form]="form"

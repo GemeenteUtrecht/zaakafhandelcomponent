@@ -372,21 +372,36 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
 
     if (mapGeometryOrMapMarker.contentProperties) {
       const table = document.createElement('table');
+      let stringRepresentation;
       mapGeometryOrMapMarker.contentProperties.forEach(([key, value]) => {
-        const formattedKey = this.formatProperty(key);
-        const formattedvalue = this.formatValue(value);
+        let formattedKey;
+        let formattedValue;
+        if (key === 'stringRepresentation') {
+          stringRepresentation = value
+        } else {
+          if (key === 'start-case') {
+            const anchor = document.createElement('a');
+            anchor.href = `/ui/zaak-starten?objectUrl=${value}&stringRepresentation=${stringRepresentation}`;
+            anchor.textContent = 'Zaak starten met dit object';
 
-        const tr = document.createElement('tr');
+            formattedKey = '';
+            formattedValue = anchor.outerHTML
+          } else {
+            formattedKey = this.formatProperty(key);
+            formattedValue = this.formatValue(value);
+          }
 
-        const th = document.createElement('th');
-        th.textContent = formattedKey;
+          const tr = document.createElement('tr');
+          const th = document.createElement('th');
+          th.textContent = formattedKey;
 
-        const td = document.createElement('td');
-        td.innerHTML = formattedvalue;
+          const td = document.createElement('td');
+          td.innerHTML = formattedValue;
 
-        tr.appendChild(th);
-        tr.appendChild(td);
-        table.appendChild(tr);
+          tr.appendChild(th);
+          tr.appendChild(td);
+          table.appendChild(tr);
+        }
       });
 
       popUpContent.appendChild(table);
