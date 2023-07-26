@@ -128,6 +128,7 @@ INSTALLED_APPS = [
     # 'django.contrib.humanize',
     # External applications.
     # organize admin
+    # "django_extensions",
     "solo",
     "axes",
     "corsheaders",
@@ -602,4 +603,4 @@ FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptl
 # Django-Hijack
 HIJACK_LOGIN_REDIRECT_URL = UI_ROOT_URL
 HIJACK_HEADER = "X-Is-Hijacked"
-LOGOUT_REDIRECT_URL = UI_ROOT_URL
+LOGOUT_REDIRECT_URL = reverse_lazy("accounts:logged_in")
