@@ -602,4 +602,3 @@ FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptl
 # Django-Hijack
 HIJACK_LOGIN_REDIRECT_URL = UI_ROOT_URL
 HIJACK_HEADER = "X-Is-Hijacked"
-HIJACK_LOGOUT_REDIRECT_URL = reverse_lazy("admin:accounts_user_changelist")

@@ -167,7 +167,7 @@ export class AppComponent implements OnInit {
     this.userService.releaseHijack().subscribe(
       () => {
         this.getContextData();
-        this.router.navigate(["/"]).then(result=>{window.location.href = '/admin/accounts/user/';});
+        window.location.href = '/admin/accounts/user/';
       }
     );
   }
