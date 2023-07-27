@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.views import LoginView as _LoginView
 from django.views.generic import RedirectView
 
