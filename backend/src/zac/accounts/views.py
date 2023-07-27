@@ -1,10 +1,6 @@
-import logging
-
 from django.conf import settings
 from django.contrib.auth.views import LoginView as _LoginView
 from django.views.generic import RedirectView
-
-logger = logging.getLogger(__name__)
 
 
 class LoginView(_LoginView):
@@ -19,6 +15,4 @@ class LoginView(_LoginView):
 class LoggedInView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         redirect_to = self.request.session.pop("login_next", "/ui")
-        if bool(self.request.session.get("hijack_history", [])):
-            return settings.HIJACK_LOGIN_REDIRECT_URL
         return redirect_to
