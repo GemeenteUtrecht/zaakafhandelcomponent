@@ -364,7 +364,6 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
     # authentication
-    "django_auth_adfs_db.backends.AdfsAuthCodeBackend",
     "mozilla_django_oidc_db.backends.OIDCAuthenticationBackend",
     "zac.accounts.backends.UserModelEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
@@ -603,4 +602,4 @@ FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptl
 # Django-Hijack
 HIJACK_LOGIN_REDIRECT_URL = UI_ROOT_URL
 HIJACK_HEADER = "X-Is-Hijacked"
-LOGOUT_REDIRECT_URL = reverse_lazy("accounts:logged_in")
+HIJACK_LOGOUT_REDIRECT_URL = reverse_lazy("admin:accounts_user_changelist")
