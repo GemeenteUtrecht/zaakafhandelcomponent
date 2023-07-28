@@ -175,8 +175,9 @@ def create_rol_document(rol: Rol) -> RolDocument:
 
 
 def update_rollen_in_zaak_document(zaak: Zaak) -> None:
+    print(get_rollen(zaak))
     rol_documents = [create_rol_document(rol) for rol in get_rollen(zaak)]
-
+    print("omschrijving_generiek: ", rol_documents[0]["omschrijving_generiek"])
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
     zaak_document.rollen = rol_documents
     zaak_document.save()

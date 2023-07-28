@@ -13,17 +13,18 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     ApplicationTokenFactory,
     BlueprintPermissionFactory,
     SuperUserFactory,
     UserFactory,
 )
+from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import (
     update_eigenschappen_in_zaak_document,
+    update_rollen_in_zaak_document,
     update_zaakobjecten_in_zaak_document,
 )
 from zac.elasticsearch.tests.utils import ESMixin
@@ -390,6 +391,61 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "object_identificatie": {},
         }
 
+        ## ZAAKROLLEN
+
+        roltype = generate_oas_component(
+            "ztc",
+            "schemas/RolType",
+            url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        )
+        medewerker = generate_oas_component(
+            "zrc",
+            "schemas/RolMedewerker",
+            identificatie=f"{AssigneeTypeChoices.user}:some-username",
+            achternaam="Orange",
+            voorletters="W.",
+            voorvoegselAchternaam="van",
+        )
+        rol1 = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=zaak1["url"],
+            betrokkene="",
+            betrokkeneType="medewerker",
+            roltype=roltype["url"],
+            betrokkeneIdentificatie=medewerker,
+            omschrijvingGeneriek="behandelaar",
+        )
+        rol2 = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=zaak2["url"],
+            betrokkene="",
+            betrokkeneType="medewerker",
+            roltype=roltype["url"],
+            betrokkeneIdentificatie=medewerker,
+            omschrijvingGeneriek="initiator",
+        )
+
+        medewerker2 = generate_oas_component(
+            "zrc",
+            "schemas/RolMedewerker",
+            identificatie=f"{AssigneeTypeChoices.user}:fred",
+            achternaam="Orange",
+            voorletters="W.",
+            voorvoegselAchternaam="van",
+        )
+        rol3 = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=zaak3["url"],
+            betrokkene="",
+            betrokkeneType="medewerker",
+            roltype=roltype["url"],
+            betrokkeneIdentificatie=medewerker2,
+            omschrijvingGeneriek="initiator",
+        )
+
         # mock requests
         # mock services
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -412,6 +468,15 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(m, zaak3)
         mock_resource_get(m, zaak4)
 
+        # Mock zaakeigenschappen
+        m.get(
+            f"{zaak1['url']}/zaakeigenschappen",
+            json=[zaak1_eigenschap_1, zaak1_eigenschap_2],
+        )
+        m.get(f"{zaak2['url']}/zaakeigenschappen", json=[])
+        m.get(f"{zaak3['url']}/zaakeigenschappen", json=[])
+        m.get(f"{zaak4['url']}/zaakeigenschappen", json=[])
+
         # mock zaakobjecten
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak1['url']}",
@@ -429,14 +494,21 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak4['url']}",
             json=paginated_response([]),
         )
-        # Mock zaakeigenschappen
+
+        # Mock zaak rollen en roltypes
         m.get(
-            f"{zaak1['url']}/zaakeigenschappen",
-            json=[zaak1_eigenschap_1, zaak1_eigenschap_2],
+            f"{ZAKEN_ROOT}rollen?zaak={zaak1['url']}",
+            json=paginated_response([rol1]),
         )
-        m.get(f"{zaak2['url']}/zaakeigenschappen", json=[])
-        m.get(f"{zaak3['url']}/zaakeigenschappen", json=[])
-        m.get(f"{zaak4['url']}/zaakeigenschappen", json=[])
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={zaak2['url']}",
+            json=paginated_response([rol2]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={zaak3['url']}",
+            json=paginated_response([rol3]),
+        )
+        mock_resource_get(m, roltype)
 
         # index documents in es
         zaak1_model = factory(Zaak, zaak1)
@@ -447,6 +519,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak1_document.save()
         update_eigenschappen_in_zaak_document(zaak1_model)
         update_zaakobjecten_in_zaak_document(zaak1_model)
+        update_rollen_in_zaak_document(zaak1_model)
 
         zaak2_model = factory(Zaak, zaak2)
         zaak2_model.deadline = datetime.date(2020, 1, 2)
@@ -455,6 +528,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak2_document.zaaktype = self.create_zaaktype_document(zaak2_model.zaaktype)
         zaak2_document.save()
         update_zaakobjecten_in_zaak_document(zaak2_model)
+        update_rollen_in_zaak_document(zaak2_model)
 
         zaak3_model = factory(Zaak, zaak3)
         zaak3_model.deadline = datetime.date(2020, 1, 3)
@@ -462,7 +536,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak3_document = self.create_zaak_document(zaak3_model)
         zaak3_document.zaaktype = self.create_zaaktype_document(zaak3_model.zaaktype)
         zaak3_document.save()
-        self.refresh_index()
+        update_rollen_in_zaak_document(zaak3_model)
 
         zaak4_model = factory(Zaak, zaak4)
         zaak4_model.deadline = datetime.date(2020, 1, 4)
@@ -590,3 +664,26 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             results = response.json()
             self.assertEqual(results["count"], 1)
             self.assertEqual(results["results"][0]["url"], zaak4["url"])
+
+        with self.subTest("Search on a behandelaar"):
+            data = {
+                "behandelaar": "some-username",
+            }
+
+            response = self.client.post(self.endpoint, data=data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            results = response.json()
+            self.assertEqual(results["count"], 2)
+            self.assertEqual(results["results"][0]["url"], zaak2["url"])
+            self.assertEqual(results["results"][1]["url"], zaak1["url"])
+
+        with self.subTest("Search on another behandelaar"):
+            data = {
+                "behandelaar": "fred",
+            }
+
+            response = self.client.post(self.endpoint, data=data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            results = response.json()
+            self.assertEqual(results["count"], 1)
+            self.assertEqual(results["results"][0]["url"], zaak3["url"])

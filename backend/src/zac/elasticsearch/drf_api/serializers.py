@@ -39,25 +39,14 @@ class SearchZaaktypeSerializer(serializers.Serializer):
 
 
 class SearchSerializer(serializers.Serializer):
-    identificatie = serializers.CharField(
-        required=False,
-        help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
-    )
-    zaaktype = SearchZaaktypeSerializer(
-        required=False, help_text=_("Properties to identify ZAAKTYPEs.")
-    )
-    omschrijving = serializers.CharField(
-        required=False, help_text=_("Brief description of ZAAK.")
+    behandelaar = serializers.CharField(
+        required=False, help_text=_("`username` of behandelaar.")
     )
     eigenschappen = serializers.JSONField(
         required=False,
         help_text=_(
             "ZAAK-EIGENSCHAPs in format `<property name>:{'value': <property value>}`."
         ),
-    )
-    object = serializers.URLField(
-        required=False,
-        help_text=_("URL-reference of OBJECT."),
     )
     fields = OrderedMultipleChoiceField(
         required=False,
@@ -67,10 +56,24 @@ class SearchSerializer(serializers.Serializer):
         choices=DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
         default=DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
     )
+    identificatie = serializers.CharField(
+        required=False,
+        help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
+    )
     include_closed = serializers.BooleanField(
         required=False,
         help_text=_("Include closed ZAAKen."),
         default=False,
+    )
+    object = serializers.URLField(
+        required=False,
+        help_text=_("URL-reference of OBJECT."),
+    )
+    omschrijving = serializers.CharField(
+        required=False, help_text=_("Brief description of ZAAK.")
+    )
+    zaaktype = SearchZaaktypeSerializer(
+        required=False, help_text=_("Properties to identify ZAAKTYPEs.")
     )
 
     def validate_omschrijving(self, omschrijving):
