@@ -166,7 +166,6 @@ class SearchView(PerformSearchMixin, views.APIView):
         results = self.perform_search(search_query)
         page = self.paginate_results(results)
         serializer = ZaakDocumentSerializer(page, many=True)
-        print(serializer.data)
         return self.get_paginated_response(
             serializer.data, input_serializer.validated_data["fields"]
         )
