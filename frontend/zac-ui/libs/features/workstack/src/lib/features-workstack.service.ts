@@ -44,4 +44,22 @@ export class FeaturesWorkstackService {
     return this.http.Get<any>(endpoint);
   }
 
+  /**
+   * Get sorted work stack reviews.
+   * @param sortValue
+   * @param sortOrder
+   * @returns {Observable<any>}
+   */
+  getWorkstackReview(sortValue, sortOrder): Observable<any> {
+    const order = sortOrder === 'desc' ? '-' : '';
+    let endpoint = '/api/workstack/review-requests';
+
+    if(sortValue) {
+      endpoint += encodeURI(
+        `?ordering=${order}${sortValue}`
+      );
+    }
+    return this.http.Get<any>(endpoint);
+  }
+
 }

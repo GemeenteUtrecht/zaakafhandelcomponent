@@ -1,13 +1,24 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { RowData, Table, UserTask, WorkstackCase, Zaak } from '@gu/models';
+import {
+  ExtensiveCell,
+  RowData,
+  Table,
+  UserTask, WorkstackAdvice,
+  WorkstackApproval,
+  WorkstackCase,
+  WorkstackReview,
+  Zaak
+} from '@gu/models';
 import {FeaturesWorkstackService} from './features-workstack.service';
 import { tabs, Tab, tabIndexes } from './constants/tabs';
 import {zakenTableHead} from './constants/zaken-tablehead';
 import {AccessRequests} from './models/access-request';
 import {AdHocActivities} from './models/activities';
-import {SnackbarService} from '@gu/components';
+import { ModalService, SnackbarService } from '@gu/components';
 import { WorkstackChecklist } from './models/checklist';
 import { tasksTableHead } from './constants/tasks-tablehead';
+import { ReviewRequestDetails, ReviewRequestSummary } from '@gu/kownsl';
+import { reviewsTableHead } from './constants/reviews-tablehead';
 
 /**
  * <gu-features-workstack></gu-features-workstack>
@@ -31,6 +42,7 @@ export class FeaturesWorkstackComponent implements OnInit {
     groupTaskPage: number;
     activitiesData: {count: number, next: string, previous: string, results: AdHocActivities[]};
     groupActivitiesData: {count: number, next: string, previous: string, results: AdHocActivities[]};
+    reviewsData: {count: number, next: string, previous: string, results: WorkstackReview[]};
     accessRequestData: {count: number, next: string, previous: string, results: AccessRequests[]};
     checkListData: WorkstackChecklist[];
     groupCheckListData: WorkstackChecklist[];
@@ -38,6 +50,9 @@ export class FeaturesWorkstackComponent implements OnInit {
     zakenTableData: Table = new Table(zakenTableHead, []);
     tasksTableData: Table = new Table(tasksTableHead, []);
     groupTasksTableData: Table = new Table(tasksTableHead, []);
+    reviewsTableData: Table = new Table(reviewsTableHead, []);
+
+    selectedReviewRequest: WorkstackReview;
 
     isLoading: boolean;
 
@@ -48,7 +63,11 @@ export class FeaturesWorkstackComponent implements OnInit {
      * @param {FeaturesWorkstackService} workstackService
      * @param {SnackbarService} snackbarService
      */
-    constructor(private cdRef: ChangeDetectorRef, private workstackService: FeaturesWorkstackService, private snackbarService: SnackbarService) {
+    constructor(
+      private cdRef: ChangeDetectorRef,
+      private workstackService: FeaturesWorkstackService,
+      private snackbarService: SnackbarService,
+      private modalService: ModalService) {
     }
 
 
@@ -62,6 +81,10 @@ export class FeaturesWorkstackComponent implements OnInit {
 
     get nGroupActivities(): number {
       return this.groupActivitiesData?.count + this.groupCheckListData?.length
+    };
+
+    get nReviews(): number {
+      return this.reviewsData?.count;
     };
 
     //
@@ -137,6 +160,34 @@ export class FeaturesWorkstackComponent implements OnInit {
       });
     }
 
+  getReviewsTableRows(reviews: WorkstackReview[]): RowData[] {
+    return reviews.map((review) => {
+      const zaakUrl = review.zaak ? `/ui/zaken/${review.zaak.bronorganisatie}/${review.zaak.identificatie}/acties` : null;
+      const reviewType = review.reviewType === 'advice' ? 'Advies' : 'Akkoord';
+      const openReviews = review.openReviews.length === 0 ? '-' : review.openReviews.length.toString()
+      let replies = review.reviewType === 'advice' ? review.advices.length.toString() : review.approvals.length.toString();
+      replies = replies === '0' ? '-' : replies;
+
+      const cellData: RowData = {
+        cellData: {
+          identificatie: zaakUrl ?
+            {
+            type: 'link',
+            label: review.zaak.identificatie,
+            url: zaakUrl,
+            } : '',
+          omschrijving: zaakUrl ? review.zaak.omschrijving : '',
+          reviewType: reviewType,
+          openReviews: openReviews,
+          replies: replies,
+        },
+        clickOutput: review
+      };
+
+      return cellData;
+    });
+  }
+
     /**
      * Returns the path to zaak.
      * @param {Zaak} zaak
@@ -176,12 +227,18 @@ export class FeaturesWorkstackComponent implements OnInit {
                   this.groupTaskData.results
                 );
 
+                // Reviews
+                this.reviewsData = res[3];
+                this.reviewsTableData.bodyData = this.getReviewsTableRows(
+                  this.reviewsData.results
+                );
+
                 // Activities
-                this.activitiesData = res[3];
-                this.groupActivitiesData = res[4];
-                this.accessRequestData = res[5];
-                this.checkListData = res[6];
-                this.groupCheckListData = res[7];
+                this.activitiesData = res[4];
+                this.groupActivitiesData = res[5];
+                this.accessRequestData = res[6];
+                this.checkListData = res[7];
+                this.groupCheckListData = res[8];
                 this.isLoading = false;
             }, this.reportError.bind(this)
         );
@@ -215,6 +272,106 @@ export class FeaturesWorkstackComponent implements OnInit {
             );
     }
 
+  /**
+   * Sorts the reviews.
+   * @param {{value: string, order: string}} sortValue
+   */
+  sortReviews(sortValue): void {
+    const sortBy = sortValue.order ? sortValue.value : undefined  // Yes.
+    const sortOrder = sortValue.order ? sortValue.order : undefined  // Yes.
+    this.workstackService
+      .getWorkstackReview(sortBy, sortOrder)
+      .subscribe(
+        (res) => {
+          this.reviewsData = res;
+          this.reviewsTableData.bodyData = this.getZakenTableRows(
+            this.zakenData.results
+          );
+        }, this.reportError.bind(this)
+      );
+  }
+
+  /**
+   * Return the table to render.
+   * @return {Table}
+   */
+  get table(): Table {
+    if(this.selectedReviewRequest?.approvals) {
+      return this.formatTableDataApproval(this.selectedReviewRequest)
+    }
+
+    if(this.selectedReviewRequest?.advices){
+      return this.formatTableDataAdvice(this.selectedReviewRequest)
+    }
+
+    return null;
+  }
+
+  /**
+   * Returns table for advices of the selected review.
+   * @param {WorkstackReview} reviewRequestDetails
+   * @return {Table}
+   */
+  formatTableDataAdvice(reviewRequestDetails: WorkstackReview): Table {
+    const headData = ['Advies', 'Van', 'Gegeven op', 'Documentadviezen'];
+
+    const bodyData = reviewRequestDetails.advices.map((review: WorkstackAdvice) => {
+
+      const cellData: RowData = {
+        cellData: {
+          advies: review.advice,
+          van: review.author.fullName,
+
+          datum: {
+            type: review.created ? 'date' : 'text',
+            date: review.created
+          } as ExtensiveCell,
+
+        },
+      }
+      return cellData;
+    })
+
+    return new Table(headData, bodyData);
+  }
+
+  /**
+   * Returns table for approvals of the selected review.
+   * @param {WorkstackReview} reviewRequestDetails
+   * @return {Table}
+   */
+  formatTableDataApproval(reviewRequestDetails: WorkstackReview): Table {
+    const headData = ['Resultaat', 'Van', 'Gegeven op', 'Toelichting'];
+
+    const bodyData = reviewRequestDetails.approvals.map((review: WorkstackApproval) => {
+      const icon = review.status === 'Akkoord' ? 'done' : 'close'
+      const iconColor = review.status === 'Akkoord' ? 'green' : 'red'
+
+      const cellData: RowData = {
+        cellData: {
+          akkoord: {
+            type: 'icon',
+            label: icon,
+            iconColor: iconColor
+          } as ExtensiveCell,
+
+          van: review.author.fullName,
+          datum: {
+            type: review.created ? 'date' : 'text',
+            date: review.created
+          } as ExtensiveCell,
+
+          toelichting: review.toelichting
+        }
+      }
+
+      return cellData;
+    })
+
+    return new Table(headData, bodyData);
+  }
+
+
     //
     // Events
     //
@@ -245,24 +402,40 @@ export class FeaturesWorkstackComponent implements OnInit {
                 this.groupTasksTableData.bodyData = this.getTasksTableRows(this.groupTaskData.results);
                 break;
               case tabs[3].component:
-                this.activitiesData = res[0];
+                this.reviewsData = res[0];
+                this.reviewsTableData = new Table(reviewsTableHead, []);
+                this.reviewsTableData.bodyData = this.getReviewsTableRows(
+                  this.reviewsData.results
+                );
                 break;
               case tabs[4].component:
-                this.groupActivitiesData = res[0];
+                this.activitiesData = res[0];
                 break;
               case tabs[5].component:
-                this.accessRequestData = res[0];
+                this.groupActivitiesData = res[0];
                 break;
               case tabs[6].component:
-                this.checkListData = res[0];
+                this.accessRequestData = res[0];
                 break;
               case tabs[7].component:
+                this.checkListData = res[0];
+                break;
+              case tabs[8].component:
                 this.groupCheckListData = res[0];
                 break;
             }
             this.cdRef.detectChanges();
           }, this.reportError.bind(this)
         );
+    }
+
+    /**
+     * Gets called when a table row is clicked.
+     * @param {ReviewRequestSummary} reviewRequestSummary
+     */
+    tableRowClick(review): void {
+      this.selectedReviewRequest = review;
+      this.modalService.open('workstack-review-modal')
     }
 
     //
