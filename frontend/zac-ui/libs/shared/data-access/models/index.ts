@@ -36,6 +36,9 @@ export * from './ui/file-upload';
 export * from './ui/modal';
 export * from './ui/menu';
 
+// Workstack
+export * from './workstack/reviews';
+
 // Accounts
 export * from './accounts/auth-profile';
 export * from './accounts/permission';

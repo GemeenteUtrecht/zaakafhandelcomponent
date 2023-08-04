@@ -21,6 +21,11 @@ const tabs: Tab[] = [
     endpoint: '/api/workstack/group-tasks'
   },
   {
+    component: 'reviews',
+    label: 'Advies/akkoord',
+    endpoint: '/api/workstack/review-requests'
+  },
+  {
     component: 'activities',
     label: 'Activiteiten',
     endpoint: '/api/workstack/activities'
@@ -52,11 +57,12 @@ const tabIndexes = {
   'zaken': 0,
   'tasks': 1,
   'group-tasks': 2,
-  'activities': 3,
-  'group-activities': 4,
-  'access-request': 5,
-  'checklist': 6,
-  'group-checklist': 7
+  'reviews': 3,
+  'activities': 4,
+  'group-activities': 5,
+  'access-request': 6,
+  'checklist': 7,
+  'group-checklist': 8
 }
 
 export { tabs, tabIndexes }

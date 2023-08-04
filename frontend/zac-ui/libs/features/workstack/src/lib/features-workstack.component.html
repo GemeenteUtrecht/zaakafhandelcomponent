@@ -95,6 +95,38 @@
             </ng-template>
           </div>
 
+          <!-- Review requests -->
+          <div class="tab-content" *ngSwitchCase="'reviews'">
+
+            <!-- Label -->
+            <ng-template mat-tab-label>
+              {{tab.label}}
+              <gu-chip *ngIf="nReviews > 0"
+                       type="badge"
+                       color="primary"
+                       class="ml-1">
+                {{nReviews}}
+              </gu-chip>
+            </ng-template>
+
+            <!-- Content -->
+            <ng-container *ngIf="reviewsTableData.bodyData.length > 0; else noReviews">
+              <gu-table
+                (sortOutput)="sortReviews($event)"
+                [sortable]="true"
+                [table]="reviewsTableData"
+                (tableOutput)="tableRowClick($event)"
+              ></gu-table>
+              <gu-paginator (page)="onPageSelect($event, 'reviews')"
+                            [pageSize]="20"
+                            [length]="reviewsData.count"
+              ></gu-paginator>
+            </ng-container>
+            <ng-template #noReviews>
+              <p>Er zijn geen aanvragen.</p>
+            </ng-template>
+          </div>
+
           <!-- Activiteiten -->
           <div class="tab-content" *ngSwitchCase="'activities'">
 
@@ -258,3 +290,33 @@
     </ng-container>
   </gu-tab-group>
 </div>
+
+<!-- Review details -->
+<gu-modal
+  id="workstack-review-modal"
+  [closeIcon]="true"
+  *ngIf="selectedReviewRequest"
+>
+  <h2>{{selectedReviewRequest.reviewType === 'approval' ? 'Akkoord' : 'Advies'}}</h2>
+  <p class="">{{selectedReviewRequest.zaak.identificatie}}: {{selectedReviewRequest.zaak.omschrijving}}</p>
+  <gu-table [table]="table"
+            class="mb-4"
+  >
+  </gu-table>
+  <div class="card open-reviews" *ngIf="selectedReviewRequest.openReviews?.length > 0">
+    <h4>Openstaande aanvragen</h4>
+    <div class="open-review" *ngFor="let openReview of selectedReviewRequest.openReviews">
+      <span>Deadline: </span><span><strong>{{openReview.deadline | date:'shortDate'}}</strong></span>
+      <ul>
+        <ng-container *ngFor="let user of openReview.users">
+          <li>{{user.fullName}}</li>
+        </ng-container>
+        <ng-container *ngFor="let group of openReview.groups">
+          <li>{{group.name}}</li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+
+
+</gu-modal>
