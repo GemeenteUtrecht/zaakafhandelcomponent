@@ -669,7 +669,6 @@ class ZaakDetailSerializer(APIModelSerializer):
             "startdatum",
             "einddatum",
             "einddatum_gepland",
-            "uiterlijke_einddatum_afdoening",
             "vertrouwelijkheidaanduiding",
             "zaakgeometrie",
             "deadline",
@@ -778,7 +777,6 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
             "omschrijving",
             "reden",
             "toelichting",
-            "uiterlijke_einddatum_afdoening",
             "vertrouwelijkheidaanduiding",
             "zaakgeometrie",
         )
@@ -796,9 +794,6 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
             "toelichting": {
                 "required": False,
                 "allow_blank": True,
-            },
-            "uiterlijke_einddatum_afdoening": {
-                "required": False,
             },
         }
 
