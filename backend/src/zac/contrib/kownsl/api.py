@@ -87,7 +87,7 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
 
 
 @optional_service
-@cache("reviewrequest:detail:{review_request.id}")
+@cache("reviewrequest:detail:{uuid}")
 def get_review_request(uuid: str) -> Optional[ReviewRequest]:
     client = get_client()
     # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid

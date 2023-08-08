@@ -1,49 +1,30 @@
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.urls import reverse_lazy
 
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
 
-from zac.accounts.models import User
+from zac.accounts.tests.factories import UserFactory
+from zac.contrib.kownsl.api import get_review_request
+from zac.contrib.kownsl.models import KownslConfig
+from zac.contrib.kownsl.tests.utils import KOWNSL_ROOT, REVIEW_REQUEST
+from zac.core.tests.utils import ClearCachesMixin
 
+RR_URL = f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}"
 NOTIFICATION = {
     "kanaal": "kownsl",
-    "hoofdObject": "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
+    "hoofdObject": RR_URL,
     "resource": "reviewRequest",
-    "resourceUrl": "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
+    "resourceUrl": RR_URL,
     "actie": "reviewSubmitted",
     "aanmaakdatum": "2020-11-04T15:24:00+00:00",
     "kenmerken": {"author": "bob", "group": ""},
-}
-
-REVIEW_REQUEST = {
-    "id": "497f6eca-6276-4993-bfeb-53cbbbba6f08",
-    "forZaak": "http://example.com",
-    "reviewType": "advice",
-    "documents": [],
-    "frontendUrl": "string",
-    "numAdvices": 1,
-    "numApprovals": 0,
-    "numAssignedUsers": 2,
-    "openReviews": [],
-    "toelichting": "https://kownsl.example.com/497f6eca-6276-4993-bfeb-53cbbbba6f08",
-    "userDeadlines": {"user:bob": "2020-11-05"},
-    "requester": {
-        "username": "alice",
-        "firstName": "",
-        "lastName": "",
-        "fullName": "",
-    },
-    "metadata": {
-        "processInstanceId": "fa962a23-ff20-4184-ba98-b390f2407353",
-        "taskDefinitionId": "Activity_e56r7y",
-    },
-    "locked": False,
-    "lockReason": "",
 }
 
 TASK_DATA = {
@@ -60,7 +41,7 @@ TASK_DATA = {
     "parentTaskId": None,
     "priority": 42,
     "processDefinitionId": "aProcDefId",
-    "processInstanceId": "87a88170-8d5c-4dec-8ee2-972a0be1b564",
+    "processInstanceId": REVIEW_REQUEST["metadata"]["processInstanceId"],
     "caseDefinitionId": "aCaseDefId",
     "caseInstanceId": "aCaseInstId",
     "caseExecutionId": "aCaseExecution",
@@ -72,35 +53,46 @@ TASK_DATA = {
 
 
 @requests_mock.Mocker()
-class ReviewSubmittedTests(APITestCase):
+class ReviewSubmittedTests(ClearCachesMixin, APITestCase):
     """
     Test the correct behaviour when reviews are submitted.
+
     """
 
     endpoint = reverse_lazy("notifications:kownsl-callback")
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create(username="notifs")
-        cls.kownsl = Service.objects.create(
-            api_root="https://kownsl.example.com/api/v1/",
+        cls.user = UserFactory.create(username="notifs")
+        cls.service = Service.objects.create(
+            label="kownsl",
             api_type=APITypes.orc,
+            api_root=KOWNSL_ROOT,
+            auth_type=AuthTypes.zgw,
+            client_id="zac",
+            secret="supersecret",
+            user_id="zac",
         )
+        config = KownslConfig.get_solo()
+        config.service = cls.service
+        config.save()
 
     def setUp(self):
         super().setUp()
 
         self.client.force_authenticate(user=self.user)
 
-    def test_user_task_closed(self, m):
-        mock_service_oas_get(m, "https://kownsl.example.com/api/v1/", "kownsl")
+    @patch(
+        "zac.contrib.kownsl.views.invalidate_review_requests_cache", return_value=None
+    )
+    def test_user_task_closed(self, m, mock_invalidate_cache):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
-            "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
+            RR_URL,
             json=REVIEW_REQUEST,
         )
         m.get(
-            "https://camunda.example.com/engine-rest/task"
-            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=user%3Abob",
+            f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
             json=[{**TASK_DATA, "assignee": f"user:bob"}],
         )
         m.post(
@@ -118,21 +110,54 @@ class ReviewSubmittedTests(APITestCase):
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/complete",
         )
 
-    def test_no_user_tasks_found(self, m):
+    @patch("zac.contrib.kownsl.cache.get_zaak")
+    def test_review_submitted_clears_cache(self, m, mock_get_zaak):
+        mock_get_zaak.id = "some-id"
+
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        m.get(
+            RR_URL,
+            json=REVIEW_REQUEST,
+        )
+        m.get(
+            f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
+            json=[{**TASK_DATA, "assignee": f"user:bob"}],
+        )
+        m.post(
+            f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/complete",
+            json={"variables": {}},
+        )
+
+        # create users
+        UserFactory.create(username="some-author")
+        UserFactory.create(username="some-other-author")
+        # Fill cache
+        get_review_request(REVIEW_REQUEST["id"])
+        self.assertTrue(cache.has_key(f"reviewrequest:detail:{REVIEW_REQUEST['id']}"))
+
+        response = self.client.post(self.endpoint, NOTIFICATION)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(cache.has_key(f"reviewrequest:detail:{REVIEW_REQUEST['id']}"))
+
+    @patch(
+        "zac.contrib.kownsl.views.invalidate_review_requests_cache", return_value=None
+    )
+    def test_no_user_tasks_found(self, m, mock_invalidate_cache):
         """
         Assert that the notification is succesfully handled even if the user task is
         already closed.
 
         This can happen because of the `returnUrl` action.
         """
-        mock_service_oas_get(m, "https://kownsl.example.com/api/v1/", "kownsl")
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
-            "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
+            RR_URL,
             json=REVIEW_REQUEST,
         )
+
         m.get(
-            "https://camunda.example.com/engine-rest/task"
-            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=user%3Abob",
+            f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
             json=[],
         )
 
@@ -146,21 +171,21 @@ class ReviewSubmittedTests(APITestCase):
         self.assertEqual(m.last_request.method, "GET")
         mock_complete.assert_not_called()
 
-    def test_user_task_closed_group_assignee_still_sets_a_user_assignee(self, m):
-        mock_service_oas_get(m, "https://kownsl.example.com/api/v1/", "kownsl")
+    @patch(
+        "zac.contrib.kownsl.views.invalidate_review_requests_cache", return_value=None
+    )
+    def test_user_task_closed_group_assignee_still_sets_a_user_assignee(
+        self, m, mock_invalidate_cache
+    ):
+        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
-            "https://kownsl.example.com/api/v1/review-requests/74480ee9-0b9c-4392-a96c-47a675552f97",
+            RR_URL,
             json=REVIEW_REQUEST,
         )
+
         m.get(
-            "https://camunda.example.com/engine-rest/task"
-            "?processInstanceId=fa962a23-ff20-4184-ba98-b390f2407353&taskDefinitionKey=Activity_e56r7y&assignee=group%3Asome-group",
-            json=[
-                {
-                    **TASK_DATA,
-                    "assignee": "group:some-group",
-                }
-            ],
+            f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=group%3Asome-group",
+            json=[{**TASK_DATA, "assignee": "group:some-group"}],
         )
         m.post(
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/assignee",
