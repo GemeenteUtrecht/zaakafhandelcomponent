@@ -58,8 +58,8 @@ def create_review_request(
     return rr
 
 
-@cache("reviewrequest:advices:{review_request.id}")
 @optional_service
+@cache("reviewrequest:advices:{review_request.id}")
 def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     """
     Retrieve the advices for a single review request.
@@ -72,8 +72,8 @@ def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     return factory(Advice, result)
 
 
-@cache("reviewrequest:approvals:{review_request.id}")
 @optional_service
+@cache("reviewrequest:approvals:{review_request.id}")
 def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     """
     Retrieve the approvals for a single review request.
@@ -86,8 +86,8 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     return factory(Approval, result)
 
 
-@cache("reviewrequest:detail:{review_request.id}")
 @optional_service
+@cache("reviewrequest:detail:{review_request.id}")
 def get_review_request(uuid: str) -> Optional[ReviewRequest]:
     client = get_client()
     # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid
@@ -132,8 +132,8 @@ def get_review_requests_paginated(
     return results, query_params
 
 
-@cache("reviewrequests:zaak:{zaak.id}")
 @optional_service
+@cache("reviewrequests:zaak:{zaak.uuid}")
 def get_all_review_requests_for_zaak(zaak: Zaak) -> List[ReviewRequest]:
     get_more = True
     query_params = {}
