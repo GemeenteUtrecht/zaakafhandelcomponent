@@ -219,6 +219,10 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
         startIndex = 1;
       }
 
+      // Add previously assigned users to search result to fill <gu-multiselect> with items
+      this.searchResultUsers = [].concat(...this.taskContextData.context.previouslyAssignedUsers.map(obj => obj.userAssignees));
+      this.searchResultUserGroups = [].concat(...this.taskContextData.context.previouslyAssignedUsers.map(obj => obj.groupAssignees));
+
       // Update step values according to previous configuration
       this.taskContextData.context.previouslyAssignedUsers.forEach((p, index) => {
         const userAssignees = p.userAssignees.map(userAssignee => userAssignee.username);
