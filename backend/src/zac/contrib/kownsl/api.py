@@ -9,7 +9,7 @@ from zgw_consumers.client import ZGWClient
 
 from zac.accounts.models import User
 from zac.core.utils import fetch_next_url_pagination
-from zac.utils.decorators import optional_service
+from zac.utils.decorators import cache, optional_service
 from zgw.models.zrc import Zaak
 
 from .data import Advice, Approval, ReviewRequest
@@ -59,6 +59,7 @@ def create_review_request(
 
 
 @optional_service
+@cache("reviewrequest:advices:{review_request.id}")
 def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
     """
     Retrieve the advices for a single review request.
@@ -72,6 +73,7 @@ def retrieve_advices(review_request: ReviewRequest) -> List[Advice]:
 
 
 @optional_service
+@cache("reviewrequest:approvals:{review_request.id}")
 def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
     """
     Retrieve the approvals for a single review request.
@@ -85,6 +87,7 @@ def retrieve_approvals(review_request: ReviewRequest) -> List[Approval]:
 
 
 @optional_service
+@cache("reviewrequest:detail:{uuid}")
 def get_review_request(uuid: str) -> Optional[ReviewRequest]:
     client = get_client()
     # Reviewrequest_retrieve translates to reviewrequest_read which isn't a valid
@@ -130,7 +133,8 @@ def get_review_requests_paginated(
 
 
 @optional_service
-def get_all_review_requests_for_zaak(zaak) -> List[ReviewRequest]:
+@cache("reviewrequests:zaak:{zaak.uuid}")
+def get_all_review_requests_for_zaak(zaak: Zaak) -> List[ReviewRequest]:
     get_more = True
     query_params = {}
     results = []

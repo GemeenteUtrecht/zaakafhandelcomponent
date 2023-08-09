@@ -34,6 +34,7 @@ from .api import (
     retrieve_approvals,
     update_assigned_users_review_request,
 )
+from .cache import invalidate_review_requests_cache
 from .data import ReviewRequest
 from .permissions import (
     CanReadOrUpdateReviews,
@@ -80,43 +81,9 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
             self._handle_review_updated(data)
 
     @staticmethod
-    def _handle_review_updated(data: dict):
-        review_request = _get_review_request_for_notification(data)
-
-        if actie := data["kenmerken"].get("actie"):
-            if "locked" in actie:
-                # End the current process instance gracefully
-                try:
-                    send_message(
-                        "cancel-process",
-                        [review_request["metadata"]["processInstanceId"]],
-                    )
-                except HTTPError as exc:
-                    logger.info(
-                        "Something went wrong. Process instance might not exist anymore.",
-                        exc_info=True,
-                    )
-
-            elif "updated_users" in actie:
-                # A notification gets sent out from kownsl to catch the event
-                # that a change in users gets triggered from a different
-                # component than the ZAC.
-                # This will return a 400 bad request if it was triggered
-                # from within the ZAC.
-                try:
-                    send_message(
-                        "change-process",
-                        [review_request["metadata"]["processInstanceId"]],
-                    )
-                except HTTPError as exc:
-                    logger.info(
-                        "Something went wrong. Process instance might not exist anymore.",
-                        exc_info=True,
-                    )
-
-    @staticmethod
     def _handle_review_submitted(data: dict):
         review_request = _get_review_request_for_notification(data)
+        invalidate_review_requests_cache(review_request)
 
         # look up and complete the user task in Camunda
         group_assignee = (
@@ -153,6 +120,41 @@ class KownslNotificationCallbackView(BaseNotificationCallbackView):
             set_assignee_and_complete_task(
                 task, user_assignee, variables={"author": user_assignee}
             )
+
+    @staticmethod
+    def _handle_review_updated(data: dict):
+        review_request = _get_review_request_for_notification(data)
+        invalidate_review_requests_cache(review_request)
+        if actie := data["kenmerken"].get("actie"):
+            if "locked" in actie:
+                # End the current process instance gracefully
+                try:
+                    send_message(
+                        "cancel-process",
+                        [review_request["metadata"]["processInstanceId"]],
+                    )
+                except HTTPError as exc:
+                    logger.info(
+                        "Something went wrong. Process instance might not exist anymore.",
+                        exc_info=True,
+                    )
+
+            elif "updated_users" in actie:
+                # A notification gets sent out from kownsl to catch the event
+                # that a change in users gets triggered from a different
+                # component than the ZAC.
+                # This will return a 400 bad request if it was triggered
+                # from within the ZAC.
+                try:
+                    send_message(
+                        "change-process",
+                        [review_request["metadata"]["processInstanceId"]],
+                    )
+                except HTTPError as exc:
+                    logger.info(
+                        "Something went wrong. Process instance might not exist anymore.",
+                        exc_info=True,
+                    )
 
 
 class BaseRequestView(APIView):
