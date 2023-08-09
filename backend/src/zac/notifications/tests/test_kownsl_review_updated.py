@@ -7,15 +7,17 @@ from django.urls import reverse_lazy
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import APITypes, Service
-from zgw_consumers.test import mock_service_oas_get
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.kownsl.api import get_review_request
 from zac.contrib.kownsl.models import KownslConfig
-from zac.contrib.kownsl.tests.utils import KOWNSL_ROOT, REVIEW_REQUEST
+from zac.contrib.kownsl.tests.utils import KOWNSL_ROOT, REVIEW_REQUEST, ZAKEN_ROOT
 from zac.core.tests.utils import ClearCachesMixin
+from zgw.models.zrc import Zaak
 
 RR_URL = f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}"
 
@@ -115,7 +117,11 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
 
     @patch("zac.contrib.kownsl.cache.get_zaak")
     def test_review_request_updated_clears_cache(self, m, mock_get_zaak):
-        mock_get_zaak.id = "some-id"
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        zaak = generate_oas_component(
+            "zrc", "schemas/Zaak", url=REVIEW_REQUEST["forZaak"]
+        )
+        mock_get_zaak = factory(Zaak, zaak)
 
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
