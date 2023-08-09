@@ -91,6 +91,7 @@ export class ZaakObjectService {
    * @return {string}
    */
   static _stringifyZaakObject(zaakObject: ZaakObject, maxEntries: number = null): string {
+    console.log(zaakObject.record.data);
     return Object.entries(zaakObject.record.data)
       .filter(([key,]) => ['objectid', 'status'].indexOf(key.toLowerCase()) === -1)  // Filter unwanted keys.
       .filter(([, value]) => !(value?.toString().match(/^http/)))  // Filter URLs.
@@ -112,7 +113,6 @@ export class ZaakObjectService {
     // Return observable, this operation is async.
     return new Observable((subscriber: Subscriber<MapMarker>) => {
       const zaakObjectGeometry = zaakObject.record.geometry as Geometry;
-      console.log(zaakObject);
       const mapMarker = zaakObjectGeometry?.type === 'Point' ? {
         contentProperties: [ ['stringRepresentation', zaakObject.stringRepresentation], ['start-case', zaakObject.url], ...Object.entries(zaakObject.record.data)],
         coordinates: zaakObjectGeometry?.coordinates?.length > 1
