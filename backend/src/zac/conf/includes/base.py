@@ -506,7 +506,7 @@ ADMIN_INDEX_HIDE_APP_INDEX_PAGES = True
 EXTERNAL_API_SCHEMAS = {
     "BAG_API_SCHEMA": config(
         "BAG_API_SCHEMA",
-        "https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/openapi.yaml",
+        "https://api.bag.acceptatie.kadaster.nl/lvbag/individuelebevragingen/v2/openapi.yaml",
     ),
     "DOWC_API_SCHEMA": config(
         "DOWC_API_SCHEMA", "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
