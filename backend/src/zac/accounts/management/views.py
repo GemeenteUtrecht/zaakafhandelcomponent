@@ -55,7 +55,7 @@ class ClearRecentlyViewedView(APIView):
     def post(self, request):
         users = User.objects.all()
         for user in users:
-            user.recently_viewed = {}
+            user.recently_viewed = dict()
         User.objects.bulk_update(users, ["recently_viewed"], batch_size=100)
 
         return Response(status=HTTP_204_NO_CONTENT)
