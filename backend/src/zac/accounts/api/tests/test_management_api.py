@@ -37,3 +37,27 @@ class AxesResetAPITests(APITestCase):
         self.assertEqual(response.status_code, 200)
         mock_reset.assert_called_once()
         self.assertEqual(response.json(), {"count": 10})
+
+
+class ClearRecentlyViewedAPITests(APITestCase):
+    endpoint = reverse_lazy("recently-viewed-clear")
+
+    def test_permissions_not_logged_in(self):
+        response = self.client.post(self.endpoint)
+        self.assertEqual(response.status_code, 403)
+
+    def test_permissions_not_staff_user(self):
+        user = UserFactory.create(is_staff=False)
+        self.client.force_authenticate(user)
+        response = self.client.post(self.endpoint)
+        self.assertEqual(response.status_code, 403)
+
+    def test_success(self):
+        user = UserFactory.create(is_staff=True)
+        user.recently_viewed = {"some-data"}
+        self.client.force_authenticate(user)
+
+        response = self.client.post(self.endpoint)
+        self.assertEqual(response.status_code, 204)
+        user.refresh_from_db()
+        self.assertFalse(user.recently_viewed)
