@@ -54,7 +54,7 @@ class ClearRecentlyViewedAPITests(APITestCase):
 
     def test_success(self):
         user = UserFactory.create(is_staff=True)
-        user.recently_viewed = {"some-data"}
+        user.recently_viewed = [{"some-data"}]
         self.client.force_authenticate(user)
 
         response = self.client.post(self.endpoint)
