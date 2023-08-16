@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 from rest_framework.views import APIView
 
+from zac.accounts.models import User
+
 from .commands.add_atomic_permissions import add_atomic_permissions
 from .commands.add_blueprint_permissions_for_zaaktypen import (
     add_blueprint_permissions_for_zaaktypen_and_iots,
@@ -33,6 +35,30 @@ class AxesResetView(APIView):
         count = reset()
         serializer = AxesResetSerializer({"count": count})
         return Response(data=serializer.data, status=HTTP_200_OK)
+
+
+class ClearRecentlyViewedView(APIView):
+    permission_classes = (
+        IsAuthenticated,
+        IsAdminUser,
+    )
+
+    @extend_schema(
+        summary=_("Clear all recently viewed fields on all users."),
+        description=_(
+            "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess. TODO: implement a worker instead of blocking the app."
+        ),
+        request=None,
+        responses={204: None},
+        tags=["management"],
+    )
+    def post(self, request):
+        users = User.objects.all()
+        for user in users:
+            user.recently_viewed = dict()
+        User.objects.bulk_update(users, ["recently_viewed"], batch_size=100)
+
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class LoadBlueprintPermissionsView(APIView):

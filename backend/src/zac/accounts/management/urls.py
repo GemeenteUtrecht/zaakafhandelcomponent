@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import AddAtomicPermissionsView, AxesResetView, LoadBlueprintPermissionsView
+from .views import (
+    AddAtomicPermissionsView,
+    AxesResetView,
+    ClearRecentlyViewedView,
+    LoadBlueprintPermissionsView,
+)
 
 urls = [
     path("axes/reset", view=AxesResetView.as_view(), name="axes-reset"),
@@ -13,5 +18,10 @@ urls = [
         "permissions/atomic/add",
         view=AddAtomicPermissionsView.as_view(),
         name="add-atomic-permissions",
+    ),
+    path(
+        "user/recently-viewed/clear",
+        ClearRecentlyViewedView.as_view(),
+        name="recently-viewed-clear",
     ),
 ]
