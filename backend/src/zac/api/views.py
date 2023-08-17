@@ -17,13 +17,22 @@ HEADERS_TO_KEEP = (
 
 from django.conf import settings
 
+from zac.utils.decorators import cache
+
+A_DAY = 60 * 60 * 24
+
+
+@cache("remote_schema:{schema_url}", timeout=A_DAY)
+def get_schema_url(schema_url: str):
+    return requests.get(schema_url)
+
 
 def remote_schema_view(request):
     schema_url = request.GET["schema"]
-    # TODO: cache
     if schema_url not in settings.EXTERNAL_API_SCHEMAS.values():
         raise PermissionDenied
-    response = requests.get(schema_url)
+
+    response = get_schema_url(schema_url)
     content = response.content
 
     django_response = HttpResponse(content=content)
