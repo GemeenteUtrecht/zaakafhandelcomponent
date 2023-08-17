@@ -18,14 +18,14 @@
       >
       </gu-multiselect>
 
-      <p *ngIf="filteredPermissions?.length === 0 && selectedUser">Deze gebruiker heeft al alle rechten die toegewezen mogen worden.</p>
+      <p *ngIf="filteredRoles?.length === 0 && selectedUser">Deze gebruiker heeft al alle rechten die toegewezen mogen worden.</p>
 
-      <ng-container *ngIf="selectedUser && filteredPermissions?.length > 0 && requesterControl.value">
+      <ng-container *ngIf="selectedUser && requesterControl.value">
         <p class="mb-2">Welke rechten wil je toewijzen aan de gebruiker?</p>
 
         <!-- Permissions -->
-        <gu-multiselect (change)="updateSelectedPermissions($event)"
-                        [items]="filteredPermissions"
+        <gu-multiselect (change)="updateSelectedRoles($event)"
+                        [items]="allRoles"
                         [multiple]="true"
                         [required]="true"
                         widgetType="checkboxGroup"
@@ -47,7 +47,7 @@
         ></gu-datepicker>
         <div class="d-flex justify-content-end">
           <button gu-button
-                  [disabled]="!grantAccessForm.valid || isSubmitting || this.selectedPermissions?.length === 0"
+                  [disabled]="!grantAccessForm.valid || isSubmitting || this.selectedRoles?.length === 0"
                   [loading]="isSubmitting"
                   buttonStyle="primary"
                   size="large"
