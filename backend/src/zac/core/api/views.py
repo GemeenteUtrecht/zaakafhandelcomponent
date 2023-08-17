@@ -29,7 +29,10 @@ from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from zds_client.client import ClientError
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.constants import (
+    RolOmschrijving,
+    VertrouwelijkheidsAanduidingen,
+)
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
@@ -41,6 +44,8 @@ from zac.camunda.process_instances import get_process_instances
 from zac.camunda.processes import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
+from zac.contrib.objects.cache import invalidate_cache_fetch_oudbehandelaren
+from zac.contrib.objects.oudbehandelaren.utils import register_old_behandelaar
 from zac.contrib.objects.services import (
     fetch_start_camunda_process_form_for_zaaktype,
     fetch_zaaktypeattributen_objects_for_zaaktype,
@@ -719,6 +724,9 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
 
     @extend_schema(
         summary=_("Destroy ROL from ZAAK."),
+        description=_(
+            "This also adds an `oudbehandelaar` to the `oudbehandelaren` object of the ZAAK if the ROL has `omschrijving_generiek`: `{behandelaar}`, and it invalidates the cache of the `oudbehandelaren` object."
+        ).format(behandelaar=RolOmschrijving.behandelaar),
         parameters=[
             OpenApiParameter(
                 name="url",
@@ -743,6 +751,10 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
             data=self.request.query_params, context={"zaak": zaak}
         )
         serializer.is_valid(raise_exception=True)
+        register_old_behandelaar(
+            zaak=zaak, rol_url=serializer.validated_data["url"], user=request.user
+        )
+        invalidate_cache_fetch_oudbehandelaren(zaak)
         delete_rol(serializer.validated_data["url"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
