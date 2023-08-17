@@ -18,6 +18,8 @@ from zac.core.services import fetch_catalogus, get_zaakobjecten, search_objects
 from zac.utils.decorators import cache
 from zgw.models import Zaak
 
+from .oudbehandelaren.data import Oudbehandelaren
+
 logger = logging.getLogger(__name__)
 perf_logger = logging.getLogger("performance")
 A_DAY = 60 * 60 * 24
@@ -208,6 +210,7 @@ def fetch_checklisttype(
     )
 
 
+@cache("fetch_checklist_object:{zaak.url}", timeout=A_DAY)
 def fetch_checklist_object(
     zaak: Zaak,
 ) -> Optional[Dict]:
@@ -333,3 +336,11 @@ def fetch_oudbehandelaren_object(zaak: Zaak) -> Optional[Dict]:
         return None
 
     return oudbehandelaren[0]
+
+
+def fetch_oudbehandelaren(zaak: Zaak) -> Optional[List[Oudbehandelaren]]:
+    oudbehandelaren = fetch_oudbehandelaren_object(zaak)
+    if not oudbehandelaren:
+        return None
+
+    return factory(Oudbehandelaren, oudbehandelaren[0]["record"]["data"])
