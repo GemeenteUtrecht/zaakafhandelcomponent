@@ -33,11 +33,13 @@
 <ng-container *ngIf="widgetType==='checkboxGroup'">
   <span class="select-all-label mb-2" *ngIf="label">{{label}}</span>
   <div class="multiselect__checkbox-group" (change)="onCheckboxGroupChange($event)">
-    <label class="multiselect__checkbox-item">
-      <input [checked]="getAllChecked()" class="multiselect__select-all" type="checkbox" (click)="toggleCheckAll()"/>
-      <span>Selecteer alles</span>
-    </label>
-    <hr>
+    <ng-container *ngIf="items?.length > 1">
+      <label class="multiselect__checkbox-item">
+        <input [checked]="getAllChecked()" class="multiselect__select-all" type="checkbox" (click)="toggleCheckAll()"/>
+        <span>Selecteer alles</span>
+      </label>
+      <hr>
+    </ng-container>
     <label class="multiselect__checkbox-item" *ngFor="let item of items">
       <input [checked]="getIsChecked(item)" name="permissions" type="checkbox" value="{{item[bindValue]}}"/>
       <span title="{{item.description}}">{{item[bindLabel]}}</span>

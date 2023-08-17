@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { UserSearchResult, Zaak, Permission, UserPermission, User } from '@gu/models';
+import { UserSearchResult, Zaak, UserPermission, User, Role } from '@gu/models';
 import { AccountsService, ApplicationHttpClient } from '@gu/services';
 import {ModalService, SnackbarService} from '@gu/components';
 import { DatePipe } from '@angular/common';
@@ -20,9 +20,11 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   requesterUser: UserSearchResult;
   selectedUser: User;
 
-  allPermissions: Permission[];
-  filteredPermissions: Permission[];
-  selectedPermissions: string[];
+  allRoles: Role[];
+  filteredRoles: Role[];
+  selectedRoles: string[];
+  selectedPermissions: any;
+  filteredUserPermissions: any;
 
   grantAccessForm: FormGroup;
   isSubmitting: boolean;
@@ -75,12 +77,12 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Fetch user user permissions.
+   * Fetch user permissions.
    */
   getContextData() {
-    this.accountsService.getPermissions()
+    this.accountsService.getRoles()
       .subscribe( res => {
-        this.allPermissions = res;
+        this.allRoles = res;
       }, error => console.error(error))
   }
 
@@ -88,8 +90,10 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
    * Update selected permissions.
    * @param event
    */
-  updateSelectedPermissions(event) {
-    this.selectedPermissions = event.map( p => p.name );
+  updateSelectedRoles(event) {
+    this.selectedRoles = event.map( p => p.name );
+    const combinedRolePermissions = [...new Set(event.flatMap(obj => obj.permissions))];
+    this.selectedPermissions = combinedRolePermissions.filter(permission => !this.filteredUserPermissions.includes(permission))
   }
 
   /**
@@ -109,16 +113,14 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
    */
   onUserSelect(user) {
     this.selectedUser = user;
-
     if (user) {
       const filteredUserPermissions = this.userPermissions.filter(permissionObject => permissionObject.username === user.username)
 
       // Check if selected user already has permissions
       if (filteredUserPermissions?.length > 0) {
-        const userPermissions = filteredUserPermissions[0].permissions.map(zaakPermission => zaakPermission.permission);
-        this.filteredPermissions = this.allPermissions.filter(permission => !userPermissions.includes(permission.name))
+        this.filteredUserPermissions = filteredUserPermissions[0].permissions.map(zaakPermission => zaakPermission.permission);
       } else if (filteredUserPermissions?.length === 0) {
-        this.filteredPermissions = this.allPermissions;
+        this.filteredUserPermissions = [];
       }
     }
   }
