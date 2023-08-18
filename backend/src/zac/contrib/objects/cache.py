@@ -21,4 +21,3 @@ def invalidate_meta_objects(on_data: Dict):
 
 def invalidate_cache_fetch_oudbehandelaren(zaak: Zaak):
     cache.delete(f"fetch_oudbehandelaren_object:{zaak.url}")
-
