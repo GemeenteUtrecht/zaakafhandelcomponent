@@ -95,13 +95,13 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
                         "ended": "2023-01-01T00:00:00Z",
                         "started": "2023-01-02T00:00:00Z",
                         "user": {
-                            "id": 1,
-                            "username": "some-username",
+                            "id": self.user.id,
+                            "username": self.user.username,
                             "firstName": "",
-                            "fullName": "some-username",
+                            "fullName": self.user.username,
                             "lastName": "",
                             "isStaff": True,
-                            "email": "user-0@zac",
+                            "email": self.user.email,
                             "groups": [],
                         },
                     }
