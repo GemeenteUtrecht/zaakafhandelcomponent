@@ -21,7 +21,6 @@ from zgw.models import Zaak
 from .oudbehandelaren.data import Oudbehandelaren
 
 logger = logging.getLogger(__name__)
-perf_logger = logging.getLogger("performance")
 A_DAY = 60 * 60 * 24
 
 
@@ -343,4 +342,4 @@ def fetch_oudbehandelaren(zaak: Zaak) -> Optional[List[Oudbehandelaren]]:
     if not oudbehandelaren:
         return None
 
-    return factory(Oudbehandelaren, oudbehandelaren[0]["record"]["data"])
+    return factory(Oudbehandelaren, oudbehandelaren["record"]["data"])

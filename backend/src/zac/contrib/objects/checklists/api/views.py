@@ -9,6 +9,7 @@ from rest_framework import permissions, status, views
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
+from zac.contrib.objects.cache import invalidate_cache_fetch_checklist_object
 from zac.contrib.objects.services import (
     fetch_checklist,
     fetch_checklist_object,
@@ -26,6 +27,27 @@ from .permissions import (
     ChecklistIsLockedByCurrentUser,
 )
 from .serializers import ChecklistSerializer, ChecklistTypeSerializer
+
+zaak_checklist_parameters = [
+    OpenApiParameter(
+        name="bronorganisatie",
+        required=True,
+        type=OpenApiTypes.STR,
+        description=_(
+            "Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype."
+        ),
+        location=OpenApiParameter.PATH,
+    ),
+    OpenApiParameter(
+        name="identificatie",
+        required=True,
+        type=OpenApiTypes.STR,
+        description=_(
+            "Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype."
+        ),
+        location=OpenApiParameter.PATH,
+    ),
+]
 
 
 class ZaakChecklistTypeView(views.APIView):
@@ -50,52 +72,11 @@ class ZaakChecklistTypeView(views.APIView):
 
     @extend_schema(
         summary=_("Retrieve checklisttype and related questions for ZAAK."),
-        parameters=[
-            OpenApiParameter(
-                name="bronorganisatie",
-                required=True,
-                type=OpenApiTypes.STR,
-                description=_(
-                    "Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype."
-                ),
-                location=OpenApiParameter.PATH,
-            ),
-            OpenApiParameter(
-                name="identificatie",
-                required=True,
-                type=OpenApiTypes.STR,
-                description=_(
-                    "Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype."
-                ),
-                location=OpenApiParameter.PATH,
-            ),
-        ],
+        parameters=zaak_checklist_parameters,
     )
     def get(self, request, *args, **kwargs):
         checklisttype = self.get_object()
         return Response(self.get_serializer(checklisttype).data)
-
-
-zaak_checklist_parameters = [
-    OpenApiParameter(
-        name="bronorganisatie",
-        required=True,
-        type=OpenApiTypes.STR,
-        description=_(
-            "Bronorganisatie of the ZAAK with ZAAKTYPE related to the checklisttype."
-        ),
-        location=OpenApiParameter.PATH,
-    ),
-    OpenApiParameter(
-        name="identificatie",
-        required=True,
-        type=OpenApiTypes.STR,
-        description=_(
-            "Identificatie of the ZAAK with ZAAKTYPE related to the checklisttype."
-        ),
-        location=OpenApiParameter.PATH,
-    ),
-]
 
 
 class BaseZaakChecklistView(views.APIView):
@@ -111,10 +92,11 @@ class BaseZaakChecklistView(views.APIView):
         return self.serializer_class(*args, **kwargs)
 
     def get_zaak(self) -> Zaak:
-        bronorganisatie = self.request.parser_context["kwargs"]["bronorganisatie"]
-        identificatie = self.request.parser_context["kwargs"]["identificatie"]
-        zaak = find_zaak(bronorganisatie, identificatie)
-        return zaak
+        if not hasattr(self, "_zaak"):
+            bronorganisatie = self.request.parser_context["kwargs"]["bronorganisatie"]
+            identificatie = self.request.parser_context["kwargs"]["identificatie"]
+            self._zaak = find_zaak(bronorganisatie, identificatie)
+        return self._zaak
 
     def get_checklist_object(self) -> Dict:
         if not hasattr(self, "_checklist_object"):
@@ -179,6 +161,8 @@ class ZaakChecklistView(BaseZaakChecklistView):
 
         # Add permissions:
         self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
+
+        invalidate_cache_fetch_checklist_object(zaak)
         return Response(
             self.get_serializer(checklist).data, status=status.HTTP_201_CREATED
         )
@@ -204,6 +188,7 @@ class ZaakChecklistView(BaseZaakChecklistView):
         serializer.is_valid(raise_exception=True)
         checklist = serializer.update()
         self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
+        invalidate_cache_fetch_checklist_object(self.get_zaak())
         return Response(self.get_serializer(checklist).data, status=status.HTTP_200_OK)
 
 
@@ -226,6 +211,7 @@ class LockZaakChecklistView(BaseZaakChecklistView):
             data=checklist_obj["record"]["data"],
             user=request.user,
         )
+        invalidate_cache_fetch_checklist_object(self.get_zaak())
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -247,4 +233,5 @@ class UnlockZaakChecklistView(BaseZaakChecklistView):
             data=checklist_obj["record"]["data"],
             user=request.user,
         )
+        invalidate_cache_fetch_checklist_object(self.get_zaak())
         return Response(status=status.HTTP_204_NO_CONTENT)
