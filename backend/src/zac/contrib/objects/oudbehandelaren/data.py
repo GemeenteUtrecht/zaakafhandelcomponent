@@ -24,5 +24,5 @@ class Oudbehandelaar(Model):
 
 @dataclass
 class Oudbehandelaren(Model):
-    behandelaren: List[Oudbehandelaar]
+    oudbehandelaren: List[Oudbehandelaar]
     zaak: str

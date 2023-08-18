@@ -39,11 +39,11 @@ def register_old_behandelaar(zaak: Zaak, rol_url: str, user: User) -> Optional[D
     create = False
     if not object:
         create = True
-        data = {"meta": True, "zaak": zaak.url, "behandelaren": []}
+        data = {"meta": True, "zaak": zaak.url, "oudbehandelaren": []}
     else:
         data = object["record"]["data"]
 
-    data["behandelaren"].append(
+    data["oudbehandelaren"].append(
         {
             "email": user.email,
             "ended": datetime.datetime.now().isoformat(),

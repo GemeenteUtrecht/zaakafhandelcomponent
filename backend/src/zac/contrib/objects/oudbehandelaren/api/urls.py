@@ -6,6 +6,6 @@ urlpatterns = [
     path(
         "oudbehandelaren/<str:bronorganisatie>/<str:identificatie>",
         OudbehandelarenView.as_view(),
-        name="oudbehandelaren",
+        name="zaak-oudbehandelaren",
     ),
 ]

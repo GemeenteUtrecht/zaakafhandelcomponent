@@ -5,10 +5,10 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import UserSerializer
 
-from ..data import Oudbehandelaren
+from ..data import Oudbehandelaar, Oudbehandelaren
 
 
-class OudbehandelarenSerializer(APIModelSerializer):
+class OudbehandelaarSerializer(APIModelSerializer):
     email = serializers.EmailField(
         help_text=_("Email address related to `oudbehandelaar`.")
     )
@@ -17,7 +17,7 @@ class OudbehandelarenSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = Oudbehandelaren
+        model = Oudbehandelaar
         fields = (
             "email",
             "ended",
@@ -29,4 +29,17 @@ class OudbehandelarenSerializer(APIModelSerializer):
             "started": {
                 "help_text": _("Datetime ROL started. `registratiedatum` of ROL.")
             },
+        }
+
+
+class OudbehandelarenSerializer(APIModelSerializer):
+    oudbehandelaren = OudbehandelaarSerializer(
+        many=True, help_text=_("Array of `oudbehandelaren`.")
+    )
+
+    class Meta:
+        model = Oudbehandelaren
+        fields = ("zaak", "oudbehandelaren")
+        extra_kwargs = {
+            "zaak": {"help_text": _("URL-reference to ZAAK.")},
         }

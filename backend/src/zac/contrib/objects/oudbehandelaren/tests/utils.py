@@ -14,7 +14,7 @@ OUDBEHANDELAREN_OBJECTTYPE = {
     "jsonSchema": {
         "type": "object",
         "title": "OudBehandelaren",
-        "required": ["behandelaren", "zaak"],
+        "required": ["oudbehandelaren", "zaak"],
         "properties": {
             "meta": True,
             "zaak": {"type": "string"},
@@ -22,17 +22,18 @@ OUDBEHANDELAREN_OBJECTTYPE = {
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "title": "behandelaar",
+                    "title": "oudbehandelaar",
                     "required": [
                         "email",
                         "ended",
-                        "started" "username",
+                        "identificatie",
+                        "started",
                     ],
                     "properties": {
                         "email": {"type": "string"},
                         "ended": {"type": "string"},
+                        "identificatie": {"type": "string"},
                         "started": {"type": "string"},
-                        "username": {"type": "string"},
                     },
                 },
             },
@@ -56,7 +57,14 @@ OUDBEHANDELAREN_OBJECT = {
         "data": {
             "meta": True,
             "zaak": ZAAK_URL,
-            "behandelaren": [],
+            "oudbehandelaren": [
+                {
+                    "email": "some-email@email.com",
+                    "ended": "2023-01-01",
+                    "started": "2023-01-02",
+                    "identificatie": "some-username",
+                }
+            ],
         },
         "geometry": "None",
         "startAt": "1999-12-31",
