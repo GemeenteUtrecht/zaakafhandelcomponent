@@ -1,15 +1,18 @@
+import datetime
 from unittest.mock import patch
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 
 import requests_mock
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import (
     RolOmschrijving,
+    RolTypes,
     VertrouwelijkheidsAanduidingen,
 )
 from zgw_consumers.constants import APITypes
@@ -22,6 +25,11 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.contrib.objects.oudbehandelaren.tests.utils import (
+    OUDBEHANDELAREN_OBJECT,
+    OUDBEHANDELAREN_OBJECTTYPE,
+)
+from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import zaken_inzien, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -561,7 +569,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    def test_destroy_rol_one_behandelaar_and_one_initiator(self, m):
+    @patch("zac.core.api.views.register_old_behandelaar")
+    def test_destroy_rol_one_behandelaar_and_one_initiator(
+        self, m, patch_register_old_behandelaar
+    ):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaaktype)
@@ -593,6 +604,73 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             self.endpoint + "?url=" + initiator["url"],
         )
         self.assertEqual(response.status_code, 204)
+        patch_register_old_behandelaar.assert_called_once()
+
+    @freeze_time("2000-01-01T23:59:59Z")
+    @patch("zac.contrib.objects.oudbehandelaren.utils.update_object_record_data")
+    def test_destroy_rol_register_old_behandelaar(
+        self, m, mock_update_object_record_data
+    ):
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.oudbehandelaren_objecttype = OUDBEHANDELAREN_OBJECTTYPE["url"]
+        meta_config.save()
+
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaaktype)
+
+        initiator = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d443/",
+            betrokkeneIdentificatie={"identificatie": self.user.username},
+            omschrijvingGeneriek=RolOmschrijving.initiator,
+            betrokkeneType=RolTypes.medewerker,
+        )
+        behandelaar = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/07adaa6a-4d2f-4539-9aaf-19b448c4d444/",
+            betrokkeneIdentificatie={"identificatie": self.user.username},
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
+        )
+        mock_resource_get(m, initiator)
+        mock_resource_get(m, behandelaar)
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([initiator, behandelaar]),
+        )
+
+        m.delete(initiator["url"], status_code=status.HTTP_204_NO_CONTENT)
+
+        with patch(
+            "zac.contrib.objects.oudbehandelaren.utils.fetch_objecttype",
+            return_value=OUDBEHANDELAREN_OBJECTTYPE,
+        ):
+            with patch(
+                "zac.contrib.objects.oudbehandelaren.utils.fetch_oudbehandelaren_object",
+                return_value=OUDBEHANDELAREN_OBJECT,
+            ):
+                response = self.client.delete(
+                    self.endpoint + "?url=" + initiator["url"],
+                )
+
+        OUDBEHANDELAREN_OBJECT["record"]["data"]["behandelaren"] = [
+            {
+                "email": self.user.email,
+                "ended": datetime.datetime.now().isoformat(),
+                "started": initiator["registratiedatum"],
+                "username": self.user.username,
+            }
+        ]
+        self.assertEqual(response.status_code, 204)
+        mock_update_object_record_data.assert_called_once_with(
+            OUDBEHANDELAREN_OBJECT,
+            OUDBEHANDELAREN_OBJECT["record"]["data"],
+            user=self.user,
+        )
 
     def test_destroy_rol_missing_url(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")

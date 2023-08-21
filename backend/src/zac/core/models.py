@@ -63,6 +63,27 @@ class CoreConfig(SingletonModel):
 
 
 class MetaObjectTypesConfig(SingletonModel):
+    checklist_objecttype = models.URLField(
+        _("URL-reference to Checklist in OBJECTTYPES API."),
+        help_text=_(
+            "A URL-reference to the Checklist OBJECTTYPE. This is used to fetch the checklist objecttype for a ZAAK."
+        ),
+        default="",
+    )
+    checklisttype_objecttype = models.URLField(
+        _("URL-reference to ChecklistType in OBJECTTYPES API."),
+        help_text=_(
+            "A URL-reference to the ChecklistType OBJECTTYPE. This is used to get the questions for a checklist for a ZAAKTYPE."
+        ),
+        default="",
+    )
+    oudbehandelaren_objecttype = models.URLField(
+        _("URL-reference to Oudbehandelaren in OBJECTTYPES API."),
+        help_text=_(
+            "A URL-reference to the Oudbehandelaren OBJECTTYPE. This is used to register the old ROL when the ROL was of ROLTYPE `behandelaar`."
+        ),
+        default="",
+    )
     start_camunda_process_form_objecttype = models.URLField(
         _("URL-reference to StartCamundaForms in OBJECTTYPES API."),
         help_text=_(
@@ -74,20 +95,6 @@ class MetaObjectTypesConfig(SingletonModel):
         _("URL-reference to ZaaktypeAttributes in OBJECTTYPES API."),
         help_text=_(
             "A URL-reference to the ZaaktypeAttributes OBJECTTYPE. This is used to get extra data for EIGENSCHAPs."
-        ),
-        default="",
-    )
-    checklisttype_objecttype = models.URLField(
-        _("URL-reference to ChecklistType in OBJECTTYPES API."),
-        help_text=_(
-            "A URL-reference to the ChecklistType OBJECTTYPE. This is used to get the questions for a checklist for a ZAAKTYPE."
-        ),
-        default="",
-    )
-    checklist_objecttype = models.URLField(
-        _("URL-reference to Checklist in OBJECTTYPES API."),
-        help_text=_(
-            "A URL-reference to the Checklist OBJECTTYPE. This is used to fetch the checklist objecttype for a ZAAK."
         ),
         default="",
     )

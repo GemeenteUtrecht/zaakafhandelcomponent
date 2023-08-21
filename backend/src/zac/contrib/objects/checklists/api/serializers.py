@@ -241,7 +241,7 @@ class ChecklistSerializer(APIModelSerializer):
                     "schema": ".jsonSchema",
                     "objectData": ".record.data",
                 },
-                "relatieomschrijving": "Checklist van Zaak",
+                "relatieomschrijving": "Checklist van de ZAAK.",
             }
         )
 
