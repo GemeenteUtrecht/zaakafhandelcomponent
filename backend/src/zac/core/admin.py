@@ -28,6 +28,7 @@ class MetaObjectTypesConfigAdmin(SingletonModelAdmin):
         objecttype_fields = [
             "zaaktype_attribute_objecttype",
             "start_camunda_process_form_objecttype",
+            "oudbehandelaren_objecttype",
             "checklisttype_objecttype",
             "checklist_objecttype",
         ]

@@ -1,8 +1,8 @@
 import datetime
 from typing import Dict, Optional
 
+from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize
-from rest_framework import settings as api_settings
 from zgw_consumers.api_models.constants import RolOmschrijving
 
 from zac.accounts.models import User
@@ -47,8 +47,8 @@ def register_old_behandelaar(zaak: Zaak, rol_url: str, user: User) -> Optional[D
         {
             "email": user.email,
             "ended": datetime.datetime.now().isoformat(),
-            "started": rol.registratiedatum,
-            "username": rol.get_identificatie(),
+            "started": rol.registratiedatum.isoformat(),
+            "identificatie": rol.get_identificatie(),
         }
     )
 
