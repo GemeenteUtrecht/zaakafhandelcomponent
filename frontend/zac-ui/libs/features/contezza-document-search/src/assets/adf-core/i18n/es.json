@@ -20,12 +20,15 @@
   "CLAIM": "Pedir",
   "UNCLAIM": "Liberar",
   "START PROCESS": "Iniciar proceso",
+  "DATA_LOADING": "Los datos se están cargando",
+  "CLOSE": "Cerrar",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "No tiene notificaciones en este momento.",
     "TITLE": "Notificaciones",
     "MARK_AS_READ": "Marcar todo como leído",
     "SYSTEM": "Sistema",
-    "LOAD_MORE": "Cargar más"
+    "LOAD_MORE": "Cargar más",
+    "OPEN_HISTORY": "Abrir el historial de notificaciones"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Descargar",
       "REMOVE_FILE": "Eliminar",
       "UPLOAD": "Cargar",
-      "REQUIRED": "*Obligatorio",
+      "REQUIRED": "Campo obligatorio",
+      "REST_API_FAILED": "No se puede acceder al servidor '{{ hostname }}'",
       "FILE_NAME": "Nombre del fichero",
       "NO_FILE_ATTACHED": "Sin fichero adjunto",
       "VALIDATOR": {
@@ -165,28 +169,6 @@
       "ERROR_SINGULAR": "{{ name }} no se ha podido eliminar",
       "ERROR_PLURAL": "{{ number }} elementos no se han podido eliminar"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Tipo de autenticación",
-      "BASIC": "Autenticación básica",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Flujo implícito",
-      "PROVIDER": "Proveedor",
-      "REQUIRED": "Este campo es obligatorio",
-      "CS_URL_ERROR": "La dirección de Content Services no coincide con el formato de la URL",
-      "PS_URL_ERROR": "La dirección de Process Services no coincide con el formato de la URL",
-      "TITLE": "Configuración",
-      "CS-HOST": "URL de Content Services",
-      "BP-HOST": "URL de Process Services",
-      "BACK": "Volver",
-      "APPLY": "Aplicar",
-      "NOT_VALID": "http(s)://host|ip:port(/path) no reconocido; pruebe con una URL diferente.",
-      "REDIRECT": "URI de redireccionamiento",
-      "REDIRECT_LOGOUT": "Cierre de sesión de URI de redireccionamiento",
-      "SILENT": "Inicio de sesión silencioso",
-      "SCOPE": "Ámbito",
-      "CLIENT": "ID de cliente",
-      "PUBLIC_URLS": "URL públicas para inicio de sesión silencioso"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "Añadir nuevo",
@@ -256,7 +238,7 @@
   },
   "COMMENTS": {
     "NONE": "No hay comentarios",
-    "ADD": "Añadir comentario",
+    "ADD": "Añadir",
     "HEADER": "Comentarios ({{ count }})",
     "CREATED_BY_HEADER": "Creado por",
     "MESSAGE_HEADER": "Mensaje",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Cancelar",
-      "CHOOSE": "Elegir"
+      "CHOOSE": "Elegir",
+      "LOGIN": "Iniciar sesión"
     }
   },
   "ADF-DATATABLE": {
@@ -332,7 +315,8 @@
       "SORT_DESCENDING_BY": "Descendente por {{ string }}",
       "ICON_TEXT": "Tipo de elemento {{ type }}",
       "ICON_DISABLED": "Desactivado",
-      "ROW_OPTION_BUTTON": "Acciones"
+      "ROW_OPTION_BUTTON": "Acciones",
+      "EMPTY_HEADER": "Encabezado vacío"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Documento",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Presentación",
       "SPREADSHEET": "Hoja de cálculo",
       "MISCELLANEOUS": "Varios"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Columnas",
+      "SEARCH": "Buscar",
+      "APPLY": "Aplicar"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Tenencia"
-      }
+      },
+      "MY_PROFILE": "Mi Perfil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Mostrando",
-      "OF": "de"
+      "OF": "de",
+      "PAGE_SELECTOR_LABEL": "Selector de página"
     },
     "LOADING": "Cargando",
     "UNKNOWN_FORMAT": "No se ha podido cargar la vista previa. Formato desconocido.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "URL de Alfresco Content Services: {{ value }}",
       "PROCESS_SERVICE_HOST": "URL de Alfresco Process Services: {{ value }}"
     },
+    "REPOSITORY": "Repositorio",
     "VERSIONS": {
       "TITLE": "Versiones de productos",
       "CONTENT_SERVICE": "Content Services",
@@ -534,12 +526,12 @@
     },
     "LICENSE": {
       "TITLE": "Licencia",
-      "PROPERTY": "Propiedad",
+      "PROPERTY": "Propiedades",
       "VALUE": "Valor"
     },
     "STATUS": {
       "TITLE": "Estado",
-      "PROPERTY": "Propiedad",
+      "PROPERTY": "Propiedades",
       "VALUE": "Valor"
     },
     "MODULES": {
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Cargando..."
+    "LOADING": "Cargando...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} combobox {{selectedOption}}"
   }
 }

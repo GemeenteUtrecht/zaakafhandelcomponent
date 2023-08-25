@@ -1,218 +1,370 @@
 {
-  "$id": "lib.zac-doclib.columns",
-  "$version": "@@project.version@@",
-  "$name": "Contezza ZAC Doclib Extension",
-  "$vendor": "Contezza BV",
-  "$description": "Contezza ZAC Doclib Extension",
-  "$license": "LGPL-3.0",
-  "$runtime": "2.6.0",
+    "$id": "lib.zac-doclib.common",
+    "$version": "@@project.version@@",
+    "$name": "Contezza ZAC Doclib Extension",
+    "$vendor": "Contezza BV",
 
-  "features": {
-    "toolbar": [
-      {
-        "id": "app.toolbar.add_to_case",
-        "order": 100,
-        "title": "APP.ACTIONS.ADD",
-        "icon": "add",
-        "actions": {
-          "click": "ADD_TO_CASE"
+    "features": {
+        "extraSearchFields": ["TEXT"],
+        "dynamicforms": [
+            {
+                "id": "sidebar-filters",
+                "form": {
+                    "subfields": [
+                        {
+                            "id": "created",
+                            "type": "dateRange",
+                            "label": "APP.FILTER.OPTIONS.CREATED",
+                            "query": { "map": { "id": "dateRangeQuery", "parameters": "@cm\\:created" } }
+                        },
+                        {
+                            "id": "infoType",
+                            "type": "autocomplete",
+                            "label": "APP.FILTER.OPTIONS.IO_TYPE",
+                            "options": {
+                                "type": "webscript",
+                                "dynamic-source": "api/ztc/informatieobjecttypen",
+                                "labelKey": "text"
+                            },
+                            "validations": [{ "id": "hasProperties", "parameters": ["uuid"] }],
+                            "query": {
+                                "key": "uuid",
+                                "property": "rgbz\\:informatieobjecttype",
+                                "options": { "exact": true }
+                            }
+                        }
+                    ]
+                },
+                "layouts": [
+                    {
+                        "id": "search-page",
+                        "layout": { "subfields": [{ "id": "created" }, { "id": "infoType" }] }
+                    }
+                ]
+            },
+            {
+                "id": "createIOTForm",
+                "form": {
+                    "subfields": [
+                        {
+                            "id": "currentDocumentInfoType",
+                            "type": "autocomplete",
+                            "label": "APP.DIALOGS.EDIT_IOT.LABELS.CURRENT_VALUE",
+                            "options": {
+                                "type": "webscript",
+                                "dynamic-source": "api/ztc/informatieobjecttypen?zaaktype=${zaaktypeurl}",
+                                "filters": [{ "id": "isDateBeforeNow", "parameters": "eindeGeldigheid" }],
+                                "labelKey": "text",
+                                "iconKey": "richting"
+                            },
+                            "validations": [{ "id": "hasProperties", "parameters": ["text"] }],
+                            "initialValue": {
+                                "dynamic-source": "${node->properties.rgbz:informatieobjecttype}",
+                                "filters": [{ "id": "stringToObject", "parameters": "id" }]
+                            },
+                            "rules": { "readonly": "true" }
+                        },
+                        {
+                            "id": "documentInfoType",
+                            "type": "autocomplete",
+                            "label": "APP.DIALOGS.EDIT_IOT.LABELS.IO_TYPE",
+                            "options": {
+                                "type": "webscript",
+                                "dynamic-source": "api/ztc/informatieobjecttypen?zaaktype=${zaaktypeurl}",
+                                "filters": [{ "id": "isDateBeforeNow", "parameters": "eindeGeldigheid" }],
+                                "labelKey": "text",
+                                "iconKey": "richting"
+                            },
+                            "validations": ["required", { "id": "hasProperties", "parameters": ["text"] }]
+                        },
+                        {
+                            "id": "documentTitle",
+                            "type": "input",
+                            "label": "Titel",
+                            "validations": ["required"],
+                            "initialValue": "${node->properties.cm:title}"
+                        },
+                        {
+                            "id": "documentLanguage",
+                            "type": "autocomplete",
+                            "label": "Taal",
+                            "initialValue": { "id": "nld" },
+                            "options": {
+                                "type": "webscript",
+                                "dynamic-source": "api/zrc/zaken/waardelijsten?type=taal",
+                                "labelKey": "label"
+                            },
+                            "validations": ["required", { "id": "hasProperties", "parameters": ["id", "label"] }]
+                        }
+                    ]
+                },
+                "layouts": [
+                    {
+                        "id": "default",
+                        "layout": {
+                            "subfields": [
+                                {
+                                    "id": "currentDocumentInfoType",
+                                    "disabled": "!(${node->properties.rgbz:informatieobjecttype})"
+                                },
+                                { "id": "documentInfoType" },
+                                { "id": "documentTitle" },
+                                { "id": "documentLanguage" }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ],
+        "toolbar": [
+            {
+                "id": "app.toolbar.add_to_case",
+                "type": "custom",
+                "order": 100,
+                "data": {
+                    "title": "APP.ACTIONS.ADD",
+                    "menuButton": true
+                },
+                "component": "zac.toolbar.addToCase",
+                "rules": {
+                    "visible": "zac.selection.canEioCreate"
+                }
+            },
+            {
+                "id": "app.toolbar.preview",
+                "type": "custom",
+                "order": 300,
+                "data": {
+                    "title": "APP.ACTIONS.VIEW",
+                    "iconButton": true
+                },
+                "component": "zac.toolbar.viewNode",
+                "rules": {
+                    "visible": "canViewFile"
+                }
+            },
+            {
+                "id": "app.toolbar.download",
+                "order": 400,
+                "title": "APP.ACTIONS.DOWNLOAD",
+                "icon": "get_app",
+                "actions": {
+                    "click": "DOWNLOAD_NODES"
+                },
+                "rules": {
+                    "visible": "zac.selection.canDownload"
+                }
+            },
+            {
+                "id": "app.create.separator.2",
+                "type": "separator",
+                "order": 680
+            },
+            {
+                "id": "app.toolbar.info.infoDrawer",
+                "type": "custom",
+                "order": 700,
+                "component": "app.toolbar.toggleInfoDrawer",
+                "rules": {
+                    "visible": "canShowInfoDrawer"
+                }
+            }
+        ],
+        "contextMenu": [
+            {
+                "id": "app.context.menu.add_to_case",
+                "order": 100,
+                "title": "APP.ACTIONS.ADD",
+                "icon": "add",
+                "actions": {
+                    "click": "ADD_TO_CASE"
+                },
+                "rules": {
+                    "visible": "zac.selection.canEioCreate"
+                }
+            },
+            {
+                "id": "app.create.separator.1",
+                "type": "separator",
+                "order": 300
+            },
+            {
+                "id": "app.context.menu.preview",
+                "type": "custom",
+                "order": 350,
+                "data": {
+                    "title": "APP.ACTIONS.VIEW",
+                    "menuButton": true
+                },
+                "component": "zac.toolbar.viewNode",
+                "rules": {
+                    "visible": "canViewFile"
+                }
+            },
+            {
+                "id": "app.context.menu.download",
+                "order": 400,
+                "title": "APP.ACTIONS.DOWNLOAD",
+                "icon": "get_app",
+                "actions": {
+                    "click": "DOWNLOAD_NODES"
+                },
+                "rules": {
+                    "visible": "zac.selection.canDownload"
+                }
+            }
+        ],
+        "sidebar": {
+            "tabs": [
+                {
+                    "id": "app.sidebar.properties",
+                    "order": 100,
+                    "title": "APP.INFO_DRAWER.TABS.PROPERTIES",
+                    "component": "app.components.tabs.metadata"
+                },
+                {
+                    "id": "app.sidebar.comments",
+                    "order": 200,
+                    "title": "APP.INFO_DRAWER.TABS.COMMENTS",
+                    "component": "app.components.tabs.comments"
+                }
+            ]
         },
-        "rules": {
-          "visible": "zac.selection.canEioCreate"
-        }
-      },
-      {
-        "id": "app.toolbar.preview",
-        "type": "custom",
-        "order": 300,
-        "data": {
-          "title": "APP.ACTIONS.VIEW",
-          "iconButton": true
-        },
-        "component": "zac.toolbar.viewNode",
-        "rules": {
-          "visible": "canViewFile"
-        }
-      },
-      {
-        "id": "app.toolbar.download",
-        "order": 400,
-        "title": "APP.ACTIONS.DOWNLOAD",
-        "icon": "get_app",
-        "actions": {
-          "click": "DOWNLOAD_NODES"
-        },
-        "rules": {
-          "visible": "zac.selection.canDownload"
-        }
-      },
-      {
-        "id": "app.create.separator.2",
-        "type": "separator",
-        "order": 680
-      },
-      {
-        "id": "app.toolbar.info.infoDrawer",
-        "type": "custom",
-        "order": 700,
-        "component": "app.toolbar.toggleInfoDrawer",
-        "rules": {
-          "visible": "canShowInfoDrawer"
-        }
-      }
-    ],
-    "contextMenu": [
-      {
-        "id": "app.context.menu.add_to_case",
-        "order": 100,
-        "title": "APP.ACTIONS.ADD",
-        "icon": "add",
-        "actions": {
-          "click": "ADD_TO_CASE"
-        },
-        "rules": {
-          "visible": "zac.selection.canEioCreate"
-        }
-      },
-      {
-        "id": "app.create.separator.1",
-        "type": "separator",
-        "order": 300
-      },
-      {
-        "id": "app.context.menu.preview",
-        "type": "custom",
-        "order": 350,
-        "data": {
-          "title": "APP.ACTIONS.VIEW",
-          "menuButton": true
-        },
-        "component": "zac.toolbar.viewNode",
-        "rules": {
-          "visible": "canViewFile"
-        }
-      },
-      {
-        "id": "app.context.menu.download",
-        "order": 400,
-        "title": "APP.ACTIONS.DOWNLOAD",
-        "icon": "get_app",
-        "actions": {
-          "click": "DOWNLOAD_NODES"
-        },
-        "rules": {
-          "visible": "zac.selection.canDownload"
-        }
-      }
-    ],
-    "sidebar": {
-      "tabs": [
-        {
-          "id": "app.sidebar.properties",
-          "order": 100,
-          "title": "APP.INFO_DRAWER.TABS.PROPERTIES",
-          "component": "app.components.tabs.metadata"
-        },
-        {
-          "id": "app.sidebar.comments",
-          "order": 200,
-          "title": "APP.INFO_DRAWER.TABS.COMMENTS",
-          "component": "app.components.tabs.comments"
-        }
-      ]
-    },
-    "sidebarFilters": [
-      {
-        "name": "created",
-        "type": "dateRange",
-        "queryParam": "@cm\\:created",
-        "save": false,
-        "controls": {
-          "from": {
-            "name": "createdFrom",
-            "value": "*",
-            "label": "APP.FILTER.OPTIONS.CREATED_FROM"
-          },
-          "till": {
-            "name": "createdTill",
-            "value": "*",
-            "label": "APP.FILTER.OPTIONS.TILL"
-          }
-        }
-      },
-      {
-        "name": "infoType",
-        "label": "APP.FILTER.OPTIONS.IO_TYPE",
-        "type": "autocomplete",
-        "optionKey": "text",
-        "searchKey": "uuid",
-        "value": "*",
-        "save": false,
-        "queryParam": "rgbz\\:informatieobjecttype",
-        "dataUrl": "api/ztc/informatieobjecttypen"
-      }
-    ],
-    "columns": [
-      {
-        "id": "app.files.thumbnail",
-        "key": "$thumbnail",
-        "type": "image",
-        "sortable": false,
-        "desktopOnly": false,
-        "order": 10
-      },
-      {
-        "id": "app.files.name",
-        "key": "name",
-        "title": "APP.DOCUMENT_LIST.COLUMNS.NAME",
-        "type": "text",
-        "class": "adf-ellipsis-cell adf-expand-cell-5",
-        "sortable": true,
-        "template": "app.columns.name",
-        "desktopOnly": false,
-        "order": 20
-      },
-      {
-        "id": "app.files.size",
-        "key": "content.sizeInBytes",
-        "sortingKey": "sizeInBytes",
-        "title": "APP.DOCUMENT_LIST.COLUMNS.SIZE",
-        "type": "fileSize",
-        "class": "adf-no-grow-cell adf-ellipsis-cell",
-        "sortable": true,
-        "desktopOnly": true,
-        "order": 30
-      },
-      {
-        "id": "app.files.modifiedOn",
-        "key": "modifiedAt",
-        "sortingKey": "cm:modified",
-        "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_ON",
-        "type": "date",
-        "format": "timeAgo",
-        "class": "adf-ellipsis-cell",
-        "sortable": true,
-        "desktopOnly": true,
-        "order": 40
-      },
-      {
-        "id": "app.files.modifiedBy",
-        "key": "modifiedByUser.displayName",
-        "sortingKey": "cm:modifier",
-        "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_BY",
-        "type": "text",
-        "class": "adf-ellipsis-cell adf-no-grow-cell",
-        "sortable": true,
-        "desktopOnly": true,
-        "order": 50
-      }
-    ],
-    "icons" : [
-      {
-        "id": "svg:filter-variant-plus",
-        "value": "./assets/zac-doclib/images/filter-variant-plus.svg"
-      }
-    ]
-  },
-  "extraSearchFields": ["TEXT"]
+        "sidebarFilters": [
+            {
+                "name": "created",
+                "type": "dateRange",
+                "queryParam": "@cm\\:created",
+                "save": false,
+                "controls": {
+                    "from": {
+                        "name": "createdFrom",
+                        "value": "*",
+                        "label": "APP.FILTER.OPTIONS.CREATED_FROM"
+                    },
+                    "till": {
+                        "name": "createdTill",
+                        "value": "*",
+                        "label": "APP.FILTER.OPTIONS.TILL"
+                    }
+                }
+            },
+            {
+                "name": "infoType",
+                "label": "APP.FILTER.OPTIONS.IO_TYPE",
+                "type": "autocomplete",
+                "optionKey": "text",
+                "searchKey": "uuid",
+                "value": "*",
+                "save": false,
+                "queryParam": "rgbz\\:informatieobjecttype",
+                "dataUrl": "api/ztc/informatieobjecttypen"
+            }
+        ],
+        "columns": [
+            {
+                "id": "app.files.thumbnail",
+                "key": "$thumbnail",
+                "type": "image",
+                "sortable": false,
+                "desktopOnly": false,
+                "order": 10
+            },
+            {
+                "id": "app.files.name",
+                "key": "name",
+                "title": "APP.DOCUMENT_LIST.COLUMNS.NAME",
+                "type": "text",
+                "class": "adf-ellipsis-cell adf-expand-cell-5",
+                "sortable": true,
+                "template": "app.columns.name",
+                "desktopOnly": false,
+                "order": 20
+            },
+            {
+                "id": "app.files.size",
+                "key": "content.sizeInBytes",
+                "sortingKey": "sizeInBytes",
+                "title": "APP.DOCUMENT_LIST.COLUMNS.SIZE",
+                "type": "fileSize",
+                "class": "adf-no-grow-cell adf-ellipsis-cell",
+                "sortable": true,
+                "desktopOnly": true,
+                "order": 30
+            },
+            {
+                "id": "app.files.modifiedOn",
+                "key": "modifiedAt",
+                "sortingKey": "cm:modified",
+                "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_ON",
+                "type": "date",
+                "format": "timeAgo",
+                "class": "adf-ellipsis-cell",
+                "sortable": true,
+                "desktopOnly": true,
+                "order": 40
+            },
+            {
+                "id": "app.files.modifiedBy",
+                "key": "modifiedByUser.displayName",
+                "sortingKey": "cm:modifier",
+                "title": "APP.DOCUMENT_LIST.COLUMNS.MODIFIED_BY",
+                "type": "text",
+                "class": "adf-ellipsis-cell adf-no-grow-cell",
+                "sortable": true,
+                "desktopOnly": true,
+                "order": 50
+            }
+        ],
+        "icons": [
+            {
+                "id": "svg:filter-variant-plus",
+                "value": "./assets/zac-doclib/images/filter-variant-plus.svg"
+            },
+            {
+                "id": "svg:uitgaand",
+                "value": "./assets/zac-doclib/images/home-export-outline.svg"
+            },
+            {
+                "id": "svg:inkomend",
+                "value": "./assets/zac-doclib/images/home-import-outline.svg"
+            },
+            {
+                "id": "svg:intern",
+                "value": "./assets/zac-doclib/images/home-minus-outline.svg"
+            }
+        ],
+        "iotCreateColumns": [
+            {
+                "id": "app.iot.select",
+                "key": "select",
+                "type": "select",
+                "expandedOnly": true,
+                "order": 10
+            },
+            {
+                "id": "app.iot.thumbnail",
+                "key": "thumbnail",
+                "type": "thumbnail",
+                "sortable": true,
+                "order": 20
+            },
+            {
+                "id": "app.iot.name",
+                "key": "name",
+                "title": "APP.DOCUMENT_LIST.COLUMNS.NAME",
+                "type": "text",
+                "class": "contezza-expand-cell",
+                "sortable": true,
+                "order": 30
+            },
+            {
+                "id": "app.iot.actions",
+                "key": "actions",
+                "type": "actions",
+                "collapsedOnly": true,
+                "order": 40
+            }
+        ]
+    }
 }

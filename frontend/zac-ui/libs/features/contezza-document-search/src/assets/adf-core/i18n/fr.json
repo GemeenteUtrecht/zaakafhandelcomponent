@@ -9,7 +9,7 @@
       "EDITOR": "Editeur",
       "CONSUMER": "Lecteur",
       "SITECOLLABORATOR": "Collaborateur du site",
-      "SITECONSUMER": "Visiteur du site",
+      "SITECONSUMER": "Utilisateur du site",
       "SITECONTRIBUTOR": "Contributeur du site",
       "SITEMANAGER": "Gestionnaire du site"
     }
@@ -20,12 +20,15 @@
   "CLAIM": "S'attribuer",
   "UNCLAIM": "Libérer",
   "START PROCESS": "Démarrer le processus",
+  "DATA_LOADING": "Chargement des données en cours",
+  "CLOSE": "Fermer",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "Aucune notification n'est disponible pour l'instant.",
     "TITLE": "Notifications",
     "MARK_AS_READ": "Marquer tout comme lu",
     "SYSTEM": "Système",
-    "LOAD_MORE": "Charger plus"
+    "LOAD_MORE": "Charger plus",
+    "OPEN_HISTORY": "Ouvrir l'historique des notifications"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Télécharger",
       "REMOVE_FILE": "Supprimer",
       "UPLOAD": "Importer",
-      "REQUIRED": "*Obligatoire",
+      "REQUIRED": "Champ obligatoire",
+      "REST_API_FAILED": "Le serveur '{{ hostname }}' n'est pas accessible",
       "FILE_NAME": "Nom de fichier",
       "NO_FILE_ATTACHED": "Aucun fichier joint",
       "VALIDATOR": {
@@ -99,7 +103,7 @@
       },
       "EDIT_JSON": {
         "CLOSE": "Fermer",
-        "UPDATE": "Mis à jour"
+        "UPDATE": "Mettre à jour"
       }
     },
     "FILE_DIALOG": {
@@ -136,7 +140,7 @@
         "LABEL": "Créer"
       },
       "UPDATE_BUTTON": {
-        "LABEL": "Mis à jour"
+        "LABEL": "Mettre à jour"
       },
       "CANCEL_BUTTON": {
         "LABEL": "Annuler"
@@ -164,28 +168,6 @@
       "PARTIAL_PLURAL": "{{ success }} éléments supprimés, {{ failed }} n'a/n'ont pas pu être supprimé(s)",
       "ERROR_SINGULAR": "{{ name }} n'a pas pu être supprimé",
       "ERROR_PLURAL": "{{ number }} éléments n'ont pas pu être supprimés"
-    },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Type d'authentification",
-      "BASIC": "Authentification de base",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Flux implicite",
-      "PROVIDER": "Fournisseur",
-      "REQUIRED": "Ce champ est obligatoire",
-      "CS_URL_ERROR": "L'adresse Content Services ne correspond pas au format d'URL",
-      "PS_URL_ERROR": "L'adresse Process Services ne correspond pas au format d'URL",
-      "TITLE": "Paramètres",
-      "CS-HOST": "URL Content Services",
-      "BP-HOST": "URL Process Services",
-      "BACK": "Retour",
-      "APPLY": "Appliquer",
-      "NOT_VALID": "Adresse http(s)://host|ip:port(/path) non reconnue, essayez une autre URL.",
-      "REDIRECT": "URI de redirection",
-      "REDIRECT_LOGOUT": "Déconnexion URI de redirection",
-      "SILENT": "Connexion en mode silencieux",
-      "SCOPE": "Etendue",
-      "CLIENT": "ID client",
-      "PUBLIC_URLS": "URL publiques pour connexion en mode silencieux"
     },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Annuler",
-      "CHOOSE": "Choisir"
+      "CHOOSE": "Choisir",
+      "LOGIN": "Connexion"
     }
   },
   "ADF-DATATABLE": {
@@ -324,15 +307,16 @@
       "ACTIONS": "Actions",
       "SELECT_ALL": "Tout sélectionner",
       "SELECT_FILE": "Sélectionner un fichier",
-      "SORT_ASCENDING": "Croissant",
-      "SORT_DESCENDING": "Décroissant",
+      "SORT_ASCENDING": "Ascendant",
+      "SORT_DESCENDING": "Descendant",
       "SORT_NONE": "Aucun",
       "SORT_DEFAULT": "Triable",
       "SORT_ASCENDING_BY": "Trié par {{ string }} dans l'ordre croissant",
       "SORT_DESCENDING_BY": "Trié par {{ string }} dans l'ordre décroissant",
       "ICON_TEXT": "Type d'élément {{ type }}",
       "ICON_DISABLED": "Désactivé",
-      "ROW_OPTION_BUTTON": "Actions"
+      "ROW_OPTION_BUTTON": "Actions",
+      "EMPTY_HEADER": "En-tête vide"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Document",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Présentation",
       "SPREADSHEET": "Feuille de calcul",
       "MISCELLANEOUS": "Divers"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Colonnes",
+      "SEARCH": "Rechercher",
+      "APPLY": "Appliquer"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Client"
-      }
+      },
+      "MY_PROFILE": "Mon profil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Affichage en cours",
-      "OF": "sur"
+      "OF": "sur",
+      "PAGE_SELECTOR_LABEL": "Sélecteur de page"
     },
     "LOADING": "Chargement en cours",
     "UNKNOWN_FORMAT": "Impossible de charger l'aperçu. Format inconnu.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "URL d'Alfresco Content Services : {{ value }}",
       "PROCESS_SERVICE_HOST": "URL d'Alfresco Process Services : {{ value }}"
     },
+    "REPOSITORY": "Entrepôt",
     "VERSIONS": {
       "TITLE": "Versions du produit",
       "CONTENT_SERVICE": "Content Services",
@@ -502,7 +494,7 @@
       "MODELING_SERVICE": "Services de modélisation",
       "DEPLOYMENT_SERVICE": "Services de déploiement",
       "QUERY_SERVICE": "Services de déploiement",
-      "RB": "Runtime",
+      "RB": "Exécution",
       "LABELS": {
         "EDITION": "Edition",
         "VERSION": "Version",
@@ -528,7 +520,7 @@
         "VERSION": "Version",
         "VENDOR": "Fournisseur",
         "LICENSE": "Licence",
-        "RUNTIME": "Runtime",
+        "RUNTIME": "Exécution",
         "DESCRIPTION": "Description"
       }
     },
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Chargement..."
+    "LOADING": "Chargement...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} zone de liste déroulante {{selectedOption}}"
   }
 }

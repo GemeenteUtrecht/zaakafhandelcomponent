@@ -20,12 +20,15 @@
   "CLAIM": "Beanspruchen",
   "UNCLAIM": "Anspruch aufheben",
   "START PROCESS": "Prozess starten",
+  "DATA_LOADING": "Daten werden geladen",
+  "CLOSE": "Schließen",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "Sie haben momentan keine Benachrichtigungen.",
     "TITLE": "Benachrichtigungen",
     "MARK_AS_READ": "Alles als gelesen markieren",
     "SYSTEM": "System",
-    "LOAD_MORE": "Mehr laden"
+    "LOAD_MORE": "Mehr laden",
+    "OPEN_HISTORY": "Benachrichtigungsverlauf öffnen"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Herunterladen",
       "REMOVE_FILE": "Entfernen",
       "UPLOAD": "Hochladen",
-      "REQUIRED": "*Erforderlich",
+      "REQUIRED": "Feld erforderlich",
+      "REST_API_FAILED": "Der Server '{{ hostname }}' ist nicht erreichbar",
       "FILE_NAME": "Dateiname",
       "NO_FILE_ATTACHED": "Keine Datei angehängt",
       "VALIDATOR": {
@@ -145,7 +149,7 @@
     "MESSAGES": {
       "ERRORS": {
         "GENERIC": "Die Aktion war nicht erfolgreich. Versuchen Sie es noch einmal oder wenden Sie sich an Ihr IT-Team.",
-        "EXISTENT_FOLDER": "Es gibt bereits einen Ordner mit diesem Namen. Probieren Sie es mit einem anderen Namen."
+        "EXISTENT_FOLDER": "Es gibt bereits einen Ordner mit diesem Namen. Versuchen Sie es mit einem anderen Namen."
       }
     },
     "RESTORE_NODE": {
@@ -164,28 +168,6 @@
       "PARTIAL_PLURAL": "{{ success }} Elemente gelöscht, {{ failed }} konnte(n) nicht gelöscht werden",
       "ERROR_SINGULAR": "{{ name }} konnte nicht gelöscht werden",
       "ERROR_PLURAL": "{{ number }} Elemente konnten nicht gelöscht werden"
-    },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Authentifizierungstyp",
-      "BASIC": "Basisauthentifizierung",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Impliziter Fluss",
-      "PROVIDER": "Provider",
-      "REQUIRED": "Dies ist ein Pflichtfeld",
-      "CS_URL_ERROR": "Content Services-Adresse nicht im richtigen URL-Format",
-      "PS_URL_ERROR": "Process Services-Adresse nicht im richtigen URL-Format",
-      "TITLE": "Einstellungen",
-      "CS-HOST": "URL für Content Services",
-      "BP-HOST": "URL für Process Services",
-      "BACK": "Zurück",
-      "APPLY": "Anwenden",
-      "NOT_VALID": "http(s)://host|ip:port(/path) nicht erkannt. Probieren Sie es mit einer anderen URL.",
-      "REDIRECT": "Umleitungs-URI",
-      "REDIRECT_LOGOUT": "Umleitungs-URI zum Abmelden",
-      "SILENT": "Automatische Anmeldung",
-      "SCOPE": "Bereich",
-      "CLIENT": "Client-ID",
-      "PUBLIC_URLS": "Öffentliche URLs für automatische Anmeldung"
     },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
@@ -256,14 +238,14 @@
   },
   "COMMENTS": {
     "NONE": "Keine Kommentare vorhanden",
-    "ADD": "Kommentar hinzufügen",
+    "ADD": "Hinzufügen",
     "HEADER": "Kommentare ({{ count }})",
     "CREATED_BY_HEADER": "Erstellt von",
-    "MESSAGE_HEADER": "Fehlermeldung",
+    "MESSAGE_HEADER": "Nachricht",
     "DIALOG": {
       "TITLE": "Neuer Kommentar",
       "LABELS": {
-        "MESSAGE": "Fehlermeldung"
+        "MESSAGE": "Nachricht"
       },
       "BUTTON": {
         "ADD": "Kommentar hinzufügen",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Abbrechen",
-      "CHOOSE": "Auswählen"
+      "CHOOSE": "Auswählen",
+      "LOGIN": "Anmelden"
     }
   },
   "ADF-DATATABLE": {
@@ -332,14 +315,15 @@
       "SORT_DESCENDING_BY": "Absteigend ({{ string }})",
       "ICON_TEXT": "Elementtyp {{ type }}",
       "ICON_DISABLED": "Deaktiviert",
-      "ROW_OPTION_BUTTON": "Aktionen"
+      "ROW_OPTION_BUTTON": "Aktionen",
+      "EMPTY_HEADER": "Leerer Header"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Dokument",
       "FOLDER": "Ordner",
       "PDF": "PDF",
       "IMAGE": "Bild",
-      "EXCEL": "Excel-Tabelle",
+      "EXCEL": "Excel-Arbeitsblatt",
       "WORD": "Word-Dokument",
       "POWERPOINT": "Powerpoint-Präsentation",
       "VIDEO": "Video",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Präsentation",
       "SPREADSHEET": "Tabelle",
       "MISCELLANEOUS": "Verschiedenes"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Spalten",
+      "SEARCH": "Suchen",
+      "APPLY": "Anwenden"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Mandant"
-      }
+      },
+      "MY_PROFILE": "Mein Profil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -382,8 +372,8 @@
     "ARIA": {
       "PREVIOUS_PAGE": "Vorherige Seite",
       "NEXT_PAGE": "Nächste Seite",
-      "ZOOM_IN": "Hineinzoomen",
-      "ZOOM_OUT": "Herauszoomen",
+      "ZOOM_IN": "Vergrößern",
+      "ZOOM_OUT": "Verkleinern",
       "FIT_PAGE": "Seite anpassen",
       "ROTATE": "Drehen",
       "CROP": "Zuschneiden",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Angezeigt",
-      "OF": "von"
+      "OF": "von",
+      "PAGE_SELECTOR_LABEL": "Seitenwähler"
     },
     "LOADING": "Laden",
     "UNKNOWN_FORMAT": "Vorschau konnte nicht geladen werden",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "Alfresco Content Services-URL: {{ value }}",
       "PROCESS_SERVICE_HOST": "Alfresco Process Services-URL: {{ value }}"
     },
+    "REPOSITORY": "Repository",
     "VERSIONS": {
       "TITLE": "Produktversionen",
       "CONTENT_SERVICE": "Content Services",
@@ -559,7 +551,7 @@
   },
   "SELECT_FILTER": {
     "INPUT": {
-      "PLACEHOLDER": "Suche",
+      "PLACEHOLDER": "Suchen",
       "ARIA_LABEL": "Suchoptionen"
     },
     "BUTTON": {
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Es wird geladen..."
+    "LOADING": "Es wird geladen...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} Kombinationsfeld {{selectedOption}}"
   }
 }

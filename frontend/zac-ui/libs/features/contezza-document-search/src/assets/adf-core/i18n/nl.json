@@ -20,12 +20,15 @@
   "CLAIM": "Claimen",
   "UNCLAIM": "Vrijgeven",
   "START PROCESS": "Proces starten",
+  "DATA_LOADING": "Gegevens worden geladen",
+  "CLOSE": "Sluiten",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "U hebt op dit moment geen meldingen.",
     "TITLE": "Meldingen",
     "MARK_AS_READ": "Alles markeren als gelezen",
     "SYSTEM": "Systeem",
-    "LOAD_MORE": "Meer laden"
+    "LOAD_MORE": "Meer laden",
+    "OPEN_HISTORY": "Meldingsgeschiedenis openen"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Downloaden",
       "REMOVE_FILE": "Verwijderen",
       "UPLOAD": "Uploaden",
-      "REQUIRED": "*Vereist",
+      "REQUIRED": "Veld vereist",
+      "REST_API_FAILED": "De server '{{ hostname }}' is niet bereikbaar",
       "FILE_NAME": "Bestandsnaam",
       "NO_FILE_ATTACHED": "Geen bestand bijgevoegd",
       "VALIDATOR": {
@@ -69,7 +73,7 @@
     },
     "FILE_SIZE": {
       "BYTES": "bytes",
-      "KB": "KB",
+      "KB": "kB",
       "MB": "MB",
       "GB": "GB",
       "TB": "TB",
@@ -164,28 +168,6 @@
       "PARTIAL_PLURAL": "{{ success }} items verwijderd, kan {{ failed }} niet verwijderen",
       "ERROR_SINGULAR": "Kan {{ name }} niet verwijderen",
       "ERROR_PLURAL": "Kan {{ number }} items niet verwijderen"
-    },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Verificatietype",
-      "BASIC": "Basisverificatie",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Impliciete stroom",
-      "PROVIDER": "Provider",
-      "REQUIRED": "Dit veld is vereist",
-      "CS_URL_ERROR": "Content Services-adres komt niet overeen met de URL-indeling",
-      "PS_URL_ERROR": "Process Services-adres komt niet overeen met de URL-indeling",
-      "TITLE": "Instellingen",
-      "CS-HOST": "Content Services-URL",
-      "BP-HOST": "Process Services-URL",
-      "BACK": "Terug",
-      "APPLY": "Toepassen",
-      "NOT_VALID": "http(s)://host|ip:port(/path) niet herkend, probeer een andere URL.",
-      "REDIRECT": "Omleidings-URI",
-      "REDIRECT_LOGOUT": "Omleidings-URI afmelden",
-      "SILENT": "Stille aanmelding",
-      "SCOPE": "Bereik",
-      "CLIENT": "Client-id",
-      "PUBLIC_URLS": "Openbare URL's voor stille aanmelding"
     },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Annuleren",
-      "CHOOSE": "Kiezen"
+      "CHOOSE": "Kiezen",
+      "LOGIN": "Aanmelden"
     }
   },
   "ADF-DATATABLE": {
@@ -323,7 +306,7 @@
     "ACCESSIBILITY": {
       "ACTIONS": "Acties",
       "SELECT_ALL": "Alles selecteren",
-      "SELECT_FILE": "een bestand selecteren",
+      "SELECT_FILE": "Bestand selecteren",
       "SORT_ASCENDING": "Oplopend",
       "SORT_DESCENDING": "Aflopend",
       "SORT_NONE": "Geen",
@@ -332,7 +315,8 @@
       "SORT_DESCENDING_BY": "Aflopend op {{ string }}",
       "ICON_TEXT": "Itemtype {{ type }}",
       "ICON_DISABLED": "Uitgeschakeld",
-      "ROW_OPTION_BUTTON": "Acties"
+      "ROW_OPTION_BUTTON": "Acties",
+      "EMPTY_HEADER": "Lege kop"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Document",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Presentatie",
       "SPREADSHEET": "Werkblad",
       "MISCELLANEOUS": "Overig"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Kolommen",
+      "SEARCH": "Zoeken",
+      "APPLY": "Toepassen"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Tenant"
-      }
+      },
+      "MY_PROFILE": "Mijn profiel"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Wordt weergegeven",
-      "OF": "van"
+      "OF": "van",
+      "PAGE_SELECTOR_LABEL": "Selectiefunctie voor pagina"
     },
     "LOADING": "Wordt geladen",
     "UNKNOWN_FORMAT": "Kan preview niet laden. Onbekende indeling.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "Alfresco Content Services-URL: {{ value }}",
       "PROCESS_SERVICE_HOST": "Alfresco Process Services-URL: {{ value }}"
     },
+    "REPOSITORY": "Repository",
     "VERSIONS": {
       "TITLE": "Productversies",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Laden..."
+    "LOADING": "Laden...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} keuzelijst met invoervak {{selectedOption}}"
   }
 }

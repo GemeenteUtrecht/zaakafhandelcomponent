@@ -20,12 +20,15 @@
   "CLAIM": "Krev",
   "UNCLAIM": "Frigi",
   "START PROCESS": "Start prosess",
+  "DATA_LOADING": "Data laster",
+  "CLOSE": "Lukk",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "Du har ingen varsler for øyeblikket.",
     "TITLE": "Varsler",
     "MARK_AS_READ": "Merk alle som lest",
     "SYSTEM": "System",
-    "LOAD_MORE": "Last ned mer"
+    "LOAD_MORE": "Last ned mer",
+    "OPEN_HISTORY": "Åpne varslingshistorikk"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Last ned",
       "REMOVE_FILE": "Fjern",
       "UPLOAD": "Laster opp",
-      "REQUIRED": "*Påkrevd",
+      "REQUIRED": "Felt er obligatorisk",
+      "REST_API_FAILED": "Serveren '{{ hostname }}' kan ikke nås",
       "FILE_NAME": "Filnavn",
       "NO_FILE_ATTACHED": "Ingen fil vedlagt",
       "VALIDATOR": {
@@ -165,28 +169,6 @@
       "ERROR_SINGULAR": "{{ name }} kan ikke slettes",
       "ERROR_PLURAL": "{{ number }} elementer kan ikke slettes"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Godkjenningstype",
-      "BASIC": "Grunnleggende godkjenning",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Implisitt flyt",
-      "PROVIDER": "Leverandør",
-      "REQUIRED": "Dette feltet er påkrevd",
-      "CS_URL_ERROR": "Adressen til innholdstjenesten stemmer ikke med URL-formatet",
-      "PS_URL_ERROR": "Adressen til prosesstjenestene stemmer ikke med URL-formatet",
-      "TITLE": "Innstillinger",
-      "CS-HOST": "URL tinnholdstjenester",
-      "BP-HOST": "URL prosesstjenester",
-      "BACK": "Tilbake",
-      "APPLY": "Bruk",
-      "NOT_VALID": "http(s)://host|ip:port(/path) ikke gjenkjent, prøv en annen URL.",
-      "REDIRECT": "Omdirigerings-URI",
-      "REDIRECT_LOGOUT": "Omdirigerings-URI avlogging",
-      "SILENT": "Stille pålogging",
-      "SCOPE": "Område",
-      "CLIENT": "Klient-ID",
-      "PUBLIC_URLS": "Offentlige URL-er for stille pålogging"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "Legg til ny",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Avbryt",
-      "CHOOSE": "Velg"
+      "CHOOSE": "Velg",
+      "LOGIN": "Logg på"
     }
   },
   "ADF-DATATABLE": {
@@ -332,7 +315,8 @@
       "SORT_DESCENDING_BY": "Synkende med {{ string }}",
       "ICON_TEXT": "Elementtype {{ type }}",
       "ICON_DISABLED": "Deaktivert",
-      "ROW_OPTION_BUTTON": "Handlinger"
+      "ROW_OPTION_BUTTON": "Handlinger",
+      "EMPTY_HEADER": "Tom topptekst"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Dokument",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Presentasjon",
       "SPREADSHEET": "Regneark",
       "MISCELLANEOUS": "Diverse"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Rader",
+      "SEARCH": "Søk",
+      "APPLY": "Bruk"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Leietaker"
-      }
+      },
+      "MY_PROFILE": "Min profil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Viser",
-      "OF": "av"
+      "OF": "av",
+      "PAGE_SELECTOR_LABEL": "Sidevelger"
     },
     "LOADING": "Laster",
     "UNKNOWN_FORMAT": "Kan ikke laste forhåndsvisning. Ukjent format.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "URL til Alfresco Content Services: {{ value }}",
       "PROCESS_SERVICE_HOST": "URL til Alfresco Process Services: {{ value }}"
     },
+    "REPOSITORY": "Oppbevaringsste",
     "VERSIONS": {
       "TITLE": "Produktversjoner",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Laster inn..."
+    "LOADING": "Laster inn...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} komboboks {{selectedOption}}"
   }
 }

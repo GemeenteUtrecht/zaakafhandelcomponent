@@ -20,12 +20,15 @@
   "CLAIM": "Gør krav på",
   "UNCLAIM": "Frigiv",
   "START PROCESS": "Start proces",
+  "DATA_LOADING": "Data indlæses",
+  "CLOSE": "Luk",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "Du har ingen meddelelser i øjeblikket.",
     "TITLE": "Meddelelser",
     "MARK_AS_READ": "Markér alle som læst",
     "SYSTEM": "System",
-    "LOAD_MORE": "Indlæs flere"
+    "LOAD_MORE": "Indlæs flere",
+    "OPEN_HISTORY": "Åbn meddelelseshistorie"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Download",
       "REMOVE_FILE": "Fjern",
       "UPLOAD": "Upload",
-      "REQUIRED": "*Påkrævet",
+      "REQUIRED": "Obligatorisk felt",
+      "REST_API_FAILED": "Serveren '{{ hostname }}' er ikke tilgængelig",
       "FILE_NAME": "Filnavn",
       "NO_FILE_ATTACHED": "Der er ikke vedhæftet en fil",
       "VALIDATOR": {
@@ -165,28 +169,6 @@
       "ERROR_SINGULAR": "{{ name }} kunne ikke slettes",
       "ERROR_PLURAL": "{{ number }} elementer kunne ikke slettes"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Godkendelsestype",
-      "BASIC": "Grundlæggende godkendelse",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Implicit flow",
-      "PROVIDER": "Udbyder",
-      "REQUIRED": "Dette felt er påkrævet",
-      "CS_URL_ERROR": "Content Services-adressen matcher ikke URL-formatet",
-      "PS_URL_ERROR": "Process Services-adressen matcher ikke URL-adresseformatet",
-      "TITLE": "Indstillinger",
-      "CS-HOST": "Content Services-URL",
-      "BP-HOST": "URL-adresse til Process Services",
-      "BACK": "Tilbage",
-      "APPLY": "Anvend",
-      "NOT_VALID": "http(s)://vært|ip-adresse:port(/sti) blev ikke genkendt. Prøv en anden URL-adresse.",
-      "REDIRECT": "URI til omdirigering",
-      "REDIRECT_LOGOUT": "Omdiriger URI til aflogning",
-      "SILENT": "Uovervåget login",
-      "SCOPE": "Omfang",
-      "CLIENT": "Klient-id",
-      "PUBLIC_URLS": "Uovervåget login til offentlige URL-adresser"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "Tilføj ny(t)",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Annuller",
-      "CHOOSE": "Vælg"
+      "CHOOSE": "Vælg",
+      "LOGIN": "Log ind"
     }
   },
   "ADF-DATATABLE": {
@@ -332,7 +315,8 @@
       "SORT_DESCENDING_BY": "Faldende efter {{ string }}",
       "ICON_TEXT": "Elementtype {{ type }}",
       "ICON_DISABLED": "Deaktiveret",
-      "ROW_OPTION_BUTTON": "Handlinger"
+      "ROW_OPTION_BUTTON": "Handlinger",
+      "EMPTY_HEADER": "Tom toptekst"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Dokument",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Præsentation",
       "SPREADSHEET": "Regneark",
       "MISCELLANEOUS": "Diverse"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Kolonner",
+      "SEARCH": "Søg",
+      "APPLY": "Anvend"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Tenant"
-      }
+      },
+      "MY_PROFILE": "Min profil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Viser",
-      "OF": "af"
+      "OF": "af",
+      "PAGE_SELECTOR_LABEL": "Sidevælger"
     },
     "LOADING": "Indlæser",
     "UNKNOWN_FORMAT": "Forhåndsvisningen kunne ikke indlæses. Ukendt format.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "URL-adresse til Alfresco-indholdstjenester: {{ value }}",
       "PROCESS_SERVICE_HOST": "URL-adresse til Alfresco-procestjenester: {{ value }}"
     },
+    "REPOSITORY": "Opbevaringssted",
     "VERSIONS": {
       "TITLE": "Produktversioner",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Indlæser..."
+    "LOADING": "Indlæser...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} kombiboks {{selectedOption}}"
   }
 }

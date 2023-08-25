@@ -20,12 +20,15 @@
   "CLAIM": "مطالبة",
   "UNCLAIM": "تحرير",
   "START PROCESS": "بدء العملية",
+  "DATA_LOADING": "يتم تحميل البيانات",
+  "CLOSE": "أغلق",
   "NOTIFICATIONS": {
-    "NO_MESSAGE": "ليس لديك إشعارات في هذا الوقت.",
+    "NO_MESSAGE": "ليس لديك إعلامات في هذا الوقت.",
     "TITLE": "إعلامات",
     "MARK_AS_READ": "وضع علامة على الكل كغير مقروءة",
     "SYSTEM": "النظام",
-    "LOAD_MORE": "تحميل المزيد"
+    "LOAD_MORE": "تحميل المزيد",
+    "OPEN_HISTORY": "فتح سجل الإعلامات"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "تنزيل",
       "REMOVE_FILE": "إزالة",
       "UPLOAD": "تحميل",
-      "REQUIRED": "*مطلوب",
+      "REQUIRED": "حقل مطلوب",
+      "REST_API_FAILED": "الخادم '{{hostname}}' لا يمكن الوصول إليه",
       "FILE_NAME": "اسم الملف",
       "NO_FILE_ATTACHED": "لا ملف مرفق",
       "VALIDATOR": {
@@ -165,28 +169,6 @@
       "ERROR_SINGULAR": "تعذر حذف {{ name }}",
       "ERROR_PLURAL": "تعذر حذف {{ number }} من العناصر"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "نوع المصادقة",
-      "BASIC": "مصادقة أساسية",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "تدفق ضمني",
-      "PROVIDER": "موفر",
-      "REQUIRED": "هذا الحقل مطلوب",
-      "CS_URL_ERROR": "لا يتطابق عنوان Content Services مع تنسيق URL",
-      "PS_URL_ERROR": "لا يتطابق عنوان Process Services مع تنسيق URL",
-      "TITLE": "إعدادات",
-      "CS-HOST": "عنوان URL لـ Content Services",
-      "BP-HOST": "عنوان URL لـ Process Services",
-      "BACK": "عودة",
-      "APPLY": "تطبيق",
-      "NOT_VALID": "لم يتم التعرف على http(s)://host|ip:port(/path)، جرّب عنوان URL مختلفًا.",
-      "REDIRECT": "إعادة توجيه URI",
-      "REDIRECT_LOGOUT": "إعادة توجيه خروج URI",
-      "SILENT": "دخول صامت",
-      "SCOPE": "نطاق",
-      "CLIENT": "معرف العميل",
-      "PUBLIC_URLS": "عناوين url العامة لتسجيل الدخول الصامت"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "إضافة جديد",
@@ -251,7 +233,7 @@
     },
     "SEARCH": {
       "TOGGLE_ASC_DESC_ORDER": "تبديل النتائج بين الترتيب الصاعدي والتنازلي",
-      "SORT_BY": "فرز حسب"
+      "SORT_BY": "صنف حسب"
     }
   },
   "COMMENTS": {
@@ -275,7 +257,7 @@
     "LOGO": "Alfresco, make business flow",
     "LABEL": {
       "LOGIN": "تسجيل دخول",
-      "USERNAME": "اسم مستخدم",
+      "USERNAME": "اسم المستخدم",
       "PASSWORD": "كلمة سر",
       "REMEMBER": "تذكرني"
     },
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "إلغاء",
-      "CHOOSE": "اختيار"
+      "CHOOSE": "اختيار",
+      "LOGIN": "تسجيل دخول"
     }
   },
   "ADF-DATATABLE": {
@@ -332,7 +315,8 @@
       "SORT_DESCENDING_BY": "تنازلي حسب {{ string }}",
       "ICON_TEXT": "نوع العنصر {{ type }}",
       "ICON_DISABLED": "معطّل",
-      "ROW_OPTION_BUTTON": "إجراءات"
+      "ROW_OPTION_BUTTON": "إجراءات",
+      "EMPTY_HEADER": "الرأس فارغ"
     },
     "FILE_TYPE": {
       "DOCUMENT": "مستند",
@@ -349,6 +333,11 @@
       "PRESENTATION": "عرض تقديمي",
       "SPREADSHEET": "جدول بيانات",
       "MISCELLANEOUS": "متنوع"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "الأعمدة",
+      "SEARCH": "بحث",
+      "APPLY": "تطبيق"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "مستأجر"
-      }
+      },
+      "MY_PROFILE": "ملف التعريف الخاص بي"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "إظهار",
-      "OF": "من"
+      "OF": "من",
+      "PAGE_SELECTOR_LABEL": "محدد الصفحة"
     },
     "LOADING": "تحميل",
     "UNKNOWN_FORMAT": "تعذر تحميل المعاينة. تنسيق غير معروف",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "عنوان URL الخاص بـ Alfresco Content Services: {{ value }}",
       "PROCESS_SERVICE_HOST": "عنوان URL الخاص بـ Alfresco Process Services: {{ value }}"
     },
+    "REPOSITORY": "مخزن",
     "VERSIONS": {
       "TITLE": "إصدارات المنتج",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "جار التحميل..."
+    "LOADING": "جار التحميل...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} مربع تحرير وسرد {{selectedOption}}"
   }
 }
