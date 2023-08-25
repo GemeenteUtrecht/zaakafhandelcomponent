@@ -20,6 +20,18 @@
       "MESSAGE": "Deleted file versions cannot be restored. Continue?",
       "YES_LABEL": "Yes",
       "NO_LABEL": "No"
+    },
+    "MANAGE_VERSION_OPTIONS": "Manage version options"
+  },
+  "ADF-NEW-VERSION-UPLOADER": {
+    "DIALOG_LIST": {
+      "TITLE": "Manage Versions",
+      "CLOSE": "Close"
+    },
+    "DIALOG_UPLOAD": {
+      "TITLE": "Upload New Version",
+      "CANCEL": "Cancel",
+      "UPLOAD": "Upload"
     }
   },
   "ADF_VERSION_COMPARISON": {
@@ -60,7 +72,8 @@
       "VIEW": "View",
       "REMOVE": "Remove",
       "DOWNLOAD": "Download"
-    }
+    },
+    "LOADER_LABEL": "Document list loader"
   },
   "ALFRESCO_DOCUMENT_LIST": {
     "BUTTON": {
@@ -125,9 +138,9 @@
       "MINIMIZE": "Minimize",
       "MAXIMIZE": "Maximize",
       "CLOSE": "Close",
-      "CANCEL_ALL": "Cancel uploads",
-      "CANCEL_FILE": "Cancel upload",
-      "REMOVE_FILE": "Remove uploaded file"
+      "STOP_ALL": "Stop uploads",
+      "STOP_FILE": "Stop upload",
+      "UPLOAD_SUCCESSFUL": "Upload successful"
     },
     "STATUS": {
       "FILE_CANCELED_STATUS": "Canceled",
@@ -139,8 +152,8 @@
         "CONTINUE": "No"
       },
       "MESSAGE": {
-        "TITLE": "Cancel Upload",
-        "TEXT": "Stop uploading and remove files already uploaded."
+        "TITLE": "Stop Upload",
+        "TEXT": "Stop and cancel all in-progress and pending uploads."
       }
     },
     "ARIA-LABEL": {
@@ -149,10 +162,10 @@
       "DIALOG_MAXIMIZE": "Maximize upload dialog",
       "DIALOG_MINIMIZE": "Minimize upload dialog",
       "DIALOG_CLOSE": "Close upload dialog",
-      "CANCEL_ALL": "Cancel all uploading files",
-      "REMOVE_FILE": "Remove uploaded file {{ file }}",
-      "CANCEL_FILE": "Cancel scheduled file {{ file }}",
-      "CANCEL_FILE_UPLOAD": "Cancel file upload {{ file }}",
+      "STOP_ALL": "Stop uploads",
+      "UPLOAD_SUCCESSFUL": "Uploaded successfully file {{ file }}",
+      "STOP_FILE": "Stop file {{ file }}",
+      "STOP_FILE_UPLOAD": "Stop file upload {{ file }}",
       "UPLOAD_FILE_ERROR": "Upload error {{ error }}",
       "CONFIRMATION": {
         "CANCEL": "Confirm cancel",
@@ -232,6 +245,7 @@
       },
       "BUTTONS": {
         "CLOSE": "Close",
+        "CLEAR": "Clear",
         "REMOVE": "Remove",
         "APPLY": "Apply",
         "CLEAR-ALL": {
@@ -247,7 +261,9 @@
         "FROM": "From",
         "TO": "To",
         "FROM-DATE": "From",
-        "TO-DATE": "To"
+        "TO-DATE": "To",
+        "SELECT-FROM-DATE": "Select From Date",
+        "SELECT-TO-DATE": "Select To Date"
       },
       "VALIDATION": {
         "REQUIRED-VALUE": "Required value",
@@ -257,6 +273,9 @@
         "BEYOND-MAX-DATE": "The date is beyond the maximum date.",
         "INVALID-DATETIME": "Invalid datetime. The datetime must be in the format '{{ requiredFormat }}'",
         "BEYOND-MAX-DATETIME": "The datetime is beyond the maximum datetime."
+      },
+      "ARIA-LABEL": {
+        "SEARCH_FILTER": "Search Filter List"
       }
     },
     "ICONS": {
@@ -371,6 +390,7 @@
     "EXPIRATION-LABEL" : "Expiration Date",
     "CLIPBOARD-MESSAGE": "Link copied to the clipboard",
     "CLOSE": "Close",
+    "COPY_BUTTON_LABEL": "Copy link",
     "CONFIRMATION": {
       "DIALOG-TITLE": "Remove this shared link",
       "MESSAGE": "This link will be deleted and a new link will be created next time this file is shared",
@@ -397,7 +417,8 @@
       "ADD-ACTION": "ADD",
       "CLOSE-ACTION": "CANCEL",
       "BASE-DIALOG-TITLE": "Search a group or people to add...",
-      "EVERYONE": "EVERYONE"
+      "EVERYONE": "EVERYONE",
+      "USER-GROUP-LIST": "User or Group List"
     },
     "COLUMN": {
       "NAME": "Users and Groups ({{ count }})",
@@ -412,7 +433,8 @@
       "DIRECT-PERMISSIONS": "Directly Applied Permission",
       "INHERITED-PERMISSIONS": "Inherited Permission",
       "INHERITED-SUBTITLE": "{{count}} users or groups are inheriting permission from a parent folder",
-      "SELECT-ROLE": "Select role"
+      "SELECT-ROLE": "Select role",
+      "INHERITED_PERMISSION_TOGGLE": "Toggle Inherited Permission"
     },
     "MESSAGE": {
       "EMPTY-PERMISSION": "No users/groups",
@@ -445,6 +467,9 @@
     "ACCESSIBILITY": {
       "ARIA_LABEL": "Toggle {{ name }}"
     }
+  },
+  "ADF-TREE": {
+    "LOAD-MORE-BUTTON": "Load more {{ name }}"
   },
   "LIBRARY": {
     "DIALOG": {
@@ -519,6 +544,9 @@
   },
   "NODE_COUNTER": {
     "SELECTED_COUNT": "{{ count }} selected"
+  },
+  "TAG_NODE_LIST": {
+    "VIEW_MORE": "View {{ count }} more"
   },
   "swsdp": "Sample: Web Site Design Project"
 }

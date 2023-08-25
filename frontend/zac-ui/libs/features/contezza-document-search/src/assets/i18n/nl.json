@@ -1,0 +1,104 @@
+{
+    "APP": {
+        "FILTER": {
+            "TITLE": "Filter",
+            "SELECT_ALL_OPTION": "Alles",
+            "OPTIONS": {
+                "CREATED": "Gemaakt",
+                "NAME": "Naam",
+                "DESCRIPTION": "Omschrijving",
+                "TITLE": "Titel",
+                "IO_TYPE": "Informatieobjecttype",
+                "CLEAR_ALL": "Alles wissen"
+            }
+        },
+        "DOCUMENT_LIST": {
+            "COLUMNS": {
+                "NAME": "Naam",
+                "SIZE": "Grootte",
+                "MODIFIED_ON": "Aangepast",
+                "MODIFIED_BY": "Aangepast door"
+            },
+            "SEARCH_RESULTS": "Zoekresultaten"
+        },
+        "ACTIONS": {
+            "ADD": "Toevoegen",
+            "VIEW": "Weergeven",
+            "MORE": "Meer acties",
+            "DOWNLOAD": "Downloaden",
+            "FILTER": "Filter",
+            "REFRESH": "Ververs pagina"
+        },
+        "MESSAGES": {
+            "EDIT_IOT_SUCCESS": "Geselecteerd informatieobjecttype is succesvol gecreërd of aangepast.",
+            "ERRORS": {
+                "MISSING_CONTENT": "Dit item bestaat niet meer of u hebt geen rechten om het weer te geven.",
+                "GENERIC": "De actie is mislukt. Probeer het opnieuw of neem contact op met het IT-team.",
+                "CONFLICT": "Deze naam wordt al gebruikt, probeer een andere naam."
+            }
+        },
+        "DIALOGS": {
+            "ADD_TO_CASE": {
+                "TITLE": "Toevoegen aan het zaak"
+            },
+            "EDIT_IOT": {
+                "TITLE": "Wijzig type",
+                "INFO": "Om het type van het informatieobject te wijzigen selecteer uw een nieuw type uit de dropdownlijst. Vervolgens geeft u het informatieobject een nieuwe titel en selecteert u een taal.",
+                "LABELS": {
+                    "CURRENT_VALUE": "Huidige waarde",
+                    "IO_TYPE": "Informatieobjecttype",
+                    "TITLE": "Titel",
+                    "LANGUAGE": "Taal",
+                    "SUCCESSFULLY_CREATED": "Geselecteerd informatieobjecttype is succesvol gecreërd of aangepast."
+                }
+            },
+            "EIO_CREATE": {
+                "TITLE": "Wijzig type",
+                "INTERN_TITLE": "Maak EIO Intern",
+                "EXTERN_TITLE": "Maak EIO Extern",
+                "INFO": "Om het type van het informatieobject te wijzigen selecteer uw een nieuw type uit de dropdownlijst. Vervolgens geeft u het informatieobject een nieuwe titel en selecteert u een taal.",
+                "LABELS": {
+                    "CURRENT_VALUE": "Huidige waarde",
+                    "IO_TYPE": "Informatieobjecttype",
+                    "TITLE": "Title",
+                    "LANGUAGE": "Taal"
+                }
+            },
+            "BUTTONS": {
+                "OK": "Ok",
+                "CLOSE": "Annuleren"
+            }
+        },
+        "INFO_DRAWER": {
+            "TITLE": "Details",
+            "TABS": {
+                "PROPERTIES": "Eigenschappen",
+                "LIBRARY_PROPERTIES": "Info",
+                "VERSIONS": "Versies",
+                "COMMENTS": "Opmerkingen",
+                "PERMISSIONS": "Rechten",
+                "EXPAND": "Uitvouwen"
+            }
+        },
+        "AUTOCOMPLETE": {
+            "NO_SUGGESTIONS": "Geen suggesties gevonden",
+            "TOTAL_ITEMS": "Aantal opties",
+            "LOADING": "Bezig met laden...",
+            "TOOLTIP": {
+                "MIN_CHARS": "Zoekactie moet tenminste {{minChars}} karakters bevatten"
+            }
+        },
+        "VALIDATIONS": {
+            "REQUIRED": "* Dit veld is verplicht",
+            "INVALID": "* Invoer is ongeldig"
+        }
+    },
+    "LOGIN": {
+        "DIALOG": {
+            "TITLE": "Aanmelden in Alfresco",
+            "BUTTONS": {
+                "LOGIN": "Aanmelden"
+            }
+        }
+    }
+}

@@ -20,12 +20,15 @@
   "CLAIM": "Anta",
   "UNCLAIM": "Avsäga",
   "START PROCESS": "Starta process",
+  "DATA_LOADING": "Data laddas",
+  "CLOSE": "Stäng",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "Du har inga aviseringar just nu.",
     "TITLE": "Aviseringar",
     "MARK_AS_READ": "Markera allt som läst",
     "SYSTEM": "System",
-    "LOAD_MORE": "Läs in mer"
+    "LOAD_MORE": "Läs in mer",
+    "OPEN_HISTORY": "Öppna meddelandehistorik"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Ladda ner",
       "REMOVE_FILE": "Ta bort",
       "UPLOAD": "Ladda upp",
-      "REQUIRED": "*Obligatorisk",
+      "REQUIRED": "Fält obligatoriskt",
+      "REST_API_FAILED": "Servern '{{ hostname }}' kan inte nås",
       "FILE_NAME": "Filnamn",
       "NO_FILE_ATTACHED": "Ingen fil bifogad",
       "VALIDATOR": {
@@ -115,7 +119,7 @@
       }
     },
     "FOLDER_DIALOG": {
-      "CREATE_FOLDER_TITLE": "Skapa en ny mapp",
+      "CREATE_FOLDER_TITLE": "Skapa ny mapp",
       "EDIT_FOLDER_TITLE": "Redigera mapp",
       "FOLDER_NAME": {
         "LABEL": "Namn",
@@ -164,28 +168,6 @@
       "PARTIAL_PLURAL": "Raderade {{ success }} objekt, {{ failed }} kunde inte raderas",
       "ERROR_SINGULAR": "{{ name }} kunde inte raderas",
       "ERROR_PLURAL": "{{ number }} objekt kunde inte raderas"
-    },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Autentiseringstyp",
-      "BASIC": "Grundläggande autentisering",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Implicit flöde",
-      "PROVIDER": "Leverantör",
-      "REQUIRED": "Det här fältet är obligatoriskt",
-      "CS_URL_ERROR": "Content Services-adressen matchar inte URL-formatet",
-      "PS_URL_ERROR": "Process Services-adressen matchar inte URL-formatet",
-      "TITLE": "Inställningar",
-      "CS-HOST": "Content Services-URL",
-      "BP-HOST": "Process Services-URL",
-      "BACK": "Tillbaka",
-      "APPLY": "Tillämpa",
-      "NOT_VALID": "http(s)://host|ip:port(/path) kändes inte igen, testa annan URL.",
-      "REDIRECT": "Omdirigera URI",
-      "REDIRECT_LOGOUT": "Omdirigera URI-utloggning",
-      "SILENT": "Tyst inloggning",
-      "SCOPE": "Definitionsområde",
-      "CLIENT": "Klient-ID",
-      "PUBLIC_URLS": "Offentliga url:er för tyst inloggning"
     },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Avbryt",
-      "CHOOSE": "Välj"
+      "CHOOSE": "Välj",
+      "LOGIN": "Logga in"
     }
   },
   "ADF-DATATABLE": {
@@ -332,7 +315,8 @@
       "SORT_DESCENDING_BY": "Sjunkande efter {{ string }}",
       "ICON_TEXT": "Artikeltyp {{ type }}",
       "ICON_DISABLED": "Avaktiverad",
-      "ROW_OPTION_BUTTON": "Åtgärder"
+      "ROW_OPTION_BUTTON": "Åtgärder",
+      "EMPTY_HEADER": "Tomt sidhuvud"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Dokument",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Presentation",
       "SPREADSHEET": "Kalkylblad",
       "MISCELLANEOUS": "Övrigt"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Kolonner",
+      "SEARCH": "Sök",
+      "APPLY": "Tillämpa"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Kund"
-      }
+      },
+      "MY_PROFILE": "Min profil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Visar",
-      "OF": "av"
+      "OF": "av",
+      "PAGE_SELECTOR_LABEL": "Sidväljare"
     },
     "LOADING": "Läser in",
     "UNKNOWN_FORMAT": "Kunde inte läsa in förhandsgranskning. Okänt format.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "Alfresco Content Services URL: {{ value }}",
       "PROCESS_SERVICE_HOST": "Alfresco Process Services URL: {{ value }}"
     },
+    "REPOSITORY": "Arkiv",
     "VERSIONS": {
       "TITLE": "Produktversioner",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Läser in..."
+    "LOADING": "Läser in...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} kombinationsrutan {{selectedOption}}"
   }
 }

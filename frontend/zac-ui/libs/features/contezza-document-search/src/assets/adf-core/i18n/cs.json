@@ -20,12 +20,15 @@
   "CLAIM": "Převzít",
   "UNCLAIM": "Vzdát se",
   "START PROCESS": "Zahájit proces",
+  "DATA_LOADING": "Probíhá načítání dat",
+  "CLOSE": "Zavřít",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "Momentálně nemáte žádná oznámení.",
     "TITLE": "Upozornění",
     "MARK_AS_READ": "Označit všechny jako přečtené",
     "SYSTEM": "Systém",
-    "LOAD_MORE": "Načíst další"
+    "LOAD_MORE": "Načíst další",
+    "OPEN_HISTORY": "Otevřít historii oznámení"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Stáhnout",
       "REMOVE_FILE": "Odstranit",
       "UPLOAD": "Odeslat",
-      "REQUIRED": "*Požadováno",
+      "REQUIRED": "Povinné pole",
+      "REST_API_FAILED": "Server {{ hostname }} není dosažitelný",
       "FILE_NAME": "Název souboru",
       "NO_FILE_ATTACHED": "Není připojen žádný soubor",
       "VALIDATOR": {
@@ -155,7 +159,7 @@
       "LOCATION_MISSING": "Položku „{{ name }}“ nebylo možné obnovit, protože původní umístění již neexistuje",
       "GENERIC": "Při pokusu o obnovení položky „{{ name }}“ došlo k potížím",
       "PLURAL": "Obnovení proběhlo úspěšně",
-      "SINGULAR": "Položku „{{ name }}“​se podařilo úspěšně obnovit"
+      "SINGULAR": "Položku „{{ name }}“ se podařilo úspěšně obnovit"
     },
     "DELETE_NODE": {
       "SINGULAR": "„{{ name }}“ se podařilo úspěšně odstranit",
@@ -165,35 +169,13 @@
       "ERROR_SINGULAR": "„{{ name }}“ nebylo možné odstranit",
       "ERROR_PLURAL": "Některé položky ({{ number }}) nebylo možné odstranit"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Typ ověřování",
-      "BASIC": "Základní ověřování",
-      "SSO": "Jednotné přihlášení",
-      "IMPLICIT-FLOW": "Implicitní tok",
-      "PROVIDER": "Poskytovatel",
-      "REQUIRED": "Toto pole je povinné",
-      "CS_URL_ERROR": "Adresa Content Services neodpovídá formátu adresy URL",
-      "PS_URL_ERROR": "Adresa Process Services neodpovídá formátu adresy URL",
-      "TITLE": "Nastavení",
-      "CS-HOST": "Adresa URL pro Content Services",
-      "BP-HOST": "Adresa URL pro Process Services",
-      "BACK": "Zpět",
-      "APPLY": "Použít",
-      "NOT_VALID": "http(s)://host|ip:port(/path) nelze rozeznat. Použijte jinou adresu URL.",
-      "REDIRECT": "URI pro přesměrování",
-      "REDIRECT_LOGOUT": "URI pro přesměrování (odhlášení)",
-      "SILENT": "Přihlášení na pozadí",
-      "SCOPE": "Rozsah",
-      "CLIENT": "ID klienta",
-      "PUBLIC_URLS": "Veřejné adresy URL pro přihlášení na pozadí"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "Přidat nové",
         "NAME": "Název",
         "VALUE": "Hodnota"
       },
-      "NONE": "Žádný",
+      "NONE": "Žádné",
       "VALIDATORS": {
         "FLOAT_VALIDATION_ERROR": "Použít formát čísla",
         "INT_VALIDATION_ERROR": "Použít formát celého čísla",
@@ -251,7 +233,7 @@
     },
     "SEARCH": {
       "TOGGLE_ASC_DESC_ORDER": "Přepnout řazení výsledků mezi vzestupným a sestupným",
-      "SORT_BY": "Třídit podle"
+      "SORT_BY": "Řadit podle"
     }
   },
   "COMMENTS": {
@@ -284,7 +266,7 @@
       "HIDE-PASSWORD": "Skrýt heslo"
     },
     "MESSAGES": {
-      "USERNAME-REQUIRED": "Požadováno",
+      "USERNAME-REQUIRED": "Povinné",
       "USERNAME-MIN": "Vaše uživatelské jméno musí obsahovat alespoň {{ minLength }} znaků.",
       "PASSWORD-REQUIRED": "Přihlaste se zadáním hesla",
       "LOGIN-ERROR-CREDENTIALS": "Zadali jste neznámé uživatelské jméno nebo heslo",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Zrušit",
-      "CHOOSE": "Vybrat"
+      "CHOOSE": "Vybrat",
+      "LOGIN": "Přihlásit se"
     }
   },
   "ADF-DATATABLE": {
@@ -326,13 +309,14 @@
       "SELECT_FILE": "Vybrat soubor",
       "SORT_ASCENDING": "Vzestupně",
       "SORT_DESCENDING": "Sestupně",
-      "SORT_NONE": "Žádný",
+      "SORT_NONE": "Žádné",
       "SORT_DEFAULT": "Seřaditelné",
       "SORT_ASCENDING_BY": "Vzestupně podle {{ string }}",
       "SORT_DESCENDING_BY": "Sestupně podle {{ string }}",
       "ICON_TEXT": "Typ položky {{ type }}",
       "ICON_DISABLED": "Zakázáno",
-      "ROW_OPTION_BUTTON": "Akce"
+      "ROW_OPTION_BUTTON": "Akce",
+      "EMPTY_HEADER": "Prázdný nadpis"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Dokument",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Prezentace",
       "SPREADSHEET": "Tabulka",
       "MISCELLANEOUS": "Různé"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Sloupce",
+      "SEARCH": "Hledat",
+      "APPLY": "Použít"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Tenant"
-      }
+      },
+      "MY_PROFILE": "Můj profil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Zobrazeno",
-      "OF": "z"
+      "OF": "z",
+      "PAGE_SELECTOR_LABEL": "Selektor stránek"
     },
     "LOADING": "Načítání",
     "UNKNOWN_FORMAT": "Náhled se nepodařilo načíst. Neznámý formát.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "Adresa URL pro Alfresco Content Services: {{ value }}",
       "PROCESS_SERVICE_HOST": "Adresa URL pro Alfresco Process Services: {{ value }}"
     },
+    "REPOSITORY": "Úložiště",
     "VERSIONS": {
       "TITLE": "Verze produktu",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Načítání..."
+    "LOADING": "Načítání...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} combobox {{selectedOption}}"
   }
 }

@@ -20,12 +20,15 @@
   "CLAIM": "担当する",
   "UNCLAIM": "担当解除",
   "START PROCESS": "プロセスの開始",
+  "DATA_LOADING": "データの読込中",
+  "CLOSE": "閉じる",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "現在通知はありません。",
     "TITLE": "通知",
     "MARK_AS_READ": "すべて既読にする",
     "SYSTEM": "システム",
-    "LOAD_MORE": "もっと見る"
+    "LOAD_MORE": "もっと見る",
+    "OPEN_HISTORY": "通知履歴を開く"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "ダウンロード",
       "REMOVE_FILE": "削除",
       "UPLOAD": "アップロード",
-      "REQUIRED": "*必須",
+      "REQUIRED": "これは必須フィールドです",
+      "REST_API_FAILED": "'{{ hostname }}' サーバーは、到達不能です",
       "FILE_NAME": "ファイル名",
       "NO_FILE_ATTACHED": "ファイルが添付されていません",
       "VALIDATOR": {
@@ -115,7 +119,7 @@
       }
     },
     "FOLDER_DIALOG": {
-      "CREATE_FOLDER_TITLE": "新規フォルダの作成",
+      "CREATE_FOLDER_TITLE": "新しいフォルダを作成します",
       "EDIT_FOLDER_TITLE": "フォルダの編集",
       "FOLDER_NAME": {
         "LABEL": "名前",
@@ -150,7 +154,7 @@
     },
     "RESTORE_NODE": {
       "VIEW": "表示",
-      "PARTIAL_PLURAL": "{{ number }} 件のアイテムが復元されませんでした。復元先の場所に問題があります",
+      "PARTIAL_PLURAL": "{{ number }} 件のアイテムが復元されませんでした。復元先の場所に問題があります。",
       "NODE_EXISTS": "復元できません。''{{ name }}'' アイテムは既に存在します",
       "LOCATION_MISSING": "''{{ name }}'' アイテムを復元できません。アイテムの元の場所が削除されています",
       "GENERIC": "''{{ name }}'' アイテムの復元中に問題が発生しました",
@@ -164,28 +168,6 @@
       "PARTIAL_PLURAL": "{{ success }} 件のアイテムを削除しましたが、{{ failed }} 件は削除できませんでした",
       "ERROR_SINGULAR": "{{ name }} を削除できませんでした",
       "ERROR_PLURAL": "{{ number }} 件のアイテムを削除できませんでした"
-    },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "認証の種類",
-      "BASIC": "基本認証",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "暗黙的フロー",
-      "PROVIDER": "プロバイダ",
-      "REQUIRED": "このフィールドは必須です",
-      "CS_URL_ERROR": "Content Services のアドレスが URL 形式と一致しません",
-      "PS_URL_ERROR": "Process Services のアドレスが URL 形式と一致しません",
-      "TITLE": "設定",
-      "CS-HOST": "Content Services の URL",
-      "BP-HOST": "Process Services の URL",
-      "BACK": "戻る",
-      "APPLY": "適用",
-      "NOT_VALID": "http(s)://host|ip:port(/path) が認識されません。別の URL を指定してください。",
-      "REDIRECT": "リダイレクト URI",
-      "REDIRECT_LOGOUT": "リダイレクト URI のログアウト",
-      "SILENT": "サイレントログイン",
-      "SCOPE": "範囲",
-      "CLIENT": "クライアント ID",
-      "PUBLIC_URLS": "サイレントログインのパブリック URL"
     },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
@@ -251,7 +233,7 @@
     },
     "SEARCH": {
       "TOGGLE_ASC_DESC_ORDER": "検索結果の昇順と降順を切り替えます",
-      "SORT_BY": "表示順"
+      "SORT_BY": "並べ替え"
     }
   },
   "COMMENTS": {
@@ -281,7 +263,7 @@
     },
     "ARIA-LABEL": {
       "SHOW-PASSWORD": "パスワードを表示",
-      "HIDE-PASSWORD": "パスワードを非表示"
+      "HIDE-PASSWORD": "パスワードの非表示"
     },
     "MESSAGES": {
       "USERNAME-REQUIRED": "必須",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "キャンセル",
-      "CHOOSE": "選択"
+      "CHOOSE": "選択",
+      "LOGIN": "サインイン"
     }
   },
   "ADF-DATATABLE": {
@@ -314,14 +297,14 @@
       "HEADER": "このリストは空です",
       "DRAG-AND-DROP": {
         "TITLE": "アップロードするファイルをドラッグ & ドロップしてください",
-        "SUBTITLE": ""
+        "SUBTITLE": "ファイルのアップロード"
       }
     },
     "CONTENT-ACTIONS": {
       "TOOLTIP": "コンテンツの処理"
     },
     "ACCESSIBILITY": {
-      "ACTIONS": "処理",
+      "ACTIONS": "アクション",
       "SELECT_ALL": "すべて選択",
       "SELECT_FILE": "ファイルを選択してください",
       "SORT_ASCENDING": "昇順",
@@ -332,7 +315,8 @@
       "SORT_DESCENDING_BY": "{{ string }} (降順)",
       "ICON_TEXT": "アイテムタイプ {{ type }}",
       "ICON_DISABLED": "無効",
-      "ROW_OPTION_BUTTON": "処理"
+      "ROW_OPTION_BUTTON": "アクション",
+      "EMPTY_HEADER": "空のヘッダー"
     },
     "FILE_TYPE": {
       "DOCUMENT": "文書",
@@ -349,6 +333,11 @@
       "PRESENTATION": "プレゼンテーション",
       "SPREADSHEET": "スプレッドシート",
       "MISCELLANEOUS": "その他"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "列",
+      "SEARCH": "検索",
+      "APPLY": "適用"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "テナント"
-      }
+      },
+      "MY_PROFILE": "あなたのプロフィール"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "表示中",
-      "OF": "/"
+      "OF": "/",
+      "PAGE_SELECTOR_LABEL": "ページセレクター"
     },
     "LOADING": "読み込み中",
     "UNKNOWN_FORMAT": "プレビューを読み込めませんでした。不明な形式です。",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "Alfresco Content Services の URL: {{ value }}",
       "PROCESS_SERVICE_HOST": "Alfresco Process Services の URL: {{ value }}"
     },
+    "REPOSITORY": "リポジトリ",
     "VERSIONS": {
       "TITLE": "製品のバージョン",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "読み込んでいます..."
+    "LOADING": "読み込んでいます...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}}コンボボックス{{selectedOption}}"
   }
 }

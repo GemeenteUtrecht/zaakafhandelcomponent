@@ -20,12 +20,15 @@
   "CLAIM": "申领",
   "UNCLAIM": "释放",
   "START PROCESS": "启动流程",
+  "DATA_LOADING": "数据正在加载",
+  "CLOSE": "关闭",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "您目前没有通知。",
     "TITLE": "通知",
     "MARK_AS_READ": "全部标记为已读",
     "SYSTEM": "系统",
-    "LOAD_MORE": "加载更多"
+    "LOAD_MORE": "加载更多",
+    "OPEN_HISTORY": "打开通知历史记录"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "下载",
       "REMOVE_FILE": "删除",
       "UPLOAD": "上传",
-      "REQUIRED": "*必需",
+      "REQUIRED": "必填字段",
+      "REST_API_FAILED": "无法访问服务器 '{{ hostname }}'",
       "FILE_NAME": "文件名",
       "NO_FILE_ATTACHED": "无附加文件",
       "VALIDATOR": {
@@ -165,28 +169,6 @@
       "ERROR_SINGULAR": "{{ name }} 无法删除",
       "ERROR_PLURAL": "{{ number }} 个项目无法删除"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "身份验证类型",
-      "BASIC": "基本身份验证",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "隐式流",
-      "PROVIDER": "提供程序",
-      "REQUIRED": "此字段为必填字段",
-      "CS_URL_ERROR": "Content Services 地址与 URL 格式不匹配",
-      "PS_URL_ERROR": "Process Services 地址与 URL 格式不匹配",
-      "TITLE": "设置",
-      "CS-HOST": "Content Services URL",
-      "BP-HOST": "Process Services URL",
-      "BACK": "返回",
-      "APPLY": "应用",
-      "NOT_VALID": "http(s)://host|ip:port(/path) 无法识别，请使用其他 URL。",
-      "REDIRECT": "重定向 URI",
-      "REDIRECT_LOGOUT": "重定向 URI 注销",
-      "SILENT": "静默登录",
-      "SCOPE": "范围",
-      "CLIENT": "客户端 ID",
-      "PUBLIC_URLS": "用于静默登录的公共 URL"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "新增",
@@ -211,7 +193,7 @@
         "DESCRIPTION": "说明",
         "AUTHOR": "作者",
         "MIMETYPE": "MIME 类型",
-        "SIZE": "字号(&S)",
+        "SIZE": "尺寸",
         "CREATOR": "创建者",
         "CREATED_DATE": "创建日期",
         "MODIFIER": "修改者",
@@ -221,7 +203,7 @@
       "CONTENT_TYPE": {
         "DIALOG": {
           "TITLE": "更改内容类型",
-          "DESCRIPTION": "对内容类型进行此更改将永久性地在文档中添加一些属性和存储的元数据。",
+          "DESCRIPTION": "对内容类型进行此更改将永久性地在文档中添加一些属性和存储的元数据.",
           "CONFIRM": "确定要更改内容类型吗？",
           "CANCEL": "取消",
           "APPLY": "保存更改",
@@ -251,7 +233,7 @@
     },
     "SEARCH": {
       "TOGGLE_ASC_DESC_ORDER": "在升序和降序之间切换结果",
-      "SORT_BY": "排序依据"
+      "SORT_BY": "排序方式"
     }
   },
   "COMMENTS": {
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "取消",
-      "CHOOSE": "选择"
+      "CHOOSE": "选择",
+      "LOGIN": "登录"
     }
   },
   "ADF-DATATABLE": {
@@ -331,8 +314,9 @@
       "SORT_ASCENDING_BY": "按 {{ string }} 升序排列",
       "SORT_DESCENDING_BY": "按 {{ string }} 降序排列",
       "ICON_TEXT": "项目类型 {{ type }}",
-      "ICON_DISABLED": "禁用",
-      "ROW_OPTION_BUTTON": "操作"
+      "ICON_DISABLED": "已禁用",
+      "ROW_OPTION_BUTTON": "操作",
+      "EMPTY_HEADER": "空白标题"
     },
     "FILE_TYPE": {
       "DOCUMENT": "文档",
@@ -349,6 +333,11 @@
       "PRESENTATION": "演示文稿",
       "SPREADSHEET": "电子表格",
       "MISCELLANEOUS": "其他"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "列",
+      "SEARCH": "搜索",
+      "APPLY": "应用"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "租户"
-      }
+      },
+      "MY_PROFILE": "我的个人档案"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "正在显示",
-      "OF": "/"
+      "OF": "/",
+      "PAGE_SELECTOR_LABEL": "页面选择器"
     },
     "LOADING": "正在加载",
     "UNKNOWN_FORMAT": "无法加载预览。未知格式。",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "Alfresco Content Services URL：{{ value }}",
       "PROCESS_SERVICE_HOST": "Alfresco Process Services URL：{{ value }}"
     },
+    "REPOSITORY": "存储库",
     "VERSIONS": {
       "TITLE": "产品版本",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "加载..."
+    "LOADING": "加载...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} 组合框 {{selectedOption}}"
   }
 }

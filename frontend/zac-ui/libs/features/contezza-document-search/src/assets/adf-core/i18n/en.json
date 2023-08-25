@@ -20,12 +20,15 @@
   "CLAIM": "CLAIM",
   "UNCLAIM": "RELEASE",
   "START PROCESS": "START PROCESS",
+  "DATA_LOADING": "Data is loading",
+  "CLOSE": "CLOSE",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "You have no notifications at this time.",
     "TITLE": "Notifications",
     "MARK_AS_READ": "Mark all as read",
     "SYSTEM": "System",
-    "LOAD_MORE": "Load more"
+    "LOAD_MORE": "Load more",
+    "OPEN_HISTORY": "Open notification history"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,7 @@
       "DOWNLOAD_FILE": "Download",
       "REMOVE_FILE": "Remove",
       "UPLOAD": "UPLOAD",
-      "REQUIRED": "*Required",
+      "REQUIRED": "This is a required field",
       "REST_API_FAILED": "The server `{{ hostname }}` is not reachable",
       "FILE_NAME": "File Name",
       "NO_FILE_ATTACHED": "No file attached",
@@ -166,28 +169,6 @@
       "ERROR_SINGULAR": "{{ name }} couldn't be deleted",
       "ERROR_PLURAL": "{{ number }} items couldn't be deleted"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Authentication type",
-      "BASIC": "Basic Authentication",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Implicit Flow",
-      "PROVIDER": "Provider",
-      "REQUIRED": "This field is required",
-      "CS_URL_ERROR": "Content Services address doesn't match the URL format",
-      "PS_URL_ERROR": "Process Services address doesn't match the URL format",
-      "TITLE": "Settings",
-      "CS-HOST": "Content Services URL",
-      "BP-HOST": "Process Services URL",
-      "BACK": "Back",
-      "APPLY": "APPLY",
-      "NOT_VALID": "http(s)://host|ip:port(/path) not recognized, try a different URL.",
-      "REDIRECT": "Redirect URI",
-      "REDIRECT_LOGOUT": "Redirect URI Logout",
-      "SILENT": "Silent Login",
-      "SCOPE": "Scope",
-      "CLIENT": "Client ID",
-      "PUBLIC_URLS": "Public urls silent Login"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "Add New",
@@ -307,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Cancel",
-      "CHOOSE": "Choose"
+      "CHOOSE": "Choose",
+      "LOGIN": "Sign in"
     }
   },
   "ADF-DATATABLE": {
@@ -333,7 +315,8 @@
       "SORT_DESCENDING_BY": "Descending by {{ string }}",
       "ICON_TEXT": "Item type {{ type }}",
       "ICON_DISABLED": "Disabled",
-      "ROW_OPTION_BUTTON": "Actions"
+      "ROW_OPTION_BUTTON": "Actions",
+      "EMPTY_HEADER": "Empty header"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Document",
@@ -350,6 +333,11 @@
       "PRESENTATION": "Presentation",
       "SPREADSHEET": "Spreadsheet",
       "MISCELLANEOUS": "Miscellaneous"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Columns",
+      "SEARCH": "Search",
+      "APPLY": "Apply"
     }
   },
   "USER_PROFILE": {
@@ -359,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Tenant"
-      }
+      },
+      "MY_PROFILE": "My Profile"
     },
     "TAB": {
       "CS": "Content Services",
@@ -396,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Showing",
-      "OF": "of"
+      "OF": "of",
+      "PAGE_SELECTOR_LABEL": "Page selector"
     },
     "LOADING": "Loading",
     "UNKNOWN_FORMAT": "Couldn't load preview. Unknown format.",
@@ -496,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "Alfresco Content Services URL: {{ value }}",
       "PROCESS_SERVICE_HOST": "Alfresco Process Services URL: {{ value }}"
     },
+    "REPOSITORY": "Repository",
     "VERSIONS": {
       "TITLE": "Product Versions",
       "CONTENT_SERVICE": "Content Services",
@@ -568,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Loading..."
+    "LOADING": "Loading...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} combobox {{selectedOption}}"
   }
 }

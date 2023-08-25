@@ -20,12 +20,15 @@
   "CLAIM": "Принять",
   "UNCLAIM": "Освободить",
   "START PROCESS": "Начать процесс",
+  "DATA_LOADING": "Выполняется загрузка данных",
+  "CLOSE": "Закрыть",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "В настоящее время у вас нет уведомлений.",
     "TITLE": "Оповещения",
     "MARK_AS_READ": "Отметить все как прочитанное",
     "SYSTEM": "Система",
-    "LOAD_MORE": "Загрузить еще"
+    "LOAD_MORE": "Загрузить еще",
+    "OPEN_HISTORY": "Открыть историю оповещений"
   },
   "FORM": {
     "START_FORM": {
@@ -41,7 +44,8 @@
       "DOWNLOAD_FILE": "Скачать",
       "REMOVE_FILE": "Удалить",
       "UPLOAD": "Загрузить",
-      "REQUIRED": "*Обязательное поле",
+      "REQUIRED": "Обязательное поле",
+      "REST_API_FAILED": "Сервер '{{ hostname }}' недоступен",
       "FILE_NAME": "Имя файла",
       "NO_FILE_ATTACHED": "Вложенные файлы отсутствуют",
       "VALIDATOR": {
@@ -165,28 +169,6 @@
       "ERROR_SINGULAR": "Не удалось удалить {{ name }}",
       "ERROR_PLURAL": "Не удалось удалить элементов: {{ number }}"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Тип авторизации",
-      "BASIC": "Базовая авторизация",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Неявный поток",
-      "PROVIDER": "Поставщик",
-      "REQUIRED": "Поле обязательно для заполнения",
-      "CS_URL_ERROR": "Адрес Content Services не соответствует формату URL",
-      "PS_URL_ERROR": "Адрес Process Services не соответствует формату URL",
-      "TITLE": "Параметры",
-      "CS-HOST": "URL-адрес Content Services",
-      "BP-HOST": "URL-адрес Process Services",
-      "BACK": "Назад",
-      "APPLY": "Применить",
-      "NOT_VALID": "http(s)://host|ip:port(/path) не распознан, используйте другой URL-адрес.",
-      "REDIRECT": "URI перенаправления",
-      "REDIRECT_LOGOUT": "Выход URI перенаправления",
-      "SILENT": "Автоматический вход",
-      "SCOPE": "Область применения",
-      "CLIENT": "Идентификатор клиента",
-      "PUBLIC_URLS": "Общедоступные URL-адреса с автоматическим входом"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "Добавить",
@@ -284,7 +266,7 @@
       "HIDE-PASSWORD": "Спрятать пароль"
     },
     "MESSAGES": {
-      "USERNAME-REQUIRED": "Обязательное поле",
+      "USERNAME-REQUIRED": "Требуемый",
       "USERNAME-MIN": "Имя пользователя должно быть не меньше {{ minLength }} символов.",
       "PASSWORD-REQUIRED": "Введите пароль для входа",
       "LOGIN-ERROR-CREDENTIALS": "Вы ввели неверное имя пользователя или пароль",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Отмена",
-      "CHOOSE": "Выбрать"
+      "CHOOSE": "Выбрать",
+      "LOGIN": "Войти"
     }
   },
   "ADF-DATATABLE": {
@@ -331,8 +314,9 @@
       "SORT_ASCENDING_BY": "По возрастанию {{ string }}",
       "SORT_DESCENDING_BY": "По убыванию {{ string }}",
       "ICON_TEXT": "Тип элемента {{ type }}",
-      "ICON_DISABLED": "Отменено",
-      "ROW_OPTION_BUTTON": "Действия"
+      "ICON_DISABLED": "Отключено",
+      "ROW_OPTION_BUTTON": "Действия",
+      "EMPTY_HEADER": "Пустой заголовок"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Документ",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Презентация",
       "SPREADSHEET": "Таблица",
       "MISCELLANEOUS": "Разное"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Столбцы",
+      "SEARCH": "Поиск",
+      "APPLY": "Применить"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Клиент"
-      }
+      },
+      "MY_PROFILE": "Мой профиль"
     },
     "TAB": {
       "CS": "Content Services",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Отображается",
-      "OF": "из"
+      "OF": "из",
+      "PAGE_SELECTOR_LABEL": "Выбор страницы"
     },
     "LOADING": "Загружается",
     "UNKNOWN_FORMAT": "Не удалось загрузить предварительный просмотр. Неизвестный формат.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "URL-адрес Alfresco Content Services: {{ value }}",
       "PROCESS_SERVICE_HOST": "URL-адрес Alfresco Process Services: {{ value }}"
     },
+    "REPOSITORY": "Репозиторий",
     "VERSIONS": {
       "TITLE": "Версии продукта",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Загрузка..."
+    "LOADING": "Загрузка...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} выпадающий список {{selectedOption}}"
   }
 }

@@ -20,12 +20,15 @@
   "CLAIM": "Reivindicar",
   "UNCLAIM": "Liberar",
   "START PROCESS": "Iniciar processo",
+  "DATA_LOADING": "Os dados estão sendo carregados",
+  "CLOSE": "Fechar",
   "NOTIFICATIONS": {
     "NO_MESSAGE": "No momento, você não tem notificações.",
     "TITLE": "Notificações",
     "MARK_AS_READ": "Marcar todas como lidas",
     "SYSTEM": "Sistema",
-    "LOAD_MORE": "Carregar mais"
+    "LOAD_MORE": "Carregar mais",
+    "OPEN_HISTORY": "Abrir histórico de notificação"
   },
   "FORM": {
     "START_FORM": {
@@ -38,10 +41,11 @@
       "LOCALSTORAGE": "Armazenamento local",
       "SOURCE": "Selecionar origem de ",
       "VIEW_FILE": "Visualizar",
-      "DOWNLOAD_FILE": "Download",
+      "DOWNLOAD_FILE": "Baixar",
       "REMOVE_FILE": "Remover",
       "UPLOAD": "Carregar",
-      "REQUIRED": "*Obrigatório",
+      "REQUIRED": "Campo obrigatório",
+      "REST_API_FAILED": "Não é possível acessar o servidor '{{ hostname }}'",
       "FILE_NAME": "Nome de arquivo",
       "NO_FILE_ATTACHED": "Nenhum arquivo anexado",
       "VALIDATOR": {
@@ -165,28 +169,6 @@
       "ERROR_SINGULAR": "Não foi possível excluir {{ name }}",
       "ERROR_PLURAL": "Não foi possível excluir {{ number }} itens"
     },
-    "HOST_SETTINGS": {
-      "TYPE-AUTH": "Tipo de autenticação",
-      "BASIC": "Autenticação básica",
-      "SSO": "SSO",
-      "IMPLICIT-FLOW": "Fluxo implícito",
-      "PROVIDER": "Provedor",
-      "REQUIRED": "Este campo é obrigatório",
-      "CS_URL_ERROR": "O endereço do Content Services não corresponde ao formato de URL",
-      "PS_URL_ERROR": "O endereço do Process Services não corresponde ao formato de URL",
-      "TITLE": "Configurações",
-      "CS-HOST": "URL do Content Services",
-      "BP-HOST": "URL do Process Services",
-      "BACK": "Voltar",
-      "APPLY": "Aplicar",
-      "NOT_VALID": "http(s)://host|ip:port(/path) não reconhecida, tente uma URL diferente.",
-      "REDIRECT": "Redirecionar URI",
-      "REDIRECT_LOGOUT": "Redirecionar logout de URI",
-      "SILENT": "Login silencioso",
-      "SCOPE": "Escopo",
-      "CLIENT": "ID de cliente",
-      "PUBLIC_URLS": "Login silencioso de URLs públicas"
-    },
     "CARDVIEW": {
       "KEYVALUEPAIRS": {
         "ADD": "Adicionar",
@@ -306,7 +288,8 @@
     },
     "DIALOG": {
       "CANCEL": "Cancelar",
-      "CHOOSE": "Escolher"
+      "CHOOSE": "Escolher",
+      "LOGIN": "Entrar"
     }
   },
   "ADF-DATATABLE": {
@@ -324,15 +307,16 @@
       "ACTIONS": "Ações",
       "SELECT_ALL": "Selecionar tudo",
       "SELECT_FILE": "Selecionar um arquivo",
-      "SORT_ASCENDING": "Crescente",
-      "SORT_DESCENDING": "Decrescente",
+      "SORT_ASCENDING": "Ascendente",
+      "SORT_DESCENDING": "Descendente",
       "SORT_NONE": "Nenhum",
       "SORT_DEFAULT": "Classificável",
       "SORT_ASCENDING_BY": "Ordem crescente por {{ string }}",
       "SORT_DESCENDING_BY": "Ordem decrescente por {{ string }}",
       "ICON_TEXT": "Tipo de item {{ type }}",
-      "ICON_DISABLED": "Desativar",
-      "ROW_OPTION_BUTTON": "Ações"
+      "ICON_DISABLED": "Desativado",
+      "ROW_OPTION_BUTTON": "Ações",
+      "EMPTY_HEADER": "Cabeçalho vazio"
     },
     "FILE_TYPE": {
       "DOCUMENT": "Documento",
@@ -349,6 +333,11 @@
       "PRESENTATION": "Apresentação",
       "SPREADSHEET": "Planilha",
       "MISCELLANEOUS": "Miscelânea"
+    },
+    "COLUMNS_SELECTOR": {
+      "COLUMNS": "Colunas",
+      "SEARCH": "Pesquisar",
+      "APPLY": "Aplicar"
     }
   },
   "USER_PROFILE": {
@@ -358,7 +347,8 @@
       },
       "BPM": {
         "TENANT": "Tenant"
-      }
+      },
+      "MY_PROFILE": "Meu perfil"
     },
     "TAB": {
       "CS": "Content Services",
@@ -369,7 +359,7 @@
     "ACTIONS": {
       "BACK": "Voltar",
       "OPEN_WITH": "Abrir com",
-      "DOWNLOAD": "Download",
+      "DOWNLOAD": "Baixar",
       "PRINT": "Imprimir",
       "SHARE": "Compartilhar",
       "MORE_ACTIONS": "Mais ações",
@@ -395,7 +385,8 @@
     },
     "PAGE_LABEL": {
       "SHOWING": "Mostrando",
-      "OF": "de"
+      "OF": "de",
+      "PAGE_SELECTOR_LABEL": "Seletor de página"
     },
     "LOADING": "Carregando",
     "UNKNOWN_FORMAT": "Não foi possível carregar pré-visualização. Formato desconhecido.",
@@ -495,6 +486,7 @@
       "CONTENT_SERVICE_HOST": "URL do Alfresco Content Services: {{ value }}",
       "PROCESS_SERVICE_HOST": "URL do Alfresco Process Services: {{ value }}"
     },
+    "REPOSITORY": "Repositório",
     "VERSIONS": {
       "TITLE": "Versões do produto",
       "CONTENT_SERVICE": "Content Services",
@@ -567,6 +559,7 @@
     }
   },
   "ADF_DROPDOWN": {
-    "LOADING": "Carregando..."
+    "LOADING": "Carregando...",
+    "SELECTION_ARIA_LABEL": "{{placeholder}} caixa de combinação {{selectedOption}}"
   }
 }
