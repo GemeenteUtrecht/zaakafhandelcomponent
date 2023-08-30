@@ -95,7 +95,7 @@ export class DocumentenService {
       const editUrl = element.currentUserIsEditing ? element.deleteUrl : element.writeUrl;
       const editButtonStyle = element.currentUserIsEditing ? 'primary' : 'tertiary';
 
-      const showEditCell = (!element.locked || element.currentUserIsEditing) && (!zaak.resultaat || zaak.kanGeforceerdBijwerken);
+      const showEditCell = ((!element.locked || element.currentUserIsEditing) && !zaak.resultaat) || (!zaak.resultaat && zaak.kanGeforceerdBijwerken);
       const showOverwriteCell = !element.locked && !zaak.resultaat;
 
       const editCell: ExtensiveCell = {
