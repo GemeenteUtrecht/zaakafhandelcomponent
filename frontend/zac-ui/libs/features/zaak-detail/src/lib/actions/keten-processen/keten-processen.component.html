@@ -32,7 +32,8 @@
               <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForCurrentUser(currentUser, task)">
                 <!-- Description -->
                 <div class="taak__detail mr-md-2">
-                  <p class="m-0 p--bold p--primary">{{task.name | capitalize}}</p>
+                  <p class="m-0 p--bold p--primary" *ngIf="task.formKey !== 'zac:doRedirect'">{{task.name | capitalize}}</p>
+                  <a class="anchor action-link" *ngIf="task.formKey === 'zac:doRedirect'" (click)="executeTask(task.id)">{{task.name | capitalize}}</a>
 
                   <!-- Double click shows id. -->
                   <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
