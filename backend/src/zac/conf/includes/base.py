@@ -596,6 +596,9 @@ UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
 CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
     "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
 )
+RESTART_ZAAK_PROCESS_DEFINITION_KEY = config(
+    "RESTART_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_herstarten"
+)
 FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptlAppId"])
 
 

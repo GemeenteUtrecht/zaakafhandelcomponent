@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.http import HttpRequest
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse_lazy
 
 from axes.conf import settings

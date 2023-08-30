@@ -1,5 +1,8 @@
+import datetime
+from copy import deepcopy
 from unittest.mock import patch
 
+from django.test import override_settings
 from django.urls import reverse
 
 import requests_mock
@@ -24,7 +27,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
-from zac.core.permissions import zaakprocess_starten
+from zac.core.permissions import zaakprocess_starten, zaken_geforceerd_bijwerken
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -159,6 +162,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
             id="30a98ef3-bf35-4287-ac9c-fed048619dd7",
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
+            einddatum=None,
         )
         cls.zaak_obj = factory(Zaak, cls.zaak)
         cls.zaak_obj.zaaktype = factory(ZaakType, cls.zaaktype)
@@ -227,7 +231,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
                 ):
                     response = self.client.post(self.endpoint, {})
 
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
                 self.assertEqual(
                     response.json(),
                     {
@@ -336,12 +340,122 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
         ):
             response = self.client.post(self.endpoint, {})
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json(),
             {
                 "instanceId": PROCESS_INSTANCE["id"],
                 "instanceUrl": "https://some-url.com/",
+            },
+        )
+
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_start_camunda_process_zaak_with_einddatum_and_running_process_instance(
+        self, m, *mocks
+    ):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
+        mock_resource_get(m, self.catalogus)
+        m.get(
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}&processDefinitionKey={PROCESS_DEFINITION['key']}",
+            json=[PROCESS_INSTANCE],
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[PROCESS_DEFINITION],
+        )
+
+        zaak_obj = deepcopy(self.zaak_obj)
+        zaak_obj.einddatum = datetime.date(2020, 1, 1)
+        with patch(
+            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
+            return_value=zaak_obj,
+        ):
+            response = self.client.post(self.endpoint, {})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json(),
+            {
+                "instanceId": PROCESS_INSTANCE["id"],
+                "instanceUrl": f"{CAMUNDA_URL}process-instance/{PROCESS_INSTANCE['id']}",
+            },
+        )
+
+    @override_settings(RESTART_ZAAK_PROCESS_DEFINITION_KEY="some-restart-key")
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_start_camunda_process_zaak_with_einddatum_without_running_process_instance(
+        self, m, *mocks
+    ):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
+        mock_resource_get(m, self.catalogus)
+        m.get(
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}&processDefinitionKey={PROCESS_DEFINITION['key']}",
+            json=[],
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[],
+        )
+
+        m.post(
+            f"{CAMUNDA_URL}process-definition/key/some-restart-key/start",
+            status_code=201,
+            json={
+                "links": [{"rel": "self", "href": "https://some-url.com/"}],
+                "id": PROCESS_INSTANCE["id"],
+            },
+        )
+
+        zaak_obj = deepcopy(self.zaak_obj)
+        zaak_obj.einddatum = datetime.date(2020, 1, 1)
+        with patch(
+            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
+            return_value=zaak_obj,
+        ):
+            response = self.client.post(self.endpoint, {})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            m.last_request.url,
+            f"{CAMUNDA_URL}process-definition/key/some-restart-key/start",
+        )
+
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "businessKey": "",
+                "withVariablesInReturn": False,
+                "variables": {
+                    "zaakUrl": {
+                        "type": "String",
+                        "value": zaak_obj.url,
+                    },
+                    "zaakIdentificatie": {
+                        "type": "String",
+                        "value": zaak_obj.identificatie,
+                    },
+                    "zaakDetails": serialize_variable(
+                        {
+                            "omschrijving": zaak_obj.omschrijving,
+                            "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
+                        }
+                    ),
+                    "initiator": {"type": "String", "value": f"user:{self.user}"},
+                },
             },
         )
 
@@ -405,6 +519,7 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            einddatum=None,
         )
         cls.zaak_obj = factory(Zaak, cls.zaak)
         cls.zaak_obj.zaaktype = factory(ZaakType, cls.zaaktype)
@@ -503,7 +618,85 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             },
         )
         response = self.client.post(self.endpoint, {})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_has_no_perm_to_force_restart(self, m, *mocks):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.zaaktype)
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaakprocess_starten.name],
+            for_user=self.user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        zaak_object = deepcopy(self.zaak_obj)
+        zaak_object.einddatum = datetime.date(2020, 1, 1)
+        with patch(
+            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
+            return_value=zaak_object,
+        ):
+            response = self.client.post(self.endpoint, {})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
+    def test_has_perm_to_force_restart(self, m, *mocks):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.zaaktype)
+        m.post(
+            f"{OBJECTS_ROOT}objects/search",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
+        )
+        # gives them access to the page, zaaktype and VA specified -> visible
+        BlueprintPermissionFactory.create(
+            role__permissions=[
+                zaakprocess_starten.name,
+                zaken_geforceerd_bijwerken.name,
+            ],
+            for_user=self.user,
+            policy={
+                "catalogus": self.zaaktype["catalogus"],
+                "zaaktype_omschrijving": "ZT1",
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-instance?variables=zaakUrl_eq_{self.zaak['url']}",
+            json=[PROCESS_INSTANCE],
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-instance?superProcessInstance={PROCESS_INSTANCE['id']}",
+            json=[],
+        )
+        m.get(
+            f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
+            json=[PROCESS_DEFINITION],
+        )
+
+        zaak_object = deepcopy(self.zaak_obj)
+        zaak_object.einddatum = datetime.date(2020, 1, 1)
+        with patch(
+            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
+            return_value=zaak_object,
+        ):
+            response = self.client.post(self.endpoint, {})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_without_application_token(self, m):
         self.client.logout()
@@ -557,4 +750,4 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.post(
             self.endpoint, {}, HTTP_AUTHORIZATION=f"ApplicationToken {token.token}"
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
