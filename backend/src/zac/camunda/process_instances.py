@@ -125,6 +125,7 @@ def get_process_instances(
     include_bijdragezaak: bool = False,
     exclude_zaak_creation: bool = True,
     nest: bool = False,
+    process_definition_key: str = "",
 ) -> Dict[CamundaId, Union[HistoricProcessInstance, ProcessInstance]]:
     client = get_client()
 
@@ -139,6 +140,9 @@ def get_process_instances(
         query_params[
             "processDefinitionKeyNotIn"
         ] = settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+
+    if process_definition_key:
+        query_params["processDefinitionKey"] = process_definition_key
 
     response = client.get(url, query_params)
 

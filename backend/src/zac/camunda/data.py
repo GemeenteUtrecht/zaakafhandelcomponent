@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 
 from django_camunda.api import get_process_instance_variable, get_task_variable
 from django_camunda.camunda_models import Model, Task as _Task
+from django_camunda.client import get_client
 from django_camunda.types import CamundaId
 
 from zac.accounts.models import User
@@ -31,14 +32,14 @@ class BaseProcessInstance(Model, ABC):
 
     @abstractmethod
     def get_variable(self, name: str) -> Any:
-        pass
-
-        if self.historical:
-            return get_historical_variable(self.id, name)
-        return get_process_instance_variable(self.id, name)
+        raise NotImplementedError("Please implement get_variable on subclasses.")
 
     def title(self) -> str:
         return self.definition.name or self.definition.key
+
+    @abstractmethod
+    def get_url(self) -> str:
+        raise NotImplementedError("Please implement get_url on subclasses.")
 
 
 @dataclass
@@ -48,6 +49,10 @@ class ProcessInstance(BaseProcessInstance):
 
     def get_variable(self, name: str) -> Any:
         return get_process_instance_variable(self.id, name)
+
+    def get_url(self) -> str:
+        client = get_client()
+        return f"{client.root_url}process-instance/{self.id}"
 
 
 @dataclass
@@ -61,6 +66,10 @@ class HistoricProcessInstance(BaseProcessInstance):
 
     def get_variable(self, name: str) -> Any:
         return get_historical_variable(self.id, name)
+
+    def get_url(self) -> str:
+        client = get_client()
+        return f"{client.root_url}history/process-instance/{self.id}"
 
 
 @dataclass

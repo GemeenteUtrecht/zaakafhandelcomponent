@@ -10,6 +10,7 @@ from zac.api.permissions import (
     DocumentDefinitionPermission,
     ZaakDefinitionPermission,
 )
+from zgw.models import Zaak
 
 from ..permissions import (
     zaken_aanmaken,
@@ -76,8 +77,14 @@ class CanForceEditClosedZaak(ZaakDefinitionPermission):
         if not serializer.is_valid():
             return True
 
-        object_url = self.get_object_url(serializer)
-        obj = self.get_object(request, object_url)
+        try:
+            object_url = self.get_object_url(serializer)
+            obj = self.get_object(request, object_url)
+        except KeyError:  # could be that a permission check is done on one of the /<bronorganisatie>/<identificatie>/-urls. in that case, try to fetch object from view directly
+            obj = view.get_object()
+            if not isinstance(obj, Zaak):
+                return False
+
         if not obj:
             return False
         return self.has_object_permission(request, view, obj)
