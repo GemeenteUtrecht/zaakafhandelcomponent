@@ -161,6 +161,10 @@ class ZaakTypeDocumentSerializer(serializers.Serializer):
         required=False,
         help_text=_("URL-reference of the CATALOGUS that belongs to the ZAAKTYPE."),
     )
+    catalogus_domein = serializers.CharField(
+        required=False,
+        help_text=_("`domein` the CATALOGUS that belongs to the ZAAKTYPE."),
+    )
     omschrijving = serializers.CharField(
         required=False, help_text=_("Description of the ZAAKTYPE.")
     )

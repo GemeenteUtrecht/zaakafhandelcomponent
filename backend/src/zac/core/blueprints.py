@@ -22,8 +22,8 @@ from .permissions import zaken_handle_access
 
 
 class ZaakTypeBlueprint(Blueprint):
-    catalogus = serializers.URLField(
-        help_text=_("URL-reference to CATALOGUS where ZAAKTYPEs are located"),
+    catalogus = serializers.CharField(
+        help_text=_("`domein` of CATALOGUS where ZAAKTYPEs are located"), max_length=5
     )
     zaaktype_omschrijving = serializers.CharField(
         max_length=100,
@@ -66,17 +66,22 @@ class ZaakTypeBlueprint(Blueprint):
 
             zaaktype = fetch_zaaktype(zaaktype)
 
+        if isinstance(zaaktype.catalogus, str):
+            from .services import fetch_catalogus
+
+            catalogus = fetch_catalogus(zaaktype.catalogus)
+
         current_va_order = VA_ORDER[zaak.vertrouwelijkheidaanduiding]
         max_va_order = VA_ORDER[self.data["max_va"]]
 
         return (
-            zaaktype.catalogus == self.data["catalogus"]
+            catalogus.domein == self.data["catalogus"]
             and zaaktype.omschrijving == self.data["zaaktype_omschrijving"]
             and current_va_order <= max_va_order
         )
 
     def search_query(self, on_nested_field: Optional[str] = "") -> Query:
-        catalogus_field = "zaaktype__catalogus"
+        catalogus_field = "zaaktype__catalogus_domein"
         omschrijving_field = "zaaktype__omschrijving"
         va_field = "va_order"
         if on_nested_field:
@@ -96,10 +101,9 @@ class ZaakTypeBlueprint(Blueprint):
 
 
 class InformatieObjectTypeBlueprint(Blueprint):
-    catalogus = serializers.URLField(
-        help_text=_(
-            "URL-reference to CATALOGUS where INFORMATIEOBJECTTYPEs are located"
-        ),
+    catalogus = serializers.CharField(
+        help_text=_("`domein` of CATALOGUS where INFORMATIEOBJECTTYPEs are located"),
+        max_length=5,
     )
     iotype_omschrijving = serializers.CharField(
         max_length=100,
@@ -120,11 +124,16 @@ class InformatieObjectTypeBlueprint(Blueprint):
 
             iotype = get_informatieobjecttype(iotype)
 
+        if isinstance(iotype.catalogus, str):
+            from .services import fetch_catalogus
+
+            catalogus = fetch_catalogus(iotype.catalogus)
+
         current_va_order = VA_ORDER[document.vertrouwelijkheidaanduiding]
         max_va_order = VA_ORDER[self.data["max_va"]]
 
         return (
-            iotype.catalogus == self.data["catalogus"]
+            catalogus.domein == self.data["catalogus"]
             and iotype.omschrijving == self.data["iotype_omschrijving"]
             and current_va_order <= max_va_order
         )

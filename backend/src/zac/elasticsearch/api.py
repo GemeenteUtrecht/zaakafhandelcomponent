@@ -126,10 +126,15 @@ def delete_zaak_document(zaak_url: str) -> None:
 
 
 def create_zaaktype_document(zaaktype: ZaakType) -> ZaakTypeDocument:
+    from zac.core.services import fetch_catalogus
+
+    catalogus = fetch_catalogus(zaaktype.catalogus)
+
     zaaktype_document = ZaakTypeDocument(
         url=zaaktype.url,
         omschrijving=zaaktype.omschrijving,
         catalogus=zaaktype.catalogus,
+        catalogus_domein=catalogus.domein,
         identificatie=zaaktype.identificatie,
     )
 

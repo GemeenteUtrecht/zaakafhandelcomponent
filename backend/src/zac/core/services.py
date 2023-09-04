@@ -173,14 +173,15 @@ def get_zaaktypen(
         .values_list("policy", flat=True)
     )
     zaaktypen_policies = list(zaaktypen_policies)
-
+    catalogi_urls = list({zt.catalogus for zt in zaaktypen})
+    catalogi = {url: fetch_catalogus(url) for url in catalogi_urls}
     return [
         zaaktype
         for zaaktype in zaaktypen
         if [
             policy
             for policy in zaaktypen_policies
-            if policy["catalogus"] == zaaktype.catalogus
+            if policy["catalogus"] == catalogi[zaaktype.catalogus].domein
             and policy["zaaktype_omschrijving"] == zaaktype.omschrijving
             and VA_ORDER[policy["max_va"]]
             >= VA_ORDER[zaaktype.vertrouwelijkheidaanduiding]
@@ -200,6 +201,7 @@ def get_zaaktype(url: str, request: Optional[Request] = None) -> Optional[ZaakTy
     Calls fetch_zaaktype, but filters the result on the user's permissions.
     """
     zaaktype = fetch_zaaktype(url)
+    catalogus = fetch_catalogus(zaaktype.catalogus)
 
     if (
         (not request)
@@ -221,7 +223,7 @@ def get_zaaktype(url: str, request: Optional[Request] = None) -> Optional[ZaakTy
         if [
             policy
             for policy in zaaktypen_policies
-            if policy["catalogus"] == zaaktype.catalogus
+            if policy["catalogus"] == catalogus.domein
             and policy["zaaktype_omschrijving"] == zaaktype.omschrijving
             and VA_ORDER[policy["max_va"]]
             >= VA_ORDER[zaaktype.vertrouwelijkheidaanduiding]
