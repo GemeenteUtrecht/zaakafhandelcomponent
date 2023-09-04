@@ -16,6 +16,7 @@ from zgw_consumers.api_models.documenten import Document
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.permissions import Blueprint, PermissionObjectType
+from zac.core.services import fetch_catalogus
 from zgw.models.zrc import Zaak
 
 from .permissions import zaken_handle_access
@@ -23,7 +24,9 @@ from .permissions import zaken_handle_access
 
 class ZaakTypeBlueprint(Blueprint):
     catalogus = serializers.CharField(
-        help_text=_("`domein` of CATALOGUS where ZAAKTYPEs are located"), max_length=5
+        help_text=_(
+            "On read: `domein` & on write: `url` of CATALOGUS where ZAAKTYPEs are located."
+        )
     )
     zaaktype_omschrijving = serializers.CharField(
         max_length=100,
@@ -99,11 +102,17 @@ class ZaakTypeBlueprint(Blueprint):
     def short_display(self):
         return f"{self.data['zaaktype_omschrijving']} ({self.data['max_va']})"
 
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        data["catalogus"] = fetch_catalogus(data["catalogus"]).domein
+        return data
+
 
 class InformatieObjectTypeBlueprint(Blueprint):
     catalogus = serializers.CharField(
-        help_text=_("`domein` of CATALOGUS where INFORMATIEOBJECTTYPEs are located"),
-        max_length=5,
+        help_text=_(
+            "On read: `domein` & on write: `url` of CATALOGUS where ZAAKTYPEs are located."
+        )
     )
     iotype_omschrijving = serializers.CharField(
         max_length=100,
@@ -140,6 +149,11 @@ class InformatieObjectTypeBlueprint(Blueprint):
 
     def short_display(self):
         return f"{self.data['iotype_omschrijving']} ({self.data['max_va']})"
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        data["catalogus"] = fetch_catalogus(data["catalogus"]).domein
+        return data
 
 
 zaak_object_type = PermissionObjectType(
