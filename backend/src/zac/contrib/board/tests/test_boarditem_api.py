@@ -374,6 +374,7 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             "zaaktype": {
                 "url": cls.zaaktype_model.url,
                 "catalogus": CATALOGUS_URL,
+                "catalogusDomein": cls.catalogus["domein"],
                 "omschrijving": "ZT1",
                 "identificatie": cls.zaaktype_model.identificatie,
             },

@@ -12,7 +12,7 @@ from zac.core.services import get_zaaktypen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from .utils import CATALOGI_ROOT, CATALOGUS, ZAAKTYPE, ZAKEN_ROOT
+from .utils import CATALOGI_ROOT, CATALOGUS, ZAAKTYPE
 
 NOTIFICATION = {
     "kanaal": "zaaktypen",

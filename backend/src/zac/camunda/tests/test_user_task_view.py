@@ -598,6 +598,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
     )
     def test_get_zet_resultaat_context(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
