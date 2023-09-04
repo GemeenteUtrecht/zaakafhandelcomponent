@@ -15,10 +15,11 @@ from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 DOCUMENTEN_ROOT = "https://api.documenten.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "DOC-001"
@@ -32,6 +33,12 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
             "bronorganisatie": BRONORGANISATIE,
             "identificatie": IDENTIFICATIE,
         },
+    )
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
     )
 
     document_1 = {
@@ -47,7 +54,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
 
     iot_1 = {
         "url": document_1["informatieobjecttype"],
-        "catalogus": f"{CATALOGI_ROOT}catalogussen/1b817d02-09dc-4e5f-9c98-cc9a991b81c6",
+        "catalogus": CATALOGUS_URL,
         "omschrijving": "Test Omschrijving 1",
         "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
         "beginGeldigheid": "2020-12-01",
@@ -84,8 +91,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         )
 
         m.get(self.document_1["inhoud"], content=self.inhoud_1)
-
-        m.get(self.iot_1["url"], json=self.iot_1)
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.iot_1)
 
     def test_login_required(self, m):
         response = self.app.get(self.download_url)
@@ -108,7 +115,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.iot_1["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -139,7 +146,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.iot_1["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "Test Omschrijving 1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -157,7 +164,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.iot_1["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "Test Omschrijving 1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -182,7 +189,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.iot_1["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "Test Omschrijving 1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -196,7 +203,7 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.iot_1["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "Test Omschrijving 1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

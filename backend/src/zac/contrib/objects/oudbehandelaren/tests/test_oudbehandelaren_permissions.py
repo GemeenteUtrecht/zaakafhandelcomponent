@@ -124,6 +124,7 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak)
 
@@ -131,7 +132,7 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus["url"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -158,6 +159,7 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
             json=paginated_response([self.zaak]),
         )
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak)
 
@@ -165,7 +167,7 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus["url"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

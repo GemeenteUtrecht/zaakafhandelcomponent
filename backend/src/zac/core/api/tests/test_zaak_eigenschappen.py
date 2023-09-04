@@ -27,6 +27,7 @@ from zgw.models.zrc import Zaak
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 KOWNSL_ROOT = "https://kownsl.nl/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -173,15 +174,18 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
         config.service = kownsl
         config.save()
 
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
@@ -238,6 +242,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
@@ -247,6 +252,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
             json=[],
         )
+        mock_resource_get(m, self.catalogus)
         # gives them access to the page, but no catalogus specified -> nothing visible
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
@@ -281,13 +287,14 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
             json=[],
         )
+        mock_resource_get(m, self.catalogus)
         user = UserFactory.create()
         # gives them access to the page and zaaktype, but insufficient VA
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -305,13 +312,14 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        mock_resource_get(m, self.catalogus)
         user = UserFactory.create()
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

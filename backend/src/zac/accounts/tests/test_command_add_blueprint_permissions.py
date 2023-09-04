@@ -73,7 +73,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
         self.assertEqual(
             zaak_permission.policy,
             {
-                "catalogus": zaaktype["catalogus"],
+                "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -83,7 +83,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
         self.assertEqual(
             doc_permission.policy,
             {
-                "catalogus": CATALOGUS_URL,
+                "catalogus": catalogus["domein"],
                 "iotype_omschrijving": "IOT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

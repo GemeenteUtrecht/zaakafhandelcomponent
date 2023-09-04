@@ -19,7 +19,7 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.documents import ZaakDocument, ZaakTypeDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..api.permissions import management_dashboard_inzien
 
@@ -34,6 +34,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
         super().setUp()
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype1",
             identificatie="zaaktype_id_1",
@@ -75,6 +76,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
         self.zaak_document1.save()
         self.zaaktype_document2 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype2",
             identificatie="zaaktype_id_2",
@@ -189,6 +191,13 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
     def test_management_dashboard_detail_blueprint(self, m):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=self.zaaktype_document1.catalogus,
+            domein="DOME",
+        )
+        mock_resource_get(m, catalogus)
         zt = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -206,7 +215,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
         BlueprintPermissionFactory.create(
             role__permissions=[management_dashboard_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -216,7 +225,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

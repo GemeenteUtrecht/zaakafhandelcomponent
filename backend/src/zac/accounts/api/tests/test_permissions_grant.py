@@ -56,6 +56,12 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        self.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         self.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -92,6 +98,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         # mock ZTC and ZRC data
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([]))
@@ -100,7 +107,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -130,6 +137,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
@@ -138,7 +146,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -168,6 +176,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak)
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
@@ -176,7 +185,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -206,6 +215,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
@@ -214,7 +224,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -244,6 +254,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
         }
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(ZAAK_URL, json={**self.zaak, "einddatum": "2020-01-01"})
         m.get(f"{ZAKEN_ROOT}rollen?zaak={ZAAK_URL}", json=paginated_response([rol]))
@@ -252,7 +263,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=self.handler,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -261,7 +272,7 @@ class GrantAccessPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_handle_access.name],
             for_user=self.handler,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

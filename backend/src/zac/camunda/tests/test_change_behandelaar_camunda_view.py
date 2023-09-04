@@ -85,19 +85,25 @@ class UpdateCamundaBehandelaarViewTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
         Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
-
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=CATALOGUS,
+            domein="DOME",
+        )
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=ZAAKTYPE,
+            catalogus=cls.catalogus["url"],
+        )
         cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=ZAAK,
             zaaktype=ZAAKTYPE,
         )
-        cls.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=ZAAKTYPE,
-            catalogus=CATALOGUS,
-        )
+
         cls.roltype = generate_oas_component(
             "ztc",
             "schemas/RolType",
@@ -300,18 +306,23 @@ class ChangeBehandelaarPermissionTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
         Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
-
-        cls.zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=ZAAK,
-            zaaktype=ZAAKTYPE,
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=CATALOGUS,
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=ZAAKTYPE,
             catalogus=CATALOGUS,
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=ZAAK,
+            zaaktype=ZAAKTYPE,
         )
         cls.roltype = generate_oas_component(
             "ztc",
@@ -358,6 +369,7 @@ class ChangeBehandelaarPermissionTests(ClearCachesMixin, APITestCase):
     def test_user_logged_in_with_permission(self, rm, *mocks):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, self.catalogus)
         mock_resource_get(rm, self.zaak)
         mock_resource_get(rm, self.zaaktype)
         mock_resource_get(rm, self.rol)
@@ -366,7 +378,7 @@ class ChangeBehandelaarPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": self.zaaktype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

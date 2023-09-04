@@ -28,7 +28,7 @@ from zac.contrib.kownsl.models import KownslConfig
 from zac.core.api.data import AuditTrailData
 from zac.core.permissions import zaken_inzien, zaken_list_documents
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -36,6 +36,7 @@ ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 KOWNSL_ROOT = "https://kownsl.nl/"
 DOWC_ROOT = "https://dowc.nl/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -118,7 +119,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
 
@@ -330,16 +331,18 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         config = KownslConfig.get_solo()
         config.service = kownsl
         config.save()
-
-        catalogus_url = (
-            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
@@ -363,7 +366,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/e3f5c6d2-0e49-4293-8428-26139f630950",
             omschrijving="some-iot-omschrijving",
-            catalogus=catalogus_url,
+            catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
         )
         cls.document = generate_oas_component(
@@ -423,6 +426,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}informatieobjecttypen",
             json=paginated_response([self.documenttype]),
         )
+        mock_resource_get(m, self.catalogus)
 
     def setUp(self):
         super().setUp()
@@ -478,7 +482,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -498,7 +502,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -521,7 +525,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name, zaken_list_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

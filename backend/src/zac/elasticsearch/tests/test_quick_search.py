@@ -3,9 +3,13 @@ from unittest.mock import MagicMock
 from django.conf import settings
 from django.urls import reverse_lazy
 
+import requests_mock
 from elasticsearch_dsl import Index
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
@@ -19,6 +23,7 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_related_zaak_document
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 
 from ..documents import (
     InformatieObjectDocument,
@@ -31,8 +36,10 @@ from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
+@requests_mock.Mocker()
 class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     endpoint = reverse_lazy("quick-search")
 
@@ -54,9 +61,17 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def setUp(self) -> None:
         super().setUp()
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        self.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus_domein=self.catalogus["domein"],
+            catalogus=self.catalogus["url"],
             omschrijving="zaaktype1",
             identificatie="id1",
         )
@@ -97,7 +112,8 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.zaak_document1.save()
         self.zaaktype_document2 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus_domein=self.catalogus["domein"],
+            catalogus=self.catalogus["url"],
             omschrijving="zaaktype2",
             identificatie="id2",
         )
@@ -116,6 +132,9 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         self.zaak_document2.save()
 
+    def _other_mocks(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         related_zaak_1 = create_related_zaak_document(self.zaak_document1)
         self.object_document_1 = ObjectDocument(
             url="some-keywoird",
@@ -141,7 +160,9 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         self.refresh_index()
 
-    def test_quick_search(self):
+    def test_quick_search(self, m):
+        self._other_mocks(m)
+
         results = quick_search("test.txt")
         self.assertEqual(
             len(results["zaken"]),
@@ -181,7 +202,8 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
         self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
 
-    def test_quick_search_blueprint_permissions(self):
+    def test_quick_search_blueprint_permissions(self, m):
+        self._other_mocks(m)
         user = UserFactory.create()
         request = MagicMock()
         request.user = user
@@ -195,7 +217,7 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -215,7 +237,7 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document2.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": self.zaaktype_document2.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -225,7 +247,8 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
 
-    def test_quick_search_atomic_permissions_for_zaak(self):
+    def test_quick_search_atomic_permissions_for_zaak(self, m):
+        self._other_mocks(m)
         user = UserFactory.create()
         request = MagicMock()
         request.user = user
@@ -260,7 +283,8 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         results = quick_search("2022 omsch", only_allowed=True, request=request)
         self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
 
-    def test_quick_search_endpoint_superuser(self):
+    def test_quick_search_endpoint_superuser(self, m):
+        self._other_mocks(m)
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
         response = self.client.post(self.endpoint, {"search": "2022 omsch"})
@@ -279,11 +303,13 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         self.assertEqual(results["documenten"][0]["titel"], self.eio_document_1.titel)
 
-    def test_quick_search_endpoint_not_authenticated(self):
+    def test_quick_search_endpoint_not_authenticated(self, m):
+        self._other_mocks(m)
         response = self.client.post(self.endpoint, {"search": "2022 omsch"})
         self.assertEqual(response.status_code, 403)
 
-    def test_quick_search_endpoint_authenticated_no_permissions(self):
+    def test_quick_search_endpoint_authenticated_no_permissions(self, m):
+        self._other_mocks(m)
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
         response = self.client.post(self.endpoint, {"search": "2022 omsch"})

@@ -34,6 +34,12 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
         super().setUp()
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        self.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
 
         self.zaaktype = generate_oas_component(
             "ztc",
@@ -67,6 +73,7 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
     def test_authenticated_no_permissions(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype]),
@@ -100,6 +107,7 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
         )
 
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype, zaaktype2]),
@@ -109,7 +117,7 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },
@@ -131,6 +139,7 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
     def test_is_superuser(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype]),
@@ -156,6 +165,7 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
     def test_has_perms(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype]),
@@ -169,7 +179,7 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },

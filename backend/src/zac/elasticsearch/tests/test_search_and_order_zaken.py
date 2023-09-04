@@ -3,8 +3,12 @@ from unittest.mock import MagicMock
 from django.conf import settings
 from django.test import TestCase
 
+import requests_mock
 from elasticsearch_dsl import Index
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import (
     AtomicPermissionFactory,
@@ -21,6 +25,7 @@ from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 class SearchZakenTests(ESMixin, TestCase):
@@ -28,6 +33,7 @@ class SearchZakenTests(ESMixin, TestCase):
         super().setUp()
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype1",
             identificatie="id1",
@@ -70,6 +76,7 @@ class SearchZakenTests(ESMixin, TestCase):
 
         self.zaaktype_document2 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype2",
             identificatie="id2",
@@ -121,12 +128,20 @@ class SearchZakenTests(ESMixin, TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].url, self.zaak_document1.url)
 
-    def test_search_only_allowed_blueprint(self):
+    @requests_mock.Mocker()
+    def test_search_only_allowed_blueprint(self, m):
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "zaaktype1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

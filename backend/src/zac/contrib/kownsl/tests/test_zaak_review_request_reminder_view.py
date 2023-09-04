@@ -24,6 +24,7 @@ from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
 from .utils import (
@@ -38,6 +39,7 @@ from .utils import (
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -181,15 +183,18 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
         config.rest_api_path = CAMUNDA_API_PATH
         config.save()
 
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=cls.catalogus["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
@@ -251,6 +256,8 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
             json=REVIEW_REQUEST,
@@ -273,6 +280,8 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_but_not_for_va(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
             json=REVIEW_REQUEST,
@@ -283,7 +292,7 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -296,6 +305,8 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
     def test_has_blueprint_perm(self, m):
         m.post(f"{CAMUNDA_URL}message", status_code=status.HTTP_204_NO_CONTENT)
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
             json=REVIEW_REQUEST,
@@ -305,7 +316,7 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.geheim,
             },

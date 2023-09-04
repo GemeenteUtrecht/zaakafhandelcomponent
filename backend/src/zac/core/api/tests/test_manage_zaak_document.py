@@ -40,6 +40,7 @@ ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 DOCUMENTS_ROOT = "https://open-zaak.nl/documenten/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 DOCUMENT_URL = f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/148c998d-85ea-4d4f-b06c-a77c791488f6"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
@@ -68,19 +69,25 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         self.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            catalogus=CATALOGUS_URL,
             omschrijving="ZT1",
         )
         self.informatieobjecttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
-            catalogus=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            catalogus=CATALOGUS_URL,
             omschrijving="IOT1",
         )
         ziot = generate_oas_component(
@@ -99,7 +106,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 "results": [self.zaaktype],
             },
         )
-
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         m.get(self.informatieobjecttype["url"], json=self.informatieobjecttype)
         m.get(
@@ -168,7 +175,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_wijzigen.name, zaken_add_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -253,7 +260,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_add_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -286,7 +293,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -324,7 +331,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_update_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.informatieobjecttype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "IOT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -361,7 +368,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -371,7 +378,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_update_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.informatieobjecttype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "IOT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -452,7 +459,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -462,7 +469,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_update_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.informatieobjecttype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "IOT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -521,7 +528,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -530,7 +537,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -540,7 +547,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             role__permissions=[zaken_update_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.informatieobjecttype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "IOT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

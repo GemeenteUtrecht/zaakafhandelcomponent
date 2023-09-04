@@ -394,15 +394,14 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         )
 
 
-@requests_mock.Mocker()
 class UserTaskHistoryPermissionTests(ClearCachesMixin, APITestCase):
-    def test_no_user_logged_in(self, m):
+    def test_no_user_logged_in(self):
         url = furl(reverse("user-task-history"))
         url.set({"zaakUrl": ZAAK_URL})
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 403)
 
-    def test_user_logged_in_but_no_permission(self, m):
+    def test_user_logged_in_but_no_permission(self):
         url = furl(reverse("user-task-history"))
         url.set({"zaakUrl": ZAAK_URL})
         user = UserFactory.create()
@@ -410,13 +409,13 @@ class UserTaskHistoryPermissionTests(ClearCachesMixin, APITestCase):
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 403)
 
-    def test_user_logged_in_with_permission(self, m):
+    def test_user_logged_in_with_permission(self):
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": "https://some-catalogus.nl/",
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

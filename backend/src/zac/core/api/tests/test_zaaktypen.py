@@ -17,7 +17,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -62,6 +62,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
 
     def test_authenticated_no_permissions(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
@@ -81,6 +82,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
 
     def test_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
@@ -94,7 +96,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT3",
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },
@@ -109,6 +111,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
 
     def test_has_perm_for_one_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
@@ -122,7 +125,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },
@@ -139,6 +142,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
 
     def test_is_superuser(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
@@ -159,6 +163,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
 
     def test_has_all_perms(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype_1, self.zaaktype_2]),
@@ -173,7 +178,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
                 role__permissions=[zaken_inzien.name],
                 for_user=user,
                 policy={
-                    "catalogus": CATALOGUS_URL,
+                    "catalogus": self.catalogus["domein"],
                     "zaaktype_omschrijving": zaaktype_omschrijving,
                     "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
                 },

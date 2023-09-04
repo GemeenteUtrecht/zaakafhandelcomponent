@@ -29,7 +29,7 @@ from ..models import BoardItem
 from .factories import BoardColumnFactory, BoardFactory, BoardItemFactory
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/482de5b2-4779-4b29-b84f-add888352182"
 
@@ -43,6 +43,12 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         # data for ES documents
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -68,18 +74,21 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(user=self.user)
+
+    def _setUpMock(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
+
         zaak_document = self.create_zaak_document(self.zaak_model)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype_model)
         zaak_document.save()
         self.refresh_index()
 
-    def _setUpMock(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_resource_get(m, self.zaaktype)
-        mock_resource_get(m, self.zaak)
-
     def test_list_no_permissions(self, m):
+        self._setUpMock(m)
         BoardItemFactory.create(object=ZAAK_URL)
         url = reverse("boarditem-list")
 
@@ -89,12 +98,13 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.json(), [])
 
     def test_list_only_allowed(self, m):
+        self._setUpMock(m)
         item = BoardItemFactory.create(object=ZAAK_URL)
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -121,7 +131,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -141,7 +151,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -159,7 +169,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -179,7 +189,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -199,7 +209,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -219,7 +229,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -228,7 +238,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -248,7 +258,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -269,7 +279,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -290,7 +300,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -309,7 +319,7 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -322,14 +332,22 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
+@requests_mock.Mocker()
 class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.user = SuperUserFactory.create()
         # data for ES documents
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -386,12 +404,21 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(user=self.user)
+
+    def _setUpMock(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.zaak)
+
         zaak_document = self.create_zaak_document(self.zaak_model)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype_model)
         zaak_document.save()
         self.refresh_index()
 
-    def test_list_items(self):
+    def test_list_items(self, m):
+        self._setUpMock(m)
         item1 = BoardItemFactory.create(column__name="wip", object=ZAAK_URL)
         item2 = BoardItemFactory.create(column__name="done")
         url = reverse("boarditem-list")
@@ -473,7 +500,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             ],
         )
 
-    def test_list_items_filter_on_board_uuid(self):
+    def test_list_items_filter_on_board_uuid(self, m):
+        self._setUpMock(m)
         item = BoardItemFactory.create(object=ZAAK_URL)
         url = reverse("boarditem-list")
 
@@ -489,7 +517,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             f"http://testserver{reverse('boarditem-detail', args=[item.uuid])}",
         )
 
-    def test_list_items_filter_on_board_slug(self):
+    def test_list_items_filter_on_board_slug(self, m):
+        self._setUpMock(m)
         item = BoardItemFactory.create(column__board__slug="scrum", object=ZAAK_URL)
         url = reverse("boarditem-list")
 
@@ -505,7 +534,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             f"http://testserver{reverse('boarditem-detail', args=[item.uuid])}",
         )
 
-    def test_list_items_filter_on_zaak_url(self):
+    def test_list_items_filter_on_zaak_url(self, m):
+        self._setUpMock(m)
         item = BoardItemFactory.create(object=ZAAK_URL)
         url = reverse("boarditem-list")
 
@@ -521,9 +551,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             f"http://testserver{reverse('boarditem-detail', args=[item.uuid])}",
         )
 
-    @requests_mock.Mocker()
     def test_retrieve_item(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        self._setUpMock(m)
         mock_resource_get(m, self.zaak)
         board = BoardFactory.create()
         col1, col2 = BoardColumnFactory.create_batch(2, board=board)
@@ -577,8 +606,9 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-    @requests_mock.Mocker()
     def test_create_item_success(self, m):
+        self._setUpMock(m)
+
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaak)
         url = reverse("boarditem-list")
@@ -596,7 +626,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(item.object_type, BoardObjectTypes.zaak)
         self.assertEqual(item.object, ZAAK_URL)
 
-    def test_create_item_column_not_exist(self):
+    def test_create_item_column_not_exist(self, m):
+        self._setUpMock(m)
         url = reverse("boarditem-list")
         data = {"object": ZAAK_URL, "column_uuid": str(uuid.uuid4())}
 
@@ -605,7 +636,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue("columnUuid" in response.json())
 
-    def test_create_item_duplicate_object_in_the_board(self):
+    def test_create_item_duplicate_object_in_the_board(self, m):
+        self._setUpMock(m)
         url = reverse("boarditem-list")
         item = BoardItemFactory.create(object=ZAAK_URL)
         col = BoardColumnFactory.create(board=item.column.board)
@@ -619,8 +651,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(), {"nonFieldErrors": ["Dit OBJECT staat al op het bord"]}
         )
 
-    @requests_mock.Mocker()
     def test_update_item_column_success(self, m):
+        self._setUpMock(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaak)
         old_col = BoardColumnFactory.create()
@@ -636,8 +668,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(item.column, new_col)
 
-    @requests_mock.Mocker()
     def test_update_item_change_column_from_another_board(self, m):
+        self._setUpMock(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaak)
         old_col, new_col = BoardColumnFactory.create_batch(2)
@@ -652,8 +684,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             {"columnUuid": ["De bord van het item kan niet worden veranderd"]},
         )
 
-    @requests_mock.Mocker()
     def test_update_item_change_object(self, m):
+        self._setUpMock(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaak)
         item = BoardItemFactory.create(object=self.zaak["url"])
@@ -665,8 +697,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
             response.json(), {"object": ["Dit veld kan niet veranderd worden."]}
         )
 
-    @requests_mock.Mocker()
     def test_delete_item_success(self, m):
+        self._setUpMock(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaak)
         item = BoardItemFactory.create(object=self.zaak["url"])
