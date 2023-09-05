@@ -106,9 +106,6 @@ django-choices==1.7.2
     # via
     #   -r requirements/base.txt
     #   zgw-consumers
-django-compat==1.0.15
-    # via
-    #   -r requirements/base.txt
 django-cors-headers==4.2.0
     # via -r requirements/base.txt
 django-decorator-include==3.0
@@ -118,9 +115,8 @@ django-extra-views==0.13.0
 django-filter==2.3.0
     # via -r requirements/base.txt
 django-hijack==3.4.1
-    # via
-    #   -r requirements/base.txt
-django-import-export==2.7.1
+    # via -r requirements/base.txt
+django-import-export==3.2.0
     # via -r requirements/base.txt
 django-ipware==5.0.0
     # via
@@ -332,7 +328,6 @@ six==1.16.0
     # via
     #   -r requirements/base.txt
     #   django-choices
-    #   django-compat
     #   django-extra-views
     #   django-nested-admin
     #   elasticsearch-dsl
@@ -355,7 +350,7 @@ sqlparse==0.4.2
     # via
     #   -r requirements/base.txt
     #   django
-tablib[html,ods,xls,xlsx,yaml]==3.2.0
+tablib[html,ods,xls,xlsx,yaml]==3.5.0
     # via
     #   -r requirements/base.txt
     #   django-import-export
