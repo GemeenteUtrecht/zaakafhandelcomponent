@@ -6,6 +6,7 @@ from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
 
 from hijack.contrib.admin import HijackUserAdminMixin
+from import_export.admin import ExportActionMixin, ImportMixin
 from nested_admin import NestedModelAdminMixin, NestedTabularInline
 
 from zac.utils.admin import RelatedLinksMixin
@@ -23,6 +24,12 @@ from .models import (
     UserAuthorizationProfile,
 )
 from .permissions import registry
+from .resources import (
+    AuthorizationProfileResource,
+    BlueprintPermissionResource,
+    RoleResource,
+    UserAuthorizationProfileResource,
+)
 from .widgets import PolicyWidget
 
 
@@ -80,12 +87,15 @@ class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
 
 
 @admin.register(AuthorizationProfile)
-class AuthorizationProfileAdmin(RelatedLinksMixin, admin.ModelAdmin):
+class AuthorizationProfileAdmin(
+    ImportMixin, ExportActionMixin, RelatedLinksMixin, admin.ModelAdmin
+):
     list_display = ("name", "get_blueprint_permissions_count", "get_users_display")
     list_filter = ("blueprint_permissions__role",)
     search_fields = ("name", "uuid")
     inlines = (UserAuthorizationProfileInline,)
     filter_horizontal = ("blueprint_permissions",)
+    resource_class = AuthorizationProfileResource
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -103,10 +113,11 @@ class AuthorizationProfileAdmin(RelatedLinksMixin, admin.ModelAdmin):
 
 
 @admin.register(UserAuthorizationProfile)
-class UserAuthorizationProfileAdmin(admin.ModelAdmin):
+class UserAuthorizationProfileAdmin(ImportMixin, ExportActionMixin, admin.ModelAdmin):
     list_display = ("user", "auth_profile", "start", "end")
     list_filter = ("user", "auth_profile", "start", "end")
     search_fields = ("user__username", "auth_profile__name", "auth_profile__uuid")
+    resource_class = UserAuthorizationProfileResource
 
 
 @admin.register(AccessRequest)
@@ -164,8 +175,12 @@ class AuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(BlueprintPermission)
-class BlueprintPermissionAdmin(RelatedLinksMixin, admin.ModelAdmin):
+class BlueprintPermissionAdmin(
+    ImportMixin, ExportActionMixin, RelatedLinksMixin, admin.ModelAdmin
+):
+    resource_class = (BlueprintPermissionResource,)
     list_display = (
+        "hashkey",
         "role",
         "object_type",
         "get_policy_list_display",
@@ -197,8 +212,9 @@ class BlueprintPermissionAdmin(RelatedLinksMixin, admin.ModelAdmin):
 
 
 @admin.register(Role)
-class RoleAdmin(RelatedLinksMixin, admin.ModelAdmin):
+class RoleAdmin(ImportMixin, ExportActionMixin, RelatedLinksMixin, admin.ModelAdmin):
     list_display = ("name", "permissions", "get_blueprint_permissions_display")
+    resource_class = RoleResource
 
     def get_blueprint_permissions_display(self, obj):
         return self.display_related_as_count_with_link(obj, "blueprint_permissions")
