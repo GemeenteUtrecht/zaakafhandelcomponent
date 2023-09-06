@@ -13,13 +13,14 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..documents import ZaakDocument
 from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d"
 
 
 @requests_mock.Mocker()
@@ -43,10 +44,16 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+        )
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            catalogus=CATALOGUS_URL,
         )
         zaak = generate_oas_component(
             "zrc",
@@ -93,7 +100,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak2['url']}", json=[])
-        m.get(zaaktype["url"], json=zaaktype)
+        mock_resource_get(m, zaaktype)
+        mock_resource_get(m, catalogus)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
             return_value=[],
