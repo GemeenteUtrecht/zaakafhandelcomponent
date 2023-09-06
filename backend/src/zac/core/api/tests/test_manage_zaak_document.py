@@ -46,6 +46,68 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30
 class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
     endpoint = reverse_lazy("zaak-document")
 
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
+    )
+    zaaktype = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+        identificatie="ZT1",
+        catalogus=CATALOGUS_URL,
+        omschrijving="ZT1",
+    )
+    informatieobjecttype = generate_oas_component(
+        "ztc",
+        "schemas/InformatieObjectType",
+        url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+        catalogus=CATALOGUS_URL,
+        omschrijving="IOT1",
+    )
+    ziot = generate_oas_component(
+        "ztc",
+        "schemas/ZaakTypeInformatieObjectType",
+        zaaktype=zaaktype["url"],
+        informatieobjecttype=informatieobjecttype["url"],
+    )
+    zaak = generate_oas_component(
+        "zrc",
+        "schemas/Zaak",
+        url=f"{ZAKEN_ROOT}zaken/456",
+        zaaktype=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+        bronorganisatie="123456782",
+        identificatie="ZAAK-2020-0010",
+    )
+    document = generate_oas_component(
+        "drc",
+        "schemas/EnkelvoudigInformatieObject",
+        url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+        informatieobjecttype=informatieobjecttype["url"],
+    )
+    audit_trail = generate_oas_component(
+        "drc",
+        "schemas/AuditTrail",
+        hoofdObject=document["url"],
+        resourceUrl=document["url"],
+        wijzigingen={
+            "oud": {
+                "content": "",
+                "modified": "2022-03-04T12:11:21.157+01:00",
+                "author": "ONBEKEND",
+                "versionLabel": "0.2",
+            },
+            "nieuw": {
+                "content": "",
+                "modified": "2022-03-04T12:11:39.293+01:00",
+                "author": "John Doe",
+                "versionLabel": "0.3",
+            },
+        },
+    )
+
     def setUp(self):
         super().setUp()
 
@@ -69,34 +131,6 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        self.catalogus = generate_oas_component(
-            "ztc",
-            "schemas/Catalogus",
-            url=CATALOGUS_URL,
-            domein="DOME",
-        )
-        self.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            omschrijving="ZT1",
-        )
-        self.informatieobjecttype = generate_oas_component(
-            "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
-            catalogus=CATALOGUS_URL,
-            omschrijving="IOT1",
-        )
-        ziot = generate_oas_component(
-            "ztc",
-            "schemas/ZaakTypeInformatieObjectType",
-            zaaktype=self.zaaktype["url"],
-            informatieobjecttype=self.informatieobjecttype["url"],
-        )
-
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json={
@@ -115,26 +149,15 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 "count": 1,
                 "next": None,
                 "previous": None,
-                "results": [ziot],
+                "results": [self.ziot],
             },
         )
-
-        self.zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/456",
-            zaaktype=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            bronorganisatie="123456782",
-            identificatie="ZAAK-2020-0010",
-        )
         mock_resource_get(m, self.zaak)
-
         patch_find_zaak = patch(
             "zac.core.services.search_zaken", return_value=[self.zaak["url"]]
         )
         patch_find_zaak.start()
         self.addCleanup(patch_find_zaak.stop)
-
         patch_get_iot = patch(
             "zac.core.api.views.get_informatieobjecttype",
             return_value=factory(InformatieObjectType, self.informatieobjecttype),
@@ -180,15 +203,9 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
-
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-        )
         m.post(
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
-            json=document,
+            json=self.document,
             status_code=201,
         )
 
@@ -206,44 +223,22 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "file": file,
         }
 
-        audit_trail = generate_oas_component(
-            "drc",
-            "schemas/AuditTrail",
-            hoofdObject=document["url"],
-            resourceUrl=document["url"],
-            wijzigingen={
-                "oud": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:21.157+01:00",
-                    "author": "ONBEKEND",
-                    "versionLabel": "0.2",
-                },
-                "nieuw": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:39.293+01:00",
-                    "author": "John Doe",
-                    "versionLabel": "0.3",
-                },
-            },
-        )
-        audit_trail = factory(AuditTrailData, audit_trail)
-
         with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
             with patch(
                 "zac.core.api.views.get_open_documenten",
                 return_value=[
                     DowcResponse(
-                        drc_url=document["url"],
+                        drc_url=self.document["url"],
                         magic_url="",
                         purpose="write",
                         uuid=uuid4(),
-                        unversioned_url=document["url"],
+                        unversioned_url=self.document["url"],
                     )
                 ],
             ):
                 with patch(
                     "zac.core.api.views.fetch_document_audit_trail",
-                    return_value=[audit_trail],
+                    return_value=[factory(AuditTrailData, self.audit_trail)],
                 ):
                     response = self.client.post(
                         self.endpoint, post_data, format="multipart"
@@ -265,21 +260,16 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
-
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-        )
         post_data = {
             "reden": "Zomaar",
-            "url": document["url"],
+            "url": self.document["url"],
             "vertrouwelijkheidaanduiding": "geheim",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
 
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            return_value=[[factory(Document, self.document)], []],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -298,24 +288,17 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
-
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}123",
-            informatieobjecttype=self.informatieobjecttype["url"],
-        )
-        m.get(document["url"], json=document)
+        mock_resource_get(m, self.document)
         post_data = {
             "reden": "Zomaar",
-            "url": document["url"],
+            "url": self.document["url"],
             "vertrouwelijkheidaanduiding": "geheim",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
 
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            return_value=[[factory(Document, self.document)], []],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -337,23 +320,17 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}123",
-            informatieobjecttype=self.informatieobjecttype["url"],
-        )
-        m.get(document["url"], json=document)
+        mock_resource_get(m, self.document)
         post_data = {
             "reden": "Zomaar",
-            "url": document["url"],
+            "url": self.document["url"],
             "vertrouwelijkheidaanduiding": "geheim",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
 
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            return_value=[[factory(Document, self.document)], []],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -384,64 +361,37 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}123",
-            informatieobjecttype=self.informatieobjecttype["url"],
-        )
-        m.get(document["url"], json=document)
+        mock_resource_get(m, self.document)
         post_data = {
             "reden": "Zomaar",
-            "url": document["url"],
+            "url": self.document["url"],
             "vertrouwelijkheidaanduiding": "geheim",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
-        audit_trail = generate_oas_component(
-            "drc",
-            "schemas/AuditTrail",
-            hoofdObject=document["url"],
-            resourceUrl=document["url"],
-            wijzigingen={
-                "oud": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:21.157+01:00",
-                    "author": "ONBEKEND",
-                    "versionLabel": "0.2",
-                },
-                "nieuw": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:39.293+01:00",
-                    "author": "John Doe",
-                    "versionLabel": "0.3",
-                },
-            },
-        )
-        audit_trail = factory(AuditTrailData, audit_trail)
 
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            return_value=[[factory(Document, self.document)], []],
         ):
             with patch(
                 "zac.core.api.views.update_document",
-                return_value=factory(Document, document),
+                return_value=factory(Document, self.document),
             ):
                 with patch(
                     "zac.core.api.views.get_open_documenten",
                     return_value=[
                         DowcResponse(
-                            drc_url=document["url"],
+                            drc_url=self.document["url"],
                             magic_url="",
                             purpose="write",
                             uuid=uuid4(),
-                            unversioned_url=document["url"],
+                            unversioned_url=self.document["url"],
                         )
                     ],
                 ):
                     with patch(
                         "zac.core.api.views.fetch_document_audit_trail",
-                        return_value=[audit_trail],
+                        return_value=[factory(AuditTrailData, self.audit_trail)],
                     ):
                         response = self.client.patch(
                             self.endpoint, post_data, format="multipart"
@@ -475,44 +425,17 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}123",
-            informatieobjecttype=self.informatieobjecttype["url"],
-        )
-        m.get(document["url"], json=document)
+        mock_resource_get(m, self.document)
         post_data = {
             "reden": "Zomaar",
-            "url": document["url"],
+            "url": self.document["url"],
             "vertrouwelijkheidaanduiding": "geheim",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
-        audit_trail = generate_oas_component(
-            "drc",
-            "schemas/AuditTrail",
-            hoofdObject=document["url"],
-            resourceUrl=document["url"],
-            wijzigingen={
-                "oud": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:21.157+01:00",
-                    "author": "ONBEKEND",
-                    "versionLabel": "0.2",
-                },
-                "nieuw": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:39.293+01:00",
-                    "author": "John Doe",
-                    "versionLabel": "0.3",
-                },
-            },
-        )
-        audit_trail = factory(AuditTrailData, audit_trail)
 
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            return_value=[[factory(Document, self.document)], []],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -553,64 +476,37 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}123",
-            informatieobjecttype=self.informatieobjecttype["url"],
-        )
-        m.get(document["url"], json=document)
+        mock_resource_get(m, self.document)
         post_data = {
             "reden": "Zomaar",
-            "url": document["url"],
+            "url": self.document["url"],
             "vertrouwelijkheidaanduiding": "geheim",
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
-        audit_trail = generate_oas_component(
-            "drc",
-            "schemas/AuditTrail",
-            hoofdObject=document["url"],
-            resourceUrl=document["url"],
-            wijzigingen={
-                "oud": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:21.157+01:00",
-                    "author": "ONBEKEND",
-                    "versionLabel": "0.2",
-                },
-                "nieuw": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:39.293+01:00",
-                    "author": "John Doe",
-                    "versionLabel": "0.3",
-                },
-            },
-        )
-        audit_trail = factory(AuditTrailData, audit_trail)
 
         with patch(
             "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            return_value=[[factory(Document, self.document)], []],
         ):
             with patch(
                 "zac.core.api.views.update_document",
-                return_value=factory(Document, document),
+                return_value=factory(Document, self.document),
             ):
                 with patch(
                     "zac.core.api.views.get_open_documenten",
                     return_value=[
                         DowcResponse(
-                            drc_url=document["url"],
+                            drc_url=self.document["url"],
                             magic_url="",
                             purpose="write",
                             uuid=uuid4(),
-                            unversioned_url=document["url"],
+                            unversioned_url=self.document["url"],
                         )
                     ],
                 ):
                     with patch(
                         "zac.core.api.views.fetch_document_audit_trail",
-                        return_value=[audit_trail],
+                        return_value=[factory(AuditTrailData, self.audit_trail)],
                     ):
                         response = self.client.patch(
                             self.endpoint, post_data, format="multipart"
@@ -622,6 +518,38 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
 @requests_mock.Mocker()
 class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
     endpoint = reverse_lazy("zaak-document")
+    zaaktype = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+        identificatie="ZT1",
+        catalogus=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+        omschrijving="ZT1",
+    )
+    informatieobjecttype = generate_oas_component(
+        "ztc",
+        "schemas/InformatieObjectType",
+        url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+    )
+    informatieobjecttype2 = generate_oas_component(
+        "ztc",
+        "schemas/InformatieObjectType",
+        url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1c",
+    )
+    ziot = generate_oas_component(
+        "ztc",
+        "schemas/ZaakTypeInformatieObjectType",
+        zaaktype=zaaktype["url"],
+        informatieobjecttype=informatieobjecttype["url"],
+        volgnummer=1,
+    )
+    ziot2 = generate_oas_component(
+        "ztc",
+        "schemas/ZaakTypeInformatieObjectType",
+        zaaktype=zaaktype["url"],
+        informatieobjecttype=informatieobjecttype2["url"],
+        volgnummer=2,
+    )
 
     def setUp(self):
         super().setUp()
@@ -646,39 +574,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        self.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
-            omschrijving="ZT1",
-        )
-        self.informatieobjecttype = generate_oas_component(
-            "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
-        )
-        self.informatieobjecttype2 = generate_oas_component(
-            "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1c",
-        )
-        ziot = generate_oas_component(
-            "ztc",
-            "schemas/ZaakTypeInformatieObjectType",
-            zaaktype=self.zaaktype["url"],
-            informatieobjecttype=self.informatieobjecttype["url"],
-            volgnummer=1,
-        )
-        ziot2 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakTypeInformatieObjectType",
-            zaaktype=self.zaaktype["url"],
-            informatieobjecttype=self.informatieobjecttype2["url"],
-            volgnummer=2,
-        )
-
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json={
@@ -701,7 +596,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "count": 1,
                 "next": None,
                 "previous": None,
-                "results": [ziot, ziot2],
+                "results": [self.ziot, self.ziot2],
             },
         )
 

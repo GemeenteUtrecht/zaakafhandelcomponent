@@ -30,41 +30,39 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30
     "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype", return_value=[]
 )
 class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
+    )
+    zaaktype = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+        identificatie="ZT1",
+        catalogus=CATALOGUS_URL,
+        vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        omschrijving="ZT1",
+    )
+    eigenschap = generate_oas_component(
+        "ztc",
+        "schemas/Eigenschap",
+        zaaktype=zaaktype["url"],
+        naam="some-property",
+        specificatie={
+            "groep": "dummy",
+            "formaat": "tekst",
+            "lengte": "3",
+            "kardinaliteit": "1",
+            "waardenverzameling": [],
+        },
+    )
+    endpoint = reverse("eigenschappen")
+
     def setUp(self):
         super().setUp()
-
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        self.catalogus = generate_oas_component(
-            "ztc",
-            "schemas/Catalogus",
-            url=CATALOGUS_URL,
-            domein="DOME",
-        )
-
-        self.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            omschrijving="ZT1",
-        )
-        self.eigenschap = generate_oas_component(
-            "ztc",
-            "schemas/Eigenschap",
-            zaaktype=self.zaaktype["url"],
-            naam="some-property",
-            specificatie={
-                "groep": "dummy",
-                "formaat": "tekst",
-                "lengte": "3",
-                "kardinaliteit": "1",
-                "waardenverzameling": [],
-            },
-        )
-
-        self.endpoint = reverse("eigenschappen")
 
     def test_not_authenticated(self, m, *mocks):
         response = self.client.get(self.endpoint)
@@ -200,16 +198,15 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
 
 class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
+    endpoint = reverse("eigenschappen")
+
     def setUp(self):
         super().setUp()
 
         # ensure that we have a user with all permissions
         self.user = SuperUserFactory.create()
         self.client.force_authenticate(user=self.user)
-
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-
-        self.endpoint = reverse("eigenschappen")
 
     @patch(
         "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",

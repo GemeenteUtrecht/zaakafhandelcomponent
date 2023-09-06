@@ -9,7 +9,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ...constants import PermissionObjectTypeChoices
 from ...models import AuthorizationProfile, BlueprintPermission
@@ -55,6 +55,31 @@ class AuthProfilePermissionsTests(APITestCase):
 
 
 class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
+    )
+    zaaktype1 = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        identificatie="ZT1",
+        catalogus=CATALOGUS_URL,
+        omschrijving="ZT1",
+        informatieobjecttypen=[],
+    )
+    zaaktype2 = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/cb7ae15e-6260-4373-b6dc-e334fedb8be9",
+        identificatie="ZT2",
+        catalogus=CATALOGUS_URL,
+        omschrijving="ZT2",
+        informatieobjecttypen=[],
+    )
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -229,34 +254,11 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
     def test_create_auth_profile(self, m):
         # setup mocks
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        catalogus = generate_oas_component(
-            "ztc",
-            "schemas/Catalogus",
-            url=CATALOGUS_URL,
-            domein="DOME",
-        )
-        zaaktype1 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            omschrijving="ZT1",
-            informatieobjecttypen=[],
-        )
-        zaaktype2 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/cb7ae15e-6260-4373-b6dc-e334fedb8be9",
-            identificatie="ZT2",
-            catalogus=CATALOGUS_URL,
-            omschrijving="ZT2",
-            informatieobjecttypen=[],
-        )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
-            json=paginated_response([zaaktype1, zaaktype2]),
+            json=paginated_response([self.zaaktype1, self.zaaktype2]),
         )
+        mock_resource_get(m, self.catalogus)
 
         role1, role2 = RoleFactory.create_batch(2)
         url = reverse_lazy("authorizationprofile-list")
@@ -268,12 +270,12 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "zaaktypeOmschrijving": "ZT1",
                             "maxVa": "zeer_geheim",
                         },
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "zaaktypeOmschrijving": "ZT2",
                             "maxVa": "openbaar",
                         },
@@ -284,7 +286,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "objectType": PermissionObjectTypeChoices.document,
                     "policies": [
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "iotypeOmschrijving": "DT1",
                             "maxVa": "openbaar",
                         }
@@ -341,28 +343,11 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
     def test_create_auth_profile_reuse_existing_permissions(self, m):
         # setup mocks
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        zaaktype1 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            omschrijving="ZT1",
-            informatieobjecttypen=[],
-        )
-        zaaktype2 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/cb7ae15e-6260-4373-b6dc-e334fedb8be9",
-            identificatie="ZT2",
-            catalogus=CATALOGUS_URL,
-            omschrijving="ZT2",
-            informatieobjecttypen=[],
-        )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
-            json=paginated_response([zaaktype1, zaaktype2]),
+            json=paginated_response([self.zaaktype1, self.zaaktype2]),
         )
+        mock_resource_get(m, self.catalogus)
 
         role1, role2 = RoleFactory.create_batch(2)
         blueprint_permission1 = BlueprintPermissionFactory.create(
@@ -401,12 +386,12 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "zaaktypeOmschrijving": "ZT1",
                             "maxVa": "zeer_geheim",
                         },
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "zaaktypeOmschrijving": "ZT2",
                             "maxVa": "openbaar",
                         },
@@ -417,7 +402,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "objectType": PermissionObjectTypeChoices.document,
                     "policies": [
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "iotypeOmschrijving": "DT1",
                             "maxVa": "openbaar",
                         }
@@ -457,7 +442,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "zaaktypeOmschrijving": "ZT1",
                         },
                     ],
@@ -480,28 +465,11 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
     def test_update_auth_profile(self, m):
         # setup mocks
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        zaaktype1 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            omschrijving="ZT1",
-            informatieobjecttypen=[],
-        )
-        zaaktype2 = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/cb7ae15e-6260-4373-b6dc-e334fedb8be9",
-            identificatie="ZT2",
-            catalogus=CATALOGUS_URL,
-            omschrijving="ZT2",
-            informatieobjecttypen=[],
-        )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
-            json=paginated_response([zaaktype1, zaaktype2]),
+            json=paginated_response([self.zaaktype1, self.zaaktype2]),
         )
+        mock_resource_get(m, self.catalogus)
 
         role = RoleFactory.create()
         blueprint_permission = BlueprintPermissionFactory.create(
@@ -524,7 +492,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "objectType": PermissionObjectTypeChoices.zaak,
                     "policies": [
                         {
-                            "catalogus": "DOME",
+                            "catalogus": CATALOGUS_URL,
                             "zaaktypeOmschrijving": "ZT2",
                             "maxVa": "openbaar",
                         },

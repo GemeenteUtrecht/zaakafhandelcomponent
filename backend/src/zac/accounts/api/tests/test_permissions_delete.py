@@ -34,21 +34,17 @@ IDENTIFICATIE = "ZAAK-001"
 
 @requests_mock.Mocker()
 class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
-    def setUp(self) -> None:
-        super().setUp()
-
-        self.handler, self.user = UserFactory.create_batch(2)
-        self.client.force_authenticate(self.handler)
-
+    @classmethod
+    def setUpTestData(cls):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        self.catalogus = generate_oas_component(
+        cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
             url=CATALOGUS_URL,
             domein="DOME",
         )
-        self.zaaktype = generate_oas_component(
+        cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
@@ -56,22 +52,27 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
             catalogus=CATALOGUS_URL,
             omschrijving="ZT1",
         )
-        self.zaak = generate_oas_component(
+        cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=ZAAK_URL,
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
-            zaaktype=self.zaaktype["url"],
+            zaaktype=cls.zaaktype["url"],
         )
+        cls.handler, cls.user = UserFactory.create_batch(2)
         atomic_permission = AtomicPermissionFactory.create(
             permission=zaakproces_send_message.name, object_url=ZAAK_URL
         )
         user_atomic_permission = UserAtomicPermissionFactory.create(
-            user=self.user,
+            user=cls.user,
             atomic_permission=atomic_permission,
         )
-        self.endpoint = reverse("accesses-detail", args=[user_atomic_permission.id])
+        cls.endpoint = reverse("accesses-detail", args=[user_atomic_permission.id])
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.client.force_authenticate(self.handler)
 
     def test_no_permissions(self, m):
         # mock ZTC and ZRC data
@@ -220,26 +221,25 @@ class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
 
 
 class DeleteAccessAPITests(APITransactionTestCase):
+    zaak = generate_oas_component(
+        "zrc",
+        "schemas/Zaak",
+        url=ZAAK_URL,
+        bronorganisatie=BRONORGANISATIE,
+        identificatie=IDENTIFICATIE,
+        zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+    )
+
     def setUp(self) -> None:
         super().setUp()
 
         self.handler = SuperUserFactory.create()
         self.user = UserFactory.create()
-
         site = Site.objects.get_current()
         site.domain = "testserver"
         site.save()
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        self.zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=ZAAK_URL,
-            bronorganisatie=BRONORGANISATIE,
-            identificatie=IDENTIFICATIE,
-            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-        )
-
         self.client.force_authenticate(self.handler)
 
     @requests_mock.Mocker()
