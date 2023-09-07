@@ -209,4 +209,14 @@ export class ReviewRequestsService {
     const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${requestUuid}/detail`);
     return this.http.Patch<ReviewRequestDetails>(endpoint, formData);
   }
+
+  /**
+   * Remind review request.
+   * @param {string} requestUuid
+   */
+  remindReviewRequest(requestUuid: string) {
+    const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${requestUuid}/reminder`);
+    return this.http.Post<any>(endpoint);
+  }
+
 }
