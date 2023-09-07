@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 import {FieldConfiguration, FieldsetConfiguration, SnackbarService} from '@gu/components';
 import {
   Checklist,
@@ -17,6 +17,7 @@ import {KetenProcessenService} from '../keten-processen/keten-processen.service'
 import {FormGroup} from '@angular/forms';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FormComponent} from '@gu/components';
+import { logger } from 'codelyzer/util/logger';
 
 
 /**
@@ -33,16 +34,30 @@ import {FormComponent} from '@gu/components';
 })
 export class ChecklistComponent implements OnInit, OnChanges {
   @ViewChild(FormComponent) formComponent: FormComponent;
+
   /** @type {string} Input to identify the organisation. */
   @Input() zaak: Zaak = null;
 
   @Output() isChecklistAvailable: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  /**
+   * Show message when checklist has unsaved changes
+   * @param $event
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    if (this.isInEditMode) {
+      $event.preventDefault();
+      $event.returnValue = '';
+    }
+  }
 
   readonly errorMessage = 'Er is een fout opgetreden bij het laden van de takenlijst.'
 
   /** @type {boolean} Whether the API is loading. */
   isLoading = false;
   isLocking = false;
+  isInEditMode = false;
 
   /** @type {boolean} Whether the form is submitting to the API. */
   isSubmitting = false;
@@ -297,6 +312,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
    */
   onClickEditButton(formIsInEditMode) {
     this.isLocking = true;
+    this.isInEditMode = !formIsInEditMode;
     if (!formIsInEditMode) {
       this.isLocking = true
       this.checklistService.lockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
