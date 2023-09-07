@@ -3,15 +3,15 @@
   <ng-container *ngIf="taskContextData.task.name.split(':')[0] === 'Open bijdragezaak'; else default">
     <gu-message type="primary" *ngIf="target === '_blank'" class='d-block mb-4'>
       <p>De bijdragezaak is geopend in een nieuw pop-up venster. Zorg er voor dat uw browser pop-up blockers uitgeschakeld zijn.</p>
-
-      <p class="p--marginsmall"><strong>Is de bijdragezaak afgerond? Klik dan op de knop hieronder om door te gaan in het proces.</strong></p>
+      <p class="p--marginsmall"><strong>Rond het routingsproces af voor je verder kan in het hoofdproces.</strong></p>
+      <p> Klik op de knop hieronder om door te gaan in het proces.</p>
     </gu-message>
     <div class="d-flex justify-content-start">
       <button gu-button
               (click)="submitForm()"
               [disabled]="isSubmitting"
               [loading]="isSubmitting">
-        Taak afronden
+        Routingsproces is afgerond
       </button>
     </div>
   </ng-container>
