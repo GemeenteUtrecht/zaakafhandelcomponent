@@ -143,14 +143,13 @@ more than one checklisttype. Currently, the checklisttype objecttype is defined 
         }
     }
 
-.. _ZaakTypeAttribute:
+.. _OudBehandelaren:
 
-ZaakTypeAttribute
------------------
+OudBehandelaren
+---------------
 
-A ``ZaakTypeAttribute`` objecttype allows for a flexible ``enum`` object related to a ``ZaakType.eigenschap``.
-As such, the ZAC will try to corroborate the value of the ``ZaakType.eigenschap`` to a value in the ``ZaakTypeAttribute``.
-The current implementation of the ``ZaakTypeAttribute`` objecttype:
+A ``OudBehandelaren`` objecttype stores data on historical ZAAK "behandelaren" for audit reasons.
+The current implementation of the ``OudBehandelaren`` objecttype:
 
 .. code-block:: json
 

@@ -174,7 +174,7 @@ to create custom add-on features such as:
 
 * :ref:`Checklist`,
 * :ref:`ChecklistType`, 
-* :ref:`Oudbehandelaar`,
+* :ref:`OudBehandelaren`,
 * :ref:`StartCamundaProcessForm`.
 * :ref:`ZaakTypeAttribute`,
 
