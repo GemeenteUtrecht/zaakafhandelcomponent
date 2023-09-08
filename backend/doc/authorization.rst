@@ -96,7 +96,7 @@ The new blueprints can be easily defined for all kinds of objects and their prop
       python src/manage.py add_blueprint_permissions_for_zaaktypen
 
 Roles (not to be confused with ROL in Open Zaak)
-^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Blueprint permissions link the shape of the object (blueprint) with the set of operations.
 Roles represent sets of operations. It is possible to include multiple (or all) operations in one role.
