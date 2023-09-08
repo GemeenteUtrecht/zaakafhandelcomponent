@@ -59,8 +59,9 @@ use NLX if you have an outway running on your machine.
 Elastic Search
 --------------
 
-The Zaak-list page requires Elastic Search 7.9 to function. You can either run ES
-on the host machine, or make use of the docker-compose service:
+Elasticsearch is for performance reasons the dominant read-only database for many different features
+mostly related to filtering based on some EIGENSCHAP value or OBJECT value, etc. The ZAC requires
+Elastic Search 7.9 to function. You can either run ES on the host machine or make use of the docker-compose service:
 
 .. code-block:: bash
 
@@ -68,16 +69,13 @@ on the host machine, or make use of the docker-compose service:
 
 Give the service some time to come up.
 
-Now, with all the services correctly configured and ES running, you can index the zaken:
+Now, with all the services correctly configured and ES running, you can index the ZAAKs, OBJECTs and INFORMATIEOBJECTs:
 
 .. code-block:: bash
 
-    (env)$ python src/manage.py index_zaken
+    (env)$ python src/manage.py index_all
 
-Indexing takes about 1-2 minutes for about 5000 zaken.
+Indexing takes some time. You can see how far along it is in the logs.
 
-Note that your dev-environment does not receive callbacks if zaken are created or
-mutated, so refreshing the zaken list will not reflect the up-to-date state. Currently,
-the best effort is to manually re-index.
-
-We're working on improving the dev-tooling to make this faster.
+Note that your dev-environment does not receive notifications (callbacks) from Open Notifications if they are sent 
+so refreshing the zaken list will not reflect the up-to-date state. Reindex when required.

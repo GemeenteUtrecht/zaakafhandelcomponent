@@ -40,6 +40,12 @@ implemented by the ZAC:
     - ``kownslDocuments``: a (JSON) list of document urls, e.g.: ``["https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
     - ``emailNotificationList``: a JSON of usernames or groupnames with an email notification flag (boolean).
 
+- ``zac:documentSelectie``: presents a form to the end user to select documents for the camunda process.
+
+  Upon succesful submission, the following process variables are set:
+    
+    - ``documenten``: a (JSON) list of document urls, e.g.: ``["https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+
 - ``zac:doRedirect``: grabs the ``redirectTo`` process variable, and redirects the user
   to this location. A ``?state`` parameter is added for the receiving application, which
   is consumed when the external application redirects the user back to the ZAC.
@@ -52,11 +58,16 @@ implemented by the ZAC:
   user will not see a window that allows them to finish the task. This is used
   in the current implementation for opening a related ZAAK from the main ZAAK.
 
-- ``zac:documentSelectie``: presents a form to the end user to select documents for the camunda process.
+- ``zac:startProcessForm``: grabs the URL-reference to the ZAAK in Open Zaak from 
+  the camunda process and uses it to fetch the appropriate form from the Objects API
+  that holds the data template required to be filled in to start the camunda process.
 
-  Upon succesful submission, the following process variables are set:
-    
-    - ``documenten``: a (JSON) list of document urls, e.g.: ``["https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid1>", "https://drc.cg-intern.utrecht.nl/api/v1/enkelvoudiginformatieobjecten/<uuid2>"]``.
+- ``zac:zetResultaat``: this forms allows a number of checks to be done before a RESULTAAT is set on a ZAAK.
+  URL-reference to the ZAAK in Open Zaak is grabbed and then the form feeds back all related
+  open activities, checklist questions, camunda tasks, review requests and open documents to 
+  the user. It also allows the user to select what the RESULTAAT should be based of the RESULTAATTYPEs
+  related to the ZAAK.
+
 
 Form definition
 ---------------
@@ -65,8 +76,3 @@ Camunda allows a user task to contain a simple form definition with primitive fi
 These fields are implemented in the ZAC, and if such a form definition is present,
 the ZAC renders a form for the user to fill out. Upon submission, the user task receives
 the field values as process variables and the task is marked as completed.
-
-Open Forms integration
-======================
-
-WIP

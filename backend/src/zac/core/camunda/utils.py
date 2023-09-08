@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 # FIXME: cleanup
 FORM_KEYS = {
     "zac:documentSelectie": True,
-    "zac:gebruikerSelectie": True,
     "zac:configureAdviceRequest": True,
     "zac:configureApprovalRequest": True,
     "zac:startProcessForm": True,
