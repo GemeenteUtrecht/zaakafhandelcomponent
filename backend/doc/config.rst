@@ -62,23 +62,12 @@ to **Kadasterconfiguratie** in the admin and verify/fill out the fields.
 Kownsl
 ------
 
-`Kownsl`_ manage advices and approvals. Add a **Service** for it:
+`Kownsl`_ manages advices and approvals. Add a **Service** for it:
 
 - Type: ORC (Overige)
 - Authorization type: ZGW client_id + secret
 - Client id: ``some-kownsl-id``
 - Client secret: ``some-kownsl-secret``
-
-.. Open Forms
-.. ----------
-
-.. Open Forms is a form builder engine, for which the ZAC has some basic support at the
-.. moment. Add a **Service** for it:
-
-.. - Type: ORC (Overige)
-.. - Authorization type: API Key
-.. - Header key: ``Authorization``
-.. - Header value: ``Token <insert open forms token>``
 
 DoWC
 ----
@@ -100,6 +89,9 @@ DoWC
 Object and Objecttypes
 ----------------------
 
+The object(types) APIs are not only used for physical objects related to ZAAKs but also to store meta-data
+of ZAAKs for which Open Zaak does not accomodate, e.g. old case managers, checklists, ZAAKTYPE-attributes and
+camunda forms related to kickstarting a camunda process related to a ZAAK.
 In order to search for objects and relate objects to a zaak, an object and objecttypes API have to be configured.
 One needs to add a **Service** for each of them:
 
@@ -182,8 +174,9 @@ to create custom add-on features such as:
 
 * :ref:`Checklist`,
 * :ref:`ChecklistType`, 
-* :ref:`ZaakTypeAttribute`,
+* :ref:`OudBehandelaren`,
 * :ref:`StartCamundaProcessForm`.
+* :ref:`ZaakTypeAttribute`,
 
 After configuring the objects and objecttypes services, one should configure the meta objecttypes
 as well by creating the mapping in the `metaobjecttypesconfig`_.

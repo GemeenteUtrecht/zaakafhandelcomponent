@@ -12,8 +12,8 @@ Permission types
 ----------------
 Each permission has the object type the permission relates to. For now three object types are supported:
 
-* zaak (case)
-* document
+* ZAAK (case)
+* INFORMATIEOBJECT (document)
 
 Each object type has its required shape for a blueprint permission.
 It is explained in the details in :ref:`authorization_blueprints`.
@@ -21,27 +21,38 @@ It is explained in the details in :ref:`authorization_blueprints`.
 Each permission provides the right to perform one of the following types of operations:
 
 * zaak permissions:
-    * ``zaken:inzien`` - to see the case details. It's the most used permission in the ZAC
-    * ``zaken:wijzigen`` - to modify the case, for example, to change the confidentiality level
-    * ``zaakproces:usertasks-uitvoeren`` - to perform Camunda tasks
-    * ``zaakproces:send-bpmn-message`` - to send messages in the Camunda process
-    * ``zaken:add-documents`` - to add documents to the case
-    * ``zaken:nieuwe-relaties-toevoegen`` - to add new relations to the case
-    * ``zaken:toegang-aanvragen`` - to request access to the case
-    * ``zaken:toegang-verlenen`` - to manage access to the case
-    * ``activiteiten:inzien`` - to read activities of the case
-    * ``activiteiten:schrijven`` - to add activities to the case
+    * ``activiteiten:inzien`` - to read activities of the ZAAK.
+    * ``activiteiten:schrijven`` - to add activities to the ZAAK.
+    * ``checklist:inzien`` - to view a CHECKLIST of the ZAAK.
+    * ``checklist:schrijven`` - to edit a CHECKLIST of the ZAAK.
+    * ``checklisttypes:inzien`` - to view the CHECKLISTTYPE of the ZAAK.
+    * ``checklisttypes:schrijven`` - to edit the CHECKLISTTYPE of the ZAAK.
+    * ``zaken:aanmaken`` - to create the ZAAK.
+    * ``zaken:add-documents`` - to add INFORMATIEOBJECTs to the ZAAK.
+    * ``zaken:afsluiten`` - to end the ZAAK.
+    * ``zaken:create-status`` - to set a STATUS on the ZAAK.
+    * ``zaken:geforceerd-bijwerken`` - to force edit the ZAAK (after setting a RESULTAAT).
+    * ``zaken:inzien`` - to see the ZAAK details.
+    * ``zaken:lijst-documenten`` - to view the list of INFORMATIEOBJECTs related to the ZAAK.
+    * ``zaken:nieuwe-relaties-toevoegen`` - to add new relations to the ZAAK.
+    * ``zaken:set-result`` - to set a RESULTAAT on a ZAAK.
+    * ``zaken:toegang-aanvragen`` - to request access to the ZAAK.
+    * ``zaken:toegang-verlenen`` - to manage access to the ZAAK.
+    * ``zaken:wijzigen`` - to modify the ZAAK for example to change the confidentiality level.
+    * ``zaakproces:starten`` - to start a process related to the ZAAK in camunda.
+    * ``zaakproces:usertasks-uitvoeren`` - to perform Camunda tasks.
+    * ``zaakproces:send-bpmn-message`` - to send messages in the Camunda process.
 
 * document permissions:
-    * ``zaken:download-documents`` - to see the metadata and content of the document
-    * ``zaken:update-documents`` - to update the content of the document
+    * ``zaken:download-documents`` - to see the metadata and content of the document.
+    * ``zaken:update-documents`` - to update the content of the document.
 
 The permissions used only in the old version of the ZAC:
 
 * zaak permissions:
-    * ``zaken:afsluiten`` - to close the case
-    * ``zaken:set-result`` - to set result to the case
-    * ``zaken:create-status`` - to add status to the case
+    * ``zaken:afsluiten`` - to close the ZAAK.
+    * ``zaken:set-result`` - to set result to the ZAAK.
+    * ``zaken:create-status`` - to add status to the ZAAK.
 
 
 They can be grouped into roles for blueprint permissions.
@@ -54,38 +65,38 @@ Blueprint permissions
 
 The permissions in the ZAC can be divided into two groups:
 
-* blueprint permissions
+* blueprint permissions (based on policies)
 * atomic permissions
 
 The blueprint permission allows a user to perform a set of operations on the defined subset of the objects.
 This is the main type of the permissions. Blueprint permissions are defined by functional managers
 in the admin interface of the ZAC.
 
-The user interface to manage them in the app is **WIP**.
+The user interface is only available to those with the right permissions (i.e. staff members or superusers).
 
-The subset of the objects (or "blueprint") is defined based on object properties and unique for every object type.
-For now, three blueprints are supported:
+The subset of the blueprint objects (or "POLICY") is defined based on object properties and unique for every object type.
+For now, two blueprints POLICIES are supported:
 
 * for zaak:
-    * zaaktype (``catalogus`` and ``omschrijving``)
+    * zaaktype (``CATALOGUS`` (write: ``URL`` or read: ``domein``) and ``omschrijving``)
     * maximum confidential level (``vertrouwelijkheidaanduiding``)
 
 * for document:
-    * informatieobjecttype (``catalogus`` and ``omschrijving``)
+    * informatieobjecttype (``CATALOGUS`` (write: ``URL`` or read: ``domein``) and ``omschrijving``)
     * maximum confidential level (``vertrouwelijkheidaanduiding``)
 
 The new blueprints can be easily defined for all kinds of objects and their properties.
 
 .. note::
 
-   If you want to quickly create permissions for all case types you can run the following command:
+   If you want to quickly create permissions for all ZAAKTYPEs you can run the following command:
 
    .. code:: shell
 
       python src/manage.py add_blueprint_permissions_for_zaaktypen
 
-Roles
-^^^^^
+Roles (not to be confused with ROL in Open Zaak)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Blueprint permissions link the shape of the object (blueprint) with the set of operations.
 Roles represent sets of operations. It is possible to include multiple (or all) operations in one role.
@@ -94,7 +105,7 @@ Using roles simplifies re-using the same permissions for different blueprints.
 Example
 ^^^^^^^
 
-For example, we want to create a permission to read all cases with the case type "Beleid opstellen".
+For example, we want to create a permission to read all ZAAKs with the ZAAKTYPEs "Beleid opstellen".
 
 First we need to define a role.
 In the admin page click on the "Toevoegen" button for "Roles":
@@ -136,7 +147,7 @@ Like blueprint permissions authorization profiles are also managed by functional
 Example
 ^^^^^^^
 
-In the previous subsection, we've created a blueprint permission to read cases with the case type
+In the previous subsection, we've created a blueprint permission to read ZAAKs with the ZAAKTYPE
 "Beleid opstellen". Now we want to grant this permission to the user called John.
 
 In the admin interface click on the "Toevoegen" button for "Autorisatieprofielen":
@@ -164,23 +175,23 @@ Atomic permissions
 ------------------
 
 Sometimes users should have extra rights for particular objects. For example, if the user should have rights
-to read only particular cases of a certain case type then atomic permissions can be used.
+to read only particular ZAAKs of a certain ZAAKTYPE then atomic permissions can be used.
 
 Unlike blueprint permissions there are several sources of the atomic permissions for the users.
 
-* The user is a **behandelaar** of the case. When this role is created (and the notification is received
-  by the ZAC) the user receives a permission to read the case automatically.
-* The user is required to be an **adviser** or **approver** of the case. When the review request is created
-  the users mentioned there receive a permission to read the case and to perform Camunda tasks automatically.
-* The user is assigned to a case **activity**. When the user is assigned to the activity they
-  receive permissions to read the case and to read and update activities automatically.
-* The user **requests access** to the particular case and this request was approved.
+* The user is a **behandelaar** of the ZAAK. When this role is created (and the notification is received
+  by the ZAC) the user receives a permission to read the ZAAK automatically.
+* The user is required to be an **adviser** or **approver** of the ZAAK. When the review request is created
+  the users mentioned there receive a permission to read the ZAAK and to perform Camunda tasks automatically.
+* The user is assigned to a ZAAK **activity**. When the user is assigned to the activity they
+  receive permissions to read the ZAAK and to read and update activities automatically.
+* The user **requests access** to the particular ZAAK and this request was approved.
 * The functional manager grants permission to the user.
 
 Unlike blueprint permissions atomic permissions don't use roles, since a part of them is created automatically
 and can't rely on user-defined roles.
 
-The display of all the users and their atomic permissions for the case is available in the ZAC user interface.
+The display of all the users and their atomic permissions for the ZAAK is available in the ZAC user interface.
 
 .. image:: _assets/authorization_atomic_permissions_ui.png
     :alt: Atomic permissions in the UI
@@ -198,15 +209,14 @@ The display of all the users and their atomic permissions for the case is availa
 Example
 ^^^^^^^
 
-For example, a user John has a blueprint permission to read all the cases of the "Beleid opstellen" case
-type. But one of these cases has a related case with another case type ("Bestuurlijke besluitvorming").
-John should not see all "Bestuurlijke besluitvorming" cases, but he can be granted an
-atomic permission for the particular case.
+For example, a user John has a blueprint permission to read all the ZAAKs of the "Beleid opstellen" ZAAKTYPE. But one of these ZAAKs has a related ZAAK with another ZAAKTYPE ("Bestuurlijke besluitvorming").
+John should not see all "Bestuurlijke besluitvorming" ZAAKs, but he can be granted an
+atomic permission for the particular ZAAK.
 
 To grant a permission an admin page can be used, but it's easier to do it in the app itself.
 
-If you have a permission to manage access to cases, go to the page of the case with the
-"Bestuurlijke besluitvorming" case type. In the top right corner of the page click on "Toegang verlenen"
+If you have a permission to manage access to ZAAKs, go to the page of the ZAAK with the
+"Bestuurlijke besluitvorming" ZAAKTYPE. In the top right corner of the page click on "Toegang verlenen"
 button and select John as the user to who you grant access. After clicking on "Versturen" button the
 atomic permission is created.
 
