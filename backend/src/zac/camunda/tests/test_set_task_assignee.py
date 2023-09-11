@@ -133,15 +133,18 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=cls.catalogus["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
@@ -221,7 +224,7 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -253,13 +256,14 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
         self.addCleanup(self.patch_get_task.stop)
 
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         user = UserFactory.create()
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

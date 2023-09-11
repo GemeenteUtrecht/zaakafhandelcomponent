@@ -137,8 +137,9 @@ class AuthorizationProfile(models.Model):
         _("name"),
         max_length=255,
         help_text=_(
-            "Use an easily recognizable name that maps to the function of users."
+            "Use an easily recognizable name that maps to the function of users that's unique."
         ),
+        unique=True,
     )
     blueprint_permissions = models.ManyToManyField(
         "BlueprintPermission",
@@ -287,6 +288,7 @@ class UserAtomicPermission(models.Model):
 
 
 class BlueprintPermission(models.Model):
+    hashkey = models.CharField(max_length=32, blank=True)
     object_type = models.CharField(
         _("object type"),
         max_length=50,
@@ -310,7 +312,7 @@ class BlueprintPermission(models.Model):
         verbose_name = _("blueprint permission")
         verbose_name_plural = _("blueprint permissions")
         ordering = ("role", "object_type", "policy__zaaktype_omschrijving")
-        unique_together = ("role", "policy")
+        unique_together = ("role", "policy", "object_type")
 
     def __str__(self):
         if not self.policy:
@@ -333,6 +335,12 @@ class BlueprintPermission(models.Model):
             blueprint = blueprint_class(data=self.policy)
             if not blueprint.is_valid():
                 raise ValidationError({"policy": get_error_list(blueprint.errors)})
+
+    def save(self, *args, **kwargs):
+        self.hashkey = str(
+            hash(f"{self.object_type}{self.role.name}{str(self.policy)}")
+        )
+        return super().save(*args, **kwargs)
 
     def has_access(self, obj, user=None, permission=None) -> bool:
         blueprint_class = self.get_blueprint_class()

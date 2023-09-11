@@ -2,7 +2,11 @@ from unittest.mock import MagicMock
 
 from django.test import TestCase
 
+import requests_mock
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
@@ -15,6 +19,7 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
 
 from ..documents import ZaakDocument, ZaakTypeDocument
 from ..searches import count_by_zaaktype
@@ -22,13 +27,23 @@ from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
+@requests_mock.Mocker()
 class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
     def setUp(self) -> None:
         super().setUp()
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        self.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype1",
             identificatie="zaaktype1",
@@ -70,6 +85,7 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         self.zaak_document1.save()
         self.zaaktype_document2 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype2",
             identificatie="zaaktype2",
@@ -90,7 +106,7 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         self.zaak_document2.save()
         self.refresh_index()
 
-    def test_count_by_zaaktype_no_permissions(self):
+    def test_count_by_zaaktype_no_permissions(self, m):
         user = UserFactory.create()
         request = MagicMock()
         request.user = user
@@ -98,7 +114,9 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         results = count_by_zaaktype(request=request)
         self.assertEqual(results, [])
 
-    def test_count_by_zaaktype_blueprint_permissions(self):
+    def test_count_by_zaaktype_blueprint_permissions(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         user = UserFactory.create()
         request = MagicMock()
         request.user = user
@@ -110,7 +128,7 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -130,7 +148,7 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document2.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": self.zaaktype_document2.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -144,7 +162,9 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         self.assertEqual(results[0].doc_count, 2)
         self.assertTrue(len(results[0].child.buckets) == 2)
 
-    def test_count_by_zaaktype_atomic_permissions_for_zaak(self):
+    def test_count_by_zaaktype_atomic_permissions_for_zaak(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         user = UserFactory.create()
         request = MagicMock()
         request.user = user
@@ -181,7 +201,9 @@ class CountByZaakTypeTests(ClearCachesMixin, ESMixin, TestCase):
         self.assertEqual(results[0].doc_count, 2)
         self.assertTrue(len(results[0].child.buckets) == 2)
 
-    def test_count_by_zaaktype_superuser(self):
+    def test_count_by_zaaktype_superuser(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         user = SuperUserFactory.create()
         request = MagicMock()
         request.user = user

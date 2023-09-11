@@ -34,6 +34,7 @@ from zgw.models.zrc import Zaak
 
 from .utils import (
     CATALOGI_ROOT,
+    CATALOGUS_RESPONSE,
     DRC_ROOT,
     INFORMATIEOBJECT,
     INFORMATIEOBJECT_RESPONSE,
@@ -108,6 +109,7 @@ class ZaakInformatieObjectChangedTests(
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(rm, DRC_ROOT, "drc")
         mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, INFORMATIEOBJECT_RESPONSE)
         mock_resource_get(rm, INFORMATIEOBJECTTYPE_RESPONSE)
@@ -172,6 +174,7 @@ class ZaakInformatieObjectChangedTests(
                     "zaaktype": {
                         "url": ZAAKTYPE_RESPONSE["url"],
                         "catalogus": ZAAKTYPE_RESPONSE["catalogus"],
+                        "catalogus_domein": CATALOGUS_RESPONSE["domein"],
                         "omschrijving": ZAAKTYPE_RESPONSE["omschrijving"],
                         "identificatie": ZAAKTYPE_RESPONSE["identificatie"],
                     },

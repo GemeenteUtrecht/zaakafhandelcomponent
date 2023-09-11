@@ -11,7 +11,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.tests.utils import paginated_response
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"

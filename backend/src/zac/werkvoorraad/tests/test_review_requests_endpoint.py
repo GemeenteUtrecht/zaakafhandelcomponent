@@ -18,7 +18,9 @@ from zac.contrib.kownsl.tests.utils import (
 )
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
+
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -48,8 +50,11 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create()
         cls.group_1 = GroupFactory.create()
         cls.group_2 = GroupFactory.create()
-        cls.catalogus = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -57,7 +62,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
             omschrijving="ZT1",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus["url"],
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -85,6 +90,8 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
 
     def test_workstack_review_requests_endpoint_no_zaak(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         self.refresh_index()
 
         m.get(
@@ -136,7 +143,8 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
 
     def test_workstack_review_requests_endpoint_found_zaak(self, m):
         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
         zaak_document.save()
@@ -183,6 +191,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                             "zaaktype": {
                                 "url": self.zaaktype["url"],
                                 "catalogus": self.zaaktype["catalogus"],
+                                "catalogusDomein": self.catalogus["domein"],
                                 "omschrijving": self.zaaktype["omschrijving"],
                                 "identificatie": self.zaaktype["identificatie"],
                             },

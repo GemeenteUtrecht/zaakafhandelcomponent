@@ -31,6 +31,7 @@ from zgw.models.zrc import Zaak
 
 from .utils import (
     CATALOGI_ROOT,
+    CATALOGUS_RESPONSE,
     OBJECT,
     OBJECT_RESPONSE,
     OBJECTS_ROOT,
@@ -107,6 +108,7 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(rm, OBJECTS_ROOT, "objects")
         mock_service_oas_get(rm, OBJECTTYPES_ROOT, "objecttypes")
         mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, OBJECT_RESPONSE)
         rm.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[OBJECTTYPE_RESPONSE])
@@ -171,6 +173,7 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "zaaktype": {
                         "url": ZAAKTYPE_RESPONSE["url"],
                         "catalogus": ZAAKTYPE_RESPONSE["catalogus"],
+                        "catalogus_domein": CATALOGUS_RESPONSE["domein"],
                         "omschrijving": ZAAKTYPE_RESPONSE["omschrijving"],
                         "identificatie": ZAAKTYPE_RESPONSE["identificatie"],
                     },

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from io import StringIO
 from unittest.mock import patch
 
@@ -13,17 +14,40 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.datastructures import VA_ORDER
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..documents import ZaakDocument
 from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogi/dfb14eb7-9731-4d22-95c2-dff4f33ef36d"
 
 
 @requests_mock.Mocker()
 class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
+    )
+    zaaktype = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+        catalogus=catalogus["url"],
+    )
+    zaak = generate_oas_component(
+        "zrc",
+        "schemas/Zaak",
+        url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+        zaaktype=zaaktype["url"],
+        bronorganisatie="002220647",
+        identificatie="ZAAK1",
+        vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+    )
+
     def setUp(self):
         super().setUp()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
@@ -33,34 +57,24 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-        )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=zaaktype["url"],
-            bronorganisatie="002220647",
-            identificatie="ZAAK1",
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-        )
-        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         m.get(
             f"{ZAKEN_ROOT}zaken",
-            json=paginated_response([zaak]),
+            json=paginated_response([self.zaak]),
         )
         m.get(
             f"{ZAKEN_ROOT}rollen",
             json=paginated_response([]),
         )
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
         )
-        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
-        m.get(zaaktype["url"], json=zaaktype)
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}", json=[])
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
+
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
             return_value=[],
@@ -68,22 +82,23 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
-        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        zaak_document = ZaakDocument.get(id=self.zaak["url"].split("/")[-1])
 
-        self.assertEqual(zaak_document.identificatie, "ZAAK1")
-        self.assertEqual(zaak_document.bronorganisatie, "002220647")
+        self.assertEqual(zaak_document.identificatie, self.zaak["identificatie"])
+        self.assertEqual(zaak_document.bronorganisatie, self.zaak["bronorganisatie"])
+        self.assertEqual(zaak_document.zaaktype["url"], self.zaaktype["url"])
         self.assertEqual(
-            zaak_document.zaaktype,
-            {
-                "url": zaaktype["url"],
-                "omschrijving": zaaktype["omschrijving"],
-                "catalogus": zaaktype["catalogus"],
-                "identificatie": zaaktype["identificatie"],
-            },
+            zaak_document.zaaktype["omschrijving"], self.zaaktype["omschrijving"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["catalogus"], self.zaaktype["catalogus"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["identificatie"], self.zaaktype["identificatie"]
         )
 
         self.assertEqual(
-            zaak_document.va_order, VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
+            zaak_document.va_order, VA_ORDER[self.zaak["vertrouwelijkheidaanduiding"]]
         )
         self.assertEqual(zaak_document.rollen, [])
 
@@ -91,24 +106,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-        )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/69e98129-1f0d-497f-bbfb-84b88137edbc",
-            zaaktype=zaaktype["url"],
-            bronorganisatie="002220647",
-            identificatie="ZAAK1",
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-        )
+
         # can't use generate_oas_component because of polymorphism
         rol1 = {
             "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
-            "zaak": zaak["url"],
+            "zaak": self.zaak["url"],
             "betrokkene": None,
             "betrokkeneType": "organisatorische_eenheid",
             "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
@@ -123,7 +125,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         }
         rol2 = {
             "url": f"{ZAKEN_ROOT}rollen/de7039d7-242a-4186-91c3-c3b49228211a",
-            "zaak": zaak["url"],
+            "zaak": self.zaak["url"],
             "betrokkene": None,
             "betrokkeneType": "medewerker",
             "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
@@ -143,22 +145,24 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "count": 1,
                 "previous": None,
                 "next": None,
-                "results": [zaaktype],
+                "results": [self.zaaktype],
             },
         )
         m.get(
             f"{ZAKEN_ROOT}zaken",
-            json=paginated_response([zaak]),
+            json=paginated_response([self.zaak]),
         )
         m.get(
             f"{ZAKEN_ROOT}rollen",
             json=paginated_response([rol1, rol2]),
         )
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
         )
-        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
-        m.get(zaaktype["url"], json=zaaktype)
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}", json=[])
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
             return_value=[],
@@ -166,22 +170,23 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
-        zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
+        zaak_document = ZaakDocument.get(id=self.zaak["url"].split("/")[-1])
 
-        self.assertEqual(zaak_document.identificatie, "ZAAK1")
-        self.assertEqual(zaak_document.bronorganisatie, "002220647")
+        self.assertEqual(zaak_document.identificatie, self.zaak["identificatie"])
+        self.assertEqual(zaak_document.bronorganisatie, self.zaak["bronorganisatie"])
+        self.assertEqual(zaak_document.zaaktype["url"], self.zaaktype["url"])
         self.assertEqual(
-            zaak_document.zaaktype,
-            {
-                "url": zaaktype["url"],
-                "omschrijving": zaaktype["omschrijving"],
-                "catalogus": zaaktype["catalogus"],
-                "identificatie": zaaktype["identificatie"],
-            },
+            zaak_document.zaaktype["omschrijving"], self.zaaktype["omschrijving"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["catalogus"], self.zaaktype["catalogus"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["identificatie"], self.zaaktype["identificatie"]
         )
 
         self.assertEqual(
-            zaak_document.va_order, VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
+            zaak_document.va_order, VA_ORDER[self.zaak["vertrouwelijkheidaanduiding"]]
         )
         self.assertEqual(len(zaak_document.rollen), 2)
 
@@ -194,24 +199,11 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-        )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/69e98129-1f0d-497f-bbfb-84b88137edbc",
-            zaaktype=zaaktype["url"],
-            bronorganisatie="002220647",
-            identificatie="ZAAK1",
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-        )
+
         # can't use generate_oas_component because of polymorphism
         rol1 = {
             "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
-            "zaak": zaak["url"],
+            "zaak": self.zaak["url"],
             "betrokkene": None,
             "betrokkeneType": "natuurlijk_persoon",
             "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
@@ -226,7 +218,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         }
         rol2 = {
             "url": f"{ZAKEN_ROOT}rollen/de7039d7-242a-4186-91c3-c3b49228211a",
-            "zaak": zaak["url"],
+            "zaak": self.zaak["url"],
             "betrokkene": None,
             "betrokkeneType": "natuurlijk_persoon",
             "roltype": f"{CATALOGI_ROOT}roltypen/bfd62804-f46c-42e7-a31c-4139b4c661ac",
@@ -246,16 +238,18 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "count": 1,
                 "previous": None,
                 "next": None,
-                "results": [zaaktype],
+                "results": [self.zaaktype],
             },
         )
-        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([self.zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([rol1, rol2]))
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
         )
-        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
-        m.get(zaaktype["url"], json=zaaktype)
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}", json=[])
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
             return_value=[],
@@ -263,22 +257,23 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
-        zaak_document = ZaakDocument.get(id="69e98129-1f0d-497f-bbfb-84b88137edbc")
+        zaak_document = ZaakDocument.get(id=self.zaak["url"].split("/")[-1])
 
-        self.assertEqual(zaak_document.identificatie, "ZAAK1")
-        self.assertEqual(zaak_document.bronorganisatie, "002220647")
+        self.assertEqual(zaak_document.identificatie, self.zaak["identificatie"])
+        self.assertEqual(zaak_document.bronorganisatie, self.zaak["bronorganisatie"])
+        self.assertEqual(zaak_document.zaaktype["url"], self.zaaktype["url"])
         self.assertEqual(
-            zaak_document.zaaktype,
-            {
-                "url": zaaktype["url"],
-                "omschrijving": zaaktype["omschrijving"],
-                "catalogus": zaaktype["catalogus"],
-                "identificatie": zaaktype["identificatie"],
-            },
+            zaak_document.zaaktype["omschrijving"], self.zaaktype["omschrijving"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["catalogus"], self.zaaktype["catalogus"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["identificatie"], self.zaaktype["identificatie"]
         )
 
         self.assertEqual(
-            zaak_document.va_order, VA_ORDER[zaak["vertrouwelijkheidaanduiding"]]
+            zaak_document.va_order, VA_ORDER[self.zaak["vertrouwelijkheidaanduiding"]]
         )
         self.assertEqual(len(zaak_document.rollen), 2)
 
@@ -292,11 +287,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-        )
         eigenschap_tekst = generate_oas_component(
             "ztc",
             "schemas/Eigenschap",
@@ -349,27 +339,19 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "waardenverzameling": [],
             },
         )
-        zaak_url = f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8"
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=zaaktype["url"],
-            bronorganisatie="002220647",
-            identificatie="ZAAK1",
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-            eigenschappen=[
-                f"{zaak_url}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
-                f"{zaak_url}/eigenschappen/bbad1fbf-484a-441e-83da-331d3695c45a",
-                f"{zaak_url}/eigenschappen/6872ba85-980f-4bcd-be12-1357494a612e",
-                f"{zaak_url}/eigenschappen/2449a619-425b-45e5-b4b6-eeb2ba109723",
-            ],
-        )
+        zaak = deepcopy(self.zaak)
+        zaak["eigenschappen"] = [
+            f"{self.zaak['url']}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
+            f"{self.zaak['url']}/eigenschappen/bbad1fbf-484a-441e-83da-331d3695c45a",
+            f"{self.zaak['url']}/eigenschappen/6872ba85-980f-4bcd-be12-1357494a612e",
+            f"{self.zaak['url']}/eigenschappen/2449a619-425b-45e5-b4b6-eeb2ba109723",
+        ]
+
         zaak_eigenschap_tekst = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{zaak_url}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
-            zaak=zaak_url,
+            url=f"{self.zaak['url']}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
+            zaak=self.zaak["url"],
             eigenschap=eigenschap_tekst["url"],
             naam="textProp",
             waarde="aaa",
@@ -377,8 +359,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak_eigenschap_getal = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{zaak_url}/eigenschappen/bbad1fbf-484a-441e-83da-331d3695c45a",
-            zaak=zaak_url,
+            url=f"{self.zaak['url']}/eigenschappen/bbad1fbf-484a-441e-83da-331d3695c45a",
+            zaak=self.zaak["url"],
             eigenschap=eigenschap_getal["url"],
             naam="getalProp",
             waarde="14",
@@ -386,8 +368,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak_eigenschap_datum = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{zaak_url}/eigenschappen/6872ba85-980f-4bcd-be12-1357494a612e",
-            zaak=zaak_url,
+            url=f"{self.zaak['url']}/eigenschappen/6872ba85-980f-4bcd-be12-1357494a612e",
+            zaak=self.zaak["url"],
             eigenschap=eigenschap_datum["url"],
             naam="datumProp",
             waarde="2021-01-02",
@@ -395,15 +377,15 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak_eigenschap_datum_tijd = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{zaak_url}/eigenschappen/2449a619-425b-45e5-b4b6-eeb2ba109723",
-            zaak=zaak_url,
+            url=f"{self.zaak['url']}/eigenschappen/2449a619-425b-45e5-b4b6-eeb2ba109723",
+            zaak=self.zaak["url"],
             eigenschap=eigenschap_datum_tijd["url"],
             naam="datumTijdProp",
             waarde="2018-11-13T20:20:39+00:00",
         )
-        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         m.get(
-            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response(
                 [
                     eigenschap_tekst,
@@ -417,7 +399,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(
-            f"{zaak_url}/zaakeigenschappen",
+            f"{self.zaak['url']}/zaakeigenschappen",
             json=[
                 zaak_eigenschap_tekst,
                 zaak_eigenschap_getal,
@@ -429,22 +411,25 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
-        m.get(zaaktype["url"], json=zaaktype)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
         call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
-        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        zaak_id = self.zaak["url"].split("/")[-1]
+        zaak_document = ZaakDocument.get(id=zaak_id)
 
-        self.assertEqual(zaak_document.identificatie, "ZAAK1")
-        self.assertEqual(zaak_document.bronorganisatie, "002220647")
+        self.assertEqual(zaak_document.identificatie, self.zaak["identificatie"])
+        self.assertEqual(zaak_document.bronorganisatie, self.zaak["bronorganisatie"])
+        self.assertEqual(zaak_document.zaaktype["url"], self.zaaktype["url"])
         self.assertEqual(
-            zaak_document.zaaktype,
-            {
-                "url": zaaktype["url"],
-                "omschrijving": zaaktype["omschrijving"],
-                "catalogus": zaaktype["catalogus"],
-                "identificatie": zaaktype["identificatie"],
-            },
+            zaak_document.zaaktype["omschrijving"], self.zaaktype["omschrijving"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["catalogus"], self.zaaktype["catalogus"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["identificatie"], self.zaaktype["identificatie"]
         )
 
         # check zaak eigenschappen
@@ -497,11 +482,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-        )
         eigenschap_tekst = generate_oas_component(
             "ztc",
             "schemas/Eigenschap",
@@ -515,59 +495,55 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "waardenverzameling": [],
             },
         )
-        zaak_url = f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8"
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=zaaktype["url"],
-            bronorganisatie="002220647",
-            identificatie="ZAAK1",
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-            eigenschappen=[
-                f"{zaak_url}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a"
-            ],
-        )
+        zaak = deepcopy(self.zaak)
+        zaak["eigenschappen"] = [
+            f"{zaak['url']}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a"
+        ]
+
         zaak_eigenschap_tekst = generate_oas_component(
             "zrc",
             "schemas/Zaak",
-            url=f"{zaak_url}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
-            zaak=zaak_url,
+            url=f"{zaak['url']}/eigenschappen/1b2b6aa8-bb41-4168-9c07-f586294f008a",
+            zaak=zaak["url"],
             eigenschap=eigenschap_tekst["url"],
             naam="Bedrag incl. BTW",
             waarde="aaa",
         )
-        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
+        m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         m.get(
-            f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype['url']}",
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([eigenschap_tekst]),
         )
 
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
-        m.get(f"{zaak_url}/zaakeigenschappen", json=[zaak_eigenschap_tekst])
+        m.get(f"{zaak['url']}/zaakeigenschappen", json=[zaak_eigenschap_tekst])
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
 
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
-        m.get(zaaktype["url"], json=zaaktype)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
         call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
-        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        zaak_id = zaak["url"].split("/")[-1]
+        zaak_document = ZaakDocument.get(id=zaak_id)
 
-        self.assertEqual(zaak_document.identificatie, "ZAAK1")
-        self.assertEqual(zaak_document.bronorganisatie, "002220647")
+        self.assertEqual(zaak_document.identificatie, zaak["identificatie"])
+        self.assertEqual(zaak_document.bronorganisatie, zaak["bronorganisatie"])
+        self.assertEqual(zaak_document.zaaktype["url"], self.zaaktype["url"])
         self.assertEqual(
-            zaak_document.zaaktype,
-            {
-                "url": zaaktype["url"],
-                "omschrijving": zaaktype["omschrijving"],
-                "catalogus": zaaktype["catalogus"],
-                "identificatie": zaaktype["identificatie"],
-            },
+            zaak_document.zaaktype["omschrijving"], self.zaaktype["omschrijving"]
         )
+        self.assertEqual(
+            zaak_document.zaaktype["catalogus"], self.zaaktype["catalogus"]
+        )
+        self.assertEqual(
+            zaak_document.zaaktype["identificatie"], self.zaaktype["identificatie"]
+        )
+
         # check zaak eigenschappen
         zaak_eigenschappen = zaak_document.eigenschappen
         self.assertEqual(zaak_eigenschappen, {"tekst": {"Bedrag incl  BTW": "aaa"}})
@@ -591,21 +567,9 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-        )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=zaaktype["url"],
-            bronorganisatie="002220647",
-            identificatie="ZAAK1",
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-            status=f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e",
-        )
+        zaak = deepcopy(self.zaak)
+        zaak["status"] = f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e"
+
         status_response = generate_oas_component(
             "zrc",
             "schemas/Status",
@@ -625,7 +589,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "count": 1,
                 "previous": None,
                 "next": None,
-                "results": [zaaktype],
+                "results": [self.zaaktype],
             },
         )
         m.get(
@@ -639,7 +603,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
         )
-        m.get(zaaktype["url"], json=zaaktype)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e",
             json=status_response,
@@ -657,7 +622,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             call_command("index_zaken", stdout=StringIO())
 
         # check zaak_document exists
-        zaak_document = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
+        zaak_document = ZaakDocument.get(id=zaak["url"].split("/")[-1])
         self.assertEqual(
             zaak_document.status.statustoelichting, "some-statustoelichting"
         )
@@ -666,21 +631,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-        )
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=zaaktype["url"],
-            bronorganisatie="002220647",
-            identificatie="ZAAK-001",
-            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-            status=None,
-        )
 
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
@@ -688,35 +638,37 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "count": 1,
                 "previous": None,
                 "next": None,
-                "results": [zaaktype],
+                "results": [self.zaaktype],
             },
         )
-        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([self.zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
         m.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak['url']}", json=paginated_response([])
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
         )
 
-        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
-        m.get(zaaktype["url"], json=zaaktype)
+        m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}", json=[])
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
         with patch(
             "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
             return_value=[],
         ):
             call_command("index_zaken")
-        zd = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca8")
-        self.assertEqual(zd.identificatie, "ZAAK-001")
+        zd = ZaakDocument.get(id=self.zaak["url"].split("/")[-1])
+        self.assertEqual(zd.identificatie, self.zaak["identificatie"])
         zaak2 = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca9",
-            zaaktype=zaaktype["url"],
+            zaaktype=self.zaaktype["url"],
             bronorganisatie="002220647",
             identificatie="ZAAK-002",
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             status=None,
         )
-        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak2, zaak]))
+        m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak2, self.zaak]))
         m.get(
             f"{ZAKEN_ROOT}zaakobjecten?zaak={zaak2['url']}", json=paginated_response([])
         )
@@ -728,5 +680,6 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             call_command("index_zaken", reindex_last=1)
 
         # check zaak_document exists
-        zd2 = ZaakDocument.get(id="a522d30c-6c10-47fe-82e3-e9f524c14ca9")
+        zaak2_id = zaak2["url"].split("/")[-1]
+        zd2 = ZaakDocument.get(id=zaak2_id)
         self.assertEqual(zd2.identificatie, "ZAAK-002")

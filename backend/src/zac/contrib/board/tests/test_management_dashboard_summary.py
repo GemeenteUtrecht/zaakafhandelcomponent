@@ -36,6 +36,7 @@ class ManagementDashboardSummaryTests(
         super().setUp()
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype1",
             identificatie="zaaktype_id_1",
@@ -77,6 +78,7 @@ class ManagementDashboardSummaryTests(
         self.zaak_document1.save()
         self.zaaktype_document2 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
+            catalogus_domein="DOME",
             catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             omschrijving="zaaktype2",
             identificatie="zaaktype_id_2",
@@ -120,7 +122,7 @@ class ManagementDashboardSummaryTests(
         BlueprintPermissionFactory.create(
             role__permissions=[management_dashboard_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -130,7 +132,7 @@ class ManagementDashboardSummaryTests(
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

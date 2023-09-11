@@ -19,22 +19,30 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.documents import ZaakDocument, ZaakTypeDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..api.permissions import management_dashboard_inzien
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     endpoint = reverse_lazy("management-dashboard")
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
+    )
 
     def setUp(self) -> None:
         super().setUp()
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus_domein="DOME",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identificatie="zaaktype_id_1",
         )
@@ -75,7 +83,8 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
         self.zaak_document1.save()
         self.zaaktype_document2 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus_domein="DOME",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype2",
             identificatie="zaaktype_id_2",
         )
@@ -109,6 +118,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
     def test_management_dashboard_detail_superuser(self, m):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         zt = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -155,7 +165,8 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
                         "url": None,
                         "zaaktype": {
                             "url": "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                            "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                            "catalogus": CATALOGUS_URL,
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": "zaaktype1",
                             "identificatie": "zaaktype_id_1",
                         },
@@ -189,6 +200,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
     def test_management_dashboard_detail_blueprint(self, m):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         zt = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -206,7 +218,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
         BlueprintPermissionFactory.create(
             role__permissions=[management_dashboard_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -216,7 +228,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
             policy={
-                "catalogus": self.zaaktype_document1.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": self.zaaktype_document1.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -255,7 +267,8 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
                         "url": None,
                         "zaaktype": {
                             "url": "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                            "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                            "catalogus": CATALOGUS_URL,
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": "zaaktype1",
                             "identificatie": "zaaktype_id_1",
                         },
@@ -289,6 +302,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
     def test_management_dashboard_detail_atomic(self, m):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         zt = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -347,7 +361,8 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
                         "url": None,
                         "zaaktype": {
                             "url": "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                            "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                            "catalogus": CATALOGUS_URL,
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": "zaaktype1",
                             "identificatie": "zaaktype_id_1",
                         },

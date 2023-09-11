@@ -21,7 +21,7 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_send_message
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from ..api.serializers import MessageSerializer
@@ -78,15 +78,18 @@ class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=cls.catalogus["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
@@ -182,6 +185,8 @@ class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        mock_resource_get(m, self.catalogus)
+
         user = UserFactory.create()
 
         # gives them access to the page, zaaktype and VA specified -> visible
@@ -190,7 +195,7 @@ class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_send_message.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

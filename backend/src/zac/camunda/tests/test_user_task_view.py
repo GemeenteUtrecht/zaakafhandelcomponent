@@ -87,22 +87,29 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory.create()
-
         Service.objects.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-
-        cls.catalogus = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        )
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
         )
-        cls.document = factory(Document, document)
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=cls.catalogus["url"],
+            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
+            identificatie="ZT1",
+            omschrijving="ZT1",
+        )
+        cls.zaaktype_obj = factory(ZaakType, cls.zaaktype)
 
         cls.documenttype = generate_oas_component(
             "ztc",
@@ -112,31 +119,22 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             catalogus=cls.catalogus,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+        )
+        cls.document = factory(Document, document)
         cls.document.informatieobjecttype = factory(
             InformatieObjectType, cls.documenttype
         )
 
-        cls.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            catalogus=cls.catalogus,
-            url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
-            identificatie="ZT1",
-            omschrijving="ZT1",
-        )
-
-        cls.zaaktype_obj = factory(ZaakType, cls.zaaktype)
-
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
         )
-
         cls.zaak = factory(Zaak, zaak)
-
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype_obj,
@@ -207,7 +205,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -266,7 +264,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -323,7 +321,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -380,7 +378,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -518,7 +516,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -575,7 +573,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -600,6 +598,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
     )
     def test_get_zet_resultaat_context(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
@@ -639,7 +638,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -710,18 +709,22 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-        cls.catalogus = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
         )
         cls.documenttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
             omschrijving="bijlage",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus["url"],
         )
         cls.resultaattype = generate_oas_component(
-            "ztc", "schemas/ResultaatType", catalogus=cls.catalogus
+            "ztc", "schemas/ResultaatType", catalogus=cls.catalogus["url"]
         )
 
         cls.document.informatieobjecttype = factory(
@@ -731,7 +734,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus["url"],
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
             informatieobjecttypen=[
@@ -793,7 +796,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

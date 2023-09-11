@@ -42,9 +42,14 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        self.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         self.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -65,8 +70,8 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             eigenschappen=[],
             resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
         )
-        zaak_model = factory(Zaak, self.zaak)
-        zaak_model.zaaktype = factory(ZaakType, self.zaaktype)
+        self.zaak_model = factory(Zaak, self.zaak)
+        self.zaak_model.zaaktype = factory(ZaakType, self.zaaktype)
 
         patch_get_zaakobjecten = patch(
             "zac.elasticsearch.api.get_zaakobjecten",
@@ -75,21 +80,27 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         patch_get_zaakobjecten.start()
         self.addCleanup(patch_get_zaakobjecten.stop)
 
-        zaak_document = self.create_zaak_document(zaak_model)
-        zaak_document.zaaktype = self.create_zaaktype_document(zaak_model.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
         self.endpoint = reverse("search")
         self.data = {"identificatie": "zaak1"}
 
+    def refresh_es(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
+        zaak_document = self.create_zaak_document(self.zaak_model)
+        zaak_document.zaaktype = self.create_zaaktype_document(self.zaak_model.zaaktype)
+        zaak_document.save()
+        self.refresh_index()
+
     def test_not_authenticated(self, m):
+        self.refresh_es(m)
         response = self.client.post(self.endpoint, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_authenticated_no_permissions(self, m):
+        self.refresh_es(m)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype]),
@@ -105,6 +116,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(results["count"], 0)
 
     def test_has_perm_but_not_for_zaaktype(self, m):
+        self.refresh_es(m)
         zaaktype2 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -115,7 +127,6 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             omschrijving="ZT2",
         )
 
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([self.zaaktype, zaaktype2]),
@@ -125,7 +136,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },
@@ -139,7 +150,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(results["count"], 0)
 
     def test_is_superuser(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.refresh_es(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         mock_resource_get(m, self.zaak)
@@ -155,7 +166,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(results["count"], 1)
 
     def test_token_auth(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.refresh_es(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         mock_resource_get(m, self.zaak)
@@ -169,7 +180,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_token_auth_perms(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.refresh_es(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         mock_resource_get(m, self.zaak)
@@ -179,7 +190,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_application=token,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -197,7 +208,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(results["count"], 1)
 
     def test_token_auth_perms(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.refresh_es(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         mock_resource_get(m, self.zaak)
@@ -207,7 +218,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_application=token,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -225,7 +236,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(results["count"], 1)
 
     def test_has_perms(self, m):
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        self.refresh_es(m)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
         mock_resource_get(m, self.zaak)
@@ -236,7 +247,7 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -271,6 +282,12 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # costs a lot of time
 
         # set up catalogi api data
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -453,6 +470,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         # mock external api objects
         # mock catalogi objects
+        mock_resource_get(m, catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen",
             json=paginated_response([zaaktype, zaaktype_old, zaaktype_2]),

@@ -18,6 +18,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.utils import mock_resource_get
 
 from .factories import KillableTaskFactory
 
@@ -218,6 +219,36 @@ class CancelTaskPermissionsTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_user_logged_in_with_permission(self, m):
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
+        )
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+            identificatie="ZT1",
+            catalogus=catalogus["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            omschrijving="ZT1",
+        )
+        zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            zaaktype=zaaktype["url"],
+        )
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, catalogus)
+        mock_resource_get(m, zaaktype)
+        mock_resource_get(m, zaak)
+
         killable_task = KillableTaskFactory.create()
         m.get(
             f"{CAMUNDA_URL}task/fc9c465d-b0d7-11ec-a5f0-32fe9303dc32",
@@ -232,41 +263,16 @@ class CancelTaskPermissionsTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakproces_usertasks.name],
             for_user=user,
             policy={
-                "catalogus": f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        )
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=catalogus_url,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            omschrijving="ZT1",
-        )
-        m.get(zaaktype["url"], json=zaaktype)
-
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            zaaktype=zaaktype["url"],
-        )
         m.get(
             f"{CAMUNDA_URL}task/fc9c465d-b0d7-11ec-a5f0-32fe9303dc32/variables/zaakUrl?deserializeValue=false",
             json=serialize_variable(zaak["url"]),
         )
-        m.get(zaak["url"], json=zaak)
 
         self.client.force_authenticate(user)
         with patch(

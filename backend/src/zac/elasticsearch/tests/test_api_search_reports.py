@@ -31,14 +31,22 @@ from .utils import ESMixin
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def setUp(self) -> None:
         super().setUp()
+        self.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus_domein=self.catalogus["domein"],
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identicatie="id1",
         )
@@ -79,7 +87,8 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.zaak_document1.save()
         self.zaaktype_document2 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus_domein=self.catalogus["domein"],
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype2",
             identificatie="id2",
         )
@@ -107,7 +116,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identificatie="id1",
         )
@@ -115,7 +124,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype2",
             identificatie="id2",
         )
@@ -131,7 +140,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             query={
                 "fields": ["bronorganisatie", "identificatie", "zaaktype"],
                 "zaaktype": {
-                    "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                     "omschrijving": "zaaktype1",
                 },
             },
@@ -140,7 +149,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             query={
                 "fields": ["bronorganisatie", "identificatie", "zaaktype"],
                 "zaaktype": {
-                    "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                     "omschrijving": "zaaktype2",
                 },
             },
@@ -159,7 +168,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             {
                 "zaaktype": {
                     "omschrijving": "zaaktype1",
-                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                 },
                 "fields": ["bronorganisatie", "identificatie", "zaaktype"],
                 "includeClosed": False,
@@ -170,7 +179,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             {
                 "zaaktype": {
                     "omschrijving": "zaaktype2",
-                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                 },
                 "fields": ["bronorganisatie", "identificatie", "zaaktype"],
                 "includeClosed": False,
@@ -186,7 +195,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identificatie="id1",
         )
@@ -208,7 +217,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "zaaktype.omschrijving",
                 ],
                 "zaaktype": {
-                    "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                     "omschrijving": "zaaktype1",
                 },
             },
@@ -223,7 +232,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "zaaktype.omschrijving",
                 ],
                 "zaaktype": {
-                    "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca",
+                    "catalogus": CATALOGUS_URL,
                     "omschrijving": "zaaktype2",
                 },
             },
@@ -238,7 +247,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             {
                 "zaaktype": {
                     "omschrijving": "zaaktype1",
-                    "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                 },
                 "fields": [
                     "bronorganisatie",
@@ -259,7 +268,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identificatie="id1",
         )
@@ -267,7 +276,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype2",
             identificatie="id2",
         )
@@ -305,6 +314,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "zaaktype.url",
                     "zaaktype.catalogus",
+                    "zaaktype.catalogus_domein",
                     "zaaktype.omschrijving",
                     "zaaktype.identificatie",
                     "identificatie",
@@ -339,7 +349,8 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "url": "https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013aa",
                         "zaaktype": {
                             "url": "https://api.catalogi.nl/api/v1/zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-                            "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                            "catalogus": CATALOGUS_URL,
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": "zaaktype2",
                             "identificatie": "id2",
                         },
@@ -369,7 +380,8 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "url": "https://api.zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                         "zaaktype": {
                             "url": "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                            "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                            "catalogus": CATALOGUS_URL,
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": "zaaktype1",
                             "identificatie": None,
                         },
@@ -422,7 +434,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identificatie="id1",
         )
@@ -439,7 +451,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             query={
                 "fields": DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
                 "zaaktype": {
-                    "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                     "omschrijving": "zaaktype1",
                 },
             },
@@ -461,6 +473,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "url",
                     "zaaktype.url",
                     "zaaktype.catalogus",
+                    "zaaktype.catalogus_domein",
                     "zaaktype.omschrijving",
                     "zaaktype.identificatie",
                     "identificatie",
@@ -495,7 +508,8 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "url": "https://api.zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                         "zaaktype": {
                             "url": "https://api.catalogi.nl/api/v1/zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                            "catalogus": "https://api.catalogi.nl/api/v1/catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                            "catalogus": CATALOGUS_URL,
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": "zaaktype1",
                             "identificatie": None,
                         },
@@ -548,7 +562,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identificatie="id1",
         )
@@ -568,7 +582,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "zaaktype.omschrijving",
                 ],
                 "zaaktype": {
-                    "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                    "catalogus": CATALOGUS_URL,
                     "omschrijving": "zaaktype1",
                 },
             },
@@ -599,7 +613,8 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "url": None,
                         "zaaktype": {
                             "url": f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-                            "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                            "catalogus": CATALOGUS_URL,
+                            "catalogusDomein": None,
                             "omschrijving": "zaaktype1",
                             "identificatie": None,
                         },
@@ -667,6 +682,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "zaakobjecten.object",
                 "zaakobjecten.url",
                 "zaaktype.catalogus",
+                "zaaktype.catalogus_domein",
                 "zaaktype.identificatie",
                 "zaaktype.omschrijving",
                 "zaaktype.url",
@@ -715,16 +731,23 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_get_report_logged_in_with_permission(self, m):
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype1",
             identificatie="id1",
         )
         zaaktype_document1 = ZaakTypeDocument(
             url=zaaktype_1["url"],
+            catalogus_domein=catalogus["domein"],
             catalogus=zaaktype_1["catalogus"],
             omschrijving=zaaktype_1["omschrijving"],
             identificatie=zaaktype_1["identificatie"],
@@ -768,12 +791,13 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/de7039d7-242a-4186-91c3-c3b49228211a",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            catalogus=CATALOGUS_URL,
             omschrijving="zaaktype2",
             identificatie="id2",
         )
         zaaktype_document2 = ZaakTypeDocument(
             url=zaaktype_2["url"],
+            catalogus_domein=catalogus["domein"],
             catalogus=zaaktype_2["catalogus"],
             omschrijving=zaaktype_2["omschrijving"],
             identificatie=zaaktype_2["identificatie"],
@@ -810,7 +834,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "zaaktype1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -826,7 +850,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": f"{CATALOGI_ROOT}catalogussen/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+                "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "zaaktype2",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

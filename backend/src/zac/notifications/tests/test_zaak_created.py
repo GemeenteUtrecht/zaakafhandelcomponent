@@ -19,6 +19,7 @@ from zac.tests.utils import mock_resource_get
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
+    CATALOGUS_RESPONSE,
     IDENTIFICATIE,
     STATUS_RESPONSE,
     STATUSTYPE_RESPONSE,
@@ -67,6 +68,7 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, STATUS_RESPONSE)
         mock_resource_get(rm, STATUSTYPE_RESPONSE)
@@ -110,6 +112,7 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, STATUS_RESPONSE)
         mock_resource_get(rm, STATUSTYPE_RESPONSE)
@@ -143,6 +146,7 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, STATUS_RESPONSE)
         mock_resource_get(rm, STATUSTYPE_RESPONSE)

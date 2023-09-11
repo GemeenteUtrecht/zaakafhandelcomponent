@@ -72,7 +72,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -221,7 +221,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -262,7 +262,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -299,7 +299,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -350,7 +350,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -408,7 +408,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -446,7 +446,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -487,7 +487,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             role=role,
             object_type=PermissionObjectTypeChoices.zaak,
             policy={
-                "catalogus": CATALOGUS_URL,
+                "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },

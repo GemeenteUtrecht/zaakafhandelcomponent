@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.core.management import call_command
 
@@ -171,7 +173,12 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         index = Index(settings.ES_INDEX_OBJECTEN)
         self.refresh_index()
         self.assertEqual(index.search().count(), 0)
-        call_command("index_objecten")
+        with patch(
+            "zac.elasticsearch.api.create_zaaktype_document", return_value=None
+        ) as mock_create_ztd:
+            call_command("index_objecten")
+        mock_create_ztd.assert_called_once()
+
         self.refresh_index()
         self.assertEqual(index.search().count(), 1)
         self.assertEqual(

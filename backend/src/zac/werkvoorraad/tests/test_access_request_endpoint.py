@@ -19,7 +19,7 @@ from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
@@ -46,19 +46,26 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_access_requests_permission(self, m):
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
-        catalogus = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
+        )
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
-            catalogus=catalogus,
+            catalogus=catalogus["url"],
             url=f"{CATALOGI_ROOT}zaaktypen/d66790b7-8b01-4005-a4ba-8fcf2a60f21d",
             identificatie="ZT1",
             omschrijving="ZT1",
         )
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -85,14 +92,14 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                 "identificatie": f"{AssigneeTypeChoices.user}:{user}",
             },
         }
-
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, catalogus)
         zaak_document = self.create_zaak_document(zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(zaaktype)
         zaak_document.rollen = [create_rol_document(factory(Rol, rol_1))]
         zaak_document.save()
         self.refresh_index()
 
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={zaaktype['catalogus']}",
             json=paginated_response([zaaktype]),
@@ -101,7 +108,7 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_handle_access.name],
             for_user=user,
             policy={
-                "catalogus": catalogus,
+                "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -110,7 +117,7 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": catalogus,
+                "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -145,6 +152,7 @@ class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                         "zaaktype": {
                             "url": zaaktype["url"],
                             "catalogus": zaaktype["catalogus"],
+                            "catalogusDomein": catalogus["domein"],
                             "omschrijving": zaaktype["omschrijving"],
                             "identificatie": zaaktype["identificatie"],
                         },

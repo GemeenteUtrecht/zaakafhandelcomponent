@@ -3,9 +3,14 @@ from typing import List
 
 from django.core.management import BaseCommand
 
+from zgw_consumers.api_models.catalogi import Catalogus
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
-from zac.core.services import get_informatieobjecttypen_for_zaaktype, get_zaaktypen
+from zac.core.services import (
+    fetch_catalogus,
+    get_informatieobjecttypen_for_zaaktype,
+    get_zaaktypen,
+)
 
 from ...constants import PermissionObjectTypeChoices
 from ...models import BlueprintPermission, Role
@@ -13,15 +18,17 @@ from ...models import BlueprintPermission, Role
 logger = logging.getLogger(__name__)
 
 
-def generate_document_policies(zaaktype_policy: dict) -> List[dict]:
+def generate_document_policies(
+    zaaktype_policy: dict, catalogus: Catalogus
+) -> List[dict]:
     zaaktype_omschrijving = zaaktype_policy.get("zaaktype_omschrijving")
-    catalogus = zaaktype_policy.get("catalogus")
-
     if not zaaktype_omschrijving or not catalogus:
         return []
 
     # find zaaktype
-    zaaktypen = get_zaaktypen(catalogus=catalogus, omschrijving=zaaktype_omschrijving)
+    zaaktypen = get_zaaktypen(
+        catalogus=catalogus.url, omschrijving=zaaktype_omschrijving
+    )
 
     # find related iotypen
     document_policies = []
@@ -32,7 +39,7 @@ def generate_document_policies(zaaktype_policy: dict) -> List[dict]:
         iotypen = get_informatieobjecttypen_for_zaaktype(zaaktype)
         document_policies += [
             {
-                "catalogus": iotype.catalogus,
+                "catalogus": catalogus.domein,
                 "iotype_omschrijving": iotype.omschrijving,
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             }
@@ -46,12 +53,13 @@ def add_blueprint_permissions_for_zaaktypen_and_iots():
     roles = Role.objects.all()
     added = 0
     for zaaktype in zaaktypen:
+        catalogus = fetch_catalogus(zaaktype.catalogus)
         zt_policy = {
-            "catalogus": zaaktype.catalogus,
+            "catalogus": catalogus.domein,
             "zaaktype_omschrijving": zaaktype.omschrijving,
             "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
         }
-        document_policies = generate_document_policies(zt_policy)
+        document_policies = generate_document_policies(zt_policy, catalogus)
         for role in roles:
             obj, created = BlueprintPermission.objects.get_or_create(
                 role=role,

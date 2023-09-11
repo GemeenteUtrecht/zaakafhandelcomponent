@@ -532,18 +532,14 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         super().setUp()
         self.user = UserFactory.create()
         self.client.force_authenticate(self.user)
-        self.find_zaak_patcher.start()
-        self.addCleanup(self.find_zaak_patcher.stop)
 
     def test_no_permissions(self, m):
-        with patch(
-            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
-            return_value=self.zaak_obj,
-        ):
-            response = self.client.post(self.endpoint, {})
+        response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_has_perm_but_not_for_zaaktype(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         # gives them access to the page, but no catalogus specified -> nothing visible
         BlueprintPermissionFactory.create(
             role__permissions=[zaakprocess_starten.name],
@@ -554,25 +550,25 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },
         )
-        with patch(
-            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
-            return_value=self.zaak_obj,
-        ):
+        with self.find_zaak_patcher:
             response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_has_perm_but_not_for_va(self, m):
-        # gives them access to the page, but no catalogus specified -> nothing visible
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
+
         BlueprintPermissionFactory.create(
             role__permissions=[zaakprocess_starten.name],
             for_user=self.user,
             policy={
-                "catalogus": "",
-                "zaaktype_omschrijving": "",
+                "catalogus": self.catalogus["domein"],
+                "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
         )
-        response = self.client.get(self.endpoint)
+        with self.find_zaak_patcher:
+            response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
@@ -592,7 +588,7 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakprocess_starten.name],
             for_user=self.user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -617,7 +613,8 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
                 "id": PROCESS_INSTANCE["id"],
             },
         )
-        response = self.client.post(self.endpoint, {})
+        with self.find_zaak_patcher:
+            response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch("zac.core.camunda.start_process.views.get_rollen", return_value=[])
@@ -637,7 +634,7 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakprocess_starten.name],
             for_user=self.user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -671,7 +668,7 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             ],
             for_user=self.user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -688,13 +685,18 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             f"{CAMUNDA_URL}process-definition?processDefinitionIdIn={PROCESS_DEFINITION['id']}",
             json=[PROCESS_DEFINITION],
         )
+        m.post(
+            f"{CAMUNDA_URL}process-definition/key/{START_CAMUNDA_PROCESS_FORM['camundaProcessDefinitionKey']}/start",
+            status_code=201,
+            json={
+                "links": [{"rel": "self", "href": "https://some-url.com/"}],
+                "id": PROCESS_INSTANCE["id"],
+            },
+        )
 
         zaak_object = deepcopy(self.zaak_obj)
         zaak_object.einddatum = datetime.date(2020, 1, 1)
-        with patch(
-            "zac.core.camunda.start_process.views.StartCamundaProcessView.get_object",
-            return_value=zaak_object,
-        ):
+        with self.find_zaak_patcher:
             response = self.client.post(self.endpoint, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -720,7 +722,7 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaakprocess_starten.name],
             for_user=self.user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -747,7 +749,9 @@ class StartCamundaProcessViewPermissionTests(ClearCachesMixin, APITestCase):
         )
         token = ApplicationTokenFactory.create()
         self.client.logout()
-        response = self.client.post(
-            self.endpoint, {}, HTTP_AUTHORIZATION=f"ApplicationToken {token.token}"
-        )
+        with self.find_zaak_patcher:
+            response = self.client.post(
+                self.endpoint, {}, HTTP_AUTHORIZATION=f"ApplicationToken {token.token}"
+            )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)

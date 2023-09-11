@@ -32,6 +32,7 @@ from ..data import DowcResponse, OpenDowc
 from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
+CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/{uuid.uuid4()}"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 DOWC_API_ROOT = "https://dowc.nl"
 
@@ -49,14 +50,18 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
-        cls.catalogus_url = f"{CATALOGI_ROOT}/catalogussen/{uuid.uuid4()}"
-
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
+        )
         cls.documenttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/{uuid.uuid4()}",
             omschrijving="bijlage",
-            catalogus=cls.catalogus_url,
+            catalogus=cls.catalogus["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
         )
         cls.document = generate_oas_component(
@@ -177,6 +182,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
     def test_create_dowc_file_with_wrong_permissions(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.documenttype)
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
@@ -190,7 +196,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.catalogus_url,
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": "some-other-iot",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -205,6 +211,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
     def test_create_dowc_file_with_right_permissions_but_wrong_VA(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.documenttype)
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
@@ -218,7 +225,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.catalogus_url,
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": self.documenttype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -233,6 +240,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
     def test_create_dowc_file_with_permissions(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.documenttype)
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
@@ -246,7 +254,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_download_documents.name],
             for_user=user,
             policy={
-                "catalogus": self.catalogus_url,
+                "catalogus": self.catalogus["domein"],
                 "iotype_omschrijving": self.documenttype["omschrijving"],
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

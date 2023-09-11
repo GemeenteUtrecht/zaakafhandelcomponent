@@ -25,6 +25,10 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.kownsl.models import KownslConfig
+from zac.core.camunda.start_process.tests.utils import (
+    OBJECTS_ROOT,
+    START_CAMUNDA_PROCESS_FORM,
+)
 from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
     zaken_inzien,
@@ -38,11 +42,7 @@ from zgw.models.zrc import Zaak
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 KOWNSL_ROOT = "https://kownsl.nl/"
-
-from zac.core.camunda.start_process.tests.utils import (
-    OBJECTS_ROOT,
-    START_CAMUNDA_PROCESS_FORM,
-)
+CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -721,15 +721,19 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         config = KownslConfig.get_solo()
         config.service = kownsl
         config.save()
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
         )
         cls._zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
-            catalogus=catalogus_url,
+            catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             omschrijving="ZT1",
         )
@@ -786,6 +790,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_authenticated_no_permissions(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self._zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
@@ -812,6 +817,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self._zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
@@ -845,6 +851,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_has_perm_but_not_for_va(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self._zaaktype)
         m.get(
             f"{ZAKEN_ROOT}zaken?bronorganisatie={self.zaak.bronorganisatie}&identificatie={self.zaak.identificatie}",
@@ -856,7 +863,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
@@ -901,6 +908,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     @requests_mock.Mocker()
     def test_has_perm_to_retrieve(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
             json=paginated_response([self._zaaktype]),
@@ -911,7 +919,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -926,6 +934,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_has_perm_to_update(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
             json=paginated_response([self._zaaktype]),
@@ -937,7 +946,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -959,6 +968,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_has_perm_to_update_but_zaak_is_closed(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self._zaaktype)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
@@ -975,7 +985,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -1009,6 +1019,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def test_has_perm_to_update_and_for_closed_zaak(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self._zaaktype)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype.catalogus}",
@@ -1021,7 +1032,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -1030,7 +1041,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

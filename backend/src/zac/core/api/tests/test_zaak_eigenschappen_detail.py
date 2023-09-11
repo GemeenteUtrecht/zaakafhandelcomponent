@@ -169,6 +169,7 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
 
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, eigenschap)
@@ -816,6 +817,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
     def test_patch_other_permission(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak_eigenschap)
@@ -826,7 +828,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },
@@ -841,6 +843,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
     def test_patch_has_perm(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
@@ -861,7 +864,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -877,6 +880,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
@@ -886,7 +890,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -902,6 +906,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
@@ -921,7 +926,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -930,7 +935,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -945,6 +950,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
     def test_delete_other_permisison(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.zaak_eigenschap)
@@ -955,7 +961,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT2",
                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             },
@@ -970,6 +976,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
     def test_delete_has_perm(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
@@ -981,7 +988,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -997,6 +1004,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
@@ -1007,7 +1015,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -1023,6 +1031,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.eigenschap)
         mock_resource_get(m, self.zaak_eigenschap)
@@ -1033,7 +1042,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_geforceerd_bijwerken.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },
@@ -1042,7 +1051,7 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
             role__permissions=[zaken_wijzigen.name],
             for_user=user,
             policy={
-                "catalogus": self.zaaktype["catalogus"],
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
             },

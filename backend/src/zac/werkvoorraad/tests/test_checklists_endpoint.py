@@ -3,12 +3,13 @@ from unittest.mock import patch
 
 from django.urls import reverse
 
+import requests_mock
 from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -27,8 +28,12 @@ from zac.contrib.objects.checklists.tests.utils import (
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.utils import mock_resource_get
+
+CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
+@requests_mock.Mocker()
 @freeze_time("2021-12-16T12:00:00Z")
 class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
     """
@@ -43,8 +48,12 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create()
         cls.group_1 = GroupFactory.create()
         cls.group_2 = GroupFactory.create()
-        cls.catalogus = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+        cls.catalogus = ()
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=CATALOGUS_URL,
+            domein="DOME",
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -52,7 +61,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
             identificatie="ZT1",
             omschrijving="ZT1",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus["url"],
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -71,7 +80,9 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             "werkvoorraad:checklists",
         )
 
-    def test_workstack_checklist_answers_endpoint(self):
+    def test_workstack_checklist_answers_endpoint(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
         zaak_document.save()
@@ -81,7 +92,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -122,6 +133,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
                         "zaaktype": {
                             "url": self.zaaktype["url"],
                             "catalogus": self.zaaktype["catalogus"],
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": self.zaaktype["omschrijving"],
                             "identificatie": self.zaaktype["identificatie"],
                         },
@@ -132,7 +144,9 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             ],
         )
 
-    def test_workstack_checklist_answers_endpoint_no_zaak(self):
+    def test_workstack_checklist_answers_endpoint_no_zaak(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         self.refresh_index()
 
         self.client.force_authenticate(user=self.user)
@@ -149,7 +163,9 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(data, [])
 
-    def test_other_user_logging_in(self):
+    def test_other_user_logging_in(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
         zaak_document.save()
@@ -170,7 +186,9 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
 
-    def test_workstack_group_checklist_answers_group_specified(self):
+    def test_workstack_group_checklist_answers_group_specified(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
         self.user.groups.add(self.group_1)
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
@@ -181,7 +199,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             role__permissions=[zaken_inzien.name],
             for_user=self.user,
             policy={
-                "catalogus": self.catalogus,
+                "catalogus": self.catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
@@ -223,6 +241,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
                         "zaaktype": {
                             "url": self.zaaktype["url"],
                             "catalogus": self.zaaktype["catalogus"],
+                            "catalogusDomein": self.catalogus["domein"],
                             "omschrijving": self.zaaktype["omschrijving"],
                             "identificatie": self.zaaktype["identificatie"],
                         },

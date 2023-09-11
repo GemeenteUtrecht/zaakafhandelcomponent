@@ -66,6 +66,7 @@ class RolDocument(InnerDoc):
 class ZaakTypeDocument(InnerDoc):
     url = field.Keyword()
     catalogus = field.Keyword()
+    catalogus_domein = field.Keyword()
     omschrijving = field.Keyword()
     identificatie = field.Keyword()
 

@@ -38,15 +38,13 @@ IDENTIFICATIE = "ZAAK-001"
 
 
 class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
-    def setUp(self) -> None:
-        super().setUp()
-
-        self.requester = UserFactory.create()
-        self.client.force_authenticate(self.requester)
-
+    @classmethod
+    def setUpTestData(cls):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        self.zaaktype = generate_oas_component(
+        cls.requester = UserFactory.create()
+
+        cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
@@ -54,29 +52,32 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
             catalogus=CATALOGUS_URL,
             omschrijving="ZT1",
         )
-        self.zaak = generate_oas_component(
+        cls.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=ZAAK_URL,
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
-            zaaktype=self.zaaktype["url"],
+            zaaktype=cls.zaaktype["url"],
         )
-        zaak = factory(Zaak, self.zaak)
-
-        self.endpoint = reverse("accessrequest-list")
-        self.data = {
+        cls.data = {
             "zaak": {
                 "identificatie": IDENTIFICATIE,
                 "bronorganisatie": BRONORGANISATIE,
             },
             "comment": "some comment",
         }
-        find_zaak_patcher = patch(
-            "zac.accounts.api.serializers.find_zaak", return_value=zaak
+        cls.endpoint = reverse("accessrequest-list")
+        cls.find_zaak_patcher = patch(
+            "zac.accounts.api.serializers.find_zaak",
+            return_value=factory(Zaak, cls.zaak),
         )
-        find_zaak_patcher.start()
-        self.addCleanup(find_zaak_patcher.stop)
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.client.force_authenticate(self.requester)
+        self.find_zaak_patcher.start()
+        self.addCleanup(self.find_zaak_patcher.stop)
 
     @requests_mock.Mocker()
     def test_no_permissions(self, m):
@@ -92,33 +93,48 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
 
 @freeze_time("2020-01-01")
 class CreateAccessRequestAPITests(APITransactionTestCase):
+    zaaktype = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+        identificatie="ZT1",
+        catalogus=CATALOGUS_URL,
+        omschrijving="ZT1",
+    )
+    zaak = generate_oas_component(
+        "zrc",
+        "schemas/Zaak",
+        url=ZAAK_URL,
+        bronorganisatie=BRONORGANISATIE,
+        identificatie=IDENTIFICATIE,
+        zaaktype=zaaktype["url"],
+    )
+    data = {
+        "zaak": {
+            "identificatie": IDENTIFICATIE,
+            "bronorganisatie": BRONORGANISATIE,
+        },
+        "comment": "some comment",
+    }
+    endpoint = reverse("accessrequest-list")
+    find_zaak_patcher = patch(
+        "zac.accounts.api.serializers.find_zaak", return_value=factory(Zaak, zaak)
+    )
+
     def setUp(self) -> None:
         super().setUp()
-
         self.requester = SuperUserFactory.create()
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         site = Site.objects.get_current()
         site.domain = "testserver"
         site.save()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        self.zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=ZAAK_URL,
-            bronorganisatie=BRONORGANISATIE,
-            identificatie=IDENTIFICATIE,
-            zaaktype=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-        )
-        zaak = factory(Zaak, self.zaak)
         self.client.force_authenticate(self.requester)
-        self.endpoint = reverse("accessrequest-list")
 
-        find_zaak_patcher = patch(
-            "zac.accounts.api.serializers.find_zaak", return_value=zaak
-        )
-        find_zaak_patcher.start()
-        self.addCleanup(find_zaak_patcher.stop)
+        self.find_zaak_patcher.start()
+        self.addCleanup(self.find_zaak_patcher.stop)
 
     @requests_mock.Mocker()
     def test_request_access_success(self, m):
