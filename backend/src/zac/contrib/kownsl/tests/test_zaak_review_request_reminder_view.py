@@ -95,12 +95,6 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
         cls.get_review_request_patcher = patch(
             "zac.contrib.kownsl.views.get_review_request", return_value=review_request
         )
-        cls.get_advices_patcher = patch(
-            "zac.contrib.kownsl.views.retrieve_advices", return_value=[]
-        )
-        cls.get_approvals_patcher = patch(
-            "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
-        )
         cls.endpoint = reverse(
             "kownsl:zaak-review-requests-reminder",
             kwargs={
@@ -115,12 +109,6 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
 
         self.get_review_request_patcher.start()
         self.addCleanup(self.get_review_request_patcher.stop)
-
-        self.get_advices_patcher.start()
-        self.addCleanup(self.get_advices_patcher.stop)
-
-        self.get_approvals_patcher.start()
-        self.addCleanup(self.get_approvals_patcher.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.superuser)

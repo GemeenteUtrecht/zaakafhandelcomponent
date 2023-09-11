@@ -115,9 +115,6 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
         document = factory(Document, cls.document)
-        cls.get_document_patcher = patch(
-            "zac.contrib.kownsl.views.get_document", return_value=document
-        )
         cls.revreq = {**REVIEW_REQUEST, "metadata": {"processInstanceId": "123"}}
 
         # Let resolve_assignee get the right users and groups
@@ -131,13 +128,6 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         cls.get_all_review_requests_for_zaak_patcher = patch(
             "zac.contrib.kownsl.views.get_all_review_requests_for_zaak",
             return_value=[review_request],
-        )
-        advices = factory(Advice, [ADVICE])
-        cls.get_advices_patcher = patch(
-            "zac.contrib.kownsl.views.retrieve_advices", return_value=advices
-        )
-        cls.get_approvals_patcher = patch(
-            "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
         )
         cls.endpoint_summary = reverse(
             "kownsl:zaak-review-requests-summary",
@@ -163,15 +153,6 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
 
         self.get_all_review_requests_for_zaak_patcher.start()
         self.addCleanup(self.get_all_review_requests_for_zaak_patcher.stop)
-
-        self.get_advices_patcher.start()
-        self.addCleanup(self.get_advices_patcher.stop)
-
-        self.get_approvals_patcher.start()
-        self.addCleanup(self.get_approvals_patcher.stop)
-
-        self.get_document_patcher.start()
-        self.addCleanup(self.get_document_patcher.stop)
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
@@ -465,16 +446,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
 
         cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
         cls.advices = factory(Advice, [ADVICE])
-        cls.get_advices_patcher = patch(
-            "zac.contrib.kownsl.api.retrieve_advices", return_value=cls.advices
-        )
-        cls.get_approvals_patcher = patch(
-            "zac.contrib.kownsl.api.retrieve_approvals", return_value=[]
-        )
         document = factory(Document, cls.document)
-        cls.get_document_patcher = patch(
-            "zac.contrib.kownsl.views.get_document", return_value=document
-        )
         cls.endpoint_summary = reverse(
             "kownsl:zaak-review-requests-summary",
             kwargs={
@@ -497,9 +469,6 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
 
         self.get_zaak_patcher.start()
         self.addCleanup(self.get_zaak_patcher.stop)
-
-        self.get_document_patcher.start()
-        self.addCleanup(self.get_document_patcher.stop)
 
     def test_rr_summary_not_authenticated(self):
         response = self.client.get(self.endpoint_summary)
@@ -648,13 +617,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.kownsl.views.get_review_request",
             return_value=self.review_request,
         ):
-            with patch(
-                "zac.contrib.kownsl.views.retrieve_advices", return_value=self.advices
-            ):
-                with patch(
-                    "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
-                ):
-                    response_detail = self.client.get(self.endpoint_detail)
+            response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
 
     def test_get_zaak_not_found(self):
@@ -709,15 +672,9 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.kownsl.views.get_review_request",
             return_value=self.review_request,
         ):
-            with patch(
-                "zac.contrib.kownsl.views.retrieve_advices", return_value=self.advices
-            ):
-                with patch(
-                    "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
-                ):
-                    response_detail = self.client.patch(
-                        self.endpoint_detail, {"lock_reason": "zomaar"}
-                    )
+            response_detail = self.client.patch(
+                self.endpoint_detail, {"lock_reason": "zomaar"}
+            )
         self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
 
     @requests_mock.Mocker()
@@ -807,11 +764,5 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.kownsl.views.get_review_request",
             return_value=factory(ReviewRequest, rr),
         ):
-            with patch(
-                "zac.contrib.kownsl.views.retrieve_advices", return_value=self.advices
-            ):
-                with patch(
-                    "zac.contrib.kownsl.views.retrieve_approvals", return_value=[]
-                ):
-                    response_detail = self.client.get(self.endpoint_detail)
+            response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_200_OK)
