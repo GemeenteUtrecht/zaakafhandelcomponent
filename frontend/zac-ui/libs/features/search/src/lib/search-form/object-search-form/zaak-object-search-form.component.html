@@ -8,7 +8,7 @@
 <gu-form class="d-block mb-4" *ngIf="objectTypeVersions" [form]="form" buttonLabel="Object zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading" [buttonSize]="'small'"
          (formSubmit)="submitForm($event)"></gu-form>
 
-<div *ngIf="zaakObjects.length > 0 && !selectedZaakObject">
+<div class="object-search-result" *ngIf="zaakObjects.length > 0 && !selectedZaakObject">
   <gu-loading-indicator *ngIf="isLoadingResults"></gu-loading-indicator>
   <gu-table [table]="zaakObjectsTableData"
             [sortable]="false"
