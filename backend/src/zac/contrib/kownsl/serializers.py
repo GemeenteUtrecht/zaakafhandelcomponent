@@ -218,11 +218,11 @@ class AdviceSerializer(APIModelSerializer):
 
 
 class AdviceReviewsSerializer(serializers.Serializer):
-    advices = AdviceSerializer(many=True, source="get_reviews")
+    advices = AdviceSerializer(many=True, source="get_reviews_detail")
 
 
 class ApprovalReviewsSerializer(serializers.Serializer):
-    approvals = ApprovalSerializer(many=True, source="get_reviews")
+    approvals = ApprovalSerializer(many=True, source="get_reviews_detail")
 
 
 class OpenReviewUserSerializer(UserSerializer):

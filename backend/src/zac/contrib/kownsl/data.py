@@ -9,11 +9,13 @@ from django.utils.translation import gettext_lazy as _
 from djchoices import ChoiceItem, DjangoChoices
 from zgw_consumers.api_models.base import Model, factory
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import Group, User
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.user_tasks import Context
 from zac.core.camunda.utils import resolve_assignee
+from zac.core.services import get_document
 from zgw.models.zrc import Zaak
 
 
@@ -200,8 +202,33 @@ class ReviewRequest(Model):
     def completed(self) -> int:
         return self.num_advices + self.num_approvals
 
-    def get_reviews(self) -> List[Union[Advice, Approval]]:
+    def get_reviews_summary(self) -> List[Union[Advice, Approval]]:
         if self.review_type == KownslTypes.advice:
             return factory(Advice, self.reviews)
         else:
             return factory(Approval, self.reviews)
+
+    def get_reviews_detail(self) -> List[Union[Advice, Approval]]:
+        if self.review_type == KownslTypes.advice:
+            _advices = factory(Advice, self.reviews)
+            documents = set()
+            for advice in _advices:
+                for document in advice.documents:
+                    documents.add(document.document)
+
+            with parallel() as executor:
+                _documents = executor.map(get_document, documents)
+
+            documents = {doc.url: doc for doc in _documents}
+            advices = []
+            for advice in _advices:
+                advice_documents = []
+                for advice_document in advice.documents:
+                    advice_document.document = documents[advice_document.document]
+                    advice_documents.append(advice_document)
+
+                advice.documents = advice_documents
+                advices.append(advice)
+            return advices
+        else:
+            return self.get_reviews_summary()

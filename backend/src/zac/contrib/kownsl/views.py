@@ -13,7 +13,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.concurrent import parallel
 from zgw_consumers.models import Service
 
 from zac.camunda.constants import AssigneeTypeChoices
@@ -22,7 +21,7 @@ from zac.camunda.user_tasks.api import set_assignee_and_complete_task
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.camunda.utils import resolve_assignee
-from zac.core.services import get_document, get_zaak
+from zac.core.services import get_zaak
 from zac.notifications.views import BaseNotificationCallbackView
 
 from .api import (
@@ -30,8 +29,6 @@ from .api import (
     get_client,
     get_review_request,
     lock_review_request,
-    retrieve_advices,
-    retrieve_approvals,
     update_assigned_users_review_request,
 )
 from .cache import invalidate_review_requests_cache
@@ -297,41 +294,6 @@ class ZaakReviewRequestDetailView(APIView):
         self.check_object_permissions(self.request, review_request)
         return review_request
 
-    def get_review_request_metadata(self, review_request: ReviewRequest):
-        with parallel() as executor:
-            review_request.advices = []
-            if review_request.num_advices:
-                _advices = executor.submit(retrieve_advices, review_request)
-                review_request.advices = _advices.result()
-
-            review_request.approvals = []
-            if review_request.num_approvals:
-                _approvals = executor.submit(retrieve_approvals, review_request)
-                review_request.approvals = _approvals.result()
-
-        documents = set()
-        for advice in review_request.advices:
-            for document in advice.documents:
-                documents.add(document.document)
-
-        with parallel() as executor:
-            _documents = executor.map(get_document, documents)
-
-        documents = {doc.url: doc for doc in _documents}
-
-        advices = []
-        for advice in review_request.advices:
-            advice_documents = []
-            for advice_document in advice.documents:
-                advice_document.document = documents[advice_document.document]
-                advice_documents.append(advice_document)
-
-            advice.documents = advice_documents
-            advices.append(advice)
-
-        review_request.advices = advices
-        return review_request
-
     @extend_schema(
         summary=_("Retrieve review request."),
         responses={
@@ -340,7 +302,6 @@ class ZaakReviewRequestDetailView(APIView):
     )
     def get(self, request, request_uuid, *args, **kwargs):
         review_request = self.get_object()
-        review_request = self.get_review_request_metadata(review_request)
         serializer = self.get_serializer(instance=review_request)
         return Response(serializer.data)
 
@@ -370,7 +331,6 @@ class ZaakReviewRequestDetailView(APIView):
                 },
             )
 
-        review_request = self.get_review_request_metadata(review_request)
         response_serializer = ZaakRevReqDetailSerializer(instance=review_request)
         return Response(response_serializer.data)
 

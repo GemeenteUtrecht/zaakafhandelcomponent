@@ -5,12 +5,13 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
+from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.kownsl.constants import KownslTypes
-from zac.contrib.kownsl.data import Advice
 from zac.contrib.kownsl.serializers import (
     AdviceSerializer,
-    AuthorSerializer,
-    ZaakRevReqDetailSerializer,
+    ApprovalReviewsSerializer,
+    ApprovalSerializer,
+    OpenReviewSerializer,
 )
 from zac.contrib.objects.checklists.data import ChecklistAnswer
 from zac.elasticsearch.drf_api.serializers import (
@@ -160,14 +161,30 @@ class WorkStackAdviceSerializer(AdviceSerializer):
 
 
 class WorkStackAdviceReviewsSerializer(serializers.Serializer):
-    advices = WorkStackAdviceSerializer(many=True, source="get_reviews")
+    advices = WorkStackAdviceSerializer(many=True, source="get_reviews_summary")
 
 
-class WorkStackReviewRequestSerializer(ZaakRevReqDetailSerializer):
+class WorkStackApprovalReviewsSerializer(serializers.Serializer):
+    approvals = ApprovalSerializer(many=True, source="get_reviews_summary")
+
+
+class WorkStackReviewRequestSerializer(PolymorphicSerializer):
     serializer_mapping = {
-        **ZaakRevReqDetailSerializer.serializer_mapping,
         KownslTypes.advice: WorkStackAdviceReviewsSerializer,
+        KownslTypes.approval: WorkStackApprovalReviewsSerializer,
     }
+    discriminator_field = "review_type"
+    id = serializers.UUIDField(help_text=_("The `id` of the review request."))
+    review_type = serializers.ChoiceField(
+        choices=KownslTypes.choices, help_text=_("The review type.")
+    )
+    open_reviews = OpenReviewSerializer(many=True, read_only=True)
+    is_being_reconfigured = serializers.BooleanField(
+        help_text=_(
+            "Boolean flag to indicate if review request is currently being reconfigured."
+        ),
+        required=True,
+    )
     completed = serializers.IntegerField(
         label=_("completed requests"), help_text=_("The number of completed requests.")
     )
