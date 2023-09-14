@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Kownsl - advices and approvals
-  version: 0.1.0
+  version: 0.1.1
   description: |2
 
     Manage case-oriented advices and approvals.
@@ -31,6 +31,23 @@ paths:
           type: string
           format: uri
         description: URL reference to the zaak in the API.
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: pageSize
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: requester
+        schema:
+          type: string
+        description: Username of requester that is filtered on.
       tags:
       - review-requests
       security:
@@ -42,9 +59,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SummaryReviewRequest'
+                $ref: '#/components/schemas/PaginatedSummaryReviewRequestList'
           description: ''
     post:
       operationId: review_requests_create
@@ -668,6 +683,27 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/review-requests/count:
+    get:
+      operationId: review_requests_count_retrieve
+      description: |-
+        CRUD operations on review requests.
+
+        Note that the list endpoint _requires_ a filter parameter.
+      summary: Count number of review requests.
+      tags:
+      - review-requests
+      security:
+      - ZGWAuthentication: []
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountReviewRequest'
+          description: ''
 components:
   schemas:
     Advice:
@@ -724,6 +760,14 @@ components:
       required:
       - author
       - created
+    CountReviewRequest:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Count number of review requests by user.
+      required:
+      - count
     DocumentAdvice:
       type: object
       properties:
@@ -763,6 +807,22 @@ components:
       - adviceVersion
       - document
       - sourceVersion
+    PaginatedSummaryReviewRequestList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SummaryReviewRequest'
     PatchedAdvice:
       type: object
       properties:
@@ -814,6 +874,9 @@ components:
     PatchedReviewRequest:
       type: object
       properties:
+        assignedUsers:
+          type: object
+          additionalProperties: {}
         created:
           type: string
           format: date-time
@@ -822,22 +885,34 @@ components:
           type: string
           format: uuid
           readOnly: true
-        forZaak:
-          type: string
-          format: uri
-          description: URL reference to the zaak in the API.
-          maxLength: 1000
-        reviewType:
-          $ref: '#/components/schemas/ReviewTypeEnum'
         documents:
           type: array
           items:
             type: string
             format: uri
+        forZaak:
+          type: string
+          format: uri
+          description: URL reference to the zaak in the API.
+          maxLength: 1000
         frontendUrl:
           type: string
           readOnly: true
           description: The frontend URL for reviewers to submit their review.
+        isBeingReconfigured:
+          type: boolean
+          description: Indication that shows if the review request is currently being
+            reconfigured.
+        lockReason:
+          type: string
+          description: Reason why the review request was locked.
+        locked:
+          type: boolean
+          description: Locking the review request prevents further reviewing.
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Metadata that may be relevant for the process.
         numAdvices:
           type: integer
           readOnly: true
@@ -849,27 +924,32 @@ components:
             does not mean they are all positive approvals - this includes the rejections.
         numAssignedUsers:
           type: integer
-          maximum: 32767
-          minimum: 0
+          readOnly: true
+        openReviews:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+          readOnly: true
+          description: Deadlines and users of open reviewers. Sorted on earliest deadlines
+            first.
         toelichting:
           type: string
         userDeadlines:
           type: object
           additionalProperties: {}
+          readOnly: true
         requester:
           allOf:
           - $ref: '#/components/schemas/User'
           readOnly: true
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Metadata that may be relevant for the process.
-        zaakDocuments:
-          type: array
-          items:
-            $ref: '#/components/schemas/ZaakDocument'
-          readOnly: true
-          description: The documents with their download url and relevant metadata.
+        reviewType:
+          $ref: '#/components/schemas/ReviewTypeEnum'
         reviews:
           type: array
           items:
@@ -877,9 +957,18 @@ components:
             additionalProperties: {}
           readOnly: true
           description: Previous advices or approvals.
+        zaakDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZaakDocument'
+          readOnly: true
+          description: The documents with their download url and relevant metadata.
     ReviewRequest:
       type: object
       properties:
+        assignedUsers:
+          type: object
+          additionalProperties: {}
         created:
           type: string
           format: date-time
@@ -888,22 +977,34 @@ components:
           type: string
           format: uuid
           readOnly: true
-        forZaak:
-          type: string
-          format: uri
-          description: URL reference to the zaak in the API.
-          maxLength: 1000
-        reviewType:
-          $ref: '#/components/schemas/ReviewTypeEnum'
         documents:
           type: array
           items:
             type: string
             format: uri
+        forZaak:
+          type: string
+          format: uri
+          description: URL reference to the zaak in the API.
+          maxLength: 1000
         frontendUrl:
           type: string
           readOnly: true
           description: The frontend URL for reviewers to submit their review.
+        isBeingReconfigured:
+          type: boolean
+          description: Indication that shows if the review request is currently being
+            reconfigured.
+        lockReason:
+          type: string
+          description: Reason why the review request was locked.
+        locked:
+          type: boolean
+          description: Locking the review request prevents further reviewing.
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Metadata that may be relevant for the process.
         numAdvices:
           type: integer
           readOnly: true
@@ -915,27 +1016,32 @@ components:
             does not mean they are all positive approvals - this includes the rejections.
         numAssignedUsers:
           type: integer
-          maximum: 32767
-          minimum: 0
+          readOnly: true
+        openReviews:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+          readOnly: true
+          description: Deadlines and users of open reviewers. Sorted on earliest deadlines
+            first.
         toelichting:
           type: string
         userDeadlines:
           type: object
           additionalProperties: {}
+          readOnly: true
         requester:
           allOf:
           - $ref: '#/components/schemas/User'
           readOnly: true
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Metadata that may be relevant for the process.
-        zaakDocuments:
-          type: array
-          items:
-            $ref: '#/components/schemas/ZaakDocument'
-          readOnly: true
-          description: The documents with their download url and relevant metadata.
+        reviewType:
+          $ref: '#/components/schemas/ReviewTypeEnum'
         reviews:
           type: array
           items:
@@ -943,6 +1049,12 @@ components:
             additionalProperties: {}
           readOnly: true
           description: Previous advices or approvals.
+        zaakDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZaakDocument'
+          readOnly: true
+          description: The documents with their download url and relevant metadata.
       required:
       - created
       - forZaak
@@ -950,9 +1062,12 @@ components:
       - id
       - numAdvices
       - numApprovals
+      - numAssignedUsers
+      - openReviews
       - requester
       - reviewType
       - reviews
+      - userDeadlines
       - zaakDocuments
     ReviewTypeEnum:
       enum:
@@ -962,12 +1077,32 @@ components:
     SummaryReviewRequest:
       type: object
       properties:
+        assignedUsers:
+          type: object
+          additionalProperties: {}
+        completed:
+          type: integer
+          readOnly: true
+          description: The number of completed requests.
         id:
           type: string
           format: uuid
           readOnly: true
-        reviewType:
-          $ref: '#/components/schemas/ReviewTypeEnum'
+        isBeingReconfigured:
+          type: boolean
+          description: Indication that shows if the review request is currently being
+            reconfigured.
+        forZaak:
+          type: string
+          format: uri
+          description: URL reference to the zaak in the API.
+          maxLength: 1000
+        lockReason:
+          type: string
+          description: Reason why the review request was locked.
+        locked:
+          type: boolean
+          description: Locking the review request prevents further reviewing.
         numAdvices:
           type: integer
           readOnly: true
@@ -979,31 +1114,47 @@ components:
             does not mean they are all positive approvals - this includes the rejections.
         numAssignedUsers:
           type: integer
-          maximum: 32767
-          minimum: 0
-        completed:
-          type: integer
           readOnly: true
-          description: The number of completed requests.
+        openReviews:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+          readOnly: true
+          description: Deadlines and users of open reviewers. Sorted on earliest deadlines
+            first.
+        requester:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        reviews:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+          description: Previous advices or approvals.
+        reviewType:
+          $ref: '#/components/schemas/ReviewTypeEnum'
         userDeadlines:
           type: object
           additionalProperties: {}
-        advices:
-          type: array
-          items:
-            $ref: '#/components/schemas/Advice'
-        approvals:
-          type: array
-          items:
-            $ref: '#/components/schemas/Approval'
       required:
-      - advices
-      - approvals
       - completed
+      - forZaak
       - id
       - numAdvices
       - numApprovals
+      - numAssignedUsers
+      - openReviews
+      - requester
       - reviewType
+      - reviews
     User:
       type: object
       properties:

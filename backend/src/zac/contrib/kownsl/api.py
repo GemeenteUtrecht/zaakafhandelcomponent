@@ -192,3 +192,15 @@ def update_assigned_users_review_request(
     review_request = factory(ReviewRequest, result)
     review_request.user_deadlines = result["userDeadlines"]
     return review_request
+
+
+@optional_service
+def count_review_requests_by_user(
+    user: User,
+) -> int:
+
+    client = get_client()
+    result = client.get(
+        "review_requests_count_retrieve", query_params={"requester": f"{user}"}
+    )
+    return result["count"]

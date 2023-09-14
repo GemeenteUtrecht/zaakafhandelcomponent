@@ -19,7 +19,10 @@ from zac.camunda.user_tasks.api import (
     get_killable_camunda_tasks,
     get_zaak_urls_from_tasks,
 )
-from zac.contrib.kownsl.api import get_review_requests_paginated
+from zac.contrib.kownsl.api import (
+    count_review_requests_by_user,
+    get_review_requests_paginated,
+)
 from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.objects.services import (
     fetch_all_checklists_for_user_groups,
@@ -31,7 +34,7 @@ from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
 from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
-from zac.elasticsearch.searches import search_zaken
+from zac.elasticsearch.searches import count_by_behandelaar, search_zaken
 
 from .data import AccessRequestGroup, TaskAndCase
 from .pagination import WorkstackPagination
@@ -40,9 +43,11 @@ from .serializers import (
     WorkStackAdhocActivitiesSerializer,
     WorkStackChecklistAnswerSerializer,
     WorkStackReviewRequestSerializer,
+    WorkStackSummarySerializer,
     WorkStackTaskSerializer,
 )
 from .utils import (
+    count_access_requests,
     get_access_requests_groups,
     get_activity_groups,
     get_checklist_answers_groups,
@@ -308,3 +313,37 @@ class WorkStackReviewRequestsView(views.APIView):
             instance=review_requests, many=True
         ).data
         return self.paginator.get_paginated_response(request, results)
+
+
+class WorkStackSummaryView(views.APIView):
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = WorkStackSummarySerializer
+
+    def post(self, request, *args, **kwargs):
+        client = get_client()
+        user_groups = [
+            n[0] for n in list(request.user.groups.all().values_list("name"))
+        ]
+        data = {}
+        data["user_tasks"] = client.post(
+            "task/count",
+            json={"assignee": f"{AssigneeTypeChoices.user}:{self.request.user}"},
+        )["count"]
+        data["group_tasks"] = client.post(
+            "task/count",
+            json={
+                "assigneeIn": [f"{AssigneeTypeChoices.group}:{n}" for n in user_groups]
+            },
+        )["count"]
+        data["zaken"] = count_by_behandelaar(request=request)
+        data["reviews"] = count_review_requests_by_user(user=request.user)
+        data["user_activities"] = Activity.objects.filter(
+            user_assignee=request.user
+        ).count()
+        data["group_activities"] = Activity.objects.filter(
+            group_assignee__in=user_groups
+        ).count()
+        data["access_requests"] = count_access_requests(request)
+        serializer = self.serializer_class(data)
+        return Response(serializer.data)
