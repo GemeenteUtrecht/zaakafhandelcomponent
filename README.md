@@ -1,3 +1,5 @@
+DOCUMENTATIE: https://zaakafhandelcomponent.readthedocs.io/en/latest/
+
 # Zaakafhandelcomponent
 
 Het zaakafhandelcomponent (ook wel: keteninzagecomponent) orchestreert het zaakgericht
