@@ -139,13 +139,14 @@ export class KownslSummaryComponent implements OnInit {
    * @return {Table}
    */
   reviewRequestSummaryAsTable(reviewRequestSummaries: ReviewRequestSummary[]): Table {
-    const table = new Table(['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', 'Laatste update', ''], []);
+    const table = new Table(['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', 'Laatste update', '', ''], []);
 
     table.bodyData = reviewRequestSummaries.map((reviewRequestSummary): RowData => {
       const reviewRequestDetails = this.getReviewRequestDetailsForSummary(reviewRequestSummary);
       const [icon, iconColor] = this.reviewRequestsService.getReviewRequestIcon(reviewRequestSummary, reviewRequestDetails);
       const status = this.reviewRequestsService.getReviewRequestStatus(reviewRequestSummary, reviewRequestDetails);
       const date = reviewRequestDetails ? this.reviewRequestsService.getReviewRequestLastUpdate(reviewRequestDetails) : null;
+      const showRemindButton = reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers
       const showCancelButton = reviewRequestSummary.canLock && !reviewRequestSummary.locked && (reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers)
 
       return {
@@ -168,6 +169,12 @@ export class KownslSummaryComponent implements OnInit {
               type: date === null ? 'text' : 'date',
               date: String(date),
             } as ExtensiveCell,
+
+          'remind': showRemindButton ? {
+            type: 'button',
+            label: 'Rappelleren',
+            value: reviewRequestSummary
+          } : '',
 
           'cancel': showCancelButton ? {
             type: 'button',
@@ -209,8 +216,15 @@ export class KownslSummaryComponent implements OnInit {
    * @param {event} event
    */
   tableButtonClick(event): void {
-    this.selectedReviewRequestSummary = event.cancel;
-    this.modalService.open('cancel-review-modal')
+    if (event.cancel) {
+      this.selectedReviewRequestSummary = event.cancel;
+      this.modalService.open('cancel-review-modal')
+    } else if (event.remind) {
+      this.reviewRequestsService.remindReviewRequest(event.remind.id)
+        .subscribe(() => {
+          this.snackbarService.openSnackBar('Verzonden', 'Sluiten', 'primary');
+        })
+    }
   }
 
   /**
