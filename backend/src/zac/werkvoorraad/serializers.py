@@ -194,7 +194,7 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
 
 class WorkStackSummarySerializer(serializers.Serializer):
     user_tasks = serializers.IntegerField()
-    group_tasks = serializers.IntegerField()
+    group_tasks = serializers.IntegerField(default=0)
     zaken = serializers.IntegerField()
     reviews = serializers.IntegerField()
     user_activities = serializers.IntegerField()

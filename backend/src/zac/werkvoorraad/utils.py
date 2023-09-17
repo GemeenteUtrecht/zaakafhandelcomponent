@@ -28,14 +28,19 @@ def count_access_requests(request: Request) -> int:
         zaak.url: zaak
         for zaak in search_zaken(request=request, behandelaar=request.user.username)
     }
+    if not behandelaar_zaken:
+        return 0
     return get_access_requests(request, behandelaar_zaken).count()
 
 
-def get_access_requests_groups(request: Request):
+def get_access_requests_groups(request: Request) -> List[dict]:
     behandelaar_zaken = {
         zaak.url: zaak
         for zaak in search_zaken(request=request, behandelaar=request.user.username)
     }
+    if not behandelaar_zaken:
+        return []
+
     # if user doesn't have a permission to handle access requests - don't show them
     qs = get_access_requests(request, zaken=behandelaar_zaken).order_by(
         "zaak", "requester__username"

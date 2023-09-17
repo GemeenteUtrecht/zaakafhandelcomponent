@@ -9,6 +9,7 @@ from .views import (
     WorkStackGroupChecklistQuestionsView,
     WorkStackGroupTasksView,
     WorkStackReviewRequestsView,
+    WorkStackSummaryView,
     WorkStackUserTasksView,
 )
 
@@ -38,4 +39,5 @@ urlpatterns = [
     path(
         "review-requests", WorkStackReviewRequestsView.as_view(), name="review-requests"
     ),
+    path("summary", WorkStackSummaryView.as_view(), name="summary"),
 ]

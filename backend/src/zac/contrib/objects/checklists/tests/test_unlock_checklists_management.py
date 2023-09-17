@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 from django.contrib.sites.models import Site
@@ -16,7 +15,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import UserFactory
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.tests.utils import mock_resource_get
 
 from .utils import (
     BRONORGANISATIE,

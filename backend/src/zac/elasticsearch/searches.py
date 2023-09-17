@@ -273,7 +273,7 @@ def count_by_behandelaar(request: Request) -> int:
     s = search_zaken(
         size=0,
         request=request,
-        behandelaar=request.user,
+        behandelaar=request.user.username,
         return_search=True,
         only_allowed=True,
     )

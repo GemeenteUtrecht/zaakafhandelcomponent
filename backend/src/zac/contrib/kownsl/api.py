@@ -197,10 +197,11 @@ def update_assigned_users_review_request(
 @optional_service
 def count_review_requests_by_user(
     user: User,
-) -> int:
+) -> Optional[int]:
 
     client = get_client()
-    result = client.get(
-        "review_requests_count_retrieve", query_params={"requester": f"{user}"}
+    result = client.retrieve(
+        "review_requests_count",
+        request_kwargs={"params": {"requester": {user.username}}},
     )
-    return result["count"]
+    return result.get("count", None)

@@ -9,11 +9,13 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import authentication, permissions, views
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
+from zgw_consumers.concurrent import parallel
 
 from zac.activities.models import Activity
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.user_tasks.api import (
+    get_camunda_user_task_count,
     get_camunda_user_tasks_for_assignee,
     get_camunda_user_tasks_for_user_groups,
     get_killable_camunda_tasks,
@@ -322,28 +324,62 @@ class WorkStackSummaryView(views.APIView):
 
     def post(self, request, *args, **kwargs):
         client = get_client()
-        user_groups = [
-            n[0] for n in list(request.user.groups.all().values_list("name"))
-        ]
         data = {}
-        data["user_tasks"] = client.post(
-            "task/count",
-            json={"assignee": f"{AssigneeTypeChoices.user}:{self.request.user}"},
-        )["count"]
-        data["group_tasks"] = client.post(
-            "task/count",
-            json={
-                "assigneeIn": [f"{AssigneeTypeChoices.group}:{n}" for n in user_groups]
-            },
-        )["count"]
-        data["zaken"] = count_by_behandelaar(request=request)
-        data["reviews"] = count_review_requests_by_user(user=request.user)
-        data["user_activities"] = Activity.objects.filter(
-            user_assignee=request.user
-        ).count()
-        data["group_activities"] = Activity.objects.filter(
-            group_assignee__in=user_groups
-        ).count()
-        data["access_requests"] = count_access_requests(request)
-        serializer = self.serializer_class(data)
+
+        def _get_user_task_count():
+            resp = get_camunda_user_task_count(
+                {"assigneeIn": [f"{AssigneeTypeChoices.user}:{self.request.user}"]}
+            )
+            return {"key": "user_tasks", "val": resp["count"]}
+
+        def _get_group_task_count():
+            user_groups = [
+                n[0] for n in list(self.request.user.groups.all().values_list("name"))
+            ]
+            resp = get_camunda_user_task_count(
+                {
+                    "assigneeIn": [
+                        f"{AssigneeTypeChoices.group}:{n}" for n in user_groups
+                    ]
+                }
+            )
+
+            return {"key": "group_tasks", "val": resp["count"]}
+
+        def _count_zaken():
+            count = count_by_behandelaar(request=self.request)
+            return {"key": "zaken", "val": count}
+
+        def _count_review_requests():
+            count = count_review_requests_by_user(user=self.request.user)
+            return {"key": "reviews", "val": count or 0}
+
+        def _count_user_activities():
+            count = Activity.objects.filter(user_assignee=request.user).count()
+            return {"key": "user_activities", "val": count}
+
+        def _count_group_activities():
+            user_groups = [
+                n[0] for n in list(self.request.user.groups.all().values_list("id"))
+            ]
+            count = Activity.objects.filter(group_assignee__in=user_groups).count()
+            return {"key": "group_activities", "val": count}
+
+        def _count_access_requests():
+            count = count_access_requests(self.request)
+            return {"key": "access_requests", "val": count}
+
+        fetch_these = [
+            _get_user_task_count,
+            _get_group_task_count,
+            _count_zaken,
+            _count_review_requests,
+            _count_user_activities,
+            _count_group_activities,
+            _count_access_requests,
+        ]
+        with parallel() as executor:
+            data = list(executor.map(lambda fn: fn(), fetch_these))
+
+        serializer = self.serializer_class({d["key"]: d["val"] for d in data})
         return Response(serializer.data)
