@@ -35,7 +35,6 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         config.save()
 
         cls.user = UserFactory.create(username="test_user")
-        cls.token = Token.objects.get_or_create(user=cls.user)
 
     def test_add_permission_for_behandelaar(self, m):
         # mock API requests
