@@ -9,7 +9,6 @@ from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.kownsl.constants import KownslTypes
 from zac.contrib.kownsl.serializers import (
     AdviceSerializer,
-    ApprovalReviewsSerializer,
     ApprovalSerializer,
     OpenReviewSerializer,
 )
@@ -191,3 +190,13 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
     zaak = SummaryZaakDocumentSerializer(
         help_text=_("ZAAK that review request belongs to."), source="for_zaak"
     )
+
+
+class WorkStackSummarySerializer(serializers.Serializer):
+    user_tasks = serializers.IntegerField()
+    group_tasks = serializers.IntegerField(default=0)
+    zaken = serializers.IntegerField()
+    reviews = serializers.IntegerField()
+    user_activities = serializers.IntegerField()
+    group_activities = serializers.IntegerField()
+    access_requests = serializers.IntegerField()

@@ -267,3 +267,14 @@ def count_by_zaaktype(request: Optional[Request] = None) -> List[ParentAggregati
     s.aggs["parent"].bucket("child", "terms", field="zaaktype.identificatie")
     results = [bucket.to_dict() for bucket in s.execute().aggregations.parent.buckets]
     return factory(ParentAggregation, results)
+
+
+def count_by_behandelaar(request: Request) -> int:
+    s = search_zaken(
+        size=0,
+        request=request,
+        behandelaar=request.user.username,
+        return_search=True,
+        only_allowed=True,
+    )
+    return s.count()
