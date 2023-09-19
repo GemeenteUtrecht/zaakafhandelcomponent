@@ -29,6 +29,7 @@ from .resources import (
     BlueprintPermissionResource,
     RoleResource,
     UserAuthorizationProfileResource,
+    UserResource,
 )
 from .widgets import PolicyWidget
 
@@ -39,7 +40,11 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 
 
 @admin.register(User)
-class _UserAdmin(RelatedLinksMixin, HijackUserAdminMixin, UserAdmin):
+class _UserAdmin(
+    ImportMixin, ExportActionMixin, RelatedLinksMixin, HijackUserAdminMixin, UserAdmin
+):
+    resource_class = UserResource
+
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         (_("Personal info"), {"fields": ("first_name", "last_name", "email")}),

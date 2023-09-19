@@ -9,6 +9,24 @@ from .models import (
 )
 
 
+class UserResource(resources.ModelResource):
+    class Meta:
+        model = User
+        import_id_fields = ("username",)
+        fields = (
+            "date_joined",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "is_staff",
+            "recently_viewed",
+            "uuid",
+            "username",
+        )
+        skip_unchanged = True
+
+
 class RoleResource(resources.ModelResource):
     class Meta:
         model = Role
