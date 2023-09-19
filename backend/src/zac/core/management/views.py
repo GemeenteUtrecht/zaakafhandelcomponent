@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
@@ -10,6 +11,7 @@ from .serializers import CacheResetSerializer
 
 
 class CacheResetView(APIView):
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (
         IsAuthenticated,
         IsAdminUser,

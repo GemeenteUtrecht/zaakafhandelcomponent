@@ -2,6 +2,7 @@ from django.core.management import call_command
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
@@ -9,6 +10,7 @@ from rest_framework.views import APIView
 
 
 class IndexAllView(APIView):
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (
         IsAuthenticated,
         IsAdminUser,
