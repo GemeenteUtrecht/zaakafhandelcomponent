@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from zgw_consumers.api_models.constants import RolTypes
 from zgw_consumers.api_models.zaken import Rol as _Rol
 
+from zac.accounts.models import Group, User
 from zac.contrib.brp.api import fetch_natuurlijkpersoon
 from zac.contrib.brp.data import IngeschrevenNatuurlijkPersoon
 from zac.contrib.organisatieonderdelen.models import OrganisatieOnderdeel
@@ -86,7 +87,14 @@ def get_naam_medewerker(rol: Rol) -> Optional[str]:
         # This is not unique enough and so we catch the gebruiker by its identificatie whenever possible.
         try:
             user = resolve_assignee(username)
-            name = user.get_full_name()
+            if isinstance(user, User):
+                name = user.get_full_name()
+            elif isinstance(user, Group):
+                logger.warning(
+                    "Groups should not be set on a ROL. Reverting to group name for now."
+                )
+                name = "Groep: {obj}".format(obj=user.name.lower())
+
         except RuntimeError:
             logger.warning(
                 "Could not resolve betrokkene_identificatie.identificatie to a user. Reverting to information in betrokkene_identificatie.",

@@ -21,6 +21,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
+    GroupFactory,
     SuperUserFactory,
     UserFactory,
 )
@@ -203,6 +204,58 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         ]
         self.assertEqual(response_data, expected)
         mock_logger.assert_not_called()
+
+    def test_get_zaak_rollen_name_from_group_resolve_assignee(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        group = GroupFactory.create(name="some-group")
+        medewerker = generate_oas_component(
+            "zrc",
+            "schemas/RolMedewerker",
+            identificatie=f"{AssigneeTypeChoices.group}:{group}",
+            achternaam="Orange",
+            voorletters="W.",
+            voorvoegselAchternaam="van",
+        )
+
+        rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            zaak=self.zaak["url"],
+            betrokkene="",
+            betrokkeneType="medewerker",
+            roltype=self.roltype["url"],
+            betrokkeneIdentificatie=medewerker,
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([rol]),
+        )
+        mock_resource_get(m, self.roltype)
+        with patch("zac.core.rollen.logger") as mock_logger:
+            response = self.client.get(self.endpoint)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        expected = [
+            {
+                "url": rol["url"],
+                "betrokkeneType": "medewerker",
+                "betrokkeneTypeDisplay": "Medewerker",
+                "omschrijving": rol["omschrijving"],
+                "omschrijvingGeneriek": rol["omschrijvingGeneriek"],
+                "roltoelichting": rol["roltoelichting"],
+                "registratiedatum": rol["registratiedatum"].replace("+00:00", "Z"),
+                "name": "Groep: some-group",
+                "identificatie": f"{AssigneeTypeChoices.group}:{group}",
+                "roltypeOmschrijving": self.roltype["omschrijving"],
+            }
+        ]
+        self.assertEqual(response_data, expected)
+        mock_logger.warning.assert_called_with(
+            "Groups should not be set on a ROL. Reverting to group name for now."
+        )
 
     def test_get_rollen_no_roles(self, m):
         with patch("zac.core.api.views.get_rollen", return_value=[]):
