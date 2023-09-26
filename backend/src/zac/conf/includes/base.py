@@ -172,21 +172,21 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "axes.middleware.AxesMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     # 'django.middleware.locale.LocaleMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "zac.accounts.middleware.HijackUserMiddleware",
     "zac.accounts.middleware.HijackSessionRefresh",
-    "zac.accounts.scim.middleware.SCIMAuthMiddleware",
-    "django_scim.middleware.SCIMAuthCheckMiddleware",
+    # "zac.accounts.scim.middleware.SCIMAuthMiddleware",
+    # "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "zac.utils.middleware.ReleaseHeaderMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "zac.urls"
