@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0031_alter_authorizationprofile_name'),
+        ("accounts", "0031_alter_authorizationprofile_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='blueprintpermission',
-            name='hashkey',
+            model_name="blueprintpermission",
+            name="hashkey",
             field=models.CharField(blank=True, max_length=32, null=True, unique=True),
         ),
     ]
