@@ -148,7 +148,7 @@ INSTALLED_APPS = [
     "hijack",
     "hijack.contrib.admin",
     "django_better_admin_arrayfield",
-    "django_scim",
+    # "django_scim",
     "nested_admin",
     # Project applications.
     "zac.elasticsearch",
