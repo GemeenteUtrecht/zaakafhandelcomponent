@@ -2,6 +2,7 @@ import binascii
 import os
 import uuid
 from datetime import date, datetime
+from hashlib import blake2b
 from typing import Optional
 
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
@@ -288,7 +289,9 @@ class UserAtomicPermission(models.Model):
 
 
 class BlueprintPermission(models.Model):
-    hashkey = models.CharField(max_length=32, blank=True)
+    hashkey = models.CharField(
+        max_length=32, blank=True, null=True, unique=True
+    )  # short key for inter env migration purposes, set in self.save()
     object_type = models.CharField(
         _("object type"),
         max_length=50,
@@ -337,9 +340,9 @@ class BlueprintPermission(models.Model):
                 raise ValidationError({"policy": get_error_list(blueprint.errors)})
 
     def save(self, *args, **kwargs):
-        self.hashkey = str(
-            hash(f"{self.object_type}{self.role.name}{str(self.policy)}")
-        )
+        h = blake2b(digest_size=16, usedforsecurity=False)
+        h.update(f"{self.object_type}{self.role.name}{str(self.policy)}".encode())
+        self.hashkey = h.hexdigest()
         return super().save(*args, **kwargs)
 
     def has_access(self, obj, user=None, permission=None) -> bool:
