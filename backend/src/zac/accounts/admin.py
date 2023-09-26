@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from hijack.contrib.admin import HijackUserAdminMixin
 from import_export.admin import ExportActionMixin, ImportMixin
+from import_export.tmp_storages import CacheStorage
 from nested_admin import NestedModelAdminMixin, NestedTabularInline
 
 from zac.utils.admin import RelatedLinksMixin
@@ -43,6 +44,7 @@ class UserAuthorizationProfileInline(admin.TabularInline):
 class _UserAdmin(
     ImportMixin, ExportActionMixin, RelatedLinksMixin, HijackUserAdminMixin, UserAdmin
 ):
+    tmp_storage_class = CacheStorage
     resource_class = UserResource
 
     fieldsets = (
@@ -95,6 +97,7 @@ class _UserAdmin(
 class AuthorizationProfileAdmin(
     ImportMixin, ExportActionMixin, RelatedLinksMixin, admin.ModelAdmin
 ):
+    tmp_storage_class = CacheStorage
     list_display = ("name", "get_blueprint_permissions_count", "get_users_display")
     list_filter = ("blueprint_permissions__role",)
     search_fields = ("name", "uuid")
@@ -119,6 +122,7 @@ class AuthorizationProfileAdmin(
 
 @admin.register(UserAuthorizationProfile)
 class UserAuthorizationProfileAdmin(ImportMixin, ExportActionMixin, admin.ModelAdmin):
+    tmp_storage_class = CacheStorage
     list_display = ("user", "auth_profile", "start", "end")
     list_filter = ("user", "auth_profile", "start", "end")
     search_fields = ("user__username", "auth_profile__name", "auth_profile__uuid")
@@ -183,7 +187,8 @@ class AuthorizationProfileInline(admin.TabularInline):
 class BlueprintPermissionAdmin(
     ImportMixin, ExportActionMixin, RelatedLinksMixin, admin.ModelAdmin
 ):
-    resource_class = (BlueprintPermissionResource,)
+    tmp_storage_class = CacheStorage
+    resource_class = BlueprintPermissionResource
     list_display = (
         "hashkey",
         "role",
@@ -220,6 +225,7 @@ class BlueprintPermissionAdmin(
 class RoleAdmin(ImportMixin, ExportActionMixin, RelatedLinksMixin, admin.ModelAdmin):
     list_display = ("name", "permissions", "get_blueprint_permissions_display")
     resource_class = RoleResource
+    tmp_storage_class = CacheStorage
 
     def get_blueprint_permissions_display(self, obj):
         return self.display_related_as_count_with_link(obj, "blueprint_permissions")
