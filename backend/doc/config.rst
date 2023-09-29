@@ -37,7 +37,17 @@ Navigate to **Camunda configuration** in the admin and fill out the details.
 BPTL configuration
 ------------------
 
-Camunda makes use of the BPTL
+The camunda process engine implements two basic tasks: user and service tasks.
+Camunda makes use of the BPTL (Business Process Task Library) to handle the service tasks.
+A service task is set in a queue from where the BPTL will fetch and process the task.
+Some service tasks require information from the ZAC. To allow the BPTL to access information
+from the ZAC please create an ApplicationToken in the ZAC and configure the ApplicationToken
+in the BPTL as such:
+
+- Type: ORC (Overige)
+- Authorization type: API Key
+- Header key: ``Authorization``
+- Header value: ``ApplicationToken <insert DoWC token>``
 
 BRP configuration
 -----------------
@@ -127,9 +137,10 @@ a container:
 This will set up the ZAC to receive notifications sent from the other APIs and act
 accordingly.
 
-Access to the SCIM endpoints
-============================
+Access to the SCIM endpoints (N/A)
+==================================
 
+IMPLEMENTION ON HOLD AND CURRENTLY NOT AVAILABLE
 The ZAC implements the :ref:`authorization_scim` for user provisioning. The endpoints
 for this are themselves protected against unintended use.
 

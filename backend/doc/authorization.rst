@@ -234,6 +234,16 @@ Here you can see the created permission. You can also filter on permission types
 .. image:: _assets/authorization_atomic_list.png
     :alt: atomic permissions page
 
+.. _applicationtokens:
+
+ApplicationToken
+----------------
+
+To regulate permissions of applications making requests to the ZAC we have implemented an ApplicationToken which needs to be inserted in 
+the header of the request from the requesting service. An ApplicationToken can be linked to an :ref:`authorization_blueprints` to manage
+permissions on a granular level or given full read access.
+
+Currently the DoWC, BPTL and Alfresco make use of the ApplicationToken to communicate with the ZAC if required.
 
 Relations between authorization objects
 ---------------------------------------
@@ -249,8 +259,9 @@ As you can see there are many-to-many relations between models:
 * ``User`` and ``AuthorizationProfile``
 * ``User`` and ``AtomicPermission``
 * ``AuthorizationProfile`` and ``BlueprintPermission``
+* ``ApplicationToken`` and ``AuthorizationProfile``
 
-This structure helps to create unique blueprint and atomic permissions and relate users to these
+This structure helps to create unique blueprint and atomic permissions and relate users and applications to these
 objects.
 
 .. _authorization_import_export:
@@ -268,14 +279,15 @@ The order of import is crucial to a successful import and outlined explicitly he
 1. Roles
 2. BlueprintPermissions (can/should be created through a management endpoint or command)
 3. AuthorizationProfiles
-4. UserAuthorizationProfiles
-
+4. Users (optional)
+5. UserAuthorizationProfiles
 
 .. _authorization_scim:
 
-SCIM Interface
---------------
+SCIM Interface (N/A)
+--------------------
 
+IMPLEMENTION ON HOLD AND CURRENTLY NOT AVAILABLE
 The System for Cross-domain Identity Management (SCIM) is an `open standard <https://datatracker.ietf.org/doc/html/rfc7644>`_
 to help automating the management of users within a company.
 It was introduced to address the problem faced by companies with a large number of employees, where
@@ -290,9 +302,10 @@ The users associated with a group are part of the JSON data of that particular g
 This schema makes it easy to exchange users/group information between the Identity Provider and the Service Providers.
 
 
-The SCIM API in ZAC
-^^^^^^^^^^^^^^^^^^^
+The SCIM API in ZAC (N/A)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
+IMPLEMENTION ON HOLD AND CURRENTLY NOT AVAILABLE
 In ZAC, the ``User`` and the ``AuthorizationProfile`` models are exposed through
 the `SCIM 2.0 <http://www.simplecloud.info/>`_ interface. The information contained in the ``User`` model and the
 ``AuthorizationProfile`` model is converted to the JSON format expected for SCIM resources of type ``User`` and ``Group``
