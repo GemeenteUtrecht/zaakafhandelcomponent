@@ -2,7 +2,7 @@
 Zaakafhandelcomponent
 =====================
 
-:Version: 0.44.2
+:Version: 0.75.9
 :Source: https://github.com/GemeenteUtrecht/zaakafhandelcomponent
 :Keywords: zaken, zaakgericht werken, GEMMA, Utrecht
 :PythonVersion: 3.9
@@ -17,10 +17,6 @@ Inleiding
 Deze generieke zaakafhandelcomponent toont aan dat er kan gekoppeld worden via
 de [ZGW APIs](https://github.com/VNG-Realisatie/gemma-zaken) om zaken op te
 volgen en af te handelen.
-
-In eerste instantie wordt er aangesloten op de nieuwe
-[huwelijksplanner](https://github.com/GemeenteUtrecht/huwelijksplanner) van
-Gemeente Utrecht.
 
 Documentatie
 ============

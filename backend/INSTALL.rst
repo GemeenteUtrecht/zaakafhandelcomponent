@@ -156,7 +156,7 @@ The easiest way to get the project started is by using `Docker Compose`_.
 
         $ export SECRET_KEY=your_unique_key
 
-    The key is a random string. Te genereren op https://www.miniwebtool.com/django-secret-key-generator/
+    The key is a random string. You can generate it here: `https://www.miniwebtool.com/django-secret-key-generator/`_.
 
 2. Start the database and web services:
 
@@ -203,7 +203,7 @@ The easiest way to get the project started is by using `Docker Compose`_.
    system you can run ``docker system prune``.
 
 .. _Docker Compose: https://docs.docker.com/compose/install/
-.. _Github: https://github.com/maykinmedia/zac/
+.. _Github: https://github.com/gemeenteutrecht/zaakafhandelcomponent.git
 
 
 More Docker
@@ -237,7 +237,7 @@ Generating the API spec
 =======================
 
 Installation of ``zds-schema`` makes the binary ``generate_schema`` available,
-which gnerates the ``src/openapi.yaml`` using drf-yasg.
+which generates the ``src/openapi.yaml`` using drf-spectacular.
 
 Make sure you have installed the ``npm`` dependencies before using this.
 
