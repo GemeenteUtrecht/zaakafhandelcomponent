@@ -7,6 +7,7 @@
 | Keywords | zaken, zaakgericht werken, GEMMA, Utrecht, Common Ground |
 |   Python | 3.9                                                      |
 
+
 Het zaakafhandelcomponent (ook wel: keteninzagecomponent) orchestreert het zaakgericht
 werken binnen Gemeente Utrecht.
 De backend koppelt met de Camunda proces-engine en overige API's in het Common Ground
@@ -16,7 +17,7 @@ eigen backend.
 
 ## Documentatie
 
-Voor [configuratie en instellingen](https://zaakafhandelcomponent.readthedocs.io/en/latest/).  
+Voor configuratie, instellingen en algemene beheerdocumentatie: [![Documentation status](https://readthedocs.org/projects/zaakafhandelcomponent/badge/?version=latest)](https://zaakafhandelcomponent.readthedocs.io/en/latest/?badge=latest)  
 Voor [API documentatie](https://zac.cg-intern.utrecht.nl/api/docs/).
 
 ## Projectstructuur
