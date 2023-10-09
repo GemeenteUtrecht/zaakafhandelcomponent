@@ -3,6 +3,10 @@ from django.utils.translation import gettext_lazy as _
 
 
 class Subscription(models.Model):
+    """
+    A singleton model that holds the URL of the registered notification subscription.
+    """
+
     url = models.URLField()
     created = models.DateTimeField(auto_now_add=True)
 

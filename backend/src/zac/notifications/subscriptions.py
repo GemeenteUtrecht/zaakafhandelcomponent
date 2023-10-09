@@ -31,6 +31,16 @@ DESIRED = [
         "filters": {},
     },
     {
+        "path": reverse_lazy("notifications:callback"),
+        "channel": "documenten",
+        "filters": {},
+    },
+    {
+        "path": reverse_lazy("notifications:callback"),
+        "channel": "objecten",
+        "filters": {},
+    },
+    {
         "path": reverse_lazy("notifications:kownsl-callback"),
         "channel": "kownsl",
         "filters": {},

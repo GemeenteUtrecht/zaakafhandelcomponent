@@ -1,5 +1,8 @@
 .. _tezza_changelog:
 
+Changes
+=======
+
 Release 0.7.36
 --------------
 

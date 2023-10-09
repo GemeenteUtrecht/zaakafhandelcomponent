@@ -6,6 +6,12 @@ from zgw_consumers.constants import APITypes
 
 
 class FormsConfig(SingletonModel):
+    """
+    A singleton model to configure the required credentials to communicate with the an Open Forms implementation.
+
+    Not currently used.
+    """
+
     forms_service = models.ForeignKey(
         "zgw_consumers.Service",
         null=True,

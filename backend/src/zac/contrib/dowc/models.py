@@ -13,6 +13,10 @@ class DowcConfigManager(models.Manager):
 
 
 class DowcConfig(SingletonModel):
+    """
+    A singleton model to configure the required credentials to communicate with the "DoWC".
+    """
+
     service = models.ForeignKey(
         "zgw_consumers.Service",
         null=True,

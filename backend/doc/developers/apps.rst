@@ -1,3 +1,5 @@
+.. _django-apps-configuration:
+
 Django apps
 ===========
 
