@@ -42,6 +42,7 @@ from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.models import BlueprintPermission, User
 from zac.client import Client
 from zac.contrib.brp.models import BRPConfig
+from zac.contrib.objects.cache import invalidate_cache_fetch_oudbehandelaren
 from zac.elasticsearch.searches import search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
@@ -866,18 +867,30 @@ def create_rol(rol: Dict) -> Rol:
     return factory(Rol, rol)
 
 
-def delete_rol(rol_url: str):
+def delete_rol(rol_url: str, zaak: Optional[Zaak] = None, user: Optional[User] = None):
+    from zac.contrib.objects.oudbehandelaren.utils import register_old_behandelaar
+
+    # fetch old rol and register it in the appropriate object before deleting
+    register_old_behandelaar(zaak=zaak, rol_url=rol_url, user=user)
+    invalidate_cache_fetch_oudbehandelaren(zaak)
+
+    # delete rol
     zrc_client = _client_from_url(rol_url)
     zrc_client.delete("rol", url=rol_url)
 
 
-def update_rol(rol_url: str, new_rol: Dict) -> Rol:
+def update_rol(
+    rol_url: str,
+    new_rol: Dict,
+    zaak: Optional[Zaak] = None,
+    user: Optional[User] = None,
+) -> Rol:
     """
-    Open zaak 1.7.x (CURRENT) does not allow patching/putting ROLlen.
+    Open zaak 1.8.x (CURRENT) does not allow patching/putting ROLlen.
 
     """
     # Destroy old rol
-    delete_rol(rol_url)
+    delete_rol(rol_url, zaak=zaak, user=user)
 
     # Create new rol
     return create_rol(new_rol)
