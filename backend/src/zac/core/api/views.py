@@ -720,7 +720,6 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         # If it is we first delete the old hoofdbehandelaar rol.
 
         roltype = get_roltype(serializer.data["roltype"])
-        print(roltype.omschrijving)
         if roltype.omschrijving == RolOmschrijving.initiator:
             rollen = get_rollen(zaak)
             rol_url = None
