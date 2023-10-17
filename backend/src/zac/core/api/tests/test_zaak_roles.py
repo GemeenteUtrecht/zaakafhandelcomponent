@@ -72,6 +72,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             "ztc",
             "schemas/RolType",
             url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            omschrijving="some-kind-of-omschrijving",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -270,7 +271,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_create_rol(self, m):
-        self.maxDiff = None
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(
@@ -332,7 +332,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
         self.assertEqual(
-            m.request_history[-2].json(),
+            m.request_history[-1].json(),
             {
                 "betrokkene": "",
                 "betrokkene_identificatie": {
@@ -348,6 +348,133 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "zaak": self.zaak["url"],
             },
         )
+
+    @patch("zac.contrib.objects.oudbehandelaren.utils.register_old_behandelaar")
+    def test_create_rol_oud_behandelaar_already_exists(
+        self, m, patch_register_old_behandelaar
+    ):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+
+        roltype = generate_oas_component(
+            "ztc",
+            "schemas/RolType",
+            url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
+            omschrijving=RolOmschrijving.initiator,
+        )
+        mock_resource_get(m, roltype)
+        m.get(
+            f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([roltype]),
+        )
+        user = UserFactory.create(username="some-second-rank-user")
+        old_rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            betrokkeneIdentificatie={
+                "voorletters": "",
+                "achternaam": "",
+                "identificatie": f"{AssigneeTypeChoices.user}:{user}",
+                "voorvoegselAchternaam": "",
+            },
+            betrokkeneType="medewerker",
+            roltype=roltype["url"],
+            betrokkene="",
+            indicatieMachtiging="gemachtigde",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/fb498b0b-e4c7-44f1-8e39-a55d9f55ebb9",
+            omschrijvingGeneriek=RolOmschrijving.initiator,
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+            json=paginated_response([old_rol]),
+        )
+        mock_resource_get(m, old_rol)
+        m.delete(old_rol["url"], status_code=204)
+
+        new_rol = generate_oas_component(
+            "zrc",
+            "schemas/Rol",
+            betrokkeneIdentificatie={
+                "voorletters": "",
+                "achternaam": "",
+                "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
+                "voorvoegselAchternaam": "",
+            },
+            betrokkeneType="medewerker",
+            roltype=roltype["url"],
+            betrokkene="",
+            indicatieMachtiging="gemachtigde",
+            zaak=self.zaak["url"],
+            url=f"{ZAKEN_ROOT}rollen/fb498b0b-e4c7-44f1-8e39-a55d9f55ebb8",
+            omschrijvingGeneriek=RolOmschrijving.initiator,
+        )
+        m.post(f"{ZAKEN_ROOT}rollen", json=new_rol, status_code=201)
+
+        response = self.client.post(
+            self.endpoint,
+            {
+                "betrokkene_type": "medewerker",
+                "betrokkene_identificatie": {"identificatie": self.user.username},
+                "roltype": roltype["url"],
+                "indicatie_machtiging": "gemachtigde",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Check response
+        self.assertEqual(
+            response.json(),
+            {
+                "betrokkene": "",
+                "betrokkeneType": "medewerker",
+                "indicatieMachtiging": "gemachtigde",
+                "roltoelichting": new_rol["roltoelichting"],
+                "roltype": roltype["url"],
+                "zaak": self.zaak["url"],
+                "url": new_rol["url"],
+                "roltypeOmschrijving": roltype["omschrijving"],
+                "betrokkeneIdentificatie": {
+                    "voorletters": "",
+                    "achternaam": "",
+                    "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
+                    "voorvoegselAchternaam": "",
+                },
+            },
+        )
+
+        # Check create call is made
+        self.assertEqual(
+            m.request_history[-1].json(),
+            {
+                "betrokkene": "",
+                "betrokkene_identificatie": {
+                    "voorletters": "H.",
+                    "achternaam": "Goodbye",
+                    "identificatie": f"{AssigneeTypeChoices.user}:{self.user}",
+                    "voorvoegsel_achternaam": "",
+                },
+                "betrokkene_type": "medewerker",
+                "indicatie_machtiging": "gemachtigde",
+                "roltoelichting": roltype["omschrijving"],
+                "roltype": roltype["url"],
+                "zaak": self.zaak["url"],
+            },
+        )
+
+        # Check delete call is made
+        self.assertEqual(m.request_history[-2].method, "DELETE")
+        self.assertEqual(m.request_history[-2].url, old_rol["url"])
+
+        # Check if old behandelaar is patched
+        patch_register_old_behandelaar.assert_called_once()
 
     def test_create_rol_empty_betrokkene_identificatie(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -401,7 +528,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
         self.assertEqual(
-            m.request_history[-2].json(),
+            m.request_history[-1].json(),
             {
                 "betrokkene": "",
                 "betrokkene_identificatie": {},
@@ -623,7 +750,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
-    @patch("zac.core.api.views.register_old_behandelaar")
+    @patch("zac.contrib.objects.oudbehandelaren.utils.register_old_behandelaar")
     def test_destroy_rol_one_behandelaar_and_one_initiator(
         self, m, patch_register_old_behandelaar
     ):

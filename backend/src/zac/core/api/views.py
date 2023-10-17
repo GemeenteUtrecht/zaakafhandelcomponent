@@ -44,8 +44,6 @@ from zac.camunda.process_instances import get_process_instances
 from zac.camunda.processes import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
 from zac.contrib.dowc.api import get_open_documenten
-from zac.contrib.objects.cache import invalidate_cache_fetch_oudbehandelaren
-from zac.contrib.objects.oudbehandelaren.utils import register_old_behandelaar
 from zac.contrib.objects.services import (
     fetch_start_camunda_process_form_for_zaaktype,
     fetch_zaaktypeattributen_objects_for_zaaktype,
@@ -88,6 +86,7 @@ from ..services import (
     get_related_zaken,
     get_resultaat,
     get_rollen,
+    get_roltype,
     get_roltypen,
     get_statussen,
     get_statustype,
@@ -710,6 +709,27 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         data = {**request.data, "zaak": zaak.url}
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
+
+        # we check if the rol to be created is a hoofdbehandelaar.
+        # For the reasons below:
+        # Open zaak does not support changing roles or assigning a hoofdbehandelaar.
+        # We use the `initiator` roltype to set our `hoofdbehandelaar`.
+        # Open Zaak only allows a single initiator rol.
+        # We don't want a ZAAK to not have a (hoofd)behandelaar.
+        #
+        # If it is we first delete the old hoofdbehandelaar rol.
+
+        roltype = get_roltype(serializer.data["roltype"])
+        if roltype.omschrijving == RolOmschrijving.initiator:
+            rollen = get_rollen(zaak)
+            rol_url = None
+            for rol in rollen:
+                if rol.omschrijving_generiek == RolOmschrijving.initiator:
+                    rol_url = rol.url
+                    break
+
+            if rol_url:
+                delete_rol(rol_url, zaak=zaak, user=request.user)
         try:
             rol = create_rol(serializer.data)
         except Exception as exc:
@@ -751,11 +771,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
             data=self.request.query_params, context={"zaak": zaak}
         )
         serializer.is_valid(raise_exception=True)
-        register_old_behandelaar(
-            zaak=zaak, rol_url=serializer.validated_data["url"], user=request.user
-        )
-        invalidate_cache_fetch_oudbehandelaren(zaak)
-        delete_rol(serializer.validated_data["url"])
+        delete_rol(serializer.validated_data["url"], zaak=zaak, user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
