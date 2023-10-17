@@ -19,9 +19,11 @@ Welcome to the documentation for the zaakafhandelcomponent (ZAC).
    authorizations/index
    metaobjecttypes/index
    forms/index
+   actions/index
    developers/index
    development/index
    models/index
+   troubleshooting/index
 
 Indices and tables
 ==================
