@@ -34,7 +34,7 @@ from .query import (
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
-    Use the built-in user model.
+    Extend the built-in user model with handy fields related to history, permissions and groups.
     """
 
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
@@ -157,6 +157,10 @@ class AuthorizationProfile(models.Model):
 
 
 class UserAuthorizationProfile(models.Model):
+    """
+    User authorization profiles serve to relate a user to an authorization profile from a start to end date.
+    """
+
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 
@@ -167,6 +171,11 @@ class UserAuthorizationProfile(models.Model):
 
 
 class AccessRequest(models.Model):
+    """
+    Access requests serve to grant users specific permissions for a ZAAK when they request them.
+    A handler must have the permissions to handle access requests but also the permissions requested.
+    """
+
     requester = models.ForeignKey(
         "User", on_delete=models.CASCADE, related_name="initiated_requests"
     )
@@ -220,6 +229,14 @@ class AccessRequest(models.Model):
 
 
 class AtomicPermission(models.Model):
+    """
+    Permissions can be granted to specific objects. This is an `atomic permission`.
+    Objects that currently are supported are:
+
+        * `zaak`
+        * `document`
+    """
+
     object_type = models.CharField(
         _("object type"),
         max_length=50,
@@ -251,6 +268,10 @@ class AtomicPermission(models.Model):
 
 
 class UserAtomicPermission(models.Model):
+    """
+    User atomic permissions serve to relate a user to an atomic permission from a start to end date.
+    """
+
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     atomic_permission = models.ForeignKey("AtomicPermission", on_delete=models.CASCADE)
     access_request = models.ForeignKey(
@@ -289,6 +310,12 @@ class UserAtomicPermission(models.Model):
 
 
 class BlueprintPermission(models.Model):
+    """
+    Blueprint permissions are related to authorization profiles. They are together with the `role` the key
+    that checks if the policy related to the blueprint permission which is related to the authorization profile
+    is sufficient to grant access.
+    """
+
     hashkey = models.CharField(
         max_length=32, blank=True, null=True, unique=True
     )  # short key for inter env migration purposes, set in self.save()
@@ -357,6 +384,11 @@ class BlueprintPermission(models.Model):
 
 
 class Role(models.Model):
+    """
+    A role comprises of a series of permissions and is related to the authorization profile.
+    The permissions are used to check if a user can perform an action such as reading a ZAAK or DOCUMENT.
+    """
+
     name = models.CharField(
         _("name"), max_length=100, unique=True, help_text=_("Name of the role")
     )
@@ -375,6 +407,11 @@ class Role(models.Model):
 
 
 class ApplicationToken(models.Model):
+    """
+    An application token can be granted to consumer of the ZAC REST APIs. They can be related to
+    an authorization profile to finely control the access the consumer has to exposed ZAC REST APIs.
+    """
+
     token = models.CharField(_("token"), max_length=40, primary_key=True)
     contact_person = models.CharField(
         _("contact person"),
@@ -438,6 +475,10 @@ class ApplicationToken(models.Model):
 
 
 class ApplicationTokenAuthorizationProfile(models.Model):
+    """
+    Application token authorization profiles serve to relate an application token to an authorization profile from a start to end date.
+    """
+
     application = models.ForeignKey("ApplicationToken", on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 

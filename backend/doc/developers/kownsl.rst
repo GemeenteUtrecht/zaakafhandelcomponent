@@ -1,7 +1,9 @@
-KOWNSL implementation
+.. _kownsl-implementation:
+
+Kownsl implementation
 =====================
 
-The KOWNSL implementation has become so interweaved with the ZAC that it requires its own documentation.
+The Kownsl implementation has become so interweaved with the ZAC that it requires its own documentation.
 There are two flavors of review request. 
 
 * Advice (Advies vragen)

@@ -4,6 +4,7 @@
    contain the root `toctree` directive.
 
 
+=================
 ZAC Documentation
 =================
 
@@ -11,15 +12,18 @@ Welcome to the documentation for the zaakafhandelcomponent (ZAC).
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
-   config
-   forms
-   authorization
-   metaobjecttypes
+   admin/index
+   config/index
+   authorizations/index
+   metaobjecttypes/index
+   forms/index
+   actions/index
    developers/index
    development/index
-
+   models/index
+   troubleshooting/index
 
 Indices and tables
 ==================

@@ -58,6 +58,10 @@ class PermissionObjectType:
 
 @dataclass(frozen=True)
 class Permission:
+    """
+    Base dataclass defining a Permission.
+    """
+
     name: str
     description: str
 

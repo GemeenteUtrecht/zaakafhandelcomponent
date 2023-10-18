@@ -7,7 +7,7 @@ itself.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Developers
 
    backend
    frontend

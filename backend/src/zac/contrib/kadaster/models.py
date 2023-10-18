@@ -7,6 +7,10 @@ from zgw_consumers.constants import APITypes
 
 
 class KadasterConfig(SingletonModel):
+    """
+    A singleton model to configure the required credentials to communicate with the "Kadaster".
+    """
+
     locatieserver = models.URLField(
         _("root URL locatieserver"),
         default="https://geodata.nationaalgeoregister.nl/locatieserver/v3/",

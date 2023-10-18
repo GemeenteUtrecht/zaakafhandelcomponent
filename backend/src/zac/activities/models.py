@@ -12,7 +12,7 @@ from .query import ActivityQuerySet
 
 class Activity(models.Model):
     """
-    Represent a single ad-hoc activity.
+    An activity can be any question or task not currently handled by a pre-defined, programmed business task.
     """
 
     zaak = models.URLField(
@@ -81,7 +81,7 @@ class Activity(models.Model):
 
 class Event(models.Model):
     """
-    Represent a single log-entry worthy event for a given activity.
+    An event is related to the an activity and comprises a log-entry worthy event for a given activity.
     """
 
     activity = models.ForeignKey(

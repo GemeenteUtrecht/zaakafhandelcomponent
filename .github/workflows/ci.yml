@@ -16,7 +16,7 @@ env:
 
 jobs:
   backend-tests:
-    name: Run the Django test suite
+    name: Run the Django test suite and build documentation
     runs-on: ubuntu-latest
 
     defaults:
@@ -57,7 +57,7 @@ jobs:
           node-version: '12'
 
       - name: Install dependencies
-        run: pip install -r requirements/dev.txt
+        run: pip install -r requirements/dev.txt pytest
 
       - name: Build frontend
         run: |
@@ -84,6 +84,11 @@ jobs:
           DB_USER: postgres
           DB_PASSWORD: ''
           IS_HTTPS: 'no'
+  
+      - name: Build and test docs
+        working-directory: backend/doc
+        run: |
+          pytest check_sphinx.py -v --tb=auto
 
   backend-docker:
     needs: backend-tests
@@ -209,20 +214,3 @@ jobs:
         if: github.event_name == 'push'  # exclude PRs
         run: |
           docker push scrumteamzgw/zac-ui:${{ steps.vars.outputs.tag }}\
-
-
-  docs:
-    runs-on: ubuntu-latest
-    name: Documentation build
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - name: Install dependencies
-        run: pip install -r backend/requirements/dev.txt pytest
-      - name: Build and test docs
-        run: |
-          pytest check_sphinx.py -v --tb=auto
-        working-directory: backend/doc

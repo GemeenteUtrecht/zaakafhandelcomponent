@@ -9,6 +9,13 @@ from zgw_consumers.constants import APITypes
 
 
 class CoreConfig(SingletonModel):
+    """
+    A singleton model to configure core configuration of the ZAC.
+    Without a properly configured CoreConfig, the ZAC will not function.
+
+    Please refer to the configuration documentation for configuration.
+    """
+
     primary_drc = models.ForeignKey(
         "zgw_consumers.Service",
         null=True,
@@ -63,6 +70,13 @@ class CoreConfig(SingletonModel):
 
 
 class MetaObjectTypesConfig(SingletonModel):
+    """
+    A singleton model that holds the URL-references of `meta`-objecttypes.
+    `meta`-objecttypes are used to store and read data not supported by Open Zaak.
+
+    Please refer to the Meta ObjectTypes documentation for further information.
+    """
+
     checklist_objecttype = models.URLField(
         _("URL-reference to Checklist in OBJECTTYPES API."),
         help_text=_(

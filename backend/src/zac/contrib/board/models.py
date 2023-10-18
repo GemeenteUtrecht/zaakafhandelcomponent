@@ -10,6 +10,11 @@ from .query import BoardItemQuerySet
 
 
 class Board(models.Model):
+    """
+    A `board`, also referred to as `dashboard`, allows the end user to quickly
+    identify statuses of ZAAKen.
+    """
+
     uuid = models.UUIDField(
         unique=True, default=uuid.uuid4, help_text=_("Unique identifier (UUID4)")
     )
@@ -37,6 +42,10 @@ class Board(models.Model):
 
 
 class BoardColumn(models.Model):
+    """
+    A single column of the board. A board can hold multiple columns.
+    """
+
     uuid = models.UUIDField(
         unique=True, default=uuid.uuid4, help_text=_("Unique identifier (UUID4)")
     )
@@ -72,6 +81,10 @@ class BoardColumn(models.Model):
 
 
 class BoardItem(models.Model):
+    """
+    A single board item. A board column can hold multiple board items.
+    """
+
     uuid = models.UUIDField(
         unique=True, default=uuid.uuid4, help_text=_("Unique identifier (UUID4)")
     )

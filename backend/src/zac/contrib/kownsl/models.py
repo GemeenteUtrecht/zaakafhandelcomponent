@@ -13,6 +13,10 @@ class KownslConfigManager(models.Manager):
 
 
 class KownslConfig(SingletonModel):
+    """
+    A singleton model to configure the required credentials to communicate with the "KOWNSL".
+    """
+
     service = models.ForeignKey(
         "zgw_consumers.Service",
         null=True,

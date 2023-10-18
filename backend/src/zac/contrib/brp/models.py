@@ -13,6 +13,10 @@ class BRPConfigManager(models.Manager):
 
 
 class BRPConfig(SingletonModel):
+    """
+    A singleton model to configure the required credentials to communicate with the "BRP".
+    """
+
     service = models.ForeignKey(
         "zgw_consumers.Service",
         null=True,

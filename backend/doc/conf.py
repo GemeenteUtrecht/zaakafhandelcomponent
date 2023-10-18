@@ -14,6 +14,17 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+# # Auto list fields from django models - from https://djangosnippets.org/snippets/2533/#c5977
+
+import os
+import sys
+
+import django
+
+sys.path.insert(0, os.path.abspath("../src/"))
+sys.path.append(os.path.abspath("_ext"))
+os.environ["DJANGO_SETTINGS_MODULE"] = "zac.conf.ci"
+django.setup()
 
 # -- Project information -----------------------------------------------------
 
@@ -32,6 +43,9 @@ release = "0.75.11"
 # ones.
 extensions = [
     "sphinx_rtd_theme",
+    "sphinx.ext.autodoc",
+    "auto_help_text",
+    "describe_permissions",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
