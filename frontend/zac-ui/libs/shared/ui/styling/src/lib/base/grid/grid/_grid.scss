@@ -29,6 +29,10 @@
     @include make-row();
   }
 
+  .mat-row {
+    display: revert;
+  }
+
   // Remove the negative margin from default .row, then the horizontal padding
   // from all immediate children columns (to prevent runaway style inheritance).
   .no-gutters {
