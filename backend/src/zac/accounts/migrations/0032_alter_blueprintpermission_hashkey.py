@@ -3,6 +3,12 @@
 from django.db import migrations, models
 
 
+def add_value_to_hashkey_blueprint_permission(apps, _):
+    BlueprintPermission = apps.get_model("accounts", "BlueprintPermission")
+    # add hashkey
+    for bp in BlueprintPermission.objects.all():
+        bp.save(force_update=True)
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,9 +16,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name="blueprintpermission",
-            name="hashkey",
-            field=models.CharField(blank=True, max_length=32, null=True, unique=True),
-        ),
+        migrations.RunPython(add_value_to_hashkey_blueprint_permission, migrations.RunPython.noop)
     ]
