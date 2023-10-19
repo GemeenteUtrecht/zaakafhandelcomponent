@@ -9,6 +9,7 @@ def add_value_to_hashkey_blueprint_permission(apps, _):
     for bp in BlueprintPermission.objects.all():
         bp.save(force_update=True)
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -16,5 +17,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_value_to_hashkey_blueprint_permission, migrations.RunPython.noop)
+        migrations.RunPython(
+            add_value_to_hashkey_blueprint_permission, migrations.RunPython.noop
+        )
     ]
