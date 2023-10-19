@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="blueprintpermission",
             name="hashkey",
-            field=models.CharField(blank=True, max_length=32),
+            field=models.CharField(blank=True, max_length=32, null=True, unique=True),
         ),
         migrations.AlterUniqueTogether(
             name="blueprintpermission",
