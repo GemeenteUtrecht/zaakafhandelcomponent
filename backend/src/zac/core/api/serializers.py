@@ -1466,6 +1466,11 @@ class ObjecttypeVersionProxySerializer(ProxySerializer):
 
 
 class ObjectProxySerializer(ProxySerializer):
+    """
+    Filter out `meta` fields please.
+
+    """
+
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTS_API_SCHEMA"]
     PROXY_SCHEMA_PATH = ["components", "schemas", "Object"]
 
@@ -1476,6 +1481,13 @@ class ObjectProxySerializer(ProxySerializer):
             "Returns a string representation based on `stringRepresentatie` in objecttype labels."
         ),
     )
+
+    def to_representation(self, *args, **kwargs):
+        data = super().to_representation(*args, **kwargs)
+        if "meta" in data.get("record", {}).get("data", {}):
+            del data["record"]["data"]["meta"]
+
+        return data
 
 
 class PaginatedObjectProxySerializer(ProxySerializer):
