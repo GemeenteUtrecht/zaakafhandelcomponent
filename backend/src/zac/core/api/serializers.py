@@ -1461,8 +1461,20 @@ class ObjecttypeProxySerializer(ProxySerializer):
 
 
 class ObjecttypeVersionProxySerializer(ProxySerializer):
+    """
+    Filter out `meta` fields please.
+
+    """
+
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTTYPES_API_SCHEMA"]
     PROXY_SCHEMA_PATH = ["components", "schemas", "ObjectVersion"]
+
+    def to_representation(self, *args, **kwargs):
+        data = super().to_representation(*args, **kwargs)
+        if "meta" in data.get("jsonSchema", {}).get("properties", {}):
+            del data["jsonSchema"]["properties"]["meta"]
+
+        return data
 
 
 class ObjectProxySerializer(ProxySerializer):
