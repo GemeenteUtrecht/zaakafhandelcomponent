@@ -14,6 +14,13 @@ class BffPagination(PageNumberPagination):
 
 
 class ProxyPagination(BffPagination):
+    """
+    This assumes data coming in is already paginated.
+    It basically alters the URLs so that ZAC will proxy the correct calls
+    without exposing the end-application.
+
+    """
+
     page_size = 20
 
     def get_page_size(self, request):

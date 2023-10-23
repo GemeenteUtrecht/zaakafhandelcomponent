@@ -1411,9 +1411,26 @@ class ObjectSearchView(views.APIView):
     serializer_class = ObjectFilterProxySerializer
     pagination_class = ProxyPagination
 
+    @property
+    def paginator(self):
+        """
+        The paginator instance associated with the view, or `None`.
+        """
+        if not hasattr(self, "_paginator"):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        return self._paginator
+
+    def get_paginated_response(self, data):
+        assert self.pagination_class is not None
+        serializer = PaginatedObjectProxySerializer(instance=data)
+        return self.paginator.get_paginated_response(self.request, serializer.data)
+
     def post(self, request):
         """
-        EXCLUDES `meta` objects.
+        EXCLUDES `meta`=True objects and hides `meta` field on others.
 
         """
         pc = self.pagination_class()
@@ -1437,7 +1454,7 @@ class ObjectSearchView(views.APIView):
         except ClientError as exc:
             raise ValidationError(detail=exc.args[0])
 
-        return pc.get_paginated_response(request, objects)
+        return self.get_paginated_response(objects)
 
 
 class ZaakObjectChangeView(views.APIView):
