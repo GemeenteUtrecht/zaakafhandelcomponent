@@ -18,7 +18,7 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private router: Router) { }
 
   private checkAuthentication(error: HttpErrorResponse): boolean {
-    return (error.status && error.status === 403 && error.error.detail === this.NOT_LOGGED_IN_MESSAGE) || (error.status && error.status === 302);
+    return (error.status && error.status === 403 && error.error.detail === this.NOT_LOGGED_IN_MESSAGE) || (error.status && error.status === 0);
   }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
