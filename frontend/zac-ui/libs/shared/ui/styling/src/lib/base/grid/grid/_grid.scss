@@ -29,8 +29,8 @@
     @include make-row();
   }
 
-  .mat-row {
-    display: revert;
+  tr.mat-row {
+    display: revert !important;
   }
 
   // Remove the negative margin from default .row, then the horizontal padding
