@@ -214,9 +214,33 @@ class ObjecttypeVersionTests(ClearCachesMixin, APITestCase):
         cls.objecttype_version = {
             "url": f"{OBJECTTYPES_ROOT}objecttypes/e0346ea0-75aa-47e0-9283-cfb35963b725/versions/0",
             "version": 0,
-            "object_type": f"{OBJECTTYPES_ROOT}objecttypes/e0346ea0-75aa-47e0-9283-cfb35963b725",
+            "objectType": f"{OBJECTTYPES_ROOT}objecttypes/e0346ea0-75aa-47e0-9283-cfb35963b725",
             "status": "published",
-            "json_schema": {"title": "Restaurant"},
+            "jsonSchema": {
+                "$id": "https://example.com/example.json",
+                "type": "object",
+                "title": "Wijk GU",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "default": {},
+                "examples": [
+                    {"REGIO_NUMMER": "0001", "GBWPCL_WIJK_OMSCHRIJVING": "West"}
+                ],
+                "required": ["REGIO_NUMMER", "GBWPCL_WIJK_OMSCHRIJVING"],
+                "properties": {
+                    "meta": {
+                        "type": "boolean",
+                        "default": False,
+                        "readonly": True,
+                        "description": "Meta status of object",
+                    },
+                    "REGIO_NUMMER": {"type": "string", "description": "regio nummer"},
+                    "GBWPCL_WIJK_OMSCHRIJVING": {
+                        "type": "string",
+                        "description": "SAPRRE wijk",
+                    },
+                },
+                "description": "Een wijk van de gemeente Utrecht.",
+            },
             "created_at": "2019-08-24",
             "modified_at": "2019-08-24",
             "published_at": "2019-08-24",
@@ -256,7 +280,28 @@ class ObjecttypeVersionTests(ClearCachesMixin, APITestCase):
         result = response.json()
 
         self.assertEqual(0, result["version"])
-        self.assertEqual({"title": "Restaurant"}, result["jsonSchema"])
+        self.assertEqual(
+            {
+                "$id": "https://example.com/example.json",
+                "type": "object",
+                "title": "Wijk GU",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "default": {},
+                "examples": [
+                    {"REGIO_NUMMER": "0001", "GBWPCL_WIJK_OMSCHRIJVING": "West"}
+                ],
+                "required": ["REGIO_NUMMER", "GBWPCL_WIJK_OMSCHRIJVING"],
+                "properties": {
+                    "REGIO_NUMMER": {"type": "string", "description": "regio nummer"},
+                    "GBWPCL_WIJK_OMSCHRIJVING": {
+                        "type": "string",
+                        "description": "SAPRRE wijk",
+                    },
+                },
+                "description": "Een wijk van de gemeente Utrecht.",
+            },
+            result["jsonSchema"],
+        )
 
 
 @requests_mock.Mocker()
