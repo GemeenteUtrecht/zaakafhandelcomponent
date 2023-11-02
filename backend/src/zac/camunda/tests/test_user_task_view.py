@@ -121,7 +121,10 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
         document = generate_oas_component(
-            "drc", "schemas/EnkelvoudigInformatieObject", titel="some-titel"
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobject/e14e72de-56ba-42b6-be36-5c280e9b30cd",
+            titel="some-titel",
         )
         cls.document = factory(Document, document)
         cls.document.informatieobjecttype = factory(
@@ -242,6 +245,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "documentType",
                     "readUrl",
                     "titel",
+                    "url",
                     "versie",
                 ]
             ),
@@ -544,6 +548,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "documentType",
                     "beschrijving",
                     "titel",
+                    "url",
                     "versie",
                 ]
             ),
@@ -703,6 +708,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.document_dict = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobject/e14e72de-56ba-42b6-be36-5c280e9b30cd",
         )
 
         cls.document = factory(Document, cls.document_dict)
@@ -715,7 +721,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="DOME",
         )
         cls.documenttype = generate_oas_component(
@@ -753,10 +759,11 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
-        cls.document_es = InformatieObjectDocument(**cls.document_dict)
-        cls.document_es.informatieobjecttype = InformatieObjectTypeDocument(
-            **cls.documenttype
+        cls.document_es = create_informatieobject_document(cls.document)
+        cls.document_es.informatieobjecttype = create_iot_document(
+            cls.document.informatieobjecttype
         )
+
         cls.patch_get_documenten_validator = patch(
             "zac.core.api.validators.get_documenten_es",
             return_value=[cls.document_es],

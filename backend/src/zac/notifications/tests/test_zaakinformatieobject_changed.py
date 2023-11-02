@@ -128,6 +128,7 @@ class ZaakInformatieObjectChangedTests(
             f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
             json=[ZAAKINFORMATIEOBJECT_RESPONSE],
         )
+        rm.get(f"{INFORMATIEOBJECT_RESPONSE['url']}/audittrail", status_code=404)
 
         # create zaak document in ES
         zaak = factory(Zaak, ZAAK_RESPONSE)

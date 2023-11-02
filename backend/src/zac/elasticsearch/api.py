@@ -498,7 +498,7 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
 
 
 def delete_informatieobject_document(document_url: str) -> None:
-    informatieobject_document = _get_informatieobject_document(document_url)
+    created, informatieobject_document = _get_informatieobject_document(document_url)
     informatieobject_document.delete()
 
 
@@ -522,7 +522,7 @@ def update_related_zaken_in_informatieobject_document(
 
     # Fetch object document to be updated
     informatieobject = get_document(informatieobject_url)
-    informatieobject_document = _get_informatieobject_document(
+    created, informatieobject_document = _get_informatieobject_document(
         informatieobject_url, create_informatieobject=informatieobject
     )
 
