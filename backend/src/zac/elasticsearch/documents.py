@@ -216,13 +216,51 @@ class ObjectDocument(Document):
         )
 
 
-class InformatieObjectDocument(Document):
+class InformatieObjectTypeDocument(InnerDoc):
     url = field.Keyword()
-    titel = field.Text(
+    begin_geldigheid = field.Date()
+    catalogus = field.Keyword()
+    concept = field.Boolean()
+    einde_geldigheid = field.Date()
+    omschrijving = field.Text()
+    vertrouwelijkheidaanduiding = field.Keyword()
+
+
+class InformatieObjectDocument(Document):
+    auteur = field.Keyword()
+    beschrijving = field.Text(
+        fields={"keyword": field.Keyword()},
         analyzer=ngram_analyzer,
         search_analyzer=standard_dutch_analyzer,
     )
+    bestandsnaam = field.Keyword()
+    bestandsomvang = field.Integer()
+    bronorganisatie = field.Keyword()
+    creatiedatum = field.Date()
+    formaat = field.Keyword()
+    identificatie = field.Keyword()
+    indicatie_gebruiksrecht = field.Boolean()
+    inhoud = field.Keyword()
+    integriteit = field.Object()
+    link = field.Keyword()
+    locked = field.Boolean()
+    ondertekening = field.Object()
+    ontvangstdatum = field.Date()
+    status = field.Keyword()
+    taal = field.Keyword()
+    titel = field.Text(
+        fields={"keyword": field.Keyword()},
+        analyzer=ngram_analyzer,
+        search_analyzer=standard_dutch_analyzer,
+    )
+    url = field.Keyword()
+    versie = field.Integer()
+    verzenddatum = field.Date()
+
+    informatieobjecttype = field.Object(InformatieObjectTypeDocument)
     related_zaken = Nested(RelatedZaakDocument)
+    last_edited_date = field.Date()
+    vertrouwelijkheidaanduiding = field.Keyword()
 
     class Index:
         name = settings.ES_INDEX_DOCUMENTEN

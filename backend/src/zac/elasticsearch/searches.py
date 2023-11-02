@@ -22,6 +22,7 @@ from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
+from zgw.models.zrc import Zaak
 
 from .data import ParentAggregation
 from .documents import InformatieObjectDocument, ObjectDocument, ZaakDocument
@@ -278,3 +279,39 @@ def count_by_behandelaar(request: Request) -> int:
         only_allowed=True,
     )
     return s.count()
+
+
+def search_informatieobjects(
+    size: int = 10000,
+    zaak: str = "",
+    urls=None,
+    ordering: tuple = ("titel.keyword", "-last_edited_date"),
+    fields: Optional[List[str]] = None,
+    return_search: bool = False,
+) -> List[InformatieObjectDocument]:
+    s = InformatieObjectDocument.search()
+    if zaak:
+        s = s.filter(
+            Nested(
+                path="related_zaken",
+                query=Bool(filter=Term(related_zaken__url=zaak)),
+            )
+        )
+    if ordering:
+        s = s.sort(*ordering)
+    if fields:
+        s = s.source(fields)
+    s = s.extra(size=size)
+
+    if urls:
+        s = s.filter(Terms(url=urls))
+
+    if return_search:
+        return s
+    response = s.execute()
+    return response.hits
+
+
+def get_documenten_es(zaak: Zaak) -> List[InformatieObjectDocument]:
+    es_results = search_informatieobjects(zaak=zaak.url)
+    return es_results

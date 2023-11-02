@@ -1,10 +1,10 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from elasticsearch import exceptions
 from elasticsearch_dsl.query import Bool, Nested, Term
-from zgw_consumers.api_models.catalogi import StatusType, ZaakType
+from zgw_consumers.api_models.catalogi import InformatieObjectType, StatusType, ZaakType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Status, ZaakEigenschap, ZaakObject
 from zgw_consumers.concurrent import parallel
@@ -12,9 +12,11 @@ from zgw_consumers.concurrent import parallel
 from zac.accounts.datastructures import VA_ORDER
 from zac.core.rollen import Rol
 from zac.core.services import (
+    fetch_latest_audit_trail_data_document,
     fetch_object,
     fetch_zaaktype,
     get_document,
+    get_informatieobjecttype,
     get_rollen,
     get_status,
     get_statustype,
@@ -30,6 +32,7 @@ from zgw.models.zrc import Zaak, ZaakInformatieObject
 
 from .documents import (
     InformatieObjectDocument,
+    InformatieObjectTypeDocument,
     ObjectDocument,
     ObjectTypeDocument,
     RelatedZaakDocument,
@@ -369,9 +372,30 @@ def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
 ###################################################
 
 
+def create_iot_document(iot: InformatieObjectType) -> InformatieObjectTypeDocument:
+    return InformatieObjectTypeDocument(
+        url=iot.url,
+        catalogus=iot.catalogus,
+        omschrijving=iot.omschrijving,
+        vertrouwelijkheidaanduiding=iot.vertrouwelijkheidaanduiding,
+        begin_geldigheid=iot.begin_geldigheid,
+        einde_geldigheid=iot.einde_geldigheid,
+        concept=iot.concept,
+    )
+
+
+def _resolve_iot_for_document(iot: Document) -> InformatieObjectTypeDocument:
+    # resolve iot if necessary
+    if type(iot.informatieobjecttype) == str:
+        iot.informatieobjecttype = get_informatieobjecttype(iot.informatieobjecttype)
+
+    return create_iot_document(iot.informatieobjecttype)
+
+
 def _get_informatieobject_document(
     informatieobject_url: str, create_informatieobject: Optional[Document] = None
-) -> Optional[InformatieObjectDocument]:
+) -> Tuple[bool, Optional[InformatieObjectDocument]]:
+    created = False
     try:
         informatieobject_document = InformatieObjectDocument.get(
             id=_get_uuid_from_url(informatieobject_url)
@@ -387,27 +411,89 @@ def _get_informatieobject_document(
                 create_informatieobject
             )
             informatieobject_document.save()
-        else:
-            return
 
-    return informatieobject_document
+            informatieobject_document.informatieobjecttype = _resolve_iot_for_document(
+                create_informatieobject
+            )
+            # get latest edit date
+            at = fetch_latest_audit_trail_data_document(informatieobject_document.url)
+            if at:
+                informatieobject_document.last_edited_date = at.last_edited_date
+
+            informatieobject_document.save()
+            created = True
+        else:
+            return created, None
+
+    return created, informatieobject_document
 
 
 def create_informatieobject_document(
     document: Document,
 ) -> InformatieObjectDocument:
+
     return InformatieObjectDocument(
-        meta={"id": _get_uuid_from_url(document.url)},
-        url=document.url,
+        meta={"id": document.uuid},
+        auteur=document.auteur,
+        beschrijving=document.beschrijving,
+        bestandsnaam=document.bestandsnaam,
+        bestandsomvang=document.bestandsomvang,
+        bronorganisatie=document.bronorganisatie,
+        creatiedatum=document.creatiedatum,
+        formaat=document.formaat,
+        identificatie=document.identificatie,
+        indicatie_gebruiksrecht=document.indicatie_gebruiksrecht,
+        inhoud=document.inhoud,
+        integriteit=document.integriteit,
+        link=document.link,
+        locked=document.locked,
+        ondertekening=document.ondertekening,
+        ontvangstdatum=document.ontvangstdatum,
+        status=document.status,
+        taal=document.taal,
         titel=document.titel,
+        url=document.url,
+        versie=document.versie,
+        vertrouwelijkheidaanduiding=document.vertrouwelijkheidaanduiding,
+        verzenddatum=document.verzenddatum,
     )
 
 
 def update_informatieobject_document(document: Document) -> InformatieObjectDocument:
-    informatieobject_document = _get_informatieobject_document(
+    created, informatieobject_document = _get_informatieobject_document(
         document.url, create_informatieobject=document
     )
-    informatieobject_document.update(refresh=True, titel=document.titel)
+    if not created:
+        # get latest edit date
+        at = fetch_latest_audit_trail_data_document(document.url)
+
+        informatieobject_document.update(
+            refresh=True,
+            auteur=document.auteur,
+            beschrijving=document.beschrijving,
+            bestandsnaam=document.bestandsnaam,
+            bestandsomvang=document.bestandsomvang,
+            bronorganisatie=document.bronorganisatie,
+            creatiedatum=document.creatiedatum,
+            formaat=document.formaat,
+            identificatie=document.identificatie,
+            indicatie_gebruiksrecht=document.indicatie_gebruiksrecht,
+            inhoud=document.inhoud,
+            integriteit=document.integriteit,
+            link=document.link,
+            locked=document.locked,
+            ondertekening=document.ondertekening,
+            ontvangstdatum=document.ontvangstdatum,
+            status=document.status,
+            taal=document.taal,
+            titel=document.titel,
+            url=document.url,
+            versie=document.versie,
+            vertrouwelijkheidaanduiding=document.vertrouwelijkheidaanduiding,
+            verzenddatum=document.verzenddatum,
+            informatieobjecttype=_resolve_iot_for_document(document),
+            last_edited_date=at.last_edited_date if at else None,
+        )
     return informatieobject_document
 
 

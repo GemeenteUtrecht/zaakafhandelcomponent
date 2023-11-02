@@ -6,6 +6,7 @@ from django.core.management import call_command
 import requests_mock
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Index
+from freezegun import freeze_time
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
@@ -25,10 +26,26 @@ from ..documents import (
 from .utils import ESMixin
 
 DRC_ROOT = "https://api.drc.nl/api/v1/"
+ZTC_ROOT = "https://api.ztc.nl/api/v1/"
 
 
+@freeze_time("2020-01-01")
 @requests_mock.Mocker()
 class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    iot = generate_oas_component(
+        "ztc",
+        "schemas/InformatieObjectType",
+        url=f"{ZTC_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+        omschrijving="bijlage",
+        vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+    )
+    document = generate_oas_component(
+        "drc",
+        "schemas/EnkelvoudigInformatieObject",
+        informatieobjecttype=iot["url"],
+        url=f"{DRC_ROOT}enkelvoudiginformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a0",
+    )
+
     @staticmethod
     def clear_index(init=False):
         ESMixin.clear_index(init=init)
@@ -48,6 +65,7 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         config = CoreConfig.get_solo()
         config.primary_drc = drc
         config.save()
+        Service.objects.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
 
     def test_index_documenten_no_zaken_index(self, m):
         self.clear_index(init=False)
@@ -56,15 +74,14 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_index_documenten(self, m):
         mock_service_oas_get(m, DRC_ROOT, "drc")
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-        )
-
+        mock_service_oas_get(m, ZTC_ROOT, "ztc")
+        m.get(f"{ZTC_ROOT}informatieobjecttypen", json=paginated_response([self.iot]))
         m.get(
             f"{DRC_ROOT}enkelvoudiginformatieobjecten",
-            json=paginated_response([document]),
+            json=paginated_response([self.document]),
         )
+        m.get(f"{self.document['url']}/audittrail", status_code=404)
+
         index = Index(settings.ES_INDEX_DOCUMENTEN)
         self.refresh_index()
         self.assertEqual(index.search().count(), 0)
@@ -74,18 +91,17 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_index_documenten_with_related_zaken(self, m):
         mock_service_oas_get(m, DRC_ROOT, "drc")
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-        )
-
+        mock_service_oas_get(m, ZTC_ROOT, "ztc")
+        m.get(f"{ZTC_ROOT}informatieobjecttypen", json=paginated_response([self.iot]))
         m.get(
             f"{DRC_ROOT}enkelvoudiginformatieobjecten",
-            json=paginated_response([document]),
+            json=paginated_response([self.document]),
         )
+        m.get(f"{self.document['url']}/audittrail", status_code=404)
+
         index = Index(settings.ES_INDEX_DOCUMENTEN)
         zio = ZaakInformatieObjectDocument(
-            url="https://some-url.com/", informatieobject=document["url"]
+            url="https://some-url.com/", informatieobject=self.document["url"]
         )
         zd = ZaakDocument(
             identificatie="some-identificatie",
