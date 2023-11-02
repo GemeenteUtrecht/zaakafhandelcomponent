@@ -222,14 +222,17 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
         )
         with patch(
-            "zac.contrib.objects.services.fetch_checklist_object",
-            return_value=checklist,
-        ):
+            "zac.core.camunda.zet_resultaat.context.get_documenten_es", return_value=[]
+        ) as patch_doc_es:
             with patch(
-                "zac.contrib.objects.services.fetch_checklisttype_object",
-                return_value=[CHECKLISTTYPE_OBJECT],
+                "zac.contrib.objects.services.fetch_checklist_object",
+                return_value=checklist,
             ):
-                task_data = UserTaskData(task=task, context=_get_context(task))
+                with patch(
+                    "zac.contrib.objects.services.fetch_checklisttype_object",
+                    return_value=[CHECKLISTTYPE_OBJECT],
+                ):
+                    task_data = UserTaskData(task=task, context=_get_context(task))
         factory = APIRequestFactory()
         request = factory.get("/")
 
@@ -240,6 +243,7 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             },
         )
 
+        patch_doc_es.assert_called_once()
         self.assertEqual(
             serializer.data["context"]["activiteiten"],
             [

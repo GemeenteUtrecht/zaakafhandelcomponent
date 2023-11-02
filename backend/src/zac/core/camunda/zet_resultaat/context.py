@@ -10,13 +10,8 @@ from zac.contrib.kownsl.api import get_all_review_requests_for_zaak
 from zac.contrib.objects.checklists.data import ChecklistQuestion
 from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
 from zac.core.camunda.utils import get_process_zaak_url
-from zac.core.services import (
-    fetch_zaaktype,
-    get_documenten,
-    get_resultaattypen,
-    get_zaak,
-    get_zaaktype,
-)
+from zac.core.services import fetch_zaaktype, get_resultaattypen, get_zaak, get_zaaktype
+from zac.elasticsearch.searches import get_documenten_es
 from zgw.models.zrc import Zaak
 
 from .serializers import (
@@ -74,7 +69,7 @@ def get_context(task: Task) -> ZetResultaatContext:
         for rr in get_all_review_requests_for_zaak(zaak)
         if rr.completed < rr.num_assigned_users
     ] or None
-    documenten, gone = get_documenten(zaak)
+    documenten = get_documenten_es(zaak)
     open_documenten = check_document_status([doc.url for doc in documenten])
     zaaktype = fetch_zaaktype(zaak.zaaktype)
 

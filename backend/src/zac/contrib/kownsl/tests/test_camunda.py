@@ -394,8 +394,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             return_value=cls.zaak_context,
         )
         cls.patch_get_documenten = patch(
-            "zac.core.api.validators.get_documenten",
-            return_value=([cls.document], []),
+            "zac.core.api.validators.get_documenten_es",
+            return_value=[cls.document],
         )
         rr = deepcopy(REVIEW_REQUEST)
         rr["documents"] = [cls.document.url]

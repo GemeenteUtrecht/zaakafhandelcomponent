@@ -12,7 +12,7 @@ from zgw_consumers.constants import AuthTypes
 
 from zac.accounts.models import User
 from zac.client import Client
-from zac.utils.decorators import optional_service
+from zac.utils.decorators import cache as cache_result, optional_service
 
 from .constants import DocFileTypes
 from .data import DowcResponse, OpenDowc
@@ -80,6 +80,7 @@ def create_doc(
 
 
 @optional_service
+@cache_result("open_documenten:{user.username}")
 def get_open_documenten(user: User) -> List[Optional[DowcResponse]]:
     client = get_client(user)
     operation_id = "documenten_list"

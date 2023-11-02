@@ -1046,57 +1046,66 @@ def fetch_documents(zios: List[str]) -> Tuple[List[Document], List[str]]:
     return factory(Document, documenten), gone
 
 
-def resolve_documenten_informatieobjecttypen(
-    documents: List[Document],
-) -> List[Document]:
+@cache_result("get_all_informatieobjecttypen", timeout=A_DAY)
+def get_all_informatieobjecttypen() -> Dict[str, InformatieObjectType]:
     logger.debug("Retrieving ZTC configuration for informatieobjecttypen")
-    # figure out relevant ztcs
-    informatieobjecttypen = {
-        document.informatieobjecttype
-        for document in documents
-        if type(document.informatieobjecttype) == str
-    }
-    if not informatieobjecttypen:
-        return documents
-
-    _iot = list(informatieobjecttypen)
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
-    relevant_ztcs = []
-    for ztc in ztcs:
-        if any(iot.startswith(ztc.api_root) for iot in _iot):
-            relevant_ztcs.append(ztc)
     all_informatieobjecttypen = []
-    for ztc in relevant_ztcs:
+    for ztc in ztcs:
         client = ztc.build_client()
         results = get_paginated_results(client, "informatieobjecttype")
-        all_informatieobjecttypen += [
-            iot for iot in results if iot["url"] in informatieobjecttypen
-        ]
+        all_informatieobjecttypen += results
     informatieobjecttypen = {
         iot["url"]: factory(InformatieObjectType, iot)
         for iot in all_informatieobjecttypen
     }
+    return informatieobjecttypen
+
+
+def resolve_documenten_informatieobjecttypen(
+    documents: List[Document],
+) -> List[Document]:
+
+    print(documents)
+    unresolved = {
+        document.informatieobjecttype
+        for document in documents
+        if type(document.informatieobjecttype) == str
+    }
+
+    # If they are already resolved (?) - skip rest.
+    if not unresolved:
+        return documents
+
+    informatieobjecttypen = get_all_informatieobjecttypen()
+
     # resolve relations
     for document in documents:
-        document.informatieobjecttype = informatieobjecttypen[
-            document.informatieobjecttype
-        ]
+        if type(document.informatieobjecttype) == str:
+            document.informatieobjecttype = informatieobjecttypen[
+                document.informatieobjecttype
+            ]
     return documents
 
 
-def get_documenten(zaak: Zaak) -> Tuple[List[Document], List[str]]:
+def get_documenten(zaak: Zaak, use_elastic: bool = True) -> List[Document]:
+    ## Deprecate in favor of elasticsearch for performance:
+    logger.warning(
+        "DEPRECATED WARNING - please use zac.elasticsearch.searches.get_documenten_es instead for performance."
+    )
     logger.debug("Retrieving documents linked to zaak %r", zaak)
 
     # get zaakinformatieobjecten
     zaak_informatieobjecten = get_zaak_informatieobjecten(zaak)
 
     # retrieve the documents themselves, in parallel
-    zios = [zio.informatieobject for zio in zaak_informatieobjecten]
+    ios = [zio.informatieobject for zio in zaak_informatieobjecten]
     logger.debug("Fetching %d documents", len(zaak_informatieobjecten))
 
     # Add version to zio_url if found in doc_versions
-    found, gone = fetch_documents(zios)
-    return found, gone
+    found, gone = fetch_documents(ios)
+
+    return found
 
 
 @cache_result("document:{bronorganisatie}:{identificatie}:{versie}")
@@ -1237,6 +1246,7 @@ def relate_document_to_zaak(document_url: str, zaak_url: str) -> Dict[str, str]:
     return response
 
 
+@cache_result("audit_trail:{document_url}", timeout=A_DAY)
 def fetch_document_audit_trail(document_url: str) -> List[AuditTrailData]:
     drc_client = _client_from_url(document_url)
     doc_uuid = furl(document_url).path.segments[-1]
@@ -1250,6 +1260,17 @@ def fetch_document_audit_trail(document_url: str) -> List[AuditTrailData]:
         )
         audit_trail = []
     return factory(AuditTrailData, audit_trail)
+
+
+def fetch_latest_audit_trail_data_document(
+    document_url: str,
+) -> Optional[AuditTrailData]:
+    ats = fetch_document_audit_trail(document_url)
+    ats = sorted(ats, key=lambda obj: obj.aanmaakdatum, reverse=True)
+    at = [edit for edit in ats if edit.was_bumped] or ats
+    if at:
+        return at[0]
+    return None
 
 
 def get_documenten_all_paginated(

@@ -16,6 +16,7 @@ from zac.core.api.permissions import CanReadDocuments
 from zac.core.cache import (
     invalidate_document_other_cache,
     invalidate_document_url_cache,
+    invalidate_open_documenten_cache,
 )
 from zac.core.services import find_document, get_document
 
@@ -75,6 +76,7 @@ class OpenDowcView(APIView):
 
         invalidate_document_url_cache(document.url)
         invalidate_document_other_cache(document)
+        invalidate_open_documenten_cache(request.user)
         return Response(serializer.data, status=status_code)
 
 
@@ -111,5 +113,7 @@ class DeleteDowcView(APIView):
             document = get_document(data["versionedUrl"])
             invalidate_document_url_cache(document.url)
             invalidate_document_other_cache(document)
+
+        invalidate_open_documenten_cache(request.user)
 
         return Response(data, status=status.HTTP_201_CREATED)

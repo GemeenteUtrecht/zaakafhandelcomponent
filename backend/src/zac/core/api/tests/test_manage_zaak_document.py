@@ -183,7 +183,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "file": file,
         }
 
-        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
             response = self.client.post(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -223,7 +223,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "file": file,
         }
 
-        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
             with patch(
                 "zac.core.api.views.get_open_documenten",
                 return_value=[
@@ -237,8 +237,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 ],
             ):
                 with patch(
-                    "zac.core.api.views.fetch_document_audit_trail",
-                    return_value=[factory(AuditTrailData, self.audit_trail)],
+                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                    return_value=factory(AuditTrailData, self.audit_trail),
                 ):
                     response = self.client.post(
                         self.endpoint, post_data, format="multipart"
@@ -268,8 +268,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, self.document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, self.document)],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -297,8 +297,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, self.document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, self.document)],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -329,8 +329,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, self.document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, self.document)],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -370,8 +370,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, self.document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, self.document)],
         ):
             with patch(
                 "zac.core.api.views.update_document",
@@ -390,8 +390,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                     ],
                 ):
                     with patch(
-                        "zac.core.api.views.fetch_document_audit_trail",
-                        return_value=[factory(AuditTrailData, self.audit_trail)],
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=factory(AuditTrailData, self.audit_trail),
                     ):
                         response = self.client.patch(
                             self.endpoint, post_data, format="multipart"
@@ -434,8 +434,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, self.document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, self.document)],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -485,8 +485,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, self.document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, self.document)],
         ):
             with patch(
                 "zac.core.api.views.update_document",
@@ -505,8 +505,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                     ],
                 ):
                     with patch(
-                        "zac.core.api.views.fetch_document_audit_trail",
-                        return_value=[factory(AuditTrailData, self.audit_trail)],
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=factory(AuditTrailData, self.audit_trail),
                     ):
                         response = self.client.patch(
                             self.endpoint, post_data, format="multipart"
@@ -660,14 +660,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             aanmaakdatum="2022-03-04T12:11:39.293+01:00",
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
             with patch(
                 "zac.core.api.views.get_open_documenten",
                 return_value=[],
             ):
                 with patch(
-                    "zac.core.api.views.fetch_document_audit_trail",
-                    return_value=[audit_trail],
+                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                    return_value=audit_trail,
                 ):
                     response = self.client.post(
                         self.endpoint, post_data, format="multipart"
@@ -756,7 +756,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "file": file,
         }
 
-        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
             response = self.client.post(self.endpoint, post_data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -805,14 +805,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         audit_trail = factory(AuditTrailData, audit_trail)
 
-        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
             with patch(
                 "zac.core.api.views.get_open_documenten",
                 return_value=[],
             ):
                 with patch(
-                    "zac.core.api.views.fetch_document_audit_trail",
-                    return_value=[audit_trail],
+                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                    return_value=audit_trail,
                 ):
                     response = self.client.post(
                         self.endpoint, post_data, format="multipart"
@@ -873,7 +873,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "zaak": f"{ZAKEN_ROOT}zaken/456",
             "url": DOCUMENT_URL,
         }
-        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
             response = self.client.post(self.endpoint, post_data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -893,7 +893,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "url": DOCUMENT_URL,
         }
 
-        with patch("zac.core.api.serializers.get_documenten", return_value=[[], []]):
+        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
             response = self.client.post(self.endpoint, post_data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -952,8 +952,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "file": file,
         }
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, document)],
         ):
             response = self.client.post(self.endpoint, post_data, format="multipart")
         self.assertEqual(
@@ -999,8 +999,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, document)],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -1038,8 +1038,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "zaak": f"{ZAKEN_ROOT}zaken/456",
         }
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, document)],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -1118,16 +1118,16 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, document)],
         ):
             with patch(
                 "zac.core.api.views.get_open_documenten",
                 return_value=[dowc_obj],
             ):
                 with patch(
-                    "zac.core.api.views.fetch_document_audit_trail",
-                    return_value=[audit_trail],
+                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                    return_value=audit_trail,
                 ):
                     response = self.client.patch(
                         self.endpoint, post_data, format="multipart"
@@ -1198,8 +1198,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1d",
         }
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[[factory(Document, document)], []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=[factory(Document, document)],
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
 
@@ -1249,8 +1249,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         }
 
         with patch(
-            "zac.core.api.serializers.get_documenten",
-            return_value=[factory(Document, [doc1, doc2]), []],
+            "zac.core.api.serializers.get_documenten_es",
+            return_value=factory(Document, [doc1, doc2]),
         ):
             response = self.client.patch(self.endpoint, post_data, format="multipart")
         self.assertEqual(
@@ -1311,8 +1311,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             return_value=[],
         ):
             with patch(
-                "zac.core.api.views.fetch_document_audit_trail",
-                return_value=[audit_trail],
+                "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                return_value=audit_trail,
             ):
                 response = self.client.post(
                     self.endpoint, post_data, format="multipart"
@@ -1377,8 +1377,8 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             return_value=[],
         ):
             with patch(
-                "zac.core.api.views.fetch_document_audit_trail",
-                return_value=[audit_trail],
+                "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                return_value=audit_trail,
             ):
                 response = self.client.post(
                     self.endpoint, post_data, format="multipart"

@@ -31,6 +31,7 @@ from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.api import create_informatieobject_document, create_iot_document
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
@@ -120,8 +121,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
         document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
+            "drc", "schemas/EnkelvoudigInformatieObject", titel="some-titel"
         )
         cls.document = factory(Document, document)
         cls.document.informatieobjecttype = factory(
@@ -135,13 +135,20 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             zaaktype=cls.zaaktype["url"],
         )
         cls.zaak = factory(Zaak, zaak)
+
+        cls.document_es = create_informatieobject_document(cls.document)
+        cls.document_es.informatieobjecttype = create_iot_document(
+            cls.document.informatieobjecttype
+        )
+
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype_obj,
             documents=[
-                cls.document,
+                cls.document_es,
             ],
         )
+
         cls.patch_get_process_zaak_url = patch(
             "zac.core.camunda.select_documents.context.get_process_zaak_url",
             return_value=cls.zaak.url,
@@ -216,20 +223,15 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             return_value=self.zaak,
         ):
             with patch(
-                "zac.core.camunda.select_documents.context.get_documenten",
-                return_value=[[], []],
+                "zac.core.camunda.select_documents.context.get_documenten_es",
+                side_effect=[[self.document_es], []],
             ):
-                with patch(
-                    "zac.core.camunda.select_documents.context.resolve_documenten_informatieobjecttypen",
-                    return_value=[self.document],
-                ):
-                    response = self.client.get(self.task_endpoint)
+                response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
         self.assertIn("documents", data["context"].keys())
-
         self.assertEqual(
             sorted(list(data["context"]["documents"][0].keys())),
             sorted(
@@ -238,8 +240,8 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "bestandsnaam",
                     "bestandsomvang",
                     "documentType",
-                    "url",
                     "readUrl",
+                    "titel",
                     "versie",
                 ]
             ),
@@ -540,8 +542,8 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "bestandsnaam",
                     "bestandsomvang",
                     "documentType",
-                    "url",
                     "beschrijving",
+                    "titel",
                     "versie",
                 ]
             ),
@@ -645,8 +647,8 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.core.camunda.zet_resultaat.context.get_documenten",
-            return_value=[(), None],
+            "zac.core.camunda.zet_resultaat.context.get_documenten_es",
+            return_value=[],
         ):
             with patch(
                 "zac.core.camunda.zet_resultaat.context.check_document_status",
@@ -750,17 +752,24 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             zaaktype=cls.zaaktype["url"],
         )
         cls.zaak = factory(Zaak, zaak)
+
+        cls.document_es = InformatieObjectDocument(**cls.document_dict)
+        cls.document_es.informatieobjecttype = InformatieObjectTypeDocument(
+            **cls.documenttype
+        )
+        cls.patch_get_documenten_validator = patch(
+            "zac.core.api.validators.get_documenten_es",
+            return_value=[cls.document_es],
+        )
+
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype_obj,
             documents=[
-                cls.document,
+                cls.document_es,
             ],
         )
-        cls.patch_get_documenten_validator = patch(
-            "zac.core.api.validators.get_documenten",
-            return_value=([cls.document], []),
-        )
+
         cls.patch_fetch_zaaktype = patch(
             "zac.core.camunda.select_documents.serializers.get_zaaktype_from_identificatie",
             return_value=cls.zaaktype_obj,
@@ -1183,11 +1192,11 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         ):
             with patch(
                 "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
-                return_value=[self.document],
+                return_value=[self.document_es],
             ):
                 with patch(
                     "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",
-                    return_value=[self.document],
+                    return_value=[self.document_es],
                 ):
                     response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)

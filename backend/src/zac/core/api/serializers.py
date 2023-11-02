@@ -64,7 +64,6 @@ from zac.core.services import (
     fetch_rol,
     fetch_zaaktype,
     get_document,
-    get_documenten,
     get_informatieobjecttypen_for_zaak,
     get_informatieobjecttypen_for_zaaktype,
     get_rollen,
@@ -75,6 +74,7 @@ from zac.core.services import (
     get_zaaktypen,
 )
 from zac.core.utils import build_absolute_url
+from zac.elasticsearch.searches import get_documenten_es
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
@@ -122,14 +122,14 @@ class GetZaakDocumentSerializer(APIModelSerializer):
     )
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display",
-        help_text=_("Vertrouwelijkheidaanduiding of DOCUMENT."),
+        help_text=_("Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."),
     )
     informatieobjecttype = InformatieObjectTypeSerializer(
         help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")
     )
     current_user_is_editing = serializers.SerializerMethodField(
         help_text=_(
-            "Boolean flag to indicate if requesting user is editing current DOCUMENT."
+            "Boolean flag to indicate if requesting user is editing current INFORMATIEOBJECT."
         )
     )
     last_edited_date = serializers.SerializerMethodField(
@@ -158,7 +158,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
         )
         extra_kwargs = {
             "bestandsomvang": {
-                "help_text": _("File size in bytes"),
+                "help_text": _("File size in bytes of INFORMATIEOBJECT."),
             }
         }
 
@@ -221,7 +221,7 @@ class AddZaakDocumentSerializer(serializers.Serializer):
                 "Either 'url' or 'file' should be provided."
             )
 
-        documenten, gone = get_documenten(get_zaak(zaak_url=zaak))
+        documenten = get_documenten_es(get_zaak(zaak_url=zaak))
         filenames = [doc.bestandsnaam.lower() for doc in documenten]
 
         if file:
@@ -299,7 +299,7 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         data = super().validate(data)
         document_url = data.get("url")
         zaak = get_zaak(zaak_url=data["zaak"])
-        documenten, gone = get_documenten(zaak)
+        documenten = get_documenten_es(zaak)
         doc_urls = {document.url: document for document in documenten}
         other_filenames = [
             doc.bestandsnaam.lower() for doc in documenten if doc.url != document_url

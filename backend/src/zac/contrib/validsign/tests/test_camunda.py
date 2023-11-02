@@ -168,8 +168,8 @@ class ValidSignTaskSerializerTests(APITestCase):
         )
 
         cls.patch_get_documenten = patch(
-            "zac.core.api.validators.get_documenten",
-            return_value=([cls.document_1, cls.document_2], []),
+            "zac.core.api.validators.get_documenten_es",
+            return_value=[cls.document_1, cls.document_2],
         )
 
     def setUp(self):

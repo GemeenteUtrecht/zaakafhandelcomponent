@@ -7,7 +7,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from furl import furl
 from rest_framework import serializers
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.fields import GroupSlugRelatedField, UserSlugRelatedField
@@ -49,22 +48,16 @@ class ZaakInformatieTaskSerializer(APIModelSerializer):
         )
 
 
-class DocumentUserTaskSerializer(APIModelSerializer):
+class DocumentUserTaskSerializer(serializers.Serializer):
+    beschrijving = serializers.CharField(help_text=_("Description."))
+    bestandsnaam = serializers.CharField(help_text=_("Filename."))
+    url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECT."))
     read_url = DowcUrlFieldReadOnly(
         purpose=DocFileTypes.read,
         help_text=_(
             "URL to read document. Opens the appropriate Microsoft Office application."
         ),
     )
-
-    class Meta:
-        model = Document
-        fields = (
-            "beschrijving",
-            "bestandsnaam",
-            "read_url",
-            "url",
-        )
 
 
 class CamundaAssignedUsersSerializer(APIModelSerializer):

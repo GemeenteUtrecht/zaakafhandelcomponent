@@ -42,7 +42,7 @@ class DocWrapper:
 
 def get_zaak_documents(zaak_url: str):
     zaak = get_zaak(zaak_url=zaak_url)
-    documenten, _ = get_documenten(zaak)
+    documenten = get_documenten(zaak)
     for doc in documenten:
         yield (doc.url, DocWrapper(doc))
 

@@ -71,7 +71,7 @@ from ..services import (
     delete_rol,
     delete_zaak_eigenschap,
     delete_zaak_object,
-    fetch_document_audit_trail,
+    fetch_latest_audit_trail_data_document,
     fetch_zaak_eigenschap,
     fetch_zaak_object,
     fetch_zaaktype,
@@ -872,6 +872,14 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
 
 @extend_schema(summary=_("List ZAAK documents."))
 class ListZaakDocumentsView(GetZaakMixin, views.APIView):
+    """
+    In some cases we have ZAAKen with 100s of documents.
+    Open Zaak does not support paginating or ordering zaakinformatieobjects.
+    This view is deprecated in favor of elasticsearch API view for obvious
+    performance reasons.
+
+    """
+
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         permissions.IsAuthenticated,
@@ -882,7 +890,9 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
 
     def get(self, request, *args, **kwargs):
         zaak = self.get_object()
-        documents, gone = get_documenten(zaak)
+
+        # Open Zaak does not support pagination for ZIOS :-(
+        documents = get_documenten(zaak)
         resolved_documenten = resolve_documenten_informatieobjecttypen(documents)
         open_documenten = get_open_documenten(request.user)
 
@@ -890,19 +900,13 @@ class ListZaakDocumentsView(GetZaakMixin, views.APIView):
         with parallel() as executor:
             audittrails = list(
                 executor.map(
-                    fetch_document_audit_trail, [doc.url for doc in resolved_documenten]
+                    fetch_latest_audit_trail_data_document,
+                    [doc.url for doc in resolved_documenten],
                 )
             )
-
-        editing_history = dict()
-        for at in audittrails:
-            if at:
-                at = sorted(at, key=lambda obj: obj.aanmaakdatum, reverse=True)
-                bumped_versions = [edit for edit in at if edit.was_bumped] or at
-                bumped_version = bumped_versions[0]
-                editing_history[
-                    bumped_version.resource_url
-                ] = bumped_version.last_edited_date
+            editing_history = {
+                at.resource_url: at.last_edited_date for at in audittrails if at
+            }
 
         serializer = self.serializer_class(
             instance=resolved_documenten,
@@ -961,11 +965,9 @@ class ZaakDocumentView(views.APIView):
         return {**document_data, **validated_data}
 
     def get_document_audit_trail(self, document: Document) -> Dict[str, datetime]:
-        audittrail = fetch_document_audit_trail(document.url)
-        audittrail = sorted(audittrail, key=lambda obj: obj.aanmaakdatum, reverse=True)
-        bumped_versions = [edit for edit in audittrail if edit.was_bumped] or audittrail
+        latest_audittrail = fetch_latest_audit_trail_data_document(document.url)
         editing_history = {
-            bumped_versions[0].resource_url: bumped_versions[0].last_edited_date
+            latest_audittrail.resource_url: latest_audittrail.last_edited_date
         }
         return editing_history
 

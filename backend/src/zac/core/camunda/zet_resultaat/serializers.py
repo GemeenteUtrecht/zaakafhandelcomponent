@@ -117,8 +117,15 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         ),
     )
 
+    def _get_zaak_context(self):
+        if not hasattr(self, "_zaak_context"):
+            self._zaak_context = get_zaak_context(
+                self.context["task"], require_zaaktype=True, require_documents=True
+            )
+        return self._zaak_context
+
     def validate_resultaat(self, resultaat) -> str:
-        zaakcontext = get_zaak_context(self.context["task"], require_zaaktype=True)
+        zaakcontext = self._get_zaak_context()
         result_types = get_resultaattypen(zaakcontext.zaaktype)
         if resultaat not in [rt.omschrijving for rt in result_types]:
             raise serializers.ValidationError(
@@ -140,7 +147,7 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         """
         assert hasattr(self, "validated_data"), "Serializer is not validated."
 
-        zaakcontext = get_zaak_context(self.context["task"], require_documents=True)
+        zaakcontext = self._get_zaak_context()
         open_documents = check_document_status(
             [doc.url for doc in zaakcontext.documents]
         )

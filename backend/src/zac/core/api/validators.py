@@ -13,13 +13,14 @@ from zac.core.services import (
     get_zaak,
     get_zaaktype,
 )
+from zac.elasticsearch.searches import get_documenten_es
 from zgw.models.zrc import Zaak
 
 from .constants import ACCEPTABLE_CONTENT_TYPES, RE_PROG
 
 
 def validate_zaak_documents(selected_documents: List[str], zaak: Zaak):
-    documents, _gone = get_documenten(zaak)
+    documents = get_documenten_es(zaak)
 
     # Make sure selected documents are unique
     if len((set(selected_documents))) != len(selected_documents):
