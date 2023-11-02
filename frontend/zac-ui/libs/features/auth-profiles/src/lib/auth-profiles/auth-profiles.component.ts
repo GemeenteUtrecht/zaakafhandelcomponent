@@ -1,8 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
 import { AuthProfile, MetaZaaktype, Role, UserAuthProfile, UserAuthProfiles } from '@gu/models';
 import { MetaService } from '@gu/services';
+import { MatPaginator } from '@angular/material/paginator';
+import { PaginatorComponent } from '@gu/components';
 
 /**
  * Displays the retrieved authorisation profiles with its roles and policies.
@@ -14,6 +16,7 @@ import { MetaService } from '@gu/services';
   styleUrls: ['./auth-profiles.component.scss']
 })
 export class AuthProfilesComponent implements OnInit {
+  @ViewChildren(PaginatorComponent) paginators: QueryList<PaginatorComponent>;
   @Input() roles: Role[];
 
   readonly getAuthProfilesErrorMessage = "Er is een fout opgetreden bij het ophalen van de autorisatieprofielen.";
@@ -21,11 +24,14 @@ export class AuthProfilesComponent implements OnInit {
   authProfiles: AuthProfile[];
   selectedAuthProfile: AuthProfile;
   selectedUserAuthProfiles: UserAuthProfile[];
-  userAuthProfiles: UserAuthProfile[] = [];
+  userAuthProfiles: UserAuthProfile[] = []
   caseTypes: MetaZaaktype;
 
   isLoading: boolean;
   errorMessage: string;
+
+  page = 1;
+  resultLength = 0;
 
   constructor(
     private fService: FeaturesAuthProfilesService,
@@ -95,7 +101,7 @@ export class AuthProfilesComponent implements OnInit {
     return authProfile.blueprintPermissions.some(perm => perm.objectType === "zaak")
   }
 
-  filterUserAuthProfiles(uuid) {
+  filterUserAuthProfiles(uuid, page?) {
     return this.userAuthProfiles.filter((profile) => profile.authProfile === uuid)
       .sort((a,b) => ((a.user.fullName || a.user.username) > (b.user.fullName || b.user.username)) ? 1 : (((b.user.fullName || b.user.username) > (a.user.fullName || a.user.username)) ? -1 : 0));
   }
@@ -127,24 +133,27 @@ export class AuthProfilesComponent implements OnInit {
   /**
    * Retrieve auth profiles.
    */
-  getUserAuthProfiles(uuid) {
-    const checkUuid = obj => obj.authProfile === uuid;
+  getUserAuthProfiles(uuid, page?) {
+    if (page === 1) {
+      this.paginators.forEach(paginator => {
+        paginator.firstPage();
+      })
+    }
 
     // Check if the uuid is present in previously requested userAuthProfiles
-    if (!this.userAuthProfiles.some(checkUuid)) {
-      this.isLoading = true;
-      this.fService.getUserAuthProfiles(uuid).subscribe(
-        (data: UserAuthProfiles) => {
-          this.isLoading = false;
-          this.userAuthProfiles = this.userAuthProfiles.concat(data.results);
-        },
-        (err) => {
-          this.isLoading = false;
-          this.errorMessage = this.getAuthProfilesErrorMessage;
-          this.reportError(err);
-        }
-      );
-    }
+    this.isLoading = true;
+    this.fService.getUserAuthProfiles(uuid, page).subscribe(
+      (data: UserAuthProfiles) => {
+        this.userAuthProfiles = data.results
+        this.resultLength = data.count;
+        this.isLoading = false;
+      },
+      (err) => {
+        this.isLoading = false;
+        this.errorMessage = this.getAuthProfilesErrorMessage;
+        this.reportError(err);
+      }
+    );
   }
 
   /**
@@ -155,6 +164,15 @@ export class AuthProfilesComponent implements OnInit {
       (data) => this.caseTypes = data,
       (error) => console.error(error),
     );
+  }
+
+  /**
+   * When paginator fires
+   * @param uuid
+   * @param page
+   */
+  onPageSelect(uuid, page) {
+    this.getUserAuthProfiles(uuid, page.pageIndex + 1);
   }
 
   /**

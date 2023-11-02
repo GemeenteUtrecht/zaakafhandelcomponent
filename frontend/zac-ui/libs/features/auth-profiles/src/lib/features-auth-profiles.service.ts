@@ -57,8 +57,9 @@ export class FeaturesAuthProfilesService {
   /**
    * Request the user authorization profiles from API.
    */
-  getUserAuthProfiles(uuid): Observable<UserAuthProfiles> {
-    const endpoint = encodeURI(`/api/accounts/user-auth-profiles?auth_profile=${uuid}`);
+  getUserAuthProfiles(uuid, page?): Observable<UserAuthProfiles> {
+    const pageValue = page ? `&page=${page}` : '';
+    const endpoint = encodeURI(`/api/accounts/user-auth-profiles?auth_profile=${uuid}&pageSize=1&${pageValue}`);
     return this.http.Get<UserAuthProfiles>(endpoint);
   }
 

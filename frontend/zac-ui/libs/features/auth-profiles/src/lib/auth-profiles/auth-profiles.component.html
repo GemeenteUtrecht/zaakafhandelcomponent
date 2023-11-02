@@ -7,10 +7,10 @@
     </button>
   </div>
   <p>Autorisatieprofielen bestaan uit één of meerdere rollen met daarbij horende zaaktypen.</p>
-  <mat-accordion *ngIf="authProfiles && caseTypes" multi>
+  <mat-accordion *ngIf="authProfiles && caseTypes">
     <ng-container *ngFor="let authProfile of authProfiles">
       <!-- Only show if the auth profile has at least one blue print permission with object type "zaak" -->
-      <mat-expansion-panel *ngIf="showAuthProfile(authProfile)" (opened)="getUserAuthProfiles(authProfile.uuid)">
+      <mat-expansion-panel *ngIf="showAuthProfile(authProfile)" (opened)="getUserAuthProfiles(authProfile.uuid, 1)">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <gu-icon class="group-icon mr-2">groups</gu-icon>
@@ -19,7 +19,7 @@
         </mat-expansion-panel-header>
 
         <div class="row">
-          <div class="col-md-6 mb-4 mb-md-0">
+          <div class="col-md-6 mb-4">
             <!-- Inner accordion to show blueprint permissions-->
             <ng-container *ngIf="authProfile.blueprintPermissions?.length > 0">
               <p class="mb-2">Bijbehorende rollen</p>
@@ -49,15 +49,20 @@
           <div class="col-md-auto">
             <!-- Inner accordion to show assign users for auth profile-->
             <p class="mb-2">Gebruikers</p>
-            <ng-container *ngIf="filterUserAuthProfiles(authProfile.uuid).length > 0">
+            <ng-container *ngIf="userAuthProfiles.length > 0">
               <ul>
-                <ng-container *ngFor="let userAuthProfile of filterUserAuthProfiles(authProfile.uuid) as userAuthProfiles;">
+                <ng-container *ngFor="let userAuthProfile of userAuthProfiles;">
                   <li>
                     {{userAuthProfile.user.fullName || userAuthProfile.user.username}}
                   </li>
                 </ng-container>
               </ul>
             </ng-container>
+            <gu-paginator *ngIf="filterUserAuthProfiles(authProfile.uuid).length >= 0"
+                          (page)="onPageSelect(authProfile.uuid, $event)"
+                          [pageSize]="1"
+                          [length]="resultLength"
+            ></gu-paginator>
             <p class="p p--muted" *ngIf="filterUserAuthProfiles(authProfile.uuid).length === 0"> Dit profiel heeft geen gebruikers.</p>
           </div>
 
@@ -66,7 +71,7 @@
           <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteAuthProfile(authProfile)">
             Verwijderen
           </button>
-          <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile, filterUserAuthProfiles(authProfile.uuid))">
+          <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile, userAuthProfiles)">
             Wijzigen
           </button>
         </div>
