@@ -60,7 +60,7 @@
             </ng-container>
             <gu-paginator *ngIf="filterUserAuthProfiles(authProfile.uuid).length >= 0"
                           (page)="onPageSelect(authProfile.uuid, $event)"
-                          [pageSize]="1"
+                          [pageSize]="50"
                           [length]="resultLength"
             ></gu-paginator>
             <p class="p p--muted" *ngIf="filterUserAuthProfiles(authProfile.uuid).length === 0"> Dit profiel heeft geen gebruikers.</p>
