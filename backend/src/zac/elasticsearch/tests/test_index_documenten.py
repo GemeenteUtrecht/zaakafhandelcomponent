@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.conf import settings
 from django.core.management import call_command
 
@@ -8,6 +6,8 @@ from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Index
 from freezegun import freeze_time
 from rest_framework.test import APITransactionTestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -16,34 +16,50 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.datastructures import VA_ORDER
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.tests.utils import mock_resource_get, paginated_response
+from zgw.models.zrc import Zaak, ZaakInformatieObject
 
-from ..documents import (
-    InformatieObjectDocument,
-    ZaakDocument,
-    ZaakInformatieObjectDocument,
+from ..api import (
+    create_zaak_document,
+    create_zaakinformatieobject_document,
+    create_zaaktype_document,
 )
+from ..documents import InformatieObjectDocument
+from ..searches import get_documenten_es
 from .utils import ESMixin
 
 DRC_ROOT = "https://api.drc.nl/api/v1/"
 ZTC_ROOT = "https://api.ztc.nl/api/v1/"
+ZRC_ROOT = "https://api.zrc.nl/api/v1/"
 
 
 @freeze_time("2020-01-01")
 @requests_mock.Mocker()
 class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=f"{ZTC_ROOT}catalogussen/54fc5b67-f643-4da1-8c55-e5d75f17c56f",
+    )
     iot = generate_oas_component(
         "ztc",
         "schemas/InformatieObjectType",
         url=f"{ZTC_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
         omschrijving="bijlage",
         vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        catalogus=catalogus["url"],
     )
-    document = generate_oas_component(
+    document1 = generate_oas_component(
         "drc",
         "schemas/EnkelvoudigInformatieObject",
         informatieobjecttype=iot["url"],
         url=f"{DRC_ROOT}enkelvoudiginformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a0",
+    )
+    document2 = generate_oas_component(
+        "drc",
+        "schemas/EnkelvoudigInformatieObject",
+        informatieobjecttype=iot["url"],
+        url=f"{DRC_ROOT}enkelvoudiginformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a1",
     )
 
     @staticmethod
@@ -78,9 +94,9 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(f"{ZTC_ROOT}informatieobjecttypen", json=paginated_response([self.iot]))
         m.get(
             f"{DRC_ROOT}enkelvoudiginformatieobjecten",
-            json=paginated_response([self.document]),
+            json=paginated_response([self.document1]),
         )
-        m.get(f"{self.document['url']}/audittrail", status_code=404)
+        m.get(f"{self.document1['url']}/audittrail", status_code=404)
 
         index = Index(settings.ES_INDEX_DOCUMENTEN)
         self.refresh_index()
@@ -92,43 +108,92 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_index_documenten_with_related_zaken(self, m):
         mock_service_oas_get(m, DRC_ROOT, "drc")
         mock_service_oas_get(m, ZTC_ROOT, "ztc")
+        mock_service_oas_get(m, ZRC_ROOT, "zrc")
+
+        index = Index(settings.ES_INDEX_DOCUMENTEN)
+        zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{ZTC_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
+            catalogus=self.catalogus["url"],
+        )
+
+        zaak1 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZRC_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK1",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+        )
+        zaak2 = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZRC_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca9",
+            zaaktype=zaaktype["url"],
+            bronorganisatie="002220647",
+            identificatie="ZAAK2",
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+        )
+        zio1 = generate_oas_component(
+            "zrc",
+            "schemas/ZaakInformatieObject",
+            zaak=zaak1["url"],
+            informatieobject=self.document1["url"],
+        )
+        zio2 = generate_oas_component(
+            "zrc",
+            "schemas/ZaakInformatieObject",
+            zaak=zaak1["url"],
+            informatieobject=self.document2["url"],
+        )
+        zio3 = generate_oas_component(
+            "zrc",
+            "schemas/ZaakInformatieObject",
+            zaak=zaak2["url"],
+            informatieobject=self.document1["url"],
+        )
+
         m.get(f"{ZTC_ROOT}informatieobjecttypen", json=paginated_response([self.iot]))
         m.get(
             f"{DRC_ROOT}enkelvoudiginformatieobjecten",
-            json=paginated_response([self.document]),
+            json=paginated_response([self.document1, self.document2]),
         )
-        m.get(f"{self.document['url']}/audittrail", status_code=404)
+        m.get(f"{self.document1['url']}/audittrail", status_code=404)
+        m.get(f"{self.document2['url']}/audittrail", status_code=404)
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, zaaktype)
 
-        index = Index(settings.ES_INDEX_DOCUMENTEN)
-        zio = ZaakInformatieObjectDocument(
-            url="https://some-url.com/", informatieobject=self.document["url"]
-        )
-        zd = ZaakDocument(
-            identificatie="some-identificatie",
-            omschrijving="some-omschrijving",
-            bronorganisatie="some-bronorganisatie",
-            zaakinformatieobjecten=[zio],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            va_order=VA_ORDER[VertrouwelijkheidsAanduidingen.openbaar],
-        )
-        zd.save()
+        zt_obj = factory(ZaakType, zaaktype)
+        zaak1_obj = factory(Zaak, zaak1)
+        zaak1_obj.zaaktype = zt_obj
+        zaak2_obj = factory(Zaak, zaak2)
+        zaak2_obj.zaaktype = zt_obj
+        zt_doc = create_zaaktype_document(zt_obj)
+        zaak1_doc = create_zaak_document(zaak1_obj)
+        zaak1_doc.zaaktype = zt_doc
+        zaak1_doc.zaakinformatieobjecten = [
+            create_zaakinformatieobject_document(factory(ZaakInformatieObject, zio))
+            for zio in [zio1, zio2]
+        ]
+        zaak2_doc = create_zaak_document(zaak2_obj)
+        zaak2_doc.zaaktype = zt_doc
+        zaak2_doc.zaakinformatieobjecten = [
+            create_zaakinformatieobject_document(factory(ZaakInformatieObject, zio3))
+        ]
+        zaak1_doc.save()
+        zaak2_doc.save()
         self.refresh_index()
+
         self.assertEqual(index.search().count(), 0)
-        with patch(
-            "zac.elasticsearch.api.create_zaaktype_document", return_value=None
-        ) as mock_create_ztd:
-            call_command("index_documenten")
-        mock_create_ztd.assert_called_once()
+        call_command("index_documenten")
+
         self.refresh_index()
-        self.assertEqual(index.search().count(), 1)
-        self.assertEqual(
-            index.search().execute()[0].related_zaken,
-            [
-                {
-                    "bronorganisatie": "some-bronorganisatie",
-                    "omschrijving": "some-omschrijving",
-                    "identificatie": "some-identificatie",
-                    "va_order": 27,
-                }
-            ],
-        )
+
+        self.assertEqual(index.search().count(), 2)
+        results = get_documenten_es(zaak=zaak1_obj)
+        self.assertEqual(len(results), 2)
+
+        results = get_documenten_es(zaak=zaak2_obj)
+        self.assertEqual(len(results), 1)

@@ -81,11 +81,13 @@ class StatusDocument(InnerDoc):
 class ZaakObjectDocument(InnerDoc):
     url = field.Keyword()
     object = field.Keyword()
+    zaak = field.Keyword()
 
 
 class ZaakInformatieObjectDocument(InnerDoc):
     url = field.Keyword()
     informatieobject = field.Keyword()
+    zaak = field.Keyword()
 
 
 class ZaakDocument(Document):
@@ -159,12 +161,12 @@ class ZaakDocument(Document):
 
 
 class RelatedZaakDocument(InnerDoc):
-    url = field.Keyword()
-    identificatie = field.Keyword(index=False)
     bronorganisatie = field.Keyword(index=False)
+    identificatie = field.Keyword(index=False)
     omschrijving = field.Text(index=False)
-    zaaktype = field.Object(ZaakTypeDocument)
+    url = field.Keyword()
     va_order = field.Integer()
+    zaaktype = field.Object(ZaakTypeDocument)
 
 
 class ObjectTypeDocument(InnerDoc):

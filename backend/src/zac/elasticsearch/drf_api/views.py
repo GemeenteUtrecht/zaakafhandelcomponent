@@ -279,9 +279,6 @@ class SearchReportViewSet(PerformSearchMixin, PaginatedSearchMixin, ModelViewSet
 
 
 class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView):
-    authentication_classes = [
-        ApplicationTokenAuthentication
-    ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
     permission_classes = (
         IsAuthenticated,
         CanReadZaken,
@@ -337,7 +334,6 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
 
         page = self.paginate_results(search_informatieobjects(**search_query))
         open_documenten = get_open_documenten(request.user)
-
         serializer = ESListZaakDocumentSerializer(
             page,
             many=True,

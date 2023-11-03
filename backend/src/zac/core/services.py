@@ -1066,7 +1066,6 @@ def resolve_documenten_informatieobjecttypen(
     documents: List[Document],
 ) -> List[Document]:
 
-    print(documents)
     unresolved = {
         document.informatieobjecttype
         for document in documents

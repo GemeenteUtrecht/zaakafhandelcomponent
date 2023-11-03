@@ -39,6 +39,7 @@ from .documents import (
     RolDocument,
     StatusDocument,
     ZaakDocument,
+    ZaakInformatieObjectDocument,
     ZaakObjectDocument,
     ZaakTypeDocument,
 )
@@ -218,7 +219,9 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
 def create_zaakobject_document(
     zaakobject: ZaakObject,
 ) -> ZaakObjectDocument:
-    return ZaakObjectDocument(url=zaakobject.url, object=zaakobject.object)
+    return ZaakObjectDocument(
+        url=zaakobject.url, object=zaakobject.object, zaak=zaakobject.object
+    )
 
 
 def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
@@ -235,8 +238,10 @@ def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
 
 def create_zaakinformatieobject_document(
     zio: ZaakInformatieObject,
-) -> ZaakObjectDocument:
-    return ZaakObjectDocument(url=zio.url, informatieobject=zio.informatieobject)
+) -> ZaakInformatieObjectDocument:
+    return ZaakInformatieObjectDocument(
+        url=zio.url, informatieobject=zio.informatieobject, zaak=zio.zaak
+    )
 
 
 def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> ZaakDocument:
