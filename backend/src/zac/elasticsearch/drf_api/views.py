@@ -51,12 +51,11 @@ class GetZakenView(views.APIView):
     ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
     permission_classes = (HasTokenAuth | IsAuthenticated,)
 
-    def get_serializer(**kwargs):
-        return ZaakSerializer(many=True, **kwargs)
-
     @extend_schema(
         summary=_("Autocomplete search ZAAKen."),
         parameters=input_serializer_to_parameters(ZaakIdentificatieSerializer),
+        request=ZaakIdentificatieSerializer,
+        responses={200: ZaakSerializer(many=True)},
     )
     def get(self, request: Request) -> Response:
         """
@@ -69,7 +68,7 @@ class GetZakenView(views.APIView):
             request=request,
             identificatie=serializer.validated_data["identificatie"],
         )
-        zaak_serializer = self.get_serializer(instance=zaken)
+        zaak_serializer = ZaakSerializer(instance=zaken, many=True)
         return Response(data=zaak_serializer.data)
 
 
@@ -310,6 +309,13 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
                 location=OpenApiParameter.QUERY,
                 required=False,
                 description=_("Page of paginated response."),
+            ),
+            OpenApiParameter(
+                name="pageSize",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                default=10,
+                description=_("Page size of paginated response."),
             ),
         ],
         responses=ESListZaakDocumentSerializer(many=True),
