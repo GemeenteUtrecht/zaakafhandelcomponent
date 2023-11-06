@@ -1,11 +1,15 @@
 import re
 from typing import Dict
 
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from ..documents import ZaakDocument
+from zac.contrib.dowc.constants import DocFileTypes
+from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+
+from ..documents import InformatieObjectDocument, ZaakDocument
 from ..models import SearchReport
 from .fields import OrderedMultipleChoiceField
 from .utils import get_document_fields, get_document_properties
@@ -14,6 +18,13 @@ DEFAULT_ES_ZAAKDOCUMENT_FIELDS = [
     field[0]
     for field in get_document_fields(
         get_document_properties(ZaakDocument)["properties"]
+    )
+]
+
+DEFAULT_ES_INFORMATIEOBJECTDOCUMENT_FIELDS = [
+    field[0]
+    for field in get_document_fields(
+        get_document_properties(InformatieObjectDocument)["properties"]
     )
 ]
 
@@ -342,3 +353,104 @@ class QuickSearchResultSerializer(serializers.Serializer):
     objecten = QSObjectDocumentSerializer(
         many=True, help_text=_("OBJECTs related to quick search query.")
     )
+
+
+class SearchInformatieObjectSerializer(serializers.Serializer):
+    fields = OrderedMultipleChoiceField(
+        required=False,
+        help_text=_(
+            "Fields that will be returned with the search results. Default returns all fields."
+        ),
+        choices=DEFAULT_ES_INFORMATIEOBJECTDOCUMENT_FIELDS
+        + [
+            "delete_url",
+            "read_url",
+            "write_url",
+            "current_user_is_editing",
+            "last_edited_date",
+        ],
+        default=[
+            "auteur",
+            "beschrijving",
+            "bestandsnaam",
+            "bestandsomvang",
+            "bronorganisatie",
+            "current_user_is_editing",
+            "delete_url",
+            "identificatie",
+            "informatieobjecttype",
+            "last_edited_date",
+            "locked",
+            "read_url",
+            "titel",
+            "url",
+            "versie",
+            "vertrouwelijkheidaanduiding",
+            "write_url",
+        ],
+    )
+
+
+class ESInformatieObjectTypeSerializer(serializers.Serializer):
+    url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECTTYPE."))
+    omschrijving = serializers.CharField(help_text=_("Description."))
+
+
+class ESListZaakDocumentSerializer(serializers.Serializer):
+    auteur = serializers.CharField(help_text=_("Author to last edit."))
+    beschrijving = serializers.CharField(help_text=_("Description."))
+    bestandsnaam = serializers.CharField(help_text=_("Filename."))
+    bestandsomvang = serializers.IntegerField(help_text=_("File size in bytes."))
+    bronorganisatie = serializers.CharField(
+        help_text=_("The RSIN of the organisation that created the INFORMATIEOBJECT."),
+    )
+    current_user_is_editing = serializers.SerializerMethodField(
+        help_text=_(
+            "Boolean flag to indicate if requesting user is editing current INFORMATIEOBJECT."
+        )
+    )
+    delete_url = serializers.SerializerMethodField(
+        help_text=_(
+            "The URL required to save edits and delete the DOWC object related to the INFORMATIEOBJECT."
+        )
+    )
+    identificatie = serializers.CharField()
+    informatieobjecttype = ESInformatieObjectTypeSerializer(
+        help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")
+    )
+    last_edited_date = serializers.DateTimeField(
+        help_text=_("Shows last edited datetime.")
+    )
+    locked = serializers.BooleanField()
+    read_url = DowcUrlFieldReadOnly(
+        purpose=DocFileTypes.read,
+        help_text=_(
+            "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
+        ),
+    )
+    related_zaken = QSZaakDocumentSerializer(many=True)
+    titel = serializers.CharField(help_text=_("Title given to INFORMATIEOBJECT."))
+    url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECT."))
+    versie = serializers.IntegerField(help_text=_("Version."))
+    vertrouwelijkheidaanduiding = serializers.CharField(
+        help_text=_("Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."),
+    )
+    write_url = DowcUrlFieldReadOnly(
+        purpose=DocFileTypes.write,
+        allow_blank=True,
+        help_text=_(
+            "URL to write INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
+        ),
+    )
+
+    def get_delete_url(self, obj) -> str:
+        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        return (
+            reverse("dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid})
+            if dowc_obj
+            else ""
+        )
+
+    def get_current_user_is_editing(self, obj) -> bool:
+        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        return bool(dowc_obj)

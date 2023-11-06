@@ -323,7 +323,6 @@ class WorkStackSummaryView(views.APIView):
     serializer_class = WorkStackSummarySerializer
 
     def post(self, request, *args, **kwargs):
-        client = get_client()
         data = {}
 
         def _get_user_task_count():

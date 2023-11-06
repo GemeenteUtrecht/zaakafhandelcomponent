@@ -685,7 +685,6 @@ paths:
       tags:
       - management
       security:
-      - cookieAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -711,7 +710,6 @@ paths:
       tags:
       - management
       security:
-      - cookieAuth: []
       - tokenAuth: []
       responses:
         '204':
@@ -733,7 +731,6 @@ paths:
       tags:
       - management
       security:
-      - cookieAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -750,6 +747,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/AddBlueprintPermissions'
           description: ''
+  /api/accounts/management/user/recently-viewed/clear:
+    post:
+      operationId: accounts_management_user_recently_viewed_clear_create
+      description: 'This is NOT meant for everyday usage but rather an emergency endpoint
+        for solving a hot mess. TODO: implement a worker instead of blocking the app.'
+      summary: Clear all recently viewed fields on all users.
+      tags:
+      - management
+      security:
+      - tokenAuth: []
+      responses:
+        '204':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          description: No response body
   /api/accounts/permissions:
     get:
       operationId: accounts_permissions_retrieve
@@ -2193,6 +2211,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/CountCamundaUserTasks'
           description: ''
+  /api/checklists/management/checklists/unlock:
+    post:
+      operationId: checklists_management_checklists_unlock_create
+      description: 'This is NOT meant for everyday usage but rather an emergency endpoint
+        for solving a hot mess. TODO: implement a worker instead of blocking the app.'
+      summary: Unlock all locked checklists.
+      tags:
+      - management
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlockCount'
+          description: ''
   /api/checklists/zaak-checklists/{bronorganisatie}/{identificatie}:
     get:
       operationId: checklists_zaak_checklists_retrieve
@@ -2614,6 +2658,11 @@ paths:
   /api/core/cases/{bronorganisatie}/{identificatie}/documents:
     get:
       operationId: core_cases_documents_retrieve
+      description: |-
+        In some cases we have ZAAKen with 100s of documents.
+        Open Zaak does not support paginating or ordering zaakinformatieobjects.
+        This view is deprecated in favor of elasticsearch API view for obvious
+        performance reasons.
       summary: Alle ZAAKdocumenten opvragen.
       parameters:
       - in: path
@@ -2828,6 +2877,9 @@ paths:
           description: ''
     delete:
       operationId: core_cases_roles_destroy
+      description: 'This also adds an `oudbehandelaar` to the `oudbehandelaren` object
+        of the ZAAK if the ROL has `omschrijving_generiek`: `behandelaar`, and it
+        invalidates the cache of the `oudbehandelaren` object.'
       summary: Vernietig ROL van ZAAK.
       parameters:
       - in: path
@@ -3353,7 +3405,7 @@ paths:
       operationId: core_management_cache_reset_create
       description: 'This is NOT meant for everyday usage but rather an emergency endpoint
         for solving a hot mess. TODO: implement a worker instead of blocking the app.'
-      summary: Clear all access attempts.
+      summary: Clear all cache key-value pairs.
       tags:
       - management
       requestBody:
@@ -3368,7 +3420,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CacheResetRequest'
       security:
-      - cookieAuth: []
       - tokenAuth: []
       responses:
         '200':
@@ -4387,7 +4438,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fapi.bag.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Nummeraanduiding
+                $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Flvbag%2Findividuelebevragingen%2Fv2%2Fopenapi.yaml#/components/schemas/Nummeraanduiding
           description: ''
   /api/kadaster/panden/{pandidentificatie}:
     get:
@@ -4422,7 +4473,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fapi.bag.kadaster.nl%2Fesd%2Fhuidigebevragingen%2Fv1%2Fopenapi.yaml#/components/schemas/Pand
+                $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Flvbag%2Findividuelebevragingen%2Fv2%2Fopenapi.yaml#/components/schemas/Pand
           description: ''
   /api/kownsl/review-requests/{request_uuid}/advice:
     get:
@@ -4756,6 +4807,144 @@ paths:
               schema:
                 $ref: '#/components/schemas/LandingPageConfiguration'
           description: ''
+  /api/oudbehandelaren/oudbehandelaren/{bronorganisatie}/{identificatie}:
+    get:
+      operationId: oudbehandelaren_oudbehandelaren_retrieve
+      summary: Retrieve `oudbehandelaren` for ZAAK.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        description: Bronorganisatie of the ZAAK.
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        description: Identificatie of the ZAAK.
+        required: true
+      tags:
+      - oudbehandelaren
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oudbehandelaren'
+          description: ''
+  /api/search/cases/{bronorganisatie}/{identificatie}/documents:
+    post:
+      operationId: search_cases_documents_create
+      description: Default ordered on `titel` and `last_edited_date`.
+      summary: Retrieve INFORMATIEOBJECTs for ZAAK in Elasticsearch.
+      parameters:
+      - in: path
+        name: bronorganisatie
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: identificatie
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - auteur
+          - beschrijving
+          - bestandsnaam
+          - bestandsomvang
+          - bronorganisatie
+          - creatiedatum
+          - formaat
+          - identificatie
+          - indicatie_gebruiksrecht
+          - informatieobjecttype.begin_geldigheid
+          - informatieobjecttype.catalogus
+          - informatieobjecttype.concept
+          - informatieobjecttype.einde_geldigheid
+          - informatieobjecttype.url
+          - informatieobjecttype.vertrouwelijkheidaanduiding
+          - inhoud
+          - last_edited_date
+          - link
+          - locked
+          - ontvangstdatum
+          - related_zaken.bronorganisatie
+          - related_zaken.identificatie
+          - related_zaken.url
+          - related_zaken.va_order
+          - related_zaken.zaaktype.catalogus
+          - related_zaken.zaaktype.catalogus_domein
+          - related_zaken.zaaktype.identificatie
+          - related_zaken.zaaktype.omschrijving
+          - related_zaken.zaaktype.url
+          - status
+          - taal
+          - titel
+          - url
+          - versie
+          - vertrouwelijkheidaanduiding
+          - verzenddatum
+        description: Possible ordering parameters. Multiple values are possible and
+          should be separated by a comma.
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page of paginated response.
+      - in: query
+        name: pageSize
+        schema:
+          type: integer
+          default: 10
+        description: Page size of paginated response.
+      tags:
+      - search
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchInformatieObjectRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SearchInformatieObjectRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SearchInformatieObjectRequest'
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedESListZaakDocumentList'
+          description: ''
   /api/search/management/index/all:
     post:
       operationId: search_management_index_all_create
@@ -4765,7 +4954,6 @@ paths:
       tags:
       - management
       security:
-      - cookieAuth: []
       - tokenAuth: []
       responses:
         '204':
@@ -5050,9 +5238,12 @@ paths:
           - zaakgeometrie
           - zaakinformatieobjecten.informatieobject
           - zaakinformatieobjecten.url
+          - zaakinformatieobjecten.zaak
           - zaakobjecten.object
           - zaakobjecten.url
+          - zaakobjecten.zaak
           - zaaktype.catalogus
+          - zaaktype.catalogus_domein
           - zaaktype.identificatie
           - zaaktype.omschrijving
           - zaaktype.url
@@ -5124,9 +5315,12 @@ paths:
           - zaakgeometrie
           - zaakinformatieobjecten.informatieobject
           - zaakinformatieobjecten.url
+          - zaakinformatieobjecten.zaak
           - zaakobjecten.object
           - zaakobjecten.url
+          - zaakobjecten.zaak
           - zaaktype.catalogus
+          - zaaktype.catalogus_domein
           - zaaktype.identificatie
           - zaaktype.omschrijving
           - zaaktype.url
@@ -5309,9 +5503,12 @@ paths:
           - zaakgeometrie
           - zaakinformatieobjecten.informatieobject
           - zaakinformatieobjecten.url
+          - zaakinformatieobjecten.zaak
           - zaakobjecten.object
           - zaakobjecten.url
+          - zaakobjecten.zaak
           - zaaktype.catalogus
+          - zaaktype.catalogus_domein
           - zaaktype.identificatie
           - zaaktype.omschrijving
           - zaaktype.url
@@ -5470,7 +5667,7 @@ paths:
   /api/workstack/review-requests:
     get:
       operationId: workstack_review_requests_retrieve
-      summary: List review requests initiated by user.
+      summary: Alle verzoeken voor een ZAAK opvragen.
       parameters:
       - in: query
         name: page
@@ -5488,7 +5685,6 @@ paths:
       - workstack
       security:
       - cookieAuth: []
-      - tokenAuth: []
       responses:
         '200':
           headers:
@@ -5503,6 +5699,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkStackReviewRequest'
+          description: ''
+  /api/workstack/summary:
+    post:
+      operationId: workstack_summary_create
+      tags:
+      - workstack
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkStackSummaryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkStackSummaryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkStackSummaryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          headers:
+            X-Is-Hijacked:
+              schema:
+                type: string
+                enum:
+                - 'false'
+                - 'true'
+              description: Header displays als de gebruiker is gehijackt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkStackSummary'
           description: ''
   /api/workstack/user-tasks:
     get:
@@ -6002,8 +6232,8 @@ components:
         name:
           type: string
           title: Naam
-          description: Gebruik een herkenbare naam die overeenkomt met de functie
-            van gebruikers.
+          description: Use an easily recognizable name that maps to the function of
+            users that's unique.
           maxLength: 255
         blueprintPermissions:
           type: array
@@ -6023,8 +6253,8 @@ components:
           type: string
           minLength: 1
           title: Naam
-          description: Gebruik een herkenbare naam die overeenkomt met de functie
-            van gebruikers.
+          description: Use an easily recognizable name that maps to the function of
+            users that's unique.
           maxLength: 255
         blueprintPermissions:
           type: array
@@ -6975,10 +7205,13 @@ components:
       properties:
         beschrijving:
           type: string
+          description: Description.
         bestandsnaam:
           type: string
+          description: Filename.
         bestandsomvang:
           type: integer
+          description: File size in bytes.
         documentType:
           type: string
         readUrl:
@@ -6988,16 +7221,23 @@ components:
           title: document read URL
           description: URL to read document. Opens the appropriate Microsoft Office
             application.
+        titel:
+          type: string
+          description: Title given to INFORMATIEOBJECT.
         url:
           type: string
+          format: uri
+          description: URL-reference to INFORMATIEOBJECT.
         versie:
           type: integer
+          description: Version.
       required:
       - beschrijving
       - bestandsnaam
       - bestandsomvang
       - documentType
       - readUrl
+      - titel
       - url
       - versie
       title: Document
@@ -7049,8 +7289,14 @@ components:
       properties:
         beschrijving:
           type: string
+          description: Description.
         bestandsnaam:
           type: string
+          description: Filename.
+        url:
+          type: string
+          format: uri
+          description: URL-reference to INFORMATIEOBJECT.
         readUrl:
           type: string
           format: uri
@@ -7058,8 +7304,6 @@ components:
           title: document read URL
           description: URL to read document. Opens the appropriate Microsoft Office
             application.
-        url:
-          type: string
       required:
       - beschrijving
       - bestandsnaam
@@ -7122,6 +7366,111 @@ components:
       description: Generic object
       additionalProperties: true
       title: DynamicFormWrite
+    ESInformatieObjectType:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL-reference to INFORMATIEOBJECTTYPE.
+        omschrijving:
+          type: string
+          description: Description.
+      required:
+      - omschrijving
+      - url
+      title: ESInformatieObjectType
+    ESListZaakDocument:
+      type: object
+      properties:
+        auteur:
+          type: string
+          description: Author to last edit.
+        beschrijving:
+          type: string
+          description: Description.
+        bestandsnaam:
+          type: string
+          description: Filename.
+        bestandsomvang:
+          type: integer
+          description: File size in bytes.
+        bronorganisatie:
+          type: string
+          description: The RSIN of the organisation that created the INFORMATIEOBJECT.
+        currentUserIsEditing:
+          type: boolean
+          readOnly: true
+          description: Boolean flag to indicate if requesting user is editing current
+            INFORMATIEOBJECT.
+        deleteUrl:
+          type: string
+          readOnly: true
+          description: The URL required to save edits and delete the DOWC object related
+            to the INFORMATIEOBJECT.
+        identificatie:
+          type: string
+        informatieobjecttype:
+          allOf:
+          - $ref: '#/components/schemas/ESInformatieObjectType'
+          description: De INFORMATIEOBJECTTYPE toebehorend aan het ZAAKINFORMATIEOBJECT.
+        lastEditedDate:
+          type: string
+          format: date-time
+          description: Laatste bewerkingsdatum.
+        locked:
+          type: boolean
+        readUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document read URL
+          description: URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft
+            Office application.
+        relatedZaken:
+          type: array
+          items:
+            $ref: '#/components/schemas/QSZaakDocument'
+        titel:
+          type: string
+          description: Title given to INFORMATIEOBJECT.
+        url:
+          type: string
+          format: uri
+          description: URL-reference to INFORMATIEOBJECT.
+        versie:
+          type: integer
+          description: Version.
+        vertrouwelijkheidaanduiding:
+          type: string
+          description: Vertrouwelijkheidaanduiding of INFORMATIEOBJECT.
+        writeUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document write URL
+          description: URL to write INFORMATIEOBJECT. Opens the appropriate Microsoft
+            Office application.
+      required:
+      - auteur
+      - beschrijving
+      - bestandsnaam
+      - bestandsomvang
+      - bronorganisatie
+      - currentUserIsEditing
+      - deleteUrl
+      - identificatie
+      - informatieobjecttype
+      - lastEditedDate
+      - locked
+      - readUrl
+      - relatedZaken
+      - titel
+      - url
+      - versie
+      - vertrouwelijkheidaanduiding
+      - writeUrl
+      title: ESListZaakDocument
     Eigenschap:
       type: object
       properties:
@@ -7303,11 +7652,12 @@ components:
       required:
       - zaakDetailUrl
       title: FetchZaakDetailUrl
-    FieldsEnum:
+    Fields261Enum:
       enum:
       - url
       - zaaktype.url
       - zaaktype.catalogus
+      - zaaktype.catalogus_domein
       - zaaktype.omschrijving
       - zaaktype.identificatie
       - identificatie
@@ -7330,14 +7680,17 @@ components:
       - toelichting
       - zaakobjecten.url
       - zaakobjecten.object
+      - zaakobjecten.zaak
       - zaakinformatieobjecten.url
       - zaakinformatieobjecten.informatieobject
+      - zaakinformatieobjecten.zaak
       - zaakgeometrie
       type: string
       description: |-
         * `url` - url
         * `zaaktype.url` - zaaktype.url
         * `zaaktype.catalogus` - zaaktype.catalogus
+        * `zaaktype.catalogus_domein` - zaaktype.catalogus_domein
         * `zaaktype.omschrijving` - zaaktype.omschrijving
         * `zaaktype.identificatie` - zaaktype.identificatie
         * `identificatie` - identificatie
@@ -7360,10 +7713,12 @@ components:
         * `toelichting` - toelichting
         * `zaakobjecten.url` - zaakobjecten.url
         * `zaakobjecten.object` - zaakobjecten.object
+        * `zaakobjecten.zaak` - zaakobjecten.zaak
         * `zaakinformatieobjecten.url` - zaakinformatieobjecten.url
         * `zaakinformatieobjecten.informatieobject` - zaakinformatieobjecten.informatieobject
+        * `zaakinformatieobjecten.zaak` - zaakinformatieobjecten.zaak
         * `zaakgeometrie` - zaakgeometrie
-      title: FieldsEnum
+      title: Fields261Enum
     FindPand:
       type: object
       properties:
@@ -7443,11 +7798,11 @@ components:
       title: FormEnum
     FormField:
       oneOf:
+      - $ref: '#/components/schemas/FormFieldInt'
       - $ref: '#/components/schemas/FormFieldDatetime'
       - $ref: '#/components/schemas/FormFieldBoolean'
-      - $ref: '#/components/schemas/FormFieldEnum'
       - $ref: '#/components/schemas/FormFieldString'
-      - $ref: '#/components/schemas/FormFieldInt'
+      - $ref: '#/components/schemas/FormFieldEnum'
       discriminator:
         propertyName: inputType
         mapping:
@@ -7526,12 +7881,12 @@ components:
           type: string
         bestandsomvang:
           type: integer
-          description: Bestandsformaat in bytes
+          description: File size in bytes of INFORMATIEOBJECT.
         currentUserIsEditing:
           type: boolean
           readOnly: true
-          description: Een booleaan die laat zien of de gebruiker het DOCUMENT aan
-            het bewerken is.
+          description: Boolean flag to indicate if requesting user is editing current
+            INFORMATIEOBJECT.
         deleteUrl:
           type: string
           readOnly: true
@@ -7566,7 +7921,7 @@ components:
           type: integer
         vertrouwelijkheidaanduiding:
           type: string
-          description: Vertrouwelijkheidaanduiding van DOCUMENT.
+          description: Vertrouwelijkheidaanduiding of INFORMATIEOBJECT.
         writeUrl:
           type: string
           format: uri
@@ -7739,8 +8094,8 @@ components:
       title: GroupBlueprintPoliciesZaakTypeBlueprintRequest
     GroupBlueprintRequest:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprintRequest'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprintRequest'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprintRequest'
       discriminator:
         propertyName: objectType
         mapping:
@@ -7916,9 +8271,8 @@ components:
       properties:
         catalogus:
           type: string
-          format: uri
-          description: URL-referentie naar CATALOGUS waar INFORMATIEOBJECTTYPEn zich
-            bevinden
+          description: 'On read: `domein` & on write: `url` of CATALOGUS where ZAAKTYPEs
+            are located.'
         iotypeOmschrijving:
           type: string
           description: INFORMATIEOBJECTTYPE waar het recht op slaat
@@ -7948,10 +8302,9 @@ components:
       properties:
         catalogus:
           type: string
-          format: uri
           minLength: 1
-          description: URL-referentie naar CATALOGUS waar INFORMATIEOBJECTTYPEn zich
-            bevinden
+          description: 'On read: `domein` & on write: `url` of CATALOGUS where ZAAKTYPEs
+            are located.'
         iotypeOmschrijving:
           type: string
           minLength: 1
@@ -8177,7 +8530,7 @@ components:
         fields:
           type: array
           items:
-            $ref: '#/components/schemas/FieldsEnum'
+            $ref: '#/components/schemas/Fields261Enum'
           default:
           - bronorganisatie
           - deadline
@@ -8269,6 +8622,7 @@ components:
       title: ObjectProxy
     ObjectProxyExtrasResponse:
       type: object
+      description: Filter out `meta` fields please.
       properties:
         stringRepresentation:
           type: string
@@ -8301,6 +8655,7 @@ components:
       title: ObjecttypeVersionProxy
     ObjecttypeVersionProxyExtrasResponse:
       type: object
+      description: Filter out `meta` fields please.
       title: ObjecttypeVersionProxyExtrasResponse
     OpenDocument:
       type: object
@@ -8324,14 +8679,14 @@ components:
             $ref: '#/components/schemas/OpenReviewUser'
           readOnly: true
           nullable: true
-          description: '`full_name` of the user assigned to review.'
+          description: '`full_name` of the users assigned to review.'
         groups:
           type: array
           items:
             $ref: '#/components/schemas/OpenReviewGroup'
           readOnly: true
           nullable: true
-          description: '`name` of the group assigned to review.'
+          description: '`name` of the groups assigned to review.'
       required:
       - deadline
       - groups
@@ -8355,6 +8710,73 @@ components:
       required:
       - fullName
       title: OpenReviewUser
+    Oudbehandelaar:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address related to `oudbehandelaar`.
+        ended:
+          type: string
+          format: date-time
+          description: Datetime at which ROL ended.
+        started:
+          type: string
+          format: date-time
+          description: Datetime ROL started. `registratiedatum` of ROL.
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          description: User data of `oudbehandelaar`.
+      required:
+      - email
+      - ended
+      - started
+      - user
+      title: Oudbehandelaar
+    Oudbehandelaren:
+      type: object
+      properties:
+        zaak:
+          type: string
+          description: URL-referentie naar de ZAAK.
+        oudbehandelaren:
+          type: array
+          items:
+            $ref: '#/components/schemas/Oudbehandelaar'
+          description: Array of `oudbehandelaren`.
+      required:
+      - oudbehandelaren
+      - zaak
+      title: Oudbehandelaren
+    PaginatedESListZaakDocumentList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ESListZaakDocument'
+        fields:
+          type: array
+          items:
+            type: string
+          nullable: false
+          default: []
+      title: PaginatedESListZaakDocumentList
     PaginatedGroupList:
       type: object
       properties:
@@ -8521,35 +8943,7 @@ components:
           items:
             type: string
           nullable: false
-          default:
-          - url
-          - zaaktype.url
-          - zaaktype.catalogus
-          - zaaktype.omschrijving
-          - zaaktype.identificatie
-          - identificatie
-          - bronorganisatie
-          - omschrijving
-          - vertrouwelijkheidaanduiding
-          - va_order
-          - rollen.url
-          - rollen.betrokkene_type
-          - rollen.omschrijving_generiek
-          - rollen.betrokkene_identificatie.identificatie
-          - startdatum
-          - einddatum
-          - registratiedatum
-          - deadline
-          - status.url
-          - status.statustype
-          - status.datum_status_gezet
-          - status.statustoelichting
-          - toelichting
-          - zaakobjecten.url
-          - zaakobjecten.object
-          - zaakinformatieobjecten.url
-          - zaakinformatieobjecten.informatieobject
-          - zaakgeometrie
+          default: []
       title: PaginatedZaakDocumentList
     PaginatedZaakTypeAggregateList:
       type: object
@@ -8737,9 +9131,6 @@ components:
             wanneer `vertrouwelijkheidaanduiding` wordt veranderd.
         toelichting:
           type: string
-        uiterlijkeEinddatumAfdoening:
-          type: string
-          format: date
         vertrouwelijkheidaanduiding:
           allOf:
           - $ref: '#/components/schemas/VertrouwelijkheidaanduidingEnum'
@@ -8797,11 +9188,16 @@ components:
           type: string
           format: uri
           minLength: 1
-          description: URL-referentie naar de ZAAK
+          description: URL-reference of the ZAAK.
         bestandsnaam:
           type: string
           minLength: 1
           description: Bestandsnaam zonder extensie.
+        informatieobjecttype:
+          type: string
+          format: uri
+          minLength: 1
+          description: URL-reference to INFORMATIEOBJECTTYPE.
       title: PatchedUpdateZaakDocumentRequest
     PatchedUpdateZaakEigenschapWaardeRequest:
       type: object
@@ -9551,12 +9947,12 @@ components:
       title: ReviewTypeEnum
     Rol:
       oneOf:
-      - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
+      - $ref: '#/components/schemas/RolJSONFieldTaskData'
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
       - $ref: '#/components/schemas/RolRolVestigingTaskData'
       - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
-      - $ref: '#/components/schemas/RolJSONFieldTaskData'
-      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
+      - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -9815,11 +10211,11 @@ components:
       title: RolOrganisatorischeEenheidTaskDataRequest
     RolRequest:
       oneOf:
-      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskDataRequest'
       - $ref: '#/components/schemas/RolRolVestigingTaskDataRequest'
       - $ref: '#/components/schemas/RolRolMedewerkerTaskDataRequest'
       - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
       - $ref: '#/components/schemas/RolJSONFieldTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskDataRequest'
       - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
       discriminator:
         propertyName: betrokkeneType
@@ -10092,29 +10488,18 @@ components:
     Search:
       type: object
       properties:
-        identificatie:
+        behandelaar:
           type: string
-          description: Unieke identificatie van ZAAK binnen `bronorganisatie`.
-        zaaktype:
-          allOf:
-          - $ref: '#/components/schemas/SearchZaaktype'
-          description: Eigenschappen om ZAAKTYPEn te identificeren.
-        omschrijving:
-          type: string
-          description: Korte omschrijving van ZAAK.
+          description: '`username` of behandelaar.'
         eigenschappen:
           type: object
           additionalProperties: {}
           description: 'ZAAK-EIGENSCHAPpen in formaat `<property name>:{''value'':
             <property value>}`.'
-        object:
-          type: string
-          format: uri
-          description: URL-referentie naar OBJECT.
         fields:
           type: array
           items:
-            $ref: '#/components/schemas/FieldsEnum'
+            $ref: '#/components/schemas/Fields261Enum'
           default:
           - bronorganisatie
           - deadline
@@ -10138,18 +10523,35 @@ components:
           - zaakgeometrie
           - zaakinformatieobjecten.informatieobject
           - zaakinformatieobjecten.url
+          - zaakinformatieobjecten.zaak
           - zaakobjecten.object
           - zaakobjecten.url
+          - zaakobjecten.zaak
           - zaaktype.catalogus
+          - zaaktype.catalogus_domein
           - zaaktype.identificatie
           - zaaktype.omschrijving
           - zaaktype.url
           description: Fields that will be returned with the search results. Default
             returns all fields. Will always include `identificatie` and `bronorganisatie`.
+        identificatie:
+          type: string
+          description: Unieke identificatie van ZAAK binnen `bronorganisatie`.
         includeClosed:
           type: boolean
           default: false
           description: Neem gesloten ZAAKen ook mee.
+        object:
+          type: string
+          format: uri
+          description: URL-referentie naar OBJECT.
+        omschrijving:
+          type: string
+          description: Korte omschrijving van ZAAK.
+        zaaktype:
+          allOf:
+          - $ref: '#/components/schemas/SearchZaaktype'
+          description: Eigenschappen om ZAAKTYPEn te identificeren.
       title: Search
     SearchEigenschap:
       type: object
@@ -10169,8 +10571,8 @@ components:
       title: SearchEigenschap
     SearchEigenschapSpecificatie:
       oneOf:
-      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumStringEnum'
       - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumNumberEnum'
+      - $ref: '#/components/schemas/SearchEigenschapSpecificatieEnumStringEnum'
       discriminator:
         propertyName: type
         mapping:
@@ -10212,6 +10614,123 @@ components:
       required:
       - type
       title: SearchEigenschapSpecificatieSharedResponse
+    SearchInformatieObjectFieldsEnum:
+      enum:
+      - auteur
+      - beschrijving
+      - bestandsnaam
+      - bestandsomvang
+      - bronorganisatie
+      - creatiedatum
+      - formaat
+      - identificatie
+      - indicatie_gebruiksrecht
+      - inhoud
+      - link
+      - locked
+      - ontvangstdatum
+      - status
+      - taal
+      - titel
+      - url
+      - versie
+      - verzenddatum
+      - informatieobjecttype.url
+      - informatieobjecttype.begin_geldigheid
+      - informatieobjecttype.catalogus
+      - informatieobjecttype.concept
+      - informatieobjecttype.einde_geldigheid
+      - informatieobjecttype.omschrijving
+      - informatieobjecttype.vertrouwelijkheidaanduiding
+      - related_zaken.bronorganisatie
+      - related_zaken.identificatie
+      - related_zaken.omschrijving
+      - related_zaken.url
+      - related_zaken.va_order
+      - related_zaken.zaaktype.url
+      - related_zaken.zaaktype.catalogus
+      - related_zaken.zaaktype.catalogus_domein
+      - related_zaken.zaaktype.omschrijving
+      - related_zaken.zaaktype.identificatie
+      - last_edited_date
+      - vertrouwelijkheidaanduiding
+      - delete_url
+      - read_url
+      - write_url
+      - current_user_is_editing
+      type: string
+      description: |-
+        * `auteur` - auteur
+        * `beschrijving` - beschrijving
+        * `bestandsnaam` - bestandsnaam
+        * `bestandsomvang` - bestandsomvang
+        * `bronorganisatie` - bronorganisatie
+        * `creatiedatum` - creatiedatum
+        * `formaat` - formaat
+        * `identificatie` - identificatie
+        * `indicatie_gebruiksrecht` - indicatie_gebruiksrecht
+        * `inhoud` - inhoud
+        * `link` - link
+        * `locked` - locked
+        * `ontvangstdatum` - ontvangstdatum
+        * `status` - status
+        * `taal` - taal
+        * `titel` - titel
+        * `url` - url
+        * `versie` - versie
+        * `verzenddatum` - verzenddatum
+        * `informatieobjecttype.url` - informatieobjecttype.url
+        * `informatieobjecttype.begin_geldigheid` - informatieobjecttype.begin_geldigheid
+        * `informatieobjecttype.catalogus` - informatieobjecttype.catalogus
+        * `informatieobjecttype.concept` - informatieobjecttype.concept
+        * `informatieobjecttype.einde_geldigheid` - informatieobjecttype.einde_geldigheid
+        * `informatieobjecttype.omschrijving` - informatieobjecttype.omschrijving
+        * `informatieobjecttype.vertrouwelijkheidaanduiding` - informatieobjecttype.vertrouwelijkheidaanduiding
+        * `related_zaken.bronorganisatie` - related_zaken.bronorganisatie
+        * `related_zaken.identificatie` - related_zaken.identificatie
+        * `related_zaken.omschrijving` - related_zaken.omschrijving
+        * `related_zaken.url` - related_zaken.url
+        * `related_zaken.va_order` - related_zaken.va_order
+        * `related_zaken.zaaktype.url` - related_zaken.zaaktype.url
+        * `related_zaken.zaaktype.catalogus` - related_zaken.zaaktype.catalogus
+        * `related_zaken.zaaktype.catalogus_domein` - related_zaken.zaaktype.catalogus_domein
+        * `related_zaken.zaaktype.omschrijving` - related_zaken.zaaktype.omschrijving
+        * `related_zaken.zaaktype.identificatie` - related_zaken.zaaktype.identificatie
+        * `last_edited_date` - last_edited_date
+        * `vertrouwelijkheidaanduiding` - vertrouwelijkheidaanduiding
+        * `delete_url` - delete_url
+        * `read_url` - read_url
+        * `write_url` - write_url
+        * `current_user_is_editing` - current_user_is_editing
+      title: SearchInformatieObjectFieldsEnum
+    SearchInformatieObjectRequest:
+      type: object
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchInformatieObjectFieldsEnum'
+          default:
+          - auteur
+          - beschrijving
+          - bestandsnaam
+          - bestandsomvang
+          - bronorganisatie
+          - current_user_is_editing
+          - delete_url
+          - identificatie
+          - informatieobjecttype
+          - last_edited_date
+          - locked
+          - read_url
+          - titel
+          - url
+          - versie
+          - vertrouwelijkheidaanduiding
+          - write_url
+          description: Fields that will be returned with the search results. Default
+            returns all fields.
+      title: SearchInformatieObjectRequest
     SearchReport:
       type: object
       properties:
@@ -10249,32 +10768,19 @@ components:
     SearchRequest:
       type: object
       properties:
-        identificatie:
+        behandelaar:
           type: string
           minLength: 1
-          description: Unieke identificatie van ZAAK binnen `bronorganisatie`.
-        zaaktype:
-          allOf:
-          - $ref: '#/components/schemas/SearchZaaktypeRequest'
-          description: Eigenschappen om ZAAKTYPEn te identificeren.
-        omschrijving:
-          type: string
-          minLength: 1
-          description: Korte omschrijving van ZAAK.
+          description: '`username` of behandelaar.'
         eigenschappen:
           type: object
           additionalProperties: {}
           description: 'ZAAK-EIGENSCHAPpen in formaat `<property name>:{''value'':
             <property value>}`.'
-        object:
-          type: string
-          format: uri
-          minLength: 1
-          description: URL-referentie naar OBJECT.
         fields:
           type: array
           items:
-            $ref: '#/components/schemas/FieldsEnum'
+            $ref: '#/components/schemas/Fields261Enum'
           default:
           - bronorganisatie
           - deadline
@@ -10298,18 +10804,38 @@ components:
           - zaakgeometrie
           - zaakinformatieobjecten.informatieobject
           - zaakinformatieobjecten.url
+          - zaakinformatieobjecten.zaak
           - zaakobjecten.object
           - zaakobjecten.url
+          - zaakobjecten.zaak
           - zaaktype.catalogus
+          - zaaktype.catalogus_domein
           - zaaktype.identificatie
           - zaaktype.omschrijving
           - zaaktype.url
           description: Fields that will be returned with the search results. Default
             returns all fields. Will always include `identificatie` and `bronorganisatie`.
+        identificatie:
+          type: string
+          minLength: 1
+          description: Unieke identificatie van ZAAK binnen `bronorganisatie`.
         includeClosed:
           type: boolean
           default: false
           description: Neem gesloten ZAAKen ook mee.
+        object:
+          type: string
+          format: uri
+          minLength: 1
+          description: URL-referentie naar OBJECT.
+        omschrijving:
+          type: string
+          minLength: 1
+          description: Korte omschrijving van ZAAK.
+        zaaktype:
+          allOf:
+          - $ref: '#/components/schemas/SearchZaaktypeRequest'
+          description: Eigenschappen om ZAAKTYPEn te identificeren.
       title: SearchRequest
     SearchZaaktype:
       type: object
@@ -10556,12 +11082,12 @@ components:
       title: SubmitUserTaskDynamicFormWrite
     SubmitUserTaskRequest:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
       - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
+      - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
       discriminator:
         propertyName: form
         mapping:
@@ -10718,9 +11244,9 @@ components:
       title: SummaryZaakDocument
     Task:
       oneOf:
+      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
-      - $ref: '#/components/schemas/TaskTaskAssigneeUser'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -10812,6 +11338,16 @@ components:
         * `string` - string
         * `number` - number
       title: TypeEnum
+    UnlockCount:
+      type: object
+      properties:
+        count:
+          type: integer
+          nullable: true
+          description: Number of checklists that are unlocked.
+      required:
+      - count
+      title: UnlockCount
     UpdateGrantPermissionRequest:
       type: object
       properties:
@@ -10964,12 +11500,12 @@ components:
     UserTaskContext:
       oneOf:
       - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
-      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
-      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
-      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
       - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
+      - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
       - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
+      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -11222,6 +11758,50 @@ components:
       - activities
       - zaak
       title: WorkStackAdhocActivities
+    WorkStackAdvice:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+          description: Datum wanneer het verzoek is aangemaakt.
+        author:
+          allOf:
+          - $ref: '#/components/schemas/Author'
+          title: auteur
+          description: Verzoeksauteur.
+        advice:
+          type: string
+          description: Gegeven advies voor een verzoek.
+        group:
+          type: string
+          description: Groep die advies gaf.
+      required:
+      - advice
+      - author
+      - created
+      - group
+      title: WorkStackAdvice
+    WorkStackAdviceReviews:
+      type: object
+      properties:
+        advices:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkStackAdvice'
+      required:
+      - advices
+      title: WorkStackAdviceReviews
+    WorkStackApprovalReviews:
+      type: object
+      properties:
+        approvals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Approval'
+      required:
+      - approvals
+      title: WorkStackApprovalReviews
     WorkStackChecklistAnswer:
       type: object
       properties:
@@ -11240,24 +11820,14 @@ components:
       title: WorkStackChecklistAnswer
     WorkStackReviewRequest:
       oneOf:
-      - $ref: '#/components/schemas/WorkStackReviewRequestApprovalReviews'
-      - $ref: '#/components/schemas/WorkStackReviewRequestAdviceReviews'
+      - $ref: '#/components/schemas/WorkStackReviewRequestWorkStackAdviceReviews'
+      - $ref: '#/components/schemas/WorkStackReviewRequestWorkStackApprovalReviews'
       discriminator:
         propertyName: reviewType
         mapping:
-          advice: '#/components/schemas/WorkStackReviewRequestAdviceReviews'
-          approval: '#/components/schemas/WorkStackReviewRequestApprovalReviews'
+          advice: '#/components/schemas/WorkStackReviewRequestWorkStackAdviceReviews'
+          approval: '#/components/schemas/WorkStackReviewRequestWorkStackApprovalReviews'
       title: WorkStackReviewRequest
-    WorkStackReviewRequestAdviceReviews:
-      allOf:
-      - $ref: '#/components/schemas/WorkStackReviewRequestSharedResponse'
-      - $ref: '#/components/schemas/AdviceReviews'
-      title: WorkStackReviewRequestAdviceReviews
-    WorkStackReviewRequestApprovalReviews:
-      allOf:
-      - $ref: '#/components/schemas/WorkStackReviewRequestSharedResponse'
-      - $ref: '#/components/schemas/ApprovalReviews'
-      title: WorkStackReviewRequestApprovalReviews
     WorkStackReviewRequestSharedResponse:
       type: object
       properties:
@@ -11298,6 +11868,68 @@ components:
       - reviewType
       - zaak
       title: WorkStackReviewRequestSharedResponse
+    WorkStackReviewRequestWorkStackAdviceReviews:
+      allOf:
+      - $ref: '#/components/schemas/WorkStackReviewRequestSharedResponse'
+      - $ref: '#/components/schemas/WorkStackAdviceReviews'
+      title: WorkStackReviewRequestWorkStackAdviceReviews
+    WorkStackReviewRequestWorkStackApprovalReviews:
+      allOf:
+      - $ref: '#/components/schemas/WorkStackReviewRequestSharedResponse'
+      - $ref: '#/components/schemas/WorkStackApprovalReviews'
+      title: WorkStackReviewRequestWorkStackApprovalReviews
+    WorkStackSummary:
+      type: object
+      properties:
+        userTasks:
+          type: integer
+        groupTasks:
+          type: integer
+          default: 0
+        zaken:
+          type: integer
+        reviews:
+          type: integer
+        userActivities:
+          type: integer
+        groupActivities:
+          type: integer
+        accessRequests:
+          type: integer
+      required:
+      - accessRequests
+      - groupActivities
+      - reviews
+      - userActivities
+      - userTasks
+      - zaken
+      title: WorkStackSummary
+    WorkStackSummaryRequest:
+      type: object
+      properties:
+        userTasks:
+          type: integer
+        groupTasks:
+          type: integer
+          default: 0
+        zaken:
+          type: integer
+        reviews:
+          type: integer
+        userActivities:
+          type: integer
+        groupActivities:
+          type: integer
+        accessRequests:
+          type: integer
+      required:
+      - accessRequests
+      - groupActivities
+      - reviews
+      - userActivities
+      - userTasks
+      - zaken
+      title: WorkStackSummaryRequest
     WorkStackTask:
       type: object
       properties:
@@ -11393,9 +12025,6 @@ components:
         einddatumGepland:
           type: string
           format: date
-        uiterlijkeEinddatumAfdoening:
-          type: string
-          format: date
         vertrouwelijkheidaanduiding:
           type: string
         zaakgeometrie:
@@ -11449,7 +12078,6 @@ components:
       - resultaat
       - startdatum
       - toelichting
-      - uiterlijkeEinddatumAfdoening
       - url
       - vertrouwelijkheidaanduiding
       - zaaktype
@@ -11619,9 +12247,9 @@ components:
     ZaakEigenschap:
       oneOf:
       - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
-      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
+      - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       discriminator:
         propertyName: formaat
         mapping:
@@ -11792,8 +12420,8 @@ components:
       title: ZaakObjectProxyRequest
     ZaakRevReqDetail:
       oneOf:
-      - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
       - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
+      - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
       discriminator:
         propertyName: reviewType
         mapping:
@@ -11982,8 +12610,8 @@ components:
       properties:
         catalogus:
           type: string
-          format: uri
-          description: URL-referentie naar CATALOGUS waar ZAAKTYPEn zich bevinden
+          description: 'On read: `domein` & on write: `url` of CATALOGUS where ZAAKTYPEs
+            are located.'
         zaaktypeOmschrijving:
           type: string
           description: ZAAKTYPE waar het recht op slaat
@@ -12013,9 +12641,9 @@ components:
       properties:
         catalogus:
           type: string
-          format: uri
           minLength: 1
-          description: URL-referentie naar CATALOGUS waar ZAAKTYPEn zich bevinden
+          description: 'On read: `domein` & on write: `url` of CATALOGUS where ZAAKTYPEs
+            are located.'
         zaaktypeOmschrijving:
           type: string
           minLength: 1
@@ -12050,6 +12678,9 @@ components:
         catalogus:
           type: string
           description: URL-referentie naar de CATALOGUS die aan de ZAAKTYPE toebehoort.
+        catalogusDomein:
+          type: string
+          description: '`domein` the CATALOGUS that belongs to the ZAAKTYPE.'
         omschrijving:
           type: string
           description: Omschrijving van de ZAAKTYPE.
@@ -12070,6 +12701,10 @@ components:
           type: string
           minLength: 1
           description: URL-referentie naar de CATALOGUS die aan de ZAAKTYPE toebehoort.
+        catalogusDomein:
+          type: string
+          minLength: 1
+          description: '`domein` the CATALOGUS that belongs to the ZAAKTYPE.'
         omschrijving:
           type: string
           minLength: 1

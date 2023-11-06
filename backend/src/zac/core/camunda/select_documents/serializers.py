@@ -23,7 +23,10 @@ from zgw.models import Zaak
 from .utils import get_zaaktype_from_identificatie
 
 
-class DocumentSerializer(APIModelSerializer):
+class DocumentSerializer(serializers.Serializer):
+    beschrijving = serializers.CharField(help_text=_("Description."))
+    bestandsnaam = serializers.CharField(help_text=_("Filename."))
+    bestandsomvang = serializers.IntegerField(help_text=_("File size in bytes."))
     document_type = serializers.CharField(source="informatieobjecttype.omschrijving")
     read_url = DowcUrlFieldReadOnly(
         purpose=DocFileTypes.read,
@@ -31,23 +34,14 @@ class DocumentSerializer(APIModelSerializer):
             "URL to read document. Opens the appropriate Microsoft Office application."
         ),
     )
-
-    class Meta:
-        model = Document
-        fields = (
-            "beschrijving",
-            "bestandsnaam",
-            "bestandsomvang",
-            "document_type",
-            "read_url",
-            "url",
-            "versie",
-        )
+    titel = serializers.CharField(help_text=_("Title given to INFORMATIEOBJECT."))
+    url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECT."))
+    versie = serializers.IntegerField(help_text=_("Version."))
 
 
 @dataclass
 class DocumentSelectContext(Context):
-    documents: List[Document]
+    documents: List[InformatieObjectType]
     informatieobjecttypen: List[InformatieObjectType]
 
 

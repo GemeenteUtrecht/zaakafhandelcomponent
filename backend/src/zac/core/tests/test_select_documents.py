@@ -18,6 +18,7 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.core.models import CoreConfig
+from zac.elasticsearch.api import create_informatieobject_document, create_iot_document
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
@@ -92,10 +93,11 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}informatieobjecten/e3497eae-dfbe-47cc-8e6d-37cd37c8f236",
         )
         cls.document = factory(Document, document)
         catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
@@ -109,17 +111,17 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         )
 
         cls.document.informatieobjecttype = factory(InformatieObjectType, documenttype)
-        cls.patch_get_documenten = patch(
-            "zac.core.camunda.select_documents.context.get_documenten",
-            return_value=[[], []],
+        cls.document_es = create_informatieobject_document(cls.document)
+        cls.document_es.informatieobjecttype = create_iot_document(
+            cls.document.informatieobjecttype
         )
-        cls.patch_resolve_documenten = patch(
-            "zac.core.camunda.select_documents.context.resolve_documenten_informatieobjecttypen",
-            return_value=[cls.document],
+        cls.patch_get_documenten = patch(
+            "zac.core.camunda.select_documents.context.get_documenten_es",
+            side_effect=[[cls.document_es], []],
         )
 
         catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
         zaaktype = generate_oas_component(
             "ztc",
@@ -150,9 +152,6 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
 
-        self.patch_resolve_documenten.start()
-        self.addCleanup(self.patch_resolve_documenten.stop)
-
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)
 
@@ -169,10 +168,11 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                 "bestandsnaam": self.document.bestandsnaam,
                 "bestandsomvang": self.document.bestandsomvang,
                 "document_type": self.document.informatieobjecttype.omschrijving,
-                "url": self.document.url,
                 "read_url": get_dowc_url_from_obj(
                     self.document, purpose=DocFileTypes.read
                 ),
+                "titel": self.document.titel,
+                "url": self.document.url,
                 "versie": self.document.versie,
             },
         )
@@ -191,6 +191,7 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                     "bestandsnaam": self.document.bestandsnaam,
                     "bestandsomvang": self.document.bestandsomvang,
                     "document_type": self.document.informatieobjecttype.omschrijving,
+                    "titel": self.document.titel,
                     "url": self.document.url,
                     "read_url": get_dowc_url_from_obj(
                         self.document, purpose=DocFileTypes.read

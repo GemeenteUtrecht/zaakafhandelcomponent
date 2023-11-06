@@ -1,5 +1,3 @@
-from typing import List
-
 from django.utils.translation import ugettext_lazy as _
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -12,9 +10,9 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from zac.core.services import get_zaaktypen
-from zac.elasticsearch.drf_api.pagination import ESPagination
+from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
-from zac.elasticsearch.drf_api.views import PerformSearchMixin
+from zac.elasticsearch.drf_api.views import PaginatedSearchMixin, PerformSearchMixin
 from zac.elasticsearch.searches import count_by_zaaktype
 
 from ..models import Board, BoardItem
@@ -72,7 +70,7 @@ class BoardItemViewSet(ModelViewSet):
         return base.for_user(self.request)
 
 
-class ManagementDashboardDetailView(PerformSearchMixin, APIView):
+class ManagementDashboardDetailView(PerformSearchMixin, PaginatedSearchMixin, APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (
         IsAuthenticated,
@@ -80,26 +78,7 @@ class ManagementDashboardDetailView(PerformSearchMixin, APIView):
     )
     pagination_class = DashboardPagination
     serializer_class = ManagementDashboardSerializer
-
-    @property
-    def paginator(self):
-        """
-        The paginator instance associated with the view, or `None`.
-
-        """
-        if not hasattr(self, "_paginator"):
-            self._paginator = self.pagination_class()
-        return self._paginator
-
-    def paginate_results(self, results):
-        return self.paginator.paginate_queryset(results, self.request, view=self)
-
-    def get_paginated_response(self, data, fields: List[str]):
-        """
-        Return a paginated style `Response` object for the given output data.
-        """
-        assert isinstance(self.pagination_class(), ESPagination)
-        return self.paginator.get_paginated_response(data, fields)
+    search_document = ZaakDocument
 
     @extend_schema(
         summary=_(

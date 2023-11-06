@@ -13,6 +13,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.client import Client
 
+from zac.accounts.models import User
 from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ def invalidate_zaaktypen_cache(catalogus: str = ""):
 def invalidate_informatieobjecttypen_cache(catalogus: str = ""):
     key = f"informatieobjecttypen:{catalogus}"
     cache.delete(key)
+    cache.delete("get_all_informatieobjecttypen")
 
 
 def invalidate_zaak_cache(zaak: Zaak):
@@ -104,6 +106,8 @@ def invalidate_document_url_cache(document_url: str):
 
     key = f"document:{document_url}"
     cache.delete(key)
+    key = f"audit_trail:{document_url}"
+    cache.delete(key)
 
 
 def invalidate_document_other_cache(document: Document):
@@ -117,6 +121,11 @@ def invalidate_document_other_cache(document: Document):
         f"document:{alfresco_zero_version_url}",
     ]
     cache.delete_many(keys)
+
+
+def invalidate_open_documenten_cache(user: User):
+    key = f"open_documenten:{user}"
+    cache.delete(key)
 
 
 def invalidate_rollen_cache(zaak: Zaak, rol_urls: Optional[List[str]] = None):

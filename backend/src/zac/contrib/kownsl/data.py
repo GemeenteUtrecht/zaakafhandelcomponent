@@ -8,14 +8,13 @@ from django.utils.translation import gettext_lazy as _
 
 from djchoices import ChoiceItem, DjangoChoices
 from zgw_consumers.api_models.base import Model, factory
-from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import Group, User
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.user_tasks import Context
 from zac.core.camunda.utils import resolve_assignee
-from zac.core.services import get_document
+from zac.elasticsearch.documents import InformatieObjectDocument
+from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
 
@@ -164,7 +163,7 @@ class ConfigureReviewRequest:
 class AdviceApprovalContext(Context):
     title: str
     zaak_informatie: Zaak
-    documents: List[Document]
+    documents: List[InformatieObjectDocument]
     review_type: str
     camunda_assigned_users: AssignedUsers
     id: Optional[UUID] = None
@@ -210,25 +209,26 @@ class ReviewRequest(Model):
 
     def get_reviews_detail(self) -> List[Union[Advice, Approval]]:
         if self.review_type == KownslTypes.advice:
-            _advices = factory(Advice, self.reviews)
+            advices = factory(Advice, self.reviews)
             documents = set()
-            for advice in _advices:
+            for advice in advices:
                 for document in advice.documents:
                     documents.add(document.document)
 
-            with parallel() as executor:
-                _documents = executor.map(get_document, documents)
+            # Deprecate in favor of elasticsearch
+            # with parallel() as executor:
+            #     _documents = executor.map(get_document, documents)
 
-            documents = {doc.url: doc for doc in _documents}
-            advices = []
-            for advice in _advices:
-                advice_documents = []
-                for advice_document in advice.documents:
-                    advice_document.document = documents[advice_document.document]
-                    advice_documents.append(advice_document)
+            if documents:
+                _documents = search_informatieobjects(urls=documents)
+                documents = {doc.url: doc for doc in _documents}
+                for advice in advices:
+                    advice_documents = []
+                    for advice_document in advice.documents:
+                        advice_document.document = documents[advice_document.document]
+                        advice_documents.append(advice_document)
 
-                advice.documents = advice_documents
-                advices.append(advice)
+                    advice.documents = advice_documents
             return advices
         else:
             return self.get_reviews_summary()

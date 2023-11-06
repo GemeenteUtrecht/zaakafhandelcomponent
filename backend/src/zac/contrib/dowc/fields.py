@@ -3,6 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import fields
 from zgw_consumers.api_models.documenten import Document
 
+from zac.elasticsearch.documents import InformatieObjectDocument
+
 from .constants import DocFileTypes
 from .utils import get_dowc_url_from_obj
 
@@ -20,8 +22,9 @@ class DowcUrlFieldReadOnly(fields.ReadOnlyField, fields.URLField):
         super().__init__(*args, **kwargs)
 
     def get_attribute(self, instance):
-        assert isinstance(
-            instance, Document
+        assert bool(
+            isinstance(instance, Document)
+            or isinstance(instance, InformatieObjectDocument),
         ), "This field is only valid for instances of type zgw_consumers.api_models.documenten.Document"
         if self.context.get("zaak_is_closed"):
             return ""

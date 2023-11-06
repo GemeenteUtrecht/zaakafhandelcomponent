@@ -7,12 +7,21 @@ from django.core.management import BaseCommand
 import click
 from elasticsearch_dsl.query import Bool, Nested, Terms
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
-from zac.core.services import get_documenten_all_paginated
+from zac.core.services import (
+    fetch_latest_audit_trail_data_document,
+    get_documenten_all_paginated,
+    resolve_documenten_informatieobjecttypen,
+)
 
-from ...api import create_informatieobject_document, create_related_zaak_document
+from ...api import (
+    create_informatieobject_document,
+    create_iot_document,
+    create_related_zaak_document,
+)
 from ...documents import InformatieObjectDocument, RelatedZaakDocument, ZaakDocument
 from ...utils import check_if_index_exists
 from ..utils import get_memory_usage
@@ -68,7 +77,7 @@ class Command(IndexCommand, BaseCommand):
                 get_more = True
                 query_params = {}
                 while get_more:
-                    # if this is running for 1h+, DRC expires the token
+                    # if this is running for 1h+ DRC expires the token
                     client.refresh_auth()
                     perf_logger.info(
                         "Fetching indexable objects for client, query params: %r.",
@@ -77,7 +86,11 @@ class Command(IndexCommand, BaseCommand):
                     documenten, query_params = get_documenten_all_paginated(
                         client, query_params=query_params
                     )
-                    # Make sure we're not retrieving more information than necessary on the zaken
+
+                    # resolve informatieobjecttypes
+                    documenten = resolve_documenten_informatieobjecttypen(documenten)
+
+                    # Make sure we're not retrieving more information than necessary
                     if self.reindex_last and self.reindex_last - self.reindexed <= len(
                         documenten
                     ):
@@ -96,7 +109,21 @@ class Command(IndexCommand, BaseCommand):
     def documenten_generator(
         self, documenten: List[Document]
     ) -> Iterator[InformatieObjectDocument]:
+        iots = {
+            io.informatieobjecttype.url: io.informatieobjecttype for io in documenten
+        }
+        with parallel() as executor:
+            audittrails = list(
+                executor.map(
+                    fetch_latest_audit_trail_data_document,
+                    [doc.url for doc in documenten],
+                )
+            )
+            last_edited_dates = {
+                at.resource_url: at.last_edited_date for at in audittrails if at
+            }
 
+        iot_documenten = {url: create_iot_document(iot) for url, iot in iots.items()}
         eio_documenten = self.create_eio_documenten(documenten)
         zaken = (
             ZaakDocument.search()
@@ -126,10 +153,15 @@ class Command(IndexCommand, BaseCommand):
             .execute()
         )
         related_zaken = self.create_related_zaken(zaken)
+
         for doc in documenten:
             eio_document = eio_documenten[doc.url]
             eio_document.related_zaken = related_zaken.get(doc.url, [])
-            eiod = eio_document.to_dict(True)
+            eio_document.informatieobjecttype = iot_documenten[
+                doc.informatieobjecttype.url
+            ]
+            eio_document.last_edited_date = last_edited_dates.get(doc.url, None)
+            eiod = eio_document.to_dict(True, skip_empty=False)
 
             yield eiod
             if self.reindex_last:

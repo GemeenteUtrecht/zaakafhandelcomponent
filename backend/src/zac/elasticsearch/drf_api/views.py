@@ -1,5 +1,6 @@
 from typing import List
 
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -14,18 +15,28 @@ from rest_framework.viewsets import ModelViewSet
 from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
+from zac.contrib.dowc.api import get_open_documenten
+from zac.core.api.permissions import CanListZaakDocuments, CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
+from zac.core.api.views import GetZaakMixin
 from zac.core.services import get_zaaktypen
 
-from ..documents import ZaakDocument
+from ..documents import InformatieObjectDocument, ZaakDocument
 from ..models import SearchReport
-from ..searches import autocomplete_zaak_search, quick_search, search_zaken
+from ..searches import (
+    autocomplete_zaak_search,
+    quick_search,
+    search_informatieobjects,
+    search_zaken,
+)
 from .filters import ESOrderingFilter
 from .pagination import ESPagination
 from .parsers import IgnoreCamelCaseJSONParser
 from .serializers import (
+    ESListZaakDocumentSerializer,
     QuickSearchResultSerializer,
     QuickSearchSerializer,
+    SearchInformatieObjectSerializer,
     SearchReportSerializer,
     SearchSerializer,
     ZaakDocumentSerializer,
@@ -40,13 +51,11 @@ class GetZakenView(views.APIView):
     ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
     permission_classes = (HasTokenAuth | IsAuthenticated,)
 
-    @staticmethod
-    def get_serializer(**kwargs):
-        return ZaakSerializer(many=True, **kwargs)
-
     @extend_schema(
         summary=_("Autocomplete search ZAAKen."),
         parameters=input_serializer_to_parameters(ZaakIdentificatieSerializer),
+        request=ZaakIdentificatieSerializer,
+        responses={200: ZaakSerializer(many=True)},
     )
     def get(self, request: Request) -> Response:
         """
@@ -59,7 +68,7 @@ class GetZakenView(views.APIView):
             request=request,
             identificatie=serializer.validated_data["identificatie"],
         )
-        zaak_serializer = self.get_serializer(instance=zaken)
+        zaak_serializer = ZaakSerializer(instance=zaken, many=True)
         return Response(data=zaak_serializer.data)
 
 
@@ -99,16 +108,22 @@ class PerformSearchMixin:
         return results
 
 
-class SearchView(PerformSearchMixin, views.APIView):
-    authentication_classes = [
-        ApplicationTokenAuthentication
-    ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
-    ordering = ("-identificatie.keyword",)
-    parser_classes = (IgnoreCamelCaseJSONParser,)
-    permission_classes = (HasTokenAuth | IsAuthenticated,)
-    search_document = ZaakDocument
-    serializer_class = SearchSerializer
-    pagination_class = ESPagination
+class PaginatedSearchMixin:
+    search_document = None
+
+    @property
+    def search_document(self):
+        """
+        The paginator instance associated with the view, or `None`.
+        """
+        if not hasattr(self, "_search_document"):
+            if not self.search_document:
+                raise ImproperlyConfigured(
+                    "PaginatedSearchMixin needs a search_document attribute."
+                )
+            else:
+                self._search_document = self.search_document
+        return self._search_document
 
     @property
     def paginator(self):
@@ -119,18 +134,30 @@ class SearchView(PerformSearchMixin, views.APIView):
             if self.pagination_class is None:
                 self._paginator = None
             else:
-                self._paginator = self.pagination_class()
+                self._paginator = self.pagination_class(view=self)
         return self._paginator
 
-    def paginate_results(self, results):
+    def paginate_results(self, results) -> List:
         return self.paginator.paginate_queryset(results, self.request, view=self)
 
     def get_paginated_response(self, data, fields: List[str]):
         """
         Return a paginated style `Response` object for the given output data.
         """
-        assert isinstance(self.pagination_class(), ESPagination)
+        assert isinstance(self.pagination_class(view=self), ESPagination)
         return self.paginator.get_paginated_response(data, fields)
+
+
+class SearchView(PerformSearchMixin, PaginatedSearchMixin, views.APIView):
+    authentication_classes = [
+        ApplicationTokenAuthentication
+    ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    ordering = ("-identificatie.keyword",)
+    parser_classes = (IgnoreCamelCaseJSONParser,)
+    permission_classes = (HasTokenAuth | IsAuthenticated,)
+    search_document = ZaakDocument
+    serializer_class = SearchSerializer
+    pagination_class = ESPagination
 
     @extend_schema(
         summary=_("Search for ZAAKen in elasticsearch."),
@@ -225,16 +252,12 @@ class QuickSearchView(views.APIView):
         responses=ZaakDocumentSerializer(many=True),
     ),
 )
-class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
+class SearchReportViewSet(PerformSearchMixin, PaginatedSearchMixin, ModelViewSet):
     ordering = ("-identificatie.keyword",)
     permission_classes = (IsAuthenticated,)
     queryset = SearchReport.objects.all()
     search_document = ZaakDocument
     serializer_class = SearchReportSerializer
-
-    def get_paginated_response(self, *args):
-        assert isinstance(self.paginator, ESPagination)
-        return self.paginator.get_paginated_response(*args)
 
     @action(
         detail=True,
@@ -251,4 +274,82 @@ class SearchReportViewSet(PerformSearchMixin, ModelViewSet):
         serializer = ZaakDocumentSerializer(page, many=True)
         return self.get_paginated_response(
             serializer.data, search_report.query["fields"]
+        )
+
+
+class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView):
+    permission_classes = (
+        IsAuthenticated,
+        CanReadZaken,
+        CanListZaakDocuments,
+    )
+    ordering = (
+        "titel.keyword",
+        "-last_edited_date",
+    )
+    serializer_class = SearchInformatieObjectSerializer
+    pagination_class = ESPagination
+    page_size = 10
+    search_document = InformatieObjectDocument
+
+    def get_object(self):
+        # Avoid multiple calls to permission checks etc.
+        if not hasattr(self, "_object"):
+            self._object = super().get_object()
+        return self._object
+
+    @extend_schema(
+        summary=_("Retrieve INFORMATIEOBJECTs for ZAAK in Elasticsearch."),
+        description=_("Default ordered on `titel` and `last_edited_date`."),
+        parameters=[
+            es_document_to_ordering_parameters(InformatieObjectDocument),
+            OpenApiParameter(
+                name="page",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description=_("Page of paginated response."),
+            ),
+            OpenApiParameter(
+                name="pageSize",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                default=10,
+                description=_("Page size of paginated response."),
+            ),
+        ],
+        responses=ESListZaakDocumentSerializer(many=True),
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Retrieve a list of INFORMATIEOBJECTs voor ZAAK based on input data.
+
+        """
+        zaak = self.get_object()
+        input_serializer = self.serializer_class(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        # Get ordering
+        ordering = ESOrderingFilter().get_ordering(request, self)
+        search_query = {
+            **input_serializer.validated_data,
+            "ordering": ordering,
+            "zaak": zaak.url,
+            "return_search": True,
+        }
+
+        page = self.paginate_results(search_informatieobjects(**search_query))
+        open_documenten = get_open_documenten(request.user)
+        serializer = ESListZaakDocumentSerializer(
+            page,
+            many=True,
+            context={
+                "open_documenten": {
+                    dowc.unversioned_url: dowc for dowc in open_documenten
+                },
+                "zaak_is_closed": True if zaak.einddatum else False,
+            },
+        )
+        return self.get_paginated_response(
+            serializer.data, input_serializer.validated_data["fields"]
         )

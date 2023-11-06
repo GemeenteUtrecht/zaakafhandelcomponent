@@ -148,9 +148,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
 
         with self.subTest("Test with audit trail"):
             with patch("zac.core.api.views.find_zaak", return_value=zaak):
-                with patch(
-                    "zac.core.api.views.get_documenten", return_value=([doc_obj], [])
-                ):
+                with patch("zac.core.api.views.get_documenten", return_value=[doc_obj]):
                     with patch(
                         "zac.core.api.views.resolve_documenten_informatieobjecttypen",
                         return_value=([doc_obj]),
@@ -160,8 +158,8 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                             return_value=[dowc],
                         ):
                             with patch(
-                                "zac.core.api.views.fetch_document_audit_trail",
-                                return_value=[audit_trail],
+                                "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                                return_value=audit_trail,
                             ):
                                 response = self.client.get(self.endpoint)
 
@@ -211,9 +209,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
 
         with self.subTest("Test without audit trail"):
             with patch("zac.core.api.views.find_zaak", return_value=zaak):
-                with patch(
-                    "zac.core.api.views.get_documenten", return_value=([doc_obj], [])
-                ):
+                with patch("zac.core.api.views.get_documenten", return_value=[doc_obj]):
                     with patch(
                         "zac.core.api.views.resolve_documenten_informatieobjecttypen",
                         return_value=([doc_obj]),
@@ -304,7 +300,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
         zaak.zaaktype = factory(ZaakType, zaaktype)
 
         with patch("zac.core.api.views.find_zaak", return_value=zaak):
-            with patch("zac.core.api.views.get_documenten", return_value=[[], []]):
+            with patch("zac.core.api.views.get_documenten", return_value=[]):
                 with patch("zac.core.api.views.get_open_documenten", return_value=[]):
                     response = self.client.get(self.endpoint)
 
@@ -384,7 +380,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             hoofdObject=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
             wijzigingen={"nieuw": {}, "oud": {}},
         )
-        cls.audit_trail = [factory(AuditTrailData, audit_trail)]
+        cls.audit_trail = factory(AuditTrailData, audit_trail)
 
         cls.dowc = DowcResponse(
             drc_url=cls.doc_obj.url,
@@ -509,9 +505,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=user)
 
-        with patch(
-            "zac.core.api.views.get_documenten", return_value=([self.doc_obj], [])
-        ):
+        with patch("zac.core.api.views.get_documenten", return_value=[self.doc_obj]):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -534,11 +528,9 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
 
         self.client.force_authenticate(user=user)
 
-        with patch(
-            "zac.core.api.views.get_documenten", return_value=([self.doc_obj], [])
-        ):
+        with patch("zac.core.api.views.get_documenten", return_value=[self.doc_obj]):
             with patch(
-                "zac.core.api.views.fetch_document_audit_trail",
+                "zac.core.api.views.fetch_latest_audit_trail_data_document",
                 return_value=self.audit_trail,
             ):
                 response = self.client.get(self.endpoint)
