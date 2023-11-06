@@ -156,6 +156,7 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 {
                     "url": "https://some.zrc.nl/api/v1/zaakobjecten/69e98129-1f0d-497f-bbfb-84b88137edbc",
                     "object": "https://some.objects.nl/api/v1/objects/f8a7573a-758f-4a19-aa22-245bb8f4712e",
+                    "zaak": ZAAK,
                 }
             ],
         )
@@ -206,12 +207,7 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         # Assert zaakobject is connected to it
         self.assertEqual(
             zaak_document.zaakobjecten,
-            [
-                {
-                    "url": ZAAKOBJECT,
-                    "object": OBJECT,
-                }
-            ],
+            [{"url": ZAAKOBJECT, "object": OBJECT, "zaak": ZAAK}],
         )
 
         # create object document

@@ -220,7 +220,7 @@ def create_zaakobject_document(
     zaakobject: ZaakObject,
 ) -> ZaakObjectDocument:
     return ZaakObjectDocument(
-        url=zaakobject.url, object=zaakobject.object, zaak=zaakobject.object
+        url=zaakobject.url, object=zaakobject.object, zaak=zaakobject.zaak
     )
 
 

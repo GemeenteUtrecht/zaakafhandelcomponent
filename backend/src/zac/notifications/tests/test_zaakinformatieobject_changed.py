@@ -156,6 +156,7 @@ class ZaakInformatieObjectChangedTests(
                 {
                     "url": ZAAKINFORMATIEOBJECT,
                     "informatieobject": INFORMATIEOBJECT,
+                    "zaak": ZAAK,
                 }
             ],
         )
@@ -213,6 +214,7 @@ class ZaakInformatieObjectChangedTests(
                 {
                     "url": ZAAKINFORMATIEOBJECT,
                     "informatieobject": INFORMATIEOBJECT,
+                    "zaak": ZAAK,
                 }
             ],
         )
@@ -275,6 +277,7 @@ class ZaakInformatieObjectChangedTests(
                 {
                     "url": ZAAKINFORMATIEOBJECT,
                     "informatieobject": INFORMATIEOBJECT,
+                    "zaak": ZAAK,
                 }
             ],
         )
