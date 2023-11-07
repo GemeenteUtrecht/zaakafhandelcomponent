@@ -168,7 +168,11 @@ export class DocumentToevoegenComponent implements OnInit {
   }
 
   async handleFileSelect(file: File) {
-    this.addDocumentForm.controls['documentFile'].setValue(file);
+    let f = file;
+    if (f.type === '' && f.name.endsWith('.msg')) {
+      f = new File([f], f.name, { type: 'application/vnd.ms-outlook' });
+    }
+    this.addDocumentForm.controls['documentFile'].setValue(f);
     if (file) {
       this.selectDocument.emit(true)
       if (!this.documentTypeControl.value) {

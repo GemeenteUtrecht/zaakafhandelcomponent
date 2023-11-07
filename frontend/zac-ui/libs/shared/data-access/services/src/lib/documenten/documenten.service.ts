@@ -10,7 +10,8 @@ import {
   Table,
   Zaak
 } from '@gu/models';
-import {ApplicationHttpClient} from '@gu/services';
+import { ApplicationHttpClient, IRequestOptions } from '@gu/services';
+import {HttpHeaders} from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
