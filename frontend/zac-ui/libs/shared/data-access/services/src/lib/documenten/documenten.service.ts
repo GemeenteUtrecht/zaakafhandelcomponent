@@ -61,16 +61,7 @@ export class DocumentenService {
   }
 
   postDocument(formData: FormData): Observable<Document> {
-    // TODO: create condition for MSG file
-    if (formData) {
-      let headers = new HttpHeaders();
-      headers = headers.append('Accept', 'application/vnd.ms-outlook');
-      headers = headers.append('Content-Type', 'application/vnd.ms-outlook');
-      return this.http.Post<any>(encodeURI(`/api/core/cases/document`), formData, { headers });
-    } else {
-      return this.http.Post<any>(encodeURI(`/api/core/cases/document`), formData);
-    }
-
+    return this.http.Post<any>(encodeURI(`/api/core/cases/document`), formData);
   }
 
   patchDocument(formData: FormData): Observable<any> {
