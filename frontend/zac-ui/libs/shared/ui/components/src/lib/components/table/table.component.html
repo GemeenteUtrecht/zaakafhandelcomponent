@@ -1,4 +1,4 @@
-<div class="table mat-elevation-z2">
+<div class="table">
     <table *ngIf="dataSource" class="table__table" [class.table--wrap]="wrap" mat-table matSort
            [matSortDisabled]="!sortable" [dataSource]="dataSource" multiTemplateDataRows (matSortChange)="onSort($event)">
 
