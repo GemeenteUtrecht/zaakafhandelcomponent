@@ -42,3 +42,11 @@ export interface InformatieObjectType {
   omschrijving: string;
   url: string;
 }
+
+export interface ListDocuments {
+  count: number;
+  fields: string[];
+  next: string;
+  previous: string;
+  results: Document[];
+}

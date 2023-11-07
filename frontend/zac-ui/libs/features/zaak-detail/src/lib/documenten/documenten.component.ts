@@ -1,5 +1,5 @@
 import {Component, HostListener, Input, OnChanges} from '@angular/core';
-import {Document, MetaConfidentiality, ReadWriteDocument, Table, Zaak} from '@gu/models';
+import { Document, ListDocuments, MetaConfidentiality, ReadWriteDocument, Table, Zaak } from '@gu/models';
 import {DocumentenService, MetaService, ZaakService} from '@gu/services';
 import {Choice, FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -48,6 +48,7 @@ export class DocumentenComponent implements OnChanges {
 
   isLoading = true;
 
+  paginatedDocsData: ListDocuments;
   documentsData: any;
 
   selectedDocument: Document;
@@ -84,14 +85,16 @@ export class DocumentenComponent implements OnChanges {
   /**
    * Fetch all the documents related to the case.
    */
-  fetchDocuments() {
+  fetchDocuments(page = 1) {
     this.isLoading = true;
 
     this.metaService.listConfidentialityClassifications().subscribe(
       (metaConfidentialities: MetaConfidentiality[]) => {
-        this.zaakService.listCaseDocuments(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
-          this.tableData = this.documentenService.formatTableData(data, this.tableHead, this.zaak, metaConfidentialities, this.onConfidentialityChange.bind(this));
-          this.documentsData = data;
+
+        this.zaakService.listCaseDocuments(this.zaak.bronorganisatie, this.zaak.identificatie, page).subscribe(data => {
+          this.tableData = this.documentenService.formatTableData(data.results, this.tableHead, this.zaak, metaConfidentialities, this.onConfidentialityChange.bind(this));
+          this.paginatedDocsData = data;
+          this.documentsData = data.results;
 
           this.handleQueryParam();
           this.isLoading = false;
@@ -320,6 +323,15 @@ export class DocumentenComponent implements OnChanges {
       () => this.reportError.bind(this),
       () => this.isLoading =false,
     );
+  }
+
+  /**
+   * When paginator fires
+   * @param uuid
+   * @param page
+   */
+  onPageSelect(page) {
+    this.fetchDocuments(page.pageIndex + 1);
   }
 
   //

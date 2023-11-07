@@ -9,7 +9,7 @@ import {
   UserPermission,
   Zaak,
   NieuweEigenschap,
-  CreateCase, ProcessInstance, CreateBetrokkene, CreateCaseDocument, Betrokkene
+  CreateCase, ProcessInstance, CreateBetrokkene, CreateCaseDocument, Betrokkene, ListDocuments
 } from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall, getEnv} from '@gu/utils';
@@ -117,9 +117,10 @@ export class ZaakService {
    * @param {string} identificatie
    * @return {Observable}
    */
-  listCaseDocuments(bronorganisatie, identificatie): Observable<Document[]> {
-    const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/documents`);
-    return this.http.Get<Document[]>(endpoint);
+  listCaseDocuments(bronorganisatie, identificatie, page): Observable<ListDocuments> {
+    const pageValue = page ? `?page=${page}` : '';
+    const endpoint = encodeURI(`/api/search/cases/${bronorganisatie}/${identificatie}/documents${pageValue}`);
+    return this.http.Post<ListDocuments>(endpoint);
   }
 
   /**
