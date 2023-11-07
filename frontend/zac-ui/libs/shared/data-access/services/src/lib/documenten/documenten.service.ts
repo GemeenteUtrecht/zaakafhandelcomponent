@@ -139,7 +139,7 @@ export class DocumentenService {
             choices: metaConfidentialities,
             type: (element.currentUserIsEditing) ? 'text' :'select',
             label: element.vertrouwelijkheidaanduiding,
-            value: metaConfidentialities.find((metaConfidentiality: MetaConfidentiality) => metaConfidentiality.label == element.vertrouwelijkheidaanduiding),
+            value: metaConfidentialities.find((metaConfidentiality: MetaConfidentiality) => metaConfidentiality.value === element.vertrouwelijkheidaanduiding),
             onChange: (choice) => {onChange(element, choice)}
           },
         }

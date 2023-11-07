@@ -22,6 +22,10 @@
               [sortable]="true"
               (buttonOutput)="handleTableButtonOutput($event)"
               class="mb-4"></gu-table>
+    <gu-paginator (page)="onPageSelect($event)"
+                  [pageSize]="10"
+                  [length]="paginatedDocsData.count"
+    ></gu-paginator>
     <p *ngIf="(documentsData.length === 0)">Er zijn geen documenten.</p>
   </ng-container>
 
