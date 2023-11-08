@@ -389,12 +389,12 @@ def create_iot_document(iot: InformatieObjectType) -> InformatieObjectTypeDocume
     )
 
 
-def _resolve_iot_for_document(iot: Document) -> InformatieObjectTypeDocument:
+def _resolve_iot_for_document(io: Document) -> InformatieObjectTypeDocument:
     # resolve iot if necessary
-    if type(iot.informatieobjecttype) == str:
-        iot.informatieobjecttype = get_informatieobjecttype(iot.informatieobjecttype)
+    if type(io.informatieobjecttype) == str:
+        io.informatieobjecttype = get_informatieobjecttype(io.informatieobjecttype)
 
-    return create_iot_document(iot.informatieobjecttype)
+    return create_iot_document(io.informatieobjecttype)
 
 
 def _get_informatieobject_document(
@@ -483,6 +483,7 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
             formaat=document.formaat,
             identificatie=document.identificatie,
             indicatie_gebruiksrecht=document.indicatie_gebruiksrecht,
+            informatieobjecttype=_resolve_iot_for_document(document).to_dict(),
             inhoud=document.inhoud,
             integriteit=document.integriteit,
             link=document.link,
@@ -496,9 +497,11 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
             versie=document.versie,
             vertrouwelijkheidaanduiding=document.vertrouwelijkheidaanduiding,
             verzenddatum=document.verzenddatum,
-            informatieobjecttype=_resolve_iot_for_document(document),
             last_edited_date=at.last_edited_date if at else None,
         )
+
+        informatieobject_document.save()
+
     return informatieobject_document
 
 
