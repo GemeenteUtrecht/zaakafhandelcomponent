@@ -14,7 +14,7 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.api.context import get_zaak_context
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.contrib.dowc.fields import DowcUrlField
 from zac.core.api.serializers import InformatieObjectTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
 from zac.core.services import create_document, download_document, get_document
@@ -28,11 +28,15 @@ class DocumentSerializer(serializers.Serializer):
     bestandsnaam = serializers.CharField(help_text=_("Filename."))
     bestandsomvang = serializers.IntegerField(help_text=_("File size in bytes."))
     document_type = serializers.CharField(source="informatieobjecttype.omschrijving")
-    read_url = DowcUrlFieldReadOnly(
+    read_url = DowcUrlField(
         purpose=DocFileTypes.read,
         help_text=_(
-            "URL to read document. Opens the appropriate Microsoft Office application."
+            "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
+    )
+    download_url = DowcUrlField(
+        purpose=DocFileTypes.download,
+        help_text=_("URL to download INFORMATIEOBJECT."),
     )
     titel = serializers.CharField(help_text=_("Title given to INFORMATIEOBJECT."))
     url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECT."))

@@ -1,3 +1,4 @@
+from os import path
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -84,7 +85,7 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             auteur="some-auteur",
             beschrijving="some-beschrijving",
-            bestandsnaam="some-bestandsnaam",
+            bestandsnaam="some-bestandsnaam.ext",
             locked="True",
             titel="some-titel",
             bestandsomvang="10",
@@ -145,8 +146,10 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
             uuid=uuid4(),
             unversioned_url=doc_obj.url,
         )
-
-        with self.subTest("Test with audit trail"):
+        fn, fext = path.splitext(document["bestandsnaam"])
+        with patch(
+            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+        ):
             with patch("zac.core.api.views.find_zaak", return_value=zaak):
                 with patch("zac.core.api.views.get_documenten", return_value=[doc_obj]):
                     with patch(
@@ -157,120 +160,141 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                             "zac.core.api.views.get_open_documenten",
                             return_value=[dowc],
                         ):
-                            with patch(
-                                "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                                return_value=audit_trail,
-                            ):
-                                response = self.client.get(self.endpoint)
+                            with self.subTest("Test with audit trail"):
+                                with patch(
+                                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                                    return_value=audit_trail,
+                                ):
+                                    response = self.client.get(self.endpoint)
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(
-                response.json(),
-                [
-                    {
-                        "auteur": "some-auteur",
-                        "beschrijving": "some-beschrijving",
-                        "bestandsnaam": "some-bestandsnaam",
-                        "bestandsomvang": 10,
-                        "currentUserIsEditing": True,
-                        "deleteUrl": reverse_lazy(
-                            "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc.uuid}
-                        ),
-                        "identificatie": "DOC-2020-007",
-                        "informatieobjecttype": {
-                            "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-                            "omschrijving": "bijlage",
-                        },
-                        "versie": 1,
-                        "locked": True,
-                        "readUrl": reverse_lazy(
-                            "dowc:request-doc",
-                            kwargs={
-                                "bronorganisatie": "123456782",
-                                "identificatie": "DOC-2020-007",
-                                "purpose": DocFileTypes.read,
-                            },
-                        ),
-                        "titel": "some-titel",
-                        "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-                        "vertrouwelijkheidaanduiding": "Openbaar",
-                        "writeUrl": reverse_lazy(
-                            "dowc:request-doc",
-                            kwargs={
-                                "bronorganisatie": "123456782",
-                                "identificatie": "DOC-2020-007",
-                                "purpose": DocFileTypes.write,
-                            },
-                        ),
-                        "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
-                    }
-                ],
-            )
-
-        with self.subTest("Test without audit trail"):
-            with patch("zac.core.api.views.find_zaak", return_value=zaak):
-                with patch("zac.core.api.views.get_documenten", return_value=[doc_obj]):
-                    with patch(
-                        "zac.core.api.views.resolve_documenten_informatieobjecttypen",
-                        return_value=([doc_obj]),
-                    ):
-                        with patch(
-                            "zac.core.api.views.get_open_documenten",
-                            return_value=[dowc],
-                        ):
-                            with patch(
-                                "zac.core.services.logger",
-                            ) as mock_logger:
-                                response = self.client.get(self.endpoint)
-                                mock_logger.warning.assert_called_with(
-                                    "No audit trail found for {document}".format(
-                                        document=document["url"]
-                                    )
+                                self.assertEqual(
+                                    response.status_code, status.HTTP_200_OK
+                                )
+                                self.assertEqual(
+                                    response.json(),
+                                    [
+                                        {
+                                            "auteur": "some-auteur",
+                                            "beschrijving": "some-beschrijving",
+                                            "bestandsnaam": "some-bestandsnaam.ext",
+                                            "bestandsomvang": 10,
+                                            "currentUserIsEditing": True,
+                                            "deleteUrl": reverse_lazy(
+                                                "dowc:patch-destroy-doc",
+                                                kwargs={"dowc_uuid": dowc.uuid},
+                                            ),
+                                            "downloadUrl": reverse_lazy(
+                                                "dowc:request-doc",
+                                                kwargs={
+                                                    "bronorganisatie": document[
+                                                        "bronorganisatie"
+                                                    ],
+                                                    "identificatie": document[
+                                                        "identificatie"
+                                                    ],
+                                                    "purpose": DocFileTypes.download,
+                                                },
+                                            ),
+                                            "identificatie": "DOC-2020-007",
+                                            "informatieobjecttype": {
+                                                "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+                                                "omschrijving": "bijlage",
+                                            },
+                                            "versie": 1,
+                                            "locked": True,
+                                            "readUrl": reverse_lazy(
+                                                "dowc:request-doc",
+                                                kwargs={
+                                                    "bronorganisatie": "123456782",
+                                                    "identificatie": "DOC-2020-007",
+                                                    "purpose": DocFileTypes.read,
+                                                },
+                                            ),
+                                            "titel": "some-titel",
+                                            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+                                            "vertrouwelijkheidaanduiding": "Openbaar",
+                                            "writeUrl": reverse_lazy(
+                                                "dowc:request-doc",
+                                                kwargs={
+                                                    "bronorganisatie": "123456782",
+                                                    "identificatie": "DOC-2020-007",
+                                                    "purpose": DocFileTypes.write,
+                                                },
+                                            ),
+                                            "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
+                                        }
+                                    ],
                                 )
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(
-                response.json(),
-                [
-                    {
-                        "auteur": "some-auteur",
-                        "beschrijving": "some-beschrijving",
-                        "bestandsnaam": "some-bestandsnaam",
-                        "bestandsomvang": 10,
-                        "currentUserIsEditing": True,
-                        "deleteUrl": reverse_lazy(
-                            "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc.uuid}
-                        ),
-                        "identificatie": "DOC-2020-007",
-                        "informatieobjecttype": {
-                            "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-                            "omschrijving": "bijlage",
-                        },
-                        "versie": 1,
-                        "locked": True,
-                        "readUrl": reverse_lazy(
-                            "dowc:request-doc",
-                            kwargs={
-                                "bronorganisatie": "123456782",
-                                "identificatie": "DOC-2020-007",
-                                "purpose": DocFileTypes.read,
-                            },
-                        ),
-                        "titel": "some-titel",
-                        "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-                        "vertrouwelijkheidaanduiding": "Openbaar",
-                        "writeUrl": reverse_lazy(
-                            "dowc:request-doc",
-                            kwargs={
-                                "bronorganisatie": "123456782",
-                                "identificatie": "DOC-2020-007",
-                                "purpose": DocFileTypes.write,
-                            },
-                        ),
-                        "lastEditedDate": None,
-                    }
-                ],
-            )
+                            with self.subTest("Test without audit trail"):
+                                with patch(
+                                    "zac.core.services.logger",
+                                ) as mock_logger:
+                                    response = self.client.get(self.endpoint)
+                                    mock_logger.warning.assert_called_with(
+                                        "No audit trail found for {document}".format(
+                                            document=document["url"]
+                                        )
+                                    )
+
+                                    self.assertEqual(
+                                        response.status_code, status.HTTP_200_OK
+                                    )
+                                    self.assertEqual(
+                                        response.json(),
+                                        [
+                                            {
+                                                "auteur": "some-auteur",
+                                                "beschrijving": "some-beschrijving",
+                                                "bestandsnaam": "some-bestandsnaam.ext",
+                                                "bestandsomvang": 10,
+                                                "currentUserIsEditing": True,
+                                                "deleteUrl": reverse_lazy(
+                                                    "dowc:patch-destroy-doc",
+                                                    kwargs={"dowc_uuid": dowc.uuid},
+                                                ),
+                                                "downloadUrl": reverse_lazy(
+                                                    "dowc:request-doc",
+                                                    kwargs={
+                                                        "bronorganisatie": document[
+                                                            "bronorganisatie"
+                                                        ],
+                                                        "identificatie": document[
+                                                            "identificatie"
+                                                        ],
+                                                        "purpose": DocFileTypes.download,
+                                                    },
+                                                ),
+                                                "identificatie": "DOC-2020-007",
+                                                "informatieobjecttype": {
+                                                    "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+                                                    "omschrijving": "bijlage",
+                                                },
+                                                "versie": 1,
+                                                "locked": True,
+                                                "readUrl": reverse_lazy(
+                                                    "dowc:request-doc",
+                                                    kwargs={
+                                                        "bronorganisatie": "123456782",
+                                                        "identificatie": "DOC-2020-007",
+                                                        "purpose": DocFileTypes.read,
+                                                    },
+                                                ),
+                                                "titel": "some-titel",
+                                                "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+                                                "vertrouwelijkheidaanduiding": "Openbaar",
+                                                "writeUrl": reverse_lazy(
+                                                    "dowc:request-doc",
+                                                    kwargs={
+                                                        "bronorganisatie": "123456782",
+                                                        "identificatie": "DOC-2020-007",
+                                                        "purpose": DocFileTypes.write,
+                                                    },
+                                                ),
+                                                "lastEditedDate": None,
+                                            }
+                                        ],
+                                    )
 
     def test_no_documents(self, m):
         self.client.force_authenticate(user=self.user)
@@ -371,6 +395,7 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
             url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
             informatieobjecttype=cls.documenttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+            bestandsnaam="some-bestandsnaam.ext",
         )
         cls.doc_obj = factory(Document, cls.document)
         audit_trail = generate_oas_component(
@@ -527,11 +552,14 @@ class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
         )
 
         self.client.force_authenticate(user=user)
-
+        fn, fext = path.split(self.doc_obj.bestandsnaam)
         with patch("zac.core.api.views.get_documenten", return_value=[self.doc_obj]):
             with patch(
-                "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                return_value=self.audit_trail,
+                "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
             ):
-                response = self.client.get(self.endpoint)
+                with patch(
+                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                    return_value=self.audit_trail,
+                ):
+                    response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

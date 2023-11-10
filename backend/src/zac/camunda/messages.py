@@ -11,12 +11,11 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.concurrent import parallel
 
 from zac.camunda.data import ProcessInstance
+from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
 
 from .bpmn import get_bpmn
 from .forms import MessageForm
-
-A_DAY = 24 * 60 * 60
 
 
 @dataclass

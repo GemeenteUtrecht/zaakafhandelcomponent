@@ -284,12 +284,15 @@ def count_by_behandelaar(request: Request) -> int:
 def search_informatieobjects(
     size: int = 10000,
     zaak: str = "",
+    bronorganisatie: str = "",
+    identificatie: str = "",
     urls=None,
-    ordering: tuple = ("titel.keyword", "-last_edited_date"),
+    ordering: List = ["titel.keyword", "-last_edited_date"],
     fields: Optional[List[str]] = None,
     return_search: bool = False,
 ) -> List[InformatieObjectDocument]:
     s = InformatieObjectDocument.search()
+
     if zaak:
         s = s.filter(
             Nested(
@@ -297,14 +300,21 @@ def search_informatieobjects(
                 query=Bool(filter=Term(related_zaken__url=zaak)),
             )
         )
+
+    if bronorganisatie:
+        s = s.filter(Term(bronorganisatie=bronorganisatie))
+
+    if identificatie:
+        s = s.filter(Term(identificatie=identificatie))
+
+    if urls:
+        s = s.filter(Terms(url=urls))
+
     if ordering:
         s = s.sort(*ordering)
     if fields:
         s = s.source(fields)
     s = s.extra(size=size)
-
-    if urls:
-        s = s.filter(Terms(url=urls))
 
     if return_search:
         return s

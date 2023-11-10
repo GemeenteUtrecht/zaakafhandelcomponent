@@ -12,6 +12,7 @@ from zgw_consumers.constants import AuthTypes
 
 from zac.accounts.models import User
 from zac.client import Client
+from zac.core.utils import A_DAY
 from zac.utils.decorators import cache as cache_result, optional_service
 
 from .constants import DocFileTypes
@@ -107,8 +108,9 @@ def patch_and_destroy_doc(
 ) -> Dict[str, str]:
     client = get_client(user=user, force=force)
     operation_id = "documenten_destroy"
+    url = get_operation_url(client.schema, operation_id, uuid=uuid)
+
     try:
-        url = get_operation_url(client.schema, operation_id, uuid=uuid)
         return client.request(url, operation_id, method="DELETE", expected_status=201)
 
     except ClientError:
@@ -130,5 +132,24 @@ def check_document_status(documenten: List[str]) -> Optional[Dict]:
             json=[{"document": doc} for doc in documenten],
         )
         return factory(OpenDowc, response)
+    except ClientError:
+        return []
+
+
+@optional_service
+@cache_result("dowc:file-extensions", time_out=A_DAY)
+def get_supported_extensions() -> Optional[List[str]]:
+    client = get_client(force=True)
+    operation_id = "api_file_extensions_retrieve"
+    url = get_operation_url(client.schema, operation_id)
+
+    try:
+        response = client.request(
+            url,
+            operation_id,
+            method="GET",
+            expected_status=200,
+        )
+        return response["extensions"]
     except ClientError:
         return []

@@ -1,4 +1,7 @@
+from os import path
 from unittest.mock import patch
+
+from django.urls import reverse_lazy
 
 import requests_mock
 from django_camunda.utils import serialize_variable, underscoreize
@@ -94,6 +97,7 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             "drc",
             "schemas/EnkelvoudigInformatieObject",
             url=f"{DOCUMENTS_ROOT}informatieobjecten/e3497eae-dfbe-47cc-8e6d-37cd37c8f236",
+            bestandsnaam="some-bestandsnaam.ext",
         )
         cls.document = factory(Document, document)
         catalogus_url = (
@@ -139,6 +143,10 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             "zac.core.camunda.select_documents.context.get_informatieobjecttypen_for_zaaktype",
             return_value=[factory(InformatieObjectType, documenttype)],
         )
+        fn, fext = path.splitext(cls.document.bestandsnaam)
+        cls.patch_get_supported_extensions = patch(
+            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+        )
 
     def setUp(self):
         super().setUp()
@@ -158,6 +166,9 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         self.patch_get_informatieobjecttypen_for_zaaktype.start()
         self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
 
+        self.patch_get_supported_extensions.start()
+        self.addCleanup(self.patch_get_supported_extensions.stop)
+
     def test_select_document_serializer(self):
         # Sanity check
         serializer = DocumentSerializer(self.document)
@@ -168,6 +179,14 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                 "bestandsnaam": self.document.bestandsnaam,
                 "bestandsomvang": self.document.bestandsomvang,
                 "document_type": self.document.informatieobjecttype.omschrijving,
+                "download_url": reverse_lazy(
+                    "dowc:request-doc",
+                    kwargs={
+                        "bronorganisatie": self.document.bronorganisatie,
+                        "identificatie": self.document.identificatie,
+                        "purpose": DocFileTypes.download,
+                    },
+                ),
                 "read_url": get_dowc_url_from_obj(
                     self.document, purpose=DocFileTypes.read
                 ),
@@ -191,6 +210,14 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                     "bestandsnaam": self.document.bestandsnaam,
                     "bestandsomvang": self.document.bestandsomvang,
                     "document_type": self.document.informatieobjecttype.omschrijving,
+                    "download_url": reverse_lazy(
+                        "dowc:request-doc",
+                        kwargs={
+                            "bronorganisatie": self.document.bronorganisatie,
+                            "identificatie": self.document.identificatie,
+                            "purpose": DocFileTypes.download,
+                        },
+                    ),
                     "titel": self.document.titel,
                     "url": self.document.url,
                     "read_url": get_dowc_url_from_obj(

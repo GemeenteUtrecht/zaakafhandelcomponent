@@ -52,7 +52,7 @@ from zac.camunda.api.utils import (
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.variable_instances import get_camunda_variable_instances
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.contrib.dowc.fields import DowcUrlField
 from zac.contrib.objects.services import (
     fetch_start_camunda_process_form_for_zaaktype,
     fetch_zaaktypeattributen_objects_for_zaaktype,
@@ -104,21 +104,25 @@ class InformatieObjectTypeSerializer(APIModelSerializer):
 class GetZaakDocumentSerializer(APIModelSerializer):
     delete_url = serializers.SerializerMethodField(
         help_text=_(
-            "The URL required to save edits and delete the DOWC object related to the DOCUMENT."
+            "The URL required to save edits and delete the DOWC object related to the INFORMATIEOBJECT."
         )
     )
-    read_url = DowcUrlFieldReadOnly(
+    read_url = DowcUrlField(
         purpose=DocFileTypes.read,
         help_text=_(
-            "URL to read document. Opens the appropriate Microsoft Office application."
+            "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
     )
-    write_url = DowcUrlFieldReadOnly(
+    write_url = DowcUrlField(
         purpose=DocFileTypes.write,
         allow_blank=True,
         help_text=_(
-            "URL to write document. Opens the appropriate Microsoft Office application."
+            "URL to write INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
+    )
+    download_url = DowcUrlField(
+        purpose=DocFileTypes.download,
+        help_text=_("URL to download INFORMATIEOBJECT."),
     )
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display",
@@ -145,6 +149,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "bestandsomvang",
             "current_user_is_editing",
             "delete_url",
+            "download_url",
             "identificatie",
             "informatieobjecttype",
             "last_edited_date",
@@ -352,11 +357,15 @@ class DocumentInfoSerializer(serializers.Serializer):
     )
     bestandsgrootte = serializers.SerializerMethodField()
 
-    read_url = DowcUrlFieldReadOnly(
+    read_url = DowcUrlField(
         purpose=DocFileTypes.read,
         help_text=_(
-            "URL to read document. Opens the appropriate Microsoft Office application."
+            "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
+    )
+    download_url = DowcUrlField(
+        purpose=DocFileTypes.download,
+        help_text=_("URL to download INFORMATIEOBJECT."),
     )
 
     def get_bestandsgrootte(self, obj):

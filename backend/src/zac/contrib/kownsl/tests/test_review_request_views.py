@@ -66,6 +66,9 @@ class ViewTests(ClearCachesMixin, APITestCase):
         UserFactory.create(
             username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
         )
+        cls.patch_get_dowc_url_from_vars = patch(
+            "zac.contrib.kownsl.serializers.get_dowc_url_from_vars", return_value=""
+        )
 
     def setUp(self):
         super().setUp()
@@ -75,6 +78,8 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         self.permissions_get_zaak_patcher.start()
         self.addCleanup(self.permissions_get_zaak_patcher.stop)
+        self.patch_get_dowc_url_from_vars.start()
+        self.addCleanup(self.patch_get_dowc_url_from_vars.stop)
 
     def test_fail_create_review_query_param(self, m):
         self.client.force_authenticate(user=self.user)

@@ -19,7 +19,7 @@ from .models import BRPConfig
 
 logger = logging.getLogger(__name__)
 
-A_DAY = 60 * 60 * 24
+from zac.core.utils import A_DAY
 
 
 class HalClient(ZGWClient):

@@ -1,5 +1,6 @@
 from datetime import date
 from io import BytesIO
+from os import path
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -107,6 +108,10 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
             },
         },
     )
+    fn, fext = path.splitext(document["bestandsnaam"])
+    patch_get_supported_extensions = patch(
+        "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+    )
 
     def setUp(self):
         super().setUp()
@@ -126,6 +131,9 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         config = CoreConfig.get_solo()
         config.primary_drc = drc
         config.save()
+
+        self.patch_get_supported_extensions.start()
+        self.addCleanup(self.patch_get_supported_extensions.stop)
 
     def _setupMocks(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -627,6 +635,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             versie=1,
             vertrouwelijkheidaanduiding="openbaar",
             informatieobjecttype=self.informatieobjecttype["url"],
+            bestandsnaam="some-bestandsnaam.ext",
         )
 
         m.post(
@@ -660,18 +669,22 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             aanmaakdatum="2022-03-04T12:11:39.293+01:00",
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
-            with patch(
-                "zac.core.api.views.get_open_documenten",
-                return_value=[],
-            ):
+        fn, fext = path.splitext(document["bestandsnaam"])
+        with patch(
+            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+        ):
+            with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
                 with patch(
-                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                    return_value=audit_trail,
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[],
                 ):
-                    response = self.client.post(
-                        self.endpoint, post_data, format="multipart"
-                    )
+                    with patch(
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
+                    ):
+                        response = self.client.post(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         called_urls = [req.url for req in m.request_history]
         # Check that informatieobjecttype url was called
@@ -714,6 +727,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "bestandsomvang": document["bestandsomvang"],
             "currentUserIsEditing": False,
             "deleteUrl": "",
+            "downloadUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.download,
+                },
+            ),
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
@@ -805,18 +826,22 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         audit_trail = factory(AuditTrailData, audit_trail)
 
-        with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
-            with patch(
-                "zac.core.api.views.get_open_documenten",
-                return_value=[],
-            ):
+        fn, fext = path.splitext(document["bestandsnaam"])
+        with patch(
+            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+        ):
+            with patch("zac.core.api.serializers.get_documenten_es", return_value=[]):
                 with patch(
-                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                    return_value=audit_trail,
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[],
                 ):
-                    response = self.client.post(
-                        self.endpoint, post_data, format="multipart"
-                    )
+                    with patch(
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
+                    ):
+                        response = self.client.post(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         # Check that zaakinformatieobjecten url was called
         called_urls = [req.url for req in m.request_history]
@@ -832,6 +857,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "bestandsomvang": document["bestandsomvang"],
             "currentUserIsEditing": False,
             "deleteUrl": "",
+            "downloadUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.download,
+                },
+            ),
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
@@ -1117,21 +1150,25 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             uuid=uuid4(),
         )
 
+        fn, fext = path.splitext(document["bestandsnaam"])
         with patch(
-            "zac.core.api.serializers.get_documenten_es",
-            return_value=[factory(Document, document)],
+            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
         ):
             with patch(
-                "zac.core.api.views.get_open_documenten",
-                return_value=[dowc_obj],
+                "zac.core.api.serializers.get_documenten_es",
+                return_value=[factory(Document, document)],
             ):
                 with patch(
-                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                    return_value=audit_trail,
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[dowc_obj],
                 ):
-                    response = self.client.patch(
-                        self.endpoint, post_data, format="multipart"
-                    )
+                    with patch(
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
+                    ):
+                        response = self.client.patch(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -1143,6 +1180,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "currentUserIsEditing": True,
             "deleteUrl": reverse_lazy(
                 "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid}
+            ),
+            "downloadUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.download,
+                },
             ),
             "identificatie": document["identificatie"],
             "informatieobjecttype": {

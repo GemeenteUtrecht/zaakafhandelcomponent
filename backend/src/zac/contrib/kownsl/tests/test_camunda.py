@@ -1,5 +1,6 @@
 from copy import deepcopy
 from datetime import date
+from os import path
 from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
@@ -82,7 +83,10 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
-            "drc", "schemas/EnkelvoudigInformatieObject", url=DOCUMENT_URL
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=DOCUMENT_URL,
+            bestandsnaam="some-bestandsnaam.ext",
         )
         cls.document = factory(Document, document)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -112,12 +116,18 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
+        fn, fext = path.splitext(cls.document.bestandsnaam)
+        cls.patch_get_supported_extensions = patch(
+            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+        )
 
     def setUp(self):
         super().setUp()
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
+        self.patch_get_supported_extensions.start()
+        self.addCleanup(self.patch_get_supported_extensions.stop)
 
     def test_zaak_informatie_task_serializer(self):
         # Sanity check
@@ -159,6 +169,9 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "url": DOCUMENT_URL,
                         "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
+                        ),
+                        "download_url": get_dowc_url_from_obj(
+                            self.document, purpose=DocFileTypes.download
                         ),
                     }
                 ],
@@ -208,6 +221,9 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "url": DOCUMENT_URL,
                         "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
+                        ),
+                        "download_url": get_dowc_url_from_obj(
+                            self.document, purpose=DocFileTypes.download
                         ),
                     }
                 ],
@@ -263,6 +279,9 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "url": DOCUMENT_URL,
                         "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
+                        ),
+                        "download_url": get_dowc_url_from_obj(
+                            self.document, purpose=DocFileTypes.download
                         ),
                     }
                 ],

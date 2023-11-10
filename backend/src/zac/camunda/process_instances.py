@@ -13,9 +13,8 @@ from zgw_consumers.concurrent import parallel
 from zac.camunda.data import HistoricProcessInstance, ProcessInstance
 from zac.camunda.messages import get_messages
 from zac.core.camunda.utils import get_process_tasks
+from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
-
-A_DAY = 60 * 60
 
 
 @cache("process-instance:{instance_id}", timeout=2)

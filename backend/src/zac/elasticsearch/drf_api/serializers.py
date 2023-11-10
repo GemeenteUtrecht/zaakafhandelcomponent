@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.contrib.dowc.fields import DowcUrlField
 
 from ..documents import InformatieObjectDocument, ZaakDocument
 from ..models import SearchReport
@@ -414,6 +414,10 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
             "The URL required to save edits and delete the DOWC object related to the INFORMATIEOBJECT."
         )
     )
+    download_url = DowcUrlField(
+        purpose=DocFileTypes.download,
+        help_text=_("URL to download INFORMATIEOBJECT."),
+    )
     identificatie = serializers.CharField()
     informatieobjecttype = ESInformatieObjectTypeSerializer(
         help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")
@@ -422,7 +426,7 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
         help_text=_("Shows last edited datetime.")
     )
     locked = serializers.BooleanField()
-    read_url = DowcUrlFieldReadOnly(
+    read_url = DowcUrlField(
         purpose=DocFileTypes.read,
         help_text=_(
             "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
@@ -435,7 +439,7 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
     vertrouwelijkheidaanduiding = serializers.CharField(
         help_text=_("Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."),
     )
-    write_url = DowcUrlFieldReadOnly(
+    write_url = DowcUrlField(
         purpose=DocFileTypes.write,
         allow_blank=True,
         help_text=_(
