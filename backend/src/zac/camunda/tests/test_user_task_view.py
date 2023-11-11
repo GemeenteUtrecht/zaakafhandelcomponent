@@ -1,4 +1,5 @@
 import uuid
+from os import path
 from pathlib import Path
 from unittest.mock import patch
 
@@ -125,6 +126,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             "schemas/EnkelvoudigInformatieObject",
             url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobject/e14e72de-56ba-42b6-be36-5c280e9b30cd",
             titel="some-titel",
+            bestandsnaam="some-bestandsnaam.ext",
         )
         cls.document = factory(Document, document)
         cls.document.informatieobjecttype = factory(
@@ -173,6 +175,10 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         cls.patch_get_camunda_client = [
             patch("django_camunda.api.get_client", return_value=_get_camunda_client())
         ]
+        fn, fext = path.splitext(cls.document.bestandsnaam)
+        cls.patch_get_supported_extensions = patch(
+            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+        )
 
     def setUp(self):
         super().setUp()
@@ -183,6 +189,9 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
 
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)
+
+        self.patch_get_supported_extensions.start()
+        self.addCleanup(self.patch_get_supported_extensions.stop)
 
         self.patch_get_informatieobjecttypen_for_zaaktype.start()
         self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
@@ -243,6 +252,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "bestandsnaam",
                     "bestandsomvang",
                     "documentType",
+                    "downloadUrl",
                     "readUrl",
                     "titel",
                     "url",
@@ -275,6 +285,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
             },
         )
+
         with patch(
             "zac.contrib.kownsl.camunda.get_zaak_context",
             return_value=self.zaak_context,
@@ -365,7 +376,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(
             sorted(list(data["context"]["documents"][0].keys())),
-            sorted(["beschrijving", "bestandsnaam", "readUrl", "url"]),
+            sorted(["beschrijving", "bestandsnaam", "readUrl", "url", "downloadUrl"]),
         )
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -543,6 +554,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             sorted(
                 [
                     "readUrl",
+                    "downloadUrl",
                     "bestandsnaam",
                     "bestandsomvang",
                     "documentType",
