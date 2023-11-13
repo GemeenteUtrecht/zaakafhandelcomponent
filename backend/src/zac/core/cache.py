@@ -133,17 +133,15 @@ def invalidate_rollen_cache(zaak: Zaak, rol_urls: Optional[List[str]] = None):
     if _cache:
         _cache.delete(f"rollen:{zaak.url}")
 
-    if rol_urls:
-        cache_keys = []
-        for rol_url in rol_urls:
-            cache_keys.append(f"rol:{rol_url}")
-
-        cache.delete_many(cache_keys)
-
     if is_redis_cache():
         cache.delete_pattern(f"*rollen:{zaak.url}*")
-        for rol in rol_urls:
-            cache.delete_pattern(f"*{rol}*")
+        if rol_urls:
+            for rol in rol_urls:
+                cache.delete_pattern(f"*{rol}*")
+
+    if rol_urls:
+        cache_keys = [f"rol:{rol_url}" for rol_url in rol_urls]
+        cache.delete_many(cache_keys)
 
 
 def invalidate_zaakobjecten_cache(zaak: Zaak):

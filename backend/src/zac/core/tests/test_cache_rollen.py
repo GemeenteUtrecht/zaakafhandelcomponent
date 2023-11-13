@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.core.cache import cache
 
 import requests_mock
@@ -86,3 +88,11 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
 
         # Make sure rol isnt cached anymore
         self.assertFalse(f"rol:{rol['url']}" in cache)
+
+        with self.subTest(
+            "Regression test in case rol_urls is None and redis cache is true"
+        ):
+            with patch("zac.core.cache.is_redis_cache", return_value=True):
+                with patch("zac.core.cache.cache") as mock_cache:
+                    invalidate_rollen_cache(zaak, rol_urls=None)
+                    mock_cache.delete_pattern.assert_called()
