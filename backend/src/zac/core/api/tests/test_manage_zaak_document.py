@@ -728,13 +728,13 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "currentUserIsEditing": False,
             "deleteUrl": "",
             "downloadUrl": reverse_lazy(
-                "dowc:request-doc",
+                "core:download-document",
                 kwargs={
                     "bronorganisatie": document["bronorganisatie"],
                     "identificatie": document["identificatie"],
-                    "purpose": DocFileTypes.download,
                 },
-            ),
+            )
+            + f"?versie={document['versie']}",
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
@@ -858,13 +858,13 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "currentUserIsEditing": False,
             "deleteUrl": "",
             "downloadUrl": reverse_lazy(
-                "dowc:request-doc",
+                "core:download-document",
                 kwargs={
                     "bronorganisatie": document["bronorganisatie"],
                     "identificatie": document["identificatie"],
-                    "purpose": DocFileTypes.download,
                 },
-            ),
+            )
+            + f"?versie={document['versie']}",
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
@@ -1182,13 +1182,13 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid}
             ),
             "downloadUrl": reverse_lazy(
-                "dowc:request-doc",
+                "core:download-document",
                 kwargs={
                     "bronorganisatie": document["bronorganisatie"],
                     "identificatie": document["identificatie"],
-                    "purpose": DocFileTypes.download,
                 },
-            ),
+            )
+            + f"?versie={document['versie']}",
             "identificatie": document["identificatie"],
             "informatieobjecttype": {
                 "url": self.informatieobjecttype2["url"],

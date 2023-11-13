@@ -180,11 +180,10 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                 "bestandsomvang": self.document.bestandsomvang,
                 "document_type": self.document.informatieobjecttype.omschrijving,
                 "download_url": reverse_lazy(
-                    "dowc:request-doc",
+                    "core:download-document",
                     kwargs={
                         "bronorganisatie": self.document.bronorganisatie,
                         "identificatie": self.document.identificatie,
-                        "purpose": DocFileTypes.download,
                     },
                 ),
                 "read_url": get_dowc_url_from_obj(
@@ -211,11 +210,10 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
                     "bestandsomvang": self.document.bestandsomvang,
                     "document_type": self.document.informatieobjecttype.omschrijving,
                     "download_url": reverse_lazy(
-                        "dowc:request-doc",
+                        "core:download-document",
                         kwargs={
                             "bronorganisatie": self.document.bronorganisatie,
                             "identificatie": self.document.identificatie,
-                            "purpose": DocFileTypes.download,
                         },
                     ),
                     "titel": self.document.titel,

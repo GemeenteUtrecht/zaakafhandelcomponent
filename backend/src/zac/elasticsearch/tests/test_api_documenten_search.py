@@ -441,11 +441,10 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
                     "currentUserIsEditing": True,
                     "deleteUrl": f"/api/dowc/{self.document1.uuid}/",
                     "downloadUrl": reverse_lazy(
-                        "dowc:request-doc",
+                        "core:download-document",
                         kwargs={
                             "bronorganisatie": self.document1.bronorganisatie,
                             "identificatie": self.document1.identificatie,
-                            "purpose": DocFileTypes.download,
                         },
                     ),
                     "identificatie": self.document1.identificatie,
@@ -472,11 +471,10 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
                     "currentUserIsEditing": False,
                     "deleteUrl": "",
                     "downloadUrl": reverse_lazy(
-                        "dowc:request-doc",
+                        "core:download-document",
                         kwargs={
                             "bronorganisatie": self.document2.bronorganisatie,
                             "identificatie": self.document2.identificatie,
-                            "purpose": DocFileTypes.download,
                         },
                     ),
                     "identificatie": self.document2.identificatie,

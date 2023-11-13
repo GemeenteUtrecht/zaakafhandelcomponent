@@ -58,6 +58,7 @@ from zac.contrib.objects.services import (
     fetch_zaaktypeattributen_objects_for_zaaktype,
 )
 from zac.core.camunda.utils import resolve_assignee
+from zac.core.fields import DownloadDocumentURLField
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_object,
@@ -120,10 +121,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "URL to write INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
     )
-    download_url = DowcUrlField(
-        purpose=DocFileTypes.download,
-        help_text=_("URL to download INFORMATIEOBJECT."),
-    )
+    download_url = DownloadDocumentURLField()
     vertrouwelijkheidaanduiding = serializers.CharField(
         source="get_vertrouwelijkheidaanduiding_display",
         help_text=_("Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."),
@@ -363,10 +361,7 @@ class DocumentInfoSerializer(serializers.Serializer):
             "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
     )
-    download_url = DowcUrlField(
-        purpose=DocFileTypes.download,
-        help_text=_("URL to download INFORMATIEOBJECT."),
-    )
+    download_url = DownloadDocumentURLField()
 
     def get_bestandsgrootte(self, obj):
         return filesizeformat(obj.bestandsomvang)

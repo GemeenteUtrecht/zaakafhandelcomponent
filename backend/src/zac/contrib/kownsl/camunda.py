@@ -21,6 +21,7 @@ from zac.contrib.dowc.fields import DowcUrlField
 from zac.contrib.kownsl.api import get_review_request
 from zac.core.api.fields import SelectDocumentsField
 from zac.core.camunda.utils import resolve_assignee
+from zac.core.fields import DownloadDocumentURLField
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
@@ -58,10 +59,7 @@ class DocumentUserTaskSerializer(serializers.Serializer):
             "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
     )
-    download_url = DowcUrlField(
-        purpose=DocFileTypes.download,
-        help_text=_("URL to download INFORMATIEOBJECT."),
-    )
+    download_url = DownloadDocumentURLField()
 
 
 class CamundaAssignedUsersSerializer(APIModelSerializer):

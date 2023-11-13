@@ -17,6 +17,7 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlField
 from zac.core.api.serializers import InformatieObjectTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
+from zac.core.fields import DownloadDocumentURLField
 from zac.core.services import create_document, download_document, get_document
 from zgw.models import Zaak
 
@@ -34,10 +35,7 @@ class DocumentSerializer(serializers.Serializer):
             "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
     )
-    download_url = DowcUrlField(
-        purpose=DocFileTypes.download,
-        help_text=_("URL to download INFORMATIEOBJECT."),
-    )
+    download_url = DownloadDocumentURLField()
     titel = serializers.CharField(help_text=_("Title given to INFORMATIEOBJECT."))
     url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECT."))
     versie = serializers.IntegerField(help_text=_("Version."))

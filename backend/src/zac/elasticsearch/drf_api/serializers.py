@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlField
+from zac.core.fields import DownloadDocumentURLField
 
 from ..documents import InformatieObjectDocument, ZaakDocument
 from ..models import SearchReport
@@ -414,10 +415,7 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
             "The URL required to save edits and delete the DOWC object related to the INFORMATIEOBJECT."
         )
     )
-    download_url = DowcUrlField(
-        purpose=DocFileTypes.download,
-        help_text=_("URL to download INFORMATIEOBJECT."),
-    )
+    download_url = DownloadDocumentURLField()
     identificatie = serializers.CharField()
     informatieobjecttype = ESInformatieObjectTypeSerializer(
         help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")

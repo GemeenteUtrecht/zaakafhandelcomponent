@@ -184,17 +184,13 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                                                 kwargs={"dowc_uuid": dowc.uuid},
                                             ),
                                             "downloadUrl": reverse_lazy(
-                                                "dowc:request-doc",
+                                                "core:download-document",
                                                 kwargs={
-                                                    "bronorganisatie": document[
-                                                        "bronorganisatie"
-                                                    ],
-                                                    "identificatie": document[
-                                                        "identificatie"
-                                                    ],
-                                                    "purpose": DocFileTypes.download,
+                                                    "bronorganisatie": doc_obj.bronorganisatie,
+                                                    "identificatie": doc_obj.identificatie,
                                                 },
-                                            ),
+                                            )
+                                            + f"?versie={doc_obj.versie}",
                                             "identificatie": "DOC-2020-007",
                                             "informatieobjecttype": {
                                                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
@@ -254,17 +250,13 @@ class ZaakDocumentsResponseTests(APITransactionTestCase):
                                                     kwargs={"dowc_uuid": dowc.uuid},
                                                 ),
                                                 "downloadUrl": reverse_lazy(
-                                                    "dowc:request-doc",
+                                                    "core:download-document",
                                                     kwargs={
-                                                        "bronorganisatie": document[
-                                                            "bronorganisatie"
-                                                        ],
-                                                        "identificatie": document[
-                                                            "identificatie"
-                                                        ],
-                                                        "purpose": DocFileTypes.download,
+                                                        "bronorganisatie": doc_obj.bronorganisatie,
+                                                        "identificatie": doc_obj.identificatie,
                                                     },
-                                                ),
+                                                )
+                                                + f"?versie={doc_obj.versie}",
                                                 "identificatie": "DOC-2020-007",
                                                 "informatieobjecttype": {
                                                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",

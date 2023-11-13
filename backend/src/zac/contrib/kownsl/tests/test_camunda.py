@@ -156,6 +156,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
+        print(serializer.data["context"]["documents"])
         self.assertEqual(
             {
                 "camunda_assigned_users": {
@@ -170,8 +171,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
                         ),
-                        "download_url": get_dowc_url_from_obj(
-                            self.document, purpose=DocFileTypes.download
+                        "download_url": reverse(
+                            "core:download-document",
+                            kwargs={
+                                "bronorganisatie": self.document.bronorganisatie,
+                                "identificatie": self.document.identificatie,
+                            },
                         ),
                     }
                 ],
@@ -222,8 +227,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
                         ),
-                        "download_url": get_dowc_url_from_obj(
-                            self.document, purpose=DocFileTypes.download
+                        "download_url": reverse(
+                            "core:download-document",
+                            kwargs={
+                                "bronorganisatie": self.document.bronorganisatie,
+                                "identificatie": self.document.identificatie,
+                            },
                         ),
                     }
                 ],
@@ -280,8 +289,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "read_url": get_dowc_url_from_obj(
                             self.document, purpose=DocFileTypes.read
                         ),
-                        "download_url": get_dowc_url_from_obj(
-                            self.document, purpose=DocFileTypes.download
+                        "download_url": reverse(
+                            "core:download-document",
+                            kwargs={
+                                "bronorganisatie": self.document.bronorganisatie,
+                                "identificatie": self.document.identificatie,
+                            },
                         ),
                     }
                 ],
