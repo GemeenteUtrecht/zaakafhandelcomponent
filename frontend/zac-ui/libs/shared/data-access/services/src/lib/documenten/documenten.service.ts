@@ -96,7 +96,7 @@ export class DocumentenService {
       const editUrl = element.currentUserIsEditing ? element.deleteUrl : element.writeUrl;
       const editButtonStyle = element.currentUserIsEditing ? 'primary' : 'tertiary';
 
-      const showEditCell = ((!element.locked || element.currentUserIsEditing) && !zaak.resultaat) || (!zaak.resultaat && zaak.kanGeforceerdBijwerken);
+      const showEditCell = (((!element.locked || element.currentUserIsEditing) && !zaak.resultaat) || (!zaak.resultaat && zaak.kanGeforceerdBijwerken)) && element.writeUrl;
       const showOverwriteCell = !element.locked && !zaak.resultaat;
 
       const editCell: ExtensiveCell = {
@@ -129,8 +129,8 @@ export class DocumentenService {
           versie: String(element.versie),
           lezen: {
             type: 'button',
-            label: 'Lezen',
-            value: element.readUrl
+            label: element.readUrl ? 'Lezen' : 'Downloaden',
+            value: element.readUrl ? element.readUrl : element.downloadUrl
           },
           bewerken: showEditCell ? editCell : '',
           overschrijven: showOverwriteCell ? overwriteCell : '',
