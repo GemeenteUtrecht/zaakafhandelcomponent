@@ -220,7 +220,7 @@ class ReviewRequest(Model):
             #     _documents = executor.map(get_document, documents)
 
             if documents:
-                _documents = search_informatieobjects(urls=documents)
+                _documents = search_informatieobjects(urls=list(documents))
                 documents = {doc.url: doc for doc in _documents}
                 for advice in advices:
                     advice_documents = []
