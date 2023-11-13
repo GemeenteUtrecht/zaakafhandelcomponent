@@ -20,9 +20,9 @@
     <gu-table *ngIf="(documentsData.length > 0) && tableData"
               [table]="tableData"
               [sortable]="true"
-              (buttonOutput)="handleTableButtonOutput($event)"
-              class="mb-4"></gu-table>
-    <gu-paginator (page)="onPageSelect($event)"
+              (sortOutput)="sortTable($event)"
+              (buttonOutput)="handleTableButtonOutput($event)"></gu-table>
+    <gu-paginator  *ngIf="(documentsData.length > 0) && tableData" (page)="onPageSelect($event)"
                   [pageSize]="10"
                   [length]="paginatedDocsData.count"
     ></gu-paginator>
@@ -74,7 +74,7 @@
   <gu-document-toevoegen [zaak]="zaak"
                          [updateDocument]="true"
                          [documentUrl]="selectedDocumentUrl"
-                         (reload)="fetchDocuments()">
+                         (reload)="refreshDocs()">
   </gu-document-toevoegen>
 </gu-modal>
 
