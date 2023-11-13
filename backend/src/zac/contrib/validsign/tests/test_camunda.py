@@ -105,6 +105,11 @@ class GetValidSignContextSerializersTests(APITestCase):
             return_value=cls.zaak_context,
         )
 
+        cls.patch_get_dowc_url_from_obj = patch(
+            "zac.contrib.dowc.fields.get_dowc_url_from_obj",
+            return_value="",
+        )
+
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
@@ -114,6 +119,8 @@ class GetValidSignContextSerializersTests(APITestCase):
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
+        self.patch_get_dowc_url_from_obj.start()
+        self.addCleanup(self.patch_get_dowc_url_from_obj.stop)
 
     def test_valid_sign_context_serializer(self):
         task = _get_task(**{"formKey": "zac:validSign:configurePackage"})

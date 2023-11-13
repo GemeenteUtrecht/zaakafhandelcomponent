@@ -9,7 +9,7 @@ from .constants import DocFileTypes
 from .utils import get_dowc_url_from_obj
 
 
-class DowcUrlFieldReadOnly(fields.ReadOnlyField, fields.URLField):
+class DowcUrlField(fields.ReadOnlyField, fields.URLField):
     def __init__(self, *args, purpose: str = DocFileTypes.read, **kwargs):
         self.purpose = purpose
         kwargs.setdefault("label", _("document {purpose} URL").format(purpose=purpose))
@@ -25,7 +25,7 @@ class DowcUrlFieldReadOnly(fields.ReadOnlyField, fields.URLField):
         assert bool(
             isinstance(instance, Document)
             or isinstance(instance, InformatieObjectDocument),
-        ), "This field is only valid for instances of type zgw_consumers.api_models.documenten.Document"
+        ), "This field is only valid for instances of type zgw_consumers.api_models.documenten.Document or zac.elasticsearch.documents.InformatieObjectDocument"
         if self.context.get("zaak_is_closed"):
             return ""
         return get_dowc_url_from_obj(instance, self.purpose)

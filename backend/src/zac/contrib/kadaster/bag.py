@@ -3,12 +3,11 @@ from typing import Any, Dict
 import requests
 from zgw_consumers.concurrent import parallel
 
+from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
 
 from .decorators import catch_httperror
 from .models import KadasterConfig
-
-A_DAY = 60 * 60 * 24
 
 
 class Bag:

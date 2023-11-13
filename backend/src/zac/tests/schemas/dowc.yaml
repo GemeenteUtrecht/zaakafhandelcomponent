@@ -8,6 +8,23 @@ info:
   contact:
     url: https://github.com/GemeenteUtrecht/dowc
 paths:
+  /api/file-extensions:
+    get:
+      operationId: api_file_extensions_retrieve
+      summary: Retrieve supported file extensions documents.
+      tags:
+      - api
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - ZGWAuthentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportedFileExtensions'
+          description: ''
   /api/v1/documenten:
     get:
       operationId: documenten_list
@@ -35,6 +52,7 @@ paths:
         schema:
           type: string
           enum:
+          - download
           - read
           - write
         description: Purpose of making the request.
@@ -330,9 +348,21 @@ components:
             parameter.
     PurposeEnum:
       enum:
+      - download
       - read
       - write
       type: string
+    SupportedFileExtensions:
+      type: object
+      properties:
+        extensions:
+          type: array
+          items:
+            type: string
+            description: File extension.
+          description: File extensions supported by DOWC.
+      required:
+      - extensions
     UnlockedDocument:
       type: object
       properties:

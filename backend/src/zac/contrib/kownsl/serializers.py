@@ -164,12 +164,24 @@ class AdviceDocumentSerializer(APIModelSerializer):
     title = serializers.CharField(
         source="document.bestandsnaam", help_text=_("The name of the document.")
     )
+    download_advice_url = serializers.SerializerMethodField(
+        help_text=_(
+            "URL-reference to download the advice version of the document from the DoWC."
+        )
+    )
+    download_source_url = serializers.SerializerMethodField(
+        help_text=_(
+            "URL-reference to download the source version of the document on the DoWC."
+        )
+    )
 
     class Meta:
         model = AdviceDocument
         fields = (
             "advice_url",
             "advice_version",
+            "download_advice_url",
+            "download_source_url",
             "source_url",
             "source_version",
             "title",
@@ -183,8 +195,8 @@ class AdviceDocumentSerializer(APIModelSerializer):
             },
         }
 
-    def get_url(self, obj, args) -> str:
-        url = furl(get_dowc_url_from_obj(obj.document, purpose=DocFileTypes.read))
+    def get_url(self, obj, args, purpose: str = DocFileTypes.read) -> str:
+        url = furl(get_dowc_url_from_obj(obj.document, purpose=purpose))
         url.args = args
         return url.url
 
@@ -193,6 +205,16 @@ class AdviceDocumentSerializer(APIModelSerializer):
 
     def get_source_url(self, obj) -> str:
         return self.get_url(obj, {"versie": obj.source_version})
+
+    def get_download_advice_url(self, obj) -> str:
+        return self.get_url(
+            obj, {"versie": obj.advice_version}, purpose=DocFileTypes.download
+        )
+
+    def get_download_source_url(self, obj) -> str:
+        return self.get_url(
+            obj, {"versie": obj.source_version}, purpose=DocFileTypes.download
+        )
 
 
 class AdviceSerializer(APIModelSerializer):

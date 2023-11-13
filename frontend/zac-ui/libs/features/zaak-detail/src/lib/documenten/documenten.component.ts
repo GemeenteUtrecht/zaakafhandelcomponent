@@ -1,7 +1,7 @@
-import {Component, HostListener, Input, OnChanges} from '@angular/core';
+import { Component, HostListener, Input, OnChanges, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { Document, ListDocuments, MetaConfidentiality, ReadWriteDocument, Table, Zaak } from '@gu/models';
 import {DocumentenService, MetaService, ZaakService} from '@gu/services';
-import {Choice, FieldConfiguration, ModalService, SnackbarService} from '@gu/components';
+import { Choice, FieldConfiguration, ModalService, PaginatorComponent, SnackbarService } from '@gu/components';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Location} from '@angular/common';
 
@@ -22,6 +22,7 @@ import {Location} from '@angular/common';
 })
 
 export class DocumentenComponent implements OnChanges {
+  @ViewChild(PaginatorComponent) paginator: PaginatorComponent;
   @Input() zaak: Zaak;
 
   readonly alertText = "U heeft uw documenten niet opgeslagen. Klik op 'Bewerkingen opslaan' in de documenten sectie om uw wijzigingen op te slaan."
@@ -31,11 +32,11 @@ export class DocumentenComponent implements OnChanges {
     '',
     'Bestandsnaam',
     'Versie',
-    'Acties',
+    '',
     '',
     '',
     'Auteur',
-    'Type',
+    'Informatieobjecttype',
     'Vertrouwelijkheidaanduiding',
   ]
 
@@ -54,6 +55,10 @@ export class DocumentenComponent implements OnChanges {
   selectedDocument: Document;
   selectedDocumentUrl: string;
   selectedConfidentialityChoice: Choice;
+
+  page = 1;
+
+  sortValue: any;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -82,16 +87,26 @@ export class DocumentenComponent implements OnChanges {
   // Context
   //
 
+  refreshDocs() {
+    this.isLoading = true;
+    this.sortValue = null;
+    this.paginator.firstPage();
+    this.page = 1;
+    setTimeout(() => {
+      this.fetchDocuments()
+    }, 1000)
+  }
+
   /**
    * Fetch all the documents related to the case.
    */
-  fetchDocuments(page = 1) {
+  fetchDocuments(page = 1, sortValue?) {
     this.isLoading = true;
 
     this.metaService.listConfidentialityClassifications().subscribe(
       (metaConfidentialities: MetaConfidentiality[]) => {
 
-        this.zaakService.listCaseDocuments(this.zaak.bronorganisatie, this.zaak.identificatie, page).subscribe(data => {
+        this.zaakService.listCaseDocuments(this.zaak.bronorganisatie, this.zaak.identificatie, page, sortValue).subscribe(data => {
           this.tableData = this.documentenService.formatTableData(data.results, this.tableHead, this.zaak, metaConfidentialities, this.onConfidentialityChange.bind(this));
           this.paginatedDocsData = data;
           this.documentsData = data.results;
@@ -331,7 +346,15 @@ export class DocumentenComponent implements OnChanges {
    * @param page
    */
   onPageSelect(page) {
-    this.fetchDocuments(page.pageIndex + 1);
+    this.page = page.pageIndex + 1;
+    this.fetchDocuments(this.page, this.sortValue);
+  }
+
+  sortTable(sortValue) {
+    this.paginator.firstPage();
+    this.page = 1;
+    this.sortValue = sortValue;
+    this.fetchDocuments(this.page, this.sortValue);
   }
 
   //

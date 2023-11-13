@@ -14,6 +14,7 @@ import {
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall, getEnv} from '@gu/utils';
 import {MapGeometry} from "../../../../../ui/components/src/lib/components/map/map";
+import { tableHeadMapping } from '../../../../../../features/reports/src/lib/constants/table';
 
 
 @Injectable({
@@ -115,11 +116,16 @@ export class ZaakService {
    * List case documents.
    * @param {string} bronorganisatie
    * @param {string} identificatie
+   * @param {number} page
+   * @param {string} sortValue
    * @return {Observable}
    */
-  listCaseDocuments(bronorganisatie, identificatie, page): Observable<ListDocuments> {
+  listCaseDocuments(bronorganisatie, identificatie, page, sortData): Observable<ListDocuments> {
     const pageValue = page ? `?page=${page}` : '';
-    const endpoint = encodeURI(`/api/search/cases/${bronorganisatie}/${identificatie}/documents${pageValue}`);
+    const sortOrder = sortData?.order === 'desc' ? '-' : '';
+    const sortValue = sortData ? sortData.toLowerCase() : '';
+    const sortParameter = sortData ? `&ordering=${sortOrder}${sortValue}` : '';
+    const endpoint = encodeURI(`/api/search/cases/${bronorganisatie}/${identificatie}/documents${pageValue}${sortParameter}`);
     return this.http.Post<ListDocuments>(endpoint);
   }
 

@@ -17,10 +17,11 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import register, usertask_context_serializer
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.fields import DowcUrlFieldReadOnly
+from zac.contrib.dowc.fields import DowcUrlField
 from zac.contrib.kownsl.api import get_review_request
 from zac.core.api.fields import SelectDocumentsField
 from zac.core.camunda.utils import resolve_assignee
+from zac.core.fields import DownloadDocumentURLField
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
@@ -52,12 +53,13 @@ class DocumentUserTaskSerializer(serializers.Serializer):
     beschrijving = serializers.CharField(help_text=_("Description."))
     bestandsnaam = serializers.CharField(help_text=_("Filename."))
     url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECT."))
-    read_url = DowcUrlFieldReadOnly(
+    read_url = DowcUrlField(
         purpose=DocFileTypes.read,
         help_text=_(
-            "URL to read document. Opens the appropriate Microsoft Office application."
+            "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
     )
+    download_url = DownloadDocumentURLField()
 
 
 class CamundaAssignedUsersSerializer(APIModelSerializer):

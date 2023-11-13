@@ -1,3 +1,4 @@
+from os import path
 from unittest.mock import patch
 
 from django.conf import settings
@@ -21,6 +22,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.models import DowcConfig
 from zac.core.permissions import zaken_inzien, zaken_list_documents
 from zac.core.tests.utils import ClearCachesMixin
@@ -240,6 +242,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             url=f"{DRC_ROOT}enkelvoudiginformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a0",
             titel="a",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            bestandsnaam="some-bestandsnaam1.ext1",
         ),
     )
     document2 = factory(
@@ -251,6 +254,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             url=f"{DRC_ROOT}enkelvoudiginformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a1",
             titel="b",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+            bestandsnaam="some-bestandsnaam2.ext2",
         ),
     )
     zio1 = factory(
@@ -335,6 +339,14 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         )
         patch_get_zaakobjecten.start()
         self.addCleanup(patch_get_zaakobjecten.stop)
+        fn, fext1 = path.splitext(self.document1.bestandsnaam)
+        fn, fext2 = path.splitext(self.document2.bestandsnaam)
+        patch_get_supported_extensions = patch(
+            "zac.contrib.dowc.utils.get_supported_extensions",
+            return_value=[fext1, fext2],
+        )
+        patch_get_supported_extensions.start()
+        self.addCleanup(patch_get_supported_extensions.stop)
 
     def refresh_es(self, m):
         ESMixin.refresh_index()
@@ -393,7 +405,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         io2_document.save()
         self.refresh_index()
 
-    def test_has_perms(self, m):
+    def test_response(self, m):
         self.refresh_es(m)
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
         m.get(f"{ZTC_ROOT}zaaktypen", json=paginated_response([self.zaaktype]))
@@ -428,6 +440,13 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
                     "bronorganisatie": self.document1.bronorganisatie,
                     "currentUserIsEditing": True,
                     "deleteUrl": f"/api/dowc/{self.document1.uuid}/",
+                    "downloadUrl": reverse_lazy(
+                        "core:download-document",
+                        kwargs={
+                            "bronorganisatie": self.document1.bronorganisatie,
+                            "identificatie": self.document1.identificatie,
+                        },
+                    ),
                     "identificatie": self.document1.identificatie,
                     "informatieobjecttype": {
                         "url": self.iot.url,
@@ -451,6 +470,13 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
                     "bronorganisatie": self.document2.bronorganisatie,
                     "currentUserIsEditing": False,
                     "deleteUrl": "",
+                    "downloadUrl": reverse_lazy(
+                        "core:download-document",
+                        kwargs={
+                            "bronorganisatie": self.document2.bronorganisatie,
+                            "identificatie": self.document2.identificatie,
+                        },
+                    ),
                     "identificatie": self.document2.identificatie,
                     "informatieobjecttype": {
                         "url": self.iot.url,

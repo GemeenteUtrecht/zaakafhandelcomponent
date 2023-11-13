@@ -1,9 +1,8 @@
 from defusedxml import ElementTree as ET
 from django_camunda.bpmn import get_bpmn as _get_bpmn
 
+from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
-
-A_DAY = 60 * 60 * 24
 
 
 @cache("bpmn:{process_definition_id}", timeout=A_DAY)

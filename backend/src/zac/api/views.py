@@ -17,9 +17,8 @@ HEADERS_TO_KEEP = (
 
 from django.conf import settings
 
+from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
-
-A_DAY = 60 * 60 * 24
 
 
 @cache("remote_schema:{schema_url}", timeout=A_DAY)

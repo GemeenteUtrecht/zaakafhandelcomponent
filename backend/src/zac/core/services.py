@@ -59,13 +59,10 @@ from .cache import (
 )
 from .models import CoreConfig
 from .rollen import Rol
-from .utils import fetch_next_url_pagination
+from .utils import A_DAY, AN_HOUR, fetch_next_url_pagination
 
 logger = logging.getLogger(__name__)
 perf_logger = logging.getLogger("performance")
-
-AN_HOUR = 60 * 60
-A_DAY = AN_HOUR * 24
 
 
 def _client_from_url(url: str):

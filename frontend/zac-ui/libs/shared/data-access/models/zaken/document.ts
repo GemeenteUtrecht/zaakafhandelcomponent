@@ -5,6 +5,7 @@ export interface Document {
   bestandsomvang: number;
   currentUserIsEditing: boolean;
   deleteUrl: string,
+  downloadUrl: string,
   identificatie: string;
   informatieobjecttype: InformatieObjectType;
   locked: boolean;

@@ -21,7 +21,7 @@ from zgw.models import Zaak
 from .oudbehandelaren.data import Oudbehandelaren
 
 logger = logging.getLogger(__name__)
-A_DAY = 60 * 60 * 24
+from zac.core.utils import A_DAY
 
 
 def _search_meta_objects(

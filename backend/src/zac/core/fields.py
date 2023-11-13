@@ -1,8 +1,43 @@
 from django import forms
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+
+from furl import furl
+from rest_framework import fields
+from zgw_consumers.api_models.documenten import Document
+
+from zac.elasticsearch.documents import InformatieObjectDocument
 
 from .services import get_documenten, get_zaak
 from .widgets import AlfrescoDocument
+
+
+class DownloadDocumentURLField(fields.ReadOnlyField, fields.URLField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label", _("document download URL"))
+        kwargs.setdefault(
+            "help_text",
+            _("The document URL that allows a document to be downloaded."),
+        )
+        super().__init__(*args, **kwargs)
+
+    def get_attribute(self, instance) -> str:
+        assert bool(
+            isinstance(instance, Document)
+            or isinstance(instance, InformatieObjectDocument),
+        ), "This field is only valid for instances of type zgw_consumers.api_models.documenten.Document or zac.elasticsearch.documents.InformatieObjectDocument"
+        url = furl(
+            reverse(
+                "core:download-document",
+                kwargs={
+                    "bronorganisatie": instance.bronorganisatie,
+                    "identificatie": instance.identificatie,
+                },
+            )
+        )
+        if instance.versie:
+            url.args = {"versie": instance.versie}
+        return url.url
 
 
 class DocWrapper:
