@@ -99,6 +99,8 @@ export class DocumentenService {
       const showEditCell = (((!element.locked || element.currentUserIsEditing) && !zaak.resultaat) || (!zaak.resultaat && zaak.kanGeforceerdBijwerken)) && element.writeUrl;
       const showOverwriteCell = !element.locked && !zaak.resultaat;
 
+      const isDownloadCell = element.titel.toLowerCase().split('.')[1] === "msg";
+
       const editCell: ExtensiveCell = {
         type: 'button',
         label: editLabel,
@@ -127,13 +129,13 @@ export class DocumentenService {
           },
           bestandsnaam: docNameButton,
           versie: String(element.versie),
-          ...(element.readUrl.length > 0) && {lezen: {
+          ...(!isDownloadCell) && {lezen: {
               type: 'button',
               label: 'Lezen',
               value: element.readUrl,
 
             }},
-          ...(element.downloadUrl.length > 0) && {downloaden: {
+          ...(isDownloadCell) && {downloaden: {
               type: 'link',
               label: 'Downloaden',
               value: element.downloadUrl,
