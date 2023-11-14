@@ -123,7 +123,7 @@ export class ZaakService {
   listCaseDocuments(bronorganisatie, identificatie, page, sortData): Observable<ListDocuments> {
     const pageValue = page ? `?page=${page}` : '';
     const sortOrder = sortData?.order === 'desc' ? '-' : '';
-    const sortValue = sortData ? sortData.toLowerCase() : '';
+    const sortValue = sortData ? sortData.value?.toLowerCase() : '';
     const sortParameter = sortData ? `&ordering=${sortOrder}${sortValue}` : '';
     const endpoint = encodeURI(`/api/search/cases/${bronorganisatie}/${identificatie}/documents${pageValue}${sortParameter}`);
     return this.http.Post<ListDocuments>(endpoint);
