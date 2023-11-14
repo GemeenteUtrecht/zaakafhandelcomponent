@@ -137,7 +137,7 @@ def check_document_status(documenten: List[str]) -> Optional[Dict]:
 
 
 @optional_service
-@cache_result("dowc:file-extensions", time_out=A_DAY)
+@cache_result("dowc:file-extensions", timeout=A_DAY)
 def get_supported_extensions() -> Optional[List[str]]:
     client = get_client(force=True)
     operation_id = "api_file_extensions_retrieve"
