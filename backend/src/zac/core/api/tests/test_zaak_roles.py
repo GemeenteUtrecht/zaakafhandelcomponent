@@ -72,7 +72,8 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             "ztc",
             "schemas/RolType",
             url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            omschrijving="some-kind-of-omschrijving",
+            omschrijving="Hoofdbehandelaar",
+            omschrijvingGeneriek=RolOmschrijving.initiator,
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -284,6 +285,9 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.roltype]),
         )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
+        )
 
         rol = generate_oas_component(
             "zrc",
@@ -366,7 +370,8 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             "ztc",
             "schemas/RolType",
             url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            omschrijving=RolOmschrijving.initiator,
+            omschrijving="Hoofdbehandelaar",
+            omschrijvingGeneriek=RolOmschrijving.initiator,
         )
         mock_resource_get(m, roltype)
         m.get(
@@ -489,6 +494,9 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         m.get(
             f"{CATALOGI_ROOT}roltypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.roltype]),
+        )
+        m.get(
+            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}", json=paginated_response([])
         )
 
         rol = generate_oas_component(
