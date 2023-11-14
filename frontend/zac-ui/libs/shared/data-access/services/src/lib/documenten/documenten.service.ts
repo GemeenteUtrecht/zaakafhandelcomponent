@@ -127,11 +127,17 @@ export class DocumentenService {
           },
           bestandsnaam: docNameButton,
           versie: String(element.versie),
-          lezen: {
-            type: 'button',
-            label: element.readUrl ? 'Lezen' : 'Downloaden',
-            value: element.readUrl ? element.readUrl : element.downloadUrl
-          },
+          ...(element.readUrl.length > 0) && {lezen: {
+              type: 'button',
+              label: 'Lezen',
+              value: element.readUrl,
+
+            }},
+          ...(element.downloadUrl.length > 0) && {downloaden: {
+              type: 'link',
+              label: 'Downloaden',
+              value: element.downloadUrl,
+            }},
           bewerken: showEditCell ? editCell : '',
           overschrijven: showOverwriteCell ? overwriteCell : '',
           auteur: element.auteur,
