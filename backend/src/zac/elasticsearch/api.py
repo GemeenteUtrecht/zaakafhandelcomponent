@@ -389,7 +389,7 @@ def create_iot_document(iot: InformatieObjectType) -> InformatieObjectTypeDocume
     )
 
 
-def _resolve_iot_for_document(io: Document) -> InformatieObjectTypeDocument:
+def resolve_iot_for_document(io: Document) -> InformatieObjectTypeDocument:
     # resolve iot if necessary
     if type(io.informatieobjecttype) == str:
         io.informatieobjecttype = get_informatieobjecttype(io.informatieobjecttype)
@@ -417,7 +417,7 @@ def _get_informatieobject_document(
             )
             informatieobject_document.save()
 
-            informatieobject_document.informatieobjecttype = _resolve_iot_for_document(
+            informatieobject_document.informatieobjecttype = resolve_iot_for_document(
                 create_informatieobject
             )
             # get latest edit date
@@ -483,7 +483,7 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
             formaat=document.formaat,
             identificatie=document.identificatie,
             indicatie_gebruiksrecht=document.indicatie_gebruiksrecht,
-            informatieobjecttype=_resolve_iot_for_document(document).to_dict(),
+            informatieobjecttype=resolve_iot_for_document(document).to_dict(),
             inhoud=document.inhoud,
             integriteit=document.integriteit,
             link=document.link,
