@@ -138,7 +138,7 @@ export class DocumentenService {
           ...(isDownloadCell) && {downloaden: {
               type: 'link',
               label: 'Downloaden',
-              value: element.downloadUrl,
+              url: element.downloadUrl,
             }},
           bewerken: showEditCell ? editCell : '',
           overschrijven: showOverwriteCell ? overwriteCell : '',
