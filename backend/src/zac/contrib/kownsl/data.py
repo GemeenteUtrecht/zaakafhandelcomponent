@@ -163,9 +163,10 @@ class ConfigureReviewRequest:
 class AdviceApprovalContext(Context):
     title: str
     zaak_informatie: Zaak
-    documents: List[InformatieObjectDocument]
+    documents_link: str
     review_type: str
     camunda_assigned_users: AssignedUsers
+    documents: Optional[List[InformatieObjectDocument]] = None
     id: Optional[UUID] = None
     previously_selected_documents: list = field(default_factory=list)
     previously_assigned_users: list = field(default_factory=list)

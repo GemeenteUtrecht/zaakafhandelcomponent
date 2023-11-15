@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 from uuid import UUID
 
+from django.urls import reverse
+
 from zgw_consumers.api_models.catalogi import ZaakType
 
 from zac.camunda.data import Task
@@ -18,6 +20,7 @@ from zgw.models.zrc import Zaak
 class ZaakContext(Context):
     zaak: Zaak
     documents: Optional[List[InformatieObjectDocument]] = None
+    documents_link: Optional[str] = ""
     zaaktype: Optional[ZaakType] = None
 
 
@@ -42,9 +45,18 @@ def get_zaak_context(
     )
     zaak = get_zaak(zaak_url=zaak_url)
     zaaktype = fetch_zaaktype(zaak.zaaktype) if require_zaaktype else None
-    docs_context = get_documenten_es(zaak) if require_documents else None
+    documents = get_documenten_es(zaak) if require_documents else None
+    doc_url = reverse(
+        "zaak-documents-es",
+        kwargs={
+            "bronorganisatie": zaak.bronorganisatie,
+            "identificatie": zaak.identificatie,
+        },
+    )
+    print(doc_url)
     return ZaakContext(
-        documents=docs_context,
+        documents=documents,
+        documents_link=doc_url,
         zaak=zaak,
         zaaktype=zaaktype,
     )
