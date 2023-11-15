@@ -99,7 +99,7 @@ export class DocumentenService {
       const showEditCell = (((!element.locked || element.currentUserIsEditing) && !zaak.resultaat) || (!zaak.resultaat && zaak.kanGeforceerdBijwerken)) && element.writeUrl;
       const showOverwriteCell = !element.locked && !zaak.resultaat;
 
-      const isDownloadCell = element.titel.toLowerCase().split('.')[1] === "msg";
+      const isDownloadCell = (element.titel.toLowerCase().split('.')[1] === ('msg' || 'pdf')) || (element.readUrl.length === 0 && element.downloadUrl.length > 0)
 
       const editCell: ExtensiveCell = {
         type: 'button',
