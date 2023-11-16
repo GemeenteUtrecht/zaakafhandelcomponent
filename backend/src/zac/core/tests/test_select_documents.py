@@ -1,4 +1,3 @@
-from os import path
 from unittest.mock import patch
 
 from django.urls import reverse_lazy
@@ -18,17 +17,13 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
-from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.core.models import CoreConfig
-from zac.elasticsearch.api import create_informatieobject_document, create_iot_document
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ..camunda.select_documents.serializers import (
     DocumentSelectContextSerializer,
     DocumentSelectTaskSerializer,
-    DocumentSerializer,
 )
 from ..camunda.select_documents.utils import (
     MissingVariable,
@@ -92,14 +87,6 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             return_value=cls.zaak.url,
         )
 
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}informatieobjecten/e3497eae-dfbe-47cc-8e6d-37cd37c8f236",
-            bestandsnaam="some-bestandsnaam.ext",
-        )
-        cls.document = factory(Document, document)
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
@@ -112,16 +99,6 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             omschrijving="bijlage",
             catalogus=catalogus_url,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-        )
-
-        cls.document.informatieobjecttype = factory(InformatieObjectType, documenttype)
-        cls.document_es = create_informatieobject_document(cls.document)
-        cls.document_es.informatieobjecttype = create_iot_document(
-            cls.document.informatieobjecttype
-        )
-        cls.patch_get_documenten = patch(
-            "zac.core.camunda.select_documents.context.get_documenten_es",
-            side_effect=[[cls.document_es], []],
         )
 
         catalogus_url = (
@@ -143,10 +120,6 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             "zac.core.camunda.select_documents.context.get_informatieobjecttypen_for_zaaktype",
             return_value=[factory(InformatieObjectType, documenttype)],
         )
-        fn, fext = path.splitext(cls.document.bestandsnaam)
-        cls.patch_get_supported_extensions = patch(
-            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-        )
 
     def setUp(self):
         super().setUp()
@@ -157,73 +130,26 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
         self.patch_get_process_zaak_url.start()
         self.addCleanup(self.patch_get_process_zaak_url.stop)
 
-        self.patch_get_documenten.start()
-        self.addCleanup(self.patch_get_documenten.stop)
-
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)
 
         self.patch_get_informatieobjecttypen_for_zaaktype.start()
         self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
 
-        self.patch_get_supported_extensions.start()
-        self.addCleanup(self.patch_get_supported_extensions.stop)
-
-    def test_select_document_serializer(self):
-        # Sanity check
-        serializer = DocumentSerializer(self.document)
-        self.assertEqual(
-            serializer.data,
-            {
-                "beschrijving": self.document.beschrijving,
-                "bestandsnaam": self.document.bestandsnaam,
-                "bestandsomvang": self.document.bestandsomvang,
-                "document_type": self.document.informatieobjecttype.omschrijving,
-                "download_url": reverse_lazy(
-                    "core:download-document",
-                    kwargs={
-                        "bronorganisatie": self.document.bronorganisatie,
-                        "identificatie": self.document.identificatie,
-                    },
-                ),
-                "read_url": get_dowc_url_from_obj(
-                    self.document, purpose=DocFileTypes.read
-                ),
-                "titel": self.document.titel,
-                "url": self.document.url,
-                "versie": self.document.versie,
-            },
-        )
-
     def test_select_documents_context_serializer(self):
         task = _get_task(**{"formKey": "zac:documentSelectie"})
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = DocumentSelectContextSerializer(instance=task_data)
         self.assertIn("context", serializer.data)
-        self.assertIn("documents", serializer.data["context"])
         self.assertEqual(
-            serializer.data["context"]["documents"],
-            [
-                {
-                    "beschrijving": self.document.beschrijving,
-                    "bestandsnaam": self.document.bestandsnaam,
-                    "bestandsomvang": self.document.bestandsomvang,
-                    "document_type": self.document.informatieobjecttype.omschrijving,
-                    "download_url": reverse_lazy(
-                        "core:download-document",
-                        kwargs={
-                            "bronorganisatie": self.document.bronorganisatie,
-                            "identificatie": self.document.identificatie,
-                        },
-                    ),
-                    "titel": self.document.titel,
-                    "url": self.document.url,
-                    "read_url": get_dowc_url_from_obj(
-                        self.document, purpose=DocFileTypes.read
-                    ),
-                    "versie": self.document.versie,
-                }
-            ],
+            serializer.data["context"]["documents_link"],
+            reverse_lazy(
+                "zaak-documents-es",
+                kwargs={
+                    "bronorganisatie": self.zaak.bronorganisatie,
+                    "identificatie": self.zaak.identificatie,
+                },
+            ),
         )
 
 

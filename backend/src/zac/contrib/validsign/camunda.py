@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from django.utils.translation import gettext_lazy as _
 
@@ -11,22 +11,22 @@ from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.core.api.fields import SelectDocumentsField
-from zac.core.camunda.select_documents.serializers import DocumentSerializer
-from zac.elasticsearch.documents import InformatieObjectDocument
 
 
 @dataclass
 class ValidSignContext(Context):
-    documents: List[InformatieObjectDocument]
+    documents_link: str
 
 
 @usertask_context_serializer
 class ValidSignContextSerializer(APIModelSerializer):
-    documents = DocumentSerializer(many=True)
+    documents_link = serializers.URLField(
+        help_text=_("URL-reference to paginated documents endpoint.")
+    )
 
     class Meta:
         model = ValidSignContext
-        fields = ("documents",)
+        fields = ("documents_link",)
 
 
 #
@@ -172,7 +172,7 @@ class ValidSignTaskSerializer(serializers.Serializer):
     ValidSignTaskSerializer,
 )
 def get_context(task: Task) -> ValidSignContext:
-    zaak_context = get_zaak_context(task, require_documents=True)
+    zaak_context = get_zaak_context(task)
     return ValidSignContext(
-        documents=zaak_context.documents,
+        documents_link=zaak_context.documents_link,
     )

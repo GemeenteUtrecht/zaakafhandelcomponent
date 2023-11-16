@@ -6,7 +6,6 @@ from django_camunda.utils import underscoreize
 from rest_framework import exceptions
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -65,26 +64,7 @@ class GetValidSignContextSerializersTests(APITestCase):
         super().setUpTestData()
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-        )
-        cls.documenttype = generate_oas_component(
-            "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-            omschrijving="bijlage",
-            catalogus=catalogus_url,
-        )
-
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-        )
-        cls.document = factory(Document, document)
-        cls.document.informatieobjecttype = factory(
-            InformatieObjectType, cls.documenttype
-        )
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -95,19 +75,18 @@ class GetValidSignContextSerializersTests(APITestCase):
 
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
-            documents=[
-                cls.document,
-            ],
+            documents_link=reverse(
+                "zaak-documents-es",
+                kwargs={
+                    "bronorganisatie": cls.zaak.bronorganisatie,
+                    "identificatie": cls.zaak.identificatie,
+                },
+            ),
         )
 
         cls.patch_get_zaak_context = patch(
             "zac.contrib.validsign.camunda.get_zaak_context",
             return_value=cls.zaak_context,
-        )
-
-        cls.patch_get_dowc_url_from_obj = patch(
-            "zac.contrib.dowc.fields.get_dowc_url_from_obj",
-            return_value="",
         )
 
         cls.task_endpoint = reverse(
@@ -119,16 +98,13 @@ class GetValidSignContextSerializersTests(APITestCase):
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
-        self.patch_get_dowc_url_from_obj.start()
-        self.addCleanup(self.patch_get_dowc_url_from_obj.stop)
 
     def test_valid_sign_context_serializer(self):
         task = _get_task(**{"formKey": "zac:validSign:configurePackage"})
         task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = ValidSignContextSerializer(instance=task_data)
         self.assertIn("context", serializer.data)
-        self.assertIn("documents", serializer.data["context"])
-        self.assertEqual(len(serializer.data["context"]["documents"]), 1)
+        self.assertIn("documents_link", serializer.data["context"])
 
 
 class ValidSignTaskSerializerTests(APITestCase):
@@ -153,6 +129,22 @@ class ValidSignTaskSerializerTests(APITestCase):
 
         cls.zaak = factory(Zaak, zaak)
 
+        cls.zaak_context = ZaakContext(
+            zaak=cls.zaak,
+            documents_link=reverse(
+                "zaak-documents-es",
+                kwargs={
+                    "bronorganisatie": cls.zaak.bronorganisatie,
+                    "identificatie": cls.zaak.identificatie,
+                },
+            ),
+        )
+
+        cls.patch_get_zaak_context = patch(
+            "zac.contrib.validsign.camunda.get_zaak_context",
+            return_value=cls.zaak_context,
+        )
+
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
             "drc",
@@ -164,16 +156,6 @@ class ValidSignTaskSerializerTests(APITestCase):
             "schemas/EnkelvoudigInformatieObject",
         )
         cls.document_2 = factory(Document, document)
-
-        cls.zaak_context = ZaakContext(
-            zaak=cls.zaak, documents=[cls.document_1, cls.document_2]
-        )
-
-        cls.patch_get_zaak_context = patch(
-            "zac.contrib.validsign.camunda.get_zaak_context",
-            return_value=cls.zaak_context,
-        )
-
         cls.patch_get_documenten = patch(
             "zac.core.api.validators.get_documenten_es",
             return_value=[cls.document_1, cls.document_2],

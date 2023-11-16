@@ -1,6 +1,5 @@
 from copy import deepcopy
 from datetime import date
-from os import path
 from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
@@ -22,8 +21,6 @@ from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
-from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
@@ -108,6 +105,13 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             documents=[
                 cls.document,
             ],
+            documents_link=reverse(
+                "zaak-documents-es",
+                kwargs={
+                    "bronorganisatie": cls.zaak.bronorganisatie,
+                    "identificatie": cls.zaak.identificatie,
+                },
+            ),
         )
         cls.patch_get_zaak_context = patch(
             "zac.contrib.kownsl.camunda.get_zaak_context",
@@ -116,18 +120,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
-        fn, fext = path.splitext(cls.document.bestandsnaam)
-        cls.patch_get_supported_extensions = patch(
-            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-        )
 
     def setUp(self):
         super().setUp()
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
-        self.patch_get_supported_extensions.start()
-        self.addCleanup(self.patch_get_supported_extensions.stop)
 
     def test_zaak_informatie_task_serializer(self):
         # Sanity check
@@ -156,30 +154,20 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
-        print(serializer.data["context"]["documents"])
+
         self.assertEqual(
             {
                 "camunda_assigned_users": {
                     "user_assignees": [],
                     "group_assignees": [],
                 },
-                "documents": [
-                    {
-                        "beschrijving": self.document.beschrijving,
-                        "bestandsnaam": self.document.bestandsnaam,
-                        "url": DOCUMENT_URL,
-                        "read_url": get_dowc_url_from_obj(
-                            self.document, purpose=DocFileTypes.read
-                        ),
-                        "download_url": reverse(
-                            "core:download-document",
-                            kwargs={
-                                "bronorganisatie": self.document.bronorganisatie,
-                                "identificatie": self.document.identificatie,
-                            },
-                        ),
-                    }
-                ],
+                "documents_link": reverse(
+                    "zaak-documents-es",
+                    kwargs={
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "identificatie": self.zaak.identificatie,
+                    },
+                ),
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.advice,
@@ -219,23 +207,13 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         }
                     ],
                 },
-                "documents": [
-                    {
-                        "beschrijving": self.document.beschrijving,
-                        "bestandsnaam": self.document.bestandsnaam,
-                        "url": DOCUMENT_URL,
-                        "read_url": get_dowc_url_from_obj(
-                            self.document, purpose=DocFileTypes.read
-                        ),
-                        "download_url": reverse(
-                            "core:download-document",
-                            kwargs={
-                                "bronorganisatie": self.document.bronorganisatie,
-                                "identificatie": self.document.identificatie,
-                            },
-                        ),
-                    }
-                ],
+                "documents_link": reverse(
+                    "zaak-documents-es",
+                    kwargs={
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "identificatie": self.zaak.identificatie,
+                    },
+                ),
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
@@ -281,23 +259,13 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                     ],
                     "group_assignees": [],
                 },
-                "documents": [
-                    {
-                        "beschrijving": self.document.beschrijving,
-                        "bestandsnaam": self.document.bestandsnaam,
-                        "url": DOCUMENT_URL,
-                        "read_url": get_dowc_url_from_obj(
-                            self.document, purpose=DocFileTypes.read
-                        ),
-                        "download_url": reverse(
-                            "core:download-document",
-                            kwargs={
-                                "bronorganisatie": self.document.bronorganisatie,
-                                "identificatie": self.document.identificatie,
-                            },
-                        ),
-                    }
-                ],
+                "documents_link": reverse(
+                    "zaak-documents-es",
+                    kwargs={
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "identificatie": self.zaak.identificatie,
+                    },
+                ),
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
@@ -360,7 +328,13 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                     "user_assignees": [],
                     "group_assignees": [],
                 },
-                "documents": [],
+                "documents_link": reverse(
+                    "zaak-documents-es",
+                    kwargs={
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "identificatie": self.zaak.identificatie,
+                    },
+                ),
                 "id": REVIEW_REQUEST["id"],
                 "previously_assigned_users": [
                     {

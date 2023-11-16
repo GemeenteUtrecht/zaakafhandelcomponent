@@ -16,12 +16,9 @@ from zac.api.context import get_zaak_context
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import register, usertask_context_serializer
-from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.fields import DowcUrlField
 from zac.contrib.kownsl.api import get_review_request
 from zac.core.api.fields import SelectDocumentsField
 from zac.core.camunda.utils import resolve_assignee
-from zac.core.fields import DownloadDocumentURLField
 from zac.core.utils import build_absolute_url
 from zgw.models.zrc import Zaak
 
@@ -47,19 +44,6 @@ class ZaakInformatieTaskSerializer(APIModelSerializer):
             "omschrijving",
             "toelichting",
         )
-
-
-class DocumentUserTaskSerializer(serializers.Serializer):
-    beschrijving = serializers.CharField(help_text=_("Description."))
-    bestandsnaam = serializers.CharField(help_text=_("Filename."))
-    url = serializers.URLField(help_text=_("URL-reference to INFORMATIEOBJECT."))
-    read_url = DowcUrlField(
-        purpose=DocFileTypes.read,
-        help_text=_(
-            "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
-        ),
-    )
-    download_url = DownloadDocumentURLField()
 
 
 class CamundaAssignedUsersSerializer(APIModelSerializer):
@@ -199,7 +183,9 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
     camunda_assigned_users = CamundaAssignedUsersSerializer(
         help_text=_("Users or groups assigned from within the camunda process.")
     )
-    documents = DocumentUserTaskSerializer(many=True)
+    documents_link = serializers.URLField(
+        help_text=_("URL-reference to paginated documents endpoint.")
+    )
     previously_assigned_users = ReadAssignedUsersSerializer(
         help_text=_("A list of previously assigned users"), many=True, required=False
     )
@@ -221,7 +207,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
         model = AdviceApprovalContext
         fields = (
             "camunda_assigned_users",
-            "documents",
+            "documents_link",
             "id",
             "previously_assigned_users",
             "review_type",
@@ -484,18 +470,21 @@ def get_review_request_from_task(task: Task) -> Optional[ReviewRequest]:
 
 
 def get_review_context(task: Task) -> AdviceApprovalContext:
-    zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
+    rr = get_review_request_from_task(task)
+    zaak_context = get_zaak_context(
+        task, require_zaaktype=True, require_documents=True if rr else False
+    )
     context = {
         "camunda_assigned_users": get_camunda_assigned_users(task),
-        "documents": zaak_context.documents,
+        "documents_link": zaak_context.documents_link,
         "title": f"{zaak_context.zaaktype.omschrijving} - {zaak_context.zaaktype.versiedatum}",
         "zaak_informatie": zaak_context.zaak,
     }
 
-    if rr := get_review_request_from_task(task):
+    if rr:
         context["id"] = rr.id
         context["documents"] = [
-            doc for doc in zaak_context.documents if doc.url in rr.documents
+            doc.url for doc in zaak_context.documents if doc.url in rr.documents
         ]
         context["previously_assigned_users"] = rr.assigned_users
         context["previously_selected_documents"] = rr.documents
