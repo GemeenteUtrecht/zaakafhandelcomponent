@@ -1,6 +1,5 @@
 from copy import deepcopy
 from datetime import date
-from os import path
 from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
@@ -121,18 +120,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
-        fn, fext = path.splitext(cls.document.bestandsnaam)
-        cls.patch_get_supported_extensions = patch(
-            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-        )
 
     def setUp(self):
         super().setUp()
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
-        self.patch_get_supported_extensions.start()
-        self.addCleanup(self.patch_get_supported_extensions.stop)
 
     def test_zaak_informatie_task_serializer(self):
         # Sanity check

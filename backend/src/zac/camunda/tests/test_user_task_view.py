@@ -1,5 +1,4 @@
 import uuid
-from os import path
 from pathlib import Path
 from unittest.mock import patch
 
@@ -149,9 +148,14 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype_obj,
-            documents=[
-                cls.document_es,
-            ],
+            documents_link=reverse(
+                "zaak-documents-es",
+                kwargs={
+                    "bronorganisatie": cls.zaak.bronorganisatie,
+                    "identificatie": cls.zaak.identificatie,
+                },
+            ),
+            documents=[],
         )
 
         cls.patch_get_process_zaak_url = patch(
@@ -175,10 +179,6 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         cls.patch_get_camunda_client = [
             patch("django_camunda.api.get_client", return_value=_get_camunda_client())
         ]
-        fn, fext = path.splitext(cls.document.bestandsnaam)
-        cls.patch_get_supported_extensions = patch(
-            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-        )
 
     def setUp(self):
         super().setUp()
@@ -189,9 +189,6 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
 
         self.patch_get_zaaktype.start()
         self.addCleanup(self.patch_get_zaaktype.stop)
-
-        self.patch_get_supported_extensions.start()
-        self.addCleanup(self.patch_get_supported_extensions.stop)
 
         self.patch_get_informatieobjecttypen_for_zaaktype.start()
         self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
@@ -234,32 +231,12 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.select_documents.context.get_zaak",
             return_value=self.zaak,
         ):
-            with patch(
-                "zac.core.camunda.select_documents.context.get_documenten_es",
-                side_effect=[[self.document_es], []],
-            ):
-                response = self.client.get(self.task_endpoint)
+            response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
-        self.assertIn("documents", data["context"].keys())
-        self.assertEqual(
-            sorted(list(data["context"]["documents"][0].keys())),
-            sorted(
-                [
-                    "beschrijving",
-                    "bestandsnaam",
-                    "bestandsomvang",
-                    "documentType",
-                    "downloadUrl",
-                    "readUrl",
-                    "titel",
-                    "url",
-                    "versie",
-                ]
-            ),
-        )
+        self.assertIn("documentsLink", data["context"].keys())
 
     @patch(
         "zac.camunda.api.views.get_task",
@@ -303,7 +280,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "camundaAssignedUsers",
                     "zaakInformatie",
                     "title",
-                    "documents",
+                    "documentsLink",
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
@@ -360,7 +337,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "camundaAssignedUsers",
                     "zaakInformatie",
                     "title",
-                    "documents",
+                    "documentsLink",
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
@@ -373,10 +350,6 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         self.assertEqual(
             sorted(list(data["context"]["zaakInformatie"].keys())),
             sorted(["omschrijving", "toelichting"]),
-        )
-        self.assertEqual(
-            sorted(list(data["context"]["documents"][0].keys())),
-            sorted(["beschrijving", "bestandsnaam", "readUrl", "url", "downloadUrl"]),
         )
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -468,7 +441,13 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             data["context"],
             {
                 "camundaAssignedUsers": {"userAssignees": [], "groupAssignees": []},
-                "documents": [],
+                "documentsLink": reverse(
+                    "zaak-documents-es",
+                    kwargs={
+                        "bronorganisatie": self.zaak.bronorganisatie,
+                        "identificatie": self.zaak.identificatie,
+                    },
+                ),
                 "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
                 "previouslyAssignedUsers": [
                     {
@@ -547,24 +526,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
-        self.assertIn("documents", data["context"].keys())
-
-        self.assertEqual(
-            sorted(list(data["context"]["documents"][0].keys())),
-            sorted(
-                [
-                    "readUrl",
-                    "downloadUrl",
-                    "bestandsnaam",
-                    "bestandsomvang",
-                    "documentType",
-                    "beschrijving",
-                    "titel",
-                    "url",
-                    "versie",
-                ]
-            ),
-        )
+        self.assertIn("documentsLink", data["context"].keys())
 
     @patch(
         "zac.camunda.api.views.get_task",
