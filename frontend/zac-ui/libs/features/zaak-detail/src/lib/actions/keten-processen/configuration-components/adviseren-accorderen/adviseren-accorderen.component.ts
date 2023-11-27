@@ -1,14 +1,21 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../../models/task-context';
-import { ApplicationHttpClient } from '@gu/services';
+import { ApplicationHttpClient, ZaakService } from '@gu/services';
 import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
-import { atleastOneValidator } from '@gu/utils';
-import {ReadWriteDocument, UserGroupDetail, UserSearchResult} from "@gu/models";
-import { ModalService, SnackbarService } from '@gu/components';
+import {
+  Document,
+  ListDocuments,
+  ReadWriteDocument,
+  RowData,
+  Table,
+  UserGroupDetail,
+  UserSearchResult,
+  Zaak
+} from '@gu/models';
+import { ModalService, PaginatorComponent, SnackbarService } from '@gu/components';
 import { KownslSummaryComponent } from '../../../adviseren-accorderen/kownsl-summary.component';
-import { lintInitGenerator } from '@nrwl/linter';
 
 /**
  * <gu-config-adviseren-accorderen [taskContextData]="taskContextData"></gu-config-adviseren-accorderen>
@@ -24,7 +31,8 @@ import { lintInitGenerator } from '@nrwl/linter';
   templateUrl: './adviseren-accorderen.component.html',
   styleUrls: ['../configuration-components.scss']
 })
-export class AdviserenAccorderenComponent implements OnInit, OnChanges {
+export class AdviserenAccorderenComponent implements OnChanges {
+  @ViewChild(PaginatorComponent) paginator: PaginatorComponent;
   @Input() taskContextData: TaskContextData;
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild(KownslSummaryComponent) kownslSummaryComponent: KownslSummaryComponent;
@@ -34,7 +42,22 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     approval: 'Accordeurs'
   }
   reviewType: 'advice' | 'approval';
+  tableHead = [
+    '',
+    'Bestandsnaam',
+    'Versie',
+    'Auteur',
+    'Informatieobjecttype',
+    'Vertrouwelijkheidaanduiding',
+  ]
 
+  tableData: Table = new Table(this.tableHead, []);
+  page = 1;
+
+  sortValue: any;
+  paginatedDocsData: ListDocuments;
+  documentsData: any;
+  selectedDocuments: string[] = [];
   steps = 1;
   minDate = new Date();
   searchResultUsers: UserSearchResult[];
@@ -54,15 +77,12 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     private modalService: ModalService,
     private ketenProcessenService: KetenProcessenService,
     private snackbarService: SnackbarService,
+    private zaakService: ZaakService,
   ) {}
 
   //
   // Getters / setters.
   //
-
-  get documents(): FormArray {
-    return this.assignUsersForm.get('documents') as FormArray;
-  };
 
   get assignedUsers(): FormArray {
     return this.assignUsersForm.get('assignedUsers') as FormArray;
@@ -97,15 +117,6 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   //
 
   /**
-   * A lifecycle hook that is called after Angular has initialized all data-bound properties of a directive. Define an
-   * ngOnInit() method to handle any additional initialization tasks.
-   */
-  ngOnInit() {
-    // this.searchUsers();
-    // this.searchUserGroups();
-  }
-
-  /**
    * A lifecycle hook that is called when any data-bound property of a directive changes. Define an ngOnChanges() method
    * to handle the changes.
    */
@@ -116,10 +127,10 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       const predefinedUsersArray = [this.addAssignUsersStep(true)];
 
       this.assignUsersForm = this.fb.group({
-        documents: this.addDocumentCheckboxes(),
         assignedUsers: this.fb.array(predefinedUsersArray),
         toelichting: this.fb.control("", [Validators.maxLength(4000)])
       })
+      this.fetchDocuments();
       this.checkPredefinedAssignees();
       this.addPreviouslyAssignedUsersStep();
     }
@@ -128,6 +139,47 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   //
   // Context.
   //
+
+  fetchDocuments(page = 1, sortValue?) {
+    this.zaakService.listTaskDocuments(this.taskContextData.context.documentsLink, page, sortValue).subscribe(data => {
+      this.tableData = this.formatTableData(data.results);
+      this.paginatedDocsData = data;
+      this.documentsData = data.results;
+    });
+  }
+
+  formatTableData(data) {
+    const tableData: Table = new Table(this.tableHead, []);
+    tableData.bodyData = data.map((element: Document) => {
+      const cellData: RowData = {
+        cellData: {
+          checkbox: {
+            type: 'checkbox',
+            checked: true,
+            value: element.url
+          },
+          bestandsnaam: {
+            type: 'text',
+            label: element.titel,
+          },
+          versie: {
+            type: 'text',
+            style: 'no-minwidth',
+            label: String(element.versie)
+          },
+          auteur: element.auteur,
+          type: element.informatieobjecttype['omschrijving'],
+          vertrouwelijkheidaanduiding: {
+            type: 'text',
+            label: element.vertrouwelijkheidaanduiding,
+          },
+        }
+      }
+      return cellData;
+    })
+
+    return tableData
+  }
 
   /**
    * Send configuration data to API.
@@ -145,18 +197,6 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
       this.error = error.error;
       this.reportError(error);
     })
-  }
-
-  /**
-   * Creates form controls for checkboxes.
-   * @returns {FormArray}
-   */
-  addDocumentCheckboxes() {
-    const arr = this.taskContextData.context.documents.map((doc) => {
-      // Set checkbox control on true if the document was selected in previous configuration
-      return this.fb.control(this.taskContextData.context.previouslySelectedDocuments.includes(doc.url));
-    });
-    return this.fb.array(arr, atleastOneValidator());
   }
 
   /**
@@ -282,6 +322,35 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   //
 
   /**
+   * When paginator fires
+   * @param uuid
+   * @param page
+   */
+  onPageSelect(page) {
+    this.page = page.pageIndex + 1;
+    this.fetchDocuments(this.page, this.sortValue);
+  }
+
+  /**
+   * When table is sorted
+   * @param sortValue
+   */
+  sortTable(sortValue) {
+    this.paginator.firstPage();
+    this.page = 1;
+    this.sortValue = sortValue;
+    this.fetchDocuments(this.page, this.sortValue);
+  }
+
+  /**
+   * On checkbox / doc select
+   * @param event
+   */
+  onDocSelect(event) {
+    this.selectedDocuments = event;
+  }
+
+  /**
    * Adds a step to the form.
    * @param i
    */
@@ -300,19 +369,6 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   deleteStep() {
     this.steps--
     this.assignedUsers.removeAt(this.assignedUsers.length - 1);
-  }
-
-  /**
-   * Redirects to url on click.
-   * @param url
-   */
-  handleDocumentClick(url) {
-    this.ketenProcessenService.readDocument(url).subscribe((res: ReadWriteDocument) => {
-      window.open(res.magicUrl, "_blank");
-    }, error => {
-      this.errorMessage = error.error.detail ? error.error.detail : "Er is een fout opgetreden";
-      this.reportError(error);
-    });
   }
 
   /**
@@ -353,10 +409,6 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
   submitForm() {
     this.isSubmitting = true;
 
-    const selectedDocuments = this.documents.value
-      .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
-      .filter(v => v !== null);
-
     const assignedUsers = this.assignedUsers.controls
       .map( (step, i) => {
         const deadline = this.datePipe.transform(this.assignedDeadlineControl(i).value, "yyyy-MM-dd");
@@ -376,7 +428,7 @@ export class AdviserenAccorderenComponent implements OnInit, OnChanges {
     const formData = {
       form: this.taskContextData.form,
       assignedUsers: assignedUsers,
-      selectedDocuments: selectedDocuments,
+      selectedDocuments: this.selectedDocuments,
       toelichting: toelichting,
       id: this.taskContextData.context.previouslyAssignedUsers.length > 0 ? this.taskContextData.context.id : null
     };

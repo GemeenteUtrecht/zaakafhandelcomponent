@@ -69,15 +69,18 @@
   }
 
   &__cell {
-    padding: 0 12px;
+    padding: 0 10px;
     white-space: pre;
     word-wrap: break-word;
-    max-width: 200px;
+    max-width: 250px;
     .cell__text {
-      min-width: 100px;
+      min-width: 80px;
       span {
         white-space: pre-line;
       }
+    }
+    .cell__no-minwidth {
+      min-width: 0;
     }
   }
 
@@ -130,7 +133,7 @@
       }
       span {
         display: block;
-        min-width: 100px;
+        //min-width: 100px;
         max-width: 200px;
         word-break: normal;
         white-space: normal;

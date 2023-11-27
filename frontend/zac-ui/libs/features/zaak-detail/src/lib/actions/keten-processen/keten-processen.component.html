@@ -33,7 +33,7 @@
                 <!-- Description -->
                 <div class="taak__detail mr-md-2">
                   <p class="m-0 p--bold p--primary" *ngIf="task.name.split(':')[0] !== 'Open bijdragezaak'">{{task.name | capitalize}}</p>
-                  <a class="anchor action-link" *ngIf="task.formKey === 'zac:doRedirect' && task.name.split(':')[0] === 'Open bijdragezaak'" (click)="executeTask(task.id)">{{task.name | capitalize}}</a>
+                  <a class="anchor action-link d-block mr-2" *ngIf="task.formKey === 'zac:doRedirect' && task.name.split(':')[0] === 'Open bijdragezaak'" (click)="executeTask(task.id)">{{task.name | capitalize}}</a>
 
                   <!-- Double click shows id. -->
                   <label class="label label--small mb-2" [ngClass]="(newestTaskId === task.id ? 'label--accent' : '')" (dblclick)="taskDblClick(task)">
@@ -211,9 +211,9 @@
                                           (successReload)="closeModal()"
           ></gu-config-adviseren-accorderen>
 
-          <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-document-select>
+          <gu-document-select *ngSwitchCase="'zac:documentSelectie'" [zaak]="zaak" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-document-select>
 
-          <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-sign-document>
+          <gu-sign-document *ngSwitchCase="'zac:validSign:configurePackage'" [zaak]="zaak" [taskContextData]="taskContextData" (successReload)="closeModal()"></gu-sign-document>
 
           <gu-redirect *ngSwitchCase="'zac:doRedirect'" [taskContextData]="taskContextData" [target]="doRedirectTarget" (successReload)="closeModal()"></gu-redirect>
 

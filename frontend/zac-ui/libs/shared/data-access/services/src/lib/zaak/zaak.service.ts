@@ -129,6 +129,23 @@ export class ZaakService {
     return this.http.Post<ListDocuments>(endpoint);
   }
 
+
+  /**
+   * List task documents.
+   * @param {string} url
+   * @param {number} page
+   * @param {string} sortValue
+   * @return {Observable}
+   */
+  listTaskDocuments(url, page, sortData): Observable<ListDocuments> {
+    const pageValue = page ? `?page=${page}` : '';
+    const sortOrder = sortData?.order === 'desc' ? '-' : '';
+    const sortValue = sortData ? sortData.value?.toLowerCase() : '';
+    const sortParameter = sortData ? `&ordering=${sortOrder}${sortValue}` : '';
+    const endpoint = encodeURI(`${url}${pageValue}${sortParameter}`);
+    return this.http.Post<ListDocuments>(endpoint);
+  }
+
   /**
    * List case properties.
    * @param {string} bronorganisatie

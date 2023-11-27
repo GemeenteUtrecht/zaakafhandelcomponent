@@ -1,11 +1,10 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { TaskContextData } from '../../../../../models/task-context';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ApplicationHttpClient } from '@gu/services';
+import { ApplicationHttpClient, ZaakService } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
-import { atleastOneValidator } from '@gu/utils';
-import { UserSearchResult } from '@gu/models';
-import { ModalService } from '@gu/components';
+import { Document, ListDocuments, RowData, Table, UserSearchResult, Zaak } from '@gu/models';
+import { ModalService, PaginatorComponent } from '@gu/components';
 
 @Component({
   selector: 'gu-sign-document',
@@ -13,6 +12,9 @@ import { ModalService } from '@gu/components';
   styleUrls: ['../configuration-components.scss']
 })
 export class SignDocumentComponent implements OnChanges {
+  @ViewChild(PaginatorComponent) paginator: PaginatorComponent;
+
+  @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -21,6 +23,23 @@ export class SignDocumentComponent implements OnChanges {
   items: UserSearchResult[] = [];
 
   signDocumentForm: FormGroup;
+
+  tableHead = [
+    '',
+    'Bestandsnaam',
+    'Versie',
+    'Auteur',
+    'Informatieobjecttype',
+    'Vertrouwelijkheidaanduiding',
+  ]
+
+  tableData: Table = new Table(this.tableHead, []);
+  page = 1;
+
+  sortValue: any;
+  paginatedDocsData: ListDocuments;
+  documentsData: any;
+  selectedDocuments: string[] = [];
 
   isSubmitting: boolean;
   submitSuccess: boolean;
@@ -31,16 +50,91 @@ export class SignDocumentComponent implements OnChanges {
     private http: ApplicationHttpClient,
     private fb: FormBuilder,
     private ketenProcessenService: KetenProcessenService,
-    private modalService: ModalService
+    private modalService: ModalService,
+    private zaakService: ZaakService,
   ) { }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.taskContextData.previousValue !== this.taskContextData ) {
       this.signDocumentForm = this.fb.group({
-        documents: this.addDocumentCheckboxes(),
         assignedUsers: this.fb.array([this.addAssignUsersStep()]),
       })
+      this.fetchDocuments();
     }
+  }
+
+  fetchDocuments(page = 1, sortValue?) {
+    this.zaakService.listTaskDocuments(this.taskContextData.context.documentsLink, page, sortValue).subscribe(data => {
+      this.tableData = this.formatTableData(data.results);
+      this.paginatedDocsData = data;
+      this.documentsData = data.results;
+    });
+  }
+
+  formatTableData(data) {
+    const tableData: Table = new Table(this.tableHead, []);
+    tableData.bodyData = data.map((element: Document) => {
+      const cellData: RowData = {
+        cellData: {
+          checkbox: {
+            type: 'checkbox',
+            checked: true,
+            value: element.url
+          },
+          bestandsnaam: {
+            type: 'text',
+            label: element.titel,
+          },
+          versie: {
+            type: 'text',
+            style: 'no-minwidth',
+            label: String(element.versie)
+          },
+          auteur: element.auteur,
+          type: element.informatieobjecttype['omschrijving'],
+          vertrouwelijkheidaanduiding: {
+            type: 'text',
+            label: element.vertrouwelijkheidaanduiding,
+          },
+        }
+      }
+      return cellData;
+    })
+
+    return tableData
+  }
+
+  //
+  // Events.
+  //
+
+  /**
+   * When paginator fires
+   * @param uuid
+   * @param page
+   */
+  onPageSelect(page) {
+    this.page = page.pageIndex + 1;
+    this.fetchDocuments(this.page, this.sortValue);
+  }
+
+  /**
+   * When table is sorted
+   * @param sortValue
+   */
+  sortTable(sortValue) {
+    this.paginator.firstPage();
+    this.page = 1;
+    this.sortValue = sortValue;
+    this.fetchDocuments(this.page, this.sortValue);
+  }
+
+  /**
+   * On checkbox / doc select
+   * @param event
+   */
+  onDocSelect(event) {
+    this.selectedDocuments = event;
   }
 
   addStep() {
@@ -62,9 +156,6 @@ export class SignDocumentComponent implements OnChanges {
   submitForm() {
     this.isSubmitting = true;
 
-    const selectedDocuments = this.documents.value
-      .map((checked, i) => checked ? this.taskContextData.context.documents[i].url : null)
-      .filter(v => v !== null);
     const assignedUsers = this.assignedUsers.controls
       .map( (step, i) => {
         return {
@@ -77,7 +168,7 @@ export class SignDocumentComponent implements OnChanges {
     const formData = {
       form: this.taskContextData.form,
       assignedUsers: assignedUsers,
-      selectedDocuments: selectedDocuments,
+      selectedDocuments: this.selectedDocuments,
     };
     this.putForm(formData);
   }
@@ -96,13 +187,6 @@ export class SignDocumentComponent implements OnChanges {
     })
   }
 
-  addDocumentCheckboxes() {
-    const arr = this.taskContextData.context.documents.map(() => {
-      return this.fb.control(false);
-    });
-    return this.fb.array(arr, atleastOneValidator());
-  }
-
   addAssignUsersStep() {
     return this.fb.group({
       username: ["", Validators.minLength(1)],
@@ -111,10 +195,6 @@ export class SignDocumentComponent implements OnChanges {
       email: ["", {validators: [Validators.email, Validators.required], updateOn: 'blur'}],
     })
   }
-
-  get documents(): FormArray {
-    return this.signDocumentForm.get('documents') as FormArray;
-  };
 
   get assignedUsers(): FormArray {
     return this.signDocumentForm.get('assignedUsers')  as FormArray;

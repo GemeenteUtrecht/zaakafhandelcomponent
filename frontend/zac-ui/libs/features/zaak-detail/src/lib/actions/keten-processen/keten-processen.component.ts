@@ -8,12 +8,14 @@ import {
   OnDestroy,
   ViewEncapsulation, SimpleChanges, HostListener
 } from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../../models/task-context';
 import {KetenProcessenService, SendMessageForm} from './keten-processen.service';
 import {Task, User, Zaak} from '@gu/models';
 import {UserService, ZaakService} from '@gu/services';
+import { fromEvent } from 'rxjs';
+import { logger, Logger } from 'codelyzer/util/logger';
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>
@@ -89,6 +91,8 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
 
   hasCancelCaseMessage: boolean;
 
+  componentIsVisible = false;
+
   /** @type {string} Idle state. */
   idleState = "NOT_STARTED";
 
@@ -108,6 +112,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   ngOnChanges(changes: SimpleChanges): void {
     this.route.params.subscribe(params => {
+      if (params['tabId'] === 'acties') {
+        this.componentIsVisible = true;
+      }
       this.bronorganisatie = params['bronorganisatie'];
       this.identificatie = params['identificatie'];
 
@@ -172,7 +179,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   async fetchPollProcesses(): Promise<void> {
     let currentTaskIds;
-    if (this.isPolling) {
+    if (this.isPolling && this.componentIsVisible) {
       // Fetch processes.
       this.ketenProcessenService.getTasks(this.mainZaakUrl).subscribe(async resData => {
 
@@ -281,10 +288,12 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   fetchMessages() {
     this.ketenProcessenService.getMessages(this.mainZaakUrl)
       .subscribe(res => {
-        this.messages = res[0].messages;
-        this.setCloseCaseMessage(this.messages);
-        // Process instance ID for API calls
-        this.processInstanceId = res[0].id;
+        if (res.length > 0) {
+          this.messages = res[0].messages;
+          this.setCloseCaseMessage(this.messages);
+          // Process instance ID for API calls
+          this.processInstanceId = res[0].id;
+        }
       })
   }
 
@@ -535,6 +544,19 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   checkActionsVisibility() {
     this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
     this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+  }
+
+  /**
+   * Checks if this component is visible
+   * @param isVisible
+   */
+  public setIsVisible(isVisible){
+    this.componentIsVisible = isVisible;
+    if (this.componentIsVisible) {
+      this.startPollingProcesses();
+    } else {
+      this.cancelPolling();
+    }
   }
 
   //

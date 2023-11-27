@@ -18,9 +18,18 @@
 
         <!-- Data -->
         <ng-container *ngFor="let column of columns" [matColumnDef]="column.name">
-            <th class="table__cell" mat-header-cell *matHeaderCellDef mat-sort-header>{{column.label|titlecase}}</th>
+          {{column.name}}
+            <ng-container *ngIf="column.label !== ''">
+              <th class="table__cell" mat-header-cell *matHeaderCellDef mat-sort-header>{{column.label|titlecase}}</th>
+            </ng-container>
+            <ng-container *ngIf="column.label === ''">
+              <th class="table__cell" mat-header-cell *matHeaderCellDef>
+                {{''}}
+              </th>
+            </ng-container>
             <td class="table__cell" mat-cell *matCellDef="let dataRow">
-                <div [ngSwitch]="dataRow[column.name].type" [ngClass]="{'cell__text': dataRow[column.name].type === 'text'}">
+                <div [ngSwitch]="dataRow[column.name].type"
+                     [ngClass]="{'cell__text': dataRow[column.name].type === 'text', 'cell__no-minwidth': dataRow[column.name].style === 'no-minwidth'}">
 
                     <!-- Button -->
                     <ng-container *ngSwitchCase="'button'">
@@ -78,7 +87,7 @@
 
                     <!-- Table -->
                     <ng-container *ngSwitchCase="'select'">
-                      <gu-multiselect class="mb-1" [items]="dataRow[column.name].choices" [selectedValue]="dataRow[column.name].value" bindValue="value" bindLabel="label" (change)="onColumnChanged(dataRow[column.name], $event)"></gu-multiselect>
+                      <gu-multiselect class="mb-1" [clearable]="false" [items]="dataRow[column.name].choices" [selectedValue]="dataRow[column.name].value" bindValue="value" bindLabel="label" (change)="onColumnChanged(dataRow[column.name], $event)"></gu-multiselect>
                     </ng-container>
 
                     <!-- Table -->
@@ -88,9 +97,19 @@
                       </ng-container>
                     </ng-container>
 
+                    <ng-container *ngSwitchCase="'checkbox'">
+                      <div class='mt-2'>
+                        <gu-checkbox
+                          [value]="dataRow[column.name].value"
+                          (change)="updateSelectedValues($event)"
+                          [checked]="isInSelectedValues(dataRow[column.name].value)"
+                        ></gu-checkbox>
+                      </div>
+                    </ng-container>
+
                     <!-- Text -->
                     <ng-template ngSwitchDefault>
-                      <span class="cell__text">{{dataRow[column.name].label}}</span>
+                      <span>{{dataRow[column.name].label}}</span>
                     </ng-template>
                 </div>
             </td>

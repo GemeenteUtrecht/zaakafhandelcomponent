@@ -32,11 +32,17 @@ export interface ExtensiveCell {
   iconInfo?: string;
   label?: string | number;
   target?: '_blank' | '_parent' | '_self' | '_top' | string
-  type: 'button' | 'chip' | 'icon' | 'link' | 'select' | 'table' | 'text' | 'date';
+  type: 'button' | 'chip' | 'icon' | 'link' | 'select' | 'table' | 'text' | 'date' | 'checkbox';
   url?: string;
   value?: any;
   date?: string;
   sortValue?: any;
+
+  error?: string;
+
+  checked?: boolean;
+
+  style?: 'no-minwidth'
 
   /** @type {Function} When type is "select", an onChange callback can be specified. */
   choices? : Choice[]
