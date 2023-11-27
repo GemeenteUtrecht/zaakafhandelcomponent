@@ -12,6 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {UserPermissionsComponent} from './overview/user-permissions/user-permissions.component';
 import {BetrokkenenComponent} from './overview/betrokkenen/betrokkenen.component';
 import {DocumentenComponent} from './documenten/documenten.component';
+import { KetenProcessenComponent } from './actions/keten-processen/keten-processen.component';
 
 
 /**
@@ -42,6 +43,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
   @ViewChild(UserPermissionsComponent) UserPermissionsComponent: UserPermissionsComponent;
   @ViewChild(BetrokkenenComponent) betrokkenenComponent: BetrokkenenComponent;
   @ViewChild(DocumentenComponent) documentenComponent: DocumentenComponent;
+  @ViewChild(KetenProcessenComponent) ketenProcessenComponent: KetenProcessenComponent;
 
   /** @type {string} Message to show when access request is successfully submitted. */
   readonly accessRequestSuccessMessage: string = 'Je aanvraag is verstuurd.';
@@ -292,6 +294,11 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
   }
 
   setUrl(tab) {
+    if (tab === 'acties') {
+      this.ketenProcessenComponent.setIsVisible(true);
+    } else {
+      this.ketenProcessenComponent.setIsVisible(false);
+    }
     this.location.go(this.getTabLink(tab))
   }
 

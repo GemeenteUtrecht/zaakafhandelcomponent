@@ -1,11 +1,24 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from '@angular/core';
 import { TaskContextData } from '../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ApplicationHttpClient } from '@gu/services';
+import { ApplicationHttpClient, ZaakService } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
-import { atleastOneValidator } from '@gu/utils';
-import { InformatieObjectType, ReadWriteDocument } from '@gu/models';
-import { ModalService } from '@gu/components';
+import {
+  Document,
+  InformatieObjectType,
+  ListDocuments,
+  ReadWriteDocument,
+  RowData,
+  Table, Zaak
+} from '@gu/models';
+import { Choice, ModalService, PaginatorComponent } from '@gu/components';
 
 /**
  * <gu-document-select [taskContextData]="taskContextData"></gu-document-select>
@@ -22,43 +35,46 @@ import { ModalService } from '@gu/components';
   styleUrls: ['../configuration-components.scss']
 })
 export class DocumentSelectComponent implements OnChanges {
+  @ViewChild(PaginatorComponent) paginator: PaginatorComponent;
+  @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  selectDocumentsForm: FormGroup
+  allData: Document[] = [];
+  tableHead = [
+    '',
+    'Bestandsnaam',
+    'Versie',
+    'Auteur',
+    'Informatieobjecttype',
+    'Vertrouwelijkheidaanduiding',
+  ]
+  tableData: Table = new Table(this.tableHead, []);
+  page = 1;
+
+  sortValue: any;
+  paginatedDocsData: ListDocuments;
+  documentsData: any;
+  selectedDocuments: string[] = [];
+  changedDocumentTypes = {}
+
+  hasDocTypeError = false;
+  docTypeErrorMessage: string;
 
   isSubmitting: boolean;
   submitSuccess: boolean;
   submitHasError: boolean;
   submitErrorMessage: string;
 
-  openSelectorsArray: number[] = [];
+  fetchedPages = [];
 
   constructor(
     private http: ApplicationHttpClient,
-    private fb: FormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private modalService: ModalService,
-    private cdRef: ChangeDetectorRef
+    private zaakService: ZaakService,
   ) { }
-
-  //
-  // Getters / setters.
-  //
-
-
-  get documents(): FormArray {
-    return this.selectDocumentsForm.get('documents') as FormArray;
-  };
-
-  get documentTypes(): FormArray {
-    return this.selectDocumentsForm.get('documentTypes') as FormArray;
-  };
-
-  documentType(index: number): FormControl {
-    return this.documentTypes.at(index) as FormControl;
-  }
 
   //
   // Angular lifecycle.
@@ -69,15 +85,8 @@ export class DocumentSelectComponent implements OnChanges {
    * to handle the changes.
    */
   ngOnChanges(changes: SimpleChanges): void {
-    this.selectDocumentsForm = this.fb.group({
-      documents: this.addDocumentCheckboxes(),
-      documentTypes: this.addDocumentTypes()
-    }, Validators.required)
     if (changes.taskContextData.previousValue !== this.taskContextData ) {
-      this.selectDocumentsForm = this.fb.group({
-        documents: this.addDocumentCheckboxes(),
-        documentTypes: this.addDocumentTypes()
-      }, Validators.required)
+      this.fetchDocuments();
     }
   }
 
@@ -85,27 +94,83 @@ export class DocumentSelectComponent implements OnChanges {
   // Context.
   //
 
-  /**
-   * Creates form array for document checkboxes.
-   * @returns {FormArray}
-   */
-  addDocumentCheckboxes(): FormArray {
-    const arr = this.taskContextData.context.documents.map(() => {
-      return this.fb.control(false);
-    });
-    return this.fb.array(arr, atleastOneValidator());
+  fetchDocuments(page = 1, sortValue?) {
+    this.zaakService.listTaskDocuments(this.taskContextData.context.documentsLink, page, sortValue).subscribe(data => {
+      if (!this.fetchedPages.includes(page)) {
+        this.fetchedPages.push(page)
+        this.allData.push(...data.results)
+      }
+      this.tableData = this.formatTableData(data.results, this.tableHead, this.zaak, this.taskContextData.context.informatieobjecttypen, this.onConfidentialityChange.bind(this));
+      this.paginatedDocsData = data;
+      this.documentsData = data.results;
+    })
   }
 
   /**
-   * Create form array for document types.
-   * @returns {FormArray}
+   * Create table
+   * @param data
+   * @param tableHead
+   * @param {Zaak} zaak
+   * @param {InformatieObjectType[]} informatieobjecttypen
+   * @param {Function} onChange
+   * @param {any[]} invalidTypes
+   * @returns {Table}
    */
-  addDocumentTypes(): FormArray {
-    const arr = this.taskContextData.context.documents.map(() => {
-      return this.fb.control('');
-    });
-    return this.fb.array(arr);
+  formatTableData(data, tableHead, zaak: Zaak, informatieobjecttypen: InformatieObjectType[], onChange: Function, invalidTypes = []) {
+    tableHead = [
+      '',
+      'Bestandsnaam',
+      'Versie',
+      'Auteur',
+      'Informatieobjecttype',
+    ]
+
+    const tableData: Table = new Table(tableHead, []);
+    tableData.bodyData = data.map((element: Document) => {
+      let val;
+      if (Object.keys(this.changedDocumentTypes).length > 0) {
+        if (this.changedDocumentTypes.hasOwnProperty(element.url)) {
+          val = this.changedDocumentTypes[element.url]['newValue'];
+        } else {
+          val = element.informatieobjecttype.url;
+        }
+      } else {
+        val = element.informatieobjecttype.url;
+      }
+      const cellData: RowData = {
+        cellData: {
+          checkbox: {
+            type: 'checkbox',
+            checked: true,
+            value: element.url
+          },
+          bestandsnaam: {
+            type: 'text',
+            label: element.titel,
+          },
+          versie: {
+            type: 'text',
+            style: 'no-minwidth',
+            label: String(element.versie)
+          },
+          auteur: element.auteur,
+          informatieobjecttype: {
+            choices: informatieobjecttypen.map(type => ({
+              label: type.omschrijving,
+              value: type.url
+            })),
+            type: 'select',
+            value: val,
+            onChange: (choice) => {onChange(element, choice)}
+          },
+        }
+      }
+      return cellData;
+    })
+
+    return tableData
   }
+
 
   /**
    * PUTs form data to API.
@@ -135,10 +200,15 @@ export class DocumentSelectComponent implements OnChanges {
     });
   }
 
-  findDocumentTypeObject(documentType): InformatieObjectType {
+  /**
+   * Checks if objecttype exists in the context data
+   * @param objecttype
+   * @returns {InformatieObjectType}
+   */
+  findDocumentTypeObject(objecttype): InformatieObjectType {
     return this.taskContextData.context.informatieobjecttypen
       .filter(type => {
-        return type.omschrijving === documentType;
+        return type.url === objecttype.url;
       })[0]
   }
 
@@ -147,23 +217,55 @@ export class DocumentSelectComponent implements OnChanges {
   //
 
   /**
-   * Show document type multiselect to change document type.
-   * @param {number} i
+   * When user selects a confidentiality
+   * @param {Document} document
+   * @param {Choice} confidentialityChoice
    */
-  openDocumentTypeSelector(i: number) {
-    this.openSelectorsArray.push(i);
+  onConfidentialityChange(document: Document, confidentialityChoice: Choice) {
+    if (this.changedDocumentTypes.hasOwnProperty(document.url)) {
+      if (document.informatieobjecttype === confidentialityChoice.value) {
+        delete this.changedDocumentTypes[document.url]
+      } else {
+        this.changedDocumentTypes[document.url]['newValue'] = confidentialityChoice.value;
+      }
+    } else {
+      if (document.informatieobjecttype !== confidentialityChoice.value) {
+        this.changedDocumentTypes[document.url] = {
+          originalValue: document.informatieobjecttype,
+          newValue: confidentialityChoice.value
+        }
+      }
+    }
+    this.hasDocTypeError = false;
   }
 
   /**
-   * Hides document type multiselect
-   * @param {number} i
+   * When paginator fires
+   * @param uuid
+   * @param page
    */
-  closeDocumentTypeSelector(i: number) {
-    const index = this.openSelectorsArray.indexOf(i);
-    if (index !== -1) {
-      this.openSelectorsArray.splice(index, 1);
-    }
-    this.documentType(i).patchValue(null)
+  onPageSelect(page) {
+    this.page = page.pageIndex + 1;
+    this.fetchDocuments(this.page, this.sortValue);
+  }
+
+  /**
+   * On checkbox / doc select
+   * @param event
+   */
+  onDocSelect(event) {
+    this.selectedDocuments = event;
+  }
+
+  /**
+   * When table is sorted
+   * @param sortValue
+   */
+  sortTable(sortValue) {
+    this.paginator.firstPage();
+    this.page = 1;
+    this.sortValue = sortValue;
+    this.fetchDocuments(this.page, this.sortValue);
   }
 
   /**
@@ -171,38 +273,48 @@ export class DocumentSelectComponent implements OnChanges {
    */
   submitForm() {
     this.isSubmitting = true;
+    this.hasDocTypeError = false;
 
-    const selectedDocuments = this.documents.value
-      .map((checked, i) => {
-        if (checked) {
-          // Check if document type has been changed by user
-          const documentTypeObject = this.documentType(i).value ? this.findDocumentTypeObject(this.documentType(i).value) : this.findDocumentTypeObject(this.taskContextData.context.documents[i].documentType);
+    const invalidDocTypeUrls = ["https://open-zaak.cg-intern.ont.utrecht.nl/catalogi/api/v1/informatieobjecttypen/b0532b9b-8084-451a-bfab-326932c464d3"]
 
-          // If document type doesn't exist in list if informatieobject types
-          if (!documentTypeObject) {
-            this.documentType(i).setErrors({noMatchingDocumentType: true})
-            this.cdRef.detectChanges();
-            return null;
-          }
-          return {
-            document: this.taskContextData.context.documents[i].url,
-            documentType: documentTypeObject.url
-          };
+    const selectedDocs = this.selectedDocuments.map(d => {
+      if (this.changedDocumentTypes.hasOwnProperty(d)) {
+        return {
+          document: d,
+          documentType: this.changedDocumentTypes[d]['newValue']
         }
-        return null;
-      })
-      .filter(v => v !== null);
+      } else {
+        // Check if document type exists in list of informatieobject types
+        const docType = this.allData.find(obj => obj['url'] === d).informatieobjecttype;
+        const isValidDocType = this.findDocumentTypeObject(docType);
+        if (!isValidDocType) {
+          invalidDocTypeUrls.push(docType.url)
+          this.hasDocTypeError = true;
+          return null;
+        }
+        return {
+          document: d,
+          documentType: docType.url
+        }
+      }
+    });
 
     const formData = {
       form: this.taskContextData.form,
-      selectedDocuments: selectedDocuments,
+      selectedDocuments: selectedDocs,
     };
+    const invalids = invalidDocTypeUrls.map(url => {
+      return this.allData.find(obj => obj['informatieobjecttype']['url'] === url).informatieobjecttype.omschrijving;
+    })
+    this.docTypeErrorMessage = "De volgende informatieobjecttypen bestaan niet: " + invalids.join(", ")
+    this.hasDocTypeError = true
 
-    if (this.selectDocumentsForm.valid) {
+    if (!this.hasDocTypeError) {
       this.putForm(formData);
     }
 
     this.isSubmitting = false;
   }
+
 
 }

@@ -2,10 +2,12 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 import {AfterViewInit, Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild} from '@angular/core';
 import {MatSort} from '@angular/material/sort';
 import {MatTableDataSource} from '@angular/material/table';
-import {Column, ExtensiveCell, Table, TableSort} from '@gu/models';
+import { Column, ExtensiveCell, Table, TableSort, UserSearchResult } from '@gu/models';
 import {TableService} from './table.service';
 import {TableButtonClickEvent, TableSortEvent} from './table';
 import {Choice} from '@gu/components';
+import { SelectionModel } from '@angular/cdk/collections';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 
 /**
@@ -44,6 +46,7 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
     @Output() tableOutput = new EventEmitter<any>();
     @Output() buttonOutput = new EventEmitter<any>();
     @Output() sortOutput = new EventEmitter<any>();
+    @Output() selectionOutput = new EventEmitter<any>();
 
     @ViewChild(MatSort) sort: MatSort;
 
@@ -62,6 +65,10 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
 
     /** @type {number|null} The index of the row to expand. */
     expandedIndex: number | null;
+
+    selection = new SelectionModel<any>(true, []);
+
+    selectedValues: any[] = [];
 
     /**
      * Constructor method.
@@ -134,9 +141,34 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
         return this.dataSource.data.indexOf(dataRow);
     }
 
+    /**
+     * Check if user exists in current selected users array.
+     * @param {UserSearchResult} user
+     * @returns {boolean}
+     */
+    isInSelectedValues(doc) {
+      return this.selectedValues.some(userObj => userObj === doc);
+    }
+
     //
     // Events.
     //
+
+    /**
+     * Update selected users array.
+     * @param {MatCheckboxChange} event
+     */
+    updateSelectedValues(event: MatCheckboxChange) {
+      const selectedValue = event.source.value;
+      const isInSelectedValues = this.isInSelectedValues(selectedValue);
+      if (event.checked && !isInSelectedValues) {
+        this.selectedValues.push(selectedValue)
+      } else if (!event.checked && isInSelectedValues) {
+        const i = this.selectedValues.findIndex(userObj => userObj === selectedValue);
+        this.selectedValues.splice(i, 1);
+      }
+      this.selectionOutput.emit(this.selectedValues);
+    }
 
     /**
      * Gets called when a button is clicked, emits buttonOutput.

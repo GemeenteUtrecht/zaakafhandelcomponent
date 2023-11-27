@@ -1,18 +1,26 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
   <h2>{{taskContextData.task.name}}</h2>
-  <form class="configuration-form" [formGroup]="signDocumentForm" *ngIf="signDocumentForm.controls['documents'].value">
+  <form class="configuration-form" [formGroup]="signDocumentForm" *ngIf="documentsData?.length > 0">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Te ondertekenen documenten</label>
       <p>Dit zijn de documenten die bij de zaak horen. Selecteer de documenten die digitaal ondertekend moeten worden.</p>
       <div class="configuration-files">
         <div class="row pl-3">
-          <div class="col-12" formArrayName="documents" *ngFor="let document of documents.controls; let i = index">
-            <gu-checkbox id="kp-sign-docs-{{i}}"
-                         [value]="taskContextData.context.documents[i].url"
-                         [control]="document">
-              <span><a class="anchor" [href]="taskContextData.context.documents[i].readUrl">{{taskContextData.context.documents[i].bestandsnaam}}</a></span>
-            </gu-checkbox>
+          <div class="d-block">
+            <gu-table *ngIf="(documentsData?.length > 0) && tableData"
+                      [table]="tableData"
+                      [sortable]="true"
+                      (sortOutput)="sortTable($event)"
+                      (selectionOutput)="onDocSelect($event)"
+            ></gu-table>
+            <gu-paginator  *ngIf="(documentsData?.length > 0) && tableData" (page)="onPageSelect($event)"
+                           [pageSize]="10"
+                           [length]="paginatedDocsData.count"
+            ></gu-paginator>
           </div>
+          <ng-container *ngIf="(documentsData?.length === 0)">
+            <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
+          </ng-container>
         </div>
       </div>
     </article>
@@ -73,7 +81,7 @@
     <div class="d-flex justify-content-start">
       <button gu-button
               (click)="submitForm()"
-              [disabled]="!signDocumentForm.valid || isSubmitting"
+              [disabled]="!signDocumentForm.valid || isSubmitting || selectedDocuments.length < 1"
               [loading]="isSubmitting">
         Voltooien
       </button>

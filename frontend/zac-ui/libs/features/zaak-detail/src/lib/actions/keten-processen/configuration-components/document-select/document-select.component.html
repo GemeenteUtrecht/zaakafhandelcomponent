@@ -1,56 +1,32 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
   <h2>{{taskContextData.task.name}}</h2>
-  <form class="configuration-form" [formGroup]="selectDocumentsForm" *ngIf="selectDocumentsForm.controls['documents'].value">
+  <form class="configuration-form" *ngIf="documentsData?.length > 0">
     <article class="configuration-details">
       <label class="h4 d-inline-block mr-2">Documenten</label>
       <p>Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</p>
-      <div class="configuration-files" formArrayName="documents">
-        <div class="row pl-3">
-          <div class="col-12 form-group configuration-file" *ngFor="let document of documents.controls; let i = index">
-            <gu-checkbox class="mb-2" id="kp-docs-select-{{i}}"
-                         [value]="taskContextData.context.documents[i].url"
-                         [control]="document">
-              <span>
-                <a class="anchor" (click)="readDocument(taskContextData.context.documents[i].readUrl)">
-                  {{taskContextData.context.documents[i].bestandsnaam}}
-                </a>
-              </span>
-            </gu-checkbox>
-            <div class="mb-2">
-              <p class="d-inline">Informatieobjecttype: <strong>{{taskContextData.context.documents[i].documentType}}</strong></p>
-              <button gu-button *ngIf="!openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="openDocumentTypeSelector(i)">Informatieobjecttype wijzigen</button>
-              <button gu-button *ngIf="openSelectorsArray.includes(i)" buttonStyle="tertiary" size="small" (click)="closeDocumentTypeSelector(i)">Sluiten</button>
-              <ng-container *ngIf="openSelectorsArray.includes(i)">
-                <div class="row">
-                  <div class="col-4">
-                    <p>Wijzigen naar:</p>
-                  </div>
-                  <div class="col-8">
-                    <gu-multiselect
-                      *ngIf="openSelectorsArray.includes(i)"
-                      [multiple]="false"
-                      [items]="taskContextData.context.informatieobjecttypen"
-                      placeholder="Selecteer informatieobjecttype"
-                      bindLabel="omschrijving"
-                      bindValue="omschrijving"
-                      class="mb-4"
-                      [control]="documentType(i)">
-                    </gu-multiselect>
-                  </div>
-                </div>
-              </ng-container>
-              <mat-error *ngIf="documentType(i).invalid">
-                Dit informatieobjecttype bestaat niet in het vervolgproces. Selecteer een informatieobjecttype met "Informatieobjecttype wijzigen".
-              </mat-error>
-            </div>
-          </div>
+      <div class="configuration-files">
+        <div class="row pl-3 d-block">
+          <gu-table *ngIf="(documentsData?.length > 0) && tableData"
+                    [table]="tableData"
+                    [sortable]="true"
+                    (sortOutput)="sortTable($event)"
+                    (selectionOutput)="onDocSelect($event)"
+          ></gu-table>
+          <gu-paginator  *ngIf="(documentsData?.length > 0) && tableData" (page)="onPageSelect($event)"
+                         [pageSize]="10"
+                         [length]="paginatedDocsData.count"
+          ></gu-paginator>
+          <ng-container *ngIf="(documentsData?.length === 0)">
+            <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
+          </ng-container>
         </div>
       </div>
     </article>
+    <gu-message *ngIf="hasDocTypeError" class='d-block mb-4' type="warn" [message]="docTypeErrorMessage"></gu-message>
     <div class="d-flex justify-content-start">
       <button gu-button
               (click)="submitForm()"
-              [disabled]="!selectDocumentsForm.valid || isSubmitting"
+              [disabled]="isSubmitting || selectedDocuments.length === 0"
               [loading]="isSubmitting">
         Voltooien
       </button>

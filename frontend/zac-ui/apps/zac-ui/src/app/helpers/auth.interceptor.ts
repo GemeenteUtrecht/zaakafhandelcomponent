@@ -26,8 +26,6 @@ export class AuthInterceptor implements HttpInterceptor {
       .pipe(
         catchError((error, caught) => {
           if (error instanceof HttpErrorResponse) {
-            console.log(error);
-            console.log(error.status);
             if (this.checkAuthentication(error) || error.status === 0) {
               const currentPath = this.router.url;
               window.location.href = `/accounts/login/?next=/ui${currentPath}`;

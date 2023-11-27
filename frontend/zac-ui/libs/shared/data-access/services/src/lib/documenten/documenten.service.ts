@@ -103,12 +103,14 @@ export class DocumentenService {
 
       const editCell: ExtensiveCell = {
         type: 'button',
+        style: 'no-minwidth',
         label: editLabel,
         value: editUrl,
         buttonType: editButtonStyle
       };
       const overwriteCell: ExtensiveCell = {
         type: 'button',
+        style: 'no-minwidth',
         label: 'Overschrijven',
         value: element.url,
         buttonInfo: 'Met deze knop kan je een oud document vervangen door een nieuw document'
@@ -128,15 +130,20 @@ export class DocumentenService {
             iconInfo: iconInfo
           },
           bestandsnaam: docNameButton,
-          versie: String(element.versie),
+          versie: {
+            type: 'text',
+            style: 'no-minwidth',
+            label: String(element.versie)
+          },
           ...(!isDownloadCell) && {lezen: {
               type: 'button',
+              style: 'no-minwidth',
               label: 'Lezen',
               value: element.readUrl,
-
             }},
           ...(isDownloadCell) && {downloaden: {
               type: 'link',
+              style: 'no-minwidth',
               label: 'Downloaden',
               url: element.downloadUrl,
             }},
