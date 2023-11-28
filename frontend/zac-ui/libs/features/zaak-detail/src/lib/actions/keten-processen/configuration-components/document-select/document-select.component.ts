@@ -275,7 +275,7 @@ export class DocumentSelectComponent implements OnChanges {
     this.isSubmitting = true;
     this.hasDocTypeError = false;
 
-    const invalidDocTypeUrls = ["https://open-zaak.cg-intern.ont.utrecht.nl/catalogi/api/v1/informatieobjecttypen/b0532b9b-8084-451a-bfab-326932c464d3"]
+    const invalidDocTypeUrls = [];
 
     const selectedDocs = this.selectedDocuments.map(d => {
       if (this.changedDocumentTypes.hasOwnProperty(d)) {
