@@ -307,13 +307,12 @@ export class DocumentSelectComponent implements OnChanges {
       return this.allData.find(obj => obj['informatieobjecttype']['url'] === url).informatieobjecttype.omschrijving;
     })
     this.docTypeErrorMessage = "De volgende informatieobjecttypen bestaan niet: " + invalids.join(", ")
-    this.hasDocTypeError = true
 
     if (!this.hasDocTypeError) {
       this.putForm(formData);
+    } else {
+      this.isSubmitting = false;
     }
-
-    this.isSubmitting = false;
   }
 
 
