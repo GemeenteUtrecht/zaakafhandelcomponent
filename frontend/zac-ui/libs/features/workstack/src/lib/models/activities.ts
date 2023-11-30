@@ -4,7 +4,7 @@ export interface Activity {
   userAssignee: string;
 }
 
-export interface Zaak {
+export interface AdHocActivitiesZaak {
   identificatie: string;
   bronorganisatie: string;
   url: string;
@@ -13,6 +13,6 @@ export interface Zaak {
 export interface AdHocActivities {
   activities: Activity[];
   url: string;
-  zaak: Zaak;
+  zaak: AdHocActivitiesZaak;
 }
 

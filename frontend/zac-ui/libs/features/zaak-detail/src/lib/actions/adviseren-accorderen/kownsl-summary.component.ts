@@ -173,12 +173,14 @@ export class KownslSummaryComponent implements OnInit {
           'remind': showRemindButton ? {
             type: 'button',
             label: 'Rappelleren',
+            style: 'no-minwidth',
             value: reviewRequestSummary
           } : '',
 
           'cancel': showCancelButton ? {
             type: 'button',
             label: 'Annuleren',
+            style: 'no-minwidth',
             value: reviewRequestSummary
           } : '',
         },

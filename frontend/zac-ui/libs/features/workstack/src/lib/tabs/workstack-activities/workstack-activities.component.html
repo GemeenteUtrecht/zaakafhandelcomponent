@@ -1,0 +1,54 @@
+<div class="workstack-tab-body">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <ng-container *ngIf="nActivities > 0; else noActivity" >
+    <div class="row">
+      <div class="col-12 col-md-6" *ngIf="activitiesData.count > 0">
+        <h4>Activiteiten</h4>
+        <div class="task-link" *ngFor="let userActivity of activitiesData.results">
+          <a class="anchor mb-4"
+             [routerLink]="getZaakPath(userActivity.zaak)+'/acties'"
+             [queryParams]="{'activities': true}"
+          >
+            {{userActivity.zaak.identificatie}}
+          </a>
+          <ul class="mb-2">
+            <li *ngFor="let activity of userActivity.activities">
+              <p class="mb-0">Activiteit: <b>{{activity.name}}</b></p>
+              <label class="label label--small d-block">{{activity.groupAssignee}}</label>
+            </li>
+          </ul>
+        </div>
+        <gu-paginator *ngIf="activitiesData.count > 0"
+                      (page)="onPageSelect($event)"
+                      [pageSize]="20"
+                      [length]="activitiesData.count"
+        ></gu-paginator>
+      </div>
+
+      <div class="col-12 col-md-6" *ngIf="checkListData.length > 0">
+        <h4>Takenlijst</h4>
+        <div class="task-link" *ngFor="let checklist of checkListData">
+          <a class="anchor mb-4"
+             [routerLink]="getZaakPath(checklist.zaak)+'/acties'"
+          >
+            {{checklist.zaak.identificatie}}
+          </a>
+          <ul class="mb-2">
+            <li *ngFor="let checklistQuestion of checklist.checklistQuestions">
+              <p class="mb-0">Checklistvraag: <b>{{checklistQuestion.question}}</b></p>
+              <label class="label label--small d-block">{{checklistQuestion.groupAssignee}}</label>
+            </li>
+          </ul>
+        </div>
+        <gu-paginator *ngIf="checkListData.length > 0"
+                      (page)="onPageSelect($event)"
+                      [pageSize]="20"
+                      [length]="checkListData.length"
+        ></gu-paginator>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template #noActivity>
+    <p *ngIf="!isLoading">Er zijn geen activiteiten.</p>
+  </ng-template>
+</div>

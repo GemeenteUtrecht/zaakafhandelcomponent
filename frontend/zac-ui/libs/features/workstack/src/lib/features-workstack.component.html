@@ -1,322 +1,152 @@
 <div class="workstack">
   <h1>Werkvoorraad</h1>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
-  <gu-tab-group *ngIf="!isLoading" [selectedIndex]="currentActiveTab || 0">
-    <ng-container *ngFor="let tab of tabs; let i = index">
-      <gu-tab>
-        <ng-container [ngSwitch]="tab.component">
+  <mat-tab-group *ngIf="!isLoading">
+    <mat-tab>
+      <div class="tab-content">
+        <!-- Label -->
+        <ng-template mat-tab-label>
+          In behandeling
+          <gu-chip *ngIf="summaryData?.zaken > 0"
+                   type="badge"
+                   color="primary"
+                   class="ml-1">
+            {{summaryData?.zaken}}
+          </gu-chip>
+        </ng-template>
+        <!-- Content -->
+        <ng-template matTabContent>
+          <gu-workstack-cases></gu-workstack-cases>
+        </ng-template>
+      </div>
+    </mat-tab>
+    <mat-tab>
+      <!-- Tasks -->
+      <div class="tab-content">
+        <!-- Label -->
+        <ng-template mat-tab-label>
+          Taken
+          <gu-chip *ngIf="summaryData?.userTasks > 0"
+                   type="badge"
+                   color="primary"
+                   class="ml-1">
+            {{summaryData?.userTasks}}
+          </gu-chip>
+        </ng-template>
 
-          <!-- Zaken -->
-          <div class="tab-content" *ngSwitchCase="'zaken'">
+        <!-- Content -->
+        <ng-template matTabContent>
+          <gu-workstack-tasks [endpoint]="'/api/workstack/user-tasks'"></gu-workstack-tasks>
+        </ng-template>
+      </div>
+    </mat-tab>
+    <mat-tab>
+      <!-- Group tasks -->
+      <div class="tab-content">
+        <!-- Label -->
+        <ng-template mat-tab-label>
+          Taken gebruikersgroepen
+          <gu-chip *ngIf="summaryData?.groupTasks > 0"
+                   type="badge"
+                   color="primary"
+                   class="ml-1">
+            {{summaryData?.groupTasks}}
+          </gu-chip>
+        </ng-template>
 
-            <!-- Label -->
-            <ng-template mat-tab-label>
-              {{tab.label}}
-              <gu-chip *ngIf="zakenData?.count > 0"
-                       type="badge"
-                       color="primary"
-                       class="ml-1">
-                {{zakenData?.count}}
-              </gu-chip>
-            </ng-template>
+        <!-- Content -->
+        <ng-template matTabContent>
+          <gu-workstack-tasks [endpoint]="'/api/workstack/group-tasks'"></gu-workstack-tasks>
+        </ng-template>
+      </div>
+    </mat-tab>
+    <mat-tab>
+      <!-- Review requests -->
+      <div class="tab-content">
 
-            <!-- Content -->
-            <ng-container *ngIf="zakenTableData.bodyData.length > 0; else noZaken">
-              <gu-table (sortOutput)="sortZaken($event)"
-                        [sortable]="true"
-                        [table]="zakenTableData"
-              ></gu-table>
-              <gu-paginator (page)="onPageSelect($event, 'zaken')"
-                            [pageSize]="20"
-                            [length]="zakenData.count"
-              ></gu-paginator>
-            </ng-container>
-            <ng-template #noZaken>
-              <p>Er zijn geen zaken gevonden.</p>
-            </ng-template>
-          </div>
+        <!-- Label -->
+        <ng-template mat-tab-label>
+          Advies/akkoord
+          <gu-chip *ngIf="summaryData?.reviews"
+                   type="badge"
+                   color="primary"
+                   class="ml-1">
+            {{summaryData?.reviews}}
+          </gu-chip>
+        </ng-template>
 
-          <!-- Tasks -->
-          <div class="tab-content" *ngSwitchCase="'tasks'">
-            <!-- Label -->
-            <ng-template mat-tab-label>
-              {{tab.label}}
-              <gu-chip *ngIf="taskData?.count > 0"
-                       type="badge"
-                       color="primary"
-                       class="ml-1">
-                {{taskData?.count}}
-              </gu-chip>
-            </ng-template>
+        <!-- Content -->
+        <ng-template matTabContent>
+          <gu-workstack-review-requests></gu-workstack-review-requests>
+        </ng-template>
+      </div>
+    </mat-tab>
+    <mat-tab>
+      <!-- Activiteiten -->
+      <div class="tab-content">
 
-            <!-- Content -->
-            <ng-container *ngIf="tasksTableData.bodyData.length > 0; else noTasks">
-              <gu-table (sortOutput)="sortZaken($event)"
-                        [sortable]="true"
-                        [table]="tasksTableData"
-              ></gu-table>
-              <gu-paginator (page)="onPageSelect($event, 'tasks')"
-                            [pageSize]="20"
-                            [length]="taskData.count"
-              ></gu-paginator>
-            </ng-container>
-            <ng-template #noTasks>
-              <p>Er zijn geen taken gevonden.</p>
-            </ng-template>
-          </div>
+        <!-- Label -->
+        <ng-template mat-tab-label>
+          Activiteiten
+          <gu-chip *ngIf="summaryData?.userActivities"
+                   type="badge"
+                   color="primary"
+                   class="ml-1">
+            {{summaryData?.userActivities}}
+          </gu-chip>
+        </ng-template>
 
-          <!-- Group tasks -->
-          <div class="tab-content" *ngSwitchCase="'group-tasks'">
-            <!-- Label -->
-            <ng-template mat-tab-label>
-              {{tab.label}}
-              <gu-chip *ngIf="groupTaskData?.count > 0"
-                       type="badge"
-                       color="primary"
-                       class="ml-1">
-                {{groupTaskData?.count}}
-              </gu-chip>
-            </ng-template>
+        <!-- Content -->
+        <ng-template matTabContent>
+          <gu-workstack-activities
+            [activtiesEndpoint]="'/api/workstack/activities'"
+            [checklistEndpoint]="'/api/workstack/checklists'"
+          ></gu-workstack-activities>
+        </ng-template>
+      </div>
+    </mat-tab>
+    <mat-tab>
+      <!-- Groepsactiviteiten -->
+      <div class="tab-content">
 
-            <!-- Content -->
-            <ng-container *ngIf="groupTasksTableData.bodyData.length > 0; else noGroupTasks">
-              <gu-table
-                        (sortOutput)="sortZaken($event)"
-                        [sortable]="true"
-                        [table]="groupTasksTableData"
-              ></gu-table>
-              <gu-paginator (page)="onPageSelect($event, 'group-tasks')"
-                            [pageSize]="20"
-                            [length]="groupTaskData.count"
-              ></gu-paginator>
-            </ng-container>
-            <ng-template #noGroupTasks>
-              <p>Er zijn geen taken voor gebruikersgroepen.</p>
-            </ng-template>
-          </div>
+        <!-- Label -->
+        <ng-template mat-tab-label>
+          Groepsactiviteiten
+          <gu-chip *ngIf="summaryData?.groupActivities"
+                   type="badge"
+                   color="primary"
+                   class="ml-1">
+            {{summaryData?.groupActivities}}
+          </gu-chip>
+        </ng-template>
 
-          <!-- Review requests -->
-          <div class="tab-content" *ngSwitchCase="'reviews'">
+        <!-- Content -->
+        <ng-template matTabContent>
+          <gu-workstack-activities
+            [activtiesEndpoint]="'/api/workstack/group-activities'"
+            [checklistEndpoint]="'/api/workstack/group-checklists'"
+          ></gu-workstack-activities>
+        </ng-template>
+      </div>
+    </mat-tab>
+    <mat-tab>
+      <!-- Toegangsverzoeken -->
+      <div class="tab-content">
 
-            <!-- Label -->
-            <ng-template mat-tab-label>
-              {{tab.label}}
-              <gu-chip *ngIf="nReviews > 0"
-                       type="badge"
-                       color="primary"
-                       class="ml-1">
-                {{nReviews}}
-              </gu-chip>
-            </ng-template>
+        <!-- Label -->
+        <ng-template mat-tab-label>
+          Toegangsverzoeken
+          <gu-chip *ngIf="summaryData?.accessRequests"
+                   type="badge"
+                   color="primary"
+                   class="ml-1">
+            {{summaryData?.accessRequests}}
+          </gu-chip>
+        </ng-template>
 
-            <!-- Content -->
-            <ng-container *ngIf="reviewsTableData.bodyData.length > 0; else noReviews">
-              <gu-table
-                (sortOutput)="sortReviews($event)"
-                [sortable]="true"
-                [table]="reviewsTableData"
-                (tableOutput)="tableRowClick($event)"
-              ></gu-table>
-              <gu-paginator (page)="onPageSelect($event, 'reviews')"
-                            [pageSize]="20"
-                            [length]="reviewsData.count"
-              ></gu-paginator>
-            </ng-container>
-            <ng-template #noReviews>
-              <p>Er zijn geen aanvragen.</p>
-            </ng-template>
-          </div>
-
-          <!-- Activiteiten -->
-          <div class="tab-content" *ngSwitchCase="'activities'">
-
-            <!-- Label -->
-            <ng-template mat-tab-label>
-              {{tab.label}}
-              <gu-chip *ngIf="nActivities > 0"
-                       type="badge"
-                       color="primary"
-                       class="ml-1">
-                {{nActivities}}
-              </gu-chip>
-            </ng-template>
-
-            <!-- Content -->
-            <ng-container *ngIf="nActivities > 0; else noActivity" >
-              <div class="row">
-                <div class="col-12 col-md-6" *ngIf="activitiesData.count > 0">
-                  <h4>Activiteiten</h4>
-                  <div class="task-link" *ngFor="let userActivity of activitiesData.results">
-                    <a class="anchor mb-4"
-                       [routerLink]="getZaakPath(userActivity.zaak)+'/acties'"
-                       [queryParams]="{'activities': true}"
-                    >
-                      {{userActivity.zaak.identificatie}}
-                    </a>
-                    <ul class="mb-2">
-                      <li *ngFor="let activity of userActivity.activities">
-                        <p class="mb-0">Activiteit: <b>{{activity.name}}</b></p>
-                        <label class="label label--small d-block">{{activity.groupAssignee}}</label>
-                      </li>
-                    </ul>
-                  </div>
-                  <gu-paginator *ngIf="activitiesData.count > 0"
-                                (page)="onPageSelect($event, 'activities')"
-                                [pageSize]="20"
-                                [length]="activitiesData.count"
-                  ></gu-paginator>
-                </div>
-
-                <div class="col-12 col-md-6" *ngIf="checkListData.length > 0">
-                  <h4>Takenlijst</h4>
-                  <div class="task-link" *ngFor="let checklist of checkListData">
-                    <a class="anchor mb-4"
-                       [routerLink]="getZaakPath(checklist.zaak)+'/acties'"
-                    >
-                      {{checklist.zaak.identificatie}}
-                    </a>
-                    <ul class="mb-2">
-                      <li *ngFor="let checklistQuestion of checklist.checklistQuestions">
-                        <p class="mb-0">Checklistvraag: <b>{{checklistQuestion.question}}</b></p>
-                        <label class="label label--small d-block">{{checklistQuestion.groupAssignee}}</label>
-                      </li>
-                    </ul>
-                  </div>
-                  <gu-paginator *ngIf="checkListData.length > 0"
-                                (page)="onPageSelect($event, 'checklist')"
-                                [pageSize]="20"
-                                [length]="checkListData.length"
-                  ></gu-paginator>
-                </div>
-              </div>
-            </ng-container>
-            <ng-template #noActivity>
-              <p>Er zijn geen activiteiten.</p>
-            </ng-template>
-          </div>
-
-          <!-- Groepsactiviteiten -->
-          <div class="tab-content" *ngSwitchCase="'group-activities'">
-
-            <!-- Label -->
-            <ng-template mat-tab-label>
-              {{tab.label}}
-              <gu-chip *ngIf="nGroupActivities > 0"
-                       type="badge"
-                       color="primary"
-                       class="ml-1">
-                {{nGroupActivities}}
-              </gu-chip>
-            </ng-template>
-
-            <!-- Content -->
-            <ng-container *ngIf="nGroupActivities > 0; else noGroupActivity" >
-              <div class="row">
-                <div class="col-12 col-md-6" *ngIf="groupActivitiesData.count > 0">
-                  <h4>Activiteiten</h4>
-                  <div class="task-link" *ngFor="let groupActivity of groupActivitiesData.results">
-                    <a class="anchor mb-4"
-                       [routerLink]="getZaakPath(groupActivity.zaak)+'/acties'"
-                       [queryParams]="{'activities': true}"
-                    >
-                      {{groupActivity.zaak.identificatie}}
-                    </a>
-                    <ul class="mb-2">
-                      <li *ngFor="let activity of groupActivity.activities">
-                        <p class="mb-0">Activiteit: <b>{{activity.name}}</b></p>
-                        <label class="label label--small d-block">{{activity.groupAssignee}}</label>
-                      </li>
-                    </ul>
-                  </div>
-                  <gu-paginator *ngIf="groupActivitiesData.count > 0"
-                                (page)="onPageSelect($event, 'group-activities')"
-                                [pageSize]="20"
-                                [length]="groupActivitiesData.count"
-                  ></gu-paginator>
-                </div>
-
-                <div class="col-12 col-md-6" *ngIf="groupCheckListData.length > 0">
-                  <h4>Takenlijst</h4>
-                  <div class="task-link" *ngFor="let groupChecklist of groupCheckListData">
-                    <a class="anchor mb-4"
-                       [routerLink]="getZaakPath(groupChecklist.zaak)+'/acties'"
-                    >
-                      {{groupChecklist.zaak.identificatie}}
-                    </a>
-                    <ul class="mb-2">
-                      <li *ngFor="let checklistQuestion of groupChecklist.checklistQuestions">
-                        <p class="mb-0">Checklistvraag: <b>{{checklistQuestion.question}}</b></p>
-                        <label class="label label--small d-block">{{checklistQuestion.groupAssignee}}</label>
-                      </li>
-                    </ul>
-                  </div>
-                  <gu-paginator *ngIf="groupCheckListData.length > 0"
-                                (page)="onPageSelect($event, 'group-checklist')"
-                                [pageSize]="20"
-                                [length]="groupCheckListData.length"
-                  ></gu-paginator>
-                </div>
-              </div>
-            </ng-container>
-            <ng-template #noGroupActivity>
-              <p>Er zijn geen groepsactiviteiten.</p>
-            </ng-template>
-          </div>
-
-          <!-- Toegangsverzoeken -->
-          <div class="tab-content" *ngSwitchCase="'access-request'">
-
-            <!-- Label -->
-            <ng-template mat-tab-label>
-              {{tab.label}}
-              <gu-chip *ngIf="accessRequestData?.count > 0"
-                       type="badge"
-                       color="primary"
-                       class="ml-1">
-                {{accessRequestData?.count}}
-              </gu-chip>
-            </ng-template>
-
-            <!-- Content -->
-            <gu-access-request [data]='accessRequestData.results' (reload)="updateContextData(3)"></gu-access-request>
-            <gu-paginator *ngIf="accessRequestData.count > 0"
-                          (page)="onPageSelect($event, 'access-request')"
-                          [pageSize]="20"
-                          [length]="accessRequestData.count"
-            ></gu-paginator>
-          </div>
-        </ng-container>
-      </gu-tab>
-    </ng-container>
-  </gu-tab-group>
+        <!-- Content -->
+        <gu-workstack-access-requests (reload)="getContextData()"></gu-workstack-access-requests>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
 </div>
-
-<!-- Review details -->
-<gu-modal
-  id="workstack-review-modal"
-  [closeIcon]="true"
-  *ngIf="selectedReviewRequest"
->
-  <h2>{{selectedReviewRequest.reviewType === 'approval' ? 'Akkoord' : 'Advies'}}</h2>
-  <p class="">{{selectedReviewRequest.zaak.identificatie}}: {{selectedReviewRequest.zaak.omschrijving}}</p>
-  <gu-table [table]="table"
-            class="mb-4"
-  >
-  </gu-table>
-  <div class="card open-reviews" *ngIf="selectedReviewRequest.openReviews?.length > 0">
-    <h4>Openstaande aanvragen</h4>
-    <div class="open-review" *ngFor="let openReview of selectedReviewRequest.openReviews">
-      <span>Deadline: </span><span><strong>{{openReview.deadline | date:'shortDate'}}</strong></span>
-      <ul>
-        <ng-container *ngFor="let user of openReview.users">
-          <li>{{user.fullName}}</li>
-        </ng-container>
-        <ng-container *ngFor="let group of openReview.groups">
-          <li>{{group.name}}</li>
-        </ng-container>
-      </ul>
-    </div>
-  </div>
-
-
-</gu-modal>

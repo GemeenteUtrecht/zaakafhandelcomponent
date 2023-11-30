@@ -1,0 +1,46 @@
+<div class="workstack-tab-body">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <ng-container *ngIf="reviewsTableData.bodyData.length > 0; else noReviews">
+    <gu-table (sortOutput)="sortTable($event)"
+              [sortable]="true"
+              [table]="reviewsTableData"
+              (tableOutput)="tableRowClick($event)"
+    ></gu-table>
+    <gu-paginator *ngIf="(reviewsData.results.length > 0) && reviewsData"
+                  (page)="onPageSelect($event)"
+                  [pageSize]="20"
+                  [length]="reviewsData.count"
+    ></gu-paginator>
+  </ng-container>
+  <ng-template #noReviews>
+    <p *ngIf="!isLoading">Er zijn geen adviseringen of accorderingen gevonden.</p>
+  </ng-template>
+</div>
+
+<!-- Review details -->
+<gu-modal
+  id="workstack-review-modal"
+  [closeIcon]="true"
+  *ngIf="selectedReviewRequest"
+>
+  <h2>{{selectedReviewRequest.reviewType === 'approval' ? 'Akkoord' : 'Advies'}}</h2>
+  <p class="">{{selectedReviewRequest.zaak.identificatie}}: {{selectedReviewRequest.zaak.omschrijving}}</p>
+  <gu-table [table]="table"
+            class="mb-4"
+  >
+  </gu-table>
+  <div class="card open-reviews" *ngIf="selectedReviewRequest.openReviews?.length > 0">
+    <h4>Openstaande aanvragen</h4>
+    <div class="open-review" *ngFor="let openReview of selectedReviewRequest.openReviews">
+      <span>Deadline: </span><span><strong>{{openReview.deadline | date:'shortDate'}}</strong></span>
+      <ul>
+        <ng-container *ngFor="let user of openReview.users">
+          <li>{{user.fullName}}</li>
+        </ng-container>
+        <ng-container *ngFor="let group of openReview.groups">
+          <li>{{group.name}}</li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</gu-modal>

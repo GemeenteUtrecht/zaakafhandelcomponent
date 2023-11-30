@@ -22,7 +22,8 @@
               [sortable]="true"
               (sortOutput)="sortTable($event)"
               (buttonOutput)="handleTableButtonOutput($event)"></gu-table>
-    <gu-paginator  *ngIf="(documentsData.length > 0) && tableData" (page)="onPageSelect($event)"
+    <gu-paginator  *ngIf="(documentsData.length > 0) && tableData"
+                   (page)="onPageSelect($event)"
                   [pageSize]="10"
                   [length]="paginatedDocsData.count"
     ></gu-paginator>
@@ -48,7 +49,7 @@
           size="big">
   <gu-document-toevoegen-contezza [zaak]="zaak"
                                   (closeModal)="closeModal('document-toevoegen-modal')"
-                                  (reload)="fetchDocuments()">
+                                  (reload)="refreshDocs()">
   </gu-document-toevoegen-contezza>
 </gu-modal>
 
@@ -61,7 +62,7 @@
                         [zaak]="zaak"
                         [selectedDocument]="selectedDocument"
                         (closeModal)="closeModal('bestandseigenschappen-wijzigen-modal')"
-                        (reload)="fetchDocuments()">
+                        (reload)="refreshDocs()">
   </gu-document-wijzigen>
 </gu-modal>
 
