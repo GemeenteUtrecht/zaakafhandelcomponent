@@ -1,0 +1,16 @@
+<div class="workstack-tab-body">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <ng-container *ngIf="tasksTableData.bodyData.length > 0; else noTasks">
+                  <gu-table (sortOutput)="sortTable($event)"
+                            [sortable]="true"
+                            [table]="tasksTableData"
+                  ></gu-table>
+    <gu-paginator (page)="onPageSelect($event)"
+                  [pageSize]="20"
+                  [length]="taskData.count"
+    ></gu-paginator>
+  </ng-container>
+  <ng-template #noTasks>
+    <p *ngIf="!isLoading">Er zijn geen taken gevonden.</p>
+  </ng-template>
+</div>

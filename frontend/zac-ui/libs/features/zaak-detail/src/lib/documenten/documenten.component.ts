@@ -338,6 +338,7 @@ export class DocumentenComponent implements OnChanges {
       () => this.reportError.bind(this),
       () => this.isLoading =false,
     );
+    this.refreshDocs();
   }
 
   /**

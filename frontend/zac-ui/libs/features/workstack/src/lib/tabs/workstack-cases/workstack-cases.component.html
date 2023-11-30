@@ -1,0 +1,17 @@
+<div class="workstack-tab-body">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <ng-container *ngIf="zakenTableData.bodyData.length > 0; else noZaken">
+    <gu-table (sortOutput)="sortZaken($event)"
+              [sortable]="true"
+              [table]="zakenTableData"
+    ></gu-table>
+    <gu-paginator *ngIf="(zakenData.results.length > 0) && zakenData"
+                  (page)="onPageSelect($event)"
+                  [pageSize]="20"
+                  [length]="zakenData.count"
+    ></gu-paginator>
+  </ng-container>
+  <ng-template #noZaken>
+    <p *ngIf="!isLoading">Er zijn geen zaken gevonden.</p>
+  </ng-template>
+</div>

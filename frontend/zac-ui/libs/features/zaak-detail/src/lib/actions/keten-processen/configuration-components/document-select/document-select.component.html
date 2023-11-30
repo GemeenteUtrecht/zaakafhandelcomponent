@@ -1,9 +1,12 @@
 <div class="configuration-component" *ngIf="taskContextData && !submitSuccess">
   <h2>{{taskContextData.task.name}}</h2>
-  <form class="configuration-form" *ngIf="documentsData?.length > 0">
+  <form class="configuration-form">
     <article class="configuration-details">
       <label class="h4 d-inline-block mr-2">Documenten</label>
       <p>Dit zijn de documenten die bij de zaak horen. Selecteer de relevante documenten voor het vervolg van het proces.</p>
+      <ng-container *ngIf="(documentsData?.length === 0)">
+        <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
+      </ng-container>
       <div class="configuration-files">
         <div class="row pl-3 d-block">
           <gu-table *ngIf="(documentsData?.length > 0) && tableData"
@@ -16,14 +19,11 @@
                          [pageSize]="10"
                          [length]="paginatedDocsData.count"
           ></gu-paginator>
-          <ng-container *ngIf="(documentsData?.length === 0)">
-            <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
-          </ng-container>
         </div>
       </div>
     </article>
     <gu-message *ngIf="hasDocTypeError" class='d-block mb-4' type="warn" [message]="docTypeErrorMessage"></gu-message>
-    <div class="d-flex justify-content-start">
+    <div class="d-flex justify-content-start" *ngIf="documentsData?.length > 0">
       <button gu-button
               (click)="submitForm()"
               [disabled]="isSubmitting || selectedDocuments.length === 0"

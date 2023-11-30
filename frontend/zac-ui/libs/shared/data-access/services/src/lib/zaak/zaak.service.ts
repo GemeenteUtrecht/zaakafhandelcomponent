@@ -117,7 +117,7 @@ export class ZaakService {
    * @param {string} bronorganisatie
    * @param {string} identificatie
    * @param {number} page
-   * @param {string} sortValue
+   * @param {string} sortData
    * @return {Observable}
    */
   listCaseDocuments(bronorganisatie, identificatie, page, sortData): Observable<ListDocuments> {

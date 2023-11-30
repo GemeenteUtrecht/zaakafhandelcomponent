@@ -9,6 +9,10 @@
     Met de gegevens hieronder kun je akkoord vragen aan een medewerker. Deze medewerker ontvangt hiervoor een mail met een link naar de zaak.
   </p>
 
+  <ng-container *ngIf="(documentsData?.length === 0)">
+    <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
+  </ng-container>
+
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="documentsData?.length > 0">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Documenten</label>
@@ -27,9 +31,6 @@
                            [length]="paginatedDocsData.count"
             ></gu-paginator>
           </div>
-          <ng-container *ngIf="(documentsData?.length === 0)">
-            <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
-          </ng-container>
         </div>
       </div>
     </article>

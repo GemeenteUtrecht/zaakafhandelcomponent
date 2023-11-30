@@ -38,6 +38,7 @@ export * from './ui/menu';
 
 // Workstack
 export * from './workstack/reviews';
+export * from './workstack/workstack-summary';
 
 // Accounts
 export * from './accounts/auth-profile';

@@ -1,0 +1,12 @@
+<div class="workstack-tab-body">
+  <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+  <ng-container *ngIf="accessRequestData">
+    <gu-access-request [data]="accessRequestData.results"
+                       (reload)="getContextData(1); reload.emit(true)"></gu-access-request>
+    <gu-paginator *ngIf="accessRequestData.count > 0"
+                  (page)="onPageSelect($event)"
+                  [pageSize]="20"
+                  [length]="accessRequestData.count"
+    ></gu-paginator>
+  </ng-container>
+</div>
