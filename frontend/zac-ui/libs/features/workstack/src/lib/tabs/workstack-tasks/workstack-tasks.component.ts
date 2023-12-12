@@ -50,7 +50,7 @@ export class WorkstackTasksComponent implements OnInit {
    */
   getTasksTableRows(tasks: UserTask[]): RowData[] {
     return tasks.map((element) => {
-      const zaakUrl = `/ui/task/${element.zaak.bronorganisatie}/${element.zaak.identificatie}/acties`;
+      const zaakUrl = `/ui/zaken/${element.zaak.bronorganisatie}/${element.zaak.identificatie}/acties`;
 
       const cellData: RowData = {
         cellData: {
