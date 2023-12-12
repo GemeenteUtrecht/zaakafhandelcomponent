@@ -27,7 +27,7 @@
                 {{''}}
               </th>
             </ng-container>
-            <td class="table__cell" mat-cell *matCellDef="let dataRow">
+            <td class="table__cell" mat-cell *matCellDef="let dataRow" (click)="onToggleClick(dataRow)">
                 <div [ngSwitch]="dataRow[column.name].type"
                      [ngClass]="{'cell__text': dataRow[column.name].type === 'text', 'cell__no-minwidth': dataRow[column.name].style === 'no-minwidth'}">
 
@@ -37,7 +37,7 @@
                             <button gu-button [buttonStyle]="dataRow[column.name].buttonType ? dataRow[column.name].buttonType : 'tertiary'"
                                     size="extrasmall"
                                     noPadding
-                                    (click)="onButtonClick(column.name, dataRow[column.name].value); $event.stopPropagation()">
+                                    (click)="$event.stopPropagation(); onButtonClick(column.name, dataRow[column.name].value)">
                               <span>{{ dataRow[column.name].label }}</span>
                             </button>
                             <div
@@ -79,7 +79,7 @@
 
                     <!-- Link -->
                     <ng-container *ngSwitchCase="'link'">
-                        <a class="anchor" [href]="dataRow[column.name].url"
+                        <a class="anchor" (click)='$event.stopPropagation()' [href]="dataRow[column.name].url"
                            target="{{ dataRow[column.name].target || '_self' }}">
                           {{ dataRow[column.name].label }}
                         </a>
@@ -138,7 +138,7 @@
         <tr class="table__row table__row--expandable"
             *matRowDef="let dataRow; columns: displayedColumns;"
             [class.table__row--expanded]="getDataRowIndex(dataRow) === expandedIndex"
-            [class.table__row--interactive]="tableOutput.observers.length && dataRow._clickOutput"
+            [class.table__row--interactive]="(tableOutput.observers.length && dataRow._clickOutput)"
             mat-row
             (click)="onRowClick(dataRow._clickOutput);"></tr>
 

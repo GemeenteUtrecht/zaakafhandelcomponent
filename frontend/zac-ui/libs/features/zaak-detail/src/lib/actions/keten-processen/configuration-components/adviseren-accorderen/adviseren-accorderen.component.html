@@ -23,6 +23,7 @@
             <gu-table *ngIf="(documentsData?.length > 0) && tableData"
                       [table]="tableData"
                       [sortable]="true"
+                      [preselectedValues]="selectedDocuments"
                       (sortOutput)="sortTable($event)"
                       (selectionOutput)="onDocSelect($event)"
             ></gu-table>
