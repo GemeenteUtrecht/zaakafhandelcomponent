@@ -8,14 +8,12 @@ import {
   OnDestroy,
   ViewEncapsulation, SimpleChanges, HostListener
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../../models/task-context';
 import {KetenProcessenService, SendMessageForm} from './keten-processen.service';
 import {Task, User, Zaak} from '@gu/models';
 import {UserService, ZaakService} from '@gu/services';
-import { fromEvent } from 'rxjs';
-import { logger, Logger } from 'codelyzer/util/logger';
 
 /**
  * <gu-keten-processen [mainZaakUrl]="mainZaakUrl" [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-keten-processen>

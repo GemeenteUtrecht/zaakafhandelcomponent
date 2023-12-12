@@ -42,6 +42,7 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
     @Input() sortable = false;
     @Input() table: Table;
     @Input() wrap = false;
+    @Input() preselectedValues = [];
 
     @Output() tableOutput = new EventEmitter<any>();
     @Output() buttonOutput = new EventEmitter<any>();
@@ -66,8 +67,6 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
     /** @type {number|null} The index of the row to expand. */
     expandedIndex: number | null;
 
-    selection = new SelectionModel<any>(true, []);
-
     selectedValues: any[] = [];
 
     /**
@@ -88,6 +87,7 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
      */
     ngOnInit(): void {
         this.getContextData();
+        this.selectedValues = this.preselectedValues
     }
 
     /**
@@ -189,8 +189,10 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
      * @param {Object} dataRow item in this.dataSource.data.
      */
     onToggleClick(dataRow) {
+      if (dataRow._expandData || dataRow._nestedTableData) {
         const key = this.getDataRowIndex(dataRow);
         this.expandedIndex = this.expandedIndex === key ? null : key;
+      }
     }
 
     /**

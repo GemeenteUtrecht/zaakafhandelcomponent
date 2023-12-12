@@ -7,7 +7,6 @@ import { KetenProcessenService } from '../../keten-processen.service';
 import {
   Document,
   ListDocuments,
-  ReadWriteDocument,
   RowData,
   Table,
   UserGroupDetail,
@@ -130,6 +129,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
         assignedUsers: this.fb.array(predefinedUsersArray),
         toelichting: this.fb.control("", [Validators.maxLength(4000)])
       })
+      this.selectedDocuments = this.taskContextData.context.previouslySelectedDocuments;
       this.fetchDocuments();
       this.checkPredefinedAssignees();
       this.addPreviouslyAssignedUsersStep();

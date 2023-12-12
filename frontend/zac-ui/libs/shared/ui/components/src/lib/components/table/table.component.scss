@@ -24,6 +24,19 @@
     cursor: pointer;
     transform-origin: center;
     transition: transform 225ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    vertical-align: middle;
+    background: $color-background-lightgrey;
+    border-radius: 50%;
+  }
+
+  &__row--expandable &__cell--expandable-toggle .mat-icon {
+    cursor: pointer;
+    transform-origin: center;
+    transition: transform 225ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    vertical-align: middle;
+    &:hover {
+      color: $color-primary
+    }
   }
 
   &__row--expanded &__cell--expandable-toggle .mat-icon {
@@ -74,7 +87,7 @@
     word-wrap: break-word;
     max-width: 250px;
     .cell__text {
-      min-width: 80px;
+      min-width: 100px;
       span {
         white-space: pre-line;
       }
@@ -89,6 +102,9 @@
 
   &__nested-content {
     white-space: pre-line;
+    &--expanded {
+      padding: 10px;
+    }
   }
 
   &__nested-content .table__cell:first-of-type {

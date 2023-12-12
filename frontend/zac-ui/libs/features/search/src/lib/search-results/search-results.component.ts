@@ -48,7 +48,7 @@ export class SearchResultsComponent implements OnChanges {
             date: result.deadline
           }
         },
-        expandData: result.toelichting,
+        ...(result.toelichting?.length > 0) && {expandData: result.toelichting},
         clickOutput: result,
       }
       return rowData
