@@ -3,7 +3,6 @@ from typing import Dict, Union
 from django.core.cache import cache
 
 from zac.core.models import MetaObjectTypesConfig
-from zgw.models import Zaak
 
 
 def get_field_names_and_values_meta_object_types() -> Dict[Union[int, str], str]:
@@ -17,11 +16,3 @@ def invalidate_meta_objects(on_data: Dict):
         on_data["kenmerken"]["object_type"]
     ):
         cache.delete(key)
-
-
-def invalidate_cache_fetch_oudbehandelaren(zaak: Zaak):
-    cache.delete(f"fetch_oudbehandelaren_object:{zaak.url}")
-
-
-def invalidate_cache_fetch_checklist_object(zaak: Zaak):
-    cache.delete(f"fetch_checklist_object:{zaak.url}")
