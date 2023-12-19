@@ -30,7 +30,7 @@ urlpatterns = [
     path("dowc/", include("zac.contrib.dowc.urls")),
     path("forms/", include("zac.forms.api.urls")),
     path("kadaster/", include("zac.contrib.kadaster.urls")),
-    path("kownsl/", include("zac.contrib.kownsl.urls")),
+    path("kownsl/", include("zac.contrib.objects.kownsl.api.urls")),
     path("landing-page/", include("zac.landing.api.urls")),
     path("oudbehandelaren/", include("zac.contrib.objects.oudbehandelaren.api.urls")),
     path("search/", include("zac.elasticsearch.drf_api.urls")),

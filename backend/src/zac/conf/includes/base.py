@@ -162,7 +162,7 @@ INSTALLED_APPS = [
     "zac.contrib.board",
     "zac.contrib.brp",
     "zac.contrib.kadaster",
-    "zac.contrib.kownsl",
+    "zac.contrib.objects.kownsl",
     "zac.contrib.organisatieonderdelen",
     "zac.contrib.validsign.apps.ValidSignConfig",
     "zac.activities",
