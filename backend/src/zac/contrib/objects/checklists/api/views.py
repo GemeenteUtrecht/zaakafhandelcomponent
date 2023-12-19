@@ -9,7 +9,7 @@ from rest_framework import permissions, status, views
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-from zac.contrib.objects.cache import invalidate_cache_fetch_checklist_object
+from zac.contrib.objects.checklists.cache import invalidate_cache_fetch_checklist_object
 from zac.contrib.objects.services import (
     fetch_checklist,
     fetch_checklist_object,
