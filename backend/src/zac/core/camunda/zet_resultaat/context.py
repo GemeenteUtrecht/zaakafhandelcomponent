@@ -68,7 +68,7 @@ def get_context(task: Task) -> ZetResultaatContext:
         get_camunda_user_tasks_for_zaak(zaak_url, exclude_zaak_creation=True) or None
     )
     open_documenten = check_document_status(zaak=zaak_url)
-    
+
     # Fetch open review requests
     review_requests = get_all_review_requests_for_zaak(zaak)
     reviews_given = {

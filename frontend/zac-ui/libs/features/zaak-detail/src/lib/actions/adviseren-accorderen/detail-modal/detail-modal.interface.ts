@@ -23,5 +23,5 @@ export interface ReviewDocument {
   adviceVersion: number;
   sourceUrl: string;
   sourceVersion: number;
-  title: string;
+  bestandsnaam: string;
 }

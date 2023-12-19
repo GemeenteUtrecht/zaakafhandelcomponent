@@ -295,10 +295,7 @@ class WorkStackReviewRequestsView(views.APIView):
         zaken = {
             z.url: z
             for z in search_zaken(
-                request=self.request, 
-                urls=urls, 
-                only_allowed=False, 
-                size=len(urls)
+                request=self.request, urls=urls, only_allowed=False, size=len(urls)
             )
         }
         for rr in review_requests:
