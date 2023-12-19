@@ -2,7 +2,7 @@ import logging
 
 from django.core.management import BaseCommand
 
-from zac.contrib.kownsl.api import get_all_review_requests_for_zaak
+from zac.contrib.objects.services import get_all_review_requests_for_zaak
 from zac.core.services import get_rollen_all, get_zaken_all
 
 from ...permission_loaders import (

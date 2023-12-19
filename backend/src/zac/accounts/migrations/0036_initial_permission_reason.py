@@ -5,8 +5,8 @@ from zac.accounts.constants import (
     PermissionObjectTypeChoices,
 )
 from zac.core.services import get_zaak, get_rollen
-from zac.contrib.kownsl.api import get_all_review_requests_for_zaak
-from zac.contrib.kownsl.data import KownslTypes
+from zac.contrib.objects.services import get_all_review_requests_for_zaak
+from zac.contrib.objects.kownsl.data import KownslTypes
 
 
 def get_reason(user_atomic_permission) -> str:

@@ -6,7 +6,7 @@ from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
 
 from zac.camunda.api.permissions import zaakproces_usertasks
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
+from zac.contrib.objects.kownsl.data import KownslTypes, ReviewRequest
 from zac.core.permissions import zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol
@@ -93,9 +93,9 @@ def add_permissions_for_advisors(
         rr_users |= group.user_set.all()
 
     zaak_url = (
-        review_request.for_zaak.url
-        if isinstance(review_request.for_zaak, Zaak)
-        else review_request.for_zaak
+        review_request.zaak.url
+        if isinstance(review_request.zaak, Zaak)
+        else review_request.zaak
     )
     reason = (
         PermissionReason.accordeur

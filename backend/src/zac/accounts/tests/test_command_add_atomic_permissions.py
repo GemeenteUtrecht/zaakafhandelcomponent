@@ -1,3 +1,6 @@
+from copy import deepcopy
+from unittest.mock import patch
+
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -6,7 +9,8 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.contrib.kownsl.models import KownslConfig
+from zac.contrib.objects.kownsl.tests.utils import REVIEW_REQUEST
+from zac.contrib.objects.services import factory_review_request
 from zac.core.permissions import zaakproces_usertasks, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
@@ -17,7 +21,6 @@ from .factories import UserFactory
 
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
-KOWNSL_ROOT = "https://kownsl.nl/"
 
 
 @requests_mock.Mocker()
@@ -28,11 +31,6 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
-
-        config = KownslConfig.get_solo()
-        config.service = kownsl
-        config.save()
 
         cls.user = UserFactory.create(username="test_user")
 
@@ -40,7 +38,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -74,12 +72,11 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([rol]))
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={zaak['url']}",
-            json=paginated_response([]),
-        )
-
-        call_command("add_atomic_permissions")
+        with patch(
+            "zac.accounts.management.commands.add_atomic_permissions.get_all_review_requests_for_zaak",
+            return_value=[],
+        ):
+            call_command("add_atomic_permissions")
 
         self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
 
@@ -95,7 +92,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -129,12 +126,11 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([rol]))
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={zaak['url']}",
-            json=paginated_response([]),
-        )
-
-        call_command("add_atomic_permissions")
+        with patch(
+            "zac.accounts.management.commands.add_atomic_permissions.get_all_review_requests_for_zaak",
+            return_value=[],
+        ):
+            call_command("add_atomic_permissions")
 
         self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 1)
 
@@ -150,7 +146,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -166,28 +162,19 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             eigenschappen=[],
         )
-        review_request = {
-            "id": "1b864f55-0880-4207-9246-9b454cb69cca",
-            "created": "2020-12-16T14:15:22Z",
-            "forZaak": zaak["url"],
-            "reviewType": "advice",
-            "documents": [],
-            "frontendUrl": "",
-            "numAdvices": 0,
-            "numApprovals": 0,
-            "numAssignedUsers": 0,
-            "toelichting": "",
-            "userDeadlines": {f"user:{self.user.username}": "2099-01-01"},
-        }
+        review_request = deepcopy(REVIEW_REQUEST)
+        review_request["zaak"] = zaak["url"]
+        review_request["userDeadlines"] = {f"user:{self.user.username}": "2099-01-01"}
+
         m.get(f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([zaaktype]))
         m.get(f"{ZAKEN_ROOT}zaken", json=paginated_response([zaak]))
         m.get(f"{ZAKEN_ROOT}rollen", json=paginated_response([]))
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={zaak['url']}",
-            json=paginated_response([review_request]),
-        )
 
-        call_command("add_atomic_permissions")
+        with patch(
+            "zac.accounts.management.commands.add_atomic_permissions.get_all_review_requests_for_zaak",
+            return_value=[factory_review_request(review_request)],
+        ):
+            call_command("add_atomic_permissions")
 
         self.assertEqual(AtomicPermission.objects.for_user(self.user).count(), 2)
 
