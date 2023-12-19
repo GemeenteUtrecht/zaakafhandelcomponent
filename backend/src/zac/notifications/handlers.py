@@ -2,7 +2,9 @@ import logging
 
 from django.conf import settings
 
+from django_camunda.api import send_message
 from elasticsearch.exceptions import NotFoundError
+from requests.exceptions import HTTPError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import RolOmschrijving
@@ -13,9 +15,14 @@ from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
-from zac.contrib.kownsl.api import get_all_review_requests_for_zaak, lock_review_request
-from zac.contrib.kownsl.data import ReviewRequest
 from zac.contrib.objects.cache import invalidate_meta_objects
+from zac.contrib.objects.kownsl.cache import invalidate_review_requests_cache
+from zac.contrib.objects.kownsl.data import ReviewRequest
+from zac.contrib.objects.services import (
+    get_all_review_requests_for_zaak,
+    get_review_request,
+    lock_review_request,
+)
 from zac.core.cache import (
     invalidate_document_other_cache,
     invalidate_document_url_cache,
@@ -27,6 +34,7 @@ from zac.core.cache import (
     invalidate_zaakobjecten_cache,
     invalidate_zaaktypen_cache,
 )
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
     _client_from_url,
     delete_zaakobjecten_of_object,
@@ -316,6 +324,30 @@ class InformatieObjecttypenHandler:
 
 
 class ObjectenHandler:
+    def _review_request_object_handler(self, data: dict) -> None:
+        if data["record"]["data"].get("locked"):
+            # End the current process instance gracefully
+            try:
+                send_message(
+                    "cancel-process",
+                    [
+                        object["record"]["data"]
+                        .get("metadata", {})
+                        .get("processInstanceId")
+                    ],
+                )
+            except HTTPError as exc:
+                logger.info(
+                    "Something went wrong trying to end process instance gracefully. Process instance might not exist anymore.",
+                    exc_info=True,
+                )
+
+    def _meta_object_handler(self) -> callable:
+        meta_config = MetaObjectTypesConfig.get_solo()
+        return {
+            meta_config.review_request_objecttype: self._review_request_object_handler
+        }
+
     # We dont update related_zaken here - the notification from open zaak takes care of that.
     def handle(self, data: dict) -> None:
         if data["resource"] == "objecten":
@@ -323,6 +355,12 @@ class ObjectenHandler:
             invalidate_meta_objects(data["kenmerken"])
             if data["actie"] in ["create", "update", "partial_update"]:
                 object = fetch_object(data["hoofd_object"])
+                if object["record"]["data"].get("meta"):
+                    if func := self._meta_object_handler().get(
+                        object["type"]["url"], None
+                    ):
+                        func(data)
+
                 update_object_document(object)
 
             elif data["actie"] == "destroy":

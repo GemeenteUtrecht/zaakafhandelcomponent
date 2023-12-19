@@ -8,14 +8,17 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.constants import APITypes, AuthTypes
+from zgw_consumers.constants import APITypes
 from zgw_consumers.models import APITypes, Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
+from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import UserFactory
-from zac.contrib.kownsl.api import get_review_request
-from zac.contrib.kownsl.models import KownslConfig
-from zac.contrib.kownsl.tests.utils import KOWNSL_ROOT, REVIEW_REQUEST, ZAKEN_ROOT
+from zac.contrib.objects.kownsl.tests.utils import (
+    KOWNSL_ROOT,
+    REVIEW_REQUEST,
+    ZAKEN_ROOT,
+)
+from zac.contrib.objects.services import get_review_request
 from zac.core.tests.utils import ClearCachesMixin
 from zgw.models.zrc import Zaak
 
@@ -67,18 +70,6 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory.create(username="notifs")
-        cls.service = Service.objects.create(
-            label="kownsl",
-            api_type=APITypes.orc,
-            api_root=KOWNSL_ROOT,
-            auth_type=AuthTypes.zgw,
-            client_id="zac",
-            secret="supersecret",
-            user_id="zac",
-        )
-        config = KownslConfig.get_solo()
-        config.service = cls.service
-        config.save()
 
     def setUp(self):
         super().setUp()
@@ -86,10 +77,11 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch(
-        "zac.contrib.kownsl.views.invalidate_review_requests_cache", return_value=None
+        "zac.contrib.objects.kownsl.views.invalidate_review_requests_cache",
+        return_value=None,
     )
     def test_user_task_send_message_locked(self, m, mock_invalidate_cache):
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         m.get(
             RR_URL,
             json=REVIEW_REQUEST,
@@ -115,15 +107,12 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
             "https://camunda.example.com/engine-rest/message",
         )
 
-    @patch("zac.contrib.kownsl.cache.get_zaak")
+    @patch("zac.contrib.objects.kownsl.cache.get_zaak")
     def test_review_request_updated_clears_cache(self, m, mock_get_zaak):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component(
-            "zrc", "schemas/Zaak", url=REVIEW_REQUEST["forZaak"]
-        )
+        zaak = generate_oas_component("zrc", "schemas/Zaak", url=REVIEW_REQUEST["zaak"])
         mock_get_zaak = factory(Zaak, zaak)
 
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         m.get(
             RR_URL,
             json=REVIEW_REQUEST,
@@ -141,22 +130,23 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         UserFactory.create(username="some-other-author")
         # Fill cache
         get_review_request(REVIEW_REQUEST["id"])
-        self.assertTrue(cache.has_key(f"reviewrequest:detail:{REVIEW_REQUEST['id']}"))
+        self.assertTrue(cache.has_key(f"review_request:detail:{REVIEW_REQUEST['id']}"))
 
         notification = deepcopy(NOTIFICATION)
         notification["kenmerken"] = {"actie": "locked"}
 
         response = self.client.post(self.endpoint, notification)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(cache.has_key(f"reviewrequest:detail:{REVIEW_REQUEST['id']}"))
+        self.assertFalse(cache.has_key(f"review_request:detail:{REVIEW_REQUEST['id']}"))
 
     @patch(
-        "zac.contrib.kownsl.views.invalidate_review_requests_cache", return_value=None
+        "zac.contrib.objects.kownsl.views.invalidate_review_requests_cache",
+        return_value=None,
     )
     def test_user_task_send_message_updated_assigned_users(
         self, m, mock_invalidate_cache
     ):
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         m.get(
             RR_URL,
             json=REVIEW_REQUEST,
