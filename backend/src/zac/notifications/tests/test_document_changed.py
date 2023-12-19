@@ -16,7 +16,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import create_informatieobject_document, create_iot_document
+from zac.elasticsearch.api import create_informatieobject_document
 from zac.elasticsearch.documents import InformatieObjectDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get
@@ -115,8 +115,8 @@ class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTest
         io.informatieobjecttype = factory(
             InformatieObjectType, INFORMATIEOBJECTTYPE_RESPONSE
         )
+        io.last_edited_date = None
         io_document = create_informatieobject_document(io)
-        io_document.informatieobjecttype = create_iot_document(io.informatieobjecttype)
         io_document.save()
         self.refresh_index()
 
@@ -163,8 +163,9 @@ class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTest
         io.informatieobjecttype = factory(
             InformatieObjectType, INFORMATIEOBJECTTYPE_RESPONSE
         )
+
+        io.last_edited_date = None
         io_document = create_informatieobject_document(io)
-        io_document.informatieobjecttype = create_iot_document(io.informatieobjecttype)
         io_document.save()
         self.refresh_index()
 

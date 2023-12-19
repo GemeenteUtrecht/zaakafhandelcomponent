@@ -245,6 +245,8 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             bestandsnaam="some-bestandsnaam1.ext1",
         ),
     )
+    document1.informatieobjecttype = iot
+    document1.last_edited_date = None
     document2 = factory(
         Document,
         generate_oas_component(
@@ -257,6 +259,8 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             bestandsnaam="some-bestandsnaam2.ext2",
         ),
     )
+    document2.informatieobjecttype = iot
+    document2.last_edited_date = None
     zio1 = factory(
         ZaakInformatieObject,
         generate_oas_component(
@@ -392,7 +396,6 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         zaak2_document.save()
 
         io1_document = create_informatieobject_document(self.document1)
-        io1_document.informatieobjecttype = create_iot_document(self.iot)
         io1_document.related_zaken = [
             create_related_zaak_document(zaak)
             for zaak in [self.zaak1_model, self.zaak2_model]
@@ -400,7 +403,6 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         io1_document.save()
 
         io2_document = create_informatieobject_document(self.document2)
-        io2_document.informatieobjecttype = create_iot_document(self.iot)
         io2_document.related_zaken = [create_related_zaak_document(self.zaak1_model)]
         io2_document.save()
         self.refresh_index()

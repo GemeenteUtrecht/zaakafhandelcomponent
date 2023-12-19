@@ -59,6 +59,11 @@ from zac.core.services import (
     update_document,
     update_zaak_eigenschap,
 )
+from zac.elasticsearch.api import (
+    create_informatieobject_document,
+    update_informatieobject_document,
+    update_zaakinformatieobjecten_in_zaak_document,
+)
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -1012,6 +1017,9 @@ class ZaakDocumentView(views.APIView):
             document.informatieobjecttype
         )
 
+        # update elasticsearch index
+        update_informatieobject_document(document)
+
         serializer = self.get_response_serializer(document)
         return Response(serializer.data)
 
@@ -1044,6 +1052,10 @@ class ZaakDocumentView(views.APIView):
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype
         )
+
+        # add to elasticsearch index
+        create_informatieobject_document(document)
+        update_zaakinformatieobjecten_in_zaak_document(zaak)
 
         serializer = self.get_response_serializer(document)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
