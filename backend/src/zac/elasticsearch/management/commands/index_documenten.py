@@ -173,6 +173,7 @@ class Command(IndexCommand, BaseCommand):
         self, zaken: List[ZaakDocument]
     ) -> Dict[str, RelatedZaakDocument]:
         eio_to_zaken = {}
+        found = 0
         for zaak in zaken:
             related_zaak = create_related_zaak_document(zaak)
             for eio in zaak.zaakinformatieobjecten:
@@ -181,9 +182,19 @@ class Command(IndexCommand, BaseCommand):
                 except KeyError:
                     eio_to_zaken[eio.informatieobject] = [related_zaak]
 
+                found += 1
+
+        self.stdout.write_without_progress(
+            "{found} INFORMATIEOBJECTen are found for {zaken} related ZAAKen.".format(
+                found=found, zaken=len(zaken)
+            )
+        )
         return eio_to_zaken
 
     def create_eio_documenten(
         self, documenten: List[Document]
     ) -> Dict[str, InformatieObjectDocument]:
+        self.stdout.write_without_progress(
+            "{no} INFORMATIEOBJECTen are found.".format(no=len(documenten))
+        )
         return {doc.url: create_informatieobject_document(doc) for doc in documenten}

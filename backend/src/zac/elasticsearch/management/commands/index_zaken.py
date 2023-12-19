@@ -207,7 +207,7 @@ class Command(IndexCommand, BaseCommand):
             if status
         }
         self.stdout.write_without_progress(
-            f"{len(status_documenten.keys())} statussen are received from ZAKEN API."
+            f"{len(status_documenten.keys())} STATUSsen are received from ZAKEN API."
         )
         return status_documenten
 
@@ -224,7 +224,7 @@ class Command(IndexCommand, BaseCommand):
 
         num_roles = sum([len(rollen) for rollen in list_of_rollen])
         self.stdout.write_without_progress(
-            f"{num_roles} rollen are received for {len(rollen_documenten.keys())} zaken."
+            f"{num_roles} ROLlen are received for {len(rollen_documenten.keys())} zaken."
         )
         return rollen_documenten
 
@@ -243,7 +243,7 @@ class Command(IndexCommand, BaseCommand):
 
         num_properties = sum([len(zen) for zen in list_of_eigenschappen])
         self.stdout.write_without_progress(
-            f"{num_properties} zaakeigenschappen are found for {len(eigenschappen_documenten.keys())} zaken."
+            f"{num_properties} ZAAKEIGENSCHAPpen are found for {len(eigenschappen_documenten.keys())} zaken."
         )
         return eigenschappen_documenten
 
@@ -262,7 +262,7 @@ class Command(IndexCommand, BaseCommand):
 
         num_case_objects = sum([len(zon) for zon in list_of_zon])
         self.stdout.write_without_progress(
-            f"{num_case_objects} zaakobjecten are found for {len(zaakobjecten_documenten.keys())} zaken."
+            f"{num_case_objects} ZAAKOBJECTen are found for {len(zaakobjecten_documenten.keys())} zaken."
         )
         return zaakobjecten_documenten
 
@@ -281,6 +281,6 @@ class Command(IndexCommand, BaseCommand):
 
         num_case_zios = sum([len(zio) for zio in list_of_zios])
         self.stdout.write_without_progress(
-            f"{num_case_zios} zaakinformatieobjecten are found for {len(zaakinformatieobject_documenten.keys())} zaken."
+            f"{num_case_zios} ZAAKINFORMATIEOBJECTen are found for {len(zaakinformatieobject_documenten.keys())} zaken."
         )
         return zaakinformatieobject_documenten

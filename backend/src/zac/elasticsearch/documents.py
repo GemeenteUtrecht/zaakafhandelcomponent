@@ -121,6 +121,7 @@ class ZaakDocument(Document):
         name = settings.ES_INDEX_ZAKEN
         settings = {
             "index.mapping.ignore_malformed": True,
+            "index.mapping.nested_objects.limit": 20000,  # temporary upscale to 20.000 to offset `mistake?` in `verzaking`
             "max_ngram_diff": settings.MAX_GRAM - settings.MIN_GRAM,
         }
         analyzers = [
