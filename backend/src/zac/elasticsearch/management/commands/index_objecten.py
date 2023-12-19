@@ -154,6 +154,7 @@ class Command(BaseCommand):
         self, zaken: List[ZaakDocument]
     ) -> Dict[str, RelatedZaakDocument]:
         obj_to_zaken = {}
+        found = 0
         for zaak in zaken:
             related_zaak = create_related_zaak_document(zaak)
             for obj in zaak.zaakobjecten:
@@ -161,12 +162,21 @@ class Command(BaseCommand):
                     obj_to_zaken[obj.object].append(related_zaak)
                 except KeyError:
                     obj_to_zaken[obj.object] = [related_zaak]
+                found += 1
 
+        self.stdout.write_without_progress(
+            "{found} OBJECTen are found for {zaken} related ZAAKen.".format(
+                found=found, zaken=len(zaken)
+            )
+        )
         return obj_to_zaken
 
     def create_objecten_documenten(
         self, objects: List[Dict]
     ) -> Dict[str, ObjectDocument]:
+        self.stdout.write_without_progress(
+            "{no} OBJECTen are found.".format(no=len(objects))
+        )
         return {obj["url"]: create_object_document(obj) for obj in objects}
 
     def create_objecttype_documenten(
