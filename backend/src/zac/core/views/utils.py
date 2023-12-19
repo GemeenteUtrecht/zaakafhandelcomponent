@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from django.http import HttpRequest
 
-from zac.contrib.kownsl.data import ReviewRequest
+from zac.contrib.objects.kownsl.data import ReviewRequest
 from zgw.models.zrc import Zaak
 
 from ..services import get_zaak

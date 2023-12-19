@@ -18,10 +18,10 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.contrib.dowc.api import check_document_status, patch_and_destroy_doc
 from zac.contrib.dowc.data import OpenDowc
-from zac.contrib.kownsl.data import ReviewRequest
-from zac.contrib.kownsl.serializers import ZaakRevReqSummarySerializer
 from zac.contrib.objects.checklists.api.serializers import ChecklistQuestionSerializer
 from zac.contrib.objects.checklists.data import ChecklistQuestion
+from zac.contrib.objects.kownsl.api.serializers import ZaakRevReqSummarySerializer
+from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.core.api.serializers import ResultaatTypeSerializer
 from zac.core.cache import invalidate_zaak_cache
 from zac.core.services import get_resultaattypen

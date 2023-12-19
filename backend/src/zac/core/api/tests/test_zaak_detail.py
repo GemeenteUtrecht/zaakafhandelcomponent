@@ -24,7 +24,6 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.contrib.kownsl.models import KownslConfig
 from zac.core.camunda.start_process.tests.utils import (
     OBJECTS_ROOT,
     START_CAMUNDA_PROCESS_FORM,
@@ -41,7 +40,6 @@ from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-KOWNSL_ROOT = "https://kownsl.nl/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
@@ -716,10 +714,6 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
-        config = KownslConfig.get_solo()
-        config.service = kownsl
-        config.save()
 
         cls.catalogus = generate_oas_component(
             "ztc",

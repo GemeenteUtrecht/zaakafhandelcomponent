@@ -74,8 +74,6 @@ def get_naam_natuurlijkpersoon(rol: Rol) -> Optional[str]:
 
 
 def get_naam_medewerker(rol: Rol) -> Optional[str]:
-    from zac.core.camunda.utils import resolve_assignee
-
     if rol.betrokkene:
         logger.warning(
             "Don't know how to handle medewerker URLs (got %s)", rol.betrokkene
@@ -86,6 +84,8 @@ def get_naam_medewerker(rol: Rol) -> Optional[str]:
         # Identificatie of a medewerker only allows voorletters, voorvoegsel_achternaam and achternaam.
         # This is not unique enough and so we catch the gebruiker by its identificatie whenever possible.
         try:
+            from zac.core.camunda.utils import resolve_assignee
+
             user = resolve_assignee(username)
             if isinstance(user, User):
                 name = user.get_full_name()

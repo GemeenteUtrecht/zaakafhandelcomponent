@@ -18,8 +18,7 @@ from zac.activities.tests.factories import ActivityFactory
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.models import DowcConfig
-from zac.contrib.kownsl.models import KownslConfig
-from zac.contrib.kownsl.tests.utils import REVIEW_REQUEST
+from zac.contrib.objects.kownsl.tests.utils import REVIEW_REQUEST
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..camunda.zet_resultaat.serializers import ZetResultaatContextSerializer
@@ -31,7 +30,6 @@ PI_URL = "https://camunda.example.com/engine-rest/process-instance"
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
-KOWNSL_ROOT = "https://kownsl.nl/"
 DOWC_API_ROOT = "https://dowc.nl/api/v1/"
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
@@ -82,10 +80,6 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
         camunda_config.root_url = CAMUNDA_ROOT
         camunda_config.rest_api_path = CAMUNDA_API_PATH
         camunda_config.save()
-        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
-        kownsl_config = KownslConfig.get_solo()
-        kownsl_config.service = kownsl
-        kownsl_config.save()
 
         cls.dowc_service = Service.objects.create(
             label="dowc",
@@ -174,7 +168,7 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
     def test_zet_resultaat_context_serializer(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         mock_service_oas_get(m, DOWC_API_ROOT, "dowc", oas_url=self.dowc_service.oas)
         mock_resource_get(m, self.catalogus)
         m.get(
@@ -191,19 +185,6 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             json=serialize_variable([self.resultaattype["omschrijving"]]),
         )
         mock_resource_get(m, self.zaak)
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=paginated_response(
-                [
-                    {
-                        **REVIEW_REQUEST,
-                        "numAssignedUsers": REVIEW_REQUEST["numAdvices"]
-                        + REVIEW_REQUEST["numApprovals"]
-                        + 1,
-                    }
-                ]
-            ),
-        )
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={self.zaak['url']}", json=[])
         m.post(f"{DOWC_API_ROOT}documenten/status", json=[])
         mock_resource_get(m, self.zaaktype)

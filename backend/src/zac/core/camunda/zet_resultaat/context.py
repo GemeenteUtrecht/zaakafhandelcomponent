@@ -6,9 +6,13 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import register
 from zac.camunda.user_tasks.api import get_camunda_user_tasks_for_zaak
 from zac.contrib.dowc.api import check_document_status
-from zac.contrib.kownsl.api import get_all_review_requests_for_zaak
 from zac.contrib.objects.checklists.data import ChecklistQuestion
-from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
+from zac.contrib.objects.services import (
+    fetch_checklist,
+    fetch_checklisttype,
+    get_all_review_requests_for_zaak,
+    get_reviews_for_zaak,
+)
 from zac.core.camunda.utils import get_process_zaak_url
 from zac.core.services import fetch_zaaktype, get_resultaattypen, get_zaak, get_zaaktype
 from zgw.models.zrc import Zaak
@@ -63,14 +67,22 @@ def get_context(task: Task) -> ZetResultaatContext:
     tasks = (
         get_camunda_user_tasks_for_zaak(zaak_url, exclude_zaak_creation=True) or None
     )
-    review_requests = [
-        rr
-        for rr in get_all_review_requests_for_zaak(zaak)
-        if rr.completed < rr.num_assigned_users
-    ] or None
     open_documenten = check_document_status(zaak=zaak_url)
-    zaaktype = fetch_zaaktype(zaak.zaaktype)
+    
+    # Fetch open review requests
+    review_requests = get_all_review_requests_for_zaak(zaak)
+    reviews_given = {
+        str(rev.review_request): rev.reviews for rev in get_reviews_for_zaak(zaak)
+    }
+    open_review_requests = []
+    for rr in review_requests:
+        rr.reviews = reviews_given.get(str(rr.id))
+        rr.fetched_reviews = True
+        if rr.get_completed() < rr.num_assigned_users:
+            open_review_requests.append(rr)
 
+    review_requests = open_review_requests or None
+    zaaktype = fetch_zaaktype(zaak.zaaktype)
     all_result_types = get_resultaattypen(zaaktype)
     chosen_result_types = []
     if result_type_choices := task.get_variable("resultaatTypeKeuzes", default=None):
