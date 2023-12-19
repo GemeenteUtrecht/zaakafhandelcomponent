@@ -1472,7 +1472,7 @@ def update_object_record_data(
     new_data = {
         "record": {
             **object["record"],
-            **{"data": data},
+            "data": data,
             "correctionFor": object["record"]["index"],
             "correctedBy": user.username if user else "service-account",
         }
