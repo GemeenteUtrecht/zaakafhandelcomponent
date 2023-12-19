@@ -2,16 +2,14 @@ from django.urls import reverse
 
 import requests_mock
 from rest_framework.test import APITestCase
-from zgw_consumers.constants import APITypes, AuthTypes
+from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, UserFactory
-from zac.contrib.kownsl.models import KownslConfig
-from zac.contrib.kownsl.tests.utils import (
+from zac.contrib.objects.kownsl.tests.utils import (
     ADVICE,
     CATALOGI_ROOT,
-    KOWNSL_ROOT,
     REVIEW_REQUEST,
     ZAAK_URL,
     ZAKEN_ROOT,
@@ -34,18 +32,6 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        cls.service = Service.objects.create(
-            label="Kownsl",
-            api_type=APITypes.orc,
-            api_root=KOWNSL_ROOT,
-            auth_type=AuthTypes.zgw,
-            client_id="zac",
-            secret="supersecret",
-            user_id="zac",
-        )
-        config = KownslConfig.get_solo()
-        config.service = cls.service
-        config.save()
 
         cls.user = UserFactory.create()
         cls.group_1 = GroupFactory.create()
@@ -89,15 +75,9 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         )
 
     def test_workstack_review_requests_endpoint_no_zaak(self, m):
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         self.refresh_index()
-
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?pageSize=20&page=1&requester={self.user}",
-            json=paginated_response([{**REVIEW_REQUEST, "reviews": [ADVICE]}]),
-        )
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.endpoint)
@@ -126,7 +106,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                         "advices": [
                             {
                                 "created": ADVICE["created"],
-                                "author": {
+                                "user": {
                                     "firstName": ADVICE["author"]["firstName"],
                                     "lastName": ADVICE["author"]["lastName"],
                                     "username": ADVICE["author"]["username"],
@@ -142,18 +122,12 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         )
 
     def test_workstack_review_requests_endpoint_found_zaak(self, m):
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         zaak_document = self.create_zaak_document(self.zaak)
         zaak_document.zaaktype = self.create_zaaktype_document(self.zaaktype)
         zaak_document.save()
         self.refresh_index()
-
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?pageSize=20&page=1&requester={self.user}",
-            json=paginated_response([REVIEW_REQUEST]),
-        )
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.endpoint)

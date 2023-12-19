@@ -6,13 +6,13 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.api.polymorphism import PolymorphicSerializer
-from zac.contrib.kownsl.constants import KownslTypes
-from zac.contrib.kownsl.serializers import (
+from zac.contrib.objects.checklists.data import ChecklistAnswer
+from zac.contrib.objects.kownsl.api.serializers import (
     AdviceSerializer,
     ApprovalSerializer,
     OpenReviewSerializer,
 )
-from zac.contrib.objects.checklists.data import ChecklistAnswer
+from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.elasticsearch.drf_api.serializers import (
     StatusDocumentSerializer,
     ZaakTypeDocumentSerializer,
@@ -160,11 +160,11 @@ class WorkStackAdviceSerializer(AdviceSerializer):
 
 
 class WorkStackAdviceReviewsSerializer(serializers.Serializer):
-    advices = WorkStackAdviceSerializer(many=True, source="get_reviews_summary")
+    advices = WorkStackAdviceSerializer(many=True)
 
 
 class WorkStackApprovalReviewsSerializer(serializers.Serializer):
-    approvals = ApprovalSerializer(many=True, source="get_reviews_summary")
+    approvals = ApprovalSerializer(many=True)
 
 
 class WorkStackReviewRequestSerializer(PolymorphicSerializer):

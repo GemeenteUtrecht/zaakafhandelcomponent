@@ -7,23 +7,20 @@ import requests_mock
 from elasticsearch_dsl import Index
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
     BlueprintPermissionFactory,
     GroupFactory,
-    SuperUserFactory,
     UserFactory,
 )
 from zac.activities.tests.factories import ActivityFactory, EventFactory
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.contrib.kownsl.tests.utils import CATALOGI_ROOT, ZAKEN_ROOT
 from zac.contrib.objects.checklists.tests.utils import CATALOGI_ROOT, ZAKEN_ROOT
+from zac.contrib.objects.kownsl.tests.utils import CATALOGI_ROOT, ZAKEN_ROOT
 from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel

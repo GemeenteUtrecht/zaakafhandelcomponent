@@ -3,11 +3,7 @@ from itertools import groupby
 from typing import Dict, List
 from urllib.request import Request
 
-from zgw_consumers.api_models.base import factory
-
-from zac.accounts.models import AccessRequest, User
-from zac.contrib.kownsl.api import get_client as get_kownsl_client
-from zac.contrib.kownsl.data import ReviewRequest
+from zac.accounts.models import AccessRequest
 from zac.core.permissions import zaken_handle_access
 from zac.elasticsearch.searches import search_zaken
 
@@ -111,12 +107,44 @@ def get_checklist_answers_groups(
     ]
 
 
-def get_review_requests_for_requester(user: User) -> List[ReviewRequest]:
-    client = get_kownsl_client()
-    results = client.list("review_requests", query_params={"requester": user.username})
-    review_requests = factory(ReviewRequest, results)
+def get_review_requests_paginated():
+    return None
 
-    # fix relation reference
-    for result, review_request in zip(results, review_requests):
-        review_request.user_deadlines = result["userDeadlines"]
-    return review_requests
+
+#     query_params: Optional[Dict] = None,
+#     zaak: Optional[Zaak] = None,
+#     requester: Optional[User] = None,
+# ) -> Tuple[List[Dict], Dict]:
+#     client = get_client()
+
+#     if not query_params:
+#         query_params = {}
+
+#     if zaak:
+#         query_params["zaak"] = zaak.url
+#     if requester:
+#         query_params["requester"] = requester.username
+
+#     results = client.list("review_requests", query_params=query_params)
+#     review_requests = factory(ReviewRequest, results["results"])
+#     # fix relation reference
+#     for result, review_request in zip(results["results"], review_requests):
+#         review_request.user_deadlines = result["userDeadlines"]
+#     results["results"] = review_requests
+#     query_params = fetch_next_url_pagination(results, query_params=query_params)
+#     return results, query_params
+
+
+def count_review_requests_by_user():
+    return None
+
+
+#     user: User,
+# ) -> Optional[int]:
+
+#     client = get_client()
+#     result = client.retrieve(
+#         "review_requests_count",
+#         request_kwargs={"params": {"requester": {user.username}}},
+#     )
+#     return result.get("count", None)
