@@ -4475,15 +4475,15 @@ paths:
               schema:
                 $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fapi.bag.acceptatie.kadaster.nl%2Flvbag%2Findividuelebevragingen%2Fv2%2Fopenapi.yaml#/components/schemas/Pand
           description: ''
-  /api/kownsl/review-requests/{request_uuid}/advice:
+  /api/kownsl/review-requests/{request_uuid}/review:
     get:
-      operationId: kownsl_review_requests_advice_retrieve
+      operationId: kownsl_review_requests_review_retrieve
       description: |-
         This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
         and post their advice/approval to the kownsl component.
 
         * Requires that the requesting user is authenticated and found in review_request.user_deadlines
-      summary: Alle adviesverzoeken opvragen.
+      summary: Een specifiek verzoek opvragen.
       parameters:
       - in: query
         name: assignee
@@ -4515,16 +4515,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/KownslReviewRequest'
+                $ref: '#/components/schemas/ZaakRevReqDetail'
           description: ''
     post:
-      operationId: kownsl_review_requests_advice_create
+      operationId: kownsl_review_requests_review_create
       description: |-
         This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
         and post their advice/approval to the kownsl component.
 
         * Requires that the requesting user is authenticated and found in review_request.user_deadlines
-      summary: Maak een advies voor een verzoek aan.
+      summary: Create review for review request.
       parameters:
       - in: query
         name: assignee
@@ -4544,95 +4544,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/requestBody/content/application%2Fjson/schema
-      security:
-      - cookieAuth: []
-      - tokenAuth: []
-      responses:
-        '201':
-          headers:
-            X-Is-Hijacked:
-              schema:
-                type: string
-                enum:
-                - 'false'
-                - 'true'
-              description: Header displays als de gebruiker is gehijackt.
-          content:
-            application/json:
-              schema:
-                $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fadvices/post/responses/201/content/application%2Fjson/schema
-          description: ''
-  /api/kownsl/review-requests/{request_uuid}/approval:
-    get:
-      operationId: kownsl_review_requests_approval_retrieve
-      description: |-
-        This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
-        and post their advice/approval to the kownsl component.
-
-        * Requires that the requesting user is authenticated and found in review_request.user_deadlines
-      summary: Een specifiek accorderingsverzoek opvragen.
-      parameters:
-      - in: query
-        name: assignee
-        schema:
-          type: string
-        description: Begunstigde van de gebruikerstaak in camunda.
-        required: true
-      - in: path
-        name: request_uuid
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - kownsl
-      security:
-      - cookieAuth: []
-      - tokenAuth: []
-      responses:
-        '200':
-          headers:
-            X-Is-Hijacked:
-              schema:
-                type: string
-                enum:
-                - 'false'
-                - 'true'
-              description: Header displays als de gebruiker is gehijackt.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KownslReviewRequest'
-          description: ''
-    post:
-      operationId: kownsl_review_requests_approval_create
-      description: |-
-        This view allows a user to get relevant review request data from the kownsl API to be able to form an advice,
-        and post their advice/approval to the kownsl component.
-
-        * Requires that the requesting user is authenticated and found in review_request.user_deadlines
-      summary: Maak een accordering voor een verzoek aan.
-      parameters:
-      - in: query
-        name: assignee
-        schema:
-          type: string
-        description: Begunstigde van de gebruikerstaak in camunda.
-        required: true
-      - in: path
-        name: request_uuid
-        schema:
-          type: string
-          format: uuid
-        required: true
-      tags:
-      - kownsl
-      requestBody:
-        content:
-          application/json:
+              $ref: '#/components/schemas/SubmitReviewRequest'
+          application/x-www-form-urlencoded:
             schema:
-              $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/requestBody/content/application%2Fjson/schema
+              $ref: '#/components/schemas/SubmitReviewRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubmitReviewRequest'
       security:
       - cookieAuth: []
       - tokenAuth: []
@@ -4649,7 +4567,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Brequest__uuid%7D%2Fapprovals/post/responses/201/content/application%2Fjson/schema
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubmitReview'
           description: ''
   /api/kownsl/zaak-review-requests/{bronorganisatie}/{identificatie}/summary:
     get:
@@ -4755,7 +4675,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ZaakRevReqDetail'
+                $ref: '#/components/schemas/ZaakRevReqSummary'
           description: ''
   /api/kownsl/zaak-review-requests/{request_uuid}/reminder:
     post:
@@ -5998,90 +5918,34 @@ components:
     Advice:
       type: object
       properties:
-        created:
-          type: string
-          format: date-time
-          description: Datum wanneer het verzoek is aangemaakt.
-        author:
-          allOf:
-          - $ref: '#/components/schemas/Author'
-          title: auteur
-          description: Verzoeksauteur.
         advice:
           type: string
           description: Gegeven advies voor een verzoek.
-        documents:
+        adviceDocuments:
           type: array
           items:
             $ref: '#/components/schemas/AdviceDocument'
           title: adviesdocumenten
-          description: Relevante documenten voor het advies.
-        group:
+          description: URL-references of documents relevant to the advice.
+        author:
+          allOf:
+          - $ref: '#/components/schemas/KownslUser'
+          description: '`username` of the author that adviced.'
+        created:
           type: string
-          description: Groep die advies gaf.
+          format: date-time
+          default: '2023-12-05T14:49:39.351411Z'
+          description: Datetime review request was created.
+        group:
+          allOf:
+          - $ref: '#/components/schemas/KownslGroup'
+          nullable: true
+          description: '`name` of the group that author answered for.'
       required:
       - advice
+      - adviceDocuments
       - author
-      - created
-      - documents
-      - group
       title: Advice
-    AdviceApprovalContext:
-      type: object
-      properties:
-        camundaAssignedUsers:
-          allOf:
-          - $ref: '#/components/schemas/CamundaAssignedUsers'
-          description: Gebruikers of groepen toegewezen vanuit het camunda proces.
-        documents:
-          type: array
-          items:
-            $ref: '#/components/schemas/DocumentUserTask'
-        id:
-          type: string
-          format: uuid
-        previouslyAssignedUsers:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReadAssignedUsers'
-          description: A list of previously assigned users
-        reviewType:
-          $ref: '#/components/schemas/ReviewTypeEnum'
-        previouslySelectedDocuments:
-          type: array
-          items:
-            type: string
-            format: uri
-          description: A list of previously selected documents.
-        title:
-          type: string
-        toelichting:
-          type: string
-          description: A previously given comment regarding the review request.
-        zaakInformatie:
-          $ref: '#/components/schemas/ZaakInformatieTask'
-      required:
-      - camundaAssignedUsers
-      - documents
-      - id
-      - reviewType
-      - title
-      - zaakInformatie
-      title: AdviceApprovalContext
-    AdviceApprovalTaskData:
-      type: object
-      properties:
-        context:
-          allOf:
-          - $ref: '#/components/schemas/AdviceApprovalContext'
-          nullable: true
-          title: Gebruikerstaak context
-          description: De vorm van de taakcontext hangt af van het `form` eigenschap.
-            De waarde is `null` als de backend de `formKey` van de gebruikerstaak
-            niet kent.
-      required:
-      - context
-      title: AdviceApprovalTaskData
     AdviceDocument:
       type: object
       properties:
@@ -6092,6 +5956,14 @@ components:
         adviceVersion:
           type: integer
           description: De versie van het document nadat het advies is gegeven.
+        downloadAdviceUrl:
+          type: string
+          readOnly: true
+          description: URL-reference to download the advice version of the document.
+        downloadSourceUrl:
+          type: string
+          readOnly: true
+          description: URL-reference to download the source version of the document.
         sourceUrl:
           type: string
           readOnly: true
@@ -6101,14 +5973,71 @@ components:
           description: De versie van het document voordat het advies was gegeven.
         title:
           type: string
+          readOnly: true
           description: De naam van het document.
+        url:
+          type: string
+          format: uri
+          description: URL-reference to document on DRC.
       required:
       - adviceUrl
       - adviceVersion
+      - downloadAdviceUrl
+      - downloadSourceUrl
       - sourceUrl
       - sourceVersion
       - title
+      - url
       title: AdviceDocument
+    AdviceDocumentRequest:
+      type: object
+      properties:
+        adviceVersion:
+          type: integer
+          description: De versie van het document nadat het advies is gegeven.
+        sourceVersion:
+          type: integer
+          description: De versie van het document voordat het advies was gegeven.
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          description: URL-reference to document on DRC.
+      required:
+      - adviceVersion
+      - sourceVersion
+      - url
+      title: AdviceDocumentRequest
+    AdviceRequest:
+      type: object
+      properties:
+        advice:
+          type: string
+          minLength: 1
+          description: Gegeven advies voor een verzoek.
+        adviceDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdviceDocumentRequest'
+          title: adviesdocumenten
+          description: URL-references of documents relevant to the advice.
+        author:
+          type: string
+          description: '`username` of the author that adviced.'
+        created:
+          type: string
+          format: date-time
+          default: '2023-12-05T14:49:39.351411Z'
+          description: Datetime review request was created.
+        group:
+          type: string
+          nullable: true
+          description: '`name` of the group that author answered for.'
+      required:
+      - advice
+      - adviceDocuments
+      - author
+      title: AdviceRequest
     AdviceReviews:
       type: object
       properties:
@@ -6122,29 +6051,54 @@ components:
     Approval:
       type: object
       properties:
+        author:
+          allOf:
+          - $ref: '#/components/schemas/KownslUser'
+          description: '`username` of the author that approved.'
         created:
           type: string
           format: date-time
-        author:
+          default: '2023-12-05T14:49:39.351102Z'
+          description: Datetime review request was created.
+        group:
           allOf:
-          - $ref: '#/components/schemas/Author'
-          title: auteur
-          description: Verzoeksauteur.
-        status:
-          type: string
-          readOnly: true
-          description: Accorderingsstatus.
+          - $ref: '#/components/schemas/KownslGroup'
+          nullable: true
+          description: '`name` of the group that author answered for.'
+        approved:
+          type: boolean
         toelichting:
           type: string
-        group:
-          type: string
       required:
+      - approved
       - author
-      - created
-      - group
-      - status
       - toelichting
       title: Approval
+    ApprovalRequest:
+      type: object
+      properties:
+        author:
+          type: string
+          description: '`username` of the author that approved.'
+        created:
+          type: string
+          format: date-time
+          default: '2023-12-05T14:49:39.351102Z'
+          description: Datetime review request was created.
+        group:
+          type: string
+          nullable: true
+          description: '`name` of the group that author answered for.'
+        approved:
+          type: boolean
+        toelichting:
+          type: string
+          minLength: 1
+      required:
+      - approved
+      - author
+      - toelichting
+      title: ApprovalRequest
     ApprovalReviews:
       type: object
       properties:
@@ -6265,23 +6219,6 @@ components:
       - blueprintPermissions
       - name
       title: AuthProfileRequest
-    Author:
-      type: object
-      properties:
-        firstName:
-          type: string
-        lastName:
-          type: string
-        username:
-          type: string
-        fullName:
-          type: string
-      required:
-      - firstName
-      - fullName
-      - lastName
-      - username
-      title: Author
     AxesReset:
       type: object
       properties:
@@ -6635,32 +6572,6 @@ components:
           description: Pattern to be cleared from cache. Only allowed for redis cache.
             `*` clears all cache keys.
       title: CacheResetRequest
-    CamundaAssignedUsers:
-      type: object
-      description: |-
-        Select users or groups and assign deadlines to those users in the configuration of
-        review requests such as the advice and approval review requests.
-      properties:
-        userAssignees:
-          type: array
-          items:
-            type: string
-            title: Gebruikersnaam
-            nullable: true
-          description: Users assigned to the review request from within the camunda
-            process.
-        groupAssignees:
-          type: array
-          items:
-            type: string
-            title: Naam
-            nullable: true
-          description: Groups assigned to the review request from within the camunda
-            process.
-      required:
-      - groupAssignees
-      - userAssignees
-      title: CamundaAssignedUsers
     CamundaZaakProcessContext:
       type: object
       properties:
@@ -6751,10 +6662,10 @@ components:
           items:
             $ref: '#/components/schemas/ChecklistAnswer'
         lockedBy:
-          type: string
-          title: Gebruikersnaam
-          description: Checklist is locked by this user.
+          allOf:
+          - $ref: '#/components/schemas/User'
           nullable: true
+          description: Checklist is locked by this user.
       required:
       - answers
       title: Checklist
@@ -6776,15 +6687,15 @@ components:
           type: string
           description: URL-referentie naar document gerelateerd aan antwoord.
         groupAssignee:
-          type: string
-          title: Naam
+          allOf:
+          - $ref: '#/components/schemas/Group'
           nullable: true
           description: '`name` van de groep toegewezen om te antwoorden.'
         userAssignee:
-          type: string
-          title: Gebruikersnaam
-          description: '`username` van de gebruiker toegewezen om te antwoorden.'
+          allOf:
+          - $ref: '#/components/schemas/User'
           nullable: true
+          description: '`username` van de gebruiker toegewezen om te antwoorden.'
       required:
       - answer
       - question
@@ -6808,16 +6719,12 @@ components:
           description: URL-referentie naar document gerelateerd aan antwoord.
         groupAssignee:
           type: string
-          minLength: 1
-          title: Naam
           nullable: true
           description: '`name` van de groep toegewezen om te antwoorden.'
         userAssignee:
           type: string
-          minLength: 1
-          title: Gebruikersnaam
-          description: '`username` van de gebruiker toegewezen om te antwoorden.'
           nullable: true
+          description: '`username` van de gebruiker toegewezen om te antwoorden.'
       required:
       - answer
       - question
@@ -6853,10 +6760,8 @@ components:
             $ref: '#/components/schemas/ChecklistAnswerRequest'
         lockedBy:
           type: string
-          minLength: 1
-          title: Gebruikersnaam
-          description: Checklist is locked by this user.
           nullable: true
+          description: Checklist is locked by this user.
       required:
       - answers
       title: ChecklistRequest
@@ -6870,39 +6775,6 @@ components:
       required:
       - questions
       title: ChecklistType
-    ConfigureReviewRequestRequest:
-      type: object
-      description: |-
-        This serializes configure review requests such as
-        advice and approval review requests.
-
-        Must have a ``task`` and ``request`` in its ``context``.
-      properties:
-        assignedUsers:
-          type: array
-          items:
-            $ref: '#/components/schemas/WriteAssignedUsersRequest'
-          description: Users assigned to review.
-        id:
-          type: string
-          format: uuid
-          nullable: true
-          description: '`uuid` of review request if it already exists and is reconfigured.'
-        selectedDocuments:
-          type: array
-          items:
-            type: string
-            format: uri
-            minLength: 1
-          title: Selecteer de relevante documenten
-          description: Supporting documents for the review request. If reconfiguring
-            this field will be ignored.
-        toelichting:
-          type: string
-      required:
-      - assignedUsers
-      - selectedDocuments
-      title: ConfigureReviewRequestRequest
     ConfigureZaakProcess:
       type: object
       description: Generic object
@@ -7200,60 +7072,19 @@ components:
       required:
       - value
       title: Datetime
-    Document:
-      type: object
-      properties:
-        beschrijving:
-          type: string
-          description: Description.
-        bestandsnaam:
-          type: string
-          description: Filename.
-        bestandsomvang:
-          type: integer
-          description: File size in bytes.
-        documentType:
-          type: string
-        readUrl:
-          type: string
-          format: uri
-          readOnly: true
-          title: document read URL
-          description: URL to read document. Opens the appropriate Microsoft Office
-            application.
-        titel:
-          type: string
-          description: Title given to INFORMATIEOBJECT.
-        url:
-          type: string
-          format: uri
-          description: URL-reference to INFORMATIEOBJECT.
-        versie:
-          type: integer
-          description: Version.
-      required:
-      - beschrijving
-      - bestandsnaam
-      - bestandsomvang
-      - documentType
-      - readUrl
-      - titel
-      - url
-      - versie
-      title: Document
     DocumentSelectContext:
       type: object
       properties:
-        documents:
-          type: array
-          items:
-            $ref: '#/components/schemas/Document'
+        documentsLink:
+          type: string
+          format: uri
+          description: URL-reference to paginated documents endpoint.
         informatieobjecttypen:
           type: array
           items:
             $ref: '#/components/schemas/InformatieObjectType'
       required:
-      - documents
+      - documentsLink
       - informatieobjecttypen
       title: DocumentSelectContext
     DocumentSelectTaskData:
@@ -7284,32 +7115,6 @@ components:
       required:
       - selectedDocuments
       title: DocumentSelectTaskRequest
-    DocumentUserTask:
-      type: object
-      properties:
-        beschrijving:
-          type: string
-          description: Description.
-        bestandsnaam:
-          type: string
-          description: Filename.
-        url:
-          type: string
-          format: uri
-          description: URL-reference to INFORMATIEOBJECT.
-        readUrl:
-          type: string
-          format: uri
-          readOnly: true
-          title: document read URL
-          description: URL to read document. Opens the appropriate Microsoft Office
-            application.
-      required:
-      - beschrijving
-      - bestandsnaam
-      - readUrl
-      - url
-      title: DocumentUserTask
     DowcResponse:
       type: object
       properties:
@@ -7408,6 +7213,12 @@ components:
           readOnly: true
           description: The URL required to save edits and delete the DOWC object related
             to the INFORMATIEOBJECT.
+        downloadUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document download URL
+          description: The document URL that allows a document to be downloaded.
         identificatie:
           type: string
         informatieobjecttype:
@@ -7459,6 +7270,7 @@ components:
       - bronorganisatie
       - currentUserIsEditing
       - deleteUrl
+      - downloadUrl
       - identificatie
       - informatieobjecttype
       - lastEditedDate
@@ -7613,10 +7425,10 @@ components:
           readOnly: true
           title: Aangemaakt
         createdBy:
-          type: string
-          title: Gebruikersnaam
-          description: '`username` van de gebruiker toegewezen om te antwoorden.'
+          allOf:
+          - $ref: '#/components/schemas/User'
           nullable: true
+          description: '`username` van de gebruiker toegewezen om te antwoorden.'
       required:
       - activity
       - created
@@ -7634,10 +7446,8 @@ components:
           title: Opmerkingen
         createdBy:
           type: string
-          minLength: 1
-          title: Gebruikersnaam
-          description: '`username` van de gebruiker toegewezen om te antwoorden.'
           nullable: true
+          description: '`username` van de gebruiker toegewezen om te antwoorden.'
       required:
       - activity
       - notes
@@ -7781,8 +7591,6 @@ components:
       - zac:doRedirect
       - zac:documentSelectie
       - zac:zetResultaat
-      - zac:configureAdviceRequest
-      - zac:configureApprovalRequest
       - zac:validSign:configurePackage
       - zac:startProcessForm
       type: string
@@ -7791,18 +7599,16 @@ components:
         * `zac:doRedirect` - zac:doRedirect
         * `zac:documentSelectie` - zac:documentSelectie
         * `zac:zetResultaat` - zac:zetResultaat
-        * `zac:configureAdviceRequest` - zac:configureAdviceRequest
-        * `zac:configureApprovalRequest` - zac:configureApprovalRequest
         * `zac:validSign:configurePackage` - zac:validSign:configurePackage
         * `zac:startProcessForm` - zac:startProcessForm
       title: FormEnum
     FormField:
       oneOf:
-      - $ref: '#/components/schemas/FormFieldInt'
-      - $ref: '#/components/schemas/FormFieldDatetime'
-      - $ref: '#/components/schemas/FormFieldBoolean'
       - $ref: '#/components/schemas/FormFieldString'
+      - $ref: '#/components/schemas/FormFieldDatetime'
       - $ref: '#/components/schemas/FormFieldEnum'
+      - $ref: '#/components/schemas/FormFieldInt'
+      - $ref: '#/components/schemas/FormFieldBoolean'
       discriminator:
         propertyName: inputType
         mapping:
@@ -7890,8 +7696,14 @@ components:
         deleteUrl:
           type: string
           readOnly: true
-          description: De vereiste URL om bewerkingen op te slaan en het gerelateerde
-            DOWC object te verwijderen.
+          description: The URL required to save edits and delete the DOWC object related
+            to the INFORMATIEOBJECT.
+        downloadUrl:
+          type: string
+          format: uri
+          readOnly: true
+          title: document download URL
+          description: The document URL that allows a document to be downloaded.
         identificatie:
           type: string
         informatieobjecttype:
@@ -7911,8 +7723,8 @@ components:
           format: uri
           readOnly: true
           title: document read URL
-          description: URL to read document. Opens the appropriate Microsoft Office
-            application.
+          description: URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft
+            Office application.
         titel:
           type: string
         url:
@@ -7927,8 +7739,8 @@ components:
           format: uri
           readOnly: true
           title: document write URL
-          description: URL to write document. Opens the appropriate Microsoft Office
-            application.
+          description: URL to write INFORMATIEOBJECT. Opens the appropriate Microsoft
+            Office application.
       required:
       - auteur
       - beschrijving
@@ -7936,6 +7748,7 @@ components:
       - bestandsomvang
       - currentUserIsEditing
       - deleteUrl
+      - downloadUrl
       - identificatie
       - informatieobjecttype
       - lastEditedDate
@@ -8064,8 +7877,8 @@ components:
       title: Group
     GroupBlueprint:
       oneOf:
-      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       - $ref: '#/components/schemas/GroupBlueprintPoliciesInformatieObjectTypeBlueprint'
+      - $ref: '#/components/schemas/GroupBlueprintPoliciesZaakTypeBlueprint'
       discriminator:
         propertyName: objectType
         mapping:
@@ -8381,47 +8194,49 @@ components:
       required:
       - betrokkeneIdentificatie
       title: JSONFieldTaskDataRequest
-    KownslReviewRequest:
-      allOf:
-      - $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/paths/%2Fapi%2Fv1%2Freview-requests%2F%7Buuid%7D/get/responses/200/content/application%2Fjson/schema
-      - $ref: '#/components/schemas/KownslReviewRequestExtrasResponse'
-      title: KownslReviewRequest
-    KownslReviewRequestExtrasResponse:
+    KownslGroup:
       type: object
       properties:
-        zaak:
-          $ref: '#/components/schemas/Zaak'
-        zaakDocuments:
-          type: array
-          items:
-            $ref: '#/components/schemas/KownslZaakDocument'
-          description: The documents with their download url and relevant metadata.
+        name:
+          type: string
+          title: Naam
+          maxLength: 150
+        fullName:
+          type: string
+          readOnly: true
+          description: Een leesbare naam die de groep identificeert.
       required:
-      - zaak
-      - zaakDocuments
-      title: KownslReviewRequestExtrasResponse
-    KownslZaakDocument:
-      allOf:
-      - $ref: http://localhost:8000/api/_get-remote-schema?schema=https%3A%2F%2Fkownsl.cg-intern.ont.utrecht.nl%2Fapi%2Fv1#/components/schemas/ZaakDocument
-      - $ref: '#/components/schemas/KownslZaakDocumentExtrasResponse'
-      title: KownslZaakDocument
-    KownslZaakDocumentExtrasResponse:
+      - fullName
+      - name
+      title: KownslGroup
+    KownslUser:
       type: object
       properties:
-        readUrl:
+        email:
+          type: string
+          format: email
+          title: Emailadres
+          maxLength: 254
+        firstName:
+          type: string
+          title: Voornaam
+          maxLength: 255
+        fullName:
           type: string
           readOnly: true
-          description: URL to read document. Opens the appropriate Microsoft Office
-            application.
-        writeUrl:
+        lastName:
           type: string
-          readOnly: true
-          description: URL to write document. Opens the appropriate Microsoft Office
-            application.
+          title: Achternaam
+          maxLength: 255
+        username:
+          type: string
+          title: Gebruikersnaam
+          description: Vereist. 150 karakters of minder.
+          maxLength: 150
       required:
-      - readUrl
-      - writeUrl
-      title: KownslZaakDocumentExtrasResponse
+      - fullName
+      - username
+      title: KownslUser
     LandingPageConfiguration:
       type: object
       properties:
@@ -8492,8 +8307,8 @@ components:
         users:
           type: array
           items:
-            type: string
-            title: Gebruikersnaam
+            allOf:
+            - $ref: '#/components/schemas/User'
           description: Users assigned to the review request from within the camunda
             process.
       required:
@@ -8513,8 +8328,6 @@ components:
           type: array
           items:
             type: string
-            minLength: 1
-            title: Gebruikersnaam
           description: Users assigned to the review request from within the camunda
             process.
       required:
@@ -8673,43 +8486,23 @@ components:
           type: string
           format: date
           description: Deadline date of open review request.
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/OpenReviewUser'
-          readOnly: true
-          nullable: true
-          description: '`full_name` of the users assigned to review.'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/OpenReviewGroup'
+            type: string
+            description: '`name` of the groups assigned to review.'
           readOnly: true
-          nullable: true
-          description: '`name` of the groups assigned to review.'
+        users:
+          type: array
+          items:
+            type: string
+            description: '`full_name` of the users assigned to review.'
+          readOnly: true
       required:
       - deadline
       - groups
       - users
       title: OpenReview
-    OpenReviewGroup:
-      type: object
-      properties:
-        name:
-          type: string
-          title: Naam
-          maxLength: 150
-      required:
-      - name
-      title: OpenReviewGroup
-    OpenReviewUser:
-      type: object
-      properties:
-        fullName:
-          type: string
-      required:
-      - fullName
-      title: OpenReviewUser
     Oudbehandelaar:
       type: object
       properties:
@@ -9672,41 +9465,6 @@ components:
       - url
       - zaak
       title: ReadActivity
-    ReadAssignedUsers:
-      type: object
-      description: |-
-        Select users or groups and assign deadlines to those users in the configuration of
-        review requests such as the advice and approval review requests.
-      properties:
-        userAssignees:
-          type: array
-          items:
-            type: string
-            title: Gebruikersnaam
-            nullable: true
-          description: Users assigned to the review request from within the camunda
-            process.
-        groupAssignees:
-          type: array
-          items:
-            type: string
-            title: Naam
-            nullable: true
-          description: Groups assigned to the review request from within the camunda
-            process.
-        emailNotification:
-          type: boolean
-          default: true
-          description: Stuur een emailnotificatie over het verzoek.
-        deadline:
-          type: string
-          format: date
-          description: Op deze datum dient het verzoek ingediend te zijn.
-      required:
-      - deadline
-      - groupAssignees
-      - userAssignees
-      title: ReadAssignedUsers
     ReadRol:
       type: object
       properties:
@@ -9947,12 +9705,12 @@ components:
       title: ReviewTypeEnum
     Rol:
       oneOf:
-      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
       - $ref: '#/components/schemas/RolJSONFieldTaskData'
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
-      - $ref: '#/components/schemas/RolRolVestigingTaskData'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskData'
       - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskData'
       - $ref: '#/components/schemas/RolRolMedewerkerTaskData'
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskData'
+      - $ref: '#/components/schemas/RolRolVestigingTaskData'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -10211,12 +9969,12 @@ components:
       title: RolOrganisatorischeEenheidTaskDataRequest
     RolRequest:
       oneOf:
+      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
       - $ref: '#/components/schemas/RolRolVestigingTaskDataRequest'
       - $ref: '#/components/schemas/RolRolMedewerkerTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
       - $ref: '#/components/schemas/RolJSONFieldTaskDataRequest'
       - $ref: '#/components/schemas/RolRolNatuurlijkPersoonTaskDataRequest'
-      - $ref: '#/components/schemas/RolRolNietNatuurlijkPersoonTaskDataRequest'
+      - $ref: '#/components/schemas/RolRolOrganisatorischeEenheidTaskDataRequest'
       discriminator:
         propertyName: betrokkeneType
         mapping:
@@ -11060,11 +10818,52 @@ components:
       - label
       - value
       title: StringEnum
-    SubmitUserTaskConfigureReviewRequestRequest:
+    SubmitReview:
+      oneOf:
+      - $ref: '#/components/schemas/SubmitReviewApproval'
+      - $ref: '#/components/schemas/SubmitReviewAdvice'
+      discriminator:
+        propertyName: reviewType
+        mapping:
+          advice: '#/components/schemas/SubmitReviewAdvice'
+          approval: '#/components/schemas/SubmitReviewApproval'
+      title: SubmitReview
+    SubmitReviewAdvice:
       allOf:
-      - $ref: '#/components/schemas/SubmitUserTaskSharedRequest'
-      - $ref: '#/components/schemas/ConfigureReviewRequestRequest'
-      title: SubmitUserTaskConfigureReviewRequestRequest
+      - $ref: '#/components/schemas/SubmitReviewSharedResponse'
+      - $ref: '#/components/schemas/Advice'
+      title: SubmitReviewAdvice
+    SubmitReviewAdviceRequest:
+      allOf:
+      - $ref: '#/components/schemas/SubmitReviewSharedRequest'
+      - $ref: '#/components/schemas/AdviceRequest'
+      title: SubmitReviewAdviceRequest
+    SubmitReviewApproval:
+      allOf:
+      - $ref: '#/components/schemas/SubmitReviewSharedResponse'
+      - $ref: '#/components/schemas/Approval'
+      title: SubmitReviewApproval
+    SubmitReviewApprovalRequest:
+      allOf:
+      - $ref: '#/components/schemas/SubmitReviewSharedRequest'
+      - $ref: '#/components/schemas/ApprovalRequest'
+      title: SubmitReviewApprovalRequest
+    SubmitReviewRequest:
+      oneOf:
+      - $ref: '#/components/schemas/SubmitReviewAdviceRequest'
+      - $ref: '#/components/schemas/SubmitReviewApprovalRequest'
+      discriminator:
+        propertyName: reviewType
+        mapping:
+          advice: '#/components/schemas/SubmitReviewAdviceRequest'
+          approval: '#/components/schemas/SubmitReviewApprovalRequest'
+      title: SubmitReviewRequest
+    SubmitReviewSharedRequest:
+      type: object
+      title: SubmitReviewSharedRequest
+    SubmitReviewSharedResponse:
+      type: object
+      title: SubmitReviewSharedResponse
     SubmitUserTaskConfigureZaakProcess:
       allOf:
       - $ref: '#/components/schemas/SubmitUserTaskSharedRequest'
@@ -11082,12 +10881,11 @@ components:
       title: SubmitUserTaskDynamicFormWrite
     SubmitUserTaskRequest:
       oneOf:
-      - $ref: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
-      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
       - $ref: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
+      - $ref: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
       - $ref: '#/components/schemas/SubmitUserTaskDynamicFormWrite'
       - $ref: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
+      - $ref: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
       discriminator:
         propertyName: form
         mapping:
@@ -11095,8 +10893,6 @@ components:
           : '#/components/schemas/SubmitUserTaskDynamicFormWrite'
           zac:documentSelectie: '#/components/schemas/SubmitUserTaskDocumentSelectTaskRequest'
           zac:zetResultaat: '#/components/schemas/SubmitUserTaskZetResultaatTaskRequest'
-          zac:configureAdviceRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
-          zac:configureApprovalRequest: '#/components/schemas/SubmitUserTaskConfigureReviewRequestRequest'
           zac:validSign:configurePackage: '#/components/schemas/SubmitUserTaskValidSignTaskRequest'
           zac:startProcessForm: '#/components/schemas/SubmitUserTaskConfigureZaakProcess'
       title: SubmitUserTaskRequest
@@ -11113,8 +10909,6 @@ components:
             * `zac:doRedirect` - zac:doRedirect
             * `zac:documentSelectie` - zac:documentSelectie
             * `zac:zetResultaat` - zac:zetResultaat
-            * `zac:configureAdviceRequest` - zac:configureAdviceRequest
-            * `zac:configureApprovalRequest` - zac:configureApprovalRequest
             * `zac:validSign:configurePackage` - zac:validSign:configurePackage
             * `zac:startProcessForm` - zac:startProcessForm
           oneOf:
@@ -11245,8 +11039,8 @@ components:
     Task:
       oneOf:
       - $ref: '#/components/schemas/TaskTaskAssigneeUser'
-      - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
       - $ref: '#/components/schemas/TaskTaskAssigneeGroup'
+      - $ref: '#/components/schemas/TaskTaskAssigneeFallback'
       discriminator:
         propertyName: assigneeType
         mapping:
@@ -11499,13 +11293,12 @@ components:
       title: UserAuthorizationProfileRequest
     UserTaskContext:
       oneOf:
-      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
-      - $ref: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
       - $ref: '#/components/schemas/UserTaskContextRedirectTaskData'
       - $ref: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
+      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
+      - $ref: '#/components/schemas/UserTaskContextValidSignTaskData'
       - $ref: '#/components/schemas/UserTaskContextDynamicFormTaskData'
       - $ref: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
-      - $ref: '#/components/schemas/UserTaskContextZetResultaatTaskData'
       discriminator:
         propertyName: form
         mapping:
@@ -11514,16 +11307,9 @@ components:
           zac:doRedirect: '#/components/schemas/UserTaskContextRedirectTaskData'
           zac:documentSelectie: '#/components/schemas/UserTaskContextDocumentSelectTaskData'
           zac:zetResultaat: '#/components/schemas/UserTaskContextZetResultaatTaskData'
-          zac:configureAdviceRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
-          zac:configureApprovalRequest: '#/components/schemas/UserTaskContextAdviceApprovalTaskData'
           zac:validSign:configurePackage: '#/components/schemas/UserTaskContextValidSignTaskData'
           zac:startProcessForm: '#/components/schemas/UserTaskContextCamundaZaakProcessTaskData'
       title: UserTaskContext
-    UserTaskContextAdviceApprovalTaskData:
-      allOf:
-      - $ref: '#/components/schemas/UserTaskContextSharedResponse'
-      - $ref: '#/components/schemas/AdviceApprovalTaskData'
-      title: UserTaskContextAdviceApprovalTaskData
     UserTaskContextCamundaZaakProcessTaskData:
       allOf:
       - $ref: '#/components/schemas/UserTaskContextSharedResponse'
@@ -11557,8 +11343,6 @@ components:
             * `zac:doRedirect` - zac:doRedirect
             * `zac:documentSelectie` - zac:documentSelectie
             * `zac:zetResultaat` - zac:zetResultaat
-            * `zac:configureAdviceRequest` - zac:configureAdviceRequest
-            * `zac:configureApprovalRequest` - zac:configureApprovalRequest
             * `zac:validSign:configurePackage` - zac:validSign:configurePackage
             * `zac:startProcessForm` - zac:startProcessForm
           oneOf:
@@ -11586,12 +11370,12 @@ components:
     ValidSignContext:
       type: object
       properties:
-        documents:
-          type: array
-          items:
-            $ref: '#/components/schemas/Document'
+        documentsLink:
+          type: string
+          format: uri
+          description: URL-reference to paginated documents endpoint.
       required:
-      - documents
+      - documentsLink
       title: ValidSignContext
     ValidSignTaskData:
       type: object
@@ -11619,7 +11403,7 @@ components:
             type: string
             format: uri
             minLength: 1
-          title: Selecteer de relevante documenten
+          title: Select the relevant documents for Camunda task.
           description: Dit zijn de documenten die bij de ZAAK horen. Selecteer de
             relevante documenten.
         assignedUsers:
@@ -11764,23 +11548,23 @@ components:
         created:
           type: string
           format: date-time
-          description: Datum wanneer het verzoek is aangemaakt.
+          default: '2023-12-05T14:49:39.351411Z'
+          description: Datetime review request was created.
         author:
           allOf:
-          - $ref: '#/components/schemas/Author'
-          title: auteur
-          description: Verzoeksauteur.
+          - $ref: '#/components/schemas/KownslUser'
+          description: '`username` of the author that adviced.'
         advice:
           type: string
           description: Gegeven advies voor een verzoek.
         group:
-          type: string
-          description: Groep die advies gaf.
+          allOf:
+          - $ref: '#/components/schemas/KownslGroup'
+          nullable: true
+          description: '`name` of the group that author answered for.'
       required:
       - advice
       - author
-      - created
-      - group
       title: WorkStackAdvice
     WorkStackAdviceReviews:
       type: object
@@ -11944,43 +11728,6 @@ components:
       - task
       - zaak
       title: WorkStackTask
-    WriteAssignedUsersRequest:
-      type: object
-      description: |-
-        Select users or groups and assign deadlines to those users in the configuration of
-        review requests such as the advice and approval review requests.
-      properties:
-        userAssignees:
-          type: array
-          items:
-            type: string
-            minLength: 1
-            title: Gebruikersnaam
-            nullable: true
-          description: Users assigned to the review request from within the camunda
-            process.
-        groupAssignees:
-          type: array
-          items:
-            type: string
-            minLength: 1
-            title: Naam
-            nullable: true
-          description: Groups assigned to the review request from within the camunda
-            process.
-        emailNotification:
-          type: boolean
-          default: true
-          description: Stuur een emailnotificatie over het verzoek.
-        deadline:
-          type: string
-          format: date
-          description: Op deze datum dient het verzoek ingediend te zijn.
-      required:
-      - deadline
-      - groupAssignees
-      - userAssignees
-      title: WriteAssignedUsersRequest
     Zaak:
       type: object
       properties:
@@ -12247,8 +11994,8 @@ components:
     ZaakEigenschap:
       oneOf:
       - $ref: '#/components/schemas/ZaakEigenschapNumberValue'
-      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       - $ref: '#/components/schemas/ZaakEigenschapDateValue'
+      - $ref: '#/components/schemas/ZaakEigenschapDateTimeValue'
       - $ref: '#/components/schemas/ZaakEigenschapCharValue'
       discriminator:
         propertyName: formaat
@@ -12343,17 +12090,6 @@ components:
           minLength: 1
           description: URL-referentie naar het INFORMATIEOBJECT in de DRC API.
       title: ZaakInformatieObjectDocumentRequest
-    ZaakInformatieTask:
-      type: object
-      properties:
-        omschrijving:
-          type: string
-        toelichting:
-          type: string
-      required:
-      - omschrijving
-      - toelichting
-      title: ZaakInformatieTask
     ZaakObjectDocument:
       type: object
       properties:
@@ -12420,8 +12156,8 @@ components:
       title: ZaakObjectProxyRequest
     ZaakRevReqDetail:
       oneOf:
-      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       - $ref: '#/components/schemas/ZaakRevReqDetailApprovalReviews'
+      - $ref: '#/components/schemas/ZaakRevReqDetailAdviceReviews'
       discriminator:
         propertyName: reviewType
         mapping:
@@ -12441,10 +12177,41 @@ components:
     ZaakRevReqDetailSharedResponse:
       type: object
       properties:
+        created:
+          type: string
+          format: date-time
+          description: Datetime review request was created.
+        documents:
+          type: array
+          items:
+            type: string
+            format: uri
+            description: URL-reference to related INFORMATIEOBJECT.
+          description: URL-references to related INFORMATIEOBJECTS.
         id:
           type: string
           format: uuid
+          readOnly: true
           description: De `id` van het verzoek.
+        isBeingReconfigured:
+          type: boolean
+          description: Boolean flag to indicate if review request is currently being
+            reconfigured.
+        locked:
+          type: boolean
+          description: Boolean flag to indicate if review request is currently locked.
+        lockReason:
+          type: string
+          description: Reason why review request is locked.
+        openReviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenReview'
+          readOnly: true
+        requester:
+          allOf:
+          - $ref: '#/components/schemas/KownslUser'
+          description: '`username` of user who requested review.'
         reviewType:
           allOf:
           - $ref: '#/components/schemas/ReviewTypeEnum'
@@ -12453,46 +12220,54 @@ components:
 
             * `advice` - Advies
             * `approval` - Accordering
-        openReviews:
+        zaak:
+          allOf:
+          - $ref: '#/components/schemas/Zaak'
+          description: ZAAK related to review.
+        zaakDocuments:
           type: array
           items:
-            $ref: '#/components/schemas/OpenReview'
+            $ref: '#/components/schemas/ESListZaakDocument'
           readOnly: true
-        isBeingReconfigured:
-          type: boolean
-          description: Boolean flag to indicate if review request is currently being
-            reconfigured.
+          description: The supporting documents for the review.
       required:
+      - created
+      - documents
       - id
       - isBeingReconfigured
+      - lockReason
+      - locked
       - openReviews
+      - requester
       - reviewType
+      - zaak
+      - zaakDocuments
       title: ZaakRevReqDetailSharedResponse
     ZaakRevReqSummary:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        reviewType:
-          type: string
-        completed:
-          type: integer
-          title: Voltooide verzoeken
-          description: Het aantal voltooide verzoeken.
-        numAssignedUsers:
-          type: integer
         canLock:
           type: boolean
           readOnly: true
           title: kan verzoek op slot zetten
           description: Gebruiker kan het verzoek op slot zetten.
+        completed:
+          type: integer
+          title: Voltooide verzoeken
+          description: Het aantal voltooide verzoeken.
+        id:
+          type: string
+          format: uuid
+        isBeingReconfigured:
+          type: boolean
         locked:
           type: boolean
         lockReason:
           type: string
-        isBeingReconfigured:
-          type: boolean
+        numAssignedUsers:
+          type: integer
+        reviewType:
+          type: string
       required:
       - canLock
       - completed
