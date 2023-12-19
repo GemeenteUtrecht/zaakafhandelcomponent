@@ -117,7 +117,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
             omschrijving="bijlage",
-            catalogus=cls.catalogus,
+            catalogus=cls.catalogus["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
         )
         document = generate_oas_component(
@@ -140,10 +140,8 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
+        cls.document.last_edited_date = None
         cls.document_es = create_informatieobject_document(cls.document)
-        cls.document_es.informatieobjecttype = create_iot_document(
-            cls.document.informatieobjecttype
-        )
 
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
@@ -733,10 +731,8 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
+        cls.document.last_edited_date = None
         cls.document_es = create_informatieobject_document(cls.document)
-        cls.document_es.informatieobjecttype = create_iot_document(
-            cls.document.informatieobjecttype
-        )
 
         cls.patch_get_documenten_validator = patch(
             "zac.core.api.validators.get_documenten_es",

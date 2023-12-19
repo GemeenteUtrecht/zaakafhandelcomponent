@@ -83,7 +83,7 @@ def _get_zaak_document(
     try:
         zaak_document = ZaakDocument.get(id=zaak_uuid)
     except exceptions.NotFoundError as exc:
-        logger.warning("zaak %s hasn't been indexed in ES", zaak_url, exc_info=True)
+        logger.warning("zaak %s hasn't been indexed in ES", zaak_url)
         if not create_zaak:
             return
         else:
@@ -265,7 +265,7 @@ def _get_object_document(
     try:
         object_document = ObjectDocument.get(id=uuid)
     except exceptions.NotFoundError as exc:
-        logger.warning("object %s hasn't been indexed in ES", object_url, exc_info=True)
+        logger.warning("object %s hasn't been indexed in ES", object_url)
         if create_object:
             object_document = create_object_document(create_object)
             object_document.save()
@@ -361,14 +361,30 @@ def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
         )
         .execute()
     )
-    related_zaak = create_related_zaak_document(zaak)
-    for obj in objects:
-        related_zaken = [rz for rz in obj.related_zaken if rz.url != zaak.url]
-        related_zaken.append(related_zaak)
-        object_document = ObjectDocument.get(id=obj.meta.id)
-        object_document.related_zaken = related_zaken
-        object_document.save()
 
+    related_zaak = create_related_zaak_document(zaak)
+
+    # check if it related zaak document really changed before reindexing a bunch of documents
+    changed = False
+    if objects and related_zaak.url in [z.url for z in objects[0].related_zaken]:
+        old_rz = [rz for rz in objects[0].related_zaken if rz.url == related_zaak.url][
+            0
+        ]
+        if any(
+            [
+                old_rz.omschrijving != related_zaak.omschrijving,
+                old_rz.va_order != related_zaak.va_order,
+            ]
+        ):
+            changed = True
+
+    if changed:
+        for obj in objects:
+            related_zaken = [rz for rz in obj.related_zaken if rz.url != zaak.url]
+            related_zaken.append(related_zaak)
+            object_document = ObjectDocument.get(id=obj.meta.id)
+            object_document.related_zaken = related_zaken
+            object_document.save()
     return
 
 
@@ -394,7 +410,10 @@ def resolve_iot_for_document(io: Document) -> InformatieObjectTypeDocument:
     if type(io.informatieobjecttype) == str:
         io.informatieobjecttype = get_informatieobjecttype(io.informatieobjecttype)
 
-    return create_iot_document(io.informatieobjecttype)
+    if isinstance(io.informatieobjecttype, InformatieObjectType):
+        return create_iot_document(io.informatieobjecttype)
+
+    raise RuntimeError(f"Can't turn io.informatieobjecttype into InformatieObjectType.")
 
 
 def _get_informatieobject_document(
@@ -407,25 +426,13 @@ def _get_informatieobject_document(
         )
     except exceptions.NotFoundError as exc:
         logger.warning(
-            "informatieobject %s hasn't been indexed in ES",
+            "informatieobject %s is not indexed in ES.",
             informatieobject_url,
-            exc_info=True,
         )
         if create_informatieobject:
             informatieobject_document = create_informatieobject_document(
                 create_informatieobject
             )
-            informatieobject_document.save()
-
-            informatieobject_document.informatieobjecttype = resolve_iot_for_document(
-                create_informatieobject
-            )
-            # get latest edit date
-            at = fetch_latest_audit_trail_data_document(informatieobject_document.url)
-            if at:
-                informatieobject_document.last_edited_date = at.last_edited_date
-
-            informatieobject_document.save()
             created = True
         else:
             return created, None
@@ -437,7 +444,11 @@ def create_informatieobject_document(
     document: Document,
 ) -> InformatieObjectDocument:
 
-    return InformatieObjectDocument(
+    if not hasattr(document, "last_edited_date"):
+        at = fetch_latest_audit_trail_data_document(document.url)
+        document.last_edited_date = at.last_edited_date if at else None
+
+    iod = InformatieObjectDocument(
         meta={"id": document.uuid},
         auteur=document.auteur,
         beschrijving=document.beschrijving,
@@ -448,8 +459,10 @@ def create_informatieobject_document(
         formaat=document.formaat,
         identificatie=document.identificatie,
         indicatie_gebruiksrecht=document.indicatie_gebruiksrecht,
+        informatieobjecttype=resolve_iot_for_document(document).to_dict(),
         inhoud=document.inhoud,
         integriteit=document.integriteit,
+        last_edited_date=document.last_edited_date,
         link=document.link,
         locked=document.locked,
         ondertekening=document.ondertekening,
@@ -462,6 +475,8 @@ def create_informatieobject_document(
         vertrouwelijkheidaanduiding=document.vertrouwelijkheidaanduiding,
         verzenddatum=document.verzenddatum,
     )
+    iod.save()
+    return iod
 
 
 def update_informatieobject_document(document: Document) -> InformatieObjectDocument:
@@ -471,7 +486,6 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
     if not created:
         # get latest edit date
         at = fetch_latest_audit_trail_data_document(document.url)
-
         informatieobject_document.update(
             refresh=True,
             auteur=document.auteur,
@@ -486,6 +500,7 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
             informatieobjecttype=resolve_iot_for_document(document).to_dict(),
             inhoud=document.inhoud,
             integriteit=document.integriteit,
+            last_edited_date=at.last_edited_date if at else None,
             link=document.link,
             locked=document.locked,
             ondertekening=document.ondertekening,
@@ -497,10 +512,7 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
             versie=document.versie,
             vertrouwelijkheidaanduiding=document.vertrouwelijkheidaanduiding,
             verzenddatum=document.verzenddatum,
-            last_edited_date=at.last_edited_date if at else None,
         )
-
-        informatieobject_document.save()
 
     return informatieobject_document
 
@@ -553,11 +565,25 @@ def update_related_zaak_in_informatieobject_documents(zaak: Zaak) -> None:
         .execute()
     )
     related_zaak = create_related_zaak_document(zaak)
-    for io in ios:
-        related_zaken = [rz for rz in io.related_zaken if rz.url != zaak.url]
-        related_zaken.append(related_zaak)
-        object_document = InformatieObjectDocument.get(id=io.meta.id)
-        object_document.related_zaken = related_zaken
-        object_document.save()
+
+    # check if it related zaak document really changed before reindexing a bunch of documents
+    changed = False
+    if ios and related_zaak.url in [z.url for z in ios[0].related_zaken]:
+        old_rz = [rz for rz in ios[0].related_zaken if rz.url == related_zaak.url][0]
+        if any(
+            [
+                old_rz.omschrijving != related_zaak.omschrijving,
+                old_rz.va_order != related_zaak.va_order,
+            ]
+        ):
+            changed = True
+
+    if changed:
+        for io in ios:
+            related_zaken = [rz for rz in io.related_zaken if rz.url != zaak.url]
+            related_zaken.append(related_zaak)
+            object_document = InformatieObjectDocument.get(id=io.meta.id)
+            object_document.related_zaken = related_zaken
+            object_document.save()
 
     return

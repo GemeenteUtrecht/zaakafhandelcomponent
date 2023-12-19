@@ -112,6 +112,16 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
     patch_get_supported_extensions = patch(
         "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
     )
+    patch_create_informatieobject_document = patch(
+        "zac.core.api.views.create_informatieobject_document", return_value=None
+    )
+    patch_update_informatieobject_document = patch(
+        "zac.core.api.views.update_informatieobject_document", return_value=None
+    )
+    patch_update_zaakinformatieobjecten_in_zaak_document = patch(
+        "zac.core.api.views.update_zaakinformatieobjecten_in_zaak_document",
+        return_value=None,
+    )
 
     def setUp(self):
         super().setUp()
@@ -134,6 +144,12 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
         self.patch_get_supported_extensions.start()
         self.addCleanup(self.patch_get_supported_extensions.stop)
+        self.patch_create_informatieobject_document.start()
+        self.addCleanup(self.patch_create_informatieobject_document.stop)
+        self.patch_update_informatieobject_document.start()
+        self.addCleanup(self.patch_update_informatieobject_document.stop)
+        self.patch_update_zaakinformatieobjecten_in_zaak_document.start()
+        self.addCleanup(self.patch_update_zaakinformatieobjecten_in_zaak_document.stop)
 
     def _setupMocks(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -618,6 +634,22 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         mock_resource_get(m, zaak)
 
+        patch_create_informatieobject_document = patch(
+            "zac.core.api.views.create_informatieobject_document", return_value=None
+        )
+        patch_create_informatieobject_document.start()
+        self.addCleanup(patch_create_informatieobject_document.stop)
+        patch_update_informatieobject_document = patch(
+            "zac.core.api.views.update_informatieobject_document", return_value=None
+        )
+        patch_update_informatieobject_document.start()
+        self.addCleanup(patch_update_informatieobject_document.stop)
+        patch_update_zaakinformatieobjecten_in_zaak_document = patch(
+            "zac.core.api.views.update_zaakinformatieobjecten_in_zaak_document",
+            return_value=None,
+        )
+        patch_update_zaakinformatieobjecten_in_zaak_document.start()
+        self.addCleanup(patch_update_zaakinformatieobjecten_in_zaak_document.stop)
         patch_find_zaak = patch(
             "zac.core.services.search_zaken", return_value=[zaak["url"]]
         )

@@ -25,7 +25,6 @@ from zac.contrib.kownsl.data import Advice, KownslTypes, ReviewRequest
 from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_inzien, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import create_informatieobject_document, create_iot_document
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 

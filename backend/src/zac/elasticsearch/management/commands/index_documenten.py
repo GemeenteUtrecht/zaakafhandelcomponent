@@ -109,9 +109,8 @@ class Command(IndexCommand, BaseCommand):
     def documenten_generator(
         self, documenten: List[Document]
     ) -> Iterator[InformatieObjectDocument]:
-        iots = {
-            io.informatieobjecttype.url: io.informatieobjecttype for io in documenten
-        }
+
+        # bulk resolve fetch_audittrail
         with parallel() as executor:
             audittrails = list(
                 executor.map(
@@ -123,7 +122,10 @@ class Command(IndexCommand, BaseCommand):
                 at.resource_url: at.last_edited_date for at in audittrails if at
             }
 
-        iot_documenten = {url: create_iot_document(iot) for url, iot in iots.items()}
+        # bulk pre-resolve audittrails
+        for doc in documenten:
+            doc.last_edited_date = last_edited_dates.get(doc.url, None)
+
         eio_documenten = self.create_eio_documenten(documenten)
         zaken = (
             ZaakDocument.search()
@@ -157,10 +159,6 @@ class Command(IndexCommand, BaseCommand):
         for doc in documenten:
             eio_document = eio_documenten[doc.url]
             eio_document.related_zaken = related_zaken.get(doc.url, [])
-            eio_document.informatieobjecttype = iot_documenten[
-                doc.informatieobjecttype.url
-            ]
-            eio_document.last_edited_date = last_edited_dates.get(doc.url, None)
             eiod = eio_document.to_dict(True, skip_empty=False)
 
             yield eiod

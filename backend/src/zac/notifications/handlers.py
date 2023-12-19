@@ -43,7 +43,6 @@ from zac.elasticsearch.api import (
     delete_object_document,
     delete_zaak_document,
     get_zaak_document,
-    resolve_iot_for_document,
     update_eigenschappen_in_zaak_document,
     update_informatieobject_document,
     update_object_document,
@@ -344,9 +343,7 @@ class InformatieObjectenHandler:
                 document = get_document(data["hoofd_object"])
                 invalidate_document_other_cache(document)
                 if data["actie"] == "create":
-                    io = create_informatieobject_document(document)
-                    io.informatieobjecttype = resolve_iot_for_document(io)
-                    io.save()
+                    create_informatieobject_document(document)
                 else:
                     update_informatieobject_document(document)
 

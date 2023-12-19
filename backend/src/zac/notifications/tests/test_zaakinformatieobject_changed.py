@@ -11,7 +11,7 @@ from elasticsearch_dsl import Index
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
@@ -219,10 +219,14 @@ class ZaakInformatieObjectChangedTests(
             ],
         )
 
-        # create informatieobject document
-        informatieobject_document = create_informatieobject_document(
-            factory(Document, INFORMATIEOBJECT_RESPONSE)
+        document = factory(Document, INFORMATIEOBJECT_RESPONSE)
+        document.informatieobjecttype = factory(
+            InformatieObjectType, INFORMATIEOBJECTTYPE_RESPONSE
         )
+        document.last_edited_date = None
+
+        # create informatieobject document
+        informatieobject_document = create_informatieobject_document(document)
         informatieobject_document.related_zaken = [create_related_zaak_document(zaak)]
         informatieobject_document.save()
 
@@ -283,9 +287,12 @@ class ZaakInformatieObjectChangedTests(
         )
 
         # create informatieobject document
-        informatieobject_document = create_informatieobject_document(
-            factory(Document, INFORMATIEOBJECT_RESPONSE)
+        document = factory(Document, INFORMATIEOBJECT_RESPONSE)
+        document.informatieobjecttype = factory(
+            InformatieObjectType, INFORMATIEOBJECTTYPE_RESPONSE
         )
+        document.last_edited_date = None
+        informatieobject_document = create_informatieobject_document(document)
         informatieobject_document.related_zaken = [create_related_zaak_document(zaak)]
         informatieobject_document.save()
 
