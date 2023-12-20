@@ -367,7 +367,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response, [])
 
-    def test_check_document_status(self, m):
+    def test_check_document_status_documenten(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
         self.client.force_authenticate(user=self.user)
         doc = "https://some-doc.nl/"
@@ -377,13 +377,36 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
             status_code=200,
             json=[{"document": doc, "uuid": str(_uuid)}],
         )
-        response = check_document_status([doc])
+        response = check_document_status(documenten=[doc])
         self.assertEqual(
             "https://dowc.nl/api/v1/documenten/status",
             m.last_request.url,
         )
         self.assertEqual(
-            [{"document": "https://some-doc.nl/"}],
+            {"documenten": ["https://some-doc.nl/"]},
+            m.last_request.json(),
+        )
+        self.assertEqual(
+            response, factory(OpenDowc, [{"document": doc, "uuid": str(_uuid)}])
+        )
+
+    def test_check_document_status_zaak(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        self.client.force_authenticate(user=self.user)
+        doc = "https://some-doc.nl/"
+        _uuid = uuid.uuid4()
+        m.post(
+            f"{DOWC_API_ROOT}/api/v1/documenten/status",
+            status_code=200,
+            json=[{"document": doc, "uuid": str(_uuid)}],
+        )
+        response = check_document_status(zaak="http://some-zaak.nl/")
+        self.assertEqual(
+            "https://dowc.nl/api/v1/documenten/status",
+            m.last_request.url,
+        )
+        self.assertEqual(
+            {"zaak": "http://some-zaak.nl/"},
             m.last_request.json(),
         )
         self.assertEqual(

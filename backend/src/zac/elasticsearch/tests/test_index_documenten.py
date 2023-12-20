@@ -25,7 +25,7 @@ from ..api import (
     create_zaaktype_document,
 )
 from ..documents import InformatieObjectDocument
-from ..searches import get_documenten_es
+from ..searches import search_informatieobjects
 from .utils import ESMixin
 
 DRC_ROOT = "https://api.drc.nl/api/v1/"
@@ -192,8 +192,8 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.refresh_index()
 
         self.assertEqual(index.search().count(), 2)
-        results = get_documenten_es(zaak=zaak1_obj)
+        results = search_informatieobjects(zaak=zaak1_obj.url)
         self.assertEqual(len(results), 2)
 
-        results = get_documenten_es(zaak=zaak2_obj)
+        results = search_informatieobjects(zaak=zaak2_obj.url)
         self.assertEqual(len(results), 1)

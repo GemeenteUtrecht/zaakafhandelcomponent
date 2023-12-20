@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 from uuid import UUID
 
 from django.urls import reverse
@@ -11,15 +11,12 @@ from zac.camunda.process_instances import get_process_instance
 from zac.camunda.user_tasks import Context
 from zac.core.camunda.utils import get_process_zaak_url
 from zac.core.services import fetch_zaaktype, get_zaak
-from zac.elasticsearch.documents import InformatieObjectDocument
-from zac.elasticsearch.searches import get_documenten_es
 from zgw.models.zrc import Zaak
 
 
 @dataclass
 class ZaakContext(Context):
     zaak: Zaak
-    documents: Optional[List[InformatieObjectDocument]] = None
     documents_link: Optional[str] = ""
     zaaktype: Optional[ZaakType] = None
 
@@ -37,7 +34,6 @@ def get_zaak_url_from_context(
 def get_zaak_context(
     task: Task,
     require_zaaktype: bool = False,
-    require_documents: bool = False,
     zaak_url_variable: str = "zaakUrl",
 ) -> ZaakContext:
     task_pid, zaak_url = get_zaak_url_from_context(
@@ -45,7 +41,6 @@ def get_zaak_context(
     )
     zaak = get_zaak(zaak_url=zaak_url)
     zaaktype = fetch_zaaktype(zaak.zaaktype) if require_zaaktype else None
-    documents = get_documenten_es(zaak) if require_documents else None
     doc_url = reverse(
         "zaak-documents-es",
         kwargs={
@@ -53,9 +48,7 @@ def get_zaak_context(
             "identificatie": zaak.identificatie,
         },
     )
-    print(doc_url)
     return ZaakContext(
-        documents=documents,
         documents_link=doc_url,
         zaak=zaak,
         zaaktype=zaaktype,

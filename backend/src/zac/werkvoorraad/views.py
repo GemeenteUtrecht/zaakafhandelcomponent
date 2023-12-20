@@ -159,11 +159,11 @@ class WorkStackUserTasksView(ListAPIView):
             if not task_ids_and_zaak_urls:
                 return []
 
+            urls = list({url for url in task_ids_and_zaak_urls.values()})
             zaken = {
                 zaak.url: zaak
                 for zaak in search_zaken(
-                    request=self.request,
-                    urls=list({url for url in task_ids_and_zaak_urls.values()}),
+                    request=self.request, urls=urls, size=len(urls)
                 )
             }
             task_zaken = dict()
@@ -293,12 +293,11 @@ class WorkStackReviewRequestsView(views.APIView):
         }
 
     def resolve_zaken(self, review_requests: List[ReviewRequest]) -> Dict:
+        urls = list({rr.for_zaak for rr in review_requests})
         zaken = {
             z.url: z
             for z in search_zaken(
-                request=self.request,
-                urls=list({rr.for_zaak for rr in review_requests}),
-                only_allowed=False,
+                request=self.request, urls=urls, only_allowed=False, size=len(urls)
             )
         }
         for rr in review_requests:

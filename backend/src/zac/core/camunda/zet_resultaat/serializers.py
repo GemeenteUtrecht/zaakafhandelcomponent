@@ -120,7 +120,7 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
     def _get_zaak_context(self):
         if not hasattr(self, "_zaak_context"):
             self._zaak_context = get_zaak_context(
-                self.context["task"], require_zaaktype=True, require_documents=True
+                self.context["task"], require_zaaktype=True
             )
         return self._zaak_context
 
@@ -148,9 +148,7 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         assert hasattr(self, "validated_data"), "Serializer is not validated."
 
         zaakcontext = self._get_zaak_context()
-        open_documents = check_document_status(
-            [doc.url for doc in zaakcontext.documents]
-        )
+        open_documents = check_document_status(zaak=zaakcontext.zaak.url)
 
         def _patch_and_destroy_doc(uuid: str):
             return patch_and_destroy_doc(uuid, force=True)

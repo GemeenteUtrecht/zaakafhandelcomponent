@@ -2,6 +2,8 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple, Union
 
+from django.conf import settings
+
 from elasticsearch import exceptions
 from elasticsearch_dsl.query import Bool, Nested, Term
 from zgw_consumers.api_models.catalogi import InformatieObjectType, StatusType, ZaakType
@@ -106,6 +108,7 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
     # different handler in the notifications api.
     zaak_document.update(
         refresh=True,
+        retry_on_conflict=settings.ES_RETRY_ON_CONFLICT,
         bronorganisatie=zaak.bronorganisatie,
         vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
         va_order=VA_ORDER[zaak.vertrouwelijkheidaanduiding],
@@ -294,6 +297,7 @@ def update_object_document(object: Dict) -> ObjectDocument:
     )
     object_document.update(
         refresh=True,
+        retry_on_conflict=settings.ES_RETRY_ON_CONFLICT,
         record_data=object["record"]["data"],
         string_representation=object["stringRepresentation"],
     )
@@ -488,6 +492,7 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
         at = fetch_latest_audit_trail_data_document(document.url)
         informatieobject_document.update(
             refresh=True,
+            retry_on_conflict=settings.ES_RETRY_ON_CONFLICT,
             auteur=document.auteur,
             beschrijving=document.beschrijving,
             bestandsnaam=document.bestandsnaam,

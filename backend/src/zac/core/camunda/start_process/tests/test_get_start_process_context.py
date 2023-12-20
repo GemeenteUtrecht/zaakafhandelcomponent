@@ -8,7 +8,6 @@ from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -163,9 +162,6 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
         cls.zaak_context = ZaakContext(
             zaak=zaak,
             zaaktype=zaak.zaaktype,
-            documents=[
-                factory(Document, cls.document),
-            ],
         )
 
     def setUp(self):
@@ -210,15 +206,20 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
         )
 
         with patch(
-            "zac.core.camunda.start_process.serializers.get_zaak_context",
-            return_value=self.zaak_context,
+            "zac.core.camunda.start_process.utils.count_by_iot_in_zaak",
+            return_value={self.informatieobjecttype["omschrijving"]: 1},
         ):
             with patch(
-                "zac.core.camunda.start_process.utils.get_informatieobjecttypen_for_zaaktype",
-                return_value=[factory(InformatieObjectType, self.informatieobjecttype)],
+                "zac.core.camunda.start_process.serializers.get_zaak_context",
+                return_value=self.zaak_context,
             ):
-                response = self.client.get(self.task_endpoint)
-
+                with patch(
+                    "zac.core.camunda.start_process.utils.get_informatieobjecttypen_for_zaaktype",
+                    return_value=[
+                        factory(InformatieObjectType, self.informatieobjecttype)
+                    ],
+                ):
+                    response = self.client.get(self.task_endpoint)
         self.assertEqual(
             response.json(),
             {
@@ -242,7 +243,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                                     "omschrijving"
                                 ],
                             },
-                            "alreadyUploadedInformatieobjecten": [self.document["url"]],
+                            "alreadyUploadedInformatieobjecten": 1,
                             "allowMultiple": True,
                             "label": PROCESS_INFORMATIE_OBJECT["label"],
                             "required": True,
@@ -295,18 +296,24 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
         zaak_context = ZaakContext(
             zaak=self.zaak_context.zaak,
             zaaktype=self.zaak_context.zaaktype,
-            documents=[],
         )
+
         with patch(
-            "zac.core.camunda.start_process.serializers.get_zaak_context",
-            return_value=zaak_context,
+            "zac.core.camunda.start_process.utils.count_by_iot_in_zaak",
+            return_value=dict(),
         ):
             with patch(
-                "zac.core.camunda.start_process.utils.get_informatieobjecttypen_for_zaaktype",
-                return_value=[factory(InformatieObjectType, self.informatieobjecttype)],
+                "zac.core.camunda.start_process.serializers.get_zaak_context",
+                return_value=zaak_context,
             ):
-                response = self.client.get(self.task_endpoint)
-
+                with patch(
+                    "zac.core.camunda.start_process.utils.get_informatieobjecttypen_for_zaaktype",
+                    return_value=[
+                        factory(InformatieObjectType, self.informatieobjecttype)
+                    ],
+                ):
+                    response = self.client.get(self.task_endpoint)
+        self.maxDiff = None
         self.assertEqual(
             response.json(),
             {
@@ -330,6 +337,7 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                                     "informatieobjecttypeOmschrijving"
                                 ],
                             },
+                            "alreadyUploadedInformatieobjecten": 0,
                             "allowMultiple": True,
                             "label": PROCESS_INFORMATIE_OBJECT["label"],
                             "required": True,

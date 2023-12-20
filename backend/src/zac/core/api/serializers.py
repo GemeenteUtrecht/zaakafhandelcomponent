@@ -75,7 +75,7 @@ from zac.core.services import (
     get_zaaktypen,
 )
 from zac.core.utils import build_absolute_url
-from zac.elasticsearch.searches import get_documenten_es
+from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
@@ -224,9 +224,6 @@ class AddZaakDocumentSerializer(serializers.Serializer):
                 "Either 'url' or 'file' should be provided."
             )
 
-        documenten = get_documenten_es(get_zaak(zaak_url=zaak))
-        filenames = [doc.bestandsnaam.lower() for doc in documenten]
-
         if file:
             bestandsnaam = file.name
             informatieobjecttype_url = data.get("informatieobjecttype")
@@ -248,7 +245,12 @@ class AddZaakDocumentSerializer(serializers.Serializer):
                 _("A `file` or `document` needs a `bestandsnaam`.")
             )
 
-        if bestandsnaam.lower() in filenames:
+        if (
+            search_informatieobjects(
+                bestandsnaam=bestandsnaam, zaak=zaak, size=0, return_search=True
+            ).count()
+            > 0
+        ):
             raise serializers.ValidationError(
                 _(
                     "`bestandsnaam`: `{bestandsnaam}` already exists. Please choose a unique `bestandsnaam`."
@@ -302,19 +304,17 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
         data = super().validate(data)
         document_url = data.get("url")
         zaak = get_zaak(zaak_url=data["zaak"])
-        documenten = get_documenten_es(zaak)
-        doc_urls = {document.url: document for document in documenten}
-        other_filenames = [
-            doc.bestandsnaam.lower() for doc in documenten if doc.url != document_url
-        ]
+
         if file := data.get("file"):
             bestandsnaam = file.name
 
-        if document := doc_urls.get(document_url):
+        if document := search_informatieobjects(
+            zaak=zaak.url, size=1, urls=[document_url]
+        ):
             if bestandsnaam := data.get("bestandsnaam"):
                 bestandsnaam = pathlib.Path(bestandsnaam).stem
                 bestandsnaam = bestandsnaam + "".join(
-                    pathlib.Path(document.bestandsnaam).suffixes
+                    pathlib.Path(document[0].bestandsnaam).suffixes
                 )
                 data["bestandsnaam"] = bestandsnaam
                 data["titel"] = bestandsnaam
@@ -325,7 +325,13 @@ class UpdateZaakDocumentSerializer(serializers.Serializer):
                 )
             )
 
-        if bestandsnaam and bestandsnaam.lower() in other_filenames:
+        if (
+            bestandsnaam
+            and search_informatieobjects(
+                zaak=zaak.url, size=0, bestandsnaam=bestandsnaam, return_search=True
+            ).count()
+            > 0
+        ):
             raise serializers.ValidationError(
                 _(
                     "`bestandsnaam`: `{bestandsnaam}` already exists. Please choose a unique `bestandsnaam`."

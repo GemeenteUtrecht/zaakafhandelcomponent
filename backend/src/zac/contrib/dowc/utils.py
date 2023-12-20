@@ -33,17 +33,11 @@ def get_dowc_url_from_vars(
 ) -> str:
 
     results = search_informatieobjects(
-        bronorganisatie=bronorganisatie, identificatie=identificatie
+        bronorganisatie=bronorganisatie, identificatie=identificatie, size=1
     )
     if not results:
         logger.warning(
             "Could not find a document with bronorganisatie {bron} and identificatie {id}.".format(
-                bron=bronorganisatie, id=identificatie
-            )
-        )
-    if len(results) > 1:
-        logger.warning(
-            "Found more than 1 document with bronorganisatie {bron} and identificatie {id}. Taking first found.".format(
                 bron=bronorganisatie, id=identificatie
             )
         )

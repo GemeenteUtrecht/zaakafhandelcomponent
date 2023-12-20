@@ -20,12 +20,8 @@ from zac.core.api.serializers import (
     RolTypeSerializer,
     ZaakEigenschapSerializer,
 )
-from zac.core.services import (
-    get_rollen,
-    get_roltypen,
-    get_zaak_eigenschappen,
-    resolve_documenten_informatieobjecttypen,
-)
+from zac.core.services import get_rollen, get_roltypen, get_zaak_eigenschappen
+from zac.elasticsearch.searches import count_by_iot_in_zaak
 
 from .data import (
     ProcessEigenschap,
@@ -72,10 +68,9 @@ class ProcessEigenschapSerializer(APIModelSerializer):
 
 
 class ProcessInformatieObjectSerializer(APIModelSerializer):
-    already_uploaded_informatieobjecten = serializers.ListField(
-        child=serializers.URLField(),
-        required=False,
-        help_text=_("URL-references of already uploaded documents."),
+    already_uploaded_informatieobjecten = serializers.IntegerField(
+        help_text=_("Count of already uploaded documents of INFORMATIEOBJECTTYPE."),
+        default=0,
     )
     informatieobjecttype = InformatieObjectTypeSerializer(
         required=True,
@@ -145,9 +140,7 @@ class GetCurrentZaakInformation:
         zaakcontext.zaak.zaaktype = zaakcontext.zaaktype
         self.field_name = serializer_field.field_name
         self.mapping = {
-            "bijlagen": partial(
-                resolve_documenten_informatieobjecttypen, zaakcontext.documents
-            ),
+            "bijlagen": partial(count_by_iot_in_zaak, zaakcontext.zaak.url),
             "rollen": partial(get_rollen, zaakcontext.zaak),
             "zaakeigenschappen": partial(get_zaak_eigenschappen, zaakcontext.zaak),
         }
@@ -165,7 +158,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
     def zaakcontext(self):
         if not hasattr(self, "_zaakcontext"):
             self._zaakcontext = get_zaak_context(
-                self.context["task"], require_zaaktype=True, require_documents=True
+                self.context["task"], require_zaaktype=True
             )
         return self._zaakcontext
 
@@ -187,23 +180,20 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             self._camunda_start_process = form
         return self._camunda_start_process
 
-    def validate_bijlagen(self, bijlagen) -> List[Document]:
-        # Validate that bijlagen related to zaak match required document(types).
-        iots = [doc.informatieobjecttype.omschrijving for doc in bijlagen]
-
-        required_informatieobjecttype_omschrijvingen = [
+    def validate_bijlagen(self, iots_found: List[str]) -> List[Document]:
+        required_iots_omschrijvingen = [
             iot.informatieobjecttype_omschrijving
             for iot in self.camunda_start_process.process_informatie_objecten
             if iot.required
         ]
-        for iot_omschrijving in required_informatieobjecttype_omschrijvingen:
-            if iot_omschrijving not in iots:
+        for iot in required_iots_omschrijvingen:
+            if iot not in iots_found:
                 raise serializers.ValidationError(
                     _(
                         "A INFORMATIEOBJECT with INFORMATIEOBJECTTYPE `omschrijving`: `{omschrijving}` is required."
-                    ).format(omschrijving=iot_omschrijving)
+                    ).format(omschrijving=iot)
                 )
-        return bijlagen
+        return iots_found
 
     def validate_rollen(self, rollen) -> List[Rol]:
         # Validate that rollen in zaak match required rollen
@@ -286,9 +276,6 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
         """
         assert self.is_valid(), "Serializer must be valid"
 
-        self.validated_data["bijlagen"] = [
-            doc.url for doc in self.validated_data["bijlagen"]
-        ]
         self.validated_data["zaakeigenschappen"] = [
             deepcopy(data)
             for data in ZaakEigenschapSerializer(
@@ -307,16 +294,11 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
             for ei in self.validated_data["zaakeigenschappen"]
         }
         return {
-            "bijlagen": self.validated_data["bijlagen"],
             "eigenschappen": [
                 {"naam": naam, "waarde": waarde}
                 for naam, waarde in eigenschappen.items()
             ],
             **eigenschappen,
-            **{
-                f"bijlage{i+1}": bijlage
-                for i, bijlage in enumerate(self.validated_data["bijlagen"])
-            },
             **{
                 rol.get_roltype_omschrijving(): {
                     "betrokkeneType": rol.betrokkene_type,
@@ -337,7 +319,7 @@ class ConfigureZaakProcessSerializer(serializers.Serializer):
     ConfigureZaakProcessSerializer,
 )
 def get_zaak_start_process_form_context(task: Task) -> StartProcessFormContext:
-    zaak_context = get_zaak_context(task, require_zaaktype=True, require_documents=True)
+    zaak_context = get_zaak_context(task, require_zaaktype=True)
     camunda_start_process = fetch_start_camunda_process_form_for_zaaktype(
         zaak_context.zaaktype
     )

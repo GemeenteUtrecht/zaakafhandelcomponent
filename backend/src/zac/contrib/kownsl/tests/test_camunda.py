@@ -102,9 +102,6 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype,
-            documents=[
-                cls.document,
-            ],
             documents_link=reverse(
                 "zaak-documents-es",
                 kwargs={
@@ -121,11 +118,19 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
 
+        cls.patch_search_informatieobjects = patch(
+            "zac.contrib.kownsl.camunda.search_informatieobjects",
+            return_value=[cls.document],
+        )
+
     def setUp(self):
         super().setUp()
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
+
+        self.patch_search_informatieobjects.start()
+        self.addCleanup(self.patch_search_informatieobjects.stop)
 
     def test_zaak_informatie_task_serializer(self):
         # Sanity check
@@ -387,9 +392,10 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.zaak = factory(Zaak, zaak)
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
-            documents=[
-                cls.document,
-            ],
+        )
+        cls.patch_search_informatieobjects = patch(
+            "zac.contrib.kownsl.camunda.search_informatieobjects",
+            return_value=[cls.document],
         )
         cls.patch_get_zaak_context = patch(
             "zac.contrib.kownsl.camunda.get_zaak_context",
@@ -400,7 +406,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             return_value=cls.zaak_context,
         )
         cls.patch_get_documenten = patch(
-            "zac.core.api.validators.get_documenten_es",
+            "zac.core.api.validators.search_informatieobjects",
             return_value=[cls.document],
         )
         rr = deepcopy(REVIEW_REQUEST)
@@ -432,6 +438,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
+
+        self.patch_search_informatieobjects.start()
+        self.addCleanup(self.patch_search_informatieobjects.stop)
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_select_users_rev_req_serializer(self):

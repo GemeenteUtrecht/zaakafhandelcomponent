@@ -20,6 +20,7 @@ from zac.contrib.kownsl.api import get_review_request
 from zac.core.api.fields import SelectDocumentsField
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.utils import build_absolute_url
+from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
 from .api import (
@@ -471,9 +472,7 @@ def get_review_request_from_task(task: Task) -> Optional[ReviewRequest]:
 
 def get_review_context(task: Task) -> AdviceApprovalContext:
     rr = get_review_request_from_task(task)
-    zaak_context = get_zaak_context(
-        task, require_zaaktype=True, require_documents=True if rr else False
-    )
+    zaak_context = get_zaak_context(task, require_zaaktype=True)
     context = {
         "camunda_assigned_users": get_camunda_assigned_users(task),
         "documents_link": zaak_context.documents_link,
@@ -483,9 +482,9 @@ def get_review_context(task: Task) -> AdviceApprovalContext:
 
     if rr:
         context["id"] = rr.id
-        context["documents"] = [
-            doc.url for doc in zaak_context.documents if doc.url in rr.documents
-        ]
+        context["documents"] = search_informatieobjects(
+            zaak=zaak_context.zaak.url, urls=rr.documents
+        )
         context["previously_assigned_users"] = rr.assigned_users
         context["previously_selected_documents"] = rr.documents
 

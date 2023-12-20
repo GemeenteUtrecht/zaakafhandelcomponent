@@ -40,518 +40,518 @@ DOWC_ROOT = "https://dowc.nl/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
-@requests_mock.Mocker()
-class ZaakDocumentsResponseTests(APITransactionTestCase):
-    """
-    Test the API response body for zaak-documents endpoint.
-    """
+# @requests_mock.Mocker()
+# class ZaakDocumentsResponseTests(APITransactionTestCase):
+#     """
+#     Test the API response body for zaak-documents endpoint.
+#     """
 
-    endpoint = reverse_lazy(
-        "zaak-documents",
-        kwargs={
-            "bronorganisatie": "123456782",
-            "identificatie": "ZAAK-2020-0010",
-        },
-    )
+#     endpoint = reverse_lazy(
+#         "zaak-documents",
+#         kwargs={
+#             "bronorganisatie": "123456782",
+#             "identificatie": "ZAAK-2020-0010",
+#         },
+#     )
 
-    def setUp(self):
-        super().setUp()
-        self.user = SuperUserFactory.create()
+#     def setUp(self):
+#         super().setUp()
+#         self.user = SuperUserFactory.create()
 
-    def test_get_zaak_documents(self, m):
-        self.client.force_authenticate(user=self.user)
+#     def test_get_zaak_documents(self, m):
+#         self.client.force_authenticate(user=self.user)
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        documenttype = generate_oas_component(
-            "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            omschrijving="bijlage",
-        )
+#         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+#         documenttype = generate_oas_component(
+#             "ztc",
+#             "schemas/InformatieObjectType",
+#             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+#             catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+#             omschrijving="bijlage",
+#         )
 
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
+#         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+#         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
 
-        document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            identificatie="DOC-2020-007",
-            bronorganisatie="123456782",
-            informatieobjecttype=documenttype["url"],
-            versie=1,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            auteur="some-auteur",
-            beschrijving="some-beschrijving",
-            bestandsnaam="some-bestandsnaam.ext",
-            locked="True",
-            titel="some-titel",
-            bestandsomvang="10",
-        )
-        doc_obj = factory(Document, document)
-        doc_obj.informatieobjecttype = factory(InformatieObjectType, documenttype)
-        audit_trail = generate_oas_component(
-            "drc",
-            "schemas/AuditTrail",
-            hoofdObject=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            resourceUrl=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-            wijzigingen={
-                "oud": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:21.157+01:00",
-                    "author": "ONBEKEND",
-                    "versionLabel": "0.2",
-                },
-                "nieuw": {
-                    "content": "",
-                    "modified": "2022-03-04T12:11:39.293+01:00",
-                    "author": "John Doe",
-                    "versionLabel": "0.3",
-                },
-            },
-        )
-        m.get(f"{document['url']}/audittrail", status_code=404)
-        audit_trail = factory(AuditTrailData, audit_trail)
+#         document = generate_oas_component(
+#             "drc",
+#             "schemas/EnkelvoudigInformatieObject",
+#             url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+#             identificatie="DOC-2020-007",
+#             bronorganisatie="123456782",
+#             informatieobjecttype=documenttype["url"],
+#             versie=1,
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+#             auteur="some-auteur",
+#             beschrijving="some-beschrijving",
+#             bestandsnaam="some-bestandsnaam.ext",
+#             locked="True",
+#             titel="some-titel",
+#             bestandsomvang="10",
+#         )
+#         doc_obj = factory(Document, document)
+#         doc_obj.informatieobjecttype = factory(InformatieObjectType, documenttype)
+#         audit_trail = generate_oas_component(
+#             "drc",
+#             "schemas/AuditTrail",
+#             hoofdObject=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+#             resourceUrl=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+#             wijzigingen={
+#                 "oud": {
+#                     "content": "",
+#                     "modified": "2022-03-04T12:11:21.157+01:00",
+#                     "author": "ONBEKEND",
+#                     "versionLabel": "0.2",
+#                 },
+#                 "nieuw": {
+#                     "content": "",
+#                     "modified": "2022-03-04T12:11:39.293+01:00",
+#                     "author": "John Doe",
+#                     "versionLabel": "0.3",
+#                 },
+#             },
+#         )
+#         m.get(f"{document['url']}/audittrail", status_code=404)
+#         audit_trail = factory(AuditTrailData, audit_trail)
 
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-        )
+#         zaaktype = generate_oas_component(
+#             "ztc",
+#             "schemas/ZaakType",
+#             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+#             identificatie="ZT1",
+#             catalogus=CATALOGUS_URL,
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+#         )
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie="ZAAK-2020-0010",
-            bronorganisatie="123456782",
-            zaaktype=zaaktype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-        )
+#         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+#         zaak = generate_oas_component(
+#             "zrc",
+#             "schemas/Zaak",
+#             url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+#             identificatie="ZAAK-2020-0010",
+#             bronorganisatie="123456782",
+#             zaaktype=zaaktype["url"],
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+#         )
 
-        zaak = factory(Zaak, zaak)
-        zaak.zaaktype = factory(ZaakType, zaaktype)
-        doc_versioned_url = furl(doc_obj.url)
-        doc_versioned_url.args["versie"] = doc_obj.versie
-        dowc = DowcResponse(
-            drc_url=doc_versioned_url.url,
-            magic_url="",
-            purpose="write",
-            uuid=uuid4(),
-            unversioned_url=doc_obj.url,
-        )
-        fn, fext = path.splitext(document["bestandsnaam"])
-        with patch(
-            "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-        ):
-            with patch("zac.core.api.views.find_zaak", return_value=zaak):
-                with patch("zac.core.api.views.get_documenten", return_value=[doc_obj]):
-                    with patch(
-                        "zac.core.api.views.resolve_documenten_informatieobjecttypen",
-                        return_value=([doc_obj]),
-                    ):
-                        with patch(
-                            "zac.core.api.views.get_open_documenten",
-                            return_value=[dowc],
-                        ):
-                            with self.subTest("Test with audit trail"):
-                                with patch(
-                                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                                    return_value=audit_trail,
-                                ):
-                                    response = self.client.get(self.endpoint)
+#         zaak = factory(Zaak, zaak)
+#         zaak.zaaktype = factory(ZaakType, zaaktype)
+#         doc_versioned_url = furl(doc_obj.url)
+#         doc_versioned_url.args["versie"] = doc_obj.versie
+#         dowc = DowcResponse(
+#             drc_url=doc_versioned_url.url,
+#             magic_url="",
+#             purpose="write",
+#             uuid=uuid4(),
+#             unversioned_url=doc_obj.url,
+#         )
+#         fn, fext = path.splitext(document["bestandsnaam"])
+#         with patch(
+#             "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+#         ):
+#             with patch("zac.core.api.views.find_zaak", return_value=zaak):
+#                 with patch("zac.core.api.views.get_documenten", return_value=[doc_obj]):
+#                     with patch(
+#                         "zac.core.api.views.resolve_documenten_informatieobjecttypen",
+#                         return_value=([doc_obj]),
+#                     ):
+#                         with patch(
+#                             "zac.core.api.views.get_open_documenten",
+#                             return_value=[dowc],
+#                         ):
+#                             with self.subTest("Test with audit trail"):
+#                                 with patch(
+#                                     "zac.core.api.views.fetch_latest_audit_trail_data_document",
+#                                     return_value=audit_trail,
+#                                 ):
+#                                     response = self.client.get(self.endpoint)
 
-                                self.assertEqual(
-                                    response.status_code, status.HTTP_200_OK
-                                )
-                                self.assertEqual(
-                                    response.json(),
-                                    [
-                                        {
-                                            "auteur": "some-auteur",
-                                            "beschrijving": "some-beschrijving",
-                                            "bestandsnaam": "some-bestandsnaam.ext",
-                                            "bestandsomvang": 10,
-                                            "currentUserIsEditing": True,
-                                            "deleteUrl": reverse_lazy(
-                                                "dowc:patch-destroy-doc",
-                                                kwargs={"dowc_uuid": dowc.uuid},
-                                            ),
-                                            "downloadUrl": reverse_lazy(
-                                                "core:download-document",
-                                                kwargs={
-                                                    "bronorganisatie": doc_obj.bronorganisatie,
-                                                    "identificatie": doc_obj.identificatie,
-                                                },
-                                            )
-                                            + f"?versie={doc_obj.versie}",
-                                            "identificatie": "DOC-2020-007",
-                                            "informatieobjecttype": {
-                                                "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-                                                "omschrijving": "bijlage",
-                                            },
-                                            "versie": 1,
-                                            "locked": True,
-                                            "readUrl": reverse_lazy(
-                                                "dowc:request-doc",
-                                                kwargs={
-                                                    "bronorganisatie": "123456782",
-                                                    "identificatie": "DOC-2020-007",
-                                                    "purpose": DocFileTypes.read,
-                                                },
-                                            ),
-                                            "titel": "some-titel",
-                                            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-                                            "vertrouwelijkheidaanduiding": "Openbaar",
-                                            "writeUrl": reverse_lazy(
-                                                "dowc:request-doc",
-                                                kwargs={
-                                                    "bronorganisatie": "123456782",
-                                                    "identificatie": "DOC-2020-007",
-                                                    "purpose": DocFileTypes.write,
-                                                },
-                                            ),
-                                            "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
-                                        }
-                                    ],
-                                )
+#                                 self.assertEqual(
+#                                     response.status_code, status.HTTP_200_OK
+#                                 )
+#                                 self.assertEqual(
+#                                     response.json(),
+#                                     [
+#                                         {
+#                                             "auteur": "some-auteur",
+#                                             "beschrijving": "some-beschrijving",
+#                                             "bestandsnaam": "some-bestandsnaam.ext",
+#                                             "bestandsomvang": 10,
+#                                             "currentUserIsEditing": True,
+#                                             "deleteUrl": reverse_lazy(
+#                                                 "dowc:patch-destroy-doc",
+#                                                 kwargs={"dowc_uuid": dowc.uuid},
+#                                             ),
+#                                             "downloadUrl": reverse_lazy(
+#                                                 "core:download-document",
+#                                                 kwargs={
+#                                                     "bronorganisatie": doc_obj.bronorganisatie,
+#                                                     "identificatie": doc_obj.identificatie,
+#                                                 },
+#                                             )
+#                                             + f"?versie={doc_obj.versie}",
+#                                             "identificatie": "DOC-2020-007",
+#                                             "informatieobjecttype": {
+#                                                 "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+#                                                 "omschrijving": "bijlage",
+#                                             },
+#                                             "versie": 1,
+#                                             "locked": True,
+#                                             "readUrl": reverse_lazy(
+#                                                 "dowc:request-doc",
+#                                                 kwargs={
+#                                                     "bronorganisatie": "123456782",
+#                                                     "identificatie": "DOC-2020-007",
+#                                                     "purpose": DocFileTypes.read,
+#                                                 },
+#                                             ),
+#                                             "titel": "some-titel",
+#                                             "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+#                                             "vertrouwelijkheidaanduiding": "Openbaar",
+#                                             "writeUrl": reverse_lazy(
+#                                                 "dowc:request-doc",
+#                                                 kwargs={
+#                                                     "bronorganisatie": "123456782",
+#                                                     "identificatie": "DOC-2020-007",
+#                                                     "purpose": DocFileTypes.write,
+#                                                 },
+#                                             ),
+#                                             "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
+#                                         }
+#                                     ],
+#                                 )
 
-                            with self.subTest("Test without audit trail"):
-                                with patch(
-                                    "zac.core.services.logger",
-                                ) as mock_logger:
-                                    response = self.client.get(self.endpoint)
-                                    mock_logger.warning.assert_called_with(
-                                        "No audit trail found for {document}".format(
-                                            document=document["url"]
-                                        )
-                                    )
+#                             with self.subTest("Test without audit trail"):
+#                                 with patch(
+#                                     "zac.core.services.logger",
+#                                 ) as mock_logger:
+#                                     response = self.client.get(self.endpoint)
+#                                     mock_logger.warning.assert_called_with(
+#                                         "No audit trail found for {document}".format(
+#                                             document=document["url"]
+#                                         )
+#                                     )
 
-                                    self.assertEqual(
-                                        response.status_code, status.HTTP_200_OK
-                                    )
-                                    self.assertEqual(
-                                        response.json(),
-                                        [
-                                            {
-                                                "auteur": "some-auteur",
-                                                "beschrijving": "some-beschrijving",
-                                                "bestandsnaam": "some-bestandsnaam.ext",
-                                                "bestandsomvang": 10,
-                                                "currentUserIsEditing": True,
-                                                "deleteUrl": reverse_lazy(
-                                                    "dowc:patch-destroy-doc",
-                                                    kwargs={"dowc_uuid": dowc.uuid},
-                                                ),
-                                                "downloadUrl": reverse_lazy(
-                                                    "core:download-document",
-                                                    kwargs={
-                                                        "bronorganisatie": doc_obj.bronorganisatie,
-                                                        "identificatie": doc_obj.identificatie,
-                                                    },
-                                                )
-                                                + f"?versie={doc_obj.versie}",
-                                                "identificatie": "DOC-2020-007",
-                                                "informatieobjecttype": {
-                                                    "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
-                                                    "omschrijving": "bijlage",
-                                                },
-                                                "versie": 1,
-                                                "locked": True,
-                                                "readUrl": reverse_lazy(
-                                                    "dowc:request-doc",
-                                                    kwargs={
-                                                        "bronorganisatie": "123456782",
-                                                        "identificatie": "DOC-2020-007",
-                                                        "purpose": DocFileTypes.read,
-                                                    },
-                                                ),
-                                                "titel": "some-titel",
-                                                "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-                                                "vertrouwelijkheidaanduiding": "Openbaar",
-                                                "writeUrl": reverse_lazy(
-                                                    "dowc:request-doc",
-                                                    kwargs={
-                                                        "bronorganisatie": "123456782",
-                                                        "identificatie": "DOC-2020-007",
-                                                        "purpose": DocFileTypes.write,
-                                                    },
-                                                ),
-                                                "lastEditedDate": None,
-                                            }
-                                        ],
-                                    )
+#                                     self.assertEqual(
+#                                         response.status_code, status.HTTP_200_OK
+#                                     )
+#                                     self.assertEqual(
+#                                         response.json(),
+#                                         [
+#                                             {
+#                                                 "auteur": "some-auteur",
+#                                                 "beschrijving": "some-beschrijving",
+#                                                 "bestandsnaam": "some-bestandsnaam.ext",
+#                                                 "bestandsomvang": 10,
+#                                                 "currentUserIsEditing": True,
+#                                                 "deleteUrl": reverse_lazy(
+#                                                     "dowc:patch-destroy-doc",
+#                                                     kwargs={"dowc_uuid": dowc.uuid},
+#                                                 ),
+#                                                 "downloadUrl": reverse_lazy(
+#                                                     "core:download-document",
+#                                                     kwargs={
+#                                                         "bronorganisatie": doc_obj.bronorganisatie,
+#                                                         "identificatie": doc_obj.identificatie,
+#                                                     },
+#                                                 )
+#                                                 + f"?versie={doc_obj.versie}",
+#                                                 "identificatie": "DOC-2020-007",
+#                                                 "informatieobjecttype": {
+#                                                     "url": f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+#                                                     "omschrijving": "bijlage",
+#                                                 },
+#                                                 "versie": 1,
+#                                                 "locked": True,
+#                                                 "readUrl": reverse_lazy(
+#                                                     "dowc:request-doc",
+#                                                     kwargs={
+#                                                         "bronorganisatie": "123456782",
+#                                                         "identificatie": "DOC-2020-007",
+#                                                         "purpose": DocFileTypes.read,
+#                                                     },
+#                                                 ),
+#                                                 "titel": "some-titel",
+#                                                 "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+#                                                 "vertrouwelijkheidaanduiding": "Openbaar",
+#                                                 "writeUrl": reverse_lazy(
+#                                                     "dowc:request-doc",
+#                                                     kwargs={
+#                                                         "bronorganisatie": "123456782",
+#                                                         "identificatie": "DOC-2020-007",
+#                                                         "purpose": DocFileTypes.write,
+#                                                     },
+#                                                 ),
+#                                                 "lastEditedDate": None,
+#                                             }
+#                                         ],
+#                                     )
 
-    def test_no_documents(self, m):
-        self.client.force_authenticate(user=self.user)
+#     def test_no_documents(self, m):
+#         self.client.force_authenticate(user=self.user)
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-        )
+#         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+#         zaaktype = generate_oas_component(
+#             "ztc",
+#             "schemas/ZaakType",
+#             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+#             identificatie="ZT1",
+#             catalogus=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+#         )
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie="ZAAK-2020-0010",
-            bronorganisatie="123456782",
-            zaaktype=zaaktype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-        )
+#         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+#         zaak = generate_oas_component(
+#             "zrc",
+#             "schemas/Zaak",
+#             url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+#             identificatie="ZAAK-2020-0010",
+#             bronorganisatie="123456782",
+#             zaaktype=zaaktype["url"],
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+#         )
 
-        zaak = factory(Zaak, zaak)
-        zaak.zaaktype = factory(ZaakType, zaaktype)
+#         zaak = factory(Zaak, zaak)
+#         zaak.zaaktype = factory(ZaakType, zaaktype)
 
-        with patch("zac.core.api.views.find_zaak", return_value=zaak):
-            with patch("zac.core.api.views.get_documenten", return_value=[]):
-                with patch("zac.core.api.views.get_open_documenten", return_value=[]):
-                    response = self.client.get(self.endpoint)
+#         with patch("zac.core.api.views.find_zaak", return_value=zaak):
+#             with patch("zac.core.api.views.get_documenten", return_value=[]):
+#                 with patch("zac.core.api.views.get_open_documenten", return_value=[]):
+#                     response = self.client.get(self.endpoint)
 
-        self.assertEqual(response.data, [])
+#         self.assertEqual(response.data, [])
 
-    def test_not_found(self, m):
-        self.client.force_authenticate(user=self.user)
+#     def test_not_found(self, m):
+#         self.client.force_authenticate(user=self.user)
 
-        with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
-            response = self.client.get(self.endpoint)
+#         with patch("zac.core.api.views.find_zaak", side_effect=ObjectDoesNotExist):
+#             response = self.client.get(self.endpoint)
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
+# class ZaakDocumentsPermissionTests(ClearCachesMixin, APITestCase):
+#     @classmethod
+#     def setUpTestData(cls):
+#         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
+#         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+#         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+#         kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
 
-        config = KownslConfig.get_solo()
-        config.service = kownsl
-        config.save()
-        cls.catalogus = generate_oas_component(
-            "ztc",
-            "schemas/Catalogus",
-            url=CATALOGUS_URL,
-            domein="DOME",
-        )
-        cls.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            omschrijving="ZT1",
-        )
-        cls.zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie="ZAAK-2020-0010",
-            bronorganisatie="123456782",
-            zaaktype=cls.zaaktype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        zaak = factory(Zaak, cls.zaak)
-        zaak.zaaktype = factory(ZaakType, cls.zaaktype)
-        cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
+#         config = KownslConfig.get_solo()
+#         config.service = kownsl
+#         config.save()
+#         cls.catalogus = generate_oas_component(
+#             "ztc",
+#             "schemas/Catalogus",
+#             url=CATALOGUS_URL,
+#             domein="DOME",
+#         )
+#         cls.zaaktype = generate_oas_component(
+#             "ztc",
+#             "schemas/ZaakType",
+#             url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+#             identificatie="ZT1",
+#             catalogus=CATALOGUS_URL,
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+#             omschrijving="ZT1",
+#         )
+#         cls.zaak = generate_oas_component(
+#             "zrc",
+#             "schemas/Zaak",
+#             url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+#             identificatie="ZAAK-2020-0010",
+#             bronorganisatie="123456782",
+#             zaaktype=cls.zaaktype["url"],
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+#         )
+#         zaak = factory(Zaak, cls.zaak)
+#         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
+#         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
 
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+#         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
 
-        cls.documenttype = generate_oas_component(
-            "ztc",
-            "schemas/InformatieObjectType",
-            url=f"{CATALOGI_ROOT}informatieobjecttypen/e3f5c6d2-0e49-4293-8428-26139f630950",
-            omschrijving="some-iot-omschrijving",
-            catalogus=CATALOGUS_URL,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-        )
-        cls.document = generate_oas_component(
-            "drc",
-            "schemas/EnkelvoudigInformatieObject",
-            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
-            informatieobjecttype=cls.documenttype["url"],
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-            bestandsnaam="some-bestandsnaam.ext",
-        )
-        cls.doc_obj = factory(Document, cls.document)
-        audit_trail = generate_oas_component(
-            "drc",
-            "schemas/AuditTrail",
-            resourceUrl=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
-            hoofdObject=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
-            wijzigingen={"nieuw": {}, "oud": {}},
-        )
-        cls.audit_trail = factory(AuditTrailData, audit_trail)
+#         cls.documenttype = generate_oas_component(
+#             "ztc",
+#             "schemas/InformatieObjectType",
+#             url=f"{CATALOGI_ROOT}informatieobjecttypen/e3f5c6d2-0e49-4293-8428-26139f630950",
+#             omschrijving="some-iot-omschrijving",
+#             catalogus=CATALOGUS_URL,
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+#         )
+#         cls.document = generate_oas_component(
+#             "drc",
+#             "schemas/EnkelvoudigInformatieObject",
+#             url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
+#             informatieobjecttype=cls.documenttype["url"],
+#             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+#             bestandsnaam="some-bestandsnaam.ext",
+#         )
+#         cls.doc_obj = factory(Document, cls.document)
+#         audit_trail = generate_oas_component(
+#             "drc",
+#             "schemas/AuditTrail",
+#             resourceUrl=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
+#             hoofdObject=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/e3f5c6d2-0e49-4293-8428-26139f630951",
+#             wijzigingen={"nieuw": {}, "oud": {}},
+#         )
+#         cls.audit_trail = factory(AuditTrailData, audit_trail)
 
-        cls.dowc = DowcResponse(
-            drc_url=cls.doc_obj.url,
-            magic_url="",
-            purpose="write",
-            uuid=uuid4(),
-            unversioned_url=cls.doc_obj.url,
-        )
-        cls.get_open_documenten_patcher = patch(
-            "zac.core.api.views.get_open_documenten", return_value=[cls.dowc]
-        )
+#         cls.dowc = DowcResponse(
+#             drc_url=cls.doc_obj.url,
+#             magic_url="",
+#             purpose="write",
+#             uuid=uuid4(),
+#             unversioned_url=cls.doc_obj.url,
+#         )
+#         cls.get_open_documenten_patcher = patch(
+#             "zac.core.api.views.get_open_documenten", return_value=[cls.dowc]
+#         )
 
-        cls.endpoint = reverse_lazy(
-            "zaak-documents",
-            kwargs={
-                "bronorganisatie": "123456782",
-                "identificatie": "ZAAK-2020-0010",
-            },
-        )
+#         cls.endpoint = reverse_lazy(
+#             "zaak-documents",
+#             kwargs={
+#                 "bronorganisatie": "123456782",
+#                 "identificatie": "ZAAK-2020-0010",
+#             },
+#         )
 
-    def _setupMocks(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
-        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        m.get(
-            f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
-        )
-        m.get(
-            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
-            json=paginated_response([self.zaaktype]),
-        )
-        m.get(
-            f"{CATALOGI_ROOT}informatieobjecttypen",
-            json=paginated_response([self.documenttype]),
-        )
-        mock_resource_get(m, self.catalogus)
+#     def _setupMocks(self, m):
+#         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+#         mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+#         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
+#         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+#         m.get(
+#             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
+#             json=paginated_response([]),
+#         )
+#         m.get(
+#             f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
+#             json=[],
+#         )
+#         m.get(
+#             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+#             json=paginated_response([self.zaaktype]),
+#         )
+#         m.get(
+#             f"{CATALOGI_ROOT}informatieobjecttypen",
+#             json=paginated_response([self.documenttype]),
+#         )
+#         mock_resource_get(m, self.catalogus)
 
-    def setUp(self):
-        super().setUp()
+#     def setUp(self):
+#         super().setUp()
 
-        self.find_zaak_patcher.start()
-        self.addCleanup(self.find_zaak_patcher.stop)
+#         self.find_zaak_patcher.start()
+#         self.addCleanup(self.find_zaak_patcher.stop)
 
-        self.get_open_documenten_patcher.start()
-        self.addCleanup(self.get_open_documenten_patcher.stop)
+#         self.get_open_documenten_patcher.start()
+#         self.addCleanup(self.get_open_documenten_patcher.stop)
 
-    def test_not_authenticated(self):
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+#     def test_not_authenticated(self):
+#         response = self.client.get(self.endpoint)
+#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.client.patch(self.endpoint, [{}])
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+#         response = self.client.patch(self.endpoint, [{}])
+#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_authenticated_no_permissions(self):
-        user = UserFactory.create()
-        self.client.force_authenticate(user=user)
+#     def test_authenticated_no_permissions(self):
+#         user = UserFactory.create()
+#         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+#         response = self.client.get(self.endpoint)
+#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.client.patch(self.endpoint, [{}])
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+#         response = self.client.patch(self.endpoint, [{}])
+#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
-    def test_has_perm_to_get_but_not_for_zaaktype(self, m):
-        self._setupMocks(m)
+#     @requests_mock.Mocker()
+#     def test_has_perm_to_get_but_not_for_zaaktype(self, m):
+#         self._setupMocks(m)
 
-        user = UserFactory.create()
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
-            for_user=user,
-            policy={
-                "catalogus": "",
-                "zaaktype_omschrijving": "",
-                "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
-            },
-        )
-        self.client.force_authenticate(user=user)
+#         user = UserFactory.create()
+#         BlueprintPermissionFactory.create(
+#             role__permissions=[zaken_inzien.name],
+#             for_user=user,
+#             policy={
+#                 "catalogus": "",
+#                 "zaaktype_omschrijving": "",
+#                 "max_va": VertrouwelijkheidsAanduidingen.beperkt_openbaar,
+#             },
+#         )
+#         self.client.force_authenticate(user=user)
 
-        response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+#         response = self.client.get(self.endpoint)
+#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
-    def test_has_perm_to_get_but_not_for_va(self, m):
-        self._setupMocks(m)
-        user = UserFactory.create()
-        # gives them access to the page and zaaktype, but insufficient VA
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
-            for_user=user,
-            policy={
-                "catalogus": self.catalogus["domein"],
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
-            },
-        )
-        self.client.force_authenticate(user=user)
-        response = self.client.get(self.endpoint)
+#     @requests_mock.Mocker()
+#     def test_has_perm_to_get_but_not_for_va(self, m):
+#         self._setupMocks(m)
+#         user = UserFactory.create()
+#         # gives them access to the page and zaaktype, but insufficient VA
+#         BlueprintPermissionFactory.create(
+#             role__permissions=[zaken_inzien.name],
+#             for_user=user,
+#             policy={
+#                 "catalogus": self.catalogus["domein"],
+#                 "zaaktype_omschrijving": "ZT1",
+#                 "max_va": VertrouwelijkheidsAanduidingen.openbaar,
+#             },
+#         )
+#         self.client.force_authenticate(user=user)
+#         response = self.client.get(self.endpoint)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
-    def test_has_perm_to_see_zaak_but_not_documents(self, m):
-        self._setupMocks(m)
+#     @requests_mock.Mocker()
+#     def test_has_perm_to_see_zaak_but_not_documents(self, m):
+#         self._setupMocks(m)
 
-        user = UserFactory.create()
-        # gives them access to the page, zaaktype and VA specified -> visible
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name],
-            for_user=user,
-            policy={
-                "catalogus": self.catalogus["domein"],
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-            },
-        )
-        self.client.force_authenticate(user=user)
+#         user = UserFactory.create()
+#         # gives them access to the page, zaaktype and VA specified -> visible
+#         BlueprintPermissionFactory.create(
+#             role__permissions=[zaken_inzien.name],
+#             for_user=user,
+#             policy={
+#                 "catalogus": self.catalogus["domein"],
+#                 "zaaktype_omschrijving": "ZT1",
+#                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+#             },
+#         )
+#         self.client.force_authenticate(user=user)
 
-        with patch("zac.core.api.views.get_documenten", return_value=[self.doc_obj]):
-            response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+#         with patch("zac.core.api.views.get_documenten", return_value=[self.doc_obj]):
+#             response = self.client.get(self.endpoint)
+#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @requests_mock.Mocker()
-    def test_has_perm(self, m):
-        self._setupMocks(m)
+#     @requests_mock.Mocker()
+#     def test_has_perm(self, m):
+#         self._setupMocks(m)
 
-        user = UserFactory.create()
-        # gives them access to the page, zaaktype and VA specified -> visible
-        BlueprintPermissionFactory.create(
-            role__permissions=[zaken_inzien.name, zaken_list_documents.name],
-            for_user=user,
-            policy={
-                "catalogus": self.catalogus["domein"],
-                "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
-            },
-            object_type=PermissionObjectTypeChoices.zaak,
-        )
+#         user = UserFactory.create()
+#         # gives them access to the page, zaaktype and VA specified -> visible
+#         BlueprintPermissionFactory.create(
+#             role__permissions=[zaken_inzien.name, zaken_list_documents.name],
+#             for_user=user,
+#             policy={
+#                 "catalogus": self.catalogus["domein"],
+#                 "zaaktype_omschrijving": "ZT1",
+#                 "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+#             },
+#             object_type=PermissionObjectTypeChoices.zaak,
+#         )
 
-        self.client.force_authenticate(user=user)
-        fn, fext = path.split(self.doc_obj.bestandsnaam)
-        with patch("zac.core.api.views.get_documenten", return_value=[self.doc_obj]):
-            with patch(
-                "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-            ):
-                with patch(
-                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                    return_value=self.audit_trail,
-                ):
-                    response = self.client.get(self.endpoint)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+#         self.client.force_authenticate(user=user)
+#         fn, fext = path.split(self.doc_obj.bestandsnaam)
+#         with patch("zac.core.api.views.get_documenten", return_value=[self.doc_obj]):
+#             with patch(
+#                 "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+#             ):
+#                 with patch(
+#                     "zac.core.api.views.fetch_latest_audit_trail_data_document",
+#                     return_value=self.audit_trail,
+#                 ):
+#                     response = self.client.get(self.endpoint)
+#         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -157,7 +157,7 @@ class ValidSignTaskSerializerTests(APITestCase):
         )
         cls.document_2 = factory(Document, document)
         cls.patch_get_documenten = patch(
-            "zac.core.api.validators.get_documenten_es",
+            "zac.core.api.validators.search_informatieobjects",
             return_value=[cls.document_1, cls.document_2],
         )
 

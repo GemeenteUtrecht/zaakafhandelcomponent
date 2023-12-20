@@ -153,7 +153,6 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "identificatie": cls.zaak.identificatie,
                 },
             ),
-            documents=[],
         )
 
         cls.patch_get_process_zaak_url = patch(
@@ -624,36 +623,30 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.core.camunda.zet_resultaat.context.get_documenten_es",
+            "zac.core.camunda.zet_resultaat.context.check_document_status",
             return_value=[],
         ):
             with patch(
-                "zac.core.camunda.zet_resultaat.context.check_document_status",
-                return_value=[],
+                "zac.core.camunda.zet_resultaat.context.get_process_zaak_url",
+                return_value=self.zaak.url,
             ):
                 with patch(
-                    "zac.core.camunda.zet_resultaat.context.get_process_zaak_url",
-                    return_value=self.zaak.url,
+                    "zac.core.camunda.zet_resultaat.context.get_camunda_user_tasks_for_zaak",
+                    return_value=tasks,
                 ):
                     with patch(
-                        "zac.core.camunda.zet_resultaat.context.get_camunda_user_tasks_for_zaak",
-                        return_value=tasks,
+                        "zac.core.camunda.zet_resultaat.context.get_zaak",
+                        return_value=self.zaak,
                     ):
                         with patch(
-                            "zac.core.camunda.zet_resultaat.context.get_zaak",
-                            return_value=self.zaak,
+                            "zac.core.camunda.zet_resultaat.context.get_all_review_requests_for_zaak",
+                            return_value=[review_request],
                         ):
                             with patch(
-                                "zac.core.camunda.zet_resultaat.context.get_all_review_requests_for_zaak",
-                                return_value=[review_request],
+                                "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
+                                return_value=[factory(ResultaatType, resultaattype)],
                             ):
-                                with patch(
-                                    "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
-                                    return_value=[
-                                        factory(ResultaatType, resultaattype)
-                                    ],
-                                ):
-                                    response = self.client.get(self.task_endpoint)
+                                response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -735,16 +728,13 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.document_es = create_informatieobject_document(cls.document)
 
         cls.patch_get_documenten_validator = patch(
-            "zac.core.api.validators.get_documenten_es",
+            "zac.core.api.validators.search_informatieobjects",
             return_value=[cls.document_es],
         )
 
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype_obj,
-            documents=[
-                cls.document_es,
-            ],
         )
 
         cls.patch_fetch_zaaktype = patch(

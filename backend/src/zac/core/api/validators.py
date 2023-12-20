@@ -6,22 +6,14 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, serializers
 
 from zac.contrib.objects.services import fetch_zaaktypeattributen_objects_for_zaaktype
-from zac.core.services import (
-    get_documenten,
-    get_eigenschap,
-    get_eigenschappen,
-    get_zaak,
-    get_zaaktype,
-)
-from zac.elasticsearch.searches import get_documenten_es
+from zac.core.services import get_eigenschap, get_eigenschappen, get_zaak, get_zaaktype
+from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
 from .constants import ACCEPTABLE_CONTENT_TYPES, RE_PROG
 
 
 def validate_zaak_documents(selected_documents: List[str], zaak: Zaak):
-    documents = get_documenten_es(zaak)
-
     # Make sure selected documents are unique
     if len((set(selected_documents))) != len(selected_documents):
         raise exceptions.ValidationError(
@@ -29,6 +21,9 @@ def validate_zaak_documents(selected_documents: List[str], zaak: Zaak):
             code="invalid-choice",
         )
 
+    documents = search_informatieobjects(
+        zaak, urls=selected_documents, size=len(selected_documents)
+    )
     valid_docs = [doc.url for doc in documents]
     invalid_docs = [url for url in selected_documents if url not in valid_docs]
 

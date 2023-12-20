@@ -1,12 +1,11 @@
 from django.urls import include, path
 
 from ..management.urls import urls as management_urls
-from .views import (
+from .views import (  # ListZaakDocumentsView,
     CatalogiView,
     CreateZaakView,
     EigenschappenView,
     InformatieObjectTypeListView,
-    ListZaakDocumentsView,
     ObjectSearchView,
     ObjecttypeListView,
     ObjecttypeVersionReadView,
@@ -53,11 +52,11 @@ urlpatterns = [
         ZaakEigenschapDetailView.as_view(),
         name="zaak-properties-detail",
     ),
-    path(
-        "cases/<str:bronorganisatie>/<str:identificatie>/documents",
-        ListZaakDocumentsView.as_view(),
-        name="zaak-documents",
-    ),
+    # path(
+    #     "cases/<str:bronorganisatie>/<str:identificatie>/documents",
+    #     ListZaakDocumentsView.as_view(),
+    #     name="zaak-documents",
+    # ),
     path(
         "cases/document",
         ZaakDocumentView.as_view(),

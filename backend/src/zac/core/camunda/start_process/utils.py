@@ -13,8 +13,8 @@ from zac.core.services import (
     get_rollen,
     get_roltypen,
     get_zaak_eigenschappen,
-    resolve_documenten_informatieobjecttypen,
 )
+from zac.elasticsearch.searches import count_by_iot_in_zaak
 
 from .data import (
     ProcessEigenschap,
@@ -27,30 +27,25 @@ from .data import (
 def get_required_process_informatie_objecten(
     zaak_context: ZaakContext, camunda_start_process: StartCamundaProcessForm
 ) -> List[ProcessInformatieObject]:
-    iots = get_informatieobjecttypen_for_zaaktype(zaak_context.zaaktype)
-    # Get all documents that are already uploaded and add them to
+    iots = {
+        iot.omschrijving: iot
+        for iot in get_informatieobjecttypen_for_zaaktype(zaak_context.zaaktype)
+    }
+    # Get the counts of all the documents that are already uploaded and add them to
     # already_uploaded_informatieobjecten if their
     # informatieobjecttype.omschrijving matches.
-    zaak_context.documents = resolve_documenten_informatieobjecttypen(
-        zaak_context.documents
-    )
-    ziot_omschrijvingen_to_doc_map = {}
-    for doc in zaak_context.documents:
-        if (
-            omschrijving := doc.informatieobjecttype.omschrijving
-        ) not in ziot_omschrijvingen_to_doc_map:
-            ziot_omschrijvingen_to_doc_map[omschrijving] = [doc]
-        else:
-            ziot_omschrijvingen_to_doc_map[omschrijving].append(doc)
+
+    iots_found_for_zaak = count_by_iot_in_zaak(zaak_context.zaak.url)
 
     # Get all required process informatie objecten from StartCamundaProcessForm
     pi_objecten = camunda_start_process.process_informatie_objecten
     required_process_informatie_objecten = []
     for piobject in pi_objecten:
         piobject.informatieobjecttype = None
-        for iot in iots:
-            if iot.omschrijving == piobject.informatieobjecttype_omschrijving:
-                piobject.informatieobjecttype = iot
+        piobject.informatieobjecttype = iots.get(
+            piobject.informatieobjecttype_omschrijving, None
+        )
+
         if not piobject.informatieobjecttype:
             raise RuntimeError(
                 "Could not find an INFORMATIEOBJECTTYPE with omschrijving {omschrijving} for ZAAKTYPE {zaaktype}.".format(
@@ -59,14 +54,16 @@ def get_required_process_informatie_objecten(
                 )
             )
 
-        docs = ziot_omschrijvingen_to_doc_map.get(
-            piobject.informatieobjecttype_omschrijving
-        )
+        docs = iots_found_for_zaak.get(piobject.informatieobjecttype.omschrijving, 0)
+
         if docs:
-            piobject.already_uploaded_informatieobjecten = [doc.url for doc in docs]
+            piobject.already_uploaded_informatieobjecten = docs
+
         if docs and not piobject.allow_multiple:
             continue
+
         required_process_informatie_objecten.append(piobject)
+
     return required_process_informatie_objecten
 
 
