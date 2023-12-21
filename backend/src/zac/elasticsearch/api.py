@@ -74,6 +74,7 @@ def create_zaak_document(zaak: Zaak) -> ZaakDocument:
         toelichting=zaak.toelichting,
         zaakgeometrie=zaak.zaakgeometrie,
         identificatie_suggest=zaak.identificatie,
+        refresh="wait_for",
     )
 
     return zaak_document
@@ -90,7 +91,7 @@ def _get_zaak_document(
             return
         else:
             zaak_document = create_zaak_document(create_zaak)
-            zaak_document.save()
+            zaak_document.save(refresh="wait_for")
 
     return zaak_document
 
@@ -106,20 +107,27 @@ def update_zaak_document(zaak: Zaak) -> ZaakDocument:
     # Don't include zaaktype and identificatie since they are immutable.
     # Don't include status or objecten as those are handled through a
     # different handler in the notifications api.
-    zaak_document.update(
-        refresh=True,
+    body = {
+        "doc": {
+            "bronorganisatie": zaak.bronorganisatie,
+            "vertrouwelijkheidaanduiding": zaak.vertrouwelijkheidaanduiding,
+            "va_order": VA_ORDER[zaak.vertrouwelijkheidaanduiding],
+            "startdatum": zaak.startdatum,
+            "einddatum": zaak.einddatum,
+            "registratiedatum": zaak.registratiedatum,
+            "deadline": zaak.deadline,
+            "toelichting": zaak.toelichting,
+            "zaakgeometrie": zaak.zaakgeometrie,
+            "omschrijving": zaak.omschrijving,
+            "identificatie_suggest": zaak.identificatie,
+        }
+    }
+    zaak_document._get_connection().update(
+        zaak_document.Index().name,
+        zaak_document.meta.id,
+        body,
+        refresh="wait_for",
         retry_on_conflict=settings.ES_RETRY_ON_CONFLICT,
-        bronorganisatie=zaak.bronorganisatie,
-        vertrouwelijkheidaanduiding=zaak.vertrouwelijkheidaanduiding,
-        va_order=VA_ORDER[zaak.vertrouwelijkheidaanduiding],
-        startdatum=zaak.startdatum,
-        einddatum=zaak.einddatum,
-        registratiedatum=zaak.registratiedatum,
-        deadline=zaak.deadline,
-        toelichting=zaak.toelichting,
-        zaakgeometrie=zaak.zaakgeometrie,
-        omschrijving=zaak.omschrijving,
-        identificatie_suggest=zaak.identificatie,
     )
     return zaak_document
 
@@ -170,7 +178,7 @@ def update_status_in_zaak_document(zaak: Zaak) -> None:
         status_document = create_status_document(zaak.status)
         zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
         zaak_document.status = status_document
-        zaak_document.save()
+        zaak_document.save(refresh="wait_for")
 
     return
 
@@ -190,8 +198,7 @@ def update_rollen_in_zaak_document(zaak: Zaak) -> None:
     rol_documents = [create_rol_document(rol) for rol in get_rollen(zaak)]
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
     zaak_document.rollen = rol_documents
-    zaak_document.save()
-
+    zaak_document.save(refresh="wait_for")
     return
 
 
@@ -214,8 +221,7 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
 
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
     zaak_document.eigenschappen = eigenschappen_doc
-    zaak_document.save()
-
+    zaak_document.save(refresh="wait_for")
     return
 
 
@@ -234,8 +240,7 @@ def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
     zaak_document.zaakobjecten = [
         create_zaakobject_document(zo) for zo in zaak.zaakobjecten
     ]
-    zaak_document.save()
-
+    zaak_document.save(refresh="wait_for")
     return
 
 
@@ -253,7 +258,7 @@ def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> ZaakDocument:
     zaak_document.zaakinformatieobjecten = [
         create_zaakinformatieobject_document(zio) for zio in zaak.zaakinformatieobjecten
     ]
-    zaak_document.save()
+    zaak_document.save(refresh="wait_for")
     return zaak_document
 
 
@@ -271,7 +276,7 @@ def _get_object_document(
         logger.warning("object %s hasn't been indexed in ES", object_url)
         if create_object:
             object_document = create_object_document(create_object)
-            object_document.save()
+            object_document.save(refresh="wait_for")
         else:
             return
 
@@ -283,23 +288,32 @@ def create_objecttype_document(objecttype: Dict) -> ObjectTypeDocument:
 
 
 def create_object_document(object: Dict) -> ObjectDocument:
-    return ObjectDocument(
+    object_document = ObjectDocument(
         meta={"id": object["uuid"]},
         url=object["url"],
         record_data=object["record"]["data"],
         string_representation=object["stringRepresentation"],
+        refresh="wait_for",
     )
+    return object_document
 
 
 def update_object_document(object: Dict) -> ObjectDocument:
     object_document = _get_object_document(
         object["uuid"], object["url"], create_object=object
     )
-    object_document.update(
-        refresh=True,
+    body = {
+        "doc": {
+            "record_data": object["record"]["data"],
+            "string_representation": object["stringRepresentation"],
+        }
+    }
+    object_document._get_connection().update(
+        object_document.Index().name,
+        object_document.meta.id,
+        body,
+        refresh="wait_for",
         retry_on_conflict=settings.ES_RETRY_ON_CONFLICT,
-        record_data=object["record"]["data"],
-        string_representation=object["stringRepresentation"],
     )
     return object_document
 
@@ -350,7 +364,7 @@ def update_related_zaken_in_object_document(object_url: str) -> None:
     # Create related_zaak documenten and update object document
     related_zaken = [create_related_zaak_document(zaak) for zaak in zaken]
     object_document.related_zaken = related_zaken
-    object_document.save()
+    object_document.save(refresh="wait_for")
     return
 
 
@@ -388,7 +402,7 @@ def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
             related_zaken.append(related_zaak)
             object_document = ObjectDocument.get(id=obj.meta.id)
             object_document.related_zaken = related_zaken
-            object_document.save()
+            object_document.save(refresh="wait_for")
     return
 
 
@@ -437,6 +451,7 @@ def _get_informatieobject_document(
             informatieobject_document = create_informatieobject_document(
                 create_informatieobject
             )
+            informatieobject_document.save(refresh="wait_for")
             created = True
         else:
             return created, None
@@ -478,8 +493,8 @@ def create_informatieobject_document(
         versie=document.versie,
         vertrouwelijkheidaanduiding=document.vertrouwelijkheidaanduiding,
         verzenddatum=document.verzenddatum,
+        refresh="wait_for",
     )
-    iod.save()
     return iod
 
 
@@ -487,38 +502,45 @@ def update_informatieobject_document(document: Document) -> InformatieObjectDocu
     created, informatieobject_document = _get_informatieobject_document(
         document.url, create_informatieobject=document
     )
+
     if not created:
         # get latest edit date
         at = fetch_latest_audit_trail_data_document(document.url)
-        informatieobject_document.update(
-            refresh=True,
+        body = {
+            "doc": {
+                "auteur": document.auteur,
+                "beschrijving": document.beschrijving,
+                "bestandsnaam": document.bestandsnaam,
+                "bestandsomvang": document.bestandsomvang,
+                "bronorganisatie": document.bronorganisatie,
+                "creatiedatum": document.creatiedatum,
+                "formaat": document.formaat,
+                "identificatie": document.identificatie,
+                "indicatie_gebruiksrecht": document.indicatie_gebruiksrecht,
+                "informatieobjecttype": resolve_iot_for_document(document).to_dict(),
+                "inhoud": document.inhoud,
+                "integriteit": document.integriteit,
+                "last_edited_date": at.last_edited_date if at else None,
+                "link": document.link,
+                "locked": document.locked,
+                "ondertekening": document.ondertekening,
+                "ontvangstdatum": document.ontvangstdatum,
+                "status": document.status,
+                "taal": document.taal,
+                "titel": document.titel,
+                "url": document.url,
+                "versie": document.versie,
+                "vertrouwelijkheidaanduiding": document.vertrouwelijkheidaanduiding,
+                "verzenddatum": document.verzenddatum,
+            }
+        }
+        informatieobject_document._get_connection().update(
+            informatieobject_document.Index().name,
+            informatieobject_document.meta.id,
+            body,
+            refresh="wait_for",
             retry_on_conflict=settings.ES_RETRY_ON_CONFLICT,
-            auteur=document.auteur,
-            beschrijving=document.beschrijving,
-            bestandsnaam=document.bestandsnaam,
-            bestandsomvang=document.bestandsomvang,
-            bronorganisatie=document.bronorganisatie,
-            creatiedatum=document.creatiedatum,
-            formaat=document.formaat,
-            identificatie=document.identificatie,
-            indicatie_gebruiksrecht=document.indicatie_gebruiksrecht,
-            informatieobjecttype=resolve_iot_for_document(document).to_dict(),
-            inhoud=document.inhoud,
-            integriteit=document.integriteit,
-            last_edited_date=at.last_edited_date if at else None,
-            link=document.link,
-            locked=document.locked,
-            ondertekening=document.ondertekening,
-            ontvangstdatum=document.ontvangstdatum,
-            status=document.status,
-            taal=document.taal,
-            titel=document.titel,
-            url=document.url,
-            versie=document.versie,
-            vertrouwelijkheidaanduiding=document.vertrouwelijkheidaanduiding,
-            verzenddatum=document.verzenddatum,
         )
-
     return informatieobject_document
 
 
@@ -554,7 +576,7 @@ def update_related_zaken_in_informatieobject_document(
     # Create related_zaak documenten and update object document
     related_zaken = [create_related_zaak_document(zaak) for zaak in zaken]
     informatieobject_document.related_zaken = related_zaken
-    informatieobject_document.save()
+    informatieobject_document.save(refresh="wait_for")
     return
 
 
@@ -589,6 +611,6 @@ def update_related_zaak_in_informatieobject_documents(zaak: Zaak) -> None:
             related_zaken.append(related_zaak)
             object_document = InformatieObjectDocument.get(id=io.meta.id)
             object_document.related_zaken = related_zaken
-            object_document.save()
+            object_document.save(refresh="wait_for")
 
     return

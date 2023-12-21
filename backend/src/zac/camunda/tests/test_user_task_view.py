@@ -422,15 +422,20 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             f"{CAMUNDA_URL}task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
+
         with patch(
-            "zac.contrib.kownsl.camunda.get_zaak_context",
-            return_value=self.zaak_context,
+            "zac.contrib.kownsl.camunda.search_informatieobjects",
+            return_value=[self.document_es],
         ):
             with patch(
-                "zac.contrib.kownsl.camunda.get_review_request_from_task",
-                return_value=review_request,
+                "zac.contrib.kownsl.camunda.get_zaak_context",
+                return_value=self.zaak_context,
             ):
-                response = self.client.get(self.task_endpoint)
+                with patch(
+                    "zac.contrib.kownsl.camunda.get_review_request_from_task",
+                    return_value=review_request,
+                ):
+                    response = self.client.get(self.task_endpoint)
 
         data = response.json()
         self.assertEqual(response.status_code, 200)
@@ -1158,8 +1163,8 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             return_value=self.zaak_context,
         ):
             with patch(
-                "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
-                return_value=[self.document_es],
+                "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+                return_value=[self.document.informatieobjecttype.omschrijving],
             ):
                 with patch(
                     "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",

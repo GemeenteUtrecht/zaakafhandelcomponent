@@ -483,7 +483,7 @@ def get_review_context(task: Task) -> AdviceApprovalContext:
     if rr:
         context["id"] = rr.id
         context["documents"] = search_informatieobjects(
-            zaak=zaak_context.zaak.url, urls=rr.documents
+            zaak=zaak_context.zaak.url, urls=rr.documents, size=len(rr.documents)
         )
         context["previously_assigned_users"] = rr.assigned_users
         context["previously_selected_documents"] = rr.documents
