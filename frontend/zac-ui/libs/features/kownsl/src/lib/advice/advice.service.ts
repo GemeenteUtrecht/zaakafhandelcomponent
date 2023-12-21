@@ -26,14 +26,16 @@ export class AdviceService {
     return this.http.Post<AdviceForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/advice?assignee=${assignee}`), formData);
   }
 
-  readDocument(bronorganisatie: string, identificatie: string): Observable<ReadWriteDocument> {
+  readDocument(bronorganisatie: string, identificatie: string, zaakUrl: string): Observable<ReadWriteDocument> {
+    const body = { zaak: zaakUrl };
     const endpoint = encodeURI(`/api/dowc/${bronorganisatie}/${identificatie}/read`);
-    return this.http.Post<ReadWriteDocument>(endpoint);
+    return this.http.Post<ReadWriteDocument>(endpoint, body);
   }
 
-  openDocumentEdit(bronorganisatie: string, identificatie: string): Observable<ReadWriteDocument> {
+  openDocumentEdit(bronorganisatie: string, identificatie: string, zaakUrl: string): Observable<ReadWriteDocument> {
+    const body = { zaak: zaakUrl };
     const endpoint = encodeURI(`/api/dowc/${bronorganisatie}/${identificatie}/write`);
-    return this.http.Post<ReadWriteDocument>(endpoint);
+    return this.http.Post<ReadWriteDocument>(endpoint, body);
   }
 
   closeDocumentEdit(deleteUrls: DocumentUrls[]): Observable<any> {

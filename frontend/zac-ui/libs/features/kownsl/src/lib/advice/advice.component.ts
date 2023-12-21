@@ -202,7 +202,7 @@ export class AdviceComponent implements OnInit {
   }
 
   readDocument(id) {
-    this.adviceService.readDocument(this.bronorganisatie, id).subscribe( (res: ReadWriteDocument) => {
+    this.adviceService.readDocument(this.bronorganisatie, id, this.zaakData.url).subscribe( (res: ReadWriteDocument) => {
       window.open(res.magicUrl, "_blank");
     }, errorResponse => {
 
@@ -217,7 +217,7 @@ export class AdviceComponent implements OnInit {
   }
 
   openDocumentEdit(id) {
-    this.adviceService.openDocumentEdit(this.bronorganisatie, id).subscribe( (res: ReadWriteDocument) => {
+    this.adviceService.openDocumentEdit(this.bronorganisatie, id, this.zaakData.url).subscribe( (res: ReadWriteDocument) => {
       // Open document
       window.open(res.magicUrl, "_blank");
 
