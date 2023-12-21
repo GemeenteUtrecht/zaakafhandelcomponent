@@ -118,10 +118,21 @@ def patch_and_destroy_doc(
 
 
 @optional_service
-def check_document_status(documenten: List[str]) -> Optional[Dict]:
+def check_document_status(
+    documenten: Optional[List[str]] = None, zaak: Optional[str] = None
+) -> Optional[Dict]:
+    if not documenten and not zaak:
+        raise RuntimeError("Need one of: [documenten, zaak].")
+
     client = get_client(force=True)
     operation_id = "documenten_status_create"
     url = get_operation_url(client.schema, operation_id)
+
+    payload = dict()
+    if documenten:
+        payload["documenten"] = documenten
+    if zaak:
+        payload["zaak"] = zaak
 
     try:
         response = client.request(
@@ -129,7 +140,7 @@ def check_document_status(documenten: List[str]) -> Optional[Dict]:
             operation_id,
             method="POST",
             expected_status=200,
-            json=[{"document": doc} for doc in documenten],
+            json=payload,
         )
         return factory(OpenDowc, response)
     except ClientError:

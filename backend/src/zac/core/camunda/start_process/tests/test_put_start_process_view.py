@@ -9,7 +9,6 @@ from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -180,9 +179,6 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         cls.zaak_context = ZaakContext(
             zaak=zaak,
             zaaktype=zaak.zaaktype,
-            documents=[
-                factory(Document, cls.document),
-            ],
         )
 
     def setUp(self):
@@ -240,10 +236,14 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.core.camunda.start_process.serializers.get_zaak_context",
-            return_value=self.zaak_context,
+            "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+            return_value={self.informatieobjecttype["omschrijving"]: 1},
         ):
-            response = self.client.put(self.task_endpoint)
+            with patch(
+                "zac.core.camunda.start_process.serializers.get_zaak_context",
+                return_value=self.zaak_context,
+            ):
+                response = self.client.put(self.task_endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(
@@ -251,19 +251,11 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             {
                 "variables": {
                     "bptlAppId": {"type": "String", "value": ""},
-                    "bijlagen": {
-                        "type": "Json",
-                        "value": '["http://documents.nl/api/v1/informatieobject/e82ae0d6-d442-436e-be55-cf5b827dfeec"]',
-                    },
                     "eigenschappen": {
                         "type": "Json",
                         "value": '[{"naam": "Some Eigenschap 1", "waarde": "some-value-1"}]',
                     },
                     "Some Eigenschap 1": {"type": "String", "value": "some-value-1"},
-                    "bijlage1": {
-                        "type": "String",
-                        "value": "http://documents.nl/api/v1/informatieobject/e82ae0d6-d442-436e-be55-cf5b827dfeec",
-                    },
                     "Some Rol": {
                         "type": "Json",
                         "value": '{"betrokkeneType": "medewerker", "betrokkeneIdentificatie": {"identificatie": "some-username", "achternaam": "Orange", "voorletters": "W.", "voorvoegsel_achternaam": "van"}, "name": "W. van Orange", "omschrijving": "Some Rol", "roltoelichting": "Some Rol", "identificatie": "some-username"}',
@@ -316,13 +308,16 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         zaakcontext = ZaakContext(
             zaak=self.zaak_context.zaak,
             zaaktype=self.zaak_context.zaaktype,
-            documents=[],
         )
         with patch(
-            "zac.core.camunda.start_process.serializers.get_zaak_context",
-            return_value=zaakcontext,
+            "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+            return_value=dict(),
         ):
-            response = self.client.put(self.task_endpoint)
+            with patch(
+                "zac.core.camunda.start_process.serializers.get_zaak_context",
+                return_value=zaakcontext,
+            ):
+                response = self.client.put(self.task_endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -339,8 +334,8 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
-        return_value=[],
+        "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+        return_value=dict(),
     )
     @patch(
         "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
@@ -397,8 +392,8 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
-        return_value=[],
+        "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+        return_value=dict(),
     )
     @patch(
         "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
@@ -457,8 +452,8 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.resolve_documenten_informatieobjecttypen",
-        return_value=[],
+        "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+        return_value=dict(),
     )
     @patch(
         "zac.core.camunda.start_process.serializers.get_rollen",

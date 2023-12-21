@@ -59,7 +59,7 @@ def get_access_requests_groups(request: Request) -> List[dict]:
 
 def filter_on_existing_zaken(request: Request, groups: List[Dict]) -> List[Dict]:
     zaak_urls = list({group["zaak_url"] for group in groups})
-    es_results = search_zaken(request=request, urls=zaak_urls)
+    es_results = search_zaken(request=request, urls=zaak_urls, size=len(zaak_urls))
     zaken = {zaak.url: zaak for zaak in es_results}
 
     # Make sure groups without a zaak in elasticsearch are not returned.

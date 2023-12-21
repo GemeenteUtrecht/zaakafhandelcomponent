@@ -222,8 +222,9 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
         )
         with patch(
-            "zac.core.camunda.zet_resultaat.context.get_documenten_es", return_value=[]
-        ) as patch_doc_es:
+            "zac.core.camunda.zet_resultaat.context.check_document_status",
+            return_value=[],
+        ) as patch_check_document_status:
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
                 return_value=checklist,
@@ -243,7 +244,7 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             },
         )
 
-        patch_doc_es.assert_called_once()
+        patch_check_document_status.assert_called_once()
         self.assertEqual(
             serializer.data["context"]["activiteiten"],
             [

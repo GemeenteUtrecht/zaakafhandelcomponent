@@ -90,9 +90,8 @@ class ManagementDashboardDetailView(PerformSearchMixin, PaginatedSearchMixin, AP
     def post(self, request: Request, *args, **kwargs):
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
-        results = self.perform_search(input_serializer.validated_data)
-
-        page = self.paginate_results(results)
+        search = self.perform_search(input_serializer.validated_data)
+        page = self.paginate_results(search)
         serializer = ZaakDocumentSerializer(page, many=True)
         return self.get_paginated_response(
             serializer.data, input_serializer.validated_data["fields"]

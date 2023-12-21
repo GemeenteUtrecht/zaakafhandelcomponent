@@ -1,6 +1,6 @@
 import operator
 from functools import reduce
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 from urllib.request import Request
 
 from elasticsearch_dsl import Q, Search
@@ -22,7 +22,6 @@ from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
-from zgw.models.zrc import Zaak
 
 from .data import ParentAggregation
 from .documents import InformatieObjectDocument, ObjectDocument, ZaakDocument
@@ -284,9 +283,11 @@ def count_by_behandelaar(request: Request) -> int:
 def search_informatieobjects(
     size: int = 10000,
     zaak: str = "",
+    bestandsnaam: str = "",
     bronorganisatie: str = "",
     identificatie: str = "",
-    urls=None,
+    iots_omschrijvingen: Optional[List[str]] = None,
+    urls: Optional[List[str]] = None,
     ordering: List = ["titel.keyword", "-last_edited_date"],
     fields: Optional[List[str]] = None,
     return_search: bool = False,
@@ -301,11 +302,19 @@ def search_informatieobjects(
             )
         )
 
+    if bestandsnaam:
+        s = s.filter(Term(bestandsnaam=bestandsnaam))
+
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
 
     if identificatie:
         s = s.filter(Term(identificatie=identificatie))
+
+    if iots_omschrijvingen:
+        s = s.filter(
+            Terms(informatieobjecttype__omschrijving__keyword=iots_omschrijvingen)
+        )
 
     if urls:
         s = s.filter(Terms(url=urls))
@@ -322,6 +331,18 @@ def search_informatieobjects(
     return response.hits
 
 
-def get_documenten_es(zaak: Zaak) -> List[InformatieObjectDocument]:
-    es_results = search_informatieobjects(zaak=zaak.url)
-    return es_results
+def count_by_iot_in_zaak(zaak: str) -> Dict[str, int]:
+    s = search_informatieobjects(zaak=zaak, size=0, return_search=True)
+
+    # elasticsearch-dsl does not support multiterm aggregation yet - workaround.
+    s.aggs.bucket("parent", "terms", field="informatieobjecttype.catalogus")
+    s.aggs["parent"].bucket(
+        "child", "terms", field="informatieobjecttype.omschrijving__keyword"
+    )
+    results = [bucket.to_dict() for bucket in s.execute().aggregations.parent.buckets]
+    results = factory(ParentAggregation, results)
+    iots_found = {}
+    if results and results[0].doc_count > 0:  # only one catalogus per zaak
+        for bucket in results[0].child.buckets:
+            iots_found[bucket.key] = bucket.doc_count
+    return iots_found

@@ -104,7 +104,9 @@ class PerformSearchMixin:
             # let search_zaken filter out what is allowed and what is not.
             search_query["zaaktypen"] = zaaktypen
 
-        results = search_zaken(**search_query, request=self.request, only_allowed=True)
+        results = search_zaken(
+            **search_query, request=self.request, only_allowed=True, return_search=True
+        )
         return results
 
 
@@ -190,8 +192,8 @@ class SearchView(PerformSearchMixin, PaginatedSearchMixin, views.APIView):
             "ordering": ordering,
         }
 
-        results = self.perform_search(search_query)
-        page = self.paginate_results(results)
+        search = self.perform_search(search_query)
+        page = self.paginate_results(search)
         serializer = ZaakDocumentSerializer(page, many=True)
         return self.get_paginated_response(
             serializer.data, input_serializer.validated_data["fields"]
@@ -267,10 +269,10 @@ class SearchReportViewSet(PerformSearchMixin, PaginatedSearchMixin, ModelViewSet
         search_report = self.get_object()
         ordering = ESOrderingFilter().get_ordering(self.request, self)
         if ordering:
-            search_report.query = {**search_report.query, "ordering": ordering}
+            search_report.query["ordering"] = ordering
 
-        results = self.perform_search(search_report.query)
-        page = self.paginate_queryset(results)
+        search = self.perform_search(search_report.query)
+        page = self.paginate_queryset(search)
         serializer = ZaakDocumentSerializer(page, many=True)
         return self.get_paginated_response(
             serializer.data, search_report.query["fields"]
@@ -331,14 +333,13 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
 
         # Get ordering
         ordering = ESOrderingFilter().get_ordering(request, self)
-        search_query = {
+        search = search_informatieobjects(
             **input_serializer.validated_data,
-            "ordering": ordering,
-            "zaak": zaak.url,
-            "return_search": True,
-        }
-
-        page = self.paginate_results(search_informatieobjects(**search_query))
+            ordering=ordering,
+            zaak=zaak.url,
+            return_search=True
+        )
+        page = self.paginate_results(search)
         open_documenten = get_open_documenten(request.user)
         serializer = ESListZaakDocumentSerializer(
             page,

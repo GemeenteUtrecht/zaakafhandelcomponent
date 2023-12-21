@@ -1087,7 +1087,7 @@ def resolve_documenten_informatieobjecttypen(
 def get_documenten(zaak: Zaak, use_elastic: bool = True) -> List[Document]:
     ## Deprecate in favor of elasticsearch for performance:
     logger.warning(
-        "DEPRECATED WARNING - please use zac.elasticsearch.searches.get_documenten_es instead for performance."
+        "DEPRECATED WARNING - please use zac.elasticsearch.searches.search_informatieobjects instead for performance."
     )
     logger.debug("Retrieving documents linked to zaak %r", zaak)
 

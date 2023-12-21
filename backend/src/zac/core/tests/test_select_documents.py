@@ -202,7 +202,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
         cls.zaak_context = ZaakContext(
-            zaak=cls.zaak, documents=[cls.document_1, cls.document_2]
+            zaak=cls.zaak,
         )
         cls.patch_get_zaak_context = patch(
             "zac.core.camunda.select_documents.serializers.get_zaak_context",

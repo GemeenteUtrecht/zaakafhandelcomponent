@@ -176,7 +176,7 @@ class ZakenHandler:
         if zaak.status:
             zaak_document.status = create_status_document(zaak.status)
 
-        zaak_document.save()
+        zaak_document.save(refresh=True)
 
     def _handle_zaak_destroy(self, zaak_url: str):
         Activity.objects.filter(zaak=zaak_url).delete()
@@ -343,7 +343,8 @@ class InformatieObjectenHandler:
                 document = get_document(data["hoofd_object"])
                 invalidate_document_other_cache(document)
                 if data["actie"] == "create":
-                    create_informatieobject_document(document)
+                    iod = create_informatieobject_document(document)
+                    iod.save(refresh=True)
                 else:
                     update_informatieobject_document(document)
 

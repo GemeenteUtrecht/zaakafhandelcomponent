@@ -225,7 +225,11 @@ class InformatieObjectTypeDocument(InnerDoc):
     catalogus = field.Keyword()
     concept = field.Boolean()
     einde_geldigheid = field.Date()
-    omschrijving = field.Text()
+    omschrijving = field.Text(
+        fields={"keyword": field.Keyword()},
+        analyzer=ngram_analyzer,
+        search_analyzer=standard_dutch_analyzer,
+    )
     vertrouwelijkheidaanduiding = field.Keyword()
 
 
