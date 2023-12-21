@@ -49,13 +49,20 @@ def get_client(user: Optional[User] = None, force: bool = False) -> Client:
 
 @optional_service
 def create_doc(
-    user: User, document: Document, purpose: str, referer: str
+    user: User,
+    document: Document,
+    purpose: str,
+    referer: str,
+    zaak: Optional[str] = None,
 ) -> Tuple[DowcResponse, int]:
 
     drc_url = furl(document.url).add({"versie": document.versie}).url
     client = get_client(user)
 
     data = {"drc_url": drc_url, "purpose": purpose, "info_url": referer}
+    if zaak:
+        data["zaak"] = zaak
+
     try:  # First try to create the object in dowc
         response = client.create("documenten", data=data)
         status_code = status.HTTP_201_CREATED
@@ -65,6 +72,10 @@ def create_doc(
             None,
         ):  # Requesting user may already have created an object dowc
             try:
+                data.pop(
+                    "zaak", None
+                )  # remove zaak from data if the document already exists
+
                 # We can fetch the first from the list because the
                 # client will have raised an exception
                 # if the status isn't as expected and there SHOULD only

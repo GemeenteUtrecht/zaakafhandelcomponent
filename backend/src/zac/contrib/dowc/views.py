@@ -38,7 +38,6 @@ class OpenDowcView(APIView):
         CanReadDocuments,
     )
     document = None
-    serializer_class = DowcResponseSerializer
 
     def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
         versie = _cast(self.request.GET.get("versie", None), int)
@@ -57,7 +56,7 @@ class OpenDowcView(APIView):
                 location=OpenApiParameter.QUERY,
             ),
         ],
-        request=None,
+        request=DowcSerializer,
         responses={201: DowcResponseSerializer, 200: DowcResponseSerializer},
     )
     def post(self, request, bronorganisatie, identificatie, purpose):
@@ -67,12 +66,16 @@ class OpenDowcView(APIView):
         """
         document = self.get_object(bronorganisatie, identificatie)
         referer = request.headers.get("referer", "")
+        serializer = DowcSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         try:
-            response, status_code = create_doc(request.user, document, purpose, referer)
+            response, status_code = create_doc(
+                request.user, document, purpose, referer, **serializer.data
+            )
         except DOWCCreateError as err:
             raise ValidationError(err.args[0])
 
-        serializer = self.serializer_class(response)
+        serializer = DowcResponseSerializer(response)
 
         invalidate_document_url_cache(document.url)
         invalidate_document_other_cache(document)

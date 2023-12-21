@@ -262,6 +262,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         )
         response = self.client.post(
             self.zac_dowc_url,
+            {"zaak": "http://some-zaak.nl/"},
             HTTP_REFERER="http://www.some-referer-url.com/",
         )
 
@@ -285,6 +286,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
                 "drc_url": self.dowc_response["drcUrl"],
                 "purpose": DocFileTypes.write,
                 "info_url": "http://www.some-referer-url.com/",
+                "zaak": "http://some-zaak.nl/",
             },
         )
 
