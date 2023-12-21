@@ -4,7 +4,7 @@
     <!-- Title -->
     <h3>Rechten</h3>
     <button gu-button
-            *ngIf="canForceEdit && table"
+            *ngIf="canForceEdit && userPermissions"
             buttonStyle="tertiary"
             icon="person_add"
             (click)="openModal('add-person-modal')">
@@ -17,14 +17,27 @@
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 
-  <!-- Form -->
   <ng-container *ngIf="!isLoading">
-    <gu-table *ngIf="table" [expandable]="true" [table]="isExpanded ? table : shortTable" (buttonOutput)="buttonClick($event)" class="mb-4"></gu-table>
     <p *ngIf="errorDetailMessage">{{errorDetailMessage}}</p>
   </ng-container>
 
-  <div class="d-flex justify-content-end" *ngIf="table">
-    <button gu-button *ngIf="table.bodyData.length > 3"
+  <mat-accordion *ngIf="!isLoading && userPermissions">
+      <ng-container *ngFor="let permission of (isExpanded ? userPermissions : shortUserPermissions)">
+        <!-- Only show if the auth profile has at least one blue print permission with object type "zaak" -->
+        <mat-expansion-panel (opened)="getUserTable(permission.permissions)">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <gu-icon class="role-icon mr-2">perm_identity</gu-icon>
+              <strong>{{ permission.fullName }}</strong>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <gu-table *ngIf="table" [expandable]="true" [table]="table" (buttonOutput)="buttonClick($event)" class="mb-4"></gu-table>
+        </mat-expansion-panel>
+      </ng-container>
+  </mat-accordion>
+
+  <div class="d-flex justify-content-end mt-4" *ngIf="userPermissions">
+    <button gu-button *ngIf="userPermissions.length > 3"
             buttonStyle="tertiary"
             size="extrasmall"
             [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"

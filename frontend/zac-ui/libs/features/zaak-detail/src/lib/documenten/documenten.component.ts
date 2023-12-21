@@ -90,7 +90,9 @@ export class DocumentenComponent implements OnChanges {
   refreshDocs() {
     this.isLoading = true;
     this.sortValue = null;
-    this.paginator.firstPage();
+    if (this.paginator) {
+      this.paginator.firstPage();
+    }
     this.page = 1;
     setTimeout(() => {
       this.fetchDocuments()

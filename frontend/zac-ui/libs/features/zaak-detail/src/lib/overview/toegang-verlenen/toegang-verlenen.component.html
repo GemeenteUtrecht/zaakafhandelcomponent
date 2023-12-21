@@ -1,7 +1,7 @@
 <div class="toegang-verlenen">
   <form [formGroup]="grantAccessForm">
     <div class="form-group">
-      <p class="mb-3">Selecteer een gebruiker die je rechten wilt verlenen tot deze zaak.</p>
+      <p class="mb-3">Selecteer een gebruiker voor het toewijzen van autorisatie(s).</p>
 
       <!-- Search user -->
       <gu-multiselect (search)="onSearch($event)"
@@ -21,7 +21,7 @@
       <p *ngIf="filteredRoles?.length === 0 && selectedUser">Deze gebruiker heeft al alle rechten die toegewezen mogen worden.</p>
 
       <ng-container *ngIf="selectedUser && requesterControl.value">
-        <p class="mb-2">Welke rechten wil je toewijzen aan de gebruiker?</p>
+        <p class="mb-2">Welke rol(len) wil je toewijzen aan de gebruiker?</p>
 
         <!-- Permissions -->
         <gu-multiselect (change)="updateSelectedRoles($event)"
@@ -31,13 +31,13 @@
                         widgetType="checkboxGroup"
                         bindLabel="name"
                         bindValue="name"
-                        label="Rechten"
+                        label="Rollen"
                         appendTo="body"
                         class="mb-4"
                         required>
         </gu-multiselect>
 
-        <p class="mb-3">Optioneel: selecteer een verloopdatum voor de toegang.</p>
+        <p class="mb-3">Optioneel: selecteer een verloopdatum voor de rol(len).</p>
 
         <!-- End date -->
         <gu-datepicker

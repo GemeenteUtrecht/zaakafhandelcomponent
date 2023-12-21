@@ -1,5 +1,5 @@
-import { ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
-import {ZaakPermission, UserPermission, Table, Zaak} from '@gu/models';
+import {Component, Input, OnInit} from '@angular/core';
+import { ZaakPermission, UserPermission, Table, Zaak, WorkstackAdvice, RowData, ExtensiveCell } from '@gu/models';
 import {ZaakService} from "@gu/services";
 import {PermissionsService} from './permissions.service';
 import {ModalService, SnackbarService} from '@gu/components';
@@ -41,6 +41,7 @@ export class UserPermissionsComponent implements OnInit {
 
   /** @type {UserPermission[]} The user permissions. */
   userPermissions: UserPermission[];
+  shortUserPermissions: UserPermission[];
 
   /** @type {boolean} Wether table rows are all shown */
   isExpanded = false;
@@ -95,10 +96,7 @@ export class UserPermissionsComponent implements OnInit {
     this.zaakService.listCaseUsers(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(
       (userPermissions: UserPermission[]): void => {
         this.userPermissions = userPermissions;
-        this.table = this.userPermissionsAsTable(userPermissions);
-
-        this.shortTable = {...this.table};
-        this.shortTable.bodyData = this.shortTable.bodyData.slice(0, 3);
+        this.shortUserPermissions = userPermissions.slice(0, 3);
 
         this.isLoading = false;
       },
@@ -106,49 +104,44 @@ export class UserPermissionsComponent implements OnInit {
     );
   }
 
+  /**
+   * Create table data
+   * @param permissions
+   */
+  getUserTable(permissions) {
+    this.table = this.userPermissionsAsTable(permissions);
+  }
 
   /**
    * Returns user permissions as table.
    * @param {UserPermission[]} userPermissions
    * @return {Table}
    */
-  userPermissionsAsTable(userPermissions: UserPermission[]): Table {
-    const bodyData = userPermissions.reduce((acc, userPermission) => {
-      const userRows = userPermission.permissions.map((permission: ZaakPermission) => ({
+  userPermissionsAsTable(permissions: ZaakPermission[]) {
+    const headData = ['Rechten', 'Reden', 'Commentaar', ''];
+
+    const bodyData = permissions.map((permission: ZaakPermission) => {
+
+      const cellData: RowData = {
         cellData: {
-          user: {
-            type: 'text',
-            label: userPermission.fullName,
-          },
           permission: {
             type: 'chip',
             label: permission.permission
           },
+          reason: permission.reason,
+          comment: permission.comment,
           // Hide button if case is closed and the user is not allowed to force edit
           delete: !this.zaak.resultaat || this.zaak.kanGeforceerdBijwerken ? {
             type: 'button',
             label: 'Verwijderen',
             value: permission,
-          } : ''
+          } : '',
         },
-        nestedTableData: new Table(['Reden', 'Commentaar'], [{
-          cellData: {
-            reason: permission.reason,
-            comment: permission["comment"]
-          }
-        },
-        ]),
-        expandData: ''
-      }));
-      return [...acc, ...userRows];
-    }, []);
+      }
+      return cellData;
+    })
 
-    return new Table(
-      [
-        'Gebruiker',
-        'Rechten',
-        'Acties',
-      ], bodyData);
+    return new Table(headData, bodyData);
   }
 
   //
