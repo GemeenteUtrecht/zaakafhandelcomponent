@@ -35,7 +35,6 @@ from zac.core.services import (
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
-    create_informatieobject_document,
     create_status_document,
     create_zaak_document,
     create_zaaktype_document,
@@ -342,11 +341,7 @@ class InformatieObjectenHandler:
                 invalidate_document_url_cache(data["hoofd_object"])
                 document = get_document(data["hoofd_object"])
                 invalidate_document_other_cache(document)
-                if data["actie"] == "create":
-                    iod = create_informatieobject_document(document)
-                    iod.save(refresh=True)
-                else:
-                    update_informatieobject_document(document)
+                update_informatieobject_document(document)
 
             elif data["actie"] == "destroy":
                 invalidate_document_url_cache(data["hoofd_object"])

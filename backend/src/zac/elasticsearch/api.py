@@ -229,7 +229,10 @@ def create_zaakobject_document(
     zaakobject: ZaakObject,
 ) -> ZaakObjectDocument:
     return ZaakObjectDocument(
-        url=zaakobject.url, object=zaakobject.object, zaak=zaakobject.zaak
+        meta={"id": zaakobject.uuid},
+        url=zaakobject.url,
+        object=zaakobject.object,
+        zaak=zaakobject.zaak,
     )
 
 
@@ -248,7 +251,10 @@ def create_zaakinformatieobject_document(
     zio: ZaakInformatieObject,
 ) -> ZaakInformatieObjectDocument:
     return ZaakInformatieObjectDocument(
-        url=zio.url, informatieobject=zio.informatieobject, zaak=zio.zaak
+        meta={"id": zio.uuid},
+        url=zio.url,
+        informatieobject=zio.informatieobject,
+        zaak=zio.zaak,
     )
 
 

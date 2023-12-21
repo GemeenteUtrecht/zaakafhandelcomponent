@@ -13,7 +13,6 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.datastructures import VA_ORDER
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -24,7 +23,7 @@ from ..api import (
     create_zaakinformatieobject_document,
     create_zaaktype_document,
 )
-from ..documents import InformatieObjectDocument
+from ..documents import InformatieObjectDocument, ZaakInformatieObjectDocument
 from ..searches import search_informatieobjects
 from .utils import ESMixin
 
@@ -66,14 +65,17 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def clear_index(init=False):
         ESMixin.clear_index(init=init)
         Index(settings.ES_INDEX_DOCUMENTEN).delete(ignore=404)
+        Index(settings.ES_INDEX_ZIO).delete(ignore=404)
 
         if init:
             InformatieObjectDocument.init()
+            ZaakInformatieObjectDocument.init()
 
     @staticmethod
     def refresh_index():
         ESMixin.refresh_index()
         Index(settings.ES_INDEX_DOCUMENTEN).refresh()
+        Index(settings.ES_INDEX_ZIO).refresh()
 
     def setUp(self):
         super().setUp()
@@ -139,18 +141,21 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zio1 = generate_oas_component(
             "zrc",
             "schemas/ZaakInformatieObject",
+            url=f"{ZRC_ROOT}zaakinformatieobjecten/d859f08e-6957-44f8-9efb-502d18c28f8d",
             zaak=zaak1["url"],
             informatieobject=self.document1["url"],
         )
         zio2 = generate_oas_component(
             "zrc",
             "schemas/ZaakInformatieObject",
+            url=f"{ZRC_ROOT}zaakinformatieobjecten/d859f08e-6957-44f8-9efb-502d18c28f8f",
             zaak=zaak1["url"],
             informatieobject=self.document2["url"],
         )
         zio3 = generate_oas_component(
             "zrc",
             "schemas/ZaakInformatieObject",
+            url=f"{ZRC_ROOT}zaakinformatieobjecten/d859f08e-6957-44f8-9efb-502d18c28f8e",
             zaak=zaak2["url"],
             informatieobject=self.document1["url"],
         )
@@ -173,15 +178,22 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zt_doc = create_zaaktype_document(zt_obj)
         zaak1_doc = create_zaak_document(zaak1_obj)
         zaak1_doc.zaaktype = zt_doc
-        zaak1_doc.zaakinformatieobjecten = [
-            create_zaakinformatieobject_document(factory(ZaakInformatieObject, zio))
-            for zio in [zio1, zio2]
-        ]
+        ziod1 = create_zaakinformatieobject_document(
+            factory(ZaakInformatieObject, zio1)
+        )
+        ziod1.save()
+        ziod2 = create_zaakinformatieobject_document(
+            factory(ZaakInformatieObject, zio2)
+        )
+        ziod2.save()
+
         zaak2_doc = create_zaak_document(zaak2_obj)
         zaak2_doc.zaaktype = zt_doc
-        zaak2_doc.zaakinformatieobjecten = [
-            create_zaakinformatieobject_document(factory(ZaakInformatieObject, zio3))
-        ]
+        ziod3 = create_zaakinformatieobject_document(
+            factory(ZaakInformatieObject, zio3)
+        )
+        ziod3.save()
+
         zaak1_doc.save()
         zaak2_doc.save()
         self.refresh_index()

@@ -5,7 +5,7 @@ from ..utils import ProgressOutputWrapper
 
 
 class Command(BaseCommand):
-    help = "Indexes ZAAKs, INFORMATIEOBJECTs and OBJECTs."
+    help = "Indexes ZAAKs, ZAAKINFORMATIEOBJECTen, ZAAKOBJECTen, INFORMATIEOBJECTen and OBJECTen."
 
     def add_arguments(self, parser: CommandParser) -> None:
         super().add_arguments(parser)
@@ -51,10 +51,16 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Calling index_zaken {' '.join(args)}")
         call_command("index_zaken", *args)
-        self.stdout.write("Done indexing zaken.")
+        self.stdout.write("Done indexing ZAAKen.")
+        self.stdout.write(f"Calling index_zaakinformatieobjecten {' '.join(args)}")
+        call_command("index_zaakinformatieobjecten", *args)
+        self.stdout.write("Done indexing ZAAKINFORMATIEOBJECTen.")
+        self.stdout.write(f"Calling index_zaakobjecten {' '.join(args)}")
+        call_command("index_zaakobjecten", *args)
+        self.stdout.write("Done indexing ZAAKOBJECTen.")
         self.stdout.write(f"Calling index_documenten {' '.join(args)}")
         call_command("index_documenten", *args)
-        self.stdout.write("Done indexing documenten.")
+        self.stdout.write("Done indexing ENKELVOUDIGEINFORMATIEOBJECTen.")
         self.stdout.write(f"Calling index_objecten")
         call_command("index_objecten")
-        self.stdout.write("Done indexing objecten.")
+        self.stdout.write("Done indexing OBJECTen.")

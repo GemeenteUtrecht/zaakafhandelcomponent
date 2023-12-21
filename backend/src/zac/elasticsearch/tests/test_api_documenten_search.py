@@ -22,13 +22,11 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.models import DowcConfig
 from zac.core.permissions import zaken_inzien, zaken_list_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import (
     create_informatieobject_document,
-    create_iot_document,
     create_related_zaak_document,
     create_zaakinformatieobject_document,
 )

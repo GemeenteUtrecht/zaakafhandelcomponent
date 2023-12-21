@@ -78,16 +78,28 @@ class StatusDocument(InnerDoc):
     statustoelichting = field.Text(fields={"keyword": field.Keyword()})
 
 
-class ZaakObjectDocument(InnerDoc):
+class ZaakObjectDocument(Document):
     url = field.Keyword()
     object = field.Keyword()
     zaak = field.Keyword()
 
+    class Index:
+        name = settings.ES_INDEX_ZO
+        settings = {
+            "index.mapping.ignore_malformed": True,
+        }
 
-class ZaakInformatieObjectDocument(InnerDoc):
+
+class ZaakInformatieObjectDocument(Document):
     url = field.Keyword()
     informatieobject = field.Keyword()
     zaak = field.Keyword()
+
+    class Index:
+        name = settings.ES_INDEX_ZIO
+        settings = {
+            "index.mapping.ignore_malformed": True,
+        }
 
 
 class ZaakDocument(Document):
@@ -113,8 +125,6 @@ class ZaakDocument(Document):
     eigenschappen = field.Object(EigenschapDocument)
     status = field.Object(StatusDocument)
     toelichting = field.Text(fields={"keyword": field.Keyword()})
-    zaakobjecten = Nested(ZaakObjectDocument)
-    zaakinformatieobjecten = Nested(ZaakInformatieObjectDocument)
     zaakgeometrie = field.GeoShape()
 
     class Index:

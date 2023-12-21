@@ -26,6 +26,7 @@ from ...documents import (
     ObjectTypeDocument,
     RelatedZaakDocument,
     ZaakDocument,
+    ZaakObjectDocument,
 )
 from ...utils import check_if_index_exists
 from ..utils import ProgressOutputWrapper
@@ -34,12 +35,7 @@ perf_logger = logging.getLogger("performance")
 
 
 class Command(BaseCommand):
-    """
-    Based on the OBJECTS V1 API - TODO migrate to V2 for pagination support.
-
-    """
-
-    help = "Create documents in ES by indexing all objecten from OBJECTS API. Requires zaken to be indexed already."
+    help = "Create documents in ES by indexing all OBJECTen from OBJECTen API. Requires zaken to be indexed already."
     index = settings.ES_INDEX_OBJECTEN
 
     def add_arguments(self, parser: CommandParser) -> None:
@@ -78,7 +74,7 @@ class Command(BaseCommand):
         index = Index(settings.ES_INDEX_OBJECTEN)
         index.refresh()
         count = index.search().count()
-        self.stdout.write(f"{count} objects are received from OBJECTS API.")
+        self.stdout.write(f"{count} OBJECTen are received from OBJECTen API.")
 
     def bulk_upsert(self):
         bulk(
@@ -91,10 +87,10 @@ class Command(BaseCommand):
 
     def batch_index(self) -> Iterator[ObjectDocument]:
         self.zaken_index_exists()
-        self.stdout.write("Preloading all object types...")
+        self.stdout.write("Preloading all OBJECTTYPEn...")
         ots = {ot["url"]: ot for ot in fetch_objecttypes()}
-        self.stdout.write(f"Fetched {len(ots)} object types.")
-        self.stdout.write("Starting object retrieval from the configured OBJECTs API.")
+        self.stdout.write(f"Fetched {len(ots)} OBJECTTYPEn.")
+        self.stdout.write("Starting OBJECT retrieval from the configured OBJECTen API.")
         client = get_objects_client()
 
         query_params = {"pageSize": 100}
@@ -103,7 +99,7 @@ class Command(BaseCommand):
             objects, query_params = fetch_objects_all_paginated(
                 client, query_params=query_params
             )
-            perf_logger.info("Fetched %d objects", len(objects["results"]))
+            perf_logger.info("Fetched %d OBJECTs", len(objects["results"]))
             get_more = query_params.get("page", None)
             for obj in objects["results"]:
                 obj["type"] = ots[obj["type"]]
@@ -113,32 +109,22 @@ class Command(BaseCommand):
     def documenten_generator(self, objects: List[Dict]) -> Iterator[ObjectDocument]:
         object_documenten = self.create_objecten_documenten(objects)
         objecttype_documenten = self.create_objecttype_documenten(objects)
-        zaken = (
-            ZaakDocument.search()
-            .filter(
-                Nested(
-                    path="zaakobjecten",
-                    query=Bool(
-                        filter=Terms(
-                            zaakobjecten__object=[obj["url"] for obj in objects]
-                        )
-                    ),
-                )
-            )
+
+        zon = (
+            ZaakObjectDocument.search()
+            .filter(Terms(object=[url for url in object_documenten.keys()]))
             .source(
                 [
-                    "identificatie",
-                    "url",
-                    "omschrijving",
-                    "bronorganisatie",
-                    "zaakobjecten.object",
-                    "zaaktype",
-                    "vertrouwelijkheidaanduiding",
+                    "zaak",
+                    "object",
                 ]
             )
             .execute()
         )
-        related_zaken = self.create_related_zaken(zaken)
+        zaken = (
+            ZaakDocument.search().filter(Terms(url=[zo.zaak for zo in zon])).execute()
+        )
+        related_zaken = self.create_related_zaken(zon, zaken)
         for obj in objects:
             object_document = object_documenten[obj["url"]]
             object_document.type = objecttype_documenten[obj["url"]]
@@ -151,17 +137,19 @@ class Command(BaseCommand):
         index.delete(ignore=404)
 
     def create_related_zaken(
-        self, zaken: List[ZaakDocument]
+        self, zon: List[ZaakObjectDocument], zaken: List[ZaakDocument]
     ) -> Dict[str, RelatedZaakDocument]:
-        obj_to_zaken = {}
+        related_zaken = {zaak.url: create_related_zaak_document(zaak) for zaak in zaken}
         found = 0
-        for zaak in zaken:
-            related_zaak = create_related_zaak_document(zaak)
-            for obj in zaak.zaakobjecten:
+        obj_to_zaken = {}
+        for zo in zon:
+            related_zaak = related_zaken.get(zo.zaak, None)
+            if related_zaak:
                 try:
-                    obj_to_zaken[obj.object].append(related_zaak)
+                    obj_to_zaken[zo.object].append(related_zaak)
                 except KeyError:
-                    obj_to_zaken[obj.object] = [related_zaak]
+                    obj_to_zaken[zo.object] = [related_zaak]
+
                 found += 1
 
         self.stdout.write_without_progress(

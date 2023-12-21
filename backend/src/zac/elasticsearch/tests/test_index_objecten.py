@@ -17,6 +17,7 @@ from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
+from ..api import create_zaakobject_document
 from ..documents import ObjectDocument, ZaakDocument, ZaakObjectDocument
 from .utils import ESMixin
 
@@ -30,14 +31,16 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def clear_index(init=False):
         ESMixin.clear_index(init=init)
         Index(settings.ES_INDEX_OBJECTEN).delete(ignore=404)
-
+        Index(settings.ES_INDEX_ZO).delete(ignore=404)
         if init:
             ObjectDocument.init()
+            ZaakObjectDocument.init()
 
     @staticmethod
     def refresh_index():
         ESMixin.refresh_index()
         Index(settings.ES_INDEX_OBJECTEN).refresh()
+        Index(settings.ES_INDEX_ZO).refresh()
 
     def setUp(self):
         super().setUp()
@@ -159,13 +162,16 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[objecttype])
         m.get(f"{OBJECTS_ROOT}objects", json=paginated_response([object]))
         zaakobject = ZaakObjectDocument(
-            url="https://some-url.com/", object=object["url"]
+            url="http://zaken.nl/api/v1/zaakobjecten/f79989d3-9ac4-4c2b-a94e-13191b333444",
+            object=object["url"],
+            zaak="http://zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
         )
+        zaakobject.save()
         zd = ZaakDocument(
+            url="http://zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
             identificatie="some-identificatie",
             omschrijving="some-omschrijving",
             bronorganisatie="some-bronorganisatie",
-            zaakobjecten=[zaakobject],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             va_order=VA_ORDER[VertrouwelijkheidsAanduidingen.openbaar],
         )
@@ -185,6 +191,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             index.search().execute()[0].related_zaken,
             [
                 {
+                    "url": "http://zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
                     "bronorganisatie": "some-bronorganisatie",
                     "omschrijving": "some-omschrijving",
                     "identificatie": "some-identificatie",

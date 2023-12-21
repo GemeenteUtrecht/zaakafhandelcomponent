@@ -17,12 +17,13 @@ from zac.core.services import (
     resolve_documenten_informatieobjecttypen,
 )
 
-from ...api import (
-    create_informatieobject_document,
-    create_iot_document,
-    create_related_zaak_document,
+from ...api import create_informatieobject_document, create_related_zaak_document
+from ...documents import (
+    InformatieObjectDocument,
+    RelatedZaakDocument,
+    ZaakDocument,
+    ZaakInformatieObjectDocument,
 )
-from ...documents import InformatieObjectDocument, RelatedZaakDocument, ZaakDocument
 from ...utils import check_if_index_exists
 from ..utils import get_memory_usage
 from .base_index import IndexCommand
@@ -31,11 +32,11 @@ perf_logger = logging.getLogger("performance")
 
 
 class Command(IndexCommand, BaseCommand):
-    help = "Create documents in ES by indexing all informatieobjects from DRC APIs. Requires zaken to already be indexed."
+    help = "Create documents in ES by indexing all ENKELVOUDIGINFORMATIEOBJECTen from DRC APIs. Requires zaken and zaakinformatieobjecten to already be indexed."
     _index = settings.ES_INDEX_DOCUMENTEN
     _type = "enkelvoudiginformatieobject"
     _document = InformatieObjectDocument
-    _verbose_name_plural = "informatieobjecten"
+    _verbose_name_plural = "ENKELVOUDIGINFORMATIEOBJECTen"
 
     def zaken_index_exists(self) -> bool:
         return check_if_index_exists(index=settings.ES_INDEX_ZAKEN)
@@ -127,40 +128,27 @@ class Command(IndexCommand, BaseCommand):
             doc.last_edited_date = last_edited_dates.get(doc.url, None)
 
         eio_documenten = self.create_eio_documenten(documenten)
-        zaken = (
-            ZaakDocument.search()
-            .filter(
-                Nested(
-                    path="zaakinformatieobjecten",
-                    query=Bool(
-                        filter=Terms(
-                            zaakinformatieobjecten__informatieobject=[
-                                doc.url for doc in documenten
-                            ]
-                        )
-                    ),
-                )
-            )
+        zios = (
+            ZaakInformatieObjectDocument.search()
+            .filter(Terms(informatieobject=[doc.url for doc in documenten]))
             .source(
                 [
-                    "identificatie",
-                    "url",
-                    "omschrijving",
-                    "bronorganisatie",
-                    "zaakinformatieobjecten.informatieobject",
-                    "zaaktype",
-                    "vertrouwelijkheidaanduiding",
+                    "zaak",
+                    "informatieobject",
                 ]
             )
             .execute()
         )
-        related_zaken = self.create_related_zaken(zaken)
-
+        zaken = (
+            ZaakDocument.search()
+            .filter(Terms(url=[zio.zaak for zio in zios]))
+            .execute()
+        )
+        related_zaken = self.create_related_zaken(zios, zaken)
         for doc in documenten:
             eio_document = eio_documenten[doc.url]
             eio_document.related_zaken = related_zaken.get(doc.url, [])
             eiod = eio_document.to_dict(True, skip_empty=False)
-
             yield eiod
             if self.reindex_last:
                 self.reindexed += 1
@@ -168,22 +156,23 @@ class Command(IndexCommand, BaseCommand):
                     return
 
     def create_related_zaken(
-        self, zaken: List[ZaakDocument]
+        self, zios: List[ZaakInformatieObjectDocument], zaken: List[ZaakDocument]
     ) -> Dict[str, RelatedZaakDocument]:
-        eio_to_zaken = {}
+        related_zaken = {zaak.url: create_related_zaak_document(zaak) for zaak in zaken}
         found = 0
-        for zaak in zaken:
-            related_zaak = create_related_zaak_document(zaak)
-            for eio in zaak.zaakinformatieobjecten:
+        eio_to_zaken = {}
+        for zio in zios:
+            related_zaak = related_zaken.get(zio.zaak, None)
+            if related_zaak:
                 try:
-                    eio_to_zaken[eio.informatieobject].append(related_zaak)
+                    eio_to_zaken[zio.informatieobject].append(related_zaak)
                 except KeyError:
-                    eio_to_zaken[eio.informatieobject] = [related_zaak]
+                    eio_to_zaken[zio.informatieobject] = [related_zaak]
 
                 found += 1
 
         self.stdout.write_without_progress(
-            "{found} INFORMATIEOBJECTen are found for {zaken} related ZAAKen.".format(
+            "{found} ENKELVOUDIGINFORMATIEOBJECTen are found for {zaken} related ZAAKen.".format(
                 found=found, zaken=len(zaken)
             )
         )
@@ -193,6 +182,6 @@ class Command(IndexCommand, BaseCommand):
         self, documenten: List[Document]
     ) -> Dict[str, InformatieObjectDocument]:
         self.stdout.write_without_progress(
-            "{no} INFORMATIEOBJECTen are found.".format(no=len(documenten))
+            "{no} ENKELVOUDIGINFORMATIEOBJECTen are found.".format(no=len(documenten))
         )
         return {doc.url: create_informatieobject_document(doc) for doc in documenten}
