@@ -1,0 +1,13 @@
+@import './base/colors/colors';
+
+.role-icon {
+  ::ng-deep .mat-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    display: inline-block;
+    vertical-align: text-bottom;
+    color: $color-secondary;
+    margin-top: 1px;
+  }
+}

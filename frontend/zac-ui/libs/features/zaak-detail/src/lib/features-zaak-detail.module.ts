@@ -23,6 +23,7 @@ import {UserPermissionsComponent} from './overview/user-permissions/user-permiss
 import {TaskHistoryComponent} from './actions/task-history/task-history.component';
 import {ChecklistComponent} from './actions/checklist/checklist.component';
 import {CancelReviewComponent} from './actions/adviseren-accorderen/cancel-review/cancel-review.component';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 @NgModule({
   imports: [
@@ -36,6 +37,7 @@ import {CancelReviewComponent} from './actions/adviseren-accorderen/cancel-revie
       headerName: 'X-CSRFToken',
     }),
     KetenProcessenModule,
+    MatExpansionModule,
     MultiselectModule,
     ReactiveFormsModule,
     RouterModule,
