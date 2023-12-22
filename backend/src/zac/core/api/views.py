@@ -59,10 +59,7 @@ from zac.core.services import (
     update_document,
     update_zaak_eigenschap,
 )
-from zac.elasticsearch.api import (
-    update_informatieobject_document,
-    update_zaakinformatieobjecten_in_zaak_document,
-)
+from zac.elasticsearch.api import update_informatieobject_document
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -77,7 +74,7 @@ from ..services import (
     delete_zaak_object,
     fetch_latest_audit_trail_data_document,
     fetch_zaak_eigenschap,
-    fetch_zaak_object,
+    fetch_zaakobject,
     fetch_zaaktype,
     find_zaak,
     get_catalogi,
@@ -1000,7 +997,6 @@ class ZaakDocumentView(views.APIView):
 
         # add to elasticsearch index
         update_informatieobject_document(document)
-        update_zaakinformatieobjecten_in_zaak_document(zaak)
 
         serializer = self.get_response_serializer(document)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1475,7 +1471,7 @@ class ZaakObjectChangeView(views.APIView):
         url = self.request.query_params.get("url")
 
         try:
-            zaak_object = fetch_zaak_object(url)
+            zaak_object = fetch_zaakobject(url)
         except ClientError as exc:
             raise Http404("No ZAAKOBJECT matches the given url.")
 

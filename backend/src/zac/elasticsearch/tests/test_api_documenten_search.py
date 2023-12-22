@@ -379,19 +379,21 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         zaak1_document.zaaktype = self.create_zaaktype_document(
             self.zaak1_model.zaaktype
         )
-        zaak1_document.zaakinformatieobjecten = [
-            create_zaakinformatieobject_document(zio) for zio in [self.zio1, self.zio2]
-        ]
         zaak1_document.save()
+
+        ziod1 = create_zaakinformatieobject_document(self.zio1)
+        ziod1.save()
+        ziod2 = create_zaakinformatieobject_document(self.zio2)
+        ziod2.save()
 
         zaak2_document = self.create_zaak_document(self.zaak2_model)
         zaak2_document.zaaktype = self.create_zaaktype_document(
             self.zaak2_model.zaaktype
         )
-        zaak2_document.zaakinformatieobjecten = [
-            create_zaakinformatieobject_document(self.zio3)
-        ]
         zaak2_document.save()
+
+        ziod3 = create_zaakinformatieobject_document(self.zio3)
+        ziod3.save()
 
         io1_document = create_informatieobject_document(self.document1)
         io1_document.related_zaken = [

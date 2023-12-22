@@ -24,9 +24,7 @@ from zac.core.services import (
     get_statustype,
     get_zaak,
     get_zaak_eigenschappen,
-    get_zaak_informatieobjecten,
     get_zaakinformatieobjecten_related_to_informatieobject,
-    get_zaakobjecten,
     get_zaakobjecten_related_to_object,
     get_zaaktypen,
 )
@@ -54,7 +52,7 @@ def _get_uuid_from_url(url: str) -> str:
 
 
 ###################################################
-#                       ZRC                       #
+#                  Zaken index                    #
 ###################################################
 
 
@@ -225,6 +223,32 @@ def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
     return
 
 
+###################################################
+#                zaakobject index                 #
+###################################################
+
+
+def _get_zo_document(
+    zo_uuid: str, zo_url: str, create_zo: Optional[ZaakObject] = None
+) -> Optional[ZaakDocument]:
+    try:
+        zo_document = ZaakObjectDocument.get(id=zo_uuid)
+    except exceptions.NotFoundError as exc:
+        logger.warning("ZIO %s hasn't been indexed in ES", zo_url)
+        if not create_zo:
+            return
+        else:
+            zo_document = create_zaakobject_document(create_zo)
+            zo_document.save(refresh="wait_for")
+
+    return zo_document
+
+
+def get_zaakobject_document(zo_url: str):
+    zo_uuid = _get_uuid_from_url(zo_url)
+    return _get_zo_document(zo_uuid, zo_url)
+
+
 def create_zaakobject_document(
     zaakobject: ZaakObject,
 ) -> ZaakObjectDocument:
@@ -236,15 +260,54 @@ def create_zaakobject_document(
     )
 
 
-def update_zaakobjecten_in_zaak_document(zaak: Zaak) -> None:
-    zaak.zaakobjecten = get_zaakobjecten(zaak)
+###################################################
+#           zaakinformatieobject index            #
+###################################################
 
-    zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
-    zaak_document.zaakobjecten = [
-        create_zaakobject_document(zo) for zo in zaak.zaakobjecten
-    ]
-    zaak_document.save(refresh="wait_for")
-    return
+
+def _get_zio_document(
+    zio_uuid: str, zio_url: str, create_zio: Optional[ZaakInformatieObject] = None
+) -> Optional[ZaakInformatieObjectDocument]:
+    try:
+        zio_document = ZaakInformatieObjectDocument.get(id=zio_uuid)
+    except exceptions.NotFoundError as exc:
+        logger.warning("ZIO %s hasn't been indexed in ES", zio_url)
+        if not create_zio:
+            return
+        else:
+            zio_document = create_zaakinformatieobject_document(create_zio)
+            zio_document.save(refresh="wait_for")
+
+    return zio_document
+
+
+def get_zaakinformatieobject_document(zio_url: str):
+    zio_uuid = _get_uuid_from_url(zio_url)
+    return _get_zio_document(zio_uuid, zio_url)
+
+
+def update_zaakinformatieobject_document(
+    zio: ZaakInformatieObject,
+) -> ZaakInformatieObjectDocument:
+    ziod = _get_zio_document(zio.uuid, zio.url, create_zio=zio)
+
+    # Don't include zaaktype and identificatie since they are immutable.
+    # Don't include status or objecten as those are handled through a
+    # different handler in the notifications api.
+    body = {
+        "doc": {
+            "informatieobject": zio.informatieobject,
+            "zaak": zio.zaak,
+        }
+    }
+    ziod._get_connection().update(
+        ziod.Index().name,
+        ziod.meta.id,
+        body,
+        refresh="wait_for",
+        retry_on_conflict=settings.ES_RETRY_ON_CONFLICT,
+    )
+    return ziod
 
 
 def create_zaakinformatieobject_document(
@@ -256,16 +319,6 @@ def create_zaakinformatieobject_document(
         informatieobject=zio.informatieobject,
         zaak=zio.zaak,
     )
-
-
-def update_zaakinformatieobjecten_in_zaak_document(zaak: Zaak) -> ZaakDocument:
-    zaak.zaakinformatieobjecten = get_zaak_informatieobjecten(zaak)
-    zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
-    zaak_document.zaakinformatieobjecten = [
-        create_zaakinformatieobject_document(zio) for zio in zaak.zaakinformatieobjecten
-    ]
-    zaak_document.save(refresh="wait_for")
-    return zaak_document
 
 
 ###################################################
@@ -375,7 +428,10 @@ def update_related_zaken_in_object_document(object_url: str) -> None:
 
 
 def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
-    objects = (
+    # check if related_zaak really changed before indexing bunch of documents
+    related_zaak = create_related_zaak_document(zaak)
+
+    object = (
         ObjectDocument.search()
         .query(
             Nested(
@@ -383,17 +439,12 @@ def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
                 query=Bool(filter=[Term(related_zaken__url=zaak.url)]),
             )
         )
+        .extra(size=1)
         .execute()
     )
-
-    related_zaak = create_related_zaak_document(zaak)
-
-    # check if it related zaak document really changed before reindexing a bunch of documents
     changed = False
-    if objects and related_zaak.url in [z.url for z in objects[0].related_zaken]:
-        old_rz = [rz for rz in objects[0].related_zaken if rz.url == related_zaak.url][
-            0
-        ]
+    if object and related_zaak.url in [z.url for z in object[0].related_zaken]:
+        old_rz = [rz for rz in object[0].related_zaken if rz.url == related_zaak.url][0]
         if any(
             [
                 old_rz.omschrijving != related_zaak.omschrijving,
@@ -403,6 +454,16 @@ def update_related_zaak_in_object_documents(zaak: Zaak) -> None:
             changed = True
 
     if changed:
+        objects = (
+            ObjectDocument.search()
+            .query(
+                Nested(
+                    path="related_zaken",
+                    query=Bool(filter=[Term(related_zaken__url=zaak.url)]),
+                )
+            )
+            .execute()
+        )
         for obj in objects:
             related_zaken = [rz for rz in obj.related_zaken if rz.url != zaak.url]
             related_zaken.append(related_zaak)
@@ -587,6 +648,32 @@ def update_related_zaken_in_informatieobject_document(
 
 
 def update_related_zaak_in_informatieobject_documents(zaak: Zaak) -> None:
+    # Check if related_zaak really changed before indexing all relevant
+    # documents
+    related_zaak = create_related_zaak_document(zaak)
+    io = (
+        InformatieObjectDocument.search()
+        .query(
+            Nested(
+                path="related_zaken",
+                query=Bool(filter=[Term(related_zaken__url=zaak.url)]),
+            )
+        )
+        .extra(size=1)
+        .execute()
+    )
+
+    changed = False
+    if io and related_zaken.url in [z.url for z in io[0].related_zaken]:
+        old_rz = [rz for rz in io[0].related_zaken if rz.url == related_zaak.url][0]
+        if any(
+            [
+                old_rz.omschrijving != related_zaak.omschrijving,
+                old_rz.va_order != related_zaak.va_order,
+            ]
+        ):
+            changed = True
+
     ios = (
         InformatieObjectDocument.search()
         .query(
@@ -597,20 +684,6 @@ def update_related_zaak_in_informatieobject_documents(zaak: Zaak) -> None:
         )
         .execute()
     )
-    related_zaak = create_related_zaak_document(zaak)
-
-    # check if it related zaak document really changed before reindexing a bunch of documents
-    changed = False
-    if ios and related_zaak.url in [z.url for z in ios[0].related_zaken]:
-        old_rz = [rz for rz in ios[0].related_zaken if rz.url == related_zaak.url][0]
-        if any(
-            [
-                old_rz.omschrijving != related_zaak.omschrijving,
-                old_rz.va_order != related_zaak.va_order,
-            ]
-        ):
-            changed = True
-
     if changed:
         for io in ios:
             related_zaken = [rz for rz in io.related_zaken if rz.url != zaak.url]

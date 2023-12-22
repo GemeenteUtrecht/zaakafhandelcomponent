@@ -18,13 +18,14 @@ from zac.accounts.tests.factories import UserFactory
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import (
+    _get_uuid_from_url,
     create_object_document,
     create_related_zaak_document,
     create_zaak_document,
     create_zaakobject_document,
     create_zaaktype_document,
 )
-from zac.elasticsearch.documents import ObjectDocument, ZaakDocument
+from zac.elasticsearch.documents import ObjectDocument, ZaakDocument, ZaakObjectDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -130,16 +131,9 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             json=paginated_response([ZAAKOBJECT_RESPONSE]),
         )
 
-        # create zaak document in ES
-        zaak = factory(Zaak, ZAAK_RESPONSE)
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        zaak_document = create_zaak_document(zaak)
-        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
-        # Assert no zaakobject is connected to it
-        self.assertEqual(zaak_document.zaakobjecten, [])
+        # Assert no zaakinformatieobject is connected to it
+        with self.assertRaises(NotFoundError):
+            ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
 
         # Assert no object document is found with the object uuid
         with self.assertRaises(NotFoundError):
@@ -149,17 +143,8 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         response = self.client.post(path, NOTIFICATION_CREATE)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
-        self.assertEqual(
-            zaak_document.zaakobjecten,
-            [
-                {
-                    "url": "https://some.zrc.nl/api/v1/zaakobjecten/69e98129-1f0d-497f-bbfb-84b88137edbc",
-                    "object": "https://some.objects.nl/api/v1/objects/f8a7573a-758f-4a19-aa22-245bb8f4712e",
-                    "zaak": ZAAK,
-                }
-            ],
-        )
+
+        ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
 
         object_document = ObjectDocument.get(id=OBJECT_RESPONSE["uuid"])
         self.assertEqual(
@@ -193,22 +178,13 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             json=paginated_response([]),
         )
 
-        # create zaak document in ES
+        # create zaak
         zaak = factory(Zaak, ZAAK_RESPONSE)
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        zaak_document = create_zaak_document(zaak)
-        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
-        zaak_document.zaakobjecten = [
-            create_zaakobject_document(factory(ZaakObject, ZAAKOBJECT_RESPONSE))
-        ]
-        zaak_document.save()
-        self.refresh_index()
-
-        # Assert zaakobject is connected to it
-        self.assertEqual(
-            zaak_document.zaakobjecten,
-            [{"url": ZAAKOBJECT, "object": OBJECT, "zaak": ZAAK}],
+        zo_document = create_zaakobject_document(
+            factory(ZaakObject, ZAAKOBJECT_RESPONSE)
         )
+        zo_document.save()
+        self.refresh_index()
 
         # create object document
         object_document = create_object_document(OBJECT_RESPONSE)
@@ -220,10 +196,10 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.refresh_index()
-        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
 
-        # Assert zaakobjecten is empty
-        self.assertEqual(zaak_document.zaakobjecten, [])
+        # Assert no zaakobject document is found with the zo uuid
+        with self.assertRaises(NotFoundError):
+            ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
 
         # Assert related_zaken of object document is empty.
         object_document = ObjectDocument.get(id=OBJECT_RESPONSE["uuid"])

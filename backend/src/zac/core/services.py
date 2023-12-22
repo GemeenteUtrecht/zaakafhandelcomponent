@@ -1528,11 +1528,10 @@ def relate_object_to_zaak(relation_data: dict) -> dict:
     return response
 
 
-def fetch_zaak_object(zaak_object_url: str):
+def fetch_zaakobject(zaak_object_url: str) -> ZaakObject:
     client = _client_from_url(zaak_object_url)
     zaak_object = client.retrieve("zaakobject", url=zaak_object_url)
-    zaak_object = factory(ZaakObject, zaak_object)
-    return zaak_object
+    return factory(ZaakObject, zaak_object)
 
 
 def delete_zaak_object(zaak_object_url: str):

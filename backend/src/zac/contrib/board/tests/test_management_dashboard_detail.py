@@ -188,9 +188,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
                             "statustoelichting": None,
                         },
                         "toelichting": None,
-                        "zaakobjecten": [],
                         "zaakgeometrie": None,
-                        "zaakinformatieobjecten": [],
                     }
                 ],
             },
@@ -290,9 +288,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
                             "statustoelichting": None,
                         },
                         "toelichting": None,
-                        "zaakobjecten": [],
                         "zaakgeometrie": None,
-                        "zaakinformatieobjecten": [],
                     }
                 ],
             },
@@ -384,9 +380,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
                             "statustoelichting": None,
                         },
                         "toelichting": None,
-                        "zaakobjecten": [],
                         "zaakgeometrie": None,
-                        "zaakinformatieobjecten": [],
                     }
                 ],
             },

@@ -1,14 +1,17 @@
 import datetime
 from unittest.mock import patch
 
+from django.conf import settings
 from django.urls import reverse
 
 import requests_mock
+from elasticsearch_dsl import Index
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -23,13 +26,15 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import (
+    create_zaakobject_document,
     update_eigenschappen_in_zaak_document,
     update_rollen_in_zaak_document,
-    update_zaakobjecten_in_zaak_document,
 )
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
+
+from ..documents import ZaakObjectDocument
 
 OBJECTS_ROOT = "http://objects.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -39,37 +44,52 @@ ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
 @requests_mock.Mocker()
 class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
+    )
+    zaaktype = generate_oas_component(
+        "ztc",
+        "schemas/ZaakType",
+        url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
+        identificatie="ZT1",
+        catalogus=CATALOGUS_URL,
+        vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        omschrijving="ZT1",
+    )
+    zaak = generate_oas_component(
+        "zrc",
+        "schemas/Zaak",
+        url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
+        zaaktype=zaaktype["url"],
+        identificatie="zaak1",
+        omschrijving="Some zaak 1",
+        vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        eigenschappen=[],
+        resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
+    )
+
+    @staticmethod
+    def clear_index(init=False):
+        ESMixin.clear_index(init=init)
+        Index(settings.ES_INDEX_ZO).delete(ignore=404)
+
+        if init:
+            ZaakObjectDocument.init()
+
+    @staticmethod
+    def refresh_index():
+        ESMixin.refresh_index()
+        Index(settings.ES_INDEX_ZO).refresh()
+
     def setUp(self):
         super().setUp()
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        self.catalogus = generate_oas_component(
-            "ztc",
-            "schemas/Catalogus",
-            url=CATALOGUS_URL,
-            domein="DOME",
-        )
-        self.zaaktype = generate_oas_component(
-            "ztc",
-            "schemas/ZaakType",
-            url=f"{CATALOGI_ROOT}zaaktypen/3e2a1218-e598-4bbe-b520-cb56b0584d60",
-            identificatie="ZT1",
-            catalogus=CATALOGUS_URL,
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            omschrijving="ZT1",
-        )
-        self.zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
-            zaaktype=self.zaaktype["url"],
-            identificatie="zaak1",
-            omschrijving="Some zaak 1",
-            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
-            eigenschappen=[],
-            resultaat=f"{ZAKEN_ROOT}resultaten/fcc09bc4-3fd5-4ea4-b6fb-b6c79dbcafca",
-        )
+
         self.zaak_model = factory(Zaak, self.zaak)
         self.zaak_model.zaaktype = factory(ZaakType, self.zaaktype)
 
@@ -264,6 +284,19 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
 @requests_mock.Mocker()
 class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    @staticmethod
+    def clear_index(init=False):
+        ESMixin.clear_index(init=init)
+        Index(settings.ES_INDEX_ZO).delete(ignore=404)
+
+        if init:
+            ZaakObjectDocument.init()
+
+    @staticmethod
+    def refresh_index():
+        ESMixin.refresh_index()
+        Index(settings.ES_INDEX_ZO).refresh()
+
     def setUp(self):
         super().setUp()
 
@@ -536,8 +569,9 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak1_document.zaaktype = self.create_zaaktype_document(zaak1_model.zaaktype)
         zaak1_document.save()
         update_eigenschappen_in_zaak_document(zaak1_model)
-        update_zaakobjecten_in_zaak_document(zaak1_model)
         update_rollen_in_zaak_document(zaak1_model)
+        zo = create_zaakobject_document(factory(ZaakObject, zaakobject))
+        zo.save()
 
         zaak2_model = factory(Zaak, zaak2)
         zaak2_model.deadline = datetime.date(2020, 1, 2)
@@ -545,7 +579,6 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zaak2_document = self.create_zaak_document(zaak2_model)
         zaak2_document.zaaktype = self.create_zaaktype_document(zaak2_model.zaaktype)
         zaak2_document.save()
-        update_zaakobjecten_in_zaak_document(zaak2_model)
         update_rollen_in_zaak_document(zaak2_model)
 
         zaak3_model = factory(Zaak, zaak3)
