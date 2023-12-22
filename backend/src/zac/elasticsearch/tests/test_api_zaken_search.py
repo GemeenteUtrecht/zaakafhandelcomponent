@@ -93,13 +93,6 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.zaak_model = factory(Zaak, self.zaak)
         self.zaak_model.zaaktype = factory(ZaakType, self.zaaktype)
 
-        patch_get_zaakobjecten = patch(
-            "zac.elasticsearch.api.get_zaakobjecten",
-            return_value=[],
-        )
-        patch_get_zaakobjecten.start()
-        self.addCleanup(patch_get_zaakobjecten.stop)
-
         self.endpoint = reverse("search")
         self.data = {"identificatie": "zaak1"}
 

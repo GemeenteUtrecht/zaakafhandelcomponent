@@ -54,7 +54,6 @@ class SummaryTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
         super().setUp()
         self.patchers = [
             patch("zac.werkvoorraad.views.parallel", return_value=mock_parallel()),
-            patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[]),
             patch(
                 "zac.werkvoorraad.views.get_camunda_user_task_count",
                 return_value={"count": 1},
