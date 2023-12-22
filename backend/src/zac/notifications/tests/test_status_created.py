@@ -62,7 +62,6 @@ class StatusCreatedTests(ESMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_find_zaak_status_created(self, rm, *mocks):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
@@ -85,7 +84,6 @@ class StatusCreatedTests(ESMixin, APITestCase):
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
             self.assertEqual(m.call_count, 2)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_get_zaak_status_created(self, rm, *mocks):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")

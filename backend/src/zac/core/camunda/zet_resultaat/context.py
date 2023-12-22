@@ -68,7 +68,7 @@ def get_context(task: Task) -> ZetResultaatContext:
         for rr in get_all_review_requests_for_zaak(zaak)
         if rr.completed < rr.num_assigned_users
     ] or None
-    open_documenten = check_document_status(zaak=zaak)
+    open_documenten = check_document_status(zaak=zaak_url)
     zaaktype = fetch_zaaktype(zaak.zaaktype)
 
     all_result_types = get_resultaattypen(zaaktype)

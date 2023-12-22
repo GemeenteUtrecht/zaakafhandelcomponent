@@ -22,13 +22,11 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.models import DowcConfig
 from zac.core.permissions import zaken_inzien, zaken_list_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import (
     create_informatieobject_document,
-    create_iot_document,
     create_related_zaak_document,
     create_zaakinformatieobject_document,
 )
@@ -81,7 +79,7 @@ class ESZaakDocumentsPermissionTests(ClearCachesMixin, APITransactionTestCase):
             "identificatie": zaak1["identificatie"],
         },
     )
-    patch_get_zaakobjecten = patch(
+    patch_find_zaak = patch(
         "zac.core.api.views.find_zaak",
         return_value=zaak1_model,
     )
@@ -92,8 +90,8 @@ class ESZaakDocumentsPermissionTests(ClearCachesMixin, APITransactionTestCase):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
         Service.objects.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
 
-        self.patch_get_zaakobjecten.start()
-        self.addCleanup(self.patch_get_zaakobjecten.stop)
+        self.patch_find_zaak.start()
+        self.addCleanup(self.patch_find_zaak.stop)
 
     def test_not_authenticated(self, m):
         response = self.client.post(self.endpoint)
@@ -266,6 +264,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         generate_oas_component(
             "zrc",
             "schemas/ZaakInformatieObject",
+            url=f"{ZRC_ROOT}zaakinformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a2",
             zaak=zaak1["url"],
             informatieobject=document1.url,
         ),
@@ -275,6 +274,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         generate_oas_component(
             "zrc",
             "schemas/ZaakInformatieObject",
+            url=f"{ZRC_ROOT}zaakinformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a3",
             zaak=zaak1["url"],
             informatieobject=document2.url,
         ),
@@ -284,6 +284,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         generate_oas_component(
             "zrc",
             "schemas/ZaakInformatieObject",
+            url=f"{ZRC_ROOT}zaakinformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a4",
             zaak=zaak2["url"],
             informatieobject=document1.url,
         ),
@@ -337,12 +338,6 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         config.service = self.dowc_service
         config.save()
 
-        patch_get_zaakobjecten = patch(
-            "zac.elasticsearch.api.get_zaakobjecten",
-            return_value=[],
-        )
-        patch_get_zaakobjecten.start()
-        self.addCleanup(patch_get_zaakobjecten.stop)
         fn, fext1 = path.splitext(self.document1.bestandsnaam)
         fn, fext2 = path.splitext(self.document2.bestandsnaam)
         patch_get_supported_extensions = patch(
@@ -381,19 +376,21 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         zaak1_document.zaaktype = self.create_zaaktype_document(
             self.zaak1_model.zaaktype
         )
-        zaak1_document.zaakinformatieobjecten = [
-            create_zaakinformatieobject_document(zio) for zio in [self.zio1, self.zio2]
-        ]
         zaak1_document.save()
+
+        ziod1 = create_zaakinformatieobject_document(self.zio1)
+        ziod1.save()
+        ziod2 = create_zaakinformatieobject_document(self.zio2)
+        ziod2.save()
 
         zaak2_document = self.create_zaak_document(self.zaak2_model)
         zaak2_document.zaaktype = self.create_zaaktype_document(
             self.zaak2_model.zaaktype
         )
-        zaak2_document.zaakinformatieobjecten = [
-            create_zaakinformatieobject_document(self.zio3)
-        ]
         zaak2_document.save()
+
+        ziod3 = create_zaakinformatieobject_document(self.zio3)
+        ziod3.save()
 
         io1_document = create_informatieobject_document(self.document1)
         io1_document.related_zaken = [

@@ -561,16 +561,23 @@ ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
 
 
 # ELASTICSEARCH CONFIG
+ES_TIMEOUT = 60
 ELASTICSEARCH_DSL = {
-    "default": {"hosts": config("ES_HOST", "localhost:9200")},
+    "default": {"hosts": config("ES_HOST", "localhost:9200"), "timeout": ES_TIMEOUT},
 }
 ES_INDEX_ZAKEN = "zaken"
 ES_INDEX_DOCUMENTEN = "documenten"
 ES_INDEX_OBJECTEN = "objecten"
+ES_INDEX_ZIO = "zaakinformatieobjecten"
+ES_INDEX_ZO = "zaakobjecten"
+
 # USED FOR INDEXING EDGE NGRAM ANALYZER
 MAX_GRAM = config("MAX_GRAM", 16)
 MIN_GRAM = config("MIN_GRAM", 3)
 ES_RETRY_ON_CONFLICT = 10
+ES_MAX_RETRIES = 10
+ES_MAX_BACKOFF = 120
+ES_CHUNK_SIZE = 100
 
 # SCIM
 SCIM_SERVICE_PROVIDER = {

@@ -65,7 +65,6 @@ NOTIFICATION_DESTROY = {
 
 @requests_mock.Mocker()
 class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaakeigenschap_created_indexed_in_es(self, rm, *mocks):
         Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
         Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
@@ -127,7 +126,6 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
             zaak_document.eigenschappen, {"tekst": {"propname": "propvalue"}}
         )
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaakeigenschap_destroyed_indexed_in_es(self, rm, *mocks):
         Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
         Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)

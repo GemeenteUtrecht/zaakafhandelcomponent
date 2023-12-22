@@ -11,7 +11,7 @@ from elasticsearch_dsl import Index
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
+from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
@@ -23,14 +23,15 @@ from zac.elasticsearch.api import (
     _get_uuid_from_url,
     create_informatieobject_document,
     create_related_zaak_document,
-    create_zaak_document,
-    create_zaaktype_document,
-    update_zaakinformatieobjecten_in_zaak_document,
+    update_zaakinformatieobject_document,
 )
-from zac.elasticsearch.documents import InformatieObjectDocument, ZaakDocument
+from zac.elasticsearch.documents import (
+    InformatieObjectDocument,
+    ZaakInformatieObjectDocument,
+)
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
-from zgw.models.zrc import Zaak
+from zgw.models.zrc import Zaak, ZaakInformatieObject
 
 from .utils import (
     CATALOGI_ROOT,
@@ -84,14 +85,17 @@ class ZaakInformatieObjectChangedTests(
     def clear_index(init=False):
         ESMixin.clear_index(init=init)
         Index(settings.ES_INDEX_DOCUMENTEN).delete(ignore=404)
+        Index(settings.ES_INDEX_ZIO).delete(ignore=404)
 
         if init:
             InformatieObjectDocument.init()
+            ZaakInformatieObjectDocument.init()
 
     @staticmethod
     def refresh_index():
         ESMixin.refresh_index()
         Index(settings.ES_INDEX_DOCUMENTEN).refresh()
+        Index(settings.ES_INDEX_ZIO).refresh()
 
     def setUp(self):
         super().setUp()
@@ -130,16 +134,11 @@ class ZaakInformatieObjectChangedTests(
         )
         rm.get(f"{INFORMATIEOBJECT_RESPONSE['url']}/audittrail", status_code=404)
 
-        # create zaak document in ES
-        zaak = factory(Zaak, ZAAK_RESPONSE)
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        zaak_document = create_zaak_document(zaak)
-        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
         # Assert no zaakinformatieobject is connected to it
-        self.assertEqual(zaak_document.zaakinformatieobjecten, [])
+        with self.assertRaises(NotFoundError):
+            ZaakInformatieObjectDocument.get(
+                id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT)
+            )
 
         # Assert no object document is found with the object uuid
         with self.assertRaises(NotFoundError):
@@ -149,18 +148,7 @@ class ZaakInformatieObjectChangedTests(
         response = self.client.post(path, NOTIFICATION_CREATE)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
-        self.assertEqual(
-            zaak_document.zaakinformatieobjecten,
-            [
-                {
-                    "url": ZAAKINFORMATIEOBJECT,
-                    "informatieobject": INFORMATIEOBJECT,
-                    "zaak": ZAAK,
-                }
-            ],
-        )
-
+        ZaakInformatieObjectDocument.get(id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT))
         informatieobject_document = InformatieObjectDocument.get(
             id=_get_uuid_from_url(INFORMATIEOBJECT)
         )
@@ -194,30 +182,14 @@ class ZaakInformatieObjectChangedTests(
             f"{ZAKEN_ROOT}zaakinformatieobjecten?informatieobject={INFORMATIEOBJECT}",
             json=[],
         )
-
         zaak = factory(Zaak, ZAAK_RESPONSE)
-
-        # create zaak document in ES
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        zaak_document = create_zaak_document(zaak)
-        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
-        zaak_document = update_zaakinformatieobjecten_in_zaak_document(zaak)
-        self.refresh_index()
-
-        # Assert zaakobject is connected to it
-        self.assertEqual(
-            zaak_document.zaakinformatieobjecten,
-            [
-                {
-                    "url": ZAAKINFORMATIEOBJECT,
-                    "informatieobject": INFORMATIEOBJECT,
-                    "zaak": ZAAK,
-                }
-            ],
+        update_zaakinformatieobject_document(
+            factory(ZaakInformatieObject, ZAAKINFORMATIEOBJECT_RESPONSE)
         )
+        self.refresh_index()
+
+        # Assert zaakinformatieobject exists
+        ZaakInformatieObjectDocument.get(id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT))
 
         document = factory(Document, INFORMATIEOBJECT_RESPONSE)
         document.informatieobjecttype = factory(
@@ -242,8 +214,12 @@ class ZaakInformatieObjectChangedTests(
 
         # Assert zaakinformatieobjecten is empty
         self.refresh_index()
-        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
-        self.assertEqual(zaak_document.zaakinformatieobjecten, [])
+
+        # Assert no zaakinformatieobject document is found with the zio uuid
+        with self.assertRaises(NotFoundError):
+            ZaakInformatieObjectDocument.get(
+                id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT)
+            )
 
         # Assert related_zaken of informatieobject document is empty.
         informatieobject_document = InformatieObjectDocument.get(
@@ -261,30 +237,14 @@ class ZaakInformatieObjectChangedTests(
             f"{ZAKEN_ROOT}zaakinformatieobjecten?informatieobject={INFORMATIEOBJECT}",
             json=[],
         )
-
         zaak = factory(Zaak, ZAAK_RESPONSE)
-
-        # create zaak document in ES
-        zaak.zaaktype = factory(ZaakType, ZAAKTYPE_RESPONSE)
-        zaak_document = create_zaak_document(zaak)
-        zaak_document.zaaktype = create_zaaktype_document(zaak.zaaktype)
-        zaak_document.save()
-        self.refresh_index()
-
-        zaak_document = update_zaakinformatieobjecten_in_zaak_document(zaak)
-        self.refresh_index()
-
-        # Assert zaakobject is connected to it
-        self.assertEqual(
-            zaak_document.zaakinformatieobjecten,
-            [
-                {
-                    "url": ZAAKINFORMATIEOBJECT,
-                    "informatieobject": INFORMATIEOBJECT,
-                    "zaak": ZAAK,
-                }
-            ],
+        update_zaakinformatieobject_document(
+            factory(ZaakInformatieObject, ZAAKINFORMATIEOBJECT_RESPONSE)
         )
+        self.refresh_index()
+
+        # Assert zaakinformatieobject exists
+        ZaakInformatieObjectDocument.get(id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT))
 
         # create informatieobject document
         document = factory(Document, INFORMATIEOBJECT_RESPONSE)
@@ -308,8 +268,12 @@ class ZaakInformatieObjectChangedTests(
 
         # Assert zaakinformatieobjecten is empty
         self.refresh_index()
-        zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
-        self.assertEqual(zaak_document.zaakinformatieobjecten, [])
+
+        # Assert no zaakinformatieobject document is found with the zio uuid
+        with self.assertRaises(NotFoundError):
+            ZaakInformatieObjectDocument.get(
+                id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT)
+            )
 
         # Assert related_zaken of informatieobject document is empty.
         informatieobject_document = InformatieObjectDocument.get(

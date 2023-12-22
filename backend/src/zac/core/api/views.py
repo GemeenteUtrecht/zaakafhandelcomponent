@@ -59,11 +59,7 @@ from zac.core.services import (
     update_document,
     update_zaak_eigenschap,
 )
-from zac.elasticsearch.api import (
-    create_informatieobject_document,
-    update_informatieobject_document,
-    update_zaakinformatieobjecten_in_zaak_document,
-)
+from zac.elasticsearch.api import update_informatieobject_document
 from zac.utils.exceptions import PermissionDeniedSerializer
 from zac.utils.filters import ApiFilterBackend
 from zgw.models.zrc import Zaak
@@ -78,7 +74,7 @@ from ..services import (
     delete_zaak_object,
     fetch_latest_audit_trail_data_document,
     fetch_zaak_eigenschap,
-    fetch_zaak_object,
+    fetch_zaakobject,
     fetch_zaaktype,
     find_zaak,
     get_catalogi,
@@ -872,58 +868,6 @@ class ZaakAtomicPermissionsView(GetZaakMixin, ListAPIView):
 ###############################
 
 
-# @extend_schema(summary=_("List ZAAK documents."))
-# class ListZaakDocumentsView(GetZaakMixin, views.APIView):
-#     """
-#     In some cases we have ZAAKen with 100s of documents.
-#     Open Zaak does not support paginating or ordering zaakinformatieobjects.
-#     This view is deprecated in favor of elasticsearch API view for obvious
-#     performance reasons.
-
-#     """
-
-#     authentication_classes = (authentication.SessionAuthentication,)
-#     permission_classes = (
-#         permissions.IsAuthenticated,
-#         CanReadZaken,
-#         CanListZaakDocuments,
-#     )
-#     serializer_class = GetZaakDocumentSerializer
-
-#     def get(self, request, *args, **kwargs):
-#         zaak = self.get_object()
-
-#         # Open Zaak does not support pagination for ZIOS :-(
-#         documents = get_documenten(zaak)
-#         resolved_documenten = resolve_documenten_informatieobjecttypen(documents)
-#         open_documenten = get_open_documenten(request.user)
-
-#         # Resolve audit trail
-#         with parallel() as executor:
-#             audittrails = list(
-#                 executor.map(
-#                     fetch_latest_audit_trail_data_document,
-#                     [doc.url for doc in resolved_documenten],
-#                 )
-#             )
-#             editing_history = {
-#                 at.resource_url: at.last_edited_date for at in audittrails if at
-#             }
-
-#         serializer = self.serializer_class(
-#             instance=resolved_documenten,
-#             many=True,
-#             context={
-#                 "open_documenten": {
-#                     dowc.unversioned_url: dowc for dowc in open_documenten
-#                 },
-#                 "editing_history": editing_history,
-#                 "zaak_is_closed": True if zaak.einddatum else False,
-#             },
-#         )
-#         return Response(serializer.data)
-
-
 class ZaakDocumentView(views.APIView):
     permission_classes = (
         permissions.IsAuthenticated,
@@ -1052,8 +996,7 @@ class ZaakDocumentView(views.APIView):
         )
 
         # add to elasticsearch index
-        create_informatieobject_document(document)
-        update_zaakinformatieobjecten_in_zaak_document(zaak)
+        update_informatieobject_document(document)
 
         serializer = self.get_response_serializer(document)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1528,7 +1471,7 @@ class ZaakObjectChangeView(views.APIView):
         url = self.request.query_params.get("url")
 
         try:
-            zaak_object = fetch_zaak_object(url)
+            zaak_object = fetch_zaakobject(url)
         except ClientError as exc:
             raise Http404("No ZAAKOBJECT matches the given url.")
 

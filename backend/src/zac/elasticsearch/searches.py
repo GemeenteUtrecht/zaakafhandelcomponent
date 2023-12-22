@@ -24,7 +24,12 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 
 from .data import ParentAggregation
-from .documents import InformatieObjectDocument, ObjectDocument, ZaakDocument
+from .documents import (
+    InformatieObjectDocument,
+    ObjectDocument,
+    ZaakDocument,
+    ZaakObjectDocument,
+)
 
 
 def query_allowed_for_requester(
@@ -85,6 +90,27 @@ def query_allowed_for_requester(
         return Q("match_none")
 
     return reduce(operator.or_, allowed)
+
+
+def search_zaakobjecten(
+    zaken: Optional[List[str]] = None,
+    objecten: Optional[List[str]] = None,
+    urls: Optional[List[str]] = None,
+) -> List[ZaakObjectDocument]:
+    s = ZaakObjectDocument.search()
+
+    if not zaken and not objecten and not urls:
+        return list()
+
+    if objecten:
+        s = s.filter(Terms(object=objecten))
+    if zaken:
+        s = s.filter(Terms(zaak=zaken))
+    if urls:
+        s = s.filter(Terms(url=urls))
+
+    results = s.execute()
+    return results.hits
 
 
 def search_zaken(
@@ -148,13 +174,15 @@ def search_zaken(
                     query=f"*{eigenschap_value}*",
                 ),
             )
+
     if object:
-        s = s.filter(
-            Nested(
-                path="zaakobjecten",
-                query=Bool(filter=Term(zaakobjecten__object=object)),
-            )
-        )
+        zon = search_zaakobjecten(zaken=urls, objecten=[object])
+        if not urls:
+            urls = []
+
+        for zo in zon:
+            if zo.zaak not in urls:
+                urls.append(zo.zaak)
 
     if not include_closed:
         s = s.filter(~Exists(field="einddatum"))

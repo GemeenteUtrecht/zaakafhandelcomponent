@@ -30,19 +30,22 @@ from zac.core.services import (
     fetch_object,
     fetch_rol,
     fetch_zaak_informatieobject,
-    fetch_zaak_object,
+    fetch_zaakobject,
     get_document,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
-    create_informatieobject_document,
     create_status_document,
     create_zaak_document,
+    create_zaakinformatieobject_document,
+    create_zaakobject_document,
     create_zaaktype_document,
     delete_informatieobject_document,
     delete_object_document,
     delete_zaak_document,
     get_zaak_document,
+    get_zaakinformatieobject_document,
+    get_zaakobject_document,
     update_eigenschappen_in_zaak_document,
     update_informatieobject_document,
     update_object_document,
@@ -53,10 +56,10 @@ from zac.elasticsearch.api import (
     update_rollen_in_zaak_document,
     update_status_in_zaak_document,
     update_zaak_document,
-    update_zaakinformatieobjecten_in_zaak_document,
-    update_zaakobjecten_in_zaak_document,
+    update_zaakinformatieobject_document,
 )
 from zac.elasticsearch.documents import ZaakDocument
+from zac.elasticsearch.searches import search_zaakobjecten
 from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
@@ -230,11 +233,12 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaakobjecten_cache(zaak)
 
-        # index in zaken
-        update_zaakobjecten_in_zaak_document(zaak)
+        zaakobject = fetch_zaakobject(zaakobject_url)
+        # index in zaakobjecten
+        zod = create_zaakobject_document(zaakobject)
+        zod.save()
 
         # index in objecten
-        zaakobject = fetch_zaak_object(zaakobject_url)
         update_related_zaken_in_object_document(zaakobject.object)
 
     def _handle_zaakobject_destroy(self, zaak_url: str, zaakobject_url: str):
@@ -242,29 +246,25 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaakobjecten_cache(zaak)
 
-        # Get zaakobject from ZaakDocument
-        zaakdocument = ZaakDocument.get(id=zaak.uuid)
-        object_url = None
-        for zo in zaakdocument.zaakobjecten:
-            if zo.url == zaakobject_url:
-                object_url = zo.object
-
-        # update zaken index
-        update_zaakobjecten_in_zaak_document(zaak)
+        # Get zaakobjectdocument
+        zaakobjectdocument = get_zaakobject_document(zaakobject_url)
 
         # update related_zaken in objecten index
-        update_related_zaken_in_object_document(object_url)
+        update_related_zaken_in_object_document(zaakobjectdocument.object)
+
+        # delete from zaakobject index
+        zaakobjectdocument.delete()
 
     def _handle_zaakinformatieobject_create(
         self, zaak_url: str, zaakinformatieobject_url: str
     ):
-        zaak = self._retrieve_zaak(zaak_url)
+        zaakinformatieobject = fetch_zaak_informatieobject(zaakinformatieobject_url)
 
-        # update zaken index
-        update_zaakinformatieobjecten_in_zaak_document(zaak)
+        # Index in zaakinformatieobject index
+        ziod = create_zaakinformatieobject_document(zaakinformatieobject)
+        ziod.save()
 
         # update related_zaken in informatieobjecten index
-        zaakinformatieobject = fetch_zaak_informatieobject(zaakinformatieobject_url)
         update_related_zaken_in_informatieobject_document(
             zaakinformatieobject.informatieobject
         )
@@ -272,13 +272,12 @@ class ZakenHandler:
     def _handle_zaakinformatieobject_update(
         self, zaak_url: str, zaakinformatieobject_url: str
     ):
-        zaak = self._retrieve_zaak(zaak_url)
+        zaakinformatieobject = fetch_zaak_informatieobject(zaakinformatieobject_url)
 
-        # update zaken index
-        update_zaakinformatieobjecten_in_zaak_document(zaak)
+        # update zaakinformatieobject index
+        update_zaakinformatieobject_document(zaakinformatieobject)
 
         # update related_zaken in informatieobjecten index
-        zaakinformatieobject = fetch_zaak_informatieobject(zaakinformatieobject_url)
         update_related_zaken_in_informatieobject_document(
             zaakinformatieobject.informatieobject
         )
@@ -286,20 +285,15 @@ class ZakenHandler:
     def _handle_zaakinformatieobject_destroy(
         self, zaak_url: str, zaakinformatieobject_url: str
     ):
-        zaak = self._retrieve_zaak(zaak_url)
 
-        # Get zaakobject from ZaakDocument
-        zaakdocument = ZaakDocument.get(id=zaak.uuid)
-        informatieobject_url = None
-        for zio in zaakdocument.zaakinformatieobjecten:
-            if zio.url == zaakinformatieobject_url:
-                informatieobject_url = zio.informatieobject
-
-        # update zaken index
-        update_zaakinformatieobjecten_in_zaak_document(zaak)
+        # Get zaakinformatieobject document
+        ziod = get_zaakinformatieobject_document(zaakinformatieobject_url)
 
         # update related_zaken in informatieobjecten index
-        update_related_zaken_in_informatieobject_document(informatieobject_url)
+        update_related_zaken_in_informatieobject_document(ziod.informatieobject)
+
+        # delete from zaakinformatieobject index
+        ziod.delete()
 
 
 class ZaaktypenHandler:
@@ -342,11 +336,7 @@ class InformatieObjectenHandler:
                 invalidate_document_url_cache(data["hoofd_object"])
                 document = get_document(data["hoofd_object"])
                 invalidate_document_other_cache(document)
-                if data["actie"] == "create":
-                    iod = create_informatieobject_document(document)
-                    iod.save(refresh=True)
-                else:
-                    update_informatieobject_document(document)
+                update_informatieobject_document(document)
 
             elif data["actie"] == "destroy":
                 invalidate_document_url_cache(data["hoofd_object"])

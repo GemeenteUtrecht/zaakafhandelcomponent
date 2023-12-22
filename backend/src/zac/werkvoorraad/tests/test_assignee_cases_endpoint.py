@@ -31,7 +31,6 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         "werkvoorraad:cases",
     )
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_cases_endpoint(self, m, *mocks):
         Service.objects.create(
             label="Catalogi API",
@@ -134,7 +133,6 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         self.assertEqual(urls[0], zaak_2["url"])
         self.assertEqual(urls[1], zaak_1["url"])
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_cases_ordering_endpoint(self, m, *mocks):
         Service.objects.create(
             label="Catalogi API",

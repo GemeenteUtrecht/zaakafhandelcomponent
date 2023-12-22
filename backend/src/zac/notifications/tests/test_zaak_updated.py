@@ -140,7 +140,6 @@ class ZaakUpdateTests(ESMixin, APITestCase):
                 self.assertNotEqual(rm.last_request, first_retrieve)
                 self.assertEqual(len(rm.request_history), num_calls_before + 1)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaak_updated_indexed_in_es(self, rm, *mocks):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
@@ -184,7 +183,6 @@ class ZaakUpdateTests(ESMixin, APITestCase):
         )
         self.assertEqual(zaak_document.meta.version, 2)
 
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_zaak_with_rollen_updated_indexed_in_es(self, rm, *mocks):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")

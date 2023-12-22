@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterator
 
+from django.conf import settings
 from django.core.management.base import CommandParser
 
 from elasticsearch.helpers import bulk
@@ -120,6 +121,9 @@ class IndexCommand(ABC):
         bulk(
             self.es_client,
             self.batch_index(),
+            max_retries=settings.ES_MAX_RETRIES,
+            max_backoff=settings.ES_MAX_BACKOFF,
+            chunk_size=settings.ES_CHUNK_SIZE,
         )
 
     def check_if_done_batching(self) -> bool:

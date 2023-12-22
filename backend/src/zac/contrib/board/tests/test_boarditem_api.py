@@ -397,8 +397,6 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
                 "statustoelichting": None,
             },
             "toelichting": cls.zaak_model.toelichting,
-            "zaakinformatieobjecten": [],
-            "zaakobjecten": [],
             "zaakgeometrie": None,
         }
 

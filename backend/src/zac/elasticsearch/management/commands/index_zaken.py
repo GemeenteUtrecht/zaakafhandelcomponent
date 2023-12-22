@@ -14,8 +14,6 @@ from zac.core.services import (
     get_rollen,
     get_status,
     get_zaak_eigenschappen,
-    get_zaak_informatieobjecten,
-    get_zaakobjecten,
     get_zaaktypen,
     get_zaken_all_paginated,
 )
@@ -26,8 +24,6 @@ from ...api import (
     create_rol_document,
     create_status_document,
     create_zaak_document,
-    create_zaakinformatieobject_document,
-    create_zaakobject_document,
     create_zaaktype_document,
 )
 from ...documents import (
@@ -35,7 +31,6 @@ from ...documents import (
     RolDocument,
     StatusDocument,
     ZaakDocument,
-    ZaakObjectDocument,
     ZaakTypeDocument,
 )
 from ..utils import get_memory_usage
@@ -46,18 +41,20 @@ from .base_index import IndexCommand
 
 
 class Command(IndexCommand, BaseCommand):
-    help = "Create documents in ES by indexing all zaken from ZAKEN API"
+    help = "Create documents in ES by indexing all ZAAKen from ZAKEN API."
     _index = settings.ES_INDEX_ZAKEN
     _type = "zaak"
     _document = ZaakDocument
-    _verbose_name_plural = "zaken"
+    _verbose_name_plural = "ZAAKen"
 
     def batch_index(self) -> Iterator[ZaakDocument]:
         self.stdout.write("Preloading all case types...")
         zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
         self.stdout.write(f"Fetched {len(zaaktypen)} case types")
 
-        self.stdout.write("Starting zaken retrieval from the configured APIs")
+        self.stdout.write(
+            f"Starting {self.verbose_name_plural} retrieval from the configured APIs."
+        )
 
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
         clients = [zrc.build_client() for zrc in zrcs]
@@ -132,41 +129,28 @@ class Command(IndexCommand, BaseCommand):
 
     def documenten_generator(self, zaken: List[Zaak]) -> Iterator[ZaakDocument]:
         perf_logger.info("  In ES documents generator")
-        perf_logger.info("    Create zaak documents...")
+        perf_logger.info("    Create ZAAK documents...")
         zaak_documenten = self.create_zaak_documenten(zaken)
-        perf_logger.info("    Create zaak documents finished")
-        perf_logger.info("    Create zaaktype documents...")
+        perf_logger.info("    Create ZAAK documents finished")
+        perf_logger.info("    Create ZAAKTYPE documents...")
         zaaktype_documenten = self.create_zaaktype_documenten(zaken)
-        perf_logger.info("    Create zaaktype documents finished")
-        perf_logger.info("    Create status documents...")
+        perf_logger.info("    Create ZAAKTYPE documents finished")
+        perf_logger.info("    Create STATUS documents...")
         status_documenten = self.create_status_documenten(zaken)
-        perf_logger.info("    Create status documents finished")
-        perf_logger.info("    Create rol documents...")
+        perf_logger.info("    Create STATUS documents finished")
+        perf_logger.info("    Create ROL documents...")
         rollen_documenten = self.create_rollen_documenten(zaken)
-        perf_logger.info("    Create rol documents finished")
-        perf_logger.info("    Create eigenschap documents...")
+        perf_logger.info("    Create ROL documents finished")
+        perf_logger.info("    Create EIGENSCHAP documents...")
         eigenschappen_documenten = self.create_eigenschappen_documenten(zaken)
-        perf_logger.info("    Create eigenschap documents finished")
-        perf_logger.info("    Create zaakobject documents...")
-        zaakobjecten_documenten = self.create_zaakobject_documenten(zaken)
-        perf_logger.info("    Create zaakobject documents finished")
-        perf_logger.info("    Create zaakinformatieobject documents...")
-        zaakinformatieobjecten_documenten = self.create_zaakinformatieobject_documenten(
-            zaken
-        )
-        perf_logger.info("    Create zaakinformatieobject documents finished")
-
-        perf_logger.info("    Relating all results for every zaak...")
+        perf_logger.info("    Create EIGENSCHAP documents finished")
+        perf_logger.info("    Relating all results for every ZAAK...")
         for zaak in zaken:
             zaakdocument = zaak_documenten[zaak.url]
             zaakdocument.zaaktype = zaaktype_documenten[zaak.url]
             zaakdocument.status = status_documenten.get(zaak.url, None)
             zaakdocument.rollen = rollen_documenten.get(zaak.url, [])
             zaakdocument.eigenschappen = eigenschappen_documenten.get(zaak.url, {})
-            zaakdocument.zaakobjecten = zaakobjecten_documenten.get(zaak.url, [])
-            zaakdocument.zaakinformatieobjecten = zaakinformatieobjecten_documenten.get(
-                zaak.url, []
-            )
             zd = zaakdocument.to_dict(True)
             yield zd
             if self.reindex_last:
@@ -224,7 +208,7 @@ class Command(IndexCommand, BaseCommand):
 
         num_roles = sum([len(rollen) for rollen in list_of_rollen])
         self.stdout.write_without_progress(
-            f"{num_roles} ROLlen are received for {len(rollen_documenten.keys())} zaken."
+            f"{num_roles} ROLlen are received for {len(rollen_documenten.keys())} ZAAKen."
         )
         return rollen_documenten
 
@@ -243,44 +227,6 @@ class Command(IndexCommand, BaseCommand):
 
         num_properties = sum([len(zen) for zen in list_of_eigenschappen])
         self.stdout.write_without_progress(
-            f"{num_properties} ZAAKEIGENSCHAPpen are found for {len(eigenschappen_documenten.keys())} zaken."
+            f"{num_properties} ZAAKEIGENSCHAPpen are found for {len(eigenschappen_documenten.keys())} ZAAKen."
         )
         return eigenschappen_documenten
-
-    def create_zaakobject_documenten(
-        self, zaken: List[Zaak]
-    ) -> Dict[str, ZaakObjectDocument]:
-        # Prefetch zaakobjecten
-        with parallel(max_workers=self.max_workers) as executor:
-            list_of_zon = list(executor.map(get_zaakobjecten, zaken))
-
-        zaakobjecten_documenten = {
-            zon[0].zaak: [create_zaakobject_document(zo) for zo in zon]
-            for zon in list_of_zon
-            if zon
-        }
-
-        num_case_objects = sum([len(zon) for zon in list_of_zon])
-        self.stdout.write_without_progress(
-            f"{num_case_objects} ZAAKOBJECTen are found for {len(zaakobjecten_documenten.keys())} zaken."
-        )
-        return zaakobjecten_documenten
-
-    def create_zaakinformatieobject_documenten(
-        self, zaken: List[Zaak]
-    ) -> Dict[str, ZaakObjectDocument]:
-        # Prefetch zaakinformatieobjecten
-        with parallel(max_workers=self.max_workers) as executor:
-            list_of_zios = list(executor.map(get_zaak_informatieobjecten, zaken))
-
-        zaakinformatieobject_documenten = {
-            zios[0].zaak: [create_zaakinformatieobject_document(zio) for zio in zios]
-            for zios in list_of_zios
-            if zios
-        }
-
-        num_case_zios = sum([len(zio) for zio in list_of_zios])
-        self.stdout.write_without_progress(
-            f"{num_case_zios} ZAAKINFORMATIEOBJECTen are found for {len(zaakinformatieobject_documenten.keys())} zaken."
-        )
-        return zaakinformatieobject_documenten

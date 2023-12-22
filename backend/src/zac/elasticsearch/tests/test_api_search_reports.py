@@ -35,14 +35,15 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30
 
 
 class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+    catalogus = generate_oas_component(
+        "ztc",
+        "schemas/Catalogus",
+        url=CATALOGUS_URL,
+        domein="DOME",
+    )
+
     def setUp(self) -> None:
         super().setUp()
-        self.catalogus = generate_oas_component(
-            "ztc",
-            "schemas/Catalogus",
-            url=CATALOGUS_URL,
-            domein="DOME",
-        )
         self.zaaktype_document1 = ZaakTypeDocument(
             url=f"{CATALOGI_ROOT}zaaktypen/a8c8bc90-defa-4548-bacd-793874c013aa",
             catalogus_domein=self.catalogus["domein"],
@@ -335,12 +336,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "status.datum_status_gezet",
                     "status.statustoelichting",
                     "toelichting",
-                    "zaakobjecten.url",
-                    "zaakobjecten.object",
-                    "zaakobjecten.zaak",
-                    "zaakinformatieobjecten.url",
-                    "zaakinformatieobjecten.informatieobject",
-                    "zaakinformatieobjecten.zaak",
                     "zaakgeometrie",
                 ],
                 "next": None,
@@ -374,9 +369,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                             "statustoelichting": None,
                         },
                         "toelichting": None,
-                        "zaakobjecten": [],
                         "zaakgeometrie": None,
-                        "zaakinformatieobjecten": [],
                     },
                     {
                         "url": "https://api.zaken.nl/api/v1/zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
@@ -420,9 +413,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                             "statustoelichting": None,
                         },
                         "toelichting": None,
-                        "zaakobjecten": [],
                         "zaakgeometrie": None,
-                        "zaakinformatieobjecten": [],
                     },
                 ],
             },
@@ -496,12 +487,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "status.datum_status_gezet",
                     "status.statustoelichting",
                     "toelichting",
-                    "zaakobjecten.url",
-                    "zaakobjecten.object",
-                    "zaakobjecten.zaak",
-                    "zaakinformatieobjecten.url",
-                    "zaakinformatieobjecten.informatieobject",
-                    "zaakinformatieobjecten.zaak",
                     "zaakgeometrie",
                 ],
                 "next": None,
@@ -550,9 +535,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                             "statustoelichting": None,
                         },
                         "toelichting": None,
-                        "zaakobjecten": [],
                         "zaakgeometrie": None,
-                        "zaakinformatieobjecten": [],
                     }
                 ],
             },
@@ -640,8 +623,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                             "statustoelichting": None,
                         },
                         "toelichting": None,
-                        "zaakinformatieobjecten": [],
-                        "zaakobjecten": [],
                         "zaakgeometrie": None,
                     }
                 ],
@@ -681,12 +662,6 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "va_order",
                 "vertrouwelijkheidaanduiding",
                 "zaakgeometrie",
-                "zaakinformatieobjecten.informatieobject",
-                "zaakinformatieobjecten.url",
-                "zaakinformatieobjecten.zaak",
-                "zaakobjecten.object",
-                "zaakobjecten.url",
-                "zaakobjecten.zaak",
                 "zaaktype.catalogus",
                 "zaaktype.catalogus_domein",
                 "zaaktype.identificatie",

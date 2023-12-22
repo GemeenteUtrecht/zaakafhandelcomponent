@@ -31,7 +31,7 @@ from zac.contrib.kownsl.data import ReviewRequest
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import create_informatieobject_document, create_iot_document
+from zac.elasticsearch.api import create_informatieobject_document
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 

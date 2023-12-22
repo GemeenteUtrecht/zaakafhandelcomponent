@@ -112,15 +112,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
     patch_get_supported_extensions = patch(
         "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
     )
-    patch_create_informatieobject_document = patch(
-        "zac.core.api.views.create_informatieobject_document", return_value=None
-    )
     patch_update_informatieobject_document = patch(
         "zac.core.api.views.update_informatieobject_document", return_value=None
-    )
-    patch_update_zaakinformatieobjecten_in_zaak_document = patch(
-        "zac.core.api.views.update_zaakinformatieobjecten_in_zaak_document",
-        return_value=None,
     )
 
     def setUp(self):
@@ -144,12 +137,8 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
         self.patch_get_supported_extensions.start()
         self.addCleanup(self.patch_get_supported_extensions.stop)
-        self.patch_create_informatieobject_document.start()
-        self.addCleanup(self.patch_create_informatieobject_document.stop)
         self.patch_update_informatieobject_document.start()
         self.addCleanup(self.patch_update_informatieobject_document.stop)
-        self.patch_update_zaakinformatieobjecten_in_zaak_document.start()
-        self.addCleanup(self.patch_update_zaakinformatieobjecten_in_zaak_document.stop)
 
     def _setupMocks(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -671,501 +660,490 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         mock_resource_get(m, zaak)
 
-        patch_create_informatieobject_document = patch(
-            "zac.core.api.views.create_informatieobject_document", return_value=None
-        )
-        patch_create_informatieobject_document.start()
-        self.addCleanup(patch_create_informatieobject_document.stop)
         patch_update_informatieobject_document = patch(
             "zac.core.api.views.update_informatieobject_document", return_value=None
         )
         patch_update_informatieobject_document.start()
         self.addCleanup(patch_update_informatieobject_document.stop)
-        patch_update_zaakinformatieobjecten_in_zaak_document = patch(
-            "zac.core.api.views.update_zaakinformatieobjecten_in_zaak_document",
-            return_value=None,
-        )
-        patch_update_zaakinformatieobjecten_in_zaak_document.start()
-        self.addCleanup(patch_update_zaakinformatieobjecten_in_zaak_document.stop)
         patch_find_zaak = patch(
             "zac.core.services.search_zaken", return_value=[zaak["url"]]
         )
         patch_find_zaak.start()
         self.addCleanup(patch_find_zaak.stop)
 
-    # def test_add_document_with_file(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_add_document_with_file(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     document = generate_oas_component(
-    #         "drc",
-    #         "schemas/EnkelvoudigInformatieObject",
-    #         versie=1,
-    #         vertrouwelijkheidaanduiding="openbaar",
-    #         informatieobjecttype=self.informatieobjecttype["url"],
-    #         bestandsnaam="some-bestandsnaam.ext",
-    #     )
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            versie=1,
+            vertrouwelijkheidaanduiding="openbaar",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            bestandsnaam="some-bestandsnaam.ext",
+        )
 
-    #     m.post(
-    #         f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
-    #         json=document,
-    #         status_code=201,
-    #     )
-    #     m.post(
-    #         f"{ZAKEN_ROOT}zaakinformatieobjecten",
-    #         json={"url": "https://example.com"},
-    #         status_code=201,
-    #     )
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
+            json=document,
+            status_code=201,
+        )
+        m.post(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten",
+            json={"url": "https://example.com"},
+            status_code=201,
+        )
 
-    #     file = BytesIO(b"foobar")
-    #     file.name = "some-name.txt"
-    #     post_data = {
-    #         "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #         "file": file,
-    #     }
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
+        post_data = {
+            "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+        }
 
-    #     audit_trail = generate_oas_component(
-    #         "drc",
-    #         "schemas/AuditTrail",
-    #         hoofdObject=document["url"],
-    #         resourceUrl=document["url"],
-    #         wijzigingen={
-    #             "oud": {},
-    #             "nieuw": {},
-    #         },
-    #         aanmaakdatum="2022-03-04T12:11:39.293+01:00",
-    #     )
-    #     audit_trail = factory(AuditTrailData, audit_trail)
-    #     fn, fext = path.splitext(document["bestandsnaam"])
-    #     search_informatieobjects = MagicMock()
-    #     search_informatieobjects.count.return_value = 0
-    #     search_informatieobjects.return_value = []
-    #     with patch(
-    #         "zac.core.api.serializers.search_informatieobjects",
-    #         return_value=search_informatieobjects,
-    #     ) as mock_search_informatieobjects:
-    #         with patch(
-    #             "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-    #         ):
-    #             with patch(
-    #                 "zac.core.api.views.get_open_documenten",
-    #                 return_value=[],
-    #             ):
-    #                 with patch(
-    #                     "zac.core.api.views.fetch_latest_audit_trail_data_document",
-    #                     return_value=audit_trail,
-    #                 ):
-    #                     response = self.client.post(
-    #                         self.endpoint, post_data, format="multipart"
-    #                     )
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {},
+                "nieuw": {},
+            },
+            aanmaakdatum="2022-03-04T12:11:39.293+01:00",
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
+        fn, fext = path.splitext(document["bestandsnaam"])
+        search_informatieobjects = MagicMock()
+        search_informatieobjects.count.return_value = 0
+        search_informatieobjects.return_value = []
+        with patch(
+            "zac.core.api.serializers.search_informatieobjects",
+            return_value=search_informatieobjects,
+        ) as mock_search_informatieobjects:
+            with patch(
+                "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+            ):
+                with patch(
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[],
+                ):
+                    with patch(
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
+                    ):
+                        response = self.client.post(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
-    #     mock_search_informatieobjects.assert_called()
+        mock_search_informatieobjects.assert_called()
 
-    #     called_urls = [req.url for req in m.request_history]
-    #     # Check that informatieobjecttype url was called
-    #     self.assertTrue(self.informatieobjecttype["url"] in called_urls)
+        called_urls = [req.url for req in m.request_history]
+        # Check that informatieobjecttype url was called
+        self.assertTrue(self.informatieobjecttype["url"] in called_urls)
 
-    #     # Check that zaakinformatieobjecten url was called
-    #     self.assertTrue(self.ziot_url.url in called_urls)
+        # Check that zaakinformatieobjecten url was called
+        self.assertTrue(self.ziot_url.url in called_urls)
 
-    #     # Regression test: check that bestandsomvang is now posted too
-    #     for req in m.request_history:
-    #         if (
-    #             req.url == f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten"
-    #             and req.method == "POST"
-    #         ):
-    #             self.assertEqual(
-    #                 req.json(),
-    #                 {
-    #                     "bronorganisatie": "123456782",
-    #                     "creatiedatum": date.today().isoformat(),
-    #                     "auteur": user.username,
-    #                     "taal": "nld",
-    #                     "ontvangstdatum": date.today().isoformat(),
-    #                     "bestandsnaam": file.name,
-    #                     "formaat": "text/plain",
-    #                     "inhoud": "Zm9vYmFy",
-    #                     "titel": file.name,
-    #                     "bestandsomvang": 6,
-    #                     "informatieobjecttype": post_data["informatieobjecttype"],
-    #                     "zaak": post_data["zaak"],
-    #                 },
-    #             )
+        # Regression test: check that bestandsomvang is now posted too
+        for req in m.request_history:
+            if (
+                req.url == f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten"
+                and req.method == "POST"
+            ):
+                self.assertEqual(
+                    req.json(),
+                    {
+                        "bronorganisatie": "123456782",
+                        "creatiedatum": date.today().isoformat(),
+                        "auteur": user.username,
+                        "taal": "nld",
+                        "ontvangstdatum": date.today().isoformat(),
+                        "bestandsnaam": file.name,
+                        "formaat": "text/plain",
+                        "inhoud": "Zm9vYmFy",
+                        "titel": file.name,
+                        "bestandsomvang": 6,
+                        "informatieobjecttype": post_data["informatieobjecttype"],
+                        "zaak": post_data["zaak"],
+                    },
+                )
 
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    #     data = response.json()
-    #     expected_data = {
-    #         "auteur": document["auteur"],
-    #         "beschrijving": document["beschrijving"],
-    #         "bestandsnaam": document["bestandsnaam"],
-    #         "bestandsomvang": document["bestandsomvang"],
-    #         "currentUserIsEditing": False,
-    #         "deleteUrl": "",
-    #         "downloadUrl": reverse_lazy(
-    #             "core:download-document",
-    #             kwargs={
-    #                 "bronorganisatie": document["bronorganisatie"],
-    #                 "identificatie": document["identificatie"],
-    #             },
-    #         )
-    #         + f"?versie={document['versie']}",
-    #         "identificatie": document["identificatie"],
-    #         "informatieobjecttype": {
-    #             "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
-    #             "omschrijving": self.informatieobjecttype["omschrijving"],
-    #         },
-    #         "locked": document["locked"],
-    #         "readUrl": reverse_lazy(
-    #             "dowc:request-doc",
-    #             kwargs={
-    #                 "bronorganisatie": document["bronorganisatie"],
-    #                 "identificatie": document["identificatie"],
-    #                 "purpose": DocFileTypes.read,
-    #             },
-    #         ),
-    #         "titel": document["titel"],
-    #         "url": document["url"],
-    #         "versie": 1,
-    #         "vertrouwelijkheidaanduiding": "Openbaar",
-    #         "writeUrl": reverse_lazy(
-    #             "dowc:request-doc",
-    #             kwargs={
-    #                 "bronorganisatie": document["bronorganisatie"],
-    #                 "identificatie": document["identificatie"],
-    #                 "purpose": DocFileTypes.write,
-    #             },
-    #         ),
-    #         "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
-    #     }
-    #     self.assertEqual(expected_data, data)
+        data = response.json()
+        expected_data = {
+            "auteur": document["auteur"],
+            "beschrijving": document["beschrijving"],
+            "bestandsnaam": document["bestandsnaam"],
+            "bestandsomvang": document["bestandsomvang"],
+            "currentUserIsEditing": False,
+            "deleteUrl": "",
+            "downloadUrl": reverse_lazy(
+                "core:download-document",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                },
+            )
+            + f"?versie={document['versie']}",
+            "identificatie": document["identificatie"],
+            "informatieobjecttype": {
+                "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+                "omschrijving": self.informatieobjecttype["omschrijving"],
+            },
+            "locked": document["locked"],
+            "readUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.read,
+                },
+            ),
+            "titel": document["titel"],
+            "url": document["url"],
+            "versie": 1,
+            "vertrouwelijkheidaanduiding": "Openbaar",
+            "writeUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.write,
+                },
+            ),
+            "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
+        }
+        self.assertEqual(expected_data, data)
 
-    # def test_add_document_with_file_without_iotype(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_add_document_with_file_without_iotype(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     file = BytesIO(b"foobar")
-    #     file.name = "some-name.txt"
-    #     post_data = {
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #         "file": file,
-    #     }
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
+        post_data = {
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+        }
 
-    #     response = self.client.post(self.endpoint, post_data, format="multipart")
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertEqual(
-    #         response.json()["nonFieldErrors"],
-    #         ["'informatieobjecttype' is required when 'file' is provided"],
-    #     )
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["nonFieldErrors"],
+            ["'informatieobjecttype' is required when 'file' is provided"],
+        )
 
-    # def test_add_document_with_url(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_add_document_with_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     document = generate_oas_component(
-    #         "drc",
-    #         "schemas/EnkelvoudigInformatieObject",
-    #         url=DOCUMENT_URL,
-    #         versie=1,
-    #         vertrouwelijkheidaanduiding="openbaar",
-    #         informatieobjecttype=self.informatieobjecttype["url"],
-    #         bestandsnaam="some-bestandsnaam.extension",
-    #     )
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=DOCUMENT_URL,
+            versie=1,
+            vertrouwelijkheidaanduiding="openbaar",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            bestandsnaam="some-bestandsnaam.extension",
+        )
 
-    #     m.get(DOCUMENT_URL, json=document)
-    #     m.post(
-    #         f"{ZAKEN_ROOT}zaakinformatieobjecten",
-    #         json={"url": "https://example.com"},
-    #         status_code=201,
-    #     )
+        m.get(DOCUMENT_URL, json=document)
+        m.post(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten",
+            json={"url": "https://example.com"},
+            status_code=201,
+        )
 
-    #     post_data = {
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #         "url": DOCUMENT_URL,
-    #     }
+        post_data = {
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "url": DOCUMENT_URL,
+        }
 
-    #     audit_trail = generate_oas_component(
-    #         "drc",
-    #         "schemas/AuditTrail",
-    #         hoofdObject=document["url"],
-    #         resourceUrl=document["url"],
-    #         wijzigingen={
-    #             "oud": {},
-    #             "nieuw": {},
-    #         },
-    #         aanmaakdatum="2022-03-04T12:11:39.293+01:00",
-    #     )
-    #     audit_trail = factory(AuditTrailData, audit_trail)
+        audit_trail = generate_oas_component(
+            "drc",
+            "schemas/AuditTrail",
+            hoofdObject=document["url"],
+            resourceUrl=document["url"],
+            wijzigingen={
+                "oud": {},
+                "nieuw": {},
+            },
+            aanmaakdatum="2022-03-04T12:11:39.293+01:00",
+        )
+        audit_trail = factory(AuditTrailData, audit_trail)
 
-    #     fn, fext = path.splitext(document["bestandsnaam"])
-    #     search_informatieobjects = MagicMock()
-    #     search_informatieobjects.count.return_value = 0
-    #     search_informatieobjects.return_value = []
-    #     with patch(
-    #         "zac.core.api.serializers.search_informatieobjects",
-    #         return_value=search_informatieobjects,
-    #     ) as mock_search_informatieobjects:
-    #         with patch(
-    #             "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
-    #         ):
-    #             with patch(
-    #                 "zac.core.api.views.get_open_documenten",
-    #                 return_value=[],
-    #             ):
-    #                 with patch(
-    #                     "zac.core.api.views.fetch_latest_audit_trail_data_document",
-    #                     return_value=audit_trail,
-    #                 ):
-    #                     response = self.client.post(
-    #                         self.endpoint, post_data, format="multipart"
-    #                     )
+        fn, fext = path.splitext(document["bestandsnaam"])
+        search_informatieobjects = MagicMock()
+        search_informatieobjects.count.return_value = 0
+        search_informatieobjects.return_value = []
+        with patch(
+            "zac.core.api.serializers.search_informatieobjects",
+            return_value=search_informatieobjects,
+        ) as mock_search_informatieobjects:
+            with patch(
+                "zac.contrib.dowc.utils.get_supported_extensions", return_value=[fext]
+            ):
+                with patch(
+                    "zac.core.api.views.get_open_documenten",
+                    return_value=[],
+                ):
+                    with patch(
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
+                    ):
+                        response = self.client.post(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
-    #     mock_search_informatieobjects.assert_called()
-    #     # Check that zaakinformatieobjecten url was called
-    #     called_urls = [req.url for req in m.request_history]
-    #     self.assertTrue(self.ziot_url.url in called_urls)
+        mock_search_informatieobjects.assert_called()
+        # Check that zaakinformatieobjecten url was called
+        called_urls = [req.url for req in m.request_history]
+        self.assertTrue(self.ziot_url.url in called_urls)
 
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    #     data = response.json()
-    #     expected_data = {
-    #         "auteur": document["auteur"],
-    #         "beschrijving": document["beschrijving"],
-    #         "bestandsnaam": document["bestandsnaam"],
-    #         "bestandsomvang": document["bestandsomvang"],
-    #         "currentUserIsEditing": False,
-    #         "deleteUrl": "",
-    #         "downloadUrl": reverse_lazy(
-    #             "core:download-document",
-    #             kwargs={
-    #                 "bronorganisatie": document["bronorganisatie"],
-    #                 "identificatie": document["identificatie"],
-    #             },
-    #         )
-    #         + f"?versie={document['versie']}",
-    #         "identificatie": document["identificatie"],
-    #         "informatieobjecttype": {
-    #             "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
-    #             "omschrijving": self.informatieobjecttype["omschrijving"],
-    #         },
-    #         "locked": document["locked"],
-    #         "readUrl": reverse_lazy(
-    #             "dowc:request-doc",
-    #             kwargs={
-    #                 "bronorganisatie": document["bronorganisatie"],
-    #                 "identificatie": document["identificatie"],
-    #                 "purpose": DocFileTypes.read,
-    #             },
-    #         ),
-    #         "titel": document["titel"],
-    #         "url": document["url"],
-    #         "versie": 1,
-    #         "vertrouwelijkheidaanduiding": "Openbaar",
-    #         "writeUrl": reverse_lazy(
-    #             "dowc:request-doc",
-    #             kwargs={
-    #                 "bronorganisatie": document["bronorganisatie"],
-    #                 "identificatie": document["identificatie"],
-    #                 "purpose": DocFileTypes.write,
-    #             },
-    #         ),
-    #         "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
-    #     }
-    #     self.assertEqual(expected_data, data)
+        data = response.json()
+        expected_data = {
+            "auteur": document["auteur"],
+            "beschrijving": document["beschrijving"],
+            "bestandsnaam": document["bestandsnaam"],
+            "bestandsomvang": document["bestandsomvang"],
+            "currentUserIsEditing": False,
+            "deleteUrl": "",
+            "downloadUrl": reverse_lazy(
+                "core:download-document",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                },
+            )
+            + f"?versie={document['versie']}",
+            "identificatie": document["identificatie"],
+            "informatieobjecttype": {
+                "url": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+                "omschrijving": self.informatieobjecttype["omschrijving"],
+            },
+            "locked": document["locked"],
+            "readUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.read,
+                },
+            ),
+            "titel": document["titel"],
+            "url": document["url"],
+            "versie": 1,
+            "vertrouwelijkheidaanduiding": "Openbaar",
+            "writeUrl": reverse_lazy(
+                "dowc:request-doc",
+                kwargs={
+                    "bronorganisatie": document["bronorganisatie"],
+                    "identificatie": document["identificatie"],
+                    "purpose": DocFileTypes.write,
+                },
+            ),
+            "lastEditedDate": "2022-03-04T12:11:39.293000+01:00",
+        }
+        self.assertEqual(expected_data, data)
 
-    # def test_add_document_with_broken_url(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_add_document_with_broken_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     m.get(DOCUMENT_URL, status_code=404)
+        m.get(DOCUMENT_URL, status_code=404)
 
-    #     post_data = {
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #         "url": DOCUMENT_URL,
-    #     }
-    #     response = self.client.post(self.endpoint, post_data, format="multipart")
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertTrue("url" in response.json())
+        post_data = {
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "url": DOCUMENT_URL,
+        }
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("url" in response.json())
 
-    # def test_add_document_with_file_and_url(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_add_document_with_file_and_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     file = BytesIO(b"foobar")
-    #     file.name = "some-name.txt"
-    #     post_data = {
-    #         "informatieobjecttype": self.informatieobjecttype["url"],
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #         "file": file,
-    #         "url": DOCUMENT_URL,
-    #     }
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
+        post_data = {
+            "informatieobjecttype": self.informatieobjecttype["url"],
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+            "url": DOCUMENT_URL,
+        }
 
-    #     response = self.client.post(self.endpoint, post_data, format="multipart")
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertEqual(
-    #         response.json()["nonFieldErrors"],
-    #         ["'url' and 'file' are mutually exclusive and can't be provided together."],
-    #     )
+        response = self.client.post(self.endpoint, post_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["nonFieldErrors"],
+            ["'url' and 'file' are mutually exclusive and can't be provided together."],
+        )
 
-    # def test_add_document_no_file_no_url(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_add_document_no_file_no_url(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     post_data = {
-    #         "informatieobjecttype": self.informatieobjecttype["url"],
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #     }
+        post_data = {
+            "informatieobjecttype": self.informatieobjecttype["url"],
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
 
-    #     response = self.client.post(self.endpoint, post_data, format="multipart")
+        response = self.client.post(self.endpoint, post_data, format="multipart")
 
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertEqual(
-    #         response.json()["nonFieldErrors"],
-    #         ["Either 'url' or 'file' should be provided."],
-    #     )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json()["nonFieldErrors"],
+            ["Either 'url' or 'file' should be provided."],
+        )
 
-    # def test_add_document_with_file_filename_already_exists(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_add_document_with_file_filename_already_exists(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     document = generate_oas_component(
-    #         "drc",
-    #         "schemas/EnkelvoudigInformatieObject",
-    #         versie=1,
-    #         vertrouwelijkheidaanduiding="openbaar",
-    #         bestandsnaam="some-name.txt",
-    #     )
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            versie=1,
+            vertrouwelijkheidaanduiding="openbaar",
+            bestandsnaam="some-name.txt",
+        )
 
-    #     m.post(
-    #         f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
-    #         json=document,
-    #         status_code=201,
-    #     )
-    #     m.post(
-    #         f"{ZAKEN_ROOT}zaakinformatieobjecten",
-    #         json={"url": "https://example.com"},
-    #         status_code=201,
-    #     )
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
+            json=document,
+            status_code=201,
+        )
+        m.post(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten",
+            json={"url": "https://example.com"},
+            status_code=201,
+        )
 
-    #     file = BytesIO(b"foobar")
-    #     file.name = "some-name.txt"
-    #     post_data = {
-    #         "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #         "file": file,
-    #     }
-    #     search_informatieobjects = MagicMock()
-    #     search_informatieobjects.count.return_value = 1
-    #     search_informatieobjects.return_value = []
-    #     with patch(
-    #         "zac.core.api.serializers.search_informatieobjects",
-    #         return_value=search_informatieobjects,
-    #     ) as mock_search_informatieobjects:
-    #         response = self.client.post(self.endpoint, post_data, format="multipart")
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
+        post_data = {
+            "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+        }
+        search_informatieobjects = MagicMock()
+        search_informatieobjects.count.return_value = 1
+        search_informatieobjects.return_value = []
+        with patch(
+            "zac.core.api.serializers.search_informatieobjects",
+            return_value=search_informatieobjects,
+        ) as mock_search_informatieobjects:
+            response = self.client.post(self.endpoint, post_data, format="multipart")
 
-    #     mock_search_informatieobjects.assert_called()
-    #     self.assertEqual(
-    #         response.json(),
-    #         {
-    #             "nonFieldErrors": [
-    #                 "`bestandsnaam`: `some-name.txt` already exists. Please choose a unique `bestandsnaam`."
-    #             ]
-    #         },
-    #     )
+        mock_search_informatieobjects.assert_called()
+        self.assertEqual(
+            response.json(),
+            {
+                "nonFieldErrors": [
+                    "`bestandsnaam`: `some-name.txt` already exists. Please choose a unique `bestandsnaam`."
+                ]
+            },
+        )
 
-    # def test_patch_document_no_url_no_reden(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_patch_document_no_url_no_reden(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     post_data = {}
+        post_data = {}
 
-    #     response = self.client.patch(self.endpoint, post_data, format="multipart")
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     data = response.json()
-    #     expected_data = {
-    #         "reden": ["Dit veld is vereist."],
-    #         "url": ["Dit veld is vereist."],
-    #         "zaak": ["Dit veld is vereist."],
-    #     }
-    #     self.assertEqual(data, expected_data)
+        response = self.client.patch(self.endpoint, post_data, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        expected_data = {
+            "reden": ["Dit veld is vereist."],
+            "url": ["Dit veld is vereist."],
+            "zaak": ["Dit veld is vereist."],
+        }
+        self.assertEqual(data, expected_data)
 
-    # def test_patch_document_wrong_document(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_patch_document_wrong_document(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     document = generate_oas_component(
-    #         "drc",
-    #         "schemas/EnkelvoudigInformatieObject",
-    #         url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-    #     )
-    #     post_data = {
-    #         "reden": "gewoon",
-    #         "url": "http://some-other-document.com",
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #     }
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+        )
+        post_data = {
+            "reden": "gewoon",
+            "url": "http://some-other-document.com",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
 
-    #     with patch(
-    #         "zac.core.api.serializers.search_informatieobjects",
-    #         return_value=[],
-    #     ) as mock_search_informatieobjects:
-    #         response = self.client.patch(self.endpoint, post_data, format="multipart")
+        with patch(
+            "zac.core.api.serializers.search_informatieobjects",
+            return_value=[],
+        ) as mock_search_informatieobjects:
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
 
-    #     mock_search_informatieobjects.assert_called()
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     data = response.json()
-    #     expected_data = {
-    #         "nonFieldErrors": [f"Het document is ongerelateerd aan ZAAK-2020-0010."]
-    #     }
-    #     self.assertEqual(data, expected_data)
+        mock_search_informatieobjects.assert_called()
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        expected_data = {
+            "nonFieldErrors": [f"Het document is ongerelateerd aan ZAAK-2020-0010."]
+        }
+        self.assertEqual(data, expected_data)
 
-    # def test_patch_document_already_locked(self, m):
-    #     user = SuperUserFactory.create()
-    #     self.client.force_authenticate(user)
-    #     self._setupMocks(m)
+    def test_patch_document_already_locked(self, m):
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
 
-    #     document = generate_oas_component(
-    #         "drc",
-    #         "schemas/EnkelvoudigInformatieObject",
-    #         url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-    #         informatieobjecttype=self.informatieobjecttype["url"],
-    #         vertrouwelijkheidaanduiding="zaakvertrouwelijk",
-    #         locked=False,
-    #     )
-    #     m.get(document["url"], json=document)
+        document = generate_oas_component(
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            informatieobjecttype=self.informatieobjecttype["url"],
+            vertrouwelijkheidaanduiding="zaakvertrouwelijk",
+            locked=False,
+        )
+        m.get(document["url"], json=document)
 
-    #     m.post(
-    #         f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6/lock",
-    #         json={"error": "dit is foute boel"},
-    #         status_code=400,
-    #     )
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6/lock",
+            json={"error": "dit is foute boel"},
+            status_code=400,
+        )
 
-    #     post_data = {
-    #         "reden": "daarom",
-    #         "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
-    #         "zaak": f"{ZAKEN_ROOT}zaken/456",
-    #     }
-    #     search_informatieobjects = MagicMock()
-    #     search_informatieobjects.count.return_value = 0
-    #     search_informatieobjects.return_value = [factory(Document, document)]
-    #     with patch(
-    #         "zac.core.api.serializers.search_informatieobjects",
-    #         return_value=search_informatieobjects,
-    #     ) as mock_search_informatieobjects:
-    #         response = self.client.patch(self.endpoint, post_data, format="multipart")
+        post_data = {
+            "reden": "daarom",
+            "url": f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/0c47fe5e-4fe1-4781-8583-168e0730c9b6",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+        }
+        search_informatieobjects = MagicMock()
+        search_informatieobjects.count.return_value = 0
+        search_informatieobjects.return_value = [factory(Document, document)]
+        with patch(
+            "zac.core.api.serializers.search_informatieobjects",
+            return_value=search_informatieobjects,
+        ) as mock_search_informatieobjects:
+            response = self.client.patch(self.endpoint, post_data, format="multipart")
 
-    #     mock_search_informatieobjects.assert_called()
-    #     self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #     self.assertEqual(response.json(), {"error": "dit is foute boel"})
+        mock_search_informatieobjects.assert_called()
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.json(), {"error": "dit is foute boel"})
 
     def test_patch_document(self, m):
         user = SuperUserFactory.create()

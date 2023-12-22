@@ -82,7 +82,6 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
         self.assertFalse(Event.objects.exists())
 
     @requests_mock.Mocker()
-    @patch("zac.elasticsearch.api.get_zaakobjecten", return_value=[])
     def test_remove_es_document(self, rm, *mocks):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
