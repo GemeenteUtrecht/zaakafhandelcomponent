@@ -114,7 +114,7 @@ class IndexCommand(ABC):
         self.bulk_upsert()
         index = Index(self.index)
         index.refresh()
-        count = index.search().count()
+        count = index.search(size=0).count()
         self.stdout.write(f"{count} {self.verbose_name_plural} are received.")
 
     def bulk_upsert(self):
