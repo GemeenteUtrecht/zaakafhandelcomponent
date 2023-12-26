@@ -91,7 +91,7 @@ class Command(IndexCommand, BaseCommand):
 
         # Announce start.
         self.stdout.write(
-            f"Starting {self.verbose_name_plural} retrieval from the configured APIs."
+            f"Starting {self.verbose_name_plural} retrieval from the configured DRC."
         )
 
         drc = Service.objects.get(api_type=APITypes.drc)
