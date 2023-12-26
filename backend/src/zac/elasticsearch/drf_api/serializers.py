@@ -421,7 +421,7 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
         help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")
     )
     last_edited_date = serializers.DateTimeField(
-        help_text=_("Shows last edited datetime.")
+        help_text=_("Shows last edited datetime."), allow_null=True
     )
     locked = serializers.BooleanField()
     read_url = DowcUrlField(

@@ -285,10 +285,7 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
         CanReadZaken,
         CanListZaakDocuments,
     )
-    ordering = (
-        "titel.keyword",
-        "-last_edited_date",
-    )
+    ordering = ("titel.keyword",)
     serializer_class = SearchInformatieObjectSerializer
     pagination_class = ESPagination
     page_size = 10
@@ -302,7 +299,7 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
 
     @extend_schema(
         summary=_("Retrieve INFORMATIEOBJECTs for ZAAK in Elasticsearch."),
-        description=_("Default ordered on `titel` and `last_edited_date`."),
+        description=_("Default ordered on `titel`."),
         parameters=[
             es_document_to_ordering_parameters(InformatieObjectDocument),
             OpenApiParameter(
