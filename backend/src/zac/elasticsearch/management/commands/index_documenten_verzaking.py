@@ -1,4 +1,6 @@
+import datetime
 import logging
+import time
 from typing import Dict, Iterator, List
 
 from django.conf import settings
@@ -14,10 +16,7 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
-from zac.core.services import (
-    fetch_latest_audit_trail_data_document,
-    resolve_documenten_informatieobjecttypen,
-)
+from zac.core.services import resolve_documenten_informatieobjecttypen
 from zac.elasticsearch.searches import search_informatieobjects
 
 from ...api import create_informatieobject_document, create_related_zaak_document
@@ -68,10 +67,29 @@ class Command(IndexCommand, BaseCommand):
     def make_request(self, url) -> Response:
         return requests.get(url, headers=self.headers)
 
+    def get_chunks(self, iterable):
+        from itertools import chain, islice
+
+        iterator = iter(iterable)
+        for first in iterator:
+            yield chain([first], islice(iterator, self.chunk_size - 1))
+
+    def get_documenten(self, client, eios: List[str]) -> List[Document]:
+        self.headers = client.auth.credentials()
+        with parallel(max_workers=self.max_workers) as executor:
+            responses = list(executor.map(self.make_request, eios))
+
+        return [
+            factory(Document, resp.json())
+            for resp in responses
+            if resp.status_code == 200
+        ]
+
     def batch_index(self) -> Iterator[InformatieObjectDocument]:
         self.zaken_index_exists()
         self.zaakinformatieobjecten_index_exists()
 
+        # Announce start.
         self.stdout.write(
             f"Starting {self.verbose_name_plural} retrieval from the configured APIs."
         )
@@ -81,64 +99,82 @@ class Command(IndexCommand, BaseCommand):
 
         # report back which clients will be iterated over and how many zaken each has
         total_expected = ZaakInformatieObjectDocument.search().extra(size=0).count()
-        max_j, remainder = divmod(total_expected, self.chunk_size)
-        remainder = min([self.chunk_size, total_expected % self.chunk_size])
+
+        # Log amount to be fetched.
         self.stdout.write(f"Total number of ZIOs: {total_expected}.")
-        self.stdout.write("Now the real work starts, hold on!")
         self.stdout.start_progress()
+
+        # Log memory use before starting to iterate.
         perf_logger.info("Memory usage 1: %s.", get_memory_usage())
 
-        # set loop parameters
-        i = 0  # total zios collected
-        j = 0  # total loops
+        # Use scan here because it can be a very large search
+        zios_scan = ZaakInformatieObjectDocument.search().scan()
 
-        get_more = True if i < total_expected else False
-        while get_more:
+        # Get time and set done=0 at start to calculate finish time.
+        time_at_start = time.time()
+        done = 0
+
+        for zios in self.get_chunks(zios_scan):
+            # Log memory use in iterator.
             perf_logger.info("Memory usage 2: %s.", get_memory_usage())
-            # if this is running for 1h+ DRC expires the token
+
+            # Refresh client authentication in case this entire index takes longer than validatity of authentication token.
             client.refresh_auth()
 
-            start = j * self.chunk_size
-            end = (
-                (j + 1) * self.chunk_size
-                if j != max_j
-                else j * self.chunk_size + remainder
-            )
-            if start == end:
-                get_more = False
-                break
-
-            zios = ZaakInformatieObjectDocument.search()[start:end].execute()
+            # Create list from chunk of generator.
+            zios = list(zios)
+            # Get unique EIO urls.
             eios = list({zio.informatieobject for zio in zios})
-            self.stdout.write(f"Retrieved EIOs: {len(eios)}.")
 
-            # remove those who are already indexed
+            # Log total EIOs found.
+            self.stdout.write(f"EIOs from ZIOs: {len(eios)}.")
+
+            # Remove EIOs that have already been indexed.
             already_indexed = search_informatieobjects(
                 size=len(eios), urls=eios, fields=["url"]
             )
             already_indexed = [eio.url for eio in already_indexed]
             eios = [eio for eio in eios if eio not in already_indexed]
-            self.stdout.write(f"Indexable EIOs: {len(eios)}.")
+
+            # Log number of EIOs to fetch.
+            self.stdout.write(f"Fetching EIOs: {len(eios)}.")
+
             if eios:
-                self.headers = client.auth.credentials()
-                with parallel(max_workers=self.max_workers) as executor:
-                    responses = list(executor.map(self.make_request, eios))
-                documenten = [
-                    factory(Document, resp.json())
-                    for resp in responses
-                    if resp.status_code == 200
-                ]
+                # Fetch documenten from DRC.
+                documenten = self.get_documenten(client, eios)
+
+                # Log how many were retrieved.
+                self.stdout.write(f"Retrieved EIOs from DRC: {len(documenten)}.")
                 perf_logger.info("Memory usage 3: %s.", get_memory_usage())
                 yield from self.documenten_generator(documenten)
 
-            self.stdout.write(f"Number of ZIOs left: {total_expected-end}.")
-            # update loop parameters
-            i += len(zios)
-            j += 1
-            if i >= total_expected:
-                get_more = False
-                self.stdout.end_progress()
-                break
+            # Add to done.
+            done += len(zios)
+
+            # Log number left
+            self.stdout.write(f"Number of ZIOs left: {total_expected-done}.")
+
+            # Calculate time remaining.
+            total_time = (total_expected / done) * (time.time() - time_at_start)
+            days, left_over_seconds = divmod(total_time, 24 * 3600)
+            hours, left_over = divmod(left_over_seconds, 3600)
+            minutes, seconds = divmod(left_over, 60)
+
+            # Print time remaining.
+            self.stdout.write(
+                f"Estimated time remaining {int(days)} days and {int(hours)} hours, {int(minutes)} minutes and {int(seconds)} seconds."
+            )
+
+            # Calculate finish datetime.
+            datetime_now = datetime.datetime.now()
+            datetime_finished = datetime_now + datetime.timedelta(
+                days, left_over_seconds
+            )
+
+            # Print finish datetime.
+            self.stdout.write(
+                f"Estimated finish time: {datetime_finished.isoformat()}."
+            )
 
         self.stdout.end_progress()
 
@@ -148,30 +184,14 @@ class Command(IndexCommand, BaseCommand):
         return resolve_documenten_informatieobjecttypen(documenten)
 
     def resolve_audit_trail(self, documenten: List[Document]) -> List[Document]:
-        # bulk resolve fetch_audittrail
-        # with parallel() as executor:
-        #     audittrails = list(
-        #         executor.map(
-        #             fetch_latest_audit_trail_data_document,
-        #             [doc.url for doc in documenten],
-        #         )
-        #     )
-        #     last_edited_dates = {
-        #         at.resource_url: at.last_edited_date for at in audittrails if at
-        #     }
-
-        # # bulk pre-resolve audittrails
-        # for doc in documenten:
-        #     doc.last_edited_date = last_edited_dates.get(doc.url, None)
         for doc in documenten:
             doc.last_edited_date = None
-
         return documenten
 
     def resolve_related_zaken(
         self, documenten: List[Document]
     ) -> Dict[str, List[RelatedZaakDocument]]:
-        zios = (
+        zios_scan_eio = (
             ZaakInformatieObjectDocument.search()
             .filter(Terms(informatieobject=[doc.url for doc in documenten]))
             .source(
@@ -180,28 +200,49 @@ class Command(IndexCommand, BaseCommand):
                     "informatieobject",
                 ]
             )
-            .execute()
+            .scan()
         )
-        zaken = (
-            ZaakDocument.search()
-            .filter(Terms(url=[zio.zaak for zio in zios]))
-            .execute()
-        )
-        return self.create_related_zaken(zios, zaken)
+        eio_to_zaken = dict()
+        for zios in self.get_chunks(zios_scan_eio):
+            zios = list(zios)
+            zaak_urls = list({zio.zaak for zio in zios})
+            zaken = ZaakDocument.search().filter(Terms(url=zaak_urls)).scan()
+            eio_to_zaken = self.create_related_zaken(zios, zaken, eio_to_zaken)
+        return eio_to_zaken
+
+    def create_related_zaken(
+        self,
+        zios: List[ZaakInformatieObjectDocument],
+        zaken: List[ZaakDocument],
+        eio_to_zaken: Dict[str, List[RelatedZaakDocument]],
+    ) -> Dict[str, RelatedZaakDocument]:
+        related_zaken = {zaak.url: create_related_zaak_document(zaak) for zaak in zaken}
+        for zio in zios:
+            related_zaak = related_zaken.get(zio.zaak, None)
+            if related_zaak:
+                try:
+                    eio_to_zaken[zio.informatieobject].append(related_zaak)
+                except KeyError:
+                    eio_to_zaken[zio.informatieobject] = [related_zaak]
+        return eio_to_zaken
 
     def documenten_generator(
         self, documenten: List[Document]
     ) -> Iterator[InformatieObjectDocument]:
-        # Resolve informatieobjecttypen
+        # Resolve informatieobjecttypen.
         documenten = self.resolve_documenten_informatieobjecttypen(documenten)
 
-        # Resolve audit trail
+        # Resolve audit trail - in this function set to None.
         documenten = self.resolve_audit_trail(documenten)
 
-        # Create related_zaken
+        # Create related_zaken.
         related_zaken = self.resolve_related_zaken(documenten)
 
-        # Create EIO documenten
+        self.stdout.write(
+            f"Found {sum([len(val) for key,val in related_zaken.items()])} related ZAAKen for {len(related_zaken)} EIOs."
+        )
+
+        # Create EIO documenten.
         eio_documenten = self.create_eio_documenten(documenten)
 
         # Join and yield
@@ -214,29 +255,6 @@ class Command(IndexCommand, BaseCommand):
                 self.reindexed += 1
                 if self.check_if_done_batching():
                     return
-
-    def create_related_zaken(
-        self, zios: List[ZaakInformatieObjectDocument], zaken: List[ZaakDocument]
-    ) -> Dict[str, RelatedZaakDocument]:
-        related_zaken = {zaak.url: create_related_zaak_document(zaak) for zaak in zaken}
-        found = 0
-        eio_to_zaken = {}
-        for zio in zios:
-            related_zaak = related_zaken.get(zio.zaak, None)
-            if related_zaak:
-                try:
-                    eio_to_zaken[zio.informatieobject].append(related_zaak)
-                except KeyError:
-                    eio_to_zaken[zio.informatieobject] = [related_zaak]
-
-                found += 1
-
-        self.stdout.write_without_progress(
-            "{found} ENKELVOUDIGINFORMATIEOBJECTen are found for {zaken} related ZAAKen.".format(
-                found=found, zaken=len(zaken)
-            )
-        )
-        return eio_to_zaken
 
     def create_eio_documenten(
         self, documenten: List[Document]
