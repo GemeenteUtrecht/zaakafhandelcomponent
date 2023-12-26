@@ -149,20 +149,23 @@ class Command(IndexCommand, BaseCommand):
 
     def resolve_audit_trail(self, documenten: List[Document]) -> List[Document]:
         # bulk resolve fetch_audittrail
-        with parallel() as executor:
-            audittrails = list(
-                executor.map(
-                    fetch_latest_audit_trail_data_document,
-                    [doc.url for doc in documenten],
-                )
-            )
-            last_edited_dates = {
-                at.resource_url: at.last_edited_date for at in audittrails if at
-            }
+        # with parallel() as executor:
+        #     audittrails = list(
+        #         executor.map(
+        #             fetch_latest_audit_trail_data_document,
+        #             [doc.url for doc in documenten],
+        #         )
+        #     )
+        #     last_edited_dates = {
+        #         at.resource_url: at.last_edited_date for at in audittrails if at
+        #     }
 
-        # bulk pre-resolve audittrails
+        # # bulk pre-resolve audittrails
+        # for doc in documenten:
+        #     doc.last_edited_date = last_edited_dates.get(doc.url, None)
         for doc in documenten:
-            doc.last_edited_date = last_edited_dates.get(doc.url, None)
+            doc.last_edited_date = None
+
         return documenten
 
     def resolve_related_zaken(

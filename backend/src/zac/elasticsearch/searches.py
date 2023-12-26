@@ -316,7 +316,9 @@ def search_informatieobjects(
     identificatie: str = "",
     iots_omschrijvingen: Optional[List[str]] = None,
     urls: Optional[List[str]] = None,
-    ordering: List = ["titel.keyword", "-last_edited_date"],
+    ordering: List = [
+        "titel.keyword",
+    ],
     fields: Optional[List[str]] = None,
     return_search: bool = False,
 ) -> List[InformatieObjectDocument]:
