@@ -1,4 +1,5 @@
 from unittest import skip
+from unittest.mock import patch
 
 from django.conf import settings
 from django.urls import reverse_lazy
@@ -63,6 +64,9 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
     }
 
     inhoud_1 = b"Test content 1"
+    patch_find_document = patch(
+        "zac.core.services.search_informatieobjects", return_value=None
+    )
 
     def setUp(self):
         super().setUp()
@@ -80,6 +84,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
         )
 
         self.document_1 = {**document_data, **self.document_1}
+        self.patch_find_document.start()
+        self.addCleanup(self.patch_find_document.stop)
 
     def _set_up_mocks(self, m):
         mock_service_oas_get(m, DOCUMENTEN_ROOT, "drc")

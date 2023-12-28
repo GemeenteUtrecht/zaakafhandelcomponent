@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from itertools import chain, islice
 from typing import Iterator
 
 from django.conf import settings
@@ -82,6 +83,12 @@ class IndexCommand(ABC):
                 "fine-grained feedback."
             ),
         )
+        parser.add_argument(
+            "--chunk-size",
+            type=int,
+            help="Indicates the chunk size for number of a single ES scan iteration. Defaults to 100.",
+            default=100,
+        )
 
     def handle(self, **options):
         # redefine self.stdout as ProgressOutputWrapper cause logging is dependent whether
@@ -90,11 +97,18 @@ class IndexCommand(ABC):
         self.stdout = ProgressOutputWrapper(show_progress, out=self.stdout._out)
         self.max_workers = options["max_workers"]
         self.reindex_last = options["reindex_last"]
+        self.chunk_size = options["chunk_size"]
+
         self.es_client = connections.get_connection()
         if self.reindex_last:
             self.handle_reindexing()
         else:
             self.handle_indexing()
+
+    def get_chunks(self, iterable):
+        iterator = iter(iterable)
+        for first in iterator:
+            yield chain([first], islice(iterator, self.chunk_size - 1))
 
     def handle_reindexing(self):
         # Make sure the index exists...

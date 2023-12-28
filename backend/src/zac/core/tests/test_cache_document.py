@@ -130,7 +130,8 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
 
         # Assert document isn't already in cache
         self.assertFalse(f"document:123456782:DOC-2020-007:None" in cache)
-        find_document("123456782", "DOC-2020-007")
+        with patch("zac.core.services.search_informatieobjects", return_value=None):
+            find_document("123456782", "DOC-2020-007")
         # Assert document is now cached
         self.assertTrue(f"document:123456782:DOC-2020-007:None" in cache)
 
@@ -148,7 +149,8 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten?bronorganisatie=123456782&identificatie=DOC-2020-007",
             json={"results": [document_2], "next": None},
         )
-        result = find_document("123456782", "DOC-2020-007")
+        with patch("zac.core.services.search_informatieobjects", return_value=None):
+            result = find_document("123456782", "DOC-2020-007")
 
         # If result.inhoud is the same inhoud as document['inhoud']
         # and NOT document_2['inhoud'] cache was called and not the function body.
@@ -159,7 +161,8 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         # Clear cache and see if we get the latest inhoud
         invalidate_document_url_cache(self.document["url"])
         invalidate_document_other_cache(factory(Document, self.document))
-        result = find_document("123456782", "DOC-2020-007")
+        with patch("zac.core.services.search_informatieobjects", return_value=None):
+            result = find_document("123456782", "DOC-2020-007")
         self.assertEqual(result.inhoud, document_2["inhoud"])
 
     def test_find_document_cached_without_candidate(self, m):
@@ -188,7 +191,8 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         self.assertFalse(f"document:123456782:DOC-2020-007:110" in cache)
         self.assertFalse(f"document:{DOCUMENT_URL}" in cache)
         self.assertFalse(f"document:{DOCUMENT_URL}?versie=100" in cache)
-        find_document("123456782", "DOC-2020-007", versie=100)
+        with patch("zac.core.services.search_informatieobjects", return_value=None):
+            find_document("123456782", "DOC-2020-007", versie=100)
 
         # Assert document with version 110 is now cached
         self.assertTrue(f"document:123456782:DOC-2020-007:100" in cache)

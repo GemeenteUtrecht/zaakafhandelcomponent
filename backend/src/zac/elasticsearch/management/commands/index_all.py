@@ -29,14 +29,19 @@ class Command(BaseCommand):
                 "fine-grained feedback."
             ),
         )
+        parser.add_argument(
+            "--chunk-size",
+            type=int,
+            help="Indicates the chunk size for number of ZIOs in a single iteration. Defaults to 100.",
+            default=100,
+        )
 
     def handle(self, **options):
-        max_workers = options["max_workers"]
-
         # redefine self.stdout as ProgressOutputWrapper cause logging is dependent whether
         # we have a progress bar
         show_progress = options["progress"]
         self.stdout = ProgressOutputWrapper(show_progress, out=self.stdout._out)
+
         args = []
         if reindex_last := options.get("reindex_last"):
             args.append(f"--reindex-last={reindex_last}")
@@ -48,6 +53,9 @@ class Command(BaseCommand):
 
         if max_workers := options.get("max_workers"):
             args.append(f"--max-workers={max_workers}")
+
+        if chunk_size := options.get("chunk_size"):
+            args.append(f"--chunk-size={chunk_size}")
 
         self.stdout.write(f"Calling index_zaken {' '.join(args)}")
         call_command("index_zaken", *args)
