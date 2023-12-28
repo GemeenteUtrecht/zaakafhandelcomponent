@@ -87,7 +87,7 @@ class Command(IndexCommand, BaseCommand):
         perf_logger.info("Memory usage 1: %s.", get_memory_usage())
 
         # Use scan here because it can be a very large search
-        zios_scan = ZaakInformatieObjectDocument.search().scan(scroll="15h")
+        zios_scan = ZaakInformatieObjectDocument.search().params(scroll="15h").scan()
 
         # Get time and set done=0 at start to calculate finish time.
         time_at_start = time.time()
