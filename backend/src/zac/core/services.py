@@ -43,7 +43,7 @@ from zac.accounts.models import BlueprintPermission, User
 from zac.client import Client
 from zac.contrib.brp.models import BRPConfig
 from zac.contrib.objects.cache import invalidate_cache_fetch_oudbehandelaren
-from zac.elasticsearch.searches import search_zaken
+from zac.elasticsearch.searches import search_informatieobjects, search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
 from zgw.models import Zaak
@@ -1111,49 +1111,57 @@ def find_document(
     """
     Find the document uniquely identified by bronorganisatie and identificatie.
     """
-    # not in cache -> check it in all known DRCs
+    # not in cache -> check it first in ES and then in all known DRCs
     query = {"bronorganisatie": bronorganisatie, "identificatie": identificatie}
-
-    drcs = Service.objects.filter(api_type=APITypes.drc)
-
     result = None
-    for drc in drcs:
-        client = drc.build_client()
-        results = get_paginated_results(
-            client, "enkelvoudiginformatieobject", query_params=query
-        )
+    results = search_informatieobjects(**query)
+    if results:
+        document_furl = furl(results[0].url).add({"versie": versie})
+        response = _fetch_document(document_furl.url)  # fetch latest version
+        response.raise_for_status()
+        result = response.json()
 
-        if not results:
-            continue
+    else:
+        drcs = Service.objects.filter(api_type=APITypes.drc)
+        for drc in drcs:
+            client = drc.build_client()
+            results = get_paginated_results(
+                client, "enkelvoudiginformatieobject", query_params=query
+            )
 
-        # get the latest one if no explicit version is given
-        if versie is None:
-            result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
+            if not results:
+                continue
 
-        else:
-            # there's only supposed to be one unique case
-            # NOTE: there are known issues with DRC-CMIS returning multiple docs for
-            # the same version...
-            candidates = [result for result in results if result["versie"] == versie]
-            if len(candidates) >= 1:
-                if len(candidates) > 1:
-                    logger.warning(
-                        "Multiple results for version '%d' found, this is an error in the DRC "
-                        "implementation!",
-                        versie,
-                        extra={"query": query},
-                    )
-                result = candidates[0]
+            # get the latest one if no explicit version is given
+            if versie is None:
+                result = sorted(results, key=lambda r: r["versie"], reverse=True)[0]
 
             else:
-                # The DRC only returns the latest version and so the candidates
-                # will always be empty if the latest version isn't the requested version.
-                # In this case try to retrieve the document by using fetch_document.
-                document_furl = furl(results[0]["url"]).add({"versie": versie})
-                response = _fetch_document(document_furl.url)
-                response.raise_for_status()
-                result = response.json()
-        break
+                # there's only supposed to be one unique case
+                # NOTE: there are known issues with DRC-CMIS returning multiple docs for
+                # the same version...
+                candidates = [
+                    result for result in results if result["versie"] == versie
+                ]
+                if len(candidates) >= 1:
+                    if len(candidates) > 1:
+                        logger.warning(
+                            "Multiple results for version '%d' found, this is an error in the DRC "
+                            "implementation!",
+                            versie,
+                            extra={"query": query},
+                        )
+                    result = candidates[0]
+
+                else:
+                    # The DRC only returns the latest version and so the candidates
+                    # will always be empty if the latest version isn't the requested version.
+                    # In this case try to retrieve the document by using fetch_document.
+                    document_furl = furl(results[0]["url"]).add({"versie": versie})
+                    response = _fetch_document(document_furl.url)
+                    response.raise_for_status()
+                    result = response.json()
+            break
 
     if not result:
         raise ObjectDoesNotExist(

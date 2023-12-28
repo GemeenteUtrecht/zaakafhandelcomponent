@@ -5,7 +5,6 @@ from typing import Dict, Iterator, List
 
 from django.conf import settings
 from django.core.management import BaseCommand
-from django.core.management.base import CommandParser
 
 import requests
 from elasticsearch_dsl.query import Terms
@@ -51,28 +50,8 @@ class Command(IndexCommand, BaseCommand):
     def zaakinformatieobjecten_index_exists(self) -> bool:
         return check_if_index_exists(index=settings.ES_INDEX_ZIO)
 
-    def add_arguments(self, parser: CommandParser) -> None:
-        parser.add_argument(
-            "--chunk-size",
-            type=int,
-            help="Indicates the chunk size for number of ZIOs in a single iteration. Defaults to 100.",
-            default=100,
-        )
-        super().add_arguments(parser)
-
-    def handle(self, **options):
-        self.chunk_size = options["chunk_size"]
-        super().handle(**options)
-
     def make_request(self, url) -> Response:
         return requests.get(url, headers=self.headers)
-
-    def get_chunks(self, iterable):
-        from itertools import chain, islice
-
-        iterator = iter(iterable)
-        for first in iterator:
-            yield chain([first], islice(iterator, self.chunk_size - 1))
 
     def get_documenten(self, client, eios: List[str]) -> List[Document]:
         self.headers = client.auth.credentials()
@@ -108,7 +87,7 @@ class Command(IndexCommand, BaseCommand):
         perf_logger.info("Memory usage 1: %s.", get_memory_usage())
 
         # Use scan here because it can be a very large search
-        zios_scan = ZaakInformatieObjectDocument.search().scan()
+        zios_scan = ZaakInformatieObjectDocument.search().scan(scroll="15h")
 
         # Get time and set done=0 at start to calculate finish time.
         time_at_start = time.time()
@@ -155,7 +134,9 @@ class Command(IndexCommand, BaseCommand):
             self.stdout.write(f"Number of ZIOs left: {total_expected-done}.")
 
             # Calculate time remaining.
-            total_time = (total_expected / done) * (time.time() - time_at_start)
+            total_time = ((total_expected - done) / done) * (
+                time.time() - time_at_start
+            )
             days, left_over_seconds = divmod(total_time, 24 * 3600)
             hours, left_over = divmod(left_over_seconds, 3600)
             minutes, seconds = divmod(left_over, 60)
