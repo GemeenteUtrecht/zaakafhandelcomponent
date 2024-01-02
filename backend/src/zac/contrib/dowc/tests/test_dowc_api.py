@@ -103,6 +103,12 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
                 "purpose": cls.purpose,
             },
         )
+        cls.delete_dowc_url = reverse(
+            "dowc:patch-destroy-doc",
+            kwargs={
+                "dowc_uuid": cls.uuid,
+            },
+        )
 
     def setUp(self):
         super().setUp()
@@ -289,6 +295,47 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
                 "zaak": "http://some-zaak.nl/",
             },
         )
+
+    def test_delete_dowc_file_with_permissions(self, m):
+        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.catalogus)
+        mock_resource_get(m, self.documenttype)
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+        m.delete(
+            f"{DOWC_API_ROOT}/api/v1/documenten/{self.uuid}",
+            status_code=201,
+            json={"versionedUrl": "something"},
+        )
+
+        BlueprintPermissionFactory.create(
+            role__permissions=[zaken_download_documents.name],
+            for_user=user,
+            policy={
+                "catalogus": self.catalogus["domein"],
+                "iotype_omschrijving": self.documenttype["omschrijving"],
+                "max_va": VertrouwelijkheidsAanduidingen.zaakvertrouwelijk,
+            },
+            object_type=PermissionObjectTypeChoices.document,
+        )
+        with patch("zac.contrib.dowc.views.get_document") as patch_get_document:
+            with patch(
+                "zac.contrib.dowc.views.invalidate_document_url_cache"
+            ) as patch_invalidate_doc_url_cache:
+                with patch(
+                    "zac.contrib.dowc.views.invalidate_document_other_cache"
+                ) as patch_invalidate_doc_other_cache:
+                    response = self.client.delete(
+                        self.delete_dowc_url,
+                    )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            m.last_request.url, f"{DOWC_API_ROOT}/api/v1/documenten/{self.uuid}"
+        )
+        patch_get_document.assert_called_once()
+        patch_invalidate_doc_url_cache.assert_called_once()
+        patch_invalidate_doc_other_cache.assert_called_once()
 
     def test_dowc_file_already_exists_same_user(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)

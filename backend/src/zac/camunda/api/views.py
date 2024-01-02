@@ -691,7 +691,6 @@ class UserTaskCountView(APIView):
     )
     def post(self, request, *args, **kwargs):
         assignees = [f"{AssigneeTypeChoices.user}:{request.user}"]
-        payload = {"assigneeIn": assignees}
-        data = get_camunda_user_task_count(payload)
-        serializer = self.get_serializer(data)
+        count = get_camunda_user_task_count(assignees)
+        serializer = self.get_serializer({"count": count})
         return Response(serializer.data)

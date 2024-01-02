@@ -325,24 +325,20 @@ class WorkStackSummaryView(views.APIView):
         data = {}
 
         def _get_user_task_count():
-            resp = get_camunda_user_task_count(
-                {"assigneeIn": [f"{AssigneeTypeChoices.user}:{self.request.user}"]}
+            count = get_camunda_user_task_count(
+                [f"{AssigneeTypeChoices.user}:{self.request.user}"]
             )
-            return {"key": "user_tasks", "val": resp["count"]}
+            return {"key": "user_tasks", "val": count}
 
         def _get_group_task_count():
-            user_groups = [
-                n[0] for n in list(self.request.user.groups.all().values_list("name"))
-            ]
-            resp = get_camunda_user_task_count(
-                {
-                    "assigneeIn": [
-                        f"{AssigneeTypeChoices.group}:{n}" for n in user_groups
-                    ]
-                }
+            user_groups = list(
+                self.request.user.groups.all().values_list("name", flat=True)
+            )
+            count = get_camunda_user_task_count(
+                [f"{AssigneeTypeChoices.group}:{n}" for n in user_groups]
             )
 
-            return {"key": "group_tasks", "val": resp["count"]}
+            return {"key": "group_tasks", "val": count}
 
         def _count_zaken():
             count = count_by_behandelaar(request=self.request)
@@ -360,7 +356,11 @@ class WorkStackSummaryView(views.APIView):
             user_groups = [
                 n[0] for n in list(self.request.user.groups.all().values_list("id"))
             ]
-            count = Activity.objects.filter(group_assignee__in=user_groups).count()
+            count = (
+                Activity.objects.filter(group_assignee__in=user_groups).count()
+                if user_groups
+                else 0
+            )
             return {"key": "group_activities", "val": count}
 
         def _count_access_requests():

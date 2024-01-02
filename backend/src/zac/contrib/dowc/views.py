@@ -22,7 +22,7 @@ from zac.core.services import find_document, get_document
 
 from .api import create_doc, patch_and_destroy_doc
 from .exceptions import DOWCCreateError
-from .serializers import DowcResponseSerializer, DowcSerializer
+from .serializers import DeleteDowcSerializer, DowcResponseSerializer, DowcSerializer
 
 
 def _cast(value: Optional[Any], type_: type) -> Any:
@@ -89,7 +89,7 @@ class DeleteDowcView(APIView):
         permissions.IsAuthenticated,
         CanReadDocuments,
     )
-    serializer_class = DowcSerializer
+    serializer_class = DeleteDowcSerializer
 
     @extend_schema(
         summary=_("Update and delete a document."),
@@ -105,7 +105,7 @@ class DeleteDowcView(APIView):
         Delete the dowc object in the dowc API. This implies that the dowc will
         attempt to patch the document in the DRC API.
         """
-        serializer = self.serializer_class(data={"uuid": dowc_uuid})
+        serializer = self.serializer_class(data={"uuid": str(dowc_uuid)})
         serializer.is_valid(raise_exception=True)
         data = patch_and_destroy_doc(
             serializer.validated_data["uuid"], user=request.user

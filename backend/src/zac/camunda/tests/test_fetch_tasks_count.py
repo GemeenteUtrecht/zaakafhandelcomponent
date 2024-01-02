@@ -11,6 +11,8 @@ from rest_framework.test import APITestCase
 
 from zac.accounts.tests.factories import GroupFactory, UserFactory
 
+from ..user_tasks.api import get_camunda_user_task_count
+
 ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"
 CAMUNDA_ROOT = "https://some.camunda.nl/"
@@ -64,3 +66,7 @@ class CountTasksTests(APITestCase):
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), {"count": 420})
+
+    def test_count_tasks_no_assignees(self, m_request):
+        count = get_camunda_user_task_count([])
+        self.assertEqual(count, 0)
