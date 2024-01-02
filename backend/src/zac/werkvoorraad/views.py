@@ -376,7 +376,7 @@ class WorkStackSummaryView(views.APIView):
             _count_group_activities,
             _count_access_requests,
         ]
-        with parallel() as executor:
+        with parallel(max_workers=10) as executor:
             data = list(executor.map(lambda fn: fn(), fetch_these))
 
         serializer = self.serializer_class({d["key"]: d["val"] for d in data})

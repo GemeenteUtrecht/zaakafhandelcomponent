@@ -16,33 +16,37 @@ from .data import ActivityGroup, ChecklistAnswerGroup
 logger = logging.getLogger(__name__)
 
 
-def get_access_requests(request: Request, zaken):
+def get_access_requests(request: Request, zaken: List[str]):
     if not request.user.has_perm(zaken_handle_access.name):
         return []
 
-    return AccessRequest.objects.filter(result="", zaak__in=list(zaken.keys()))
+    return AccessRequest.objects.filter(result="", zaak__in=zaken)
 
 
 def count_access_requests(request: Request) -> int:
     behandelaar_zaken = {
-        zaak.url: zaak
-        for zaak in search_zaken(request=request, behandelaar=request.user.username)
+        zaak.url
+        for zaak in search_zaken(
+            request=request, behandelaar=request.user.username, fields=["url"], size=500
+        )
     }
     if not behandelaar_zaken:
         return 0
-    return get_access_requests(request, behandelaar_zaken).count()
+    return get_access_requests(request, list(behandelaar_zaken)).count()
 
 
 def get_access_requests_groups(request: Request) -> List[dict]:
     behandelaar_zaken = {
         zaak.url: zaak
-        for zaak in search_zaken(request=request, behandelaar=request.user.username)
+        for zaak in search_zaken(
+            request=request, behandelaar=request.user.username, fields=["url"], size=500
+        )
     }
     if not behandelaar_zaken:
         return []
 
     # if user doesn't have a permission to handle access requests - don't show them
-    qs = get_access_requests(request, zaken=behandelaar_zaken).order_by(
+    qs = get_access_requests(request, zaken=list(behandelaar_zaken.keys())).order_by(
         "zaak", "requester__username"
     )
     requested_zaken = []
