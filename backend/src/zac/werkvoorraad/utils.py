@@ -39,7 +39,18 @@ def get_access_requests_groups(request: Request) -> List[dict]:
     behandelaar_zaken = {
         zaak.url: zaak
         for zaak in search_zaken(
-            request=request, behandelaar=request.user.username, fields=["url"], size=500
+            request=request,
+            behandelaar=request.user.username,
+            fields=[
+                "url",
+                "identificatie",
+                "bronorganisatie",
+                "status",
+                "zaaktype",
+                "omschrijving",
+                "deadline",
+            ],
+            size=500,
         )
     }
     if not behandelaar_zaken:
