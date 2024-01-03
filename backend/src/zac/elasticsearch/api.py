@@ -664,7 +664,7 @@ def update_related_zaak_in_informatieobject_documents(zaak: Zaak) -> None:
     )
 
     changed = False
-    if io and related_zaken.url in [z.url for z in io[0].related_zaken]:
+    if io and related_zaak.url in [z.url for z in io[0].related_zaken]:
         old_rz = [rz for rz in io[0].related_zaken if rz.url == related_zaak.url][0]
         if any(
             [

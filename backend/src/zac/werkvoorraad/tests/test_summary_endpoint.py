@@ -56,7 +56,7 @@ class SummaryTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
             patch("zac.werkvoorraad.views.parallel", return_value=mock_parallel()),
             patch(
                 "zac.werkvoorraad.views.get_camunda_user_task_count",
-                return_value={"count": 1},
+                return_value=1,
             ),
             patch(
                 "zac.werkvoorraad.views.count_review_requests_by_user",
@@ -114,7 +114,7 @@ class SummaryTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
                     },
                 },
             ],
-            eigenschappen={},
+            eigenschappen=dict(),
             startdatum="2021-12-01",
             registratiedatum="2021-12-01",
             deadline="2021-12-31",

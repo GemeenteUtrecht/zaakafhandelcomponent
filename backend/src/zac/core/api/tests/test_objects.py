@@ -333,7 +333,9 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
             "update_frequency": "",
             "provider_organization": "",
             "documentation_url": "",
-            "labels": {"stringRepresentation": ["type", "adres", "status"]},
+            "labels": {
+                "stringRepresentation": ["type", ", ", "adres", " - ", "status"]
+            },
             "created_at": "2019-08-24",
             "modified_at": "2019-08-24",
             "versions": [],
@@ -456,7 +458,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                         "correctionFor": None,
                         "correctedBy": None,
                     },
-                    "stringRepresentation": "Laadpaal, Utrechtsestraat 41, In ontwikkeling",
+                    "stringRepresentation": "Laadpaal, Utrechtsestraat 41 - In ontwikkeling",
                 }
             ],
         )

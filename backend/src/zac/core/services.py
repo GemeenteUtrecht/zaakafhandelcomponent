@@ -1369,14 +1369,14 @@ def add_string_representation(func):
         )
         if (
             ot
-            and (labels := ot["labels"].get("stringRepresentation", {}))
+            and (labels := ot["labels"].get("stringRepresentation", []))
             and (obj.get("record", {}).get("data", {}).keys())
         ):
             # get the values of the original fields from the object
-            values = [obj["record"]["data"].get(label, "") for label in labels]
-            obj["stringRepresentation"] = ", ".join([val for val in values if val])
+            values = [obj["record"]["data"].get(label, label) for label in labels]
+            obj["stringRepresentation"] = "".join([val for val in values if val])
         else:
-            obj["stringRepresentation"] = ""
+            obj["stringRepresentation"] = "Objectnaam niet beschikbaar."
         return obj
 
     def _fetch_object_types() -> Dict[str, Dict]:

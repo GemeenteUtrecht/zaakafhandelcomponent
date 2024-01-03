@@ -45,17 +45,8 @@ class DowcResponseSerializer(APIModelSerializer):
         )
 
 
-class DeleteDowcSerializer(APIModelSerializer):
-    class Meta:
-        model = DowcResponse
-        fields = "uuid"
-        extra_kwargs = {
-            "zaak": {
-                "help_text": _("URL-reference to ZAAK."),
-                "required": False,
-                "allow_blank": True,
-            }
-        }
+class DeleteDowcSerializer(serializers.Serializer):
+    uuid = serializers.UUIDField(help_text=_("UUID of DoWC object."), required=True)
 
 
 class DowcSerializer(serializers.Serializer):
