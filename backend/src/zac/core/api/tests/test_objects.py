@@ -334,7 +334,13 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
             "provider_organization": "",
             "documentation_url": "",
             "labels": {
-                "stringRepresentation": ["type", ", ", "adres", " - ", "status"]
+                "stringRepresentation": [
+                    "field__type",
+                    ", ",
+                    "field__adres",
+                    " - ",
+                    "field__status",
+                ]
             },
             "created_at": "2019-08-24",
             "modified_at": "2019-08-24",
