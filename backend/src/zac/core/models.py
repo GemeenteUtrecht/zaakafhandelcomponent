@@ -1,4 +1,5 @@
-from typing import List
+import logging
+from typing import Dict
 
 from django.db import models
 from django.utils.encoding import force_str
@@ -6,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 
 from solo.models import SingletonModel
 from zgw_consumers.constants import APITypes
+
+logger = logging.getLogger(__name__)
 
 
 class CoreConfig(SingletonModel):
@@ -71,11 +74,27 @@ class CoreConfig(SingletonModel):
 
 class MetaObjectTypesConfig(SingletonModel):
     """
-    A singleton model that holds the URL-references of `meta`-objecttypes.
+    A singleton model that holds the URL-references of the meta objecttypes.
     `meta`-objecttypes are used to store and read data not supported by Open Zaak.
 
     Please refer to the Meta ObjectTypes documentation for further information.
+
     """
+
+    default = models.BooleanField(
+        default=True,
+        help_text=_(
+            "Setting to False will allow the user to define custom objecttypes instead of the URL-references retrieved from the list of meta objecttypes from the OBJECTS API."
+        ),
+    )
+
+    meta_list_objecttype = models.URLField(
+        _("URL-reference to MetaListObjectType in OBJECTTYPES API."),
+        help_text=_(
+            "A URL-reference to the Meta List OBJECTTYPE. This is used to fetch the meta list objecttype for managing meta objects and objecttypes."
+        ),
+        default="",
+    )
 
     checklist_objecttype = models.URLField(
         _("URL-reference to Checklist in OBJECTTYPES API."),
@@ -119,10 +138,29 @@ class MetaObjectTypesConfig(SingletonModel):
     def __str__(self):
         return force_str(self._meta.verbose_name)
 
+    def save(self):
+        if self.default:
+            from zac.core.services import search_objects
+
+            response, qp = search_objects({"type": self.meta_list_objecttype})
+            if response["count"] == 1:
+                urls = response["results"][0]["record"]["data"].get(
+                    "metalistobjecttypes", dict()
+                )
+            else:
+                logger.warning(
+                    "meta_list_object should be unique. Grabbing the first one."
+                )
+
+            for objecttype_name, url in urls.items():
+                if url:
+                    setattr(self, objecttype_name, url)
+        return super().save()
+
     @property
-    def meta_objecttype_urls(self) -> List[str]:
-        return [
-            getattr(self, field.name)
+    def meta_objecttype_urls(self) -> Dict[str, str]:
+        return {
+            field.get_attname(): getattr(self, field.name)
             for field in self._meta.get_fields()
             if isinstance(field, models.URLField)
-        ]
+        }

@@ -134,7 +134,7 @@ class ChecklistSerializer(APIModelSerializer):
     answers = ChecklistAnswerSerializer(
         many=True,
     )
-    meta = serializers.HiddenField(default=True)
+    # meta = serializers.HiddenField(default=True)
     locked_by = UserSlugRelatedField(
         help_text=_("Checklist is locked by this user."),
         slug_field="username",
@@ -145,7 +145,7 @@ class ChecklistSerializer(APIModelSerializer):
 
     class Meta:
         model = Checklist
-        fields = ("answers", "meta", "locked_by")
+        fields = ("answers", "locked_by")
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)

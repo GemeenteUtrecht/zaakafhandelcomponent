@@ -1070,8 +1070,7 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    @requests_mock.Mocker()
-    def test_has_atomic_access(self, m):
+    def test_has_atomic_access(self):
         user = UserFactory.create()
         AtomicPermissionFactory.create(
             object_url=self.zaak.url,

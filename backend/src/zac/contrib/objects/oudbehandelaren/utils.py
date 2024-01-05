@@ -39,7 +39,7 @@ def register_old_behandelaar(zaak: Zaak, rol_url: str, user: User) -> Optional[D
     create = False
     if not object:
         create = True
-        data = {"meta": True, "zaak": zaak.url, "oudbehandelaren": []}
+        data = {"zaak": zaak.url, "oudbehandelaren": []}
     else:
         data = object["record"]["data"]
 

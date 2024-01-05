@@ -1,8 +1,8 @@
+from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
+
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
-OBJECTS_ROOT = "http://object.nl/api/v1/"
 PI_URL = "https://camunda.example.com/engine-rest/process-instance"
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
