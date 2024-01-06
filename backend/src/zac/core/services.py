@@ -1373,7 +1373,13 @@ def add_string_representation(func):
             and (obj.get("record", {}).get("data", {}).keys())
         ):
             # get the values of the original fields from the object
-            values = [obj["record"]["data"].get(label, label) for label in labels]
+            values = [
+                obj["record"]["data"].get(label[7:], "")
+                if "field__" in label
+                else label
+                for label in labels
+                if label
+            ]
             obj["stringRepresentation"] = "".join([val for val in values if val])
         else:
             obj["stringRepresentation"] = "Objectnaam niet beschikbaar."

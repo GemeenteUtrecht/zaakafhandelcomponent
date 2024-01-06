@@ -138,7 +138,7 @@ OBJECTTYPE_RESPONSE = {
     "updateFrequency": "unknown",
     "providerOrganization": "",
     "documentationUrl": "",
-    "labels": {"stringRepresentation": ["VELD"]},
+    "labels": {"stringRepresentation": ["field__VELD"]},
     "createdAt": "2023-01-02",
     "modifiedAt": "2023-01-02",
     "versions": [
