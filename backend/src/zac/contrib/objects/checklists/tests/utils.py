@@ -1,9 +1,9 @@
+from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
+
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 BRONORGANISATIE = "123456789"
 IDENTIFICATIE = "ZAAK-0000001"
-OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
-OBJECTS_ROOT = "http://object.nl/api/v2/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7"
 
 
@@ -19,10 +19,8 @@ CHECKLISTTYPE_OBJECTTYPE = {
             "zaaktypeCatalogus",
             "zaaktypeIdentificaties",
             "questions",
-            "meta",
         ],
         "properties": {
-            "meta": True,
             "questions": {
                 "type": "array",
                 "items": {
@@ -62,7 +60,6 @@ CHECKLISTTYPE_OBJECT = {
         "index": 1,
         "typeVersion": 4,
         "data": {
-            "meta": True,
             "zaaktypeCatalogus": "UTRE",
             "zaaktypeIdentificaties": ["ZT1"],
             "questions": [
@@ -119,9 +116,8 @@ CHECKLIST_OBJECTTYPE_LATEST_VERSION = {
     "jsonSchema": {
         "type": "object",
         "title": "Checklist",
-        "required": ["answers", "zaak", "meta", "lockedBy"],
+        "required": ["answers", "zaak", "lockedBy"],
         "properties": {
-            "meta": True,
             "zaak": {"type": "string"},
             "answers": {
                 "type": "array",
@@ -155,7 +151,6 @@ CHECKLIST_OBJECT = {
         "index": 1,
         "typeVersion": 3,
         "data": {
-            "meta": True,
             "zaak": ZAAK_URL,
             "answers": [
                 {"answer": "Ja", "question": "Ja?"},

@@ -1298,11 +1298,12 @@ class ObjecttypeListView(views.APIView):
         if not filterset.is_valid():
             raise exceptions.ValidationError(filterset.errors)
 
-        meta_objecttype_config = MetaObjectTypesConfig.get_solo()
+        meta_ot_urls = list(
+            MetaObjectTypesConfig.get_solo().meta_objecttype_urls.values()
+        )
+
         objecttypes = [
-            ot
-            for ot in fetch_objecttypes()
-            if ot["url"] not in meta_objecttype_config.meta_objecttype_urls
+            ot for ot in fetch_objecttypes() if ot["url"] not in meta_ot_urls
         ]
 
         if zt_url := filterset.data.get("zaaktype"):

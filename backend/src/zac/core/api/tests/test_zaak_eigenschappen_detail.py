@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 import requests_mock
@@ -81,7 +83,6 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
 
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
-        self.maxDiff = None
 
     def test_create_zaak_eigenschap(self, m):
         eigenschap = generate_oas_component(

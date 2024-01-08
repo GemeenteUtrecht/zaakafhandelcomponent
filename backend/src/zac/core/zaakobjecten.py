@@ -4,7 +4,6 @@ from typing import Iterator
 import requests
 from zgw_consumers.api_models.zaken import ZaakObject
 
-from zac.contrib.kadaster.bag import fetch_pand, fetch_verblijfsobject
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.services import fetch_objects
 
@@ -50,7 +49,9 @@ class ZaakObjectGroup:
         self.items = []
 
         # Do not show retrieved meta objects unless explicitly requested
-        meta_objecttype_urls = MetaObjectTypesConfig.get_solo().meta_objecttype_urls
+        meta_objecttype_urls = list(
+            MetaObjectTypesConfig.get_solo().meta_objecttype_urls.values()
+        )
         for zaakobject_url, item in object_items:
             retrieved_item = object_url_mapping.get(item, item)
             if (

@@ -24,7 +24,6 @@ from .utils import (
     OUDBEHANDELAREN_OBJECT,
     OUDBEHANDELAREN_OBJECTTYPE,
     ZAAK_URL,
-    ZAKEN_ROOT,
 )
 
 

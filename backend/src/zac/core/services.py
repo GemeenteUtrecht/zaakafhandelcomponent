@@ -43,6 +43,7 @@ from zac.accounts.models import BlueprintPermission, User
 from zac.client import Client
 from zac.contrib.brp.models import BRPConfig
 from zac.contrib.objects.cache import invalidate_cache_fetch_oudbehandelaren
+from zac.core.models import MetaObjectTypesConfig
 from zac.elasticsearch.searches import search_informatieobjects, search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
@@ -1509,14 +1510,18 @@ def fetch_objecttype_version(uuid: str, version: int) -> dict:
     return objecttypes_version_data
 
 
-def search_objects(filters: dict, query_params: Dict = dict) -> Tuple[List[dict], Dict]:
+def search_objects(
+    filters: dict, query_params: Optional[Dict] = None
+) -> Tuple[List[dict], Dict]:
     client = get_objects_client()
     operation_id = "object_search"
     url = get_operation_url(client.schema, operation_id, base_url=client.base_url)
+    query_params = query_params if query_params else dict()
     url = furl(url).set(query_params).url
     response = add_string_representation(client.operation)(
         url=url, operation_id=operation_id, query_params=query_params, data=filters
     )
+
     query_params = fetch_next_url_pagination(response, query_params=query_params)
     return response, query_params
 

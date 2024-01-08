@@ -25,23 +25,24 @@ from zac.core.utils import A_DAY
 
 
 def _search_meta_objects(
-    attribute_name: str,
+    objecttype_name: str,
     zaak: Optional[Zaak] = None,
     zaaktype: Optional[ZaakType] = None,
     unique: bool = False,
     data_attrs: List = [],
 ) -> List[dict]:
+
     config = MetaObjectTypesConfig.get_solo()
-    ot_url = getattr(config, attribute_name, None)
+    ot_url = getattr(config, objecttype_name, None)
     if not ot_url:
         logger.warning(
-            "`{attr}` objecttype is not configured in core configuration or does not exist in the configured objecttype service.".format(
-                attr=attribute_name
+            "`{objecttype_name}` objecttype is not configured in core configuration or does not exist in the configured objecttype service.".format(
+                objecttype_name=objecttype_name
             )
         )
         return []
 
-    object_filters = {"type": ot_url, "data_attrs": ["meta__icontains__true"]}
+    object_filters = {"type": ot_url, "data_attrs": []}
     if zaaktype:
         catalogus = fetch_catalogus(zaaktype.catalogus)
         object_filters["data_attrs"] += [

@@ -31,6 +31,7 @@ class MetaObjectTypesConfigAdmin(SingletonModelAdmin):
             "oudbehandelaren_objecttype",
             "checklisttype_objecttype",
             "checklist_objecttype",
+            "meta_list_objecttype",
         ]
         for field in objecttype_fields:
             form.base_fields[field] = fields.ChoiceField(

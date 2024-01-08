@@ -16,7 +16,6 @@ OUDBEHANDELAREN_OBJECTTYPE = {
         "title": "OudBehandelaren",
         "required": ["oudbehandelaren", "zaak"],
         "properties": {
-            "meta": True,
             "zaak": {"type": "string"},
             "behandelaren": {
                 "type": "array",
@@ -55,7 +54,6 @@ OUDBEHANDELAREN_OBJECT = {
         "index": 1,
         "typeVersion": 3,
         "data": {
-            "meta": True,
             "zaak": ZAAK_URL,
             "oudbehandelaren": [
                 {
