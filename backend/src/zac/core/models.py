@@ -138,8 +138,8 @@ class MetaObjectTypesConfig(SingletonModel):
     def __str__(self):
         return force_str(self._meta.verbose_name)
 
-    def save(self):
-        if self.default:
+    def save(self, *args, **kwargs):
+        if self.default and self.meta_list_objecttype:
             from zac.core.services import search_objects
 
             response, qp = search_objects({"type": self.meta_list_objecttype})
@@ -155,7 +155,7 @@ class MetaObjectTypesConfig(SingletonModel):
             for objecttype_name, url in urls.items():
                 if url:
                     setattr(self, objecttype_name, url)
-        return super().save()
+        return super().save(*args, **kwargs)
 
     @property
     def meta_objecttype_urls(self) -> Dict[str, str]:
