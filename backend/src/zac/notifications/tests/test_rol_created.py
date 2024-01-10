@@ -293,6 +293,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "zaak": ZAAK,
                 "roltype_omschrijving": ROLTYPE_RESPONSE["omschrijving"],
             },
+            self.zaak,
         )
         mock_es_get_rollen.assert_called_once_with(self.zaak)
 
@@ -469,6 +470,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "zaak": f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60",
                 "roltype_omschrijving": ROLTYPE_RESPONSE["omschrijving"],
             },
+            self.zaak,
         )
         mock_es_get_rollen.assert_called_once_with(self.zaak)
 

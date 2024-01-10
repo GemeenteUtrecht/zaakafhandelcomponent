@@ -1274,6 +1274,12 @@ class RolSerializer(PolymorphicSerializer):
                     rt=data["roltype"], zt=zaaktype.url
                 )
             )
+        else:
+            if rt.omschrijving_generiek == RolOmschrijving.initiator:
+                raise serializers.ValidationError(
+                    _("ROLTYPE {rt} is an initiator and cannot be changed.")
+                )
+
         if data.get("betrokkene") and data["betrokkene_type"]:
             raise serializers.ValidationError(
                 _("`betrokkene` and `betrokkene_type` are mutually exclusive.")

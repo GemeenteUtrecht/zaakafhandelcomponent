@@ -73,7 +73,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             "schemas/RolType",
             url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             omschrijving="Hoofdbehandelaar",
-            omschrijvingGeneriek=RolOmschrijving.initiator,
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -371,7 +371,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             "schemas/RolType",
             url=f"{CATALOGI_ROOT}roltypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
             omschrijving="Hoofdbehandelaar",
-            omschrijvingGeneriek=RolOmschrijving.initiator,
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
         )
         mock_resource_get(m, roltype)
         m.get(
@@ -394,7 +394,8 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             indicatieMachtiging="gemachtigde",
             zaak=self.zaak["url"],
             url=f"{ZAKEN_ROOT}rollen/fb498b0b-e4c7-44f1-8e39-a55d9f55ebb9",
-            omschrijvingGeneriek=RolOmschrijving.initiator,
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
+            omschrijving="Hoofdbehandelaar",
         )
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
@@ -418,7 +419,8 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             indicatieMachtiging="gemachtigde",
             zaak=self.zaak["url"],
             url=f"{ZAKEN_ROOT}rollen/fb498b0b-e4c7-44f1-8e39-a55d9f55ebb8",
-            omschrijvingGeneriek=RolOmschrijving.initiator,
+            omschrijvingGeneriek=RolOmschrijving.behandelaar,
+            omschrijving="Hoofdbehandelaar",
         )
         m.post(f"{ZAKEN_ROOT}rollen", json=new_rol, status_code=201)
 
@@ -431,7 +433,6 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "indicatie_machtiging": "gemachtigde",
             },
         )
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Check response

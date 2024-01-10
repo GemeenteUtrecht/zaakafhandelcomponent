@@ -390,10 +390,7 @@ class ChangeBehandelaarTasksSerializer(serializers.Serializer):
                 )
             )
 
-            if (
-                self.validated_data["rol"].omschrijving_generiek
-                == RolOmschrijving.initiator
-            ):
+            if self.validated_data["rol"].omschrijving == "Hoofdbehandelaar":
                 # Update `initiator` variable
                 list(
                     executor.map(
