@@ -712,22 +712,19 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
         # For the reasons below we check if the rol to be created is a hoofdbehandelaar:
         #
         # Open zaak does not support changing roles or assigning a hoofdbehandelaar.
-        # We use the `initiator` roltype to set our `hoofdbehandelaar`.
-        # Open Zaak only allows a single initiator rol.
-        # We don't want a ZAAK to not have a (hoofd)behandelaar.
+        # We use the `behandelaar` roltype to set our `hoofdbehandelaar`, but we typically only want one
+        # and at the same time we don't want a ZAAK to not have a (hoofd)behandelaar.
         #
-        # If it is we first delete the old hoofdbehandelaar rol.
+        # If it is a hoofdbehandelaar rol we first delete the old hoofdbehandelaar rol.
 
         roltype = get_roltype(serializer.data["roltype"])
-        if roltype.omschrijving_generiek == RolOmschrijving.initiator:
+        if roltype.omschrijving == "Hoofdbehandelaar":
             rollen = get_rollen(zaak)
             rol_url = [
-                rol.url
-                for rol in rollen
-                if rol.omschrijving_generiek == RolOmschrijving.initiator
+                rol.url for rol in rollen if rol.omschrijving == "Hoofdbehandelaar"
             ]
             if rol_url:
-                delete_rol(rol_url[0], zaak=zaak, user=request.user)
+                delete_rol(rol_url[0], zaak, user=request.user)
         try:
             rol = create_rol(serializer.data)
         except Exception as exc:
@@ -769,7 +766,7 @@ class ZaakRolesView(GetZaakMixin, views.APIView):
             data=self.request.query_params, context={"zaak": zaak}
         )
         serializer.is_valid(raise_exception=True)
-        delete_rol(serializer.validated_data["url"], zaak=zaak, user=request.user)
+        delete_rol(serializer.validated_data["url"], zaak, user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

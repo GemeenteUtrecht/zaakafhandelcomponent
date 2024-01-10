@@ -865,7 +865,7 @@ def create_rol(rol: Dict) -> Rol:
     return factory(Rol, rol)
 
 
-def delete_rol(rol_url: str, zaak: Optional[Zaak] = None, user: Optional[User] = None):
+def delete_rol(rol_url: str, zaak: Zaak, user: Optional[User] = None):
     from zac.contrib.objects.oudbehandelaren.utils import register_old_behandelaar
 
     # fetch old rol and register it in the appropriate object before deleting
@@ -880,7 +880,7 @@ def delete_rol(rol_url: str, zaak: Optional[Zaak] = None, user: Optional[User] =
 def update_rol(
     rol_url: str,
     new_rol: Dict,
-    zaak: Optional[Zaak] = None,
+    zaak: Zaak,
     user: Optional[User] = None,
 ) -> Rol:
     """
@@ -888,13 +888,13 @@ def update_rol(
 
     """
     # Destroy old rol
-    delete_rol(rol_url, zaak=zaak, user=user)
+    delete_rol(rol_url, zaak, user=user)
 
     # Create new rol
     return create_rol(new_rol)
 
 
-def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
+def update_medewerker_identificatie_rol(rol_url: str, zaak: Zaak) -> Optional[Rol]:
     rol = fetch_rol(rol_url)
 
     if rol.betrokkene_type != RolTypes.medewerker or rol.betrokkene:
@@ -923,7 +923,7 @@ def update_medewerker_identificatie_rol(rol_url: str) -> Optional[Rol]:
     from .api.serializers import RolSerializer
 
     new_rol_data = RolSerializer(instance=rol, context={"user": user}).data
-    return update_rol(rol_url, new_rol_data)
+    return update_rol(rol_url, new_rol_data, zaak)
 
 
 def fetch_zaak_informatieobject(zaak_informatieobject_url: str) -> ZaakInformatieObject:

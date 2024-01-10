@@ -203,7 +203,7 @@ class ZakenHandler:
     def _handle_rol_create(self, zaak_url: str, rol_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_rollen_cache(zaak, rol_urls=[rol_url])
-        updated = update_medewerker_identificatie_rol(rol_url)
+        updated = update_medewerker_identificatie_rol(rol_url, zaak=zaak)
 
         rol = fetch_rol(rol_url=rol_url)
         if not updated and (

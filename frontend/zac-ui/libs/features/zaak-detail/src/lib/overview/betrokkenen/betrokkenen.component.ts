@@ -12,7 +12,7 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 export class BetrokkenenComponent implements OnChanges {
   @Input() zaak: Zaak;
 
-  readonly omschrijvingGeneriekHoofdbehandelaar = "initiator"
+  readonly omschrijvingHoofdbehandelaar = "Hoofdbehandelaar"
   hiddenRoleData: Betrokkene[];
   alwaysVisibleRoleData: Betrokkene[];
   hoofdbehandelaar: Betrokkene;
@@ -60,9 +60,9 @@ export class BetrokkenenComponent implements OnChanges {
    * @returns {boolean}
    */
   isRemovableRole(role) {
-    return this.edit &&
-      ((role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijvingGeneriek !== this.omschrijvingGeneriekHoofdbehandelaar)) ||
-        ((role.omschrijvingGeneriek === 'behandelaar' || (role.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar)) && this.nBehandelaars > 1))
+    return this.edit && (role.omschrijvingGeneriek !== 'initiator') && 
+      ((role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijving !== this.omschrijvingHoofdbehandelaar)) ||
+        ((role.omschrijvingGeneriek === 'behandelaar' || (role.omschrijving === this.omschrijvingHoofdbehandelaar)) && this.nBehandelaars > 1))
   }
 
   ngOnChanges(): void {
@@ -88,11 +88,11 @@ export class BetrokkenenComponent implements OnChanges {
     this.isLoading = true;
     this.metaService.getRoleTypes(this.zaak.url).subscribe(roletypes => {
       this.roleTypes = roletypes;
-      this.hoofdBehandelaarType = this.roleTypes.find(x => x.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar);
+      this.hoofdBehandelaarType = this.roleTypes.find(x => x.omschrijving === this.omschrijvingHoofdbehandelaar);
     })
     this.zaakService.getCaseRoles(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(data => {
-      this.hoofdbehandelaar = data.find(x => x.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar);
-      this.allRoleData = data.filter(x => x.omschrijvingGeneriek !== this.omschrijvingGeneriekHoofdbehandelaar);
+      this.hoofdbehandelaar = data.find(x => x.omschrijving === this.omschrijvingHoofdbehandelaar);
+      this.allRoleData = data.filter(x => x.omschrijving !== this.omschrijvingHoofdbehandelaar);
       this.formatRoles(this.allRoleData);
       this.isLoading = false;
       this.edit = false;
@@ -124,7 +124,7 @@ export class BetrokkenenComponent implements OnChanges {
     this.hiddenRoleData = data.slice(0, -3);
     this.alwaysVisibleRoleData = data.slice(-3)
     this.nBehandelaars = data.filter(role => {
-      return (role.omschrijvingGeneriek === 'behandelaar') || (role.omschrijvingGeneriek === this.omschrijvingGeneriekHoofdbehandelaar)
+      return (role.omschrijvingGeneriek === 'behandelaar') || (role.omschrijving === this.omschrijvingHoofdbehandelaar)
     }).length;
   }
 
