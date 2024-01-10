@@ -367,8 +367,9 @@ def count_by_iot_in_zaak(zaak: str) -> Dict[str, int]:
     # elasticsearch-dsl does not support multiterm aggregation yet - workaround.
     s.aggs.bucket("parent", "terms", field="informatieobjecttype.catalogus")
     s.aggs["parent"].bucket(
-        "child", "terms", field="informatieobjecttype.omschrijving__keyword"
+        "child", "terms", field="informatieobjecttype.omschrijving.keyword"
     )
+
     results = [bucket.to_dict() for bucket in s.execute().aggregations.parent.buckets]
     results = factory(ParentAggregation, results)
     iots_found = {}
