@@ -93,7 +93,6 @@ export class KetenProcessenService {
     if(['Accorderen', 'Adviseren'].indexOf(task.name) > -1) {
       return user.username && !task.assignee
     }
-    return task.formKey !== 'zac:zetResultaat';
   }
 
   /**
