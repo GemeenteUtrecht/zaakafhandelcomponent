@@ -48,6 +48,7 @@ export class AppComponent implements OnInit {
    * @param {SnackbarService} snackbarService
    * @param {UserService} userService
    * @param {ZaakService} zaakService
+   * @param {HealthService} healthService
    * @param {ChangeDetectorRef} cd
    */
   constructor (
@@ -60,23 +61,26 @@ export class AppComponent implements OnInit {
     cd: ChangeDetectorRef
   ) {
     idle.setIdle(5); // how long can they be inactive before considered idle, in seconds (5 sec)
-    idle.setTimeout(10 * 60); // how long can they be idle before considered timed out, in seconds (10 minutes)
+    idle.setTimeout(20); // how long can they be idle before considered timed out, in seconds (10 minutes)
     idle.setInterrupts(DEFAULT_INTERRUPTSOURCES); // provide sources that will "interrupt" aka provide events indicating the user is active
 
     // When the user becomes idle
     idle.onIdleStart.subscribe(() => {
       this.idleState = "IDLE";
+      console.log('idle');
     });
 
     // When the user is no longer idle
     idle.onIdleEnd.subscribe(() => {
       this.idleState = "NOT_IDLE";
       cd.detectChanges();
+      console.log('no idle');
     });
 
     // When the user has timed out
     idle.onTimeout.subscribe(() => {
       this.idleState = "TIMED_OUT";
+      console.log('timed out');
       this.logOutUser();
     });
   }
