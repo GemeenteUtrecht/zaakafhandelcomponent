@@ -41,7 +41,7 @@ export class AppComponent implements OnInit {
   /** @type {string} Idle state. */
   idleState = "NOT_STARTED";
 
-  checkHealth = true;
+  userIsActive = true;
 
   /**
    * Constructor method.
@@ -62,31 +62,25 @@ export class AppComponent implements OnInit {
     private healthService: HealthService,
     cd: ChangeDetectorRef
   ) {
-    idle.setIdle(5); // how long can they be inactive before considered idle, in seconds (5 sec)
-    idle.setTimeout(20); // how long can they be idle before considered timed out, in seconds (10 minutes)
+    idle.setIdle(60); // how long can they be inactive before considered idle, in seconds (60 sec)
     idle.setInterrupts(DEFAULT_INTERRUPTSOURCES); // provide sources that will "interrupt" aka provide events indicating the user is active
 
     // When the user becomes idle
     idle.onIdleStart.subscribe(() => {
       this.idleState = "IDLE";
-      console.log('idle');
-      this.checkHealth = false;
+      console.log('inactive');
+      this.userIsActive = false;
     });
 
     // When the user is no longer idle
     idle.onIdleEnd.subscribe(() => {
       this.idleState = "NOT_IDLE";
       cd.detectChanges();
-      console.log('not idle');
-      this.checkHealth = true;
+      console.log('active');
+      this.userIsActive = true;
       this.getHealth();
     });
 
-    // When the user has timed out
-    idle.onTimeout.subscribe(() => {
-      this.idleState = "TIMED_OUT";
-      console.log('timed out');
-    });
   }
 
   //
@@ -121,12 +115,13 @@ export class AppComponent implements OnInit {
   getHealth() {
     console.log('health check');
     this.healthService.getHealth().subscribe();
-    // Poll again after 5s if it fails
+
+    // check health every 60s if the user is active
     setTimeout(() => {
-      if (this.checkHealth) {
+      if (this.userIsActive) {
         this.getHealth();
       }
-    }, 1000*60) // 60 seconds
+    }, 1000 * 60) // 60 seconds
   }
 
   /**
