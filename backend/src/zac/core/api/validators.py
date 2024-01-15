@@ -22,7 +22,7 @@ def validate_zaak_documents(selected_documents: List[str], zaak: Zaak):
         )
 
     documents = search_informatieobjects(
-        zaak=zaak, urls=selected_documents, size=len(selected_documents)
+        zaak=zaak.url, urls=selected_documents, size=len(selected_documents)
     )
     valid_docs = [doc.url for doc in documents]
     invalid_docs = [url for url in selected_documents if url not in valid_docs]
