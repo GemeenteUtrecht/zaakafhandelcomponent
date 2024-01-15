@@ -41,6 +41,8 @@ export class AppComponent implements OnInit {
   /** @type {string} Idle state. */
   idleState = "NOT_STARTED";
 
+  checkHealth = true;
+
   /**
    * Constructor method.
    * @param {Idle} idle
@@ -68,20 +70,22 @@ export class AppComponent implements OnInit {
     idle.onIdleStart.subscribe(() => {
       this.idleState = "IDLE";
       console.log('idle');
+      this.checkHealth = false;
     });
 
     // When the user is no longer idle
     idle.onIdleEnd.subscribe(() => {
       this.idleState = "NOT_IDLE";
       cd.detectChanges();
-      console.log('no idle');
+      console.log('not idle');
+      this.checkHealth = true;
+      this.getHealth();
     });
 
     // When the user has timed out
     idle.onTimeout.subscribe(() => {
       this.idleState = "TIMED_OUT";
       console.log('timed out');
-      this.logOutUser();
     });
   }
 
@@ -94,9 +98,7 @@ export class AppComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
-    setInterval(() => {
-      this.checkHealth();
-    }, 1000 * 60);
+    this.getHealth();
     this.reset();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -113,8 +115,18 @@ export class AppComponent implements OnInit {
   // Context.
   //
 
-  checkHealth() {
-    this.healthService.checkHealth().subscribe();
+  /**
+   * check health of application
+   */
+  getHealth() {
+    console.log('health check');
+    this.healthService.getHealth().subscribe();
+    // Poll again after 5s if it fails
+    setTimeout(() => {
+      if (this.checkHealth) {
+        this.getHealth();
+      }
+    }, 1000*60) // 60 seconds
   }
 
   /**
