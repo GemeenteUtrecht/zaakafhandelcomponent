@@ -64,7 +64,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   isPolling = false;
   nPolls = 0;
   nPollingFails = 0;
-  pollingInterval = 1000;
+  pollingInterval = 2000;
 
   errorMessage: string;
 
@@ -168,7 +168,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    */
   startPollingProcesses(): void {
     this.isPolling = true;
-    this.pollingInterval = 1000;
+    this.pollingInterval = 2000;
     this.fetchPollProcesses();
   }
 
@@ -262,7 +262,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     if (this.isPolling) {
       this.isPolling = false;
       this.nPolls = 0;
-      this.pollingInterval = 1000;
+      this.pollingInterval = 2000;
     }
   }
 
