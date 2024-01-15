@@ -5,8 +5,6 @@ import {SnackbarService} from '@gu/components';
 import { HealthService, UserService, ZaakService } from '@gu/services';
 import {menuItems, MenuItem} from './constants/menu';
 import { User } from '@gu/models';
-import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
-
 
 /**
  * <gu-zac-ui-root></gu-zac-ui-root>
@@ -42,10 +40,13 @@ export class AppComponent implements OnInit {
   idleState = "NOT_STARTED";
 
   userIsActive = true;
+  timeoutId: number;
+
+  maxUserInactivityTime = 60 * 1000; // 60 seconds
+  isUserInactive = false;
 
   /**
    * Constructor method.
-   * @param {Idle} idle
    * @param {Router} router
    * @param {SnackbarService} snackbarService
    * @param {UserService} userService
@@ -54,7 +55,6 @@ export class AppComponent implements OnInit {
    * @param {ChangeDetectorRef} cd
    */
   constructor (
-    private idle: Idle,
     private router: Router,
     private snackbarService: SnackbarService,
     private userService: UserService,
@@ -62,25 +62,6 @@ export class AppComponent implements OnInit {
     private healthService: HealthService,
     cd: ChangeDetectorRef
   ) {
-    idle.setIdle(60); // how long can they be inactive before considered idle, in seconds (60 sec)
-    idle.setInterrupts(DEFAULT_INTERRUPTSOURCES); // provide sources that will "interrupt" aka provide events indicating the user is active
-
-    // When the user becomes idle
-    idle.onIdleStart.subscribe(() => {
-      this.idleState = "IDLE";
-      console.log('inactive');
-      this.userIsActive = false;
-    });
-
-    // When the user is no longer idle
-    idle.onIdleEnd.subscribe(() => {
-      this.idleState = "NOT_IDLE";
-      cd.detectChanges();
-      console.log('active');
-      this.userIsActive = true;
-      this.getHealth();
-    });
-
   }
 
   //
@@ -93,7 +74,6 @@ export class AppComponent implements OnInit {
    */
   ngOnInit(): void {
     this.getHealth();
-    this.reset();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
@@ -125,14 +105,6 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * Call this method to start/reset the idle process
-   */
-  reset() {
-    this.idle.watch();
-    this.idleState = "NOT_IDLE";
-  }
-
-  /**
    * Retrieves the current user.
    */
   getContextData(): void {
@@ -155,6 +127,34 @@ export class AppComponent implements OnInit {
   //
   // Events
   //
+
+  /**
+   * Clear time out if user shows activity.
+   */
+  @HostListener('document:mousemove')
+  @HostListener('document:keypress')
+  @HostListener('document:keydown')
+  @HostListener('document:click')
+  @HostListener('document:wheel')
+  resetTimeout() {
+    console.log('activity');
+    clearTimeout(this.timeoutId);
+    if (!this.userIsActive) {
+      this.userIsActive = true;
+      this.getHealth();
+    }
+    this.checkTimeOut();
+  }
+
+  /**
+   * Set user as inactive when time has passed
+   */
+  checkTimeOut() {
+    this.timeoutId = setTimeout(() => {
+      this.userIsActive = false;
+      console.log('inactive');
+    }, this.maxUserInactivityTime);
+  }
 
   /**
    * Call API to log out user.
