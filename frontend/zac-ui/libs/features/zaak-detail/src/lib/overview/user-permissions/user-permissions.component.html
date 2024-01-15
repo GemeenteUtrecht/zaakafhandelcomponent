@@ -19,6 +19,7 @@
 
   <ng-container *ngIf="!isLoading">
     <p *ngIf="errorDetailMessage">{{errorDetailMessage}}</p>
+    <p class="p p--muted" *ngIf="userPermissions?.length == 0">Er zijn geen extra rechten toegevoegd.</p>
   </ng-container>
 
   <mat-accordion *ngIf="!isLoading && userPermissions">
@@ -36,8 +37,8 @@
       </ng-container>
   </mat-accordion>
 
-  <div class="d-flex justify-content-end mt-4" *ngIf="userPermissions">
-    <button gu-button *ngIf="userPermissions.length > 3"
+  <div class="d-flex justify-content-end mt-4" *ngIf="userPermissions?.length > 3">
+    <button gu-button
             buttonStyle="tertiary"
             size="extrasmall"
             [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
