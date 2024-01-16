@@ -137,7 +137,6 @@ export class AppComponent implements OnInit {
   @HostListener('document:click')
   @HostListener('document:wheel')
   resetTimeout() {
-    console.log('activity');
     clearTimeout(this.timeoutId);
     if (!this.userIsActive) {
       this.userIsActive = true;
