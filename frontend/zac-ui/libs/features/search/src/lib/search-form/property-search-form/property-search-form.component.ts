@@ -39,6 +39,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   @Input() pageData: PageEvent;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
   @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
+  @Output() showResults: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() isLoadingResult: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   searchForm: FormGroup
@@ -261,6 +262,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     this.searchService.searchZaken(search, page, ordering).subscribe(res =>{
       this.loadResult.emit(res.results);
       this.resultLength.emit(res.count);
+      this.showResults.emit(true);
       this.isSubmitting = false;
       this.isLoadingResult.emit(false);
     }, error => {

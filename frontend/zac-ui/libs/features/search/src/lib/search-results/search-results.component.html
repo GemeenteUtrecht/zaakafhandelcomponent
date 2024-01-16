@@ -1,4 +1,4 @@
-<ng-container *ngIf="resultData && tableData">
+<div class="search-results" *ngIf="resultData && tableData">
   <p class="mb-2"><strong>Resultaten ({{resultLength ? resultLength : 0}})</strong></p>
   <section *ngIf="resultData.length > 0">
     <gu-table [table]="tableData"
@@ -11,4 +11,4 @@
                   [length]="resultLength"
     ></gu-paginator>
   </section>
-</ng-container>
+</div>

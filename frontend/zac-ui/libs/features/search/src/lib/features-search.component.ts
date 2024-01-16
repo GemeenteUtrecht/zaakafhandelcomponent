@@ -15,6 +15,7 @@ export class FeaturesSearchComponent {
   mapMarkers: MapMarker[] = [];
 
   resultData: Zaak[] = [];
+  isVisible = false;
   resultLength: number;
   sortData: TableSort;
   pageData: PageEvent;
@@ -83,5 +84,13 @@ export class FeaturesSearchComponent {
    */
   onResultLength(data): void {
     this.resultLength = data;
+  }
+
+  /**
+   * Check if results need to be shown
+   * @param isVisible
+   */
+  onShowResults(isVisible): void {
+    this.isVisible = isVisible;
   }
 }
