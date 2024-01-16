@@ -19,8 +19,11 @@ jobs:
     name: Check if backend files were changed
     outputs:
       run_job: ${{ steps.check_files.outputs.run_job }}
+    # test
     runs-on: ubuntu-latest
     steps:
+      - name: Install genometools
+        run: sudo apt-get genometools
       - name: Checkout code
         uses: actions/checkout@v2
         with:
