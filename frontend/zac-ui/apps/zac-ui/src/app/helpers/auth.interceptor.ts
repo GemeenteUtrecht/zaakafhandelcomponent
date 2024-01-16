@@ -7,7 +7,7 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, mergeMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ApplicationHttpClient } from '@gu/services';
 import { lowerFirst } from 'lodash-es';
@@ -43,9 +43,10 @@ export class AuthInterceptor implements HttpInterceptor {
               window.location.href = `/accounts/login/?next=/ui${currentPath}`;
               return throwError(error);
             } else if (this.checkAzureSession(error)) {
-              const refreshUrl = error['refresh_url'];
-              this.http.Get(refreshUrl).subscribe();
-              return throwError(error);
+              return this.http.Get(error.error?.refresh_url)
+                .pipe(
+                  mergeMap(() => next.handle(req.clone()))
+                );
             } else {
               return throwError(error);
             }
