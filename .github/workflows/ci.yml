@@ -8,9 +8,13 @@ on:
     tags:
       - '*'
     paths:
-      - backend/requirements/*
+      - backend/*
   pull_request:
+    paths:
+      - backend/*
   workflow_dispatch:
+    paths:
+      - backend/*
 
 env:
   BACKEND_IMAGE_NAME: scrumteamzgw/zaakafhandelcomponent
