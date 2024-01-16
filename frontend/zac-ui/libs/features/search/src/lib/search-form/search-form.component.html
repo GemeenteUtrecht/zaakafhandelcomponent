@@ -14,6 +14,7 @@
         <gu-property-search-form [pageData]="pageData"
                                  [sortData]="sortData"
                                  (isLoadingResult)="isLoading = $event"
+                                 (showResults)="showResults.emit($event)"
                                  (loadResult)="loadResult.emit($event)"
                                  (resultLength)="resultLength.emit($event)"></gu-property-search-form>
       </div>

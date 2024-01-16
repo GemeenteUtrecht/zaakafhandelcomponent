@@ -10,11 +10,13 @@
                         (mapMarkers)="onMapMarkers($event)"
                         (loadResult)="onLoadResult($event)"
                         (resultLength)="onResultLength($event)"
+                        (showResults)="onShowResults($event)"
                         class="d-block mb-2">
         </gu-search-form>
       </div>
 
-      <gu-search-results [resultData]="resultData"
+      <gu-search-results *ngIf="isVisible"
+                         [resultData]="resultData"
                          [resultLength]="resultLength"
                          (pageOutput)="pageData = $event"
                          (sortOutput)="sortData = $event"></gu-search-results>

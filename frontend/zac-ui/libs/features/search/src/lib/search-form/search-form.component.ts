@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import {PageEvent} from '@angular/material/paginator';
 import {SnackbarService} from '@gu/components';
 import {Zaak, TableSort, ZaakObject} from '@gu/models';
@@ -6,6 +6,7 @@ import {SearchService} from '../search.service';
 import {MapGeometry, MapMarker} from "../../../../../shared/ui/components/src/lib/components/map/map";
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
+import { SearchResultsComponent } from '../search-results/search-results.component';
 
 
 /**
@@ -29,6 +30,7 @@ export class SearchFormComponent {
   @Input() pageData: PageEvent;
   @Output() loadResult: EventEmitter<Zaak[]> = new EventEmitter<Zaak[]>();
   @Output() resultLength: EventEmitter<number> = new EventEmitter<number>();
+  @Output() showResults: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   @Output() mapGeometry: EventEmitter<MapGeometry> = new EventEmitter<MapGeometry>();
   @Output() mapMarkers: EventEmitter<MapMarker[]> = new EventEmitter<MapMarker[]>();
@@ -70,6 +72,7 @@ export class SearchFormComponent {
   searchObjects() {
     this.loadResult.emit([]);
     this.resultLength.emit(0);
+    this.showResults.emit(false);
   }
 
   /**
@@ -88,6 +91,7 @@ export class SearchFormComponent {
         this.isLoading = false;
         this.loadResult.emit(data.results as Zaak[]);
         this.resultLength.emit(data.count);
+        this.showResults.emit(true);
       },
       this.reportError.bind(this)
     );
@@ -102,7 +106,8 @@ export class SearchFormComponent {
   handleTabClick(event, tab) {
     event.preventDefault()
     this.setUrl(tab.link);
-    this.activatedChildRoute = tab.link.split('/')[2]
+    this.activatedChildRoute = tab.link.split('/')[2];
+    this.searchObjects();
   }
 
   /**
