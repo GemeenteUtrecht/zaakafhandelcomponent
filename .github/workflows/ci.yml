@@ -13,6 +13,8 @@ on:
 env:
   BACKEND_IMAGE_NAME: scrumteamzgw/zaakafhandelcomponent
   FRONTEND_IMAGE_NAME: scrumteamzgw/zac-ui
+  time: 3
+  continue: true
 
 jobs:
   check_files_changed:
@@ -123,17 +125,21 @@ jobs:
 
   backend-docker:
     needs: backend-tests
+    timeout-minutes: 10
+    if: always()
 
     name: Build (and push) backend Docker image
     runs-on: ubuntu-latest
 
     steps: 
-      -
-        name: Checkout
+      - name: fail if conditional job failed
+        if: ${{ needs.backend-tests.result == 'failure' }}
+        run: exit 1
+
+      - name: Checkout
         uses: actions/checkout@v2
 
-      -
-        name: Construct tag
+      - name: Construct tag
         id: vars
         run: |
           # Strip git ref prefix from version
