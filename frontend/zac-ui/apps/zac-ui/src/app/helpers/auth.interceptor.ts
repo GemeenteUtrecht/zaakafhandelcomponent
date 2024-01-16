@@ -10,6 +10,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ApplicationHttpClient } from '@gu/services';
+import { lowerFirst } from 'lodash-es';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -26,8 +27,10 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private checkAzureSession(error: HttpErrorResponse): boolean {
+    console.log('refresh url error');
     console.log(error.error);
-    return error.status && error.status === 403 && error.error['refresh_url']
+    console.log(error.error?.hasOwnProperty('refresh_url'));
+    return error.error?.hasOwnProperty('refresh_url');
   }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -40,8 +43,8 @@ export class AuthInterceptor implements HttpInterceptor {
               window.location.href = `/accounts/login/?next=/ui${currentPath}`;
               return throwError(error);
             } else if (this.checkAzureSession(error)) {
-              const refreshUrl = error.error['refresh_url'];
-              this.http.Get(refreshUrl);
+              const refreshUrl = error['refresh_url'];
+              this.http.Get(refreshUrl).subscribe();
               return throwError(error);
             } else {
               return throwError(error);
