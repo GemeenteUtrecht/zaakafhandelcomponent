@@ -19,11 +19,8 @@ jobs:
     name: Check if backend files were changed
     outputs:
       run_job: ${{ steps.check_files.outputs.run_job }}
-    # test
     runs-on: ubuntu-latest
     steps:
-      - name: Install genometools
-        run: sudo apt-get install genometools
       - name: Checkout code
         uses: actions/checkout@v2
         with:
@@ -33,9 +30,9 @@ jobs:
         run: |
           echo "=============== list modified files ==============="
           git diff --name-only HEAD^ HEAD
-          
+
           echo "========== check paths of modified files =========="
-          git diff --name-only HEAD^ HEAD &gt; files.txt
+          git diff --name-only HEAD^ HEAD > files.txt
           while IFS= read -r file
           do
             echo $file
@@ -45,7 +42,7 @@ jobs:
             else
               echo "::set-output name=run_job::true"
             fi
-          done &lt; files.txt
+          done < files.txt
 
   backend-tests:
     name: Run the Django test suite and build documentation
