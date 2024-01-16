@@ -8,7 +8,7 @@ on:
     tags:
       - '*'
     paths:
-      - "backend/requirements/*"
+      - backend/requirements/*
   pull_request:
   workflow_dispatch:
 
