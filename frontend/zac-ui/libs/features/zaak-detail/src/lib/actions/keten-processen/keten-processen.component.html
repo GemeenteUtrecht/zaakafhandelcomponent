@@ -90,12 +90,6 @@
                       {{task.created | niceDateFormatPipe}}
                     </ng-container>
                   </label>
-
-                  <div class="d-flex flex-column justify-content-center" *ngIf="ketenProcessenService.isTaskActionableByUser(currentUser, task)">
-                    <button gu-button class="mb-2" buttonStyle="action-link" (click)="executeTask(task.id)">
-                      Behandelen
-                    </button>
-                  </div>
                 </div>
 
                 <!-- Actions -->
@@ -226,7 +220,7 @@
       </gu-tab>
 
       <!-- Assign task -->
-      <gu-tab label="Toewijzen" *ngIf="ketenProcessenService.isUserAllowedToAssignTask(currentUser, taskContextData.task)">
+      <gu-tab label="Toewijzen">
         <div class="pt-4">
           <gu-assign-task [taskData]="taskContextData.task" [currentUser]="currentUser" (successReload)="closeModal()"></gu-assign-task>
         </div>

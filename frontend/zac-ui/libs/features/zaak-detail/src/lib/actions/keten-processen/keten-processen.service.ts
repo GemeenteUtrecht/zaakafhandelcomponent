@@ -92,6 +92,8 @@ export class KetenProcessenService {
   isUserAllowedToAssignTask(user: User, task: Task): boolean {
     if(['Accorderen', 'Adviseren'].indexOf(task.name) > -1) {
       return user.username && !task.assignee
+    } else {
+      return true;
     }
   }
 

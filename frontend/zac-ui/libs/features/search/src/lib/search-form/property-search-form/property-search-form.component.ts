@@ -12,12 +12,18 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import {Zaak, TableSort, ZaaktypeEigenschap, MetaZaaktypeResult, MetaZaaktypeCatalogus} from '@gu/models';
+import {
+  Zaak,
+  TableSort,
+  ZaaktypeEigenschap,
+  MetaZaaktypeResult,
+  UserSearchResult
+} from '@gu/models';
 import { Search } from '../../../models/search';
 import { SearchService } from '../../search.service';
 import {tableHeadMapping} from "../../search-results/constants/table";
 import { PageEvent } from '@angular/material/paginator';
-import { MetaService } from '@gu/services';
+import { AccountsService, MetaService } from '@gu/services';
 import { Choice } from '@gu/components';
 
 
@@ -45,6 +51,8 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   searchForm: FormGroup
   search: Search;
 
+  users: UserSearchResult[] = [];
+
   caseTypes: MetaZaaktypeResult[];
   domainChoices: Choice[];
   caseTypeChoices: Choice[];
@@ -65,6 +73,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   constructor(
     private fb: FormBuilder,
+    private accountsService: AccountsService,
     private searchService: SearchService,
     private metaService: MetaService,
     private router: Router,
@@ -77,6 +86,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     this.searchForm = this.fb.group({
       domain: [{label: 'UTRE', value: 'UTRE'}],
       zaaktype: [''],
+      behandelaar: [''],
       omschrijving: [''],
       eigenschapnaam: [''],
       eigenschapwaarde: [''],
@@ -175,6 +185,18 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     }
   }
 
+
+  /**
+   * Search users.
+   * @param searchInput
+   */
+  onSearch(searchInput) {
+    this.accountsService.getAccounts(searchInput).subscribe(res => {
+        this.users = res.results;
+      }
+    );
+  }
+
   /**
    * Set the selected property value
    * @param {ZaaktypeEigenschap} property
@@ -230,6 +252,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     // Only add key with values if the values are present
     this.search = {
       ...zaaktype && {zaaktype: zaaktype},
+      ...this.behandelaar.value && {behandelaar: this.behandelaar.value},
       ...this.omschrijving.value && {omschrijving: this.omschrijving.value},
       ...(this.eigenschapnaam.value && this.eigenschapwaarde.value) && {eigenschappen: eigenschappen}
     }
@@ -301,6 +324,10 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
 
   get zaaktype(): FormControl {
     return this.searchForm.get('zaaktype') as FormControl;
+  };
+
+  get behandelaar(): FormControl {
+    return this.searchForm.get('behandelaar') as FormControl;
   };
 
   get omschrijving(): FormControl {
