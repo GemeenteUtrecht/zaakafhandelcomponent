@@ -52,7 +52,7 @@
         <div *ngFor="let field of fieldset.fields; let i = index">
           <div [hidden]="!isExpanded && i >= 4 + this.hiddenFields.length && !isInEditMode && showLess">
             <!-- Document -->
-            <div *ngIf="field.widgetType == 'document'" class="form__document mb-4">
+            <div *ngIf="field.widgetType == 'document'" class="form__document mb-3">
               <!-- Has document -->
               <div *ngIf="field.value" class="mat-form-field-wrapper pb-1">
                 <div class="">
@@ -65,7 +65,7 @@
               <div *ngIf="documents[field.name]" class="mat-form-field-wrapper">
                 <div class="row">
                   <p class="col-8 mb-2">Geselecteerde document: {{documents[field.name]?.bestandsnaam}}</p>
-                  <p class="col-4 mb-4">
+                  <p class="col-4 mb-3">
                     <button gu-button
                             buttonStyle="tertiary"
                             icon="remove"
@@ -149,7 +149,7 @@
               [value]="field.control.value"
               [autocomplete]="field.autocomplete"
               (change)="inputChanged($event, field)"
-              class="mb-4"
+              class="mb-3"
             ></gu-input>
             <!-- End regular field. -->
 
@@ -161,7 +161,7 @@
               [value]="field.value"
               [checked]="field.checked"
               (change)="checkboxChanged($event, field)"
-              class="mb-4"
+              class="mb-3"
             >{{field.label}}</gu-checkbox>
 
             <!-- Select field. -->
@@ -178,7 +178,7 @@
               bindValue="value"
               (change)="selectChanged($event, field)"
               (search)="selectSearch($event, field)"
-              class="mb-4"
+              class="mb-3"
             ></gu-multiselect>
             <!-- End select field. -->
           </div>

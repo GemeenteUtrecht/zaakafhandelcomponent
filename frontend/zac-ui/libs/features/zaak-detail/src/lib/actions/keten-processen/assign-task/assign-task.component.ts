@@ -32,6 +32,8 @@ export class AssignTaskComponent implements OnChanges {
   errorMessage: string;
   submitSuccess: boolean;
 
+  showForm: boolean;
+
   constructor(
     private kService: KetenProcessenService,
     private fb: FormBuilder,
@@ -69,6 +71,8 @@ export class AssignTaskComponent implements OnChanges {
       this.assignUserGroupForm = this.fb.group({
         assignee: this.fb.control("", Validators.required)
       })
+
+      this.showForm = this.kService.isUserAllowedToAssignTask(this.currentUser, this.taskData)
     }
   }
 
