@@ -38,7 +38,7 @@ jobs:
           while IFS= read -r file
           do
             echo $file
-            if [[ $file != backend/* ]]; then
+            if [[ $file != backend/requirements/* ]]; then
               echo "::set-output name=run_job::false"
               break
             else
