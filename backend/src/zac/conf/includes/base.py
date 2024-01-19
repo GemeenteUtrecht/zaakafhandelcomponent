@@ -381,7 +381,7 @@ LOGIN_REDIRECT_URL = reverse_lazy("accounts:logged_in")
 #
 SESSION_COOKIE_SECURE = IS_HTTPS
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = config("SESSION_COOKIE_AGE", default=20 * 60)  # 20 minutes
+SESSION_COOKIE_AGE = config("SESSION_COOKIE_AGE", default=10 * 60)  # 10 minutes
 SESSION_SAVE_EVERY_REQUEST = True  #
 
 CSRF_COOKIE_SECURE = IS_HTTPS
@@ -418,7 +418,7 @@ AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 #
 # derive default value from debug yes/no - that enables it at dev-time but disables it
 # in production-like environments
-CORS_ALLOW_ALL_ORIGINS = config("CORS_HEADERS_ENABLED", default=DEBUG)
+CORS_ALLOW_ALL_ORIGINS = True  # config("CORS_HEADERS_ENABLED", default=DEBUG)
 _angular_dev_server_port = config("ANGULAR_DEV_SERVER_PORT", default=4200)
 CSRF_TRUSTED_ORIGINS = [
     f"localhost:{_angular_dev_server_port}",
@@ -437,6 +437,8 @@ OIDC_AUTHENTICATE_CLASS = "mozilla_django_oidc_db.views.OIDCAuthenticationReques
 OIDC_CALLBACK_CLASS = "mozilla_django_oidc_db.views.OIDCCallbackView"
 MOZILLA_DJANGO_OIDC_DB_CACHE = "oidc"
 MOZILLA_DJANGO_OIDC_DB_CACHE_TIMEOUT = 1
+OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 5 * 60  # 5 minutes
+OIDC_REDIRECT_REQUIRE_HTTPS = True  # for sure
 
 #
 # DRF
