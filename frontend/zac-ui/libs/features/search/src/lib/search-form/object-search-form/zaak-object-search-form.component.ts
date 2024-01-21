@@ -174,7 +174,6 @@ export class ZaakObjectSearchFormComponent implements OnInit {
       {
         label: 'Zoekopdracht',
         name: 'query',
-        placeholder: 'adres:Utrechtsestraat 41, type:Laadpaal',
         required: false,
         value: '',
       },
