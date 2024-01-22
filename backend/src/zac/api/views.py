@@ -5,6 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 import requests
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -58,6 +60,28 @@ class HealthCheckView(APIView):
     )
     def get(self, request: Request, *args, **kwargs):
         return Response({"healty": True})
+
+    def get_serializer(self, *args, **kwargs):
+        # shut up drf-spectacular
+        return {}
+
+
+class PingView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary=_("Ping a user session."),
+        description=_("Extends user session on activity."),
+        responses={
+            "200": inline_serializer(
+                "Serializer",
+                fields={"pong": serializers.BooleanField(default=True)},
+            )
+        },
+    )
+    def get(self, request: Request, *args, **kwargs):
+        return Response({"pong": True})
 
     def get_serializer(self, *args, **kwargs):
         # shut up drf-spectacular
