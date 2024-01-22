@@ -6,12 +6,13 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
-from .views import HealthCheckView, remote_schema_view
+from .views import HealthCheckView, PingView, remote_schema_view
 
 urlpatterns = [
     # API schema documentation
     path("", SpectacularJSONAPIView.as_view(schema=None), name="api-schema-json"),
     path("_health/", HealthCheckView.as_view(), name="health-check"),
+    path("ping/", PingView.as_view(), name="ping"),
     path("_get-remote-schema", remote_schema_view, name="get-remote-schema"),
     path("schema", SpectacularAPIView.as_view(schema=None), name="api-schema"),
     path(
