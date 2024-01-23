@@ -13,15 +13,15 @@
     <p *ngIf="!(!!allTaskData && allTaskData.length === 0 && !isLoading) && !zaak.resultaat">Dit zijn acties die uitgevoerd moeten worden om de zaak af te ronden.</p>
 
     <!-- Result set -->
-    <p *ngIf="zaak.resultaat">De zaak is afgesloten.</p>
+    <p *ngIf="zaak.resultaat && !showOverlay && !zaak.kanGeforceerdBijwerken">De zaak is afgesloten.</p>
 
     <!-- Loaded -->
-    <ng-container *ngIf="!!allTaskData && allTaskData?.length > 0 && !zaak.resultaat">
+    <ng-container *ngIf="!!allTaskData && allTaskData?.length > 0 && !showOverlay && showTasks">
       <!-- Task lists -->
       <div *ngIf="allTaskData" class="processen__taken">
 
         <!-- When there are no actions for the user -->
-        <p *ngIf="nVisibleTaskData === 0">Er zijn nog geen acties beschikbaar.</p>
+        <p *ngIf="nVisibleTaskData === 0">Er zijn geen acties beschikbaar.</p>
 
         <!-- When there are actions available -->
         <div *ngIf="nVisibleTaskData > 0" class="row">
@@ -29,7 +29,7 @@
           <div class="col-md-6 mb-4 mb-md-0">
             <h4>Mijn acties</h4>
             <ng-container *ngFor="let task of allTaskData">
-              <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForCurrentUser(currentUser, task)">
+              <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForCurrentUser(currentUser, task) && !(task.name === 'Zaak afsluiten' && zaak.resultaat)">
                 <!-- Description -->
                 <div class="taak__detail mr-md-2">
                   <p class="m-0 p--bold p--primary" *ngIf="task.name.split(':')[0] !== 'Open bijdragezaak'">{{task.name | capitalize}}</p>
@@ -75,7 +75,7 @@
           <div class="col-md-6">
             <h4>Acties voor anderen</h4>
             <ng-container *ngFor="let task of allTaskData">
-              <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForOtherUser(currentUser, task)">
+              <div class="taak d-flex justify-content-between" *ngIf="ketenProcessenService.isTaskForOtherUser(currentUser, task)  && !(task.name === 'Zaak afsluiten' && zaak.resultaat)">
                 <!-- Description -->
                 <div class="taak__detail mr-md-2">
                   <p class="m-0 p--bold p--primary" *ngIf="task.name">{{task.name | capitalize}}</p>
@@ -137,16 +137,16 @@
 
   <!-- Process has not started -->
   <div *ngIf="showOverlay" class="processen__disabled-overlay">
-    <button gu-button class="mb-2" buttonStyle="primary" size="large" (click)="initiateCamundaProcess()">
+    <button gu-button class="mb-2" buttonStyle="primary" size="large" (click)="initiateCamundaProcess()" [loading]="isStartingProcess">
       Proces opstarten
     </button>
   </div>
 
 </div>
 
-<div class="acties card mt-4" *ngIf="!!messages && messages?.length > 0 && showActions">
+<div class="acties card mt-4" *ngIf="!!messages && messages?.length > 0 && showActions && showTasks">
   <h3>Optionele acties</h3>
-  <p>Dit zijn acties die op elk moment tijdens de zaak uitgevoerd kunnen worden.</p>
+  <p *ngIf='!zaak.resultaat'>Dit zijn acties die op elk moment tijdens de zaak uitgevoerd kunnen worden.</p>
   <!-- Action buttons -->
   <div class="processen__msg-btns-container">
     <ng-container *ngFor="let message of messages; let i = index">
@@ -159,7 +159,7 @@
       </button>
     </ng-container>
   </div>
-  <button *ngIf="hasCancelCaseMessage"
+  <button *ngIf="hasCancelCaseMessage && !zaak.resultaat"
           gu-button
           buttonStyle="primary"
           buttonType="danger"
@@ -170,7 +170,7 @@
   </button>
 
   <!-- Loader -->
-  <ng-container *ngIf="isLoadingAction && !zaak.resultaat">
+  <ng-container *ngIf="isLoadingAction">
     <gu-loading-indicator></gu-loading-indicator>
   </ng-container>
 </div>
