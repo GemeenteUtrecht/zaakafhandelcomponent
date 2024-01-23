@@ -12,7 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 import {ModalService, SnackbarService} from '@gu/components';
 import {TaskContextData} from '../../../models/task-context';
 import {KetenProcessenService, SendMessageForm} from './keten-processen.service';
-import {Task, User, Zaak} from '@gu/models';
+import { Task, User, Zaak } from '@gu/models';
 import {UserService, ZaakService} from '@gu/services';
 
 /**
@@ -85,14 +85,12 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   doRedirectTarget: '_blank' | '_self';
 
   showOverlay: boolean;
+  showTasks: boolean;
   showActions: boolean;
 
   hasCancelCaseMessage: boolean;
 
   componentIsVisible = false;
-
-  /** @type {string} Idle state. */
-  idleState = "NOT_STARTED";
 
   constructor(
     public ketenProcessenService: KetenProcessenService,
@@ -120,7 +118,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       this.fetchCurrentUser();
 
       if (JSON.stringify(changes.zaak.currentValue) !== JSON.stringify(changes.zaak.previousValue)) {
-        if (!this.zaak.resultaat && !this.isPolling && !this.showOverlay) {
+        if (!this.isPolling && !this.showOverlay) {
           this.isLoading = true;
           this.fetchProcesses();
           this.fetchMessages();
@@ -356,7 +354,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
       const sendMessageConfirmation = 'De taak wordt aangemaakt, een moment geduld.'
       this.snackbarService.openSnackBar(sendMessageConfirmation, 'Sluiten', 'primary')
     }, errorRes => {
-      this.errorMessage = errorRes?.error?.detail || 'Het openen van de actie is niet gelukt. Controleer of de actie al actief is in het "Acties" blok hierboven.';
+      this.errorMessage = errorRes?.error?.detail || errorRes?.error?.message || 'Het openen van de actie is niet gelukt. Controleer of de actie al actief is in het "Acties" blok hierboven.';
       this.reportError(errorRes);
     })
   }
@@ -373,7 +371,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.nVisibleTaskData = this.allTaskData.length;
 
     // Emit number of tasks
-    this.nTaskDataEvent.emit(this.allTaskData.length);
+    this.nTaskDataEvent.emit(this.nVisibleTaskData);
 
     // Trigger update in parent
     if (forceUpdateParent) {
@@ -482,13 +480,12 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
   initiateCamundaProcess() {
     this.isStartingProcess = true;
     this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
+      this.fetchCaseDetails();
       setTimeout(() => {
         this.showOverlay = false;
       }, 2000)
-      this.fetchCaseDetails();
     }, error => {
       this.isLoading = false;
-      this.isStartingProcess = false;
       this.errorMessage = error.error?.value
         ? error.error?.value[0]
         : error?.error?.detail || error?.error.reason || error?.error[0]?.reason || error?.error.nonFieldErrors?.join(', ') || "Het opstarten van het proces is mislukt. Probeer het nog eens."
@@ -540,8 +537,15 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
    * Show actions and overlay.
    */
   checkActionsVisibility() {
-    this.showOverlay = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
-    this.showActions = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+    this.showTasks = !this.zaak.resultaat || (this.zaak.resultaat && this.zaak.kanGeforceerdBijwerken);
+
+    const caseIsUnstartedAndUnconfigured = !this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && !this.zaak?.isConfigured;
+    const caseIsClosedAndHasForceStartPermission = this.zaak.resultaat && !this.zaak?.isStatic && !this.zaak?.hasProcess && this.zaak?.isConfigured && this.zaak.kanGeforceerdBijwerken;
+    this.showOverlay = caseIsUnstartedAndUnconfigured || caseIsClosedAndHasForceStartPermission
+
+    const caseIsActiveAndHasProcess = !this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess && this.zaak?.isConfigured;
+    const caseIsClosedAndHasProcess = this.zaak.resultaat && !this.zaak?.isStatic && this.zaak?.hasProcess;
+    this.showActions = caseIsActiveAndHasProcess || caseIsClosedAndHasProcess;
   }
 
   /**
