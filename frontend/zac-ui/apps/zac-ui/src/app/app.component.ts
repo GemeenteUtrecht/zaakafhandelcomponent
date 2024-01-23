@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/cor
 import {NavigationEnd, Router} from '@angular/router';
 import {filter} from 'rxjs/operators';
 import {SnackbarService} from '@gu/components';
-import { HealthService, UserService, ZaakService } from '@gu/services';
+import { PingService, UserService, ZaakService } from '@gu/services';
 import {menuItems, MenuItem} from './constants/menu';
 import { User } from '@gu/models';
 
@@ -51,7 +51,7 @@ export class AppComponent implements OnInit {
    * @param {SnackbarService} snackbarService
    * @param {UserService} userService
    * @param {ZaakService} zaakService
-   * @param {HealthService} healthService
+   * @param {PingService} pingService
    * @param {ChangeDetectorRef} cd
    */
   constructor (
@@ -59,7 +59,7 @@ export class AppComponent implements OnInit {
     private snackbarService: SnackbarService,
     private userService: UserService,
     private zaakService: ZaakService,
-    private healthService: HealthService,
+    private pingService: PingService,
     cd: ChangeDetectorRef
   ) {
   }
@@ -73,7 +73,7 @@ export class AppComponent implements OnInit {
    * ngOnInit() method to handle any additional initialization tasks.
    */
   ngOnInit(): void {
-    this.getHealth();
+    this.pingServer();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
@@ -90,16 +90,15 @@ export class AppComponent implements OnInit {
   //
 
   /**
-   * check health of application
+   * ping server for activity
    */
-  getHealth() {
-    console.log('health check');
-    this.healthService.getHealth().subscribe();
+  pingServer() {
+    this.pingService.pingServer().subscribe();
 
     // check health every 60s if the user is active
     setTimeout(() => {
       if (this.userIsActive) {
-        this.getHealth();
+        this.pingServer();
       }
     }, 1000 * 60) // 60 seconds
   }
@@ -140,7 +139,7 @@ export class AppComponent implements OnInit {
     clearTimeout(this.timeoutId);
     if (!this.userIsActive) {
       this.userIsActive = true;
-      this.getHealth();
+      this.pingServer();
     }
     this.checkTimeOut();
   }
@@ -151,7 +150,6 @@ export class AppComponent implements OnInit {
   checkTimeOut() {
     this.timeoutId = setTimeout(() => {
       this.userIsActive = false;
-      console.log('inactive');
     }, this.maxUserInactivityTime);
   }
 
