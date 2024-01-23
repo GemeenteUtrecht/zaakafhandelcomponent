@@ -217,7 +217,7 @@ export class KetenProcessenService {
    */
   compareArraysById(arr1, arr2) {
     // Check if the arrays have the same length
-    if (arr1.length !== arr2.length) {
+    if (arr1?.length !== arr2?.length) {
       return { areEqual: false };
     }
 

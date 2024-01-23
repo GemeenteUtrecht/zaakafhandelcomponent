@@ -137,7 +137,7 @@
 
   <!-- Process has not started -->
   <div *ngIf="showOverlay" class="processen__disabled-overlay">
-    <button gu-button class="mb-2" buttonStyle="primary" size="large" (click)="initiateCamundaProcess()" [loading]="isStartingProcess">
+    <button gu-button class="mb-2" buttonStyle="primary" size="large" (click)="initiateCamundaProcess()" [loading]="isStartingProcess" [disabled]="isStartingProcess">
       Proces opstarten
     </button>
   </div>

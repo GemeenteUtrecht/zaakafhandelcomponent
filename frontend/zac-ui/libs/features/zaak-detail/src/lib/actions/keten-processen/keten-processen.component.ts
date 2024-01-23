@@ -371,7 +371,9 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.nVisibleTaskData = this.allTaskData.length;
 
     // Emit number of tasks
-    this.nTaskDataEvent.emit(this.nVisibleTaskData);
+    if (!this.zaak.resultaat) {
+      this.nTaskDataEvent.emit(this.nVisibleTaskData);
+    }
 
     // Trigger update in parent
     if (forceUpdateParent) {
@@ -436,7 +438,7 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
             this.checkActionsVisibility();
             this.isStartingProcess = false;
             if (!this.isPolling) {
-              this.startPollingProcesses();
+              this.fetchProcesses();
             }
           }
         }, 2000)
@@ -481,9 +483,6 @@ export class KetenProcessenComponent implements OnChanges, OnDestroy, AfterViewI
     this.isStartingProcess = true;
     this.zaakService.startCaseProcess(this.bronorganisatie, this.identificatie).subscribe(() => {
       this.fetchCaseDetails();
-      setTimeout(() => {
-        this.showOverlay = false;
-      }, 2000)
     }, error => {
       this.isLoading = false;
       this.errorMessage = error.error?.value
