@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class HealthService {
+export class PingService {
 
   constructor(
     private http: ApplicationHttpClient
@@ -14,11 +14,11 @@ export class HealthService {
   }
 
   /**
-   * Check application health
+   * Ping server to show activity
    * @return {Observable}
    */
-  getHealth(): Observable<any> {
-    const endpoint = encodeURI(`/api/_health/`);
+  pingServer(): Observable<any> {
+    const endpoint = encodeURI(`/api/ping/`);
     return this.http.Get<any>(endpoint);
   }
 
