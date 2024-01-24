@@ -167,7 +167,7 @@ def get_process_instances(
                 zaak_url="" if include_bijdragezaak else zaak_url,
             )
 
-        with parallel() as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             list(executor.map(_add_subprocesses, pis))
 
     definition_ids = sorted(
@@ -207,7 +207,7 @@ def get_top_level_process_instances(
         if not process_instance.tasks:
             process_instances_without_task.append(process_instance)
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = executor.map(get_process_tasks, process_instances_without_task)
 
     tasks = {str(_tasks[0].process_instance_id): _tasks for _tasks in results if _tasks}
@@ -228,7 +228,7 @@ def get_top_level_process_instances(
         nonlocal def_messages
         def_messages[definition_id] = get_messages(definition_id)
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         list(executor.map(_get_messages, top_definition_ids))
 
     for process in top_level_processes:

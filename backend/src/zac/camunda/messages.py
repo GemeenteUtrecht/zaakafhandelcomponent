@@ -68,7 +68,7 @@ def get_process_instances_messages_for_zaak(zaak_url: str) -> List[ProcessInstan
         nonlocal def_messages
         def_messages[definition_id] = get_messages(definition_id)
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         list(executor.map(_get_messages, p_def_ids))
 
     for p in process_instances:

@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 from urllib.request import Request
 
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -293,7 +294,7 @@ def get_eigenschap(url: str) -> Eigenschap:
 
 
 def get_eigenschappen_for_zaaktypen(zaaktypen: List[ZaakType]) -> List[Eigenschap]:
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         _eigenschappen = executor.map(get_eigenschappen, zaaktypen)
 
     eigenschappen = sum(list(_eigenschappen), [])
@@ -367,7 +368,7 @@ def get_informatieobjecttypen_for_zaaktype(
         iot["informatieobjecttype"]
         for iot in sorted(results, key=lambda iot: iot["volgnummer"])
     ]
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = executor.map(get_informatieobjecttype, urls)
     return list(results)
 
@@ -381,7 +382,7 @@ def get_informatieobjecttype(url: str) -> InformatieObjectType:
 
 @cache_result("zt:besluittypen:{zaaktype.url}")
 def get_besluittypen_for_zaaktype(zaaktype: ZaakType) -> List[BesluitType]:
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = executor.map(fetch_besluittype, zaaktype.besluittypen)
     return list(results)
 
@@ -471,7 +472,7 @@ def get_zaken_all(
     def _get_paginated_results(client):
         return get_paginated_results(client, "zaak", query_params=query_params)
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = executor.map(_get_paginated_results, clients)
         flattened = sum(list(results), [])
 
@@ -784,7 +785,7 @@ def get_related_zaken(zaak: Zaak) -> List[Tuple[str, Zaak]]:
 
         return relevante_andere_zaak["aard_relatie"], zaak
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = list(executor.map(_fetch_zaak, zaak.relevante_andere_zaken))
 
     return results
@@ -1031,7 +1032,7 @@ def _fetch_document(url: str) -> Response:
 
 
 def fetch_documents(zios: List[str]) -> Tuple[List[Document], List[str]]:
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         responses = executor.map(lambda url: _fetch_document(url), zios)
     documenten = []
     gone = []
@@ -1311,7 +1312,7 @@ def get_besluiten(zaak: Zaak) -> List[Besluit]:
 
     # resolve besluittypen
     _besluittypen = {besluit.besluittype for besluit in besluiten}
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         _resolved_besluittypen = executor.map(fetch_besluittype, _besluittypen)
     besluittypen = {bt.url: bt for bt in _resolved_besluittypen}
 
@@ -1451,13 +1452,15 @@ def fetch_object(url: str, client: Optional[Client] = None) -> dict:
     return retrieved_item
 
 
-def fetch_objects(urls: List[str]) -> List[Dict]:
+def fetch_objects(
+    urls: List[str], max_workers: int = settings.MAX_WORKERS
+) -> List[Dict]:
     object_api_client = get_objects_client()
 
     def _fetch_object(url):
         return fetch_object(url, client=object_api_client)
 
-    with parallel() as executor:
+    with parallel(max_workers=max_workers) as executor:
         retrieved_objects = list(executor.map(_fetch_object, urls))
 
     return retrieved_objects
@@ -1553,6 +1556,18 @@ def fetch_zaakobject(zaak_object_url: str) -> ZaakObject:
     return factory(ZaakObject, zaak_object)
 
 
-def delete_zaak_object(zaak_object_url: str):
+def delete_zaakobject(zaak_object_url: str):
     client = _client_from_url(zaak_object_url)
     client.delete("zaakobject", url=zaak_object_url)
+
+
+def delete_zaakobjecten_of_object(object_url: str):
+    services = Service.objects.filter(api_type=APITypes.zrc)
+    zon = []
+    for zrc in services:
+        client = zrc.build_client()
+        _zon = client.list("zaakobject", query_params={"object": object_url})
+        zon += _zon
+
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
+        executor.map(delete_zaakobject, [zo["url"] for zo in zon])

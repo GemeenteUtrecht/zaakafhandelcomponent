@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -153,7 +154,7 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         def _patch_and_destroy_doc(uuid: str):
             return patch_and_destroy_doc(uuid, force=True)
 
-        with parallel() as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             list(
                 executor.map(
                     _patch_and_destroy_doc, [str(doc.uuid) for doc in open_documents]

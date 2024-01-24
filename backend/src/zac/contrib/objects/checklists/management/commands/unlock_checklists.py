@@ -2,6 +2,7 @@ import logging
 from copy import deepcopy
 from typing import Dict, List, Tuple
 
+from django.conf import settings
 from django.core.management import BaseCommand
 
 from zgw_consumers.concurrent import parallel
@@ -23,7 +24,7 @@ def unlock_checklists(checklists: List[Dict]):
             data=checklist_obj["record"]["data"],
         )
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         executor.map(_unlock_checklists, checklists)
 
 
@@ -48,7 +49,7 @@ def unlock_command() -> int:
 
         list_to_email.append((user, checklist["record"]["data"]["zaak"]))
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         list(executor.map(notify_user_of_unlock, list_to_email))
 
     return len(list_to_email)

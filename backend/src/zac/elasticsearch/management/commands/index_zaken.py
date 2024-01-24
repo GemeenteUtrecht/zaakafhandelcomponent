@@ -48,6 +48,7 @@ class Command(IndexCommand, BaseCommand):
     _verbose_name_plural = "ZAAKen"
 
     def batch_index(self) -> Iterator[ZaakDocument]:
+        super().batch_index()
         self.stdout.write("Preloading all case types...")
         zaaktypen = {zt.url: zt for zt in get_zaaktypen()}
         self.stdout.write(f"Fetched {len(zaaktypen)} case types")

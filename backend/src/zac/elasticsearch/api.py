@@ -405,7 +405,7 @@ def update_related_zaken_in_object_document(object_url: str) -> None:
     def _get_zaak(url: str) -> Zaak:
         return get_zaak(zaak_url=url)
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         zaken = list(executor.map(_get_zaak, [zo.zaak for zo in zaakobjecten]))
 
     # resolve zaaktypen
@@ -625,7 +625,7 @@ def update_related_zaken_in_informatieobject_document(
     def _get_zaak(url: str) -> Zaak:
         return get_zaak(zaak_url=url)
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         zaken = list(executor.map(_get_zaak, list({zio.zaak for zio in zios})))
 
     # resolve zaaktypen

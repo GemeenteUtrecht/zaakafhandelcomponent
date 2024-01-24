@@ -1,5 +1,7 @@
 from typing import Any, Dict
 
+from django.conf import settings
+
 import requests
 from zgw_consumers.concurrent import parallel
 
@@ -89,7 +91,7 @@ def fetch_pand(url: str) -> Dict[str, Any]:
     def fetch_adres(vo: dict) -> dict:
         return _fetch_adres(bag, vo["_links"]["hoofdadres"]["href"])
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         adressen = list(executor.map(fetch_adres, _verblijfsobjecten))
 
     verblijfsobjecten = [
