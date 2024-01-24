@@ -18,16 +18,11 @@ from zac.core.cache import (
     invalidate_document_url_cache,
 )
 from zac.core.services import find_document, get_document
+from zac.core.utils import cast
 
 from .api import create_doc, patch_and_destroy_doc
 from .exceptions import DOWCCreateError
 from .serializers import DeleteDowcSerializer, DowcResponseSerializer, DowcSerializer
-
-
-def _cast(value: Optional[Any], type_: type) -> Any:
-    if value is None:
-        return value
-    return type_(value)
 
 
 class OpenDowcView(APIView):
@@ -39,7 +34,7 @@ class OpenDowcView(APIView):
     document = None
 
     def get_object(self, bronorganisatie: str, identificatie: str) -> Document:
-        versie = _cast(self.request.GET.get("versie", None), int)
+        versie = cast(self.request.GET.get("versie", None), int)
         document = find_document(bronorganisatie, identificatie, versie=versie)
         self.check_object_permissions(self.request, document)
         return document

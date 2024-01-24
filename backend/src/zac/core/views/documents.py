@@ -9,12 +9,7 @@ from zgw_consumers.api_models.documenten import Document
 
 from ..permissions import zaken_download_documents
 from ..services import download_document, find_document, get_informatieobjecttype
-
-
-def _cast(value: Optional[Any], type_: type) -> Any:
-    if value is None:
-        return value
-    return type_(value)
+from ..utils import cast
 
 
 class DownloadDocumentView(LoginRequiredMixin, PermissionRequiredMixin, View):
@@ -28,7 +23,7 @@ class DownloadDocumentView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return self.request.user.has_perms(perms, obj)
 
     def get_object(self) -> Document:
-        versie = _cast(self.request.GET.get("versie", None), int)
+        versie = cast(self.request.GET.get("versie", None), int)
         self.document = find_document(versie=versie, **self.kwargs)
 
         informatieobjecttype = get_informatieobjecttype(

@@ -335,7 +335,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         m.get(self.document["inhoud"], content=b"some-content")
 
         with patch(
-            "zac.core.services._client_from_url", return_value=self.drc_client
+            "zac.core.services.client_from_url", return_value=self.drc_client
         ) as mock_drc_client:
             with patch(
                 "zac.core.camunda.select_documents.serializers.create_document",

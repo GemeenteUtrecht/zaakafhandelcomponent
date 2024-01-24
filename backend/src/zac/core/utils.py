@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
@@ -9,6 +9,12 @@ from furl import furl
 
 AN_HOUR = 60 * 60
 A_DAY = AN_HOUR * 24
+
+
+def cast(value: Optional[Any], type_: type) -> Any:
+    if value is None:
+        return value
+    return type_(value)
 
 
 def build_absolute_url(

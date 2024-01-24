@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 
 from elasticsearch_dsl import (
@@ -285,3 +287,7 @@ class InformatieObjectDocument(Document):
             "index.mapping.ignore_malformed": True,
             "max_ngram_diff": settings.MAX_GRAM - settings.MIN_GRAM,
         }
+
+    @property
+    def uuid(self) -> uuid.UUID:
+        return uuid.UUID(self.url.split("/")[-1])

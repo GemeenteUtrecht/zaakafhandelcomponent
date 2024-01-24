@@ -68,7 +68,7 @@ logger = logging.getLogger(__name__)
 perf_logger = logging.getLogger("performance")
 
 
-def _client_from_url(url: str):
+def client_from_url(url: str):
     service = Service.get_service(url)
     if not service:
         raise ServiceConfigError(
@@ -79,8 +79,8 @@ def _client_from_url(url: str):
     return client
 
 
-def _client_from_object(obj):
-    return _client_from_url(obj.url)
+def client_from_object(obj):
+    return client_from_url(obj.url)
 
 
 ###################################################
@@ -90,14 +90,14 @@ def _client_from_object(obj):
 
 @cache_result("besluittype:{url}", timeout=A_DAY)
 def fetch_besluittype(url: str) -> BesluitType:
-    client = _client_from_url(url)
+    client = client_from_url(url)
     result = client.retrieve("besluittype", url=url)
     return factory(BesluitType, result)
 
 
 @cache_result("catalogus:{url}", timeout=A_DAY)
 def fetch_catalogus(url: str) -> Catalogus:
-    client = _client_from_url(url)
+    client = client_from_url(url)
     result = client.retrieve("catalogus", url=url)
     return factory(Catalogus, result)
 
@@ -111,7 +111,7 @@ def _get_from_catalogus(resource: str, catalogus: str = "", **extra_query) -> Li
     ztcs = Service.objects.filter(api_type=APITypes.ztc)
 
     if catalogus:
-        clients = [_client_from_url(catalogus)]
+        clients = [client_from_url(catalogus)]
     else:
         clients = [ztc.build_client() for ztc in ztcs]
 
@@ -192,7 +192,7 @@ def get_zaaktypen(
 
 @cache_result("zaaktype:{url}", timeout=A_DAY)
 def fetch_zaaktype(url: str) -> ZaakType:
-    client = _client_from_url(url)
+    client = client_from_url(url)
     result = client.retrieve("zaaktype", url=url)
     return factory(ZaakType, result)
 
@@ -235,7 +235,7 @@ def get_zaaktype(url: str, request: Optional[Request] = None) -> Optional[ZaakTy
 
 @cache_result("zt:statustypen:{zaaktype.url}", timeout=A_DAY)
 def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
-    client = _client_from_object(zaaktype)
+    client = client_from_object(zaaktype)
     _statustypen = get_paginated_results(
         client, "statustype", query_params={"zaaktype": zaaktype.url}
     )
@@ -245,7 +245,7 @@ def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
 
 @cache_result("statustype:{url}", timeout=A_DAY)
 def get_statustype(url: str) -> StatusType:
-    client = _client_from_url(url)
+    client = client_from_url(url)
     status_type = client.retrieve("statustype", url=url)
     status_type = factory(StatusType, status_type)
     return status_type
@@ -253,7 +253,7 @@ def get_statustype(url: str) -> StatusType:
 
 @cache_result("zt:resultaattypen:{zaaktype.url}", timeout=A_DAY)
 def get_resultaattypen(zaaktype: ZaakType) -> List[ResultaatType]:
-    client = _client_from_object(zaaktype)
+    client = client_from_object(zaaktype)
     resultaattypen = get_paginated_results(
         client,
         "resultaattype",
@@ -271,7 +271,7 @@ def get_resultaattypen(zaaktype: ZaakType) -> List[ResultaatType]:
 
 @cache_result("zt:eigenschappen:{zaaktype.url}", timeout=A_DAY)
 def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
-    client = _client_from_object(zaaktype)
+    client = client_from_object(zaaktype)
     eigenschappen = get_paginated_results(
         client,
         "eigenschap",
@@ -289,7 +289,7 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
 
 @cache_result("eigenschap:{url}", timeout=A_DAY)
 def get_eigenschap(url: str) -> Eigenschap:
-    client = _client_from_url(url)
+    client = client_from_url(url)
     result = client.retrieve("eigenschap", url)
     return factory(Eigenschap, result)
 
@@ -338,7 +338,7 @@ def get_eigenschappen_for_zaaktypen(zaaktypen: List[ZaakType]) -> List[Eigenscha
 
 @cache_result("roltype:{url}", timeout=A_DAY)
 def get_roltype(url: str) -> RolType:
-    client = _client_from_url(url)
+    client = client_from_url(url)
     result = client.retrieve("roltype", url)
     return factory(RolType, result)
 
@@ -348,7 +348,7 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
     query_params = {"zaaktype": zaaktype.url}
     if omschrijving_generiek:
         query_params.update({"omschrijvingGeneriek": omschrijving_generiek})
-    client = _client_from_object(zaaktype)
+    client = client_from_object(zaaktype)
     roltypen = get_paginated_results(client, "roltype", query_params=query_params)
     roltypen = factory(RolType, roltypen)
     return roltypen
@@ -361,7 +361,7 @@ def get_informatieobjecttypen_for_zaaktype(
     """
     Retrieve all informatieobjecttypen relevant for a given zaaktype.
     """
-    client = _client_from_object(zaaktype)
+    client = client_from_object(zaaktype)
     results = get_paginated_results(
         client, "zaakinformatieobjecttype", query_params={"zaaktype": zaaktype.url}
     )
@@ -376,7 +376,7 @@ def get_informatieobjecttypen_for_zaaktype(
 
 @cache_result("informatieobjecttype:{url}", timeout=A_DAY)
 def get_informatieobjecttype(url: str) -> InformatieObjectType:
-    client = _client_from_url(url)
+    client = client_from_url(url)
     data = client.retrieve("informatieobjecttype", url=url)
     return factory(InformatieObjectType, data)
 
@@ -602,7 +602,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
 
 
 def get_statussen(zaak: Zaak) -> List[Status]:
-    client = _client_from_object(zaak)
+    client = client_from_object(zaak)
 
     # re-use cached objects
     statustypen = {st.url: st for st in get_statustypen(zaak.zaaktype)}
@@ -627,7 +627,7 @@ def get_status(zaak: Zaak) -> Optional[Status]:
     if not zaak.status:
         return None
     assert isinstance(zaak.status, str), "Status already resolved."
-    client = _client_from_object(zaak)
+    client = client_from_object(zaak)
     _status = client.retrieve("status", url=zaak.status)
 
     # resolve statustype
@@ -638,7 +638,7 @@ def get_status(zaak: Zaak) -> Optional[Status]:
 
 @cache_result("zaakeigenschappen:{zaak.url}", timeout=AN_HOUR)
 def fetch_zaakeigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
-    zrc_client = _client_from_object(zaak)
+    zrc_client = client_from_object(zaak)
     zaak_eigenschappen = zrc_client.list("zaakeigenschap", zaak_uuid=zaak.uuid)
     return sorted(factory(ZaakEigenschap, zaak_eigenschappen), key=lambda zei: zei.naam)
 
@@ -668,7 +668,7 @@ def get_zaakeigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
 
 
 def fetch_zaak_eigenschap(zaak_eigenschap_url: str) -> ZaakEigenschap:
-    client = _client_from_url(zaak_eigenschap_url)
+    client = client_from_url(zaak_eigenschap_url)
     zaak_eigenschap = client.retrieve("zaakeigenschap", url=zaak_eigenschap_url)
     zaak_eigenschap = factory(ZaakEigenschap, zaak_eigenschap)
     zaak_eigenschap.eigenschap = get_eigenschap(zaak_eigenschap.eigenschap)
@@ -701,7 +701,7 @@ def create_zaak_eigenschap(
         logger.info("Eigenschap '%s' did not exist on the zaaktype, aborting." % naam)
         return None
 
-    zrc_client = _client_from_url(zaak_url)
+    zrc_client = client_from_url(zaak_url)
     zaak_eigenschap = zrc_client.create(
         "zaakeigenschap",
         {
@@ -736,7 +736,7 @@ def update_zaak_eigenschap(
 
 
 def delete_zaak_eigenschap(zaak_eigenschap_url: str):
-    client = _client_from_url(zaak_eigenschap_url)
+    client = client_from_url(zaak_eigenschap_url)
     client.delete("zaakeigenschap", url=zaak_eigenschap_url)
 
 
@@ -755,7 +755,7 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
         zaak_url, zaak_uuid = zaak_uuid, None
 
     if client is None and zaak_url is not None:
-        client = _client_from_url(zaak_url)
+        client = client_from_url(zaak_url)
 
     if client is None:
         zrcs = Service.objects.filter(api_type=APITypes.zrc)
@@ -802,7 +802,7 @@ def get_related_zaken(zaak: Zaak) -> List[Tuple[str, Zaak]]:
 
 @cache_result("zaak_objecten:{zaak.url}", timeout=AN_HOUR)
 def get_zaakobjecten(zaak: Zaak) -> List[ZaakObject]:
-    client = _client_from_url(zaak.url)
+    client = client_from_url(zaak.url)
 
     zaakobjecten = get_paginated_results(
         client,
@@ -835,7 +835,7 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
     if not zaak.resultaat:
         return None
 
-    client = _client_from_object(zaak)
+    client = client_from_object(zaak)
     resultaat = client.retrieve("resultaat", url=zaak.resultaat)
 
     resultaat = factory(Resultaat, resultaat)
@@ -851,7 +851,7 @@ def get_resultaat(zaak: Zaak) -> Optional[Resultaat]:
 def get_rollen(zaak: Zaak) -> List[Rol]:
     perf_logger.info("      Fetching rollen for zaak %s", zaak.identificatie)
     # fetch the rollen
-    client = _client_from_object(zaak)
+    client = client_from_object(zaak)
     _rollen = get_paginated_results(client, "rol", query_params={"zaak": zaak.url})
     perf_logger.info("      Done fetching rollen for zaak %s", zaak.identificatie)
 
@@ -862,7 +862,7 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
 
 @cache_result("rol:{rol_url}", timeout=AN_HOUR)
 def fetch_rol(rol_url: str) -> Rol:
-    client = _client_from_url(rol_url)
+    client = client_from_url(rol_url)
     rol = client.retrieve("rol", url=rol_url)
 
     rol = factory(Rol, rol)
@@ -870,7 +870,7 @@ def fetch_rol(rol_url: str) -> Rol:
 
 
 def create_rol(rol: Dict) -> Rol:
-    zrc_client = _client_from_url(rol["zaak"])
+    zrc_client = client_from_url(rol["zaak"])
     rol = zrc_client.create("rol", rol)
     return factory(Rol, rol)
 
@@ -883,7 +883,7 @@ def delete_rol(rol_url: str, zaak: Zaak, user: Optional[User] = None):
     invalidate_cache_fetch_oudbehandelaren(zaak)
 
     # delete rol
-    zrc_client = _client_from_url(rol_url)
+    zrc_client = client_from_url(rol_url)
     zrc_client.delete("rol", url=rol_url)
 
 
@@ -937,7 +937,7 @@ def update_medewerker_identificatie_rol(rol_url: str, zaak: Zaak) -> Optional[Ro
 
 
 def fetch_zaak_informatieobject(zaak_informatieobject_url: str) -> ZaakInformatieObject:
-    client = _client_from_url(zaak_informatieobject_url)
+    client = client_from_url(zaak_informatieobject_url)
     zaak_informatieobject = client.retrieve(
         "zaak_informatieobject_url", url=zaak_informatieobject_url
     )
@@ -967,7 +967,7 @@ def get_zaakinformatieobjecten_related_to_informatieobject(
 
 
 def get_zaak_informatieobjecten(zaak: Zaak) -> List[ZaakInformatieObject]:
-    client = _client_from_object(zaak)
+    client = client_from_object(zaak)
     zaak_informatieobjecten = client.list(
         "zaakinformatieobject", query_params={"zaak": zaak.url}
     )
@@ -984,7 +984,7 @@ def get_informatieobjecttypen_for_zaak(url: str) -> List[InformatieObjectType]:
 def zet_status(zaak: Zaak, statustype: StatusType, toelichting: str = "") -> Status:
     assert len(toelichting) <= 1000, "Toelichting is > 1000 characters"
 
-    client = _client_from_object(zaak)
+    client = client_from_object(zaak)
     status = client.create(
         "status",
         {
@@ -1033,7 +1033,7 @@ def _fetch_document(url: str) -> Response:
     cache_key = f"document:{url}"
     if cache_key in cache:
         return cache.get(cache_key)
-    client = _client_from_url(url)
+    client = client_from_url(url)
     headers = client.auth.credentials()
     response = requests.get(url, headers=headers)
     cache_document(url, response)
@@ -1193,7 +1193,7 @@ def get_document(url: str) -> Document:
 
 
 def download_document(document: Document) -> Tuple[Document, bytes]:
-    client = _client_from_object(document)
+    client = client_from_object(document)
     response = requests.get(document.inhoud, headers=client.auth.credentials())
     response.raise_for_status()
     return document, response.content
@@ -1210,7 +1210,7 @@ def create_document(document_data: Dict) -> Document:
 
 
 def update_document(url: str, data: dict, audit_line: str) -> Document:
-    client = _client_from_url(url)
+    client = client_from_url(url)
 
     # lock eio
     lock_result = client.operation(
@@ -1263,7 +1263,7 @@ def relate_document_to_zaak(document_url: str, zaak_url: str) -> Dict[str, str]:
 
 @cache_result("audit_trail:{document_url}", timeout=A_DAY)
 def fetch_document_audit_trail(document_url: str) -> List[AuditTrailData]:
-    drc_client = _client_from_url(document_url)
+    drc_client = client_from_url(document_url)
     doc_uuid = furl(document_url).path.segments[-1]
     try:
         audit_trail = drc_client.list(
@@ -1348,7 +1348,7 @@ def create_zaakbesluit(zaak: Zaak, data: Dict[str, Any]) -> Besluit:
 
 
 def create_besluit_document(besluit: Besluit, document_url: str) -> BesluitDocument:
-    client = _client_from_object(besluit)
+    client = client_from_object(besluit)
     bio_data = client.create(
         "besluitinformatieobject",
         {
@@ -1560,13 +1560,13 @@ def relate_object_to_zaak(relation_data: dict) -> dict:
 
 
 def fetch_zaakobject(zaak_object_url: str) -> ZaakObject:
-    client = _client_from_url(zaak_object_url)
+    client = client_from_url(zaak_object_url)
     zaak_object = client.retrieve("zaakobject", url=zaak_object_url)
     return factory(ZaakObject, zaak_object)
 
 
 def delete_zaakobject(zaak_object_url: str):
-    client = _client_from_url(zaak_object_url)
+    client = client_from_url(zaak_object_url)
     client.delete("zaakobject", url=zaak_object_url)
 
 
