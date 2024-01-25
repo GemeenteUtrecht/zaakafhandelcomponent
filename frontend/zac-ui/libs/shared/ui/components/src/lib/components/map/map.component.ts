@@ -201,6 +201,38 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
     this.map.removeLayer(this.temporaryMarkerLayer);
   }
 
+  /**
+   * Scale map to fit markers
+   */
+  fitMapBounds() {
+    // Get all visible Markers
+    const visibleMarkers = [];
+    this.map.eachLayer(layer => {
+      if (layer instanceof L.Marker) {
+        const latInNetherlands = layer.getLatLng().lng >= 4 && layer.getLatLng().lng <= 7;
+        const lngInNetherlands = layer.getLatLng().lat >= 51 && layer.getLatLng().lat <= 53
+        if (latInNetherlands && lngInNetherlands) {
+          visibleMarkers.push(layer);
+        }
+      }
+    });
+
+    // Ensure there's at least one visible Marker
+    if (visibleMarkers.length > 0) {
+
+      // Create bounds from first Marker then extend it with the rest
+      const markersBounds = L.latLngBounds([visibleMarkers[0].getLatLng()]);
+      visibleMarkers.forEach((marker) => {
+        markersBounds.extend(marker.getLatLng());
+      });
+
+      // Fit the map with the visible markers bounds
+      this.map.flyToBounds(markersBounds, {
+        padding: L.point(0, 0.5), animate: true,
+      });
+    }
+  }
+
   //
   // Events.
   //
@@ -312,6 +344,8 @@ export class MapComponent implements OnInit, OnChanges, OnDestroy {
         mapMarkerlayer.on('pm:rotate', (e) => mapMarker.onChange(e));
       }
     });
+
+    this.fitMapBounds();
 
     if (this.editable) {
       this.map.pm.removeControls();
