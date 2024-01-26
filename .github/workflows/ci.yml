@@ -40,9 +40,9 @@ jobs:
             echo $file
             if [[ $file != backend/* ]]; then
               echo "::set-output name=run_job::false"
-              break
             else
               echo "::set-output name=run_job::true"
+              break
             fi
           done < files.txt
 
