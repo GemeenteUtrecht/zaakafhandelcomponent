@@ -19,8 +19,6 @@ env:
 jobs:
   check_files_changed:
     name: Check if backend files were changed
-    outputs:
-      run_job: ${{ steps.check_files.outputs.run_job }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -39,9 +37,9 @@ jobs:
           do
             echo $file
             if [[ $file != backend/* ]]; then
-              echo "run_job=false" >> "$GITHUB_ENV"
+              echo "run_job=false" >> "$GITHUB_OUTPUT"
             else
-              echo "run_job=true" >> "$GITHUB_ENV"
+              echo "run_job=true" >> "$GITHUB_OUTPUT"
               break
             fi
           done < files.txt
@@ -49,7 +47,9 @@ jobs:
   backend-tests:
     name: Run the Django test suite and build documentation
     needs: check_files_changed
-    if: needs.check_files_changed.outputs.run_job == 'true'
+    env:
+        RUN_JOB: ${{ needs.check_files_changed.outputs.run_job }}
+    if: $RUN_JOB == 'true'
     runs-on: ubuntu-latest
 
     defaults:
