@@ -47,9 +47,7 @@ jobs:
   backend-tests:
     name: Run the Django test suite and build documentation
     needs: check_files_changed
-    env:
-        RUN_JOB: ${{ needs.check_files_changed.outputs.run_job }}
-    if: $RUN_JOB == 'true'
+    if: needs.check_files_changed.outputs.run_job == 'true'
     runs-on: ubuntu-latest
 
     defaults:
