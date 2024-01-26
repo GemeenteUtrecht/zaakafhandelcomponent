@@ -20,6 +20,8 @@ jobs:
   check_files_changed:
     name: Check if backend files were changed
     runs-on: ubuntu-latest
+    outputs:
+      run_job: ${{ steps.check_files.outputs.run_job }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
