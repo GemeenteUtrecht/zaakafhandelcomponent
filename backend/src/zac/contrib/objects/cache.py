@@ -10,9 +10,9 @@ def get_field_names_and_values_meta_object_types() -> Dict[Union[int, str], str]
     return {getattr(conf, field.name): field.name for field in conf._meta.fields}
 
 
-def invalidate_meta_objects(on_data: Dict):
+def invalidate_meta_objects(kenmerken_data: Dict):
     mapping = get_field_names_and_values_meta_object_types()
-    if key := on_data["kenmerken"]["object_type"] in mapping.get(
-        on_data["kenmerken"]["object_type"]
+    if (key := kenmerken_data["object_type"]) in mapping.get(
+        kenmerken_data["object_type"]
     ):
         cache.delete(key)

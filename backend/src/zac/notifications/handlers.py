@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 
 from django.conf import settings
 
@@ -325,16 +326,15 @@ class InformatieObjecttypenHandler:
 
 class ObjectenHandler:
     def _review_request_object_handler(self, data: dict) -> None:
-        if data["record"]["data"].get("locked"):
+        rr = factory(ReviewRequest, data["record"]["data"])
+        invalidate_review_requests_cache(rr)
+        rr = get_review_request(rr.id)
+        if rr.locked:
             # End the current process instance gracefully
             try:
                 send_message(
                     "cancel-process",
-                    [
-                        object["record"]["data"]
-                        .get("metadata", {})
-                        .get("processInstanceId")
-                    ],
+                    [rr.metadata.get("processInstanceId")],
                 )
             except HTTPError as exc:
                 logger.info(
@@ -342,7 +342,7 @@ class ObjectenHandler:
                     exc_info=True,
                 )
 
-    def _meta_object_handler(self) -> callable:
+    def _meta_object_handler(self) -> Dict[str, callable]:
         meta_config = MetaObjectTypesConfig.get_solo()
         return {
             meta_config.review_request_objecttype: self._review_request_object_handler
@@ -350,17 +350,14 @@ class ObjectenHandler:
 
     # We dont update related_zaken here - the notification from open zaak takes care of that.
     def handle(self, data: dict) -> None:
-        if data["resource"] == "objecten":
+        if data["resource"] == "object":
             invalidate_fetch_object_cache(data["hoofd_object"])
             invalidate_meta_objects(data["kenmerken"])
             if data["actie"] in ["create", "update", "partial_update"]:
                 object = fetch_object(data["hoofd_object"])
-                if object["record"]["data"].get("meta"):
-                    if func := self._meta_object_handler().get(
-                        object["type"]["url"], None
-                    ):
-                        func(data)
-
+                meta_object_handler = self._meta_object_handler()
+                if func := meta_object_handler.get(object["type"]["url"], None):
+                    func(object)
                 update_object_document(object)
 
             elif data["actie"] == "destroy":

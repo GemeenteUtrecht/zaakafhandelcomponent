@@ -27,7 +27,6 @@ from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.documents import ZaakDocument, ZaakTypeDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zgw.models.zrc import Zaak
 
 from ..data import ActivityGroup
 

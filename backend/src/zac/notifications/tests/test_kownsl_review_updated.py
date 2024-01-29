@@ -13,25 +13,25 @@ from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import UserFactory
+from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.kownsl.tests.utils import (
-    KOWNSL_ROOT,
     REVIEW_REQUEST,
+    REVIEW_REQUEST_OBJECT,
+    REVIEW_REQUEST_OBJECTTYPE,
     ZAKEN_ROOT,
 )
-from zac.contrib.objects.services import get_review_request
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
-from zgw.models.zrc import Zaak
-
-RR_URL = f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}"
+from zac.tests.utils import mock_resource_get
 
 NOTIFICATION = {
-    "kanaal": "kownsl",
-    "hoofdObject": RR_URL,
-    "resource": "reviewRequest",
-    "resourceUrl": RR_URL,
+    "kanaal": "objecten",
+    "hoofdObject": REVIEW_REQUEST_OBJECT["url"],
+    "resource": "object",
+    "resourceUrl": REVIEW_REQUEST_OBJECT["url"],
     "actie": "update",
     "aanmaakdatum": "2020-11-04T15:24:00+00:00",
-    "kenmerken": {},
+    "kenmerken": {"object_type": REVIEW_REQUEST_OBJECTTYPE["url"]},
 }
 TASK_DATA = {
     "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
@@ -65,27 +65,35 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
 
     """
 
-    endpoint = reverse_lazy("notifications:kownsl-callback")
+    endpoint = reverse_lazy("notifications:callback")
 
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory.create(username="notifs")
+        cls.patch_fetch_object = patch(
+            "zac.notifications.handlers.fetch_object",
+            return_value={
+                **REVIEW_REQUEST_OBJECT,
+                "type": REVIEW_REQUEST_OBJECTTYPE,
+                "stringRepresentation": "",
+            },
+        )
+        confg = MetaObjectTypesConfig.get_solo()
+        confg.review_request_objecttype = REVIEW_REQUEST_OBJECTTYPE["url"]
+        confg.save()
 
     def setUp(self):
         super().setUp()
-
         self.client.force_authenticate(user=self.user)
+        self.patch_fetch_object.start()
+        self.addCleanup(self.patch_fetch_object.stop)
 
     @patch(
-        "zac.contrib.objects.kownsl.views.invalidate_review_requests_cache",
+        "zac.contrib.objects.kownsl.api.views.invalidate_review_requests_cache",
         return_value=None,
     )
     def test_user_task_send_message_locked(self, m, mock_invalidate_cache):
-
-        m.get(
-            RR_URL,
-            json=REVIEW_REQUEST,
-        )
+        mock_resource_get(m, REVIEW_REQUEST_OBJECT)
         m.get(
             f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
             json=[{**TASK_DATA, "assignee": f"user:bob"}],
@@ -94,10 +102,10 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
             "https://camunda.example.com/engine-rest/message",
         )
 
-        notification = deepcopy(NOTIFICATION)
-        notification["kenmerken"] = {"actie": "locked"}
-
-        response = self.client.post(self.endpoint, notification)
+        rr = factory(ReviewRequest, REVIEW_REQUEST)
+        rr.locked = True
+        with patch("zac.notifications.handlers.get_review_request", return_value=rr):
+            response = self.client.post(self.endpoint, NOTIFICATION)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -107,16 +115,11 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
             "https://camunda.example.com/engine-rest/message",
         )
 
-    @patch("zac.contrib.objects.kownsl.cache.get_zaak")
-    def test_review_request_updated_clears_cache(self, m, mock_get_zaak):
+    def test_review_request_updated_clears_cache(self, m):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component("zrc", "schemas/Zaak", url=REVIEW_REQUEST["zaak"])
-        mock_get_zaak = factory(Zaak, zaak)
+        mock_resource_get(m, REVIEW_REQUEST_OBJECT)
 
-        m.get(
-            RR_URL,
-            json=REVIEW_REQUEST,
-        )
         m.get(
             f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
             json=[{**TASK_DATA, "assignee": f"user:bob"}],
@@ -129,44 +132,11 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         UserFactory.create(username="some-author")
         UserFactory.create(username="some-other-author")
         # Fill cache
-        get_review_request(REVIEW_REQUEST["id"])
+        cache.set(f"review_request:detail:{REVIEW_REQUEST['id']}", "hello")
         self.assertTrue(cache.has_key(f"review_request:detail:{REVIEW_REQUEST['id']}"))
 
-        notification = deepcopy(NOTIFICATION)
-        notification["kenmerken"] = {"actie": "locked"}
-
-        response = self.client.post(self.endpoint, notification)
+        rr = factory(ReviewRequest, REVIEW_REQUEST)
+        with patch("zac.notifications.handlers.get_review_request", return_value=rr):
+            response = self.client.post(self.endpoint, NOTIFICATION)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(cache.has_key(f"review_request:detail:{REVIEW_REQUEST['id']}"))
-
-    @patch(
-        "zac.contrib.objects.kownsl.views.invalidate_review_requests_cache",
-        return_value=None,
-    )
-    def test_user_task_send_message_updated_assigned_users(
-        self, m, mock_invalidate_cache
-    ):
-
-        m.get(
-            RR_URL,
-            json=REVIEW_REQUEST,
-        )
-        m.get(
-            f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
-            json=[{**TASK_DATA, "assignee": f"user:bob"}],
-        )
-        m.post(
-            "https://camunda.example.com/engine-rest/message",
-        )
-        notification = deepcopy(NOTIFICATION)
-        notification["kenmerken"] = {"actie": "updated_users"}
-
-        response = self.client.post(self.endpoint, notification)
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-        self.assertEqual(m.last_request.method, "POST")
-        self.assertEqual(
-            m.last_request.url,
-            "https://camunda.example.com/engine-rest/message",
-        )

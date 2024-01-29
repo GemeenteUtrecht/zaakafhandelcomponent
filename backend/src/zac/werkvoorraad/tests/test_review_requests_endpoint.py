@@ -16,7 +16,7 @@ from zac.contrib.objects.kownsl.tests.utils import (
 )
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.tests.utils import mock_resource_get
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
@@ -68,10 +68,10 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.group = GroupFactory.create(name="some-group")
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+            username=REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0]
         )
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+            username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
         )
 
     def test_workstack_review_requests_endpoint_no_zaak(self, m):
