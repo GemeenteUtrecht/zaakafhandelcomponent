@@ -419,11 +419,11 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.contrib.kownsl.camunda.search_informatieobjects",
+            "zac.contrib.objects.kownsl.camunda.search_informatieobjects",
             return_value=[self.document_es],
         ):
             with patch(
-                "zac.contrib.kownsl.camunda.get_zaak_context",
+                "zac.contrib.objects.kownsl.camunda.get_zaak_context",
                 return_value=self.zaak_context,
             ):
                 with patch(

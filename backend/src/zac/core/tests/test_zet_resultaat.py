@@ -18,7 +18,8 @@ from zac.activities.tests.factories import ActivityFactory
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.models import DowcConfig
-from zac.contrib.objects.kownsl.tests.utils import REVIEW_REQUEST
+from zac.contrib.objects.kownsl.data import ReviewRequest, Reviews
+from zac.contrib.objects.kownsl.tests.utils import REVIEW_REQUEST, REVIEWS_ADVICE
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..camunda.zet_resultaat.serializers import ZetResultaatContextSerializer
@@ -168,7 +169,6 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
     def test_zet_resultaat_context_serializer(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-
         mock_service_oas_get(m, DOWC_API_ROOT, "dowc", oas_url=self.dowc_service.oas)
         mock_resource_get(m, self.catalogus)
         m.get(
@@ -197,26 +197,40 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
 
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+            username=REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0]
         )
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+            username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
         )
+        rr = factory(ReviewRequest, REVIEW_REQUEST)
+        reviews = factory(Reviews, REVIEWS_ADVICE)
+        rr.fetched_reviews = True
+
         with patch(
-            "zac.core.camunda.zet_resultaat.context.check_document_status",
-            return_value=[],
-        ) as patch_check_document_status:
+            "zac.core.camunda.zet_resultaat.context.get_all_review_requests_for_zaak",
+            return_value=[rr],
+        ) as patch_get_all_rr_4_zaak:
             with patch(
-                "zac.contrib.objects.services.fetch_checklist_object",
-                return_value=checklist,
-            ):
+                "zac.core.camunda.zet_resultaat.context.get_reviews_for_zaak",
+                return_value=[reviews],
+            ) as patch_get_revs_4_zaak:
                 with patch(
-                    "zac.contrib.objects.services.fetch_checklisttype_object",
-                    return_value=[CHECKLISTTYPE_OBJECT],
-                ):
-                    task_data = UserTaskData(task=task, context=_get_context(task))
-        factory = APIRequestFactory()
-        request = factory.get("/")
+                    "zac.core.camunda.zet_resultaat.context.check_document_status",
+                    return_value=[],
+                ) as patch_check_document_status:
+                    with patch(
+                        "zac.contrib.objects.services.fetch_checklist_object",
+                        return_value=checklist,
+                    ):
+                        with patch(
+                            "zac.contrib.objects.services.fetch_checklisttype_object",
+                            return_value=[CHECKLISTTYPE_OBJECT],
+                        ):
+                            task_data = UserTaskData(
+                                task=task, context=_get_context(task)
+                            )
+        req_factory = APIRequestFactory()
+        request = req_factory.get("/")
 
         serializer = ZetResultaatContextSerializer(
             instance=task_data,

@@ -1,6 +1,7 @@
 from rest_framework.serializers import Serializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
+from zac.accounts.models import User
 from zac.core.api.fields import SerializerSlugRelatedField
 
 
@@ -10,9 +11,6 @@ class UserSlugRelatedField(SerializerSlugRelatedField):
 
 class GroupSlugRelatedField(SerializerSlugRelatedField):
     response_serializer = GroupSerializer
-
-
-from zac.accounts.models import User
 
 
 class UserSlugSerializer(Serializer):
