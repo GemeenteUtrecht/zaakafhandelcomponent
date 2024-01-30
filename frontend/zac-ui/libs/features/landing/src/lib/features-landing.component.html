@@ -44,9 +44,8 @@
             <!-- Zaken results  -->
             <div class="landing__search-result" *ngIf="item.type === 'Zaken' && (selectedFilter === 'Zaken' || selectedFilter === 'all') ">
               <div class="landing__search-option d-flex justify-content-between">
-                <span>{{item.identificatie}}: {{item.omschrijving}}</span>
                 <a class="anchor mb-2 task-link" [routerLink]="createRouteLink(item)">
-                  Naar zaak
+                  {{item.identificatie}}: {{item.omschrijving}}
                 </a>
               </div>
             </div>
