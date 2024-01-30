@@ -112,12 +112,7 @@ export class DocumentenService {
         label: 'Downloaden',
         url: element.downloadUrl,
       }
-      let readOrDownloadCell;
-      if (isDownloadCell) {
-        readOrDownloadCell = downloadCell;
-      } else {
-        readOrDownloadCell = readCell;
-      }
+      const readOrDownloadCell = isDownloadCell ? downloadCell : readCell;
 
       const editCell: ExtensiveCell = {
         type: 'button',
