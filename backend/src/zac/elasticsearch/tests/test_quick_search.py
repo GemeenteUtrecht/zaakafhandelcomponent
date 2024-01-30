@@ -19,6 +19,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_related_zaak_document
@@ -28,6 +29,7 @@ from zac.tests.utils import mock_resource_get
 from ..documents import (
     InformatieObjectDocument,
     ObjectDocument,
+    ObjectTypeDocument,
     ZaakDocument,
     ZaakTypeDocument,
 )
@@ -135,12 +137,13 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def _other_mocks(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
-        related_zaak_1 = create_related_zaak_document(self.zaak_document1)
+        self.related_zaak_1 = create_related_zaak_document(self.zaak_document1)
+        ot_doc = ObjectTypeDocument(name="some-name", url="https://some-objecttype.nl/")
         self.object_document_1 = ObjectDocument(
             url="some-keywoird",
-            object_type="https://api.zaken.nl/api/v1/zaken/a8c8bc90-defa-4548-bacd-793874c013ab",
+            type=ot_doc,
             record_data={"some-field": "some omschrijving value"},
-            related_zaken=[related_zaak_1],
+            related_zaken=[self.related_zaak_1],
         )
         self.object_document_1.save()
 
@@ -162,6 +165,20 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_quick_search(self, m):
         self._other_mocks(m)
+        config = MetaObjectTypesConfig.get_solo()
+        config.checklist_objecttype = "https://some-checklist.nl/"
+        config.save()
+
+        ot_doc = ObjectTypeDocument(name="lol", url=config.checklist_objecttype)
+
+        obj_doc_2 = ObjectDocument(
+            url="some-keywoird",
+            type=ot_doc,
+            record_data={"some-field": "some omschrijving value"},
+            related_zaken=[self.related_zaak_1],
+        )
+        obj_doc_2.save()
+        self.refresh_index()
 
         results = quick_search("test.txt")
         self.assertEqual(
@@ -200,10 +217,31 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             results["zaken"][0].identificatie, self.zaak_document2.identificatie
         )
         self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
+        self.assertEqual(len(results["objecten"]), 1)
+        self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
+        ot_doc_3 = ObjectTypeDocument(
+            name="lol", url="https://some-other-objecttype.nl/"
+        )
+        obj_doc_3 = ObjectDocument(
+            url="some-keywoird-2",
+            type=ot_doc_3,
+            record_data={"some-field": "some omschrijving value"},
+            related_zaken=[self.related_zaak_1],
+        )
+        obj_doc_3.save()
+        self.refresh_index()
+
+        results = quick_search("2021 omsch")
+        self.assertEqual(
+            results["zaken"][0].identificatie, self.zaak_document2.identificatie
+        )
+        self.assertEqual(results["objecten"][0].url, self.object_document_1.url)
+        self.assertEqual(len(results["objecten"]), 2)
         self.assertEqual(results["documenten"][0].url, self.eio_document_1.url)
 
     def test_quick_search_blueprint_permissions(self, m):
         self._other_mocks(m)
+
         user = UserFactory.create()
         request = MagicMock()
         request.user = user
