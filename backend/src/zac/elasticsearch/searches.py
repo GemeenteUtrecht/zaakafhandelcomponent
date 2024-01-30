@@ -21,6 +21,7 @@ from zgw_consumers.api_models.constants import RolOmschrijving
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.permissions import zaken_inzien
 
 from .data import ParentAggregation
@@ -253,11 +254,12 @@ def quick_search(
         )
         .extra(size=15)
     )
-
+    meta_config = MetaObjectTypesConfig.get_solo()
+    urls = [url for url in meta_config.meta_objecttype_urls.values() if url]
     s_objecten = (
         ObjectDocument.search()
         .query(MultiMatch(fields=["record_data_text.*"], query=search_term))
-        .filter(~Exists(field="record_data.meta"))
+        .filter(~Terms(type__url=urls))
         .extra(size=15)
     )
 
