@@ -99,6 +99,7 @@ export class DocumentenService {
       const showEditCell = (((!element.locked || element.currentUserIsEditing) && !zaak.resultaat) || (!zaak.resultaat && zaak.kanGeforceerdBijwerken)) && element.writeUrl;
       const showOverwriteCell = !element.locked && !zaak.resultaat;
 
+      let readOrDownloadCell;
       const isDownloadCell = (element.titel.toLowerCase().split('.')[1] === ('msg' || 'pdf')) || (element.readUrl.length === 0 && element.downloadUrl.length > 0)
       const readCell = {
         type: 'button',
@@ -112,7 +113,11 @@ export class DocumentenService {
         label: 'Downloaden',
         url: element.downloadUrl,
       }
-      const readOrDownloadCell = isDownloadCell ? downloadCell : readCell;
+      if (isDownloadCell) {
+        readOrDownloadCell = downloadCell;
+      } else {
+        readOrDownloadCell = readCell;
+      }
 
       const editCell: ExtensiveCell = {
         type: 'button',
