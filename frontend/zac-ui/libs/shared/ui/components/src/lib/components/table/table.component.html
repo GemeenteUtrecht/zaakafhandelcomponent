@@ -35,7 +35,7 @@
                     <ng-container *ngSwitchCase="'button'">
                         <div class="button-wrapper">
                             <button gu-button [buttonStyle]="dataRow[column.name].buttonType ? dataRow[column.name].buttonType : 'tertiary'"
-                                    size="extrasmall"
+                                    size="small"
                                     noPadding
                                     (click)="$event.stopPropagation(); onButtonClick(column.name, dataRow[column.name].value)">
                               <span>{{ dataRow[column.name].label }}</span>

@@ -176,12 +176,12 @@ export class TableComponent implements OnInit, AfterViewInit, OnChanges {
      * @param {*} value
      */
     onButtonClick(columnName: string, value: any): void {
-        if (columnName && value) {
-            const output = {
-                [columnName]: value
-            }
-            this.buttonOutput.emit(output as TableButtonClickEvent);
-        }
+      if (columnName && value) {
+          const output = {
+              [columnName]: value
+          }
+          this.buttonOutput.emit(output as TableButtonClickEvent);
+      }
     }
 
     /**

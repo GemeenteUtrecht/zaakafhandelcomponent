@@ -100,6 +100,24 @@ export class DocumentenService {
       const showOverwriteCell = !element.locked && !zaak.resultaat;
 
       const isDownloadCell = (element.titel.toLowerCase().split('.')[1] === ('msg' || 'pdf')) || (element.readUrl.length === 0 && element.downloadUrl.length > 0)
+      const readCell = {
+        type: 'button',
+        style: 'no-minwidth',
+        label: 'Lezen',
+        value: element.readUrl,
+      }
+      const downloadCell = {
+        type: 'link',
+        style: 'no-minwidth',
+        label: 'Downloaden',
+        url: element.downloadUrl,
+      }
+      let readOrDownloadCell;
+      if (isDownloadCell) {
+        readOrDownloadCell = downloadCell;
+      } else {
+        readOrDownloadCell = readCell;
+      }
 
       const editCell: ExtensiveCell = {
         type: 'button',
@@ -135,18 +153,7 @@ export class DocumentenService {
             style: 'no-minwidth',
             label: String(element.versie)
           },
-          ...(!isDownloadCell) && {lezen: {
-              type: 'button',
-              style: 'no-minwidth',
-              label: 'Lezen',
-              value: element.readUrl,
-            }},
-          ...(isDownloadCell) && {downloaden: {
-              type: 'link',
-              style: 'no-minwidth',
-              label: 'Downloaden',
-              url: element.downloadUrl,
-            }},
+          lezen: readOrDownloadCell,
           bewerken: showEditCell ? editCell : '',
           overschrijven: showOverwriteCell ? overwriteCell : '',
           auteur: element.auteur,
