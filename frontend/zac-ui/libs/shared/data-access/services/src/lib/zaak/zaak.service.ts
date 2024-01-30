@@ -3,18 +3,16 @@ import {Injectable} from '@angular/core';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
 import {
-  Document,
   RelatedCase,
   EigenschapWaarde,
   UserPermission,
   Zaak,
   NieuweEigenschap,
-  CreateCase, ProcessInstance, CreateBetrokkene, CreateCaseDocument, Betrokkene, ListDocuments
+  CreateCase, ProcessInstance, CreateBetrokkene, CreateCaseDocument, Betrokkene, ListDocuments, Oudbehandelaren
 } from '@gu/models';
 import {ApplicationHttpClient} from '@gu/services';
 import {CachedObservableMethod, ClearCacheOnMethodCall, getEnv} from '@gu/utils';
 import {MapGeometry} from "../../../../../ui/components/src/lib/components/map/map";
-import { tableHeadMapping } from '../../../../../../features/reports/src/lib/constants/table';
 
 
 @Injectable({
@@ -310,6 +308,17 @@ export class ZaakService {
   getCaseRoles(bronorganisatie: string, identificatie: string): Observable<Betrokkene[]> {
     const endpoint = encodeURI(`/api/core/cases/${bronorganisatie}/${identificatie}/roles`);
     return this.http.Get<Betrokkene[]>(endpoint);
+  }
+
+  /**
+   * Retrieve all oud behandelaren
+   * @param {string} bronorganisatie
+   * @param {string} identificatie
+   * @returns {Observable<Oudbehandelaren>}
+   */
+  getCaseOudbehandelaren(bronorganisatie: string, identificatie: string): Observable<Oudbehandelaren> {
+    const endpoint = encodeURI(`/api/oudbehandelaren/oudbehandelaren/${bronorganisatie}/${identificatie}`);
+    return this.http.Get<Oudbehandelaren>(endpoint);
   }
 
   /**

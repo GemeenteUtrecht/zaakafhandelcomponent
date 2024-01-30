@@ -1,7 +1,16 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { AccountsService, CamundaService, MetaService, ZaakService } from '@gu/services';
 import { FieldConfiguration, ModalService, SnackbarService } from '@gu/components';
-import { Betrokkene, CreateBetrokkene, MetaRoltype, UserSearchResult, Zaak } from '@gu/models';
+import {
+  Betrokkene,
+  CreateBetrokkene,
+  MetaRoltype,
+  Oudbehandelaren,
+  RowData,
+  Table,
+  UserSearchResult,
+  Zaak
+} from '@gu/models';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
@@ -29,6 +38,8 @@ export class BetrokkenenComponent implements OnChanges {
 
   roleForm: FormGroup;
   isSubmitting: boolean;
+  oudbehandelaren: Oudbehandelaren;
+  oudbehandelarenTable: Table = new Table(['Naam', 'E-mail', 'Start', 'Eind'], []);
 
   constructor(
     private zaakService: ZaakService,
@@ -60,7 +71,7 @@ export class BetrokkenenComponent implements OnChanges {
    * @returns {boolean}
    */
   isRemovableRole(role) {
-    return this.edit && (role.omschrijvingGeneriek !== 'initiator') && 
+    return this.edit && (role.omschrijvingGeneriek !== 'initiator') &&
       ((role.omschrijvingGeneriek !== 'behandelaar' || (role.omschrijving !== this.omschrijvingHoofdbehandelaar)) ||
         ((role.omschrijvingGeneriek === 'behandelaar' || (role.omschrijving === this.omschrijvingHoofdbehandelaar)) && this.nBehandelaars > 1))
   }
@@ -86,6 +97,12 @@ export class BetrokkenenComponent implements OnChanges {
    */
   getContextData() {
     this.isLoading = true;
+
+    this.zaakService.getCaseOudbehandelaren(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe((oudbehandelaren: Oudbehandelaren) => {
+      this.oudbehandelaren = oudbehandelaren;
+      this.createTable();
+    }, () => this.oudbehandelaren = null)
+
     this.metaService.getRoleTypes(this.zaak.url).subscribe(roletypes => {
       this.roleTypes = roletypes;
       this.hoofdBehandelaarType = this.roleTypes.find(x => x.omschrijving === this.omschrijvingHoofdbehandelaar);
@@ -100,6 +117,26 @@ export class BetrokkenenComponent implements OnChanges {
       console.error(error);
       this.isLoading = false;
     })
+  }
+
+  createTable() {
+    this.oudbehandelarenTable.bodyData = this.oudbehandelaren.oudbehandelaren.map( behandelaar => {
+      const rowData: RowData = {
+        cellData: {
+          name: behandelaar.user.fullName,
+          email: behandelaar.email,
+          started: {
+            type: 'date',
+            date: behandelaar.started
+          },
+          ended: {
+            type: 'date',
+            date: behandelaar.ended
+          }
+        },
+      }
+      return rowData
+    });
   }
 
   /**

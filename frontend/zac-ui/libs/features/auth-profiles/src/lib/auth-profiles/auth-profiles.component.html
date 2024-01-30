@@ -2,7 +2,7 @@
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
   <div class="d-flex justify-content-between">
     <h2 class="d-inline-block">Autorisatieprofielen</h2>
-    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-auth-profile-modal')">
+    <button gu-button buttonStyle="tertiary" size="small" icon="add" (click)="openModal('add-auth-profile-modal')">
       Autorisatieprofiel toevoegen
     </button>
   </div>
@@ -68,7 +68,7 @@
 
         </div>
         <div class="mt-4 d-flex justify-content-end align-items-center">
-          <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteAuthProfile(authProfile)">
+          <button class="mr-4" gu-button buttonStyle="tertiary" size="small" icon="delete" (click)="deleteAuthProfile(authProfile)">
             Verwijderen
           </button>
           <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editAuthProfile(authProfile, userAuthProfiles)">

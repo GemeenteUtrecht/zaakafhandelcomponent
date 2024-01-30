@@ -32,7 +32,7 @@
           gu-button
           class="form__edit-toggle"
           buttonStyle="tertiary"
-          size="extrasmall"
+          size="small"
           icon="edit"
           (click)="toggleClick($event)"
         >
@@ -69,7 +69,7 @@
                     <button gu-button
                             buttonStyle="tertiary"
                             icon="remove"
-                            size="extrasmall"
+                            size="small"
                             type="button"
                             (click)="removeDocument(field)">
                       Documentkoppeling verwijderen
@@ -86,7 +86,7 @@
                           gu-button
                           buttonStyle="tertiary"
                           icon="upload_file"
-                          size="extrasmall"
+                          size="small"
                           type="button"
                           (click)="field.edit = !field.edit">
                     {{field.value
@@ -210,7 +210,7 @@
             *ngIf="showLess && visibleFields?.length > 4 && !isInEditMode"
             type="button"
             buttonStyle="tertiary"
-            size="extrasmall"
+            size="small"
             [icon]="isExpanded ? 'unfold_less' : 'unfold_more'"
             (click)="isExpanded = !isExpanded">
       {{isExpanded ? 'Toon minder' : 'Toon meer'}}

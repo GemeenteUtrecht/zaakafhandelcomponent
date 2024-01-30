@@ -1,7 +1,7 @@
 <div class="betrokkenen card">
   <div class="d-flex justify-content-between">
     <h3 class="mr-1">Betrokkenen</h3>
-    <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="extrasmall" icon="settings"
+    <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="small" icon="settings"
             (click)="toggleEdit()">
       {{edit ? 'Annuleren' : '' }}
     </button>
@@ -10,7 +10,12 @@
   <div class="betrokkenen__role betrokkenen__role--initiator" *ngIf="hoofdbehandelaar">
     <div>
       <div class="role-description">
-        <p class="p--bold">{{hoofdbehandelaar.roltypeOmschrijving}}</p>
+        <p class="p--bold d-inline">{{hoofdbehandelaar.roltypeOmschrijving}}</p>
+        <button *ngIf="oudbehandelaren"
+                gu-button
+                buttonStyle="tertiary"
+                size="extrasmall"
+                (click)="openModal('oudbehandelaren-modal')">Toon historie</button>
       </div>
       <p class="p--nomargin">{{hoofdbehandelaar.name}}</p>
     </div>
@@ -86,6 +91,15 @@
     </div>
   </ng-container>
 </div>
+
+<gu-modal id="oudbehandelaren-modal"
+          [closeIcon]="true"
+          title="Oud behandelaren"
+          size="small">
+  <gu-table *ngIf="oudbehandelaren"
+            [table]="oudbehandelarenTable">
+  </gu-table>
+</gu-modal>
 
 <gu-modal id="betrokkene-modal"
           [closeIcon]="true"
