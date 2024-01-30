@@ -34,9 +34,9 @@
           <ng-template ng-header-tmp>
             <mat-button-toggle-group  [(ngModel)]="selectedFilter" aria-label="Results Filter">
               <mat-button-toggle value="all" (click)="onFilterResults()">Toon alle ({{searchResults.length}})</mat-button-toggle>
+              <mat-button-toggle value="Objecten" (click)="onFilterResults()">Objecten ({{(searchResults | filterResultsPipe: 'Objecten').length}})</mat-button-toggle>
               <mat-button-toggle value="Zaken" (click)="onFilterResults()">Zaken ({{(searchResults | filterResultsPipe: 'Zaken').length}})</mat-button-toggle>
               <mat-button-toggle value="Documenten" (click)="onFilterResults()">Documenten ({{(searchResults | filterResultsPipe: 'Documenten').length}})</mat-button-toggle>
-              <mat-button-toggle value="Objecten" (click)="onFilterResults()">Objecten ({{(searchResults | filterResultsPipe: 'Objecten').length}})</mat-button-toggle>
             </mat-button-toggle-group>
           </ng-template>
           <ng-template ng-option-tmp let-item="item">
