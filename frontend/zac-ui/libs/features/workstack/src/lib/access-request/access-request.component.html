@@ -5,7 +5,7 @@
     <ul>
       <li *ngFor='let request of accessRequest.accessRequests' class='mb-2'>
         <gu-icon>add_moderator</gu-icon>
-        <button gu-button buttonStyle='tertiary' size='extrasmall' (click)='openRequestHandler(accessRequest, request)'>{{request.requester}}</button>
+        <button gu-button buttonStyle='tertiary' size='small' (click)='openRequestHandler(accessRequest, request)'>{{request.requester}}</button>
       </li>
     </ul>
   </div>

@@ -2,7 +2,7 @@
   <div class="d-flex justify-content-between">
     <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
     <h2 class="d-inline-block">Gebruikersgroepen</h2>
-    <button gu-button buttonStyle="tertiary" size="extrasmall" icon="add" (click)="openModal('add-usergroup-modal')">
+    <button gu-button buttonStyle="tertiary" size="small" icon="add" (click)="openModal('add-usergroup-modal')">
       Gebruikersgroep aanmaken
     </button>
   </div>
@@ -20,7 +20,7 @@
           </li>
         </ul>
         <div class="d-flex justify-content-end align-items-center">
-          <button class="mr-4" gu-button buttonStyle="tertiary" size="extrasmall" icon="delete" (click)="deleteUserGroup(group)">
+          <button class="mr-4" gu-button buttonStyle="tertiary" size="small" icon="delete" (click)="deleteUserGroup(group)">
             Verwijderen
           </button>
           <button gu-button buttonStyle="secondary" size="small" icon="edit" (click)="editUserGroup(group)">

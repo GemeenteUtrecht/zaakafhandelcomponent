@@ -95,9 +95,13 @@ $spinner-top-color: rgba(255, 255, 255, 0.3);
         color: $color-disabled;
       }
 
-      &.btn--extrasmall {
+      &.btn--small {
         padding: 0;
         min-width: unset;
+      }
+
+      &.btn--extrasmall {
+        font-size: 0.75rem
       }
     }
 
