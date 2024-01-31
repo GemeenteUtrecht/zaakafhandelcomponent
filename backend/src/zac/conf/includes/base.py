@@ -611,7 +611,7 @@ RESTART_ZAAK_PROCESS_DEFINITION_KEY = config(
     "RESTART_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_herstarten"
 )
 FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptlAppId"])
-
+FILTERED_IOTS = config("FILTERED_IOTS", default=["Importdocument"])
 
 # Django-Hijack
 HIJACK_LOGIN_REDIRECT_URL = UI_ROOT_URL

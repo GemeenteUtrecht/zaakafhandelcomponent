@@ -1005,33 +1005,36 @@ class ZaakDocumentView(views.APIView):
 
 
 @extend_schema(
-    summary=_("List document types for a ZAAK."),
+    summary=_("List INFORMATIEOBJECTTYPEs for a ZAAK."),
     tags=["meta"],
     parameters=[
         OpenApiParameter(
             name="zaak",
             required=True,
             type=OpenApiTypes.URI,
-            description=_("ZAAK to list available document types for."),
+            description=_("ZAAK to list available INFORMATIEOBJECTTYPEs for."),
             location=OpenApiParameter.QUERY,
         )
     ],
 )
-class InformatieObjectTypeListView(ListAPIView):
+class InformatieObjectTypeListView(views.APIView):
     """
     List the available document types for a given zaak.
 
-    TODO: permissions checks on zaak - can this user read/mutate the zaak?
     """
 
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = InformatieObjectTypeSerializer
     filter_backends = ()
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         zaak_url = self.request.query_params.get("zaak")
         if not zaak_url:
             raise exceptions.ValidationError("'zaak' query parameter is required.")
-        return get_informatieobjecttypen_for_zaak(zaak_url)
+        iots = get_informatieobjecttypen_for_zaak(zaak_url)
+        iots = [iot for iot in iots if iot.omschrijving not in settings.FILTERED_IOTS]
+        return Response(self.serializer_class(iots, many=True).data)
 
 
 @extend_schema(summary=_("List CATALOGI."), tags=["meta"])
