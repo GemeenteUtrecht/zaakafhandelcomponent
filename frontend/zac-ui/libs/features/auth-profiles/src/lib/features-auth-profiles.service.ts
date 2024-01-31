@@ -140,7 +140,7 @@ export class FeaturesAuthProfilesService {
    * Request document types
    */
   getDocTypes(): Observable<MetaDocType> {
-    const endpoint = encodeURI("/api/core/document-types");
+    const endpoint = encodeURI("/api/core/informatieobjecttypen");
     return this.http.Get<MetaDocType>(endpoint);
   }
 

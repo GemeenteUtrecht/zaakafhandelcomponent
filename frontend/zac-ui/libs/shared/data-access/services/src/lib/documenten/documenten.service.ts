@@ -69,7 +69,7 @@ export class DocumentenService {
   }
 
   getDocumentTypes(mainZaakUrl): Observable<InformatieObjectType[]> {
-    const endpoint = encodeURI(`/api/core/document-types?zaak=${mainZaakUrl}`);
+    const endpoint = encodeURI(`/api/core/informatieobjecttypen?zaak=${mainZaakUrl}`);
     return this.http.Get<InformatieObjectType[]>(endpoint);
   }
 

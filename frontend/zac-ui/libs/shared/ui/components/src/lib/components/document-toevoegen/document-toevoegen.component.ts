@@ -102,7 +102,7 @@ export class DocumentToevoegenComponent implements OnInit {
 
   @CachedObservableMethod('DocumentToevoegenComponent.getDocumentTypes')
   getDocumentTypes(): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/api/core/document-types?zaak=${this.zaak.url}`);
+    const endpoint = encodeURI(`/api/core/informatieobjecttypen?zaak=${this.zaak.url}`);
     return this.http.Get<any>(endpoint);
   }
 
