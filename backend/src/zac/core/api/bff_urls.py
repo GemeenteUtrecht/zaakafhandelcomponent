@@ -97,9 +97,9 @@ urlpatterns = [
     path("zaaktypen", ZaakTypenView.as_view(), name="zaaktypen"),
     path("eigenschappen", EigenschappenView.as_view(), name="eigenschappen"),
     path(
-        "document-types",
+        "informatieobjecttypen",
         InformatieObjectTypeListView.as_view(),
-        name="document-types-list",
+        name="informatieobjecttypes-list",
     ),
     path(
         "vertrouwelijkheidsaanduidingen",
