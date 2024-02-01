@@ -1163,7 +1163,7 @@ class StatusTypenView(views.APIView):
 @extend_schema(summary=_("List ZAAKTYPE EIGENSCHAPpen."), tags=["meta"])
 class EigenschappenView(ListAPIView):
     """
-    List the available eigenschappen for a given `zaaktype` OR a `zaaktype_omschrijving` within a `catalogus`.
+    List the available eigenschappen sorted by name for a given `zaaktype` OR a `zaaktype_omschrijving` within a `catalogus`.
     If the `zaaktype_omschrijving` is submitted, the `catalogus` is also required.
     If the `catalogus` is submitted, the `zaaktype_omschrijving` is required.
     The `zaaktype` is mutually exclusive from the `zaaktype_omschrijving` and `catalogus`.
@@ -1226,6 +1226,7 @@ class EigenschappenView(ListAPIView):
             for e in eigenschappen
         ]
 
+        eigenschappen_data = sorted(eigenschappen_data, key=lambda ei: ei["name"])
         serializer = self.get_serializer(eigenschappen_data, many=True)
         return Response(serializer.data)
 

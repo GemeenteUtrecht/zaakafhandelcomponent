@@ -4,7 +4,9 @@
 .form {
   box-sizing: border-box;
   position: relative;
-
+  .roww {
+    display: flex;
+  }
   &__header {
     display: flex;
     justify-content: space-between;

@@ -118,27 +118,29 @@
             </div>
 
             <!-- Read-only field. -->
-            <div class="row" *ngIf="field.widgetType == 'readonly' && !field.writeonly">
-              <div class="col-12">
-                <p class="p--bold p--muted mb-0">{{field.label}}</p>
-              </div>
+            <div class="row">
+              <ng-container *ngIf="field.widgetType == 'readonly' && !field.writeonly">
+                <div class="col-12 col-sm-4 col-md-6">
+                  <p class="p--bold p--muted p--no-wrap mb-0">{{field.label}}</p>
+                </div>
 
-              <div class="col-12 ml-1" *ngIf="!field.choices">
-                <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
-                <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
-                <p class="p--pre-wrap" *ngIf="!field.value && !field.placeholder">-</p>
-              </div>
+                <div class="col-12 col-sm-8 col-md-6" *ngIf="!field.choices">
+                  <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
+                  <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
+                  <p class="p--pre-wrap" *ngIf="!field.value && !field.placeholder">-</p>
+                </div>
 
 
-              <div class="col-12 ml-1" *ngIf="field.choices">
-                <p class="p--pre-wrap">{{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}</p>
-              </div>
+                <div class="col-12 col-sm-8 col-md-6" *ngIf="field.choices">
+                  <p class="p--pre-wrap">{{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}</p>
+                </div>
+              </ng-container>
             </div>
             <!-- End read-only field. -->
 
             <!-- Regular field. -->
             <gu-input
-              *ngIf="field.widgetType == 'input' && isInEditMode"
+              *ngIf="field.widgetType == 'input' && field.format != 'long' && isInEditMode"
               [control]="field.control"
               [label]="field.label"
               [maxlength]="field.maxlength"
@@ -152,6 +154,19 @@
               class="mb-3"
             ></gu-input>
             <!-- End regular field. -->
+
+            <gu-textarea
+              *ngIf="field.widgetType == 'input' && field.format == 'long' && isInEditMode"
+              [label]="field.label"
+              [maxlength]="field.maxlength"
+              [control]="field.control"
+              [placeholder]="field.placeholder"
+              [required]="field.required"
+              [value]="field.control.value"
+              [minheight]="3"
+              (change)="inputChanged($event, field)"
+            >
+            </gu-textarea>
 
             <!-- Checbkox field. -->
             <!-- TODO: Non editable field, required etc. -->

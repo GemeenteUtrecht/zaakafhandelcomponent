@@ -36,6 +36,9 @@ export interface FieldConfiguration {
   /** @type {AbstractControl} */
   control?: AbstractControl;
 
+  /** @type {string} The format for this field. */
+  format?: string;
+
   /** @type {string} The unique identifier for this field. */
   key?: string;
 
@@ -109,6 +112,7 @@ export class Field {
   choices: Array<Choice>;
   control: AbstractControl;
   edit: boolean;
+  format?: string;
   key?: string;
   label: string;
   maxlength?: string;

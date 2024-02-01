@@ -43,7 +43,6 @@ from zac.accounts.models import BlueprintPermission, User
 from zac.client import Client
 from zac.contrib.brp.models import BRPConfig
 from zac.contrib.objects.cache import invalidate_cache_fetch_oudbehandelaren
-from zac.core.models import MetaObjectTypesConfig
 from zac.elasticsearch.searches import search_informatieobjects, search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError

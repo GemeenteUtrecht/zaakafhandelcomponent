@@ -248,12 +248,12 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         eigenschap2 = generate_oas_component(
             "ztc",
             "schemas/Eigenschap",
-            zaaktype=zaaktype2["url"],
+            zaaktype=zaaktype1["url"],
             naam="other-property",
             specificatie={
                 "groep": "dummy",
                 "formaat": "tekst",
-                "lengte": "1",
+                "lengte": "201",
                 "kardinaliteit": "1",
                 "waardenverzameling": [],
             },
@@ -267,7 +267,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={zaaktype1['url']}",
-            json=paginated_response([eigenschap1]),
+            json=paginated_response([eigenschap1, eigenschap2]),
         )
 
         response = self.client.get(
@@ -277,10 +277,18 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-
         self.assertEqual(
             data,
             [
+                {
+                    "name": "other-property",
+                    "spec": {
+                        "type": "string",
+                        "format": "long",
+                        "minLength": 1,
+                        "maxLength": 201,
+                    },
+                },
                 {
                     "name": "some-property",
                     "spec": {
@@ -292,7 +300,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                             {"label": "bbb", "value": "bbb"},
                         ],
                     },
-                }
+                },
             ],
         )
 
