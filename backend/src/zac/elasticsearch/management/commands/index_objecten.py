@@ -4,9 +4,11 @@ from typing import Dict, Iterator, List
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from elasticsearch_dsl.query import Terms
+from elasticsearch_dsl.query import Term, Terms
 
+from zac.core.cache import invalidate_fetch_object_cache
 from zac.core.services import (
+    fetch_objects,
     fetch_objects_all_paginated,
     fetch_objecttypes,
     get_objects_client,
@@ -36,35 +38,82 @@ class Command(IndexCommand, BaseCommand):
     _type = "object"
     _document = ObjectDocument
     _verbose_name_plural = "OBJECTen"
-    index = settings.ES_INDEX_OBJECTEN
-
-    def zaken_index_exists(self) -> bool:
-        check_if_index_exists(index=settings.ES_INDEX_ZAKEN)
-
-    def zaakobjecten_index_exists(self) -> bool:
-        return check_if_index_exists(index=settings.ES_INDEX_ZO)
+    _index = settings.ES_INDEX_OBJECTEN
+    relies_on = {
+        settings.ES_INDEX_ZAKEN: ZaakDocument,
+        settings.ES_INDEX_ZO: ZaakObjectDocument,
+    }
 
     def batch_index(self) -> Iterator[ObjectDocument]:
-        self.zaken_index_exists()
-        self.zaakobjecten_index_exists()
+        super().batch_index()
         self.stdout.write("Preloading all OBJECTTYPEn...")
         ots = {ot["url"]: ot for ot in fetch_objecttypes()}
         self.stdout.write(f"Fetched {len(ots)} OBJECTTYPEn.")
         self.stdout.write("Starting OBJECT retrieval from the configured OBJECTs API.")
         client = get_objects_client()
 
-        query_params = {"pageSize": 100}
-        get_more = True
-        while get_more:
-            objects, query_params = fetch_objects_all_paginated(
-                client, query_params=query_params
-            )
-            perf_logger.info("Fetched %d OBJECTen.", len(objects["results"]))
-            get_more = query_params.get("page", None)
-            for obj in objects["results"]:
-                obj["type"] = ots[obj["type"]]
+        if not self.reindex_last:
+            query_params = {"pageSize": 100}
+            get_more = True
+            while get_more:
+                objects, query_params = fetch_objects_all_paginated(
+                    client, query_params=query_params
+                )
+                perf_logger.info("Fetched %d OBJECTen.", len(objects["results"]))
+                get_more = query_params.get("page", None)
+                for obj in objects["results"]:
+                    obj["type"] = ots[obj["type"]]
 
-            yield from self.documenten_generator(objects["results"])
+                yield from self.documenten_generator(objects["results"])
+        else:
+            zaken = self.handle_reindex()
+            for zaak in zaken:
+                # First check to see if there are any zaakobjecten here before we iterate through a scan.
+                if (
+                    ZaakObjectDocument.search()
+                    .extra(size=0)
+                    .filter(Term(zaak=zaak.url))
+                    .count()
+                    == 0
+                ):
+                    # continue to next loop
+                    continue
+
+                zon_scan = (
+                    ZaakObjectDocument.search()
+                    .filter(Term(zaak=zaak.url))
+                    .params(scroll="15h")
+                    .scan()
+                )
+                for zon in self.get_chunks(zon_scan):
+                    # Refresh client authentication in case this entire index takes longer than validatity of authentication token.
+                    client.refresh_auth()
+
+                    # Create list from chunk of generator.
+                    zon = list(zon)
+
+                    # Get unique OBJECTs urls.
+                    objects = list({zo.object for zo in zon})
+
+                    # Log total OBJECTs found.
+                    self.stdout.write(f"OBJECTs from ZOs: {len(objects)}.")
+
+                    # Invalidate cache
+                    for obj in objects:
+                        invalidate_fetch_object_cache(obj)
+
+                    # Log number of OBJECTs to fetch.
+                    self.stdout.write(f"Fetching OBJECTs: {len(objects)}.")
+
+                    if zon:
+                        # Fetch objects from OBJECTs API.
+                        objects = fetch_objects(objects, max_workers=self.max_workers)
+
+                        # Log how many were retrieved.
+                        self.stdout.write(
+                            f"Retrieved OBJECTs from OBJECTs API: {len(objects)}."
+                        )
+                        yield from self.documenten_generator(objects)
 
     def documenten_generator(self, objects: List[Dict]) -> Iterator[ObjectDocument]:
         object_documenten = self.create_objecten_documenten(objects)

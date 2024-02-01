@@ -57,18 +57,15 @@ class Command(BaseCommand):
         if chunk_size := options.get("chunk_size"):
             args.append(f"--chunk-size={chunk_size}")
 
-        self.stdout.write(f"Calling index_zaken {' '.join(args)}")
-        call_command("index_zaken", *args)
-        self.stdout.write("Done indexing ZAAKen.")
-        self.stdout.write(f"Calling index_zaakinformatieobjecten {' '.join(args)}")
-        call_command("index_zaakinformatieobjecten", *args)
-        self.stdout.write("Done indexing ZAAKINFORMATIEOBJECTen.")
-        self.stdout.write(f"Calling index_zaakobjecten {' '.join(args)}")
-        call_command("index_zaakobjecten", *args)
-        self.stdout.write("Done indexing ZAAKOBJECTen.")
-        self.stdout.write(f"Calling index_documenten_verzaking {' '.join(args)}")
-        call_command("index_documenten_verzaking", *args)
-        self.stdout.write("Done indexing ENKELVOUDIGINFORMATIEOBJECTen.")
-        self.stdout.write(f"Calling index_objecten")
-        call_command("index_objecten")
-        self.stdout.write("Done indexing OBJECTen.")
+        index_these = [
+            "index_zaken",
+            "index_zaakinformatieobjecten",
+            "index_zaakobjecten",
+            "index_documenten_verzaking",
+            "index_objecten",
+        ]
+
+        for index_this in index_these:
+            self.stdout.write(f"Calling {index_this} {' '.join(args)}.")
+            call_command(index_this, *args)
+            self.stdout.write(f"Done with {index_this}.")

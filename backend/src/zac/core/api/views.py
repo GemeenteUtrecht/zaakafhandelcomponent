@@ -71,7 +71,7 @@ from ..services import (
     create_zaak_eigenschap,
     delete_rol,
     delete_zaak_eigenschap,
-    delete_zaak_object,
+    delete_zaakobject,
     fetch_latest_audit_trail_data_document,
     fetch_zaak_eigenschap,
     fetch_zaakobject,
@@ -318,7 +318,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
             "process_instances": [get_process_instances, zaak.url],
         }
         results = dict()
-        with parallel() as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             running_tasks = {
                 key: executor.submit(*task) for key, task in mapping.items()
             }
@@ -1481,7 +1481,7 @@ class ZaakObjectChangeView(views.APIView):
         zaak = get_zaak(zaak_url=zaak_object.zaak)
         self.check_object_permissions(self.request, zaak)
 
-        delete_zaak_object(zaak_object.url)
+        delete_zaakobject(zaak_object.url)
         invalidate_zaakobjecten_cache(zaak)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

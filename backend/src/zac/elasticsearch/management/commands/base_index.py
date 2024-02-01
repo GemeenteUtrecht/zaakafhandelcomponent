@@ -9,6 +9,8 @@ from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 
+from zac.elasticsearch.documents import ZaakDocument
+
 from ...utils import check_if_index_exists
 from ..utils import ProgressOutputWrapper
 
@@ -22,6 +24,7 @@ class IndexCommand(ABC):
     _document = None
     _verbose_name = None
     _verbose_name_plural = None
+    relies_on = dict()
 
     @property
     def index(self):
@@ -60,6 +63,27 @@ class IndexCommand(ABC):
         if self._verbose_name_plural:
             return self._verbose_name_plural
         return self._type
+
+    def check_relies_on(self):
+        for ind in self.relies_on.keys():
+            check_if_index_exists(ind)
+
+    def handle_reindex(self) -> list:
+        # Edge case checks
+        for doc in self.relies_on.values():
+            if doc.search().extra(size=0).count() == 0:
+                self.stdout.end_progress()
+                return []
+
+        # Fetch last <int:self.reindex_last> zaken, the ZIOs related to those zaken
+        # and see if we have all the EIOs related to the ZIOs.
+        return (
+            ZaakDocument.search()
+            .sort("-identificatie.keyword")
+            .extra(size=self.reindex_last)
+            .execute()
+            .hits
+        )
 
     def add_arguments(self, parser: CommandParser) -> None:
         super().add_arguments(parser)
@@ -118,7 +142,7 @@ class IndexCommand(ABC):
         )
         self.bulk_upsert()
         self.stdout.write(
-            f"{self.reindex_last} {self.verbose_name_plural} are reindexed."
+            f"{self.verbose_name_plural} for the last {self.reindex_last} ZAAKen are reindexed."
         )
 
     def handle_indexing(self):
@@ -151,4 +175,5 @@ class IndexCommand(ABC):
 
     @abstractmethod
     def batch_index(self) -> Iterator:
+        self.check_relies_on()
         pass

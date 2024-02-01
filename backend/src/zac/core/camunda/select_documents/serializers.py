@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Dict, List
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -118,7 +119,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         assert hasattr(self, "validated_data"), "Serializer is not validated."
 
         # Get original documents
-        with parallel() as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             original_documents = executor.map(
                 lambda doc: get_document(doc["document"]),
                 self.validated_data["selected_documents"],
@@ -126,7 +127,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
         original_documents = {doc.url: doc for doc in original_documents}
 
         # Get content of documents
-        with parallel() as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             original_documents = executor.map(
                 lambda doc: download_document(doc),
                 [doc for doc_url, doc in original_documents.items()],
@@ -160,7 +161,7 @@ class DocumentSelectTaskSerializer(serializers.Serializer):
                 }
             )
 
-        with parallel() as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             documents = executor.map(
                 lambda doc: create_document(doc),
                 new_documents,

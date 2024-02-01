@@ -396,6 +396,7 @@ SITE_TITLE = "Zaakafhandeling"
 
 ENVIRONMENT = config("ENVIRONMENT", "")
 SHOW_ALERT = True
+MAX_WORKERS = config("MAX_WORKERS", default=4)
 
 ##############################
 #                            #

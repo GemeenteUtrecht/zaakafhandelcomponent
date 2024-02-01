@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List, Optional
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from djangorestframework_camel_case.settings import api_settings
@@ -279,7 +280,7 @@ def fetch_all_checklists_for_user_groups(user: User) -> List[dict]:
             ]
         return []
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = executor.map(_search_checklists_objects, data_attrs_list)
     final_results = []
     for result in results:

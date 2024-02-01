@@ -65,6 +65,7 @@ class Command(IndexCommand, BaseCommand):
         ]
 
     def batch_index(self) -> Iterator[InformatieObjectDocument]:
+        super().batch_index()
         self.zaken_index_exists()
         self.zaakinformatieobjecten_index_exists()
 
@@ -73,10 +74,10 @@ class Command(IndexCommand, BaseCommand):
             f"Starting {self.verbose_name_plural} retrieval from the configured DRC."
         )
 
+        # Build client
         drc = Service.objects.get(api_type=APITypes.drc)
         client = drc.build_client()
 
-        # report back which clients will be iterated over and how many zaken each has
         total_expected = ZaakInformatieObjectDocument.search().extra(size=0).count()
 
         # Log amount to be fetched.

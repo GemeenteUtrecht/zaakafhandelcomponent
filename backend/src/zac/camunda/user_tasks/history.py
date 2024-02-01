@@ -149,7 +149,7 @@ def get_camunda_history_for_zaak(
         tasks[task.id].form_key = extract_task_form_key(task)
 
     # Get task form_keys
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         list(
             executor.map(
                 _extract_task_form_key,
@@ -171,7 +171,7 @@ def get_camunda_history_for_zaak(
         }
 
     tasks = tasks.values()
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         list(executor.map(_get_historic_activity_variables_from_task, tasks))
 
     # Add camunda form labels to zaak_history if task has a camunda form
@@ -182,7 +182,7 @@ def get_camunda_history_for_zaak(
             if form_label := form_labels.get(var["variable_name"]):
                 var["label"] = form_label
 
-    with parallel() as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         list(executor.map(_add_camunda_form_labels_to_user_task_history, tasks))
 
     return factory(HistoricUserTask, [h for h in user_task_history.values()])

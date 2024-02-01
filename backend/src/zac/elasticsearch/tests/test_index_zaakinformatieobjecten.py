@@ -6,13 +6,17 @@ from django.core.management import call_command
 import requests_mock
 from elasticsearch_dsl import Index
 from rest_framework.test import APITransactionTestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
+from zgw.models.zrc import Zaak
 
+from ..api import create_zaak_document
 from ..documents import ZaakInformatieObjectDocument
 from .utils import ESMixin
 
@@ -44,7 +48,7 @@ class IndexZaakInformatieObjectenTests(
         url=f"{ZAKEN_ROOT}zaken/a522d30c-6c10-47fe-82e3-e9f524c14ca8",
         zaaktype=zaaktype["url"],
         bronorganisatie="002220647",
-        identificatie="ZAAK1",
+        identificatie="ZAAK-001",
         vertrouwelijkheidaanduiding="zaakvertrouwelijk",
     )
     zaakinformatieobject = generate_oas_component(
@@ -87,7 +91,7 @@ class IndexZaakInformatieObjectenTests(
         call_command("index_zaakinformatieobjecten", stdout=StringIO())
         self.refresh_index()
 
-        # check zaak_document exists
+        # check zio_document exists
         zio_document = ZaakInformatieObjectDocument.get(
             id=self.zaakinformatieobject["url"].split("/")[-1]
         )
@@ -97,7 +101,7 @@ class IndexZaakInformatieObjectenTests(
         )
         self.assertEqual(zio_document.url, self.zaakinformatieobject["url"])
 
-    def test_index_zaken_reindex_last_argument(self, m):
+    def test_index_zio_reindex_last_argument(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(
             f"{ZAKEN_ROOT}zaken",
@@ -143,9 +147,19 @@ class IndexZaakInformatieObjectenTests(
             f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak2['url']}",
             json=[zaakinformatieobject2],
         )
-        call_command("index_zaakinformatieobjecten", reindex_last=1)
+
+        zaak = factory(Zaak, self.zaak)
+        zaak.zaaktype = factory(ZaakType, self.zaaktype)
+        zaak2 = factory(Zaak, zaak2)
+        zaak2.zaaktype = factory(ZaakType, self.zaaktype)
+        zd2 = create_zaak_document(zaak2)
+        zd2.save()
+        zd = create_zaak_document(zaak)
+        zd.save()
         self.refresh_index()
 
+        call_command("index_zaakinformatieobjecten", reindex_last=1)
+        self.refresh_index()
         # check zaak_document exists
         zio_document = ZaakInformatieObjectDocument.get(
             id=zaakinformatieobject2["url"].split("/")[-1]

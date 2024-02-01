@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
@@ -372,7 +373,7 @@ class ChangeBehandelaarTasksSerializer(serializers.Serializer):
             "identificatie": self.validated_data["rol"].get_identificatie(),
         }
 
-        with parallel() as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             # Update 'behandelaar' variable
             list(
                 executor.map(

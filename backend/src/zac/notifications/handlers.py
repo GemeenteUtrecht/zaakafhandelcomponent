@@ -1,5 +1,7 @@
 import logging
 
+from django.conf import settings
+
 from elasticsearch.exceptions import NotFoundError
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
@@ -27,6 +29,7 @@ from zac.core.cache import (
 )
 from zac.core.services import (
     _client_from_url,
+    delete_zaakobjecten_of_object,
     fetch_object,
     fetch_rol,
     fetch_zaak_informatieobject,
@@ -151,7 +154,7 @@ class ZakenHandler:
             # lock all review requests related to zaak
             if is_closed and is_closed != was_closed:
                 review_requests = get_all_review_requests_for_zaak(zaak)
-                with parallel() as executor:
+                with parallel(max_workers=settings.MAX_WORKERS) as executor:
                     list(executor.map(_lock_review_request, review_requests))
 
         # index in ES
@@ -326,6 +329,7 @@ class ObjectenHandler:
 
             elif data["actie"] == "destroy":
                 delete_object_document(data["hoofd_object"])
+                delete_zaakobjecten_of_object(data["hoofd_object"])
 
 
 class InformatieObjectenHandler:
