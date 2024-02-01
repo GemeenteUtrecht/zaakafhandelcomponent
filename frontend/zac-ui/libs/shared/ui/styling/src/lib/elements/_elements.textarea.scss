@@ -8,4 +8,7 @@ textarea {
   overflow: visible;
   padding: 0.625rem;
   max-width: 100%;
+  &--double {
+    height: 2rem;
+  }
 }

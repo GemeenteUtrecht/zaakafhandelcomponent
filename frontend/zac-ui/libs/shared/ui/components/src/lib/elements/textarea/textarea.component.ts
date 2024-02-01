@@ -29,4 +29,5 @@ export class TextareaComponent {
   @Input() placeholder: string;
   @Input() value: string | number;
   @Input() maxlength: string;
+  @Input() minheight: string;
 }

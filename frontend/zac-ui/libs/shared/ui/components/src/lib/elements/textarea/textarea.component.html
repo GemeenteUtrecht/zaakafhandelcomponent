@@ -4,6 +4,7 @@
 >
   <mat-label *ngIf="label">{{label}}</mat-label>
   <textarea matInput
+            style="height: {{minheight}}rem"
             [placeholder]="placeholder"
             [value]="value"
             [disabled]="disabled"

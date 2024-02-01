@@ -130,11 +130,12 @@ export class InformatieComponent implements OnInit, OnChanges {
       return {
         choices: zaaktypeEigenschap.spec.enum,
         label: zaaktypeEigenschap.name,
-        maxlength: 80,
+        maxlength: zaaktypeEigenschap.spec.maxLength,
         placeholder: '-',
         readonly: false,
         required: false,
         value: value,
+        format: zaaktypeEigenschap.spec.format,
         type: (zaaktypeEigenschap.spec.enum) ? 'select' : type,
       };
     })
