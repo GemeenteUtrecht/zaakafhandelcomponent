@@ -108,11 +108,30 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "The URL required to save edits and delete the DOWC object related to the INFORMATIEOBJECT."
         )
     )
+    current_user_is_editing = serializers.SerializerMethodField(
+        help_text=_(
+            "Boolean flag to indicate if requesting user is editing current INFORMATIEOBJECT."
+        )
+    )
+    download_url = DownloadDocumentURLField()
+    informatieobjecttype = InformatieObjectTypeSerializer(
+        help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")
+    )
+    last_edited_date = serializers.SerializerMethodField(
+        help_text=_("Shows last edited datetime.")
+    )
+    locked_by = serializers.SerializerMethodField(
+        help_text=_("Email of user that locked document.")
+    )
     read_url = DowcUrlField(
         purpose=DocFileTypes.read,
         help_text=_(
             "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
+    )
+    vertrouwelijkheidaanduiding = serializers.CharField(
+        source="get_vertrouwelijkheidaanduiding_display",
+        help_text=_("Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."),
     )
     write_url = DowcUrlField(
         purpose=DocFileTypes.write,
@@ -120,22 +139,6 @@ class GetZaakDocumentSerializer(APIModelSerializer):
         help_text=_(
             "URL to write INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
-    )
-    download_url = DownloadDocumentURLField()
-    vertrouwelijkheidaanduiding = serializers.CharField(
-        source="get_vertrouwelijkheidaanduiding_display",
-        help_text=_("Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."),
-    )
-    informatieobjecttype = InformatieObjectTypeSerializer(
-        help_text=_("The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT.")
-    )
-    current_user_is_editing = serializers.SerializerMethodField(
-        help_text=_(
-            "Boolean flag to indicate if requesting user is editing current INFORMATIEOBJECT."
-        )
-    )
-    last_edited_date = serializers.SerializerMethodField(
-        help_text=_("Shows last edited datetime.")
     )
 
     class Meta:
@@ -152,6 +155,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "informatieobjecttype",
             "last_edited_date",
             "locked",
+            "locked_by",
             "read_url",
             "titel",
             "url",
@@ -166,7 +170,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
         }
 
     def get_delete_url(self, obj) -> str:
-        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        dowc_obj = self.context.get("open_documenten_user", {}).get(obj.url)
         return (
             reverse("dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid})
             if dowc_obj
@@ -174,8 +178,15 @@ class GetZaakDocumentSerializer(APIModelSerializer):
         )
 
     def get_current_user_is_editing(self, obj) -> bool:
-        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        dowc_obj = self.context.get("open_documenten_user", {}).get(obj.url)
         return bool(dowc_obj)
+
+    def get_locked_by(self, obj) -> str:
+        if obj.locked and (
+            open_dowc := self.context.get("open_documenten_zaak", {}).get(obj.url, None)
+        ):
+            return open_dowc.locked_by
+        return ""
 
     def get_last_edited_date(self, obj) -> Optional[datetime]:
         return self.context.get("editing_history", {}).get(obj.url)

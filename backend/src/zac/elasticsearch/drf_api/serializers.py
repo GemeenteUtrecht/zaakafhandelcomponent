@@ -424,6 +424,9 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
         help_text=_("Shows last edited datetime."), allow_null=True
     )
     locked = serializers.BooleanField()
+    locked_by = serializers.SerializerMethodField(
+        help_text=_("Email of user that locked document.")
+    )
     read_url = DowcUrlField(
         purpose=DocFileTypes.read,
         help_text=_(
@@ -446,7 +449,7 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
     )
 
     def get_delete_url(self, obj) -> str:
-        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        dowc_obj = self.context.get("open_documenten_user", {}).get(obj.url)
         return (
             reverse("dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid})
             if dowc_obj
@@ -454,5 +457,12 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
         )
 
     def get_current_user_is_editing(self, obj) -> bool:
-        dowc_obj = self.context.get("open_documenten", {}).get(obj.url)
+        dowc_obj = self.context.get("open_documenten_user", {}).get(obj.url)
         return bool(dowc_obj)
+
+    def get_locked_by(self, obj) -> str:
+        if obj.locked and (
+            open_dowc := self.context.get("open_documenten_zaak", {}).get(obj.url, None)
+        ):
+            return open_dowc.locked_by
+        return ""

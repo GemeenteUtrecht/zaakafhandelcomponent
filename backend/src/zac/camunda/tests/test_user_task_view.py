@@ -1189,7 +1189,14 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         with patch(
             "zac.core.camunda.zet_resultaat.serializers.check_document_status",
             return_value=factory(
-                OpenDowc, [{"document": self.document.url, "uuid": str(_uuid)}]
+                OpenDowc,
+                [
+                    {
+                        "document": self.document.url,
+                        "uuid": str(_uuid),
+                        "lockedBy": "some-user@zac.nl",
+                    }
+                ],
             ),
         ):
             with patch(

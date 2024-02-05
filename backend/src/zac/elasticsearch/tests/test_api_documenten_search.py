@@ -22,6 +22,7 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
+from zac.contrib.dowc.data import OpenDowc
 from zac.contrib.dowc.models import DowcConfig
 from zac.core.permissions import zaken_inzien, zaken_list_documents
 from zac.core.tests.utils import ClearCachesMixin
@@ -140,7 +141,9 @@ class ESZaakDocumentsPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch("zac.elasticsearch.drf_api.views.search_informatieobjects", return_value=[])
-    @patch("zac.elasticsearch.drf_api.views.get_open_documenten", return_value=[])
+    @patch(
+        "zac.elasticsearch.drf_api.views.get_open_documenten_for_user", return_value=[]
+    )
     def test_is_superuser(self, m, *mocks):
         mock_service_oas_get(m, ZTC_ROOT, "ztc")
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
@@ -157,7 +160,9 @@ class ESZaakDocumentsPermissionTests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(results["count"], 0)
 
     @patch("zac.elasticsearch.drf_api.views.search_informatieobjects", return_value=[])
-    @patch("zac.elasticsearch.drf_api.views.get_open_documenten", return_value=[])
+    @patch(
+        "zac.elasticsearch.drf_api.views.get_open_documenten_for_user", return_value=[]
+    )
     def test_has_perms(self, m, *mocks):
         mock_service_oas_get(m, ZTC_ROOT, "ztc")
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
@@ -422,7 +427,17 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         )
         self.client.force_authenticate(user=user)
 
-        response = self.client.post(self.endpoint)
+        with patch(
+            "zac.elasticsearch.drf_api.views.check_document_status",
+            return_value=[
+                OpenDowc(
+                    document=self.document1.url,
+                    uuid="8a5885c3-9016-44c2-8ab9-0aceb9e5d8f8",
+                    locked_by=user.email,
+                )
+            ],
+        ):
+            response = self.client.post(self.endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -453,6 +468,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
                     },
                     "lastEditedDate": None,
                     "locked": self.document1.locked,
+                    "lockedBy": user.email,
                     "readUrl": f"/api/dowc/{self.document1.bronorganisatie}/{self.document1.identificatie}/read",
                     "relatedZaken": [],
                     "titel": self.document1.titel,
@@ -483,6 +499,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
                     },
                     "lastEditedDate": None,
                     "locked": self.document2.locked,
+                    "lockedBy": "",
                     "readUrl": f"/api/dowc/{self.document2.bronorganisatie}/{self.document2.identificatie}/read",
                     "relatedZaken": [],
                     "titel": self.document2.titel,

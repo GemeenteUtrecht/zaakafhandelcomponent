@@ -42,10 +42,13 @@ class OpenDocumentSerializer(APIModelSerializer):
         source="document",
         help_text=_("Unversioned URL-reference to INFORMATIEOBJECT in DRC API."),
     )
+    locked_by = serializers.EmailField(
+        help_text=_("Email of user that locked document.")
+    )
 
     class Meta:
         model = OpenDowc
-        fields = ("url",)
+        fields = ("url", "locked_by")
 
 
 @usertask_context_serializer

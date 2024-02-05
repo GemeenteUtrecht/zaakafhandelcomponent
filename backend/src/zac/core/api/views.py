@@ -43,7 +43,7 @@ from zac.accounts.models import User, UserAtomicPermission
 from zac.camunda.process_instances import get_process_instances
 from zac.camunda.processes import start_process
 from zac.contrib.brp.api import fetch_extrainfo_np
-from zac.contrib.dowc.api import get_open_documenten
+from zac.contrib.dowc.api import check_document_status, get_open_documenten_for_user
 from zac.contrib.objects.services import (
     fetch_start_camunda_process_form_for_zaaktype,
     fetch_zaaktypeattributen_objects_for_zaaktype,
@@ -914,14 +914,20 @@ class ZaakDocumentView(views.APIView):
         }
         return editing_history
 
-    def get_response_serializer(self, instance: Document) -> GetZaakDocumentSerializer:
-        open_documenten = get_open_documenten(self.request.user)
+    def get_response_serializer(
+        self, instance: Document, zaak: Zaak
+    ) -> GetZaakDocumentSerializer:
+        open_documenten_zaak = check_document_status(zaak.url)
+        open_documenten = get_open_documenten_for_user(self.request.user)
         editing_history = self.get_document_audit_trail(instance)
         serializer = GetZaakDocumentSerializer(
             instance=instance,
             context={
-                "open_documenten": {
+                "open_documenten_user": {
                     dowc.unversioned_url: dowc for dowc in open_documenten
+                },
+                "open_documenten_zaak": {
+                    dowc.document: dowc for dowc in open_documenten_zaak
                 },
                 "editing_history": editing_history,
             },
@@ -959,7 +965,7 @@ class ZaakDocumentView(views.APIView):
         # update elasticsearch index
         update_informatieobject_document(document)
 
-        serializer = self.get_response_serializer(document)
+        serializer = self.get_response_serializer(document, zaak)
         return Response(serializer.data)
 
     @extend_schema(
@@ -995,7 +1001,7 @@ class ZaakDocumentView(views.APIView):
         # add to elasticsearch index
         update_informatieobject_document(document)
 
-        serializer = self.get_response_serializer(document)
+        serializer = self.get_response_serializer(document, zaak)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

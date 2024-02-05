@@ -40,7 +40,7 @@ class OpenReview(Model):
         ]
 
     @property
-    def groups(self) -> List[User]:
+    def groups(self) -> List[Group]:
         return self._groups
 
     @groups.setter
@@ -215,10 +215,6 @@ class ReviewRequest(Model):
             for advice in advices:
                 for document in advice.documents:
                     documents.add(document.document)
-
-            # Deprecate in favor of elasticsearch
-            # with parallel() as executor:
-            #     _documents = executor.map(get_document, documents)
 
             if documents:
                 documents = list(documents)
