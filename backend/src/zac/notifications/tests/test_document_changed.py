@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -15,11 +17,11 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
-from zac.core.tests.utils import ClearCachesMixin
+from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.elasticsearch.api import create_informatieobject_document
 from zac.elasticsearch.documents import InformatieObjectDocument
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 
 from .utils import (
     CATALOGI_ROOT,
@@ -28,6 +30,10 @@ from .utils import (
     INFORMATIEOBJECT,
     INFORMATIEOBJECT_RESPONSE,
     INFORMATIEOBJECTTYPE_RESPONSE,
+    ZAAK_RESPONSE,
+    ZAAKINFORMATIEOBJECT_RESPONSE,
+    ZAAKTYPE_RESPONSE,
+    ZAKEN_ROOT,
 )
 
 NOTIFICATION_CREATE = {
@@ -78,22 +84,30 @@ class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTest
         super().setUp()
         Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
         Service.objects.create(api_root=DRC_ROOT, api_type=APITypes.drc)
-
-        # config = CoreConfig.get_solo()
-        # config.save()
+        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 
     def _setup_mocks(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, DRC_ROOT, "drc")
+        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, INFORMATIEOBJECT_RESPONSE)
         mock_resource_get(rm, INFORMATIEOBJECTTYPE_RESPONSE)
 
     def test_informatieobject_created_indexed_in_es(self, rm):
         self._setup_mocks(rm)
+        mock_resource_get(rm, ZAAK_RESPONSE)
+        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         rm.get(f"{INFORMATIEOBJECT_RESPONSE['url']}/audittrail", status_code=404)
+        rm.get(
+            f"{ZAKEN_ROOT}zaakinformatieobjecten?informatieobject={INFORMATIEOBJECT}",
+            json=[ZAAKINFORMATIEOBJECT_RESPONSE],
+        )
+        rm.get(
+            f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([ZAAKTYPE_RESPONSE])
+        )
 
         # assert IO is not indexed
         with self.assertRaises(NotFoundError):
@@ -102,11 +116,15 @@ class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTest
             )
 
         path = reverse("notifications:callback")
-        response = self.client.post(path, NOTIFICATION_CREATE)
+        with patch("zac.elasticsearch.api.parallel", return_value=mock_parallel()):
+            response = self.client.post(path, NOTIFICATION_CREATE)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.refresh_index()
-        InformatieObjectDocument.get(id=INFORMATIEOBJECT_RESPONSE["url"].split("/")[-1])
+        eio_doc = InformatieObjectDocument.get(
+            id=INFORMATIEOBJECT_RESPONSE["url"].split("/")[-1]
+        )
+        self.assertEqual(eio_doc.related_zaken[0].url, ZAAK_RESPONSE["url"])
 
     def test_informatieobject_updated_in_es(self, rm):
         self._setup_mocks(rm)

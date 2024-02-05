@@ -61,8 +61,6 @@ from zac.elasticsearch.api import (
     update_zaak_document,
     update_zaakinformatieobject_document,
 )
-from zac.elasticsearch.documents import ZaakDocument
-from zac.elasticsearch.searches import search_zaakobjecten
 from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
@@ -336,11 +334,16 @@ class InformatieObjectenHandler:
     # We dont update related_zaken here - the notification from open zaak takes care of that.
     def handle(self, data: dict) -> None:
         if data["resource"] == "enkelvoudiginformatieobject":
-            if data["actie"] in ["create", "update", "partial_update"]:
+            if (actie := data["actie"]) in ["create", "update", "partial_update"]:
                 invalidate_document_url_cache(data["hoofd_object"])
                 document = get_document(data["hoofd_object"])
                 invalidate_document_other_cache(document)
                 update_informatieobject_document(document)
+
+                # in edge cases a destroyed EIO can be restored.
+                # in this case check at creation for existing zaakinformatieobjecten in ES
+                if actie == "create":
+                    update_related_zaken_in_informatieobject_document(document.url)
 
             elif data["actie"] == "destroy":
                 invalidate_document_url_cache(data["hoofd_object"])
