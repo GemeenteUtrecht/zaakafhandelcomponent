@@ -160,11 +160,11 @@ class WorkStackAdviceSerializer(AdviceSerializer):
 
 
 class WorkStackAdviceReviewsSerializer(serializers.Serializer):
-    advices = WorkStackAdviceSerializer(many=True)
+    advices = WorkStackAdviceSerializer(many=True, source="get_reviews")
 
 
 class WorkStackApprovalReviewsSerializer(serializers.Serializer):
-    approvals = ApprovalSerializer(many=True)
+    approvals = ApprovalSerializer(many=True, source="get_reviews")
 
 
 class WorkStackReviewRequestSerializer(PolymorphicSerializer):
@@ -184,12 +184,15 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
         ),
         required=True,
     )
-    completed = serializers.IntegerField(
+    completed = serializers.SerializerMethodField(
         label=_("completed requests"), help_text=_("The number of completed requests.")
     )
     zaak = SummaryZaakDocumentSerializer(
-        help_text=_("ZAAK that review request belongs to."), source="for_zaak"
+        help_text=_("ZAAK that review request belongs to.")
     )
+
+    def get_completed(self, obj) -> int:
+        return len(obj.reviews)
 
 
 class WorkStackSummarySerializer(serializers.Serializer):

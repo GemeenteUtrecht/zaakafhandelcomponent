@@ -87,6 +87,7 @@ class Reviews(Model):
     review_request: str
     zaak: str
 
+    requester: dict = field(default_factory=dict)
     reviews: list = field(default_factory=list)
 
     @property
@@ -175,6 +176,9 @@ class ReviewRequest(Model):
                     self.reviews = self._resolve_advice_documents_for_advices(
                         self.reviews
                     )
+            else:
+                self.reviews = []
+
             self.fetched_reviews = True
         return self.reviews
 

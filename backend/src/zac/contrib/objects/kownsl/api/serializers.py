@@ -355,10 +355,9 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
     can_lock = serializers.SerializerMethodField(
         label=_("can lock request"), help_text=_("User can lock the review request.")
     )
-    completed = serializers.IntegerField(
+    completed = serializers.SerializerMethodField(
         label=_("completed requests"),
         help_text=_("The number of completed requests."),
-        source="get_completed",
     )
 
     class Meta:
@@ -380,3 +379,6 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
         ) and request.user.username == obj.requester["username"]:
             return True
         return False
+
+    def get_completed(self, obj) -> int:
+        return len(obj.reviews)

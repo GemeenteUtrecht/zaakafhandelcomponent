@@ -101,9 +101,6 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype,
-            documents=[
-                cls.document,
-            ],
             documents_link=reverse(
                 "zaak-documents-es",
                 kwargs={
@@ -380,9 +377,6 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.zaak = factory(Zaak, zaak)
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
-            documents=[
-                cls.document,
-            ],
         )
         cls.patch_get_zaak_context = patch(
             "zac.contrib.objects.kownsl.camunda.get_zaak_context",

@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from uuid import UUID, uuid4
 
 from django.conf import settings
@@ -16,7 +16,6 @@ from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import User
 from zac.contrib.objects.checklists.data import Checklist, ChecklistType
-from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.core.camunda.start_process.data import StartCamundaProcessForm
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
@@ -32,7 +31,7 @@ from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
 from zgw.models import Zaak
 
-from .kownsl.data import Advice, Approval, ReviewRequest, Reviews
+from .kownsl.data import ReviewRequest, Reviews
 from .oudbehandelaren.data import Oudbehandelaren
 
 logger = logging.getLogger(__name__)
@@ -44,7 +43,10 @@ def _search_meta_objects(
     zaaktype: Optional[ZaakType] = None,
     unique: bool = False,
     data_attrs: List = [],
-) -> List[dict]:
+    paginated: bool = False,
+    query_params: Optional[Dict] = None,
+    page_size: int = 100,
+) -> Union[List[dict], Tuple[Dict, Dict]]:
 
     config = MetaObjectTypesConfig.get_solo()
     ot_url = getattr(config, objecttype_name, None)
@@ -72,15 +74,24 @@ def _search_meta_objects(
 
     object_filters["data_attrs"] = ",".join(object_filters["data_attrs"])
 
-    query_params = {"pageSize": 100}
-    get_more = True
-    meta_objects = []
-    while get_more:
+    if (not query_params) or ("pageSize" not in query_params):
+        query_params = {"pageSize": page_size}
+
+    if paginated:
         response, query_params = search_objects(
             object_filters, query_params=query_params
         )
-        meta_objects += response["results"]
-        get_more = query_params.get("page", None)
+        return response, query_params
+
+    else:
+        get_more = True
+        meta_objects = []
+        while get_more:
+            response, query_params = search_objects(
+                object_filters, query_params=query_params
+            )
+            meta_objects += response["results"]
+            get_more = query_params.get("page", None)
 
     if not meta_objects:
         logger.warning("No `{url}` object is found.".format(url=ot_url))
@@ -506,6 +517,39 @@ def update_review_request(
     return factory_review_request(result["record"]["data"])
 
 
+def get_review_requests_paginated(
+    query_params: Optional[Dict] = None,
+    zaak: Optional[Zaak] = None,
+    requester: Optional[User] = None,
+    page_size: int = 100,
+) -> Tuple[List[Dict], Dict]:
+
+    data_attrs = []
+
+    if zaak:
+        data_attrs += [f"zaak__exact__{zaak.url}"]
+    if requester:
+        data_attrs += [f"requester__username__exact__{requester.username}"]
+
+    response, query_params = _search_meta_objects(
+        "review_request_objecttype",
+        data_attrs=data_attrs,
+        paginated=True,
+        page_size=page_size,
+        query_params=query_params,
+    )
+    review_requests = [
+        factory_review_request(rr["record"]["data"]) for rr in response["results"]
+    ]
+    response["results"] = review_requests
+    return response, query_params
+
+
+def count_review_requests_by_user(requester: User) -> Optional[int]:
+    response, query_params = get_review_requests_paginated(requester, page_size=1)
+    return response.get("count", None)
+
+
 ###################################################
 #                KOWNSL - reviews                 #
 ###################################################
@@ -523,6 +567,7 @@ def fetch_reviews(
     review_request: Optional[str] = None,
     id: Optional[str] = None,
     zaak: Optional[str] = None,
+    requester: Optional[User] = None,
 ) -> List[Dict]:
 
     data_attrs = []
@@ -533,6 +578,8 @@ def fetch_reviews(
         data_attrs += [f"id__exact__{id}"]
     if zaak:
         data_attrs += [f"zaak__exact__{zaak}"]
+    if requester:
+        data_attrs += [f"requester__exact__{requester.username}"]
 
     if objs := _search_meta_objects(
         "review_objecttype",
@@ -546,9 +593,12 @@ def fetch_reviews(
 
 @cache("reviews:zaak:{zaak.uuid}")
 def get_reviews_for_zaak(zaak: Zaak) -> List[Reviews]:
-    result = fetch_reviews(zaak=zaak.url)
-    if result:
-        return [factory_reviews(obj) for obj in result["object"]["data"]]
+    results = fetch_reviews(zaak=zaak.url)
+    if results:
+        reviews = []
+        for rev in results:
+            reviews.append(factory_reviews(rev["record"]["data"]))
+        return reviews
     return list()
 
 
@@ -562,6 +612,19 @@ def get_reviews_for_review_request(
     return None
 
 
+@cache("reviews:requester:{requester.username}")
+def get_reviews_for_requester(
+    requester: User,
+) -> List[Reviews]:
+    results = fetch_reviews(requester=requester)
+    if results:
+        reviews = []
+        for rev in results:
+            reviews.append(factory_reviews(rev["record"]["data"]))
+        return reviews
+    return list()
+
+
 def create_reviews_for_review_request(
     data: Dict, review_request: ReviewRequest
 ) -> Reviews:
@@ -571,6 +634,7 @@ def create_reviews_for_review_request(
         "review_type": review_request.review_type,
         "reviews": [data],
         "id": _create_unique_uuid_for_object(fetch_review_on_id),
+        "requester": review_request.requester,
     }
     result = create_meta_object_and_relate_to_zaak("review", data, data["zaak"])
     return factory_reviews(result["record"]["data"])
