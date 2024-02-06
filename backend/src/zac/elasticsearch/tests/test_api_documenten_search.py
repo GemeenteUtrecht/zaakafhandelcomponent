@@ -144,6 +144,7 @@ class ESZaakDocumentsPermissionTests(ClearCachesMixin, APITransactionTestCase):
     @patch(
         "zac.elasticsearch.drf_api.views.get_open_documenten_for_user", return_value=[]
     )
+    @patch("zac.elasticsearch.drf_api.views.check_document_status", return_value=[])
     def test_is_superuser(self, m, *mocks):
         mock_service_oas_get(m, ZTC_ROOT, "ztc")
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
@@ -163,6 +164,7 @@ class ESZaakDocumentsPermissionTests(ClearCachesMixin, APITransactionTestCase):
     @patch(
         "zac.elasticsearch.drf_api.views.get_open_documenten_for_user", return_value=[]
     )
+    @patch("zac.elasticsearch.drf_api.views.check_document_status", return_value=[])
     def test_has_perms(self, m, *mocks):
         mock_service_oas_get(m, ZTC_ROOT, "ztc")
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
