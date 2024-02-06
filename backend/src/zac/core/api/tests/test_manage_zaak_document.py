@@ -813,6 +813,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "omschrijving": self.informatieobjecttype["omschrijving"],
             },
             "locked": document["locked"],
+            "lockedBy": "",
             "readUrl": reverse_lazy(
                 "dowc:request-doc",
                 kwargs={
@@ -953,6 +954,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "omschrijving": self.informatieobjecttype["omschrijving"],
             },
             "locked": document["locked"],
+            "lockedBy": "",
             "readUrl": reverse_lazy(
                 "dowc:request-doc",
                 kwargs={
@@ -1239,7 +1241,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         dowc_status = OpenDowc(
             document=document["url"],
-            user=user.email,
+            locked_by=user.email,
             uuid=uuid4(),
         )
 
@@ -1296,6 +1298,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 "omschrijving": self.informatieobjecttype2["omschrijving"],
             },
             "locked": False,
+            "lockedBy": "",
             "readUrl": reverse_lazy(
                 "dowc:request-doc",
                 kwargs={
