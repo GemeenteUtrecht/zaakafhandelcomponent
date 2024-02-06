@@ -15,7 +15,7 @@ from rest_framework.viewsets import ModelViewSet
 from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.api.drf_spectacular.utils import input_serializer_to_parameters
-from zac.contrib.dowc.api import get_open_documenten
+from zac.contrib.dowc.api import check_document_status, get_open_documenten_for_user
 from zac.core.api.permissions import CanListZaakDocuments, CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.api.views import GetZaakMixin
@@ -337,13 +337,18 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
             return_search=True
         )
         page = self.paginate_results(search)
-        open_documenten = get_open_documenten(request.user)
+
+        open_documenten_user = get_open_documenten_for_user(request.user)
+        open_documenten_zaak = check_document_status(zaak.url)
         serializer = ESListZaakDocumentSerializer(
             page,
             many=True,
             context={
-                "open_documenten": {
-                    dowc.unversioned_url: dowc for dowc in open_documenten
+                "open_documenten_user": {
+                    dowc.unversioned_url: dowc for dowc in open_documenten_user
+                },
+                "open_documenten_zaak": {
+                    dowc.document: dowc for dowc in open_documenten_zaak
                 },
                 "zaak_is_closed": True if zaak.einddatum else False,
             },

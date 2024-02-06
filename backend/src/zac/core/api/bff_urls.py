@@ -1,7 +1,7 @@
 from django.urls import include, path
 
 from ..management.urls import urls as management_urls
-from .views import (  # ListZaakDocumentsView,
+from .views import (
     CatalogiView,
     CreateZaakView,
     EigenschappenView,
@@ -52,11 +52,6 @@ urlpatterns = [
         ZaakEigenschapDetailView.as_view(),
         name="zaak-properties-detail",
     ),
-    # path(
-    #     "cases/<str:bronorganisatie>/<str:identificatie>/documents",
-    #     ListZaakDocumentsView.as_view(),
-    #     name="zaak-documents",
-    # ),
     path(
         "cases/document",
         ZaakDocumentView.as_view(),

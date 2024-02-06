@@ -17,3 +17,4 @@ class DowcResponse(Model):
 class OpenDowc(Model):
     document: str
     uuid: UUID
+    locked_by: str
