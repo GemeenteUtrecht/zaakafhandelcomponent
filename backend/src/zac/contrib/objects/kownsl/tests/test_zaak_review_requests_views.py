@@ -30,14 +30,16 @@ from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from .utils import (
-    ADVICE,
     CATALOGI_ROOT,
     DOCUMENT_URL,
     DOCUMENTS_ROOT,
-    REVIEW_REQUEST,
-    REVIEWS_ADVICE,
     ZAAK_URL,
     ZAKEN_ROOT,
+    AdviceFactory,
+    AssignedUsersFactory,
+    ReviewRequestFactory,
+    ReviewsAdviceFactory,
+    UserAssigneeFactory,
 )
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -118,22 +120,34 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             return_value=[path.splitext(es_document.bestandsnaam)],
         )
 
-        cls.revreq = {
-            **REVIEW_REQUEST,
-            "metadata": {"processInstanceId": "123"},
-            "documents": [DOCUMENT_URL],
-        }
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
+        )
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
+        )
+        cls.review_request_dict = ReviewRequestFactory(
+            documents=[deepcopy(DOCUMENT_URL)]
+        )
+        cls.review_request_dict["assignedUsers"].append(assigned_users2)
 
-        # Let resolve_assignee get the right users and groups
-        UserFactory.create(username=cls.revreq["assignedUsers"][0]["userAssignees"][0])
-        UserFactory.create(username=cls.revreq["assignedUsers"][1]["userAssignees"][0])
-
-        reviews = factory_reviews(REVIEWS_ADVICE)
+        cls.reviews = ReviewsAdviceFactory()
+        reviews = factory_reviews(cls.reviews)
         cls.get_reviews_patcher = patch(
             "zac.contrib.objects.services.get_reviews_for_review_request",
             return_value=reviews,
         )
-        cls.review_request = factory(ReviewRequest, cls.revreq)
+        cls.review_request = factory(ReviewRequest, cls.review_request_dict)
         cls.get_review_request_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=cls.review_request,
@@ -176,7 +190,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             response_data,
             [
                 {
-                    "id": REVIEW_REQUEST["id"],
+                    "id": str(self.review_request.id),
                     "reviewType": KownslTypes.advice,
                     "completed": 0,
                     "numAssignedUsers": 2,
@@ -190,7 +204,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
 
     def test_get_zaak_review_requests_can_lock(self, m):
         some_other_user = SuperUserFactory(
-            username=REVIEW_REQUEST["requester"]["username"]
+            username=self.review_request.requester["username"]
         )
         self.client.force_authenticate(user=some_other_user)
         response = self.client.get(self.endpoint_summary)
@@ -200,7 +214,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             response_data,
             [
                 {
-                    "id": REVIEW_REQUEST["id"],
+                    "id": str(self.review_request.id),
                     "reviewType": KownslTypes.advice,
                     "completed": 0,
                     "numAssignedUsers": 2,
@@ -213,10 +227,9 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         )
 
     def test_get_zaak_review_requests_is_locked(self, m):
-        rr = factory(
-            ReviewRequest,
-            {**REVIEW_REQUEST, "locked": True, "lockReason": "just a reason"},
-        )
+        rr = deepcopy(self.review_request)
+        rr.locked = True
+        rr.lock_reason = "just a reason"
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_all_review_requests_for_zaak",
             return_value=[rr],
@@ -228,7 +241,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             response_data,
             [
                 {
-                    "id": REVIEW_REQUEST["id"],
+                    "id": str(rr.id),
                     "reviewType": KownslTypes.advice,
                     "completed": 0,
                     "numAssignedUsers": 2,
@@ -250,13 +263,12 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
-        self.maxDiff = None
         self.assertEqual(
             response_data,
             {
-                "created": REVIEW_REQUEST["created"],
+                "created": self.review_request_dict["created"],
                 "documents": [DOCUMENT_URL],
-                "id": REVIEW_REQUEST["id"],
+                "id": str(self.review_request.id),
                 "isBeingReconfigured": False,
                 "locked": False,
                 "lockReason": "",
@@ -273,7 +285,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "lastName": "Some Last",
                     "username": "some-author",
                 },
-                "reviewType": REVIEW_REQUEST["reviewType"],
+                "reviewType": self.review_request.review_type,
                 "zaak": {
                     "identificatie": self.zaak["identificatie"],
                     "bronorganisatie": self.zaak["bronorganisatie"],
@@ -296,6 +308,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                         },
                         "lastEditedDate": None,
                         "locked": self.document["locked"],
+                        "lockedBy": "",
                         "readUrl": "",
                         "relatedZaken": [],
                         "titel": self.document["titel"],
@@ -309,7 +322,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                 ],
                 "advices": [
                     {
-                        "advice": ADVICE["advice"],
+                        "advice": self.reviews["reviews"][0]["advice"],
                         "adviceDocuments": [
                             {
                                 "adviceUrl": "?versie=2",
@@ -321,8 +334,8 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                                 "bestandsnaam": self.document["bestandsnaam"],
                             }
                         ],
-                        "author": ADVICE["author"],
-                        "created": ADVICE["created"],
+                        "author": self.reviews["reviews"][0]["author"],
+                        "created": self.reviews["reviews"][0]["created"],
                         "group": {},
                     }
                 ],
@@ -353,11 +366,13 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
     def test_update_review_request_lock(self, m):
         url = reverse(
             "kownsl:zaak-review-requests-detail",
-            kwargs={"request_uuid": REVIEW_REQUEST["id"]},
+            kwargs={"request_uuid": self.review_request.id},
         )
         body = {"lock_reason": "some-reason"}
 
-        user = SuperUserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        user = SuperUserFactory.create(
+            username=self.review_request.requester["username"]
+        )
         self.client.force_authenticate(user=user)
         rr = deepcopy(self.review_request)
         rr.locked = True
@@ -382,11 +397,13 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
     def test_update_review_request_update_users(self, m, mock_send_message):
         url = reverse(
             "kownsl:zaak-review-requests-detail",
-            kwargs={"request_uuid": REVIEW_REQUEST["id"]},
+            kwargs={"request_uuid": self.review_request.id},
         )
         body = {"update_users": True}
 
-        user = SuperUserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        user = SuperUserFactory.create(
+            username=self.review_request.requester["username"]
+        )
         self.client.force_authenticate(user=user)
         with self.get_review_request_patcher:
             with self.get_reviews_patcher:
@@ -404,7 +421,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send_message.assert_called_once_with(
-            "change-process", [self.revreq["metadata"]["processInstanceId"]]
+            "change-process", [self.review_request.metadata["process_instance_id"]]
         )
         patch_invalidate_cache.assert_called_once()
         patch_lock_review_request.assert_called_once()
@@ -412,11 +429,13 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
     def test_update_review_request_lock_and_update_users_fail(self, m):
         url = reverse(
             "kownsl:zaak-review-requests-detail",
-            kwargs={"request_uuid": REVIEW_REQUEST["id"]},
+            kwargs={"request_uuid": self.review_request.id},
         )
         body = {"lock_reason": "some-reason", "update_users": True}
 
-        user = SuperUserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        user = SuperUserFactory.create(
+            username=self.review_request.requester["username"]
+        )
         self.client.force_authenticate(user=user)
         rr = deepcopy(self.review_request)
         rr.locked = True
@@ -494,16 +513,27 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.permissions.get_zaak", return_value=zaak
         )
 
-        # Let resolve_assignee get the right users and groups
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0]
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
         )
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
         )
+        cls.review_request = ReviewRequestFactory(documents=[])
+        cls.review_request["assignedUsers"].append(assigned_users2)
+        cls.review_request = factory(ReviewRequest, cls.review_request)
+        cls.advices = factory(Advice, [AdviceFactory()])
 
-        cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
-        cls.advices = factory(Advice, [ADVICE])
         document = factory(Document, cls.document)
         cls.endpoint_summary = reverse(
             "kownsl:zaak-review-requests-summary",
@@ -515,7 +545,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         cls.endpoint_detail = reverse(
             "kownsl:zaak-review-requests-detail",
             kwargs={
-                "request_uuid": REVIEW_REQUEST["id"],
+                "request_uuid": cls.review_request.id,
             },
         )
 
@@ -708,7 +738,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        user = UserFactory.create(username=self.review_request.requester["username"])
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_wijzigen.name],
@@ -740,7 +770,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
 
-        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        user = UserFactory.create(username=self.review_request.requester["username"])
         self.client.force_authenticate(user=user)
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_wijzigen.name],
@@ -753,7 +783,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
-            return_value=factory(ReviewRequest, {**REVIEW_REQUEST, "locked": True}),
+            return_value=factory(ReviewRequest, ReviewRequestFactory(locked=True)),
         ):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -767,7 +797,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
 
-        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        user = UserFactory.create(username=self.review_request.requester["username"])
         self.client.force_authenticate(user=user)
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_wijzigen.name],
@@ -782,7 +812,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=factory(
                 ReviewRequest,
-                {**REVIEW_REQUEST, "is_being_reconfigured": True, "locked": False},
+                ReviewRequestFactory(is_being_reconfigured=True, locked=False),
             ),
         ):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})
@@ -807,7 +837,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
-        user = UserFactory.create(username=REVIEW_REQUEST["requester"]["username"])
+        user = UserFactory.create(username=self.review_request.requester["username"])
         # gives them access to the page, zaaktype and VA specified -> visible
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
@@ -819,10 +849,12 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             },
         )
         self.client.force_authenticate(user=user)
-        rr = {**REVIEW_REQUEST, "locked": True, "lock_reason": "zomaar"}
+        rr = deepcopy(self.review_request)
+        rr.locked = True
+        rr.lock_reason = "zomaar"
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
-            return_value=factory(ReviewRequest, rr),
+            return_value=rr,
         ):
             response_detail = self.client.get(self.endpoint_detail)
         self.assertEqual(response_detail.status_code, status.HTTP_200_OK)

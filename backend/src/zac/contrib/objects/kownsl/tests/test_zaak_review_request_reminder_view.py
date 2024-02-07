@@ -10,7 +10,7 @@ from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.constants import APITypes, AuthTypes
+from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
@@ -26,7 +26,15 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
-from .utils import CATALOGI_ROOT, DOCUMENTS_ROOT, REVIEW_REQUEST, ZAAK_URL, ZAKEN_ROOT
+from .utils import (
+    CATALOGI_ROOT,
+    DOCUMENTS_ROOT,
+    ZAAK_URL,
+    ZAKEN_ROOT,
+    AssignedUsersFactory,
+    ReviewRequestFactory,
+    UserAssigneeFactory,
+)
 
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
@@ -65,14 +73,34 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=zaak
         )
+
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
+        )
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
+        )
+        cls.review_request = ReviewRequestFactory()
+        cls.review_request["assignedUsers"].append(assigned_users2)
+
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0]
+            username=cls.review_request["assignedUsers"][0]["userAssignees"][0]
         )
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
+            username=cls.review_request["assignedUsers"][1]["userAssignees"][0]
         )
-        review_request = factory(ReviewRequest, REVIEW_REQUEST)
+        review_request = factory(ReviewRequest, cls.review_request)
         cls.get_review_request_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=review_request,
@@ -103,7 +131,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
     def test_get_zaak_review_request_is_locked(self, m):
         rr = factory(
             ReviewRequest,
-            {**REVIEW_REQUEST, "locked": True, "lockReason": "just a reason"},
+            ReviewRequestFactory(locked=True, lock_reason="just a reason"),
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
@@ -115,7 +143,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
     def test_get_zaak_review_request_not_found(self, m):
         rr = factory(
             ReviewRequest,
-            {**REVIEW_REQUEST, "locked": True, "lockReason": "just a reason"},
+            ReviewRequestFactory(locked=True, lock_reason="just a reason"),
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
@@ -172,14 +200,26 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.objects.kownsl.permissions.get_zaak", return_value=zaak
         )
-        # Let resolve_assignee get the right users and groups
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0]
+
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
         )
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
         )
-        cls.review_request = factory(ReviewRequest, REVIEW_REQUEST)
+        cls.review_request = ReviewRequestFactory()
+        cls.review_request["assignedUsers"].append(assigned_users2)
+        cls.review_request = factory(ReviewRequest, cls.review_request)
         cls.patch_get_review_request = patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=cls.review_request,

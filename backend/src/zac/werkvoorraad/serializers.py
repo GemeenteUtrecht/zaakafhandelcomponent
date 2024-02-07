@@ -186,8 +186,10 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
         ),
         required=True,
     )
-    completed = serializers.SerializerMethodField(
-        label=_("completed requests"), help_text=_("The number of completed requests.")
+    completed = serializers.IntegerField(
+        label=_("completed requests"),
+        help_text=_("The number of completed requests."),
+        source="get_completed",
     )
     zaak = SummaryZaakDocumentSerializer(
         help_text=_("ZAAK that review request belongs to.")

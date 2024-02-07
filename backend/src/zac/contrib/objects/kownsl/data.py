@@ -186,14 +186,17 @@ class ReviewRequest(Model):
         if not getattr(self, "open_reviews", []):
             user_deadlines = deepcopy(self.user_deadlines)
 
+            # remove those who have already reviewed
             for review in self.get_reviews():
+                # if the reviewer is a group remove the group and...
                 if name := review.group.get("name"):
                     user_deadlines.pop(f"{AssigneeTypeChoices.group}:{name}", None)
 
+                # ... the user if the reviewer is a user
                 author = f"{AssigneeTypeChoices.user}:{review.author['username']}"
                 user_deadlines.pop(author, None)
 
-            # create dictionary of users for their information
+            # create dictionary of users for their information as stored on the review request object
             assignees = {}
             for assignee in self.assigned_users:
                 for user in assignee.user_assignees:

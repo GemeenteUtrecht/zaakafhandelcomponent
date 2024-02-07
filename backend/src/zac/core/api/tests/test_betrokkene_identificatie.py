@@ -41,9 +41,7 @@ class RolBetrokkeneIdentificatieResponseTests(ClearCachesMixin, APITestCase):
         )
 
     def test_user_exists(self):
-        user = UserFactory.create(
-            first_name="Some", last_name="User", username="some-user"
-        )
+        UserFactory.create(first_name="Some", last_name="User", username="some-user")
         response = self.client.post(self.endpoint, self.payload, **self.headers)
         self.assertEqual(
             response.json(),

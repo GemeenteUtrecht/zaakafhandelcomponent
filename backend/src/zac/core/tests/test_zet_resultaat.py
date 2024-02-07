@@ -12,14 +12,18 @@ from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import UserFactory
 from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.models import DowcConfig
 from zac.contrib.objects.kownsl.data import ReviewRequest, Reviews
-from zac.contrib.objects.kownsl.tests.utils import REVIEW_REQUEST, REVIEWS_ADVICE
+from zac.contrib.objects.kownsl.tests.utils import (
+    AssignedUsersFactory,
+    ReviewRequestFactory,
+    ReviewsAdviceFactory,
+    UserAssigneeFactory,
+)
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..camunda.zet_resultaat.serializers import ZetResultaatContextSerializer
@@ -195,17 +199,28 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
         checklist = deepcopy(CHECKLIST_OBJECT)
         checklist["record"]["data"]["answers"][0]["answer"] = ""
 
-        # Let resolve_assignee get the right users and groups
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0]
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
         )
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
         )
-        rr = factory(ReviewRequest, REVIEW_REQUEST)
+        review_request = ReviewRequestFactory()
+        review_request["assignedUsers"].append(assigned_users2)
+        rr = factory(ReviewRequest, review_request)
 
         # Avoid patching fetch_reviews and everything
-        reviews = factory(Reviews, REVIEWS_ADVICE)
+        reviews = factory(Reviews, ReviewsAdviceFactory())
         rr.fetched_reviews = True
 
         with patch(

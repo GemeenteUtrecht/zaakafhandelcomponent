@@ -28,7 +28,10 @@ from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.dowc.data import OpenDowc
 from zac.contrib.objects.kownsl.constants import KownslTypes
-from zac.contrib.objects.kownsl.tests.utils import REVIEW_REQUEST, REVIEWS_ADVICE
+from zac.contrib.objects.kownsl.tests.utils import (
+    ReviewRequestFactory,
+    ReviewsAdviceFactory,
+)
 from zac.contrib.objects.services import factory_review_request, factory_reviews
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
@@ -380,7 +383,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         users = UserFactory.create_batch(3)
-        review_request_data = deepcopy(REVIEW_REQUEST)
+        review_request_data = ReviewRequestFactory()
         review_request_data["assignedUsers"] = [
             {
                 "deadline": "2020-01-01",
@@ -570,8 +573,8 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
-        review_request = factory_review_request(REVIEW_REQUEST)
-        reviews = factory_reviews(REVIEWS_ADVICE)
+        review_request = factory_review_request(ReviewRequestFactory())
+        reviews = factory_reviews(ReviewsAdviceFactory())
         mock_resource_get(m, self.zaaktype)
         resultaattype = generate_oas_component(
             "ztc",
@@ -836,7 +839,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "toelichting": "some-toelichting",
             "id": None,
         }
-        rr = deepcopy(REVIEW_REQUEST)
+        rr = ReviewRequestFactory()
         rr["assignedUsers"] = [
             {
                 "deadline": "2020-01-01",
@@ -900,7 +903,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def test_put_reconfigure_advice_review_request_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
-        rr = deepcopy(REVIEW_REQUEST)
+        rr = ReviewRequestFactory()
         rr["assignedUsers"] = [
             {
                 "deadline": "2020-01-01",

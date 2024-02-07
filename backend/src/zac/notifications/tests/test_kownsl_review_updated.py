@@ -15,10 +15,10 @@ from zgw_consumers.test import generate_oas_component
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.kownsl.tests.utils import (
-    REVIEW_REQUEST,
     REVIEW_REQUEST_OBJECT,
     REVIEW_REQUEST_OBJECTTYPE,
     ZAKEN_ROOT,
+    ReviewRequestFactory,
 )
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -47,7 +47,7 @@ TASK_DATA = {
     "parentTaskId": None,
     "priority": 42,
     "processDefinitionId": "aProcDefId",
-    "processInstanceId": REVIEW_REQUEST["metadata"]["processInstanceId"],
+    "processInstanceId": "",
     "caseDefinitionId": "aCaseDefId",
     "caseInstanceId": "aCaseInstId",
     "caseExecutionId": "aCaseExecution",
@@ -81,6 +81,11 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         confg = MetaObjectTypesConfig.get_solo()
         confg.review_request_objecttype = REVIEW_REQUEST_OBJECTTYPE["url"]
         confg.save()
+        cls.review_request = ReviewRequestFactory()
+        cls.task_data = deepcopy(TASK_DATA)
+        cls.task_data["processInstanceId"] = cls.review_request["metadata"][
+            "processInstanceId"
+        ]
 
     def setUp(self):
         super().setUp()
@@ -95,14 +100,14 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
     def test_user_task_send_message_locked(self, m, mock_invalidate_cache):
         mock_resource_get(m, REVIEW_REQUEST_OBJECT)
         m.get(
-            f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
-            json=[{**TASK_DATA, "assignee": f"user:bob"}],
+            f"https://camunda.example.com/engine-rest/task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee=user%3Abob",
+            json=[{**self.task_data, "assignee": f"user:bob"}],
         )
         m.post(
             "https://camunda.example.com/engine-rest/message",
         )
 
-        rr = factory(ReviewRequest, REVIEW_REQUEST)
+        rr = factory(ReviewRequest, self.review_request)
         rr.locked = True
         with patch("zac.notifications.handlers.get_review_request", return_value=rr):
             response = self.client.post(self.endpoint, NOTIFICATION)
@@ -117,26 +122,29 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
 
     def test_review_request_updated_clears_cache(self, m):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component("zrc", "schemas/Zaak", url=REVIEW_REQUEST["zaak"])
+        zaak = generate_oas_component(
+            "zrc", "schemas/Zaak", url=self.review_request["zaak"]
+        )
         mock_resource_get(m, REVIEW_REQUEST_OBJECT)
 
         m.get(
-            f"https://camunda.example.com/engine-rest/task?processInstanceId={REVIEW_REQUEST['metadata']['processInstanceId']}&taskDefinitionKey={REVIEW_REQUEST['metadata']['taskDefinitionId']}&assignee=user%3Abob",
-            json=[{**TASK_DATA, "assignee": f"user:bob"}],
+            f"https://camunda.example.com/engine-rest/task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee=user%3Abob",
+            json=[{**self.task_data, "assignee": f"user:bob"}],
         )
         m.post(
             "https://camunda.example.com/engine-rest/message",
         )
 
-        # create users
-        UserFactory.create(username="some-author")
-        UserFactory.create(username="some-other-author")
         # Fill cache
-        cache.set(f"review_request:detail:{REVIEW_REQUEST['id']}", "hello")
-        self.assertTrue(cache.has_key(f"review_request:detail:{REVIEW_REQUEST['id']}"))
+        cache.set(f"review_request:detail:{self.review_request['id']}", "hello")
+        self.assertTrue(
+            cache.has_key(f"review_request:detail:{self.review_request['id']}")
+        )
 
-        rr = factory(ReviewRequest, REVIEW_REQUEST)
+        rr = factory(ReviewRequest, self.review_request)
         with patch("zac.notifications.handlers.get_review_request", return_value=rr):
             response = self.client.post(self.endpoint, NOTIFICATION)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(cache.has_key(f"review_request:detail:{REVIEW_REQUEST['id']}"))
+        self.assertFalse(
+            cache.has_key(f"review_request:detail:{self.review_request['id']}")
+        )

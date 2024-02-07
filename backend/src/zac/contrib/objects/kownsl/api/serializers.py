@@ -355,9 +355,10 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
     can_lock = serializers.SerializerMethodField(
         label=_("can lock request"), help_text=_("User can lock the review request.")
     )
-    completed = serializers.SerializerMethodField(
+    completed = serializers.IntegerField(
         label=_("completed requests"),
         help_text=_("The number of completed requests."),
+        source="get_completed",
     )
 
     class Meta:

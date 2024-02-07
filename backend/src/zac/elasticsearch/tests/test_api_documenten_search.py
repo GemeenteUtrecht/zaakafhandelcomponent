@@ -263,6 +263,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             titel="b",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             bestandsnaam="some-bestandsnaam2.ext2",
+            locked=False,
         ),
     )
     document2.informatieobjecttype = iot
@@ -472,7 +473,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
                     },
                     "lastEditedDate": None,
                     "locked": self.document1.locked,
-                    "lockedBy": user.email,
+                    "lockedBy": user.email if self.document1.locked else "",
                     "readUrl": f"/api/dowc/{self.document1.bronorganisatie}/{self.document1.identificatie}/read",
                     "relatedZaken": [],
                     "titel": self.document1.titel,

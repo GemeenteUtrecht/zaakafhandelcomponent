@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -8,19 +9,22 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.accounts.tests.factories import GroupFactory, UserFactory
+from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.kownsl.tests.utils import (
-    ADVICE,
     CATALOGI_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
     REVIEW_OBJECT,
     REVIEW_OBJECTTYPE,
-    REVIEW_REQUEST,
     REVIEW_REQUEST_OBJECT,
     REVIEW_REQUEST_OBJECTTYPE,
     ZAAK_URL,
     ZAKEN_ROOT,
+    AdviceFactory,
+    AssignedUsersFactory,
+    ReviewRequestFactory,
+    ReviewsAdviceFactory,
+    UserAssigneeFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -38,6 +42,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.maxDiff = None
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -58,8 +63,6 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         meta_config.save()
 
         cls.user = UserFactory.create()
-        cls.group_1 = GroupFactory.create()
-        cls.group_2 = GroupFactory.create()
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
@@ -88,15 +91,24 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.endpoint = reverse(
             "werkvoorraad:review-requests",
         )
-
-        cls.group = GroupFactory.create(name="some-group")
-        # Let resolve_assignee get the right users and groups
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0]
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
         )
-        UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
         )
+        cls.review_request = ReviewRequestFactory()
+        cls.review_request["assignedUsers"].append(assigned_users2)
 
     @patch("zac.core.services.fetch_objecttypes", return_value=[])
     def test_workstack_review_requests_endpoint_no_zaak(self, m, *mocks):
@@ -104,11 +116,12 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         mock_resource_get(m, self.catalogus)
-        self.refresh_index()
 
+        rr_object = deepcopy(REVIEW_REQUEST_OBJECT)
+        rr_object["record"]["data"] = self.review_request
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=20&page=1",
-            json=paginated_response([REVIEW_REQUEST_OBJECT]),
+            json=paginated_response([rr_object]),
         )
 
         self.client.force_authenticate(user=self.user)
@@ -127,21 +140,31 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": REVIEW_REQUEST["id"],
-                        "reviewType": REVIEW_REQUEST["reviewType"],
+                        "id": self.review_request["id"],
+                        "reviewType": self.review_request["reviewType"],
                         "openReviews": [
                             {
                                 "deadline": "2022-04-14",
                                 "groups": [],
-                                "users": ["Some First Some Last"],
+                                "users": [
+                                    self.review_request["assignedUsers"][0][
+                                        "userAssignees"
+                                    ][0]["fullName"]
+                                ],
                             },
                             {
                                 "deadline": "2022-04-15",
                                 "groups": [],
-                                "users": ["Some Other First Some Last"],
+                                "users": [
+                                    self.review_request["assignedUsers"][1][
+                                        "userAssignees"
+                                    ][0]["fullName"]
+                                ],
                             },
                         ],
-                        "isBeingReconfigured": REVIEW_REQUEST["isBeingReconfigured"],
+                        "isBeingReconfigured": self.review_request[
+                            "isBeingReconfigured"
+                        ],
                         "completed": 0,
                         "zaak": None,
                         "advices": [],
@@ -162,16 +185,25 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         zaak_document.save()
         self.refresh_index()
 
+        rr_object = deepcopy(REVIEW_REQUEST_OBJECT)
+        rr_object["record"]["data"] = self.review_request
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=20&page=1",
-            json=paginated_response([REVIEW_REQUEST_OBJECT]),
+            json=paginated_response([rr_object]),
         )
 
         self.client.force_authenticate(user=self.user)
 
+        advice = AdviceFactory()
+        reviews_advice = ReviewsAdviceFactory()
+        reviews_advice["reviews"] = [advice]
+
+        review_object = deepcopy(REVIEW_OBJECT)
+        review_object["record"]["data"] = reviews_advice
+
         with patch(
             "zac.contrib.objects.services.fetch_reviews",
-            return_value=[REVIEW_OBJECT],
+            return_value=[review_object],
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
@@ -182,16 +214,22 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                 "previous": None,
                 "results": [
                     {
-                        "id": REVIEW_REQUEST["id"],
-                        "reviewType": REVIEW_REQUEST["reviewType"],
+                        "id": self.review_request["id"],
+                        "reviewType": self.review_request["reviewType"],
                         "openReviews": [
                             {
                                 "deadline": "2022-04-15",
                                 "groups": [],
-                                "users": ["Some Other First Some Last"],
+                                "users": [
+                                    self.review_request["assignedUsers"][1][
+                                        "userAssignees"
+                                    ][0]["fullName"]
+                                ],
                             }
                         ],
-                        "isBeingReconfigured": REVIEW_REQUEST["isBeingReconfigured"],
+                        "isBeingReconfigured": self.review_request[
+                            "isBeingReconfigured"
+                        ],
                         "completed": 1,
                         "zaak": {
                             "url": ZAAK_URL,
@@ -216,14 +254,14 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                         "advices": [
                             {
                                 "author": {
-                                    "firstName": ADVICE["author"]["firstName"],
-                                    "lastName": ADVICE["author"]["lastName"],
-                                    "username": ADVICE["author"]["username"],
-                                    "fullName": ADVICE["author"]["fullName"],
+                                    "firstName": advice["author"]["firstName"],
+                                    "lastName": advice["author"]["lastName"],
+                                    "username": advice["author"]["username"],
+                                    "fullName": advice["author"]["fullName"],
                                 },
-                                "advice": ADVICE["advice"],
+                                "advice": advice["advice"],
                                 "group": dict(),
-                                "created": ADVICE["created"],
+                                "created": advice["created"],
                             }
                         ],
                     }

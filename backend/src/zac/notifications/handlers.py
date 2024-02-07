@@ -358,7 +358,13 @@ class ObjectenHandler:
                 meta_object_handler = self._meta_object_handler()
                 if func := meta_object_handler.get(object["type"]["url"], None):
                     func(object)
-                update_object_document(object)
+
+                # Don't index meta objects.
+                if (
+                    object["type"]["url"]
+                    not in MetaObjectTypesConfig.get_solo().meta_objecttype_urls.values()
+                ):
+                    update_object_document(object)
 
             elif data["actie"] == "destroy":
                 delete_object_document(data["hoofd_object"])

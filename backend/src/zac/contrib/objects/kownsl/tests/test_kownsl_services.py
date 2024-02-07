@@ -3,13 +3,11 @@ from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
 
-import jwt
 import requests_mock
 from django_camunda.utils import underscoreize
 from freezegun import freeze_time
-from zds_client.auth import JWT_ALG
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.constants import APITypes, AuthTypes
+from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
@@ -18,24 +16,20 @@ from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.kownsl.camunda import ConfigureReviewRequestSerializer
 from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.contrib.objects.kownsl.tests.utils import (
-    ADVICE,
-    APPROVAL,
-    CATALOGI_ROOT,
-    DOCUMENT_URL,
-    DOCUMENTS_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
     REVIEW_OBJECT,
     REVIEW_OBJECTTYPE,
-    REVIEW_OBJECTTYPE_LATEST_VERSION,
-    REVIEW_REQUEST,
     REVIEW_REQUEST_OBJECT,
     REVIEW_REQUEST_OBJECTTYPE,
     REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION,
-    REVIEWS_ADVICE,
-    ZAAK_DOCUMENT,
     ZAAK_URL,
     ZAKEN_ROOT,
+    AdviceFactory,
+    AssignedUsersFactory,
+    ReviewRequestFactory,
+    ReviewsAdviceFactory,
+    UserAssigneeFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -62,13 +56,37 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         super().setUpTestData()
         zaak_json = generate_oas_component("zrc", "schemas/Zaak", url=ZAAK_URL)
         cls.zaak = factory(Zaak, zaak_json)
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
+        )
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
+        )
+        cls.review_request = ReviewRequestFactory()
+        cls.review_request["assignedUsers"].append(assigned_users2)
+        cls.advice = AdviceFactory()
+        cls.reviews_advice = ReviewsAdviceFactory()
+        cls.reviews_advice["reviews"] = [cls.advice]
+
+        cls.review_object = deepcopy(REVIEW_OBJECT)
+        cls.review_object["data"] = cls.reviews_advice
 
         # Make sure all users associated to the REVIEW REQUEST exist
         users = deepcopy(
             [
-                REVIEW_REQUEST["assignedUsers"][0]["userAssignees"][0],
-                REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0],
-                REVIEW_REQUEST["requester"],
+                cls.review_request["assignedUsers"][0]["userAssignees"][0],
+                cls.review_request["assignedUsers"][1]["userAssignees"][0],
+                cls.review_request["requester"],
             ]
         )
         # del full_name
@@ -76,7 +94,9 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             del user["fullName"]
             UserFactory.create(**underscoreize(user))
 
-        cls.user = User.objects.get(username=REVIEW_REQUEST["requester"]["username"])
+        cls.user = User.objects.get(
+            username=cls.review_request["requester"]["username"]
+        )
         Service.objects.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
@@ -106,8 +126,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             json=paginated_response([REVIEW_REQUEST_OBJECT]),
         )
 
-        review_request = get_review_request(REVIEW_REQUEST["id"])
-        self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
+        review_request = get_review_request(self.review_request["id"])
+        self.assertEqual(str(review_request.id), self.review_request["id"])
 
     def test_get_reviews(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
@@ -116,11 +136,13 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_OBJECTTYPE])
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
-            json=paginated_response([REVIEW_OBJECT]),
+            json=paginated_response([self.review_object]),
         )
 
-        reviews = fetch_reviews(review_request=REVIEW_REQUEST["id"])
-        self.assertEqual(reviews[0]["record"]["data"], REVIEW_OBJECT["record"]["data"])
+        reviews = fetch_reviews(review_request=self.review_request["id"])
+        self.assertEqual(
+            reviews[0]["record"]["data"], self.review_object["record"]["data"]
+        )
 
     @patch("zac.core.api.validators.validate_zaak_documents")
     def test_create_review_request_object_and_relate_to_zaak(self, m, *mocks):
@@ -179,11 +201,11 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         with patch(
             "zac.contrib.objects.services._create_unique_uuid_for_object",
-            return_value=REVIEW_REQUEST["id"],
+            return_value=self.review_request["id"],
         ):
             review_request = create_review_request(serializer.data)
 
-        self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(str(review_request.id), self.review_request["id"])
         self.assertEqual(review_request.zaak, ZAAK_URL)
         self.assertEqual(review_request.is_being_reconfigured, False)
         self.assertEqual(review_request.lock_reason, "")
@@ -209,7 +231,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         review_requests = get_all_review_requests_for_zaak(self.zaak)
         request = review_requests[0]
-        self.assertEqual(str(request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(str(request.id), self.review_request["id"])
 
     @patch("zac.core.api.validators.validate_zaak_documents")
     def test_update_assigned_users_review_request(self, m, *mocks):
@@ -219,12 +241,12 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
 
         data = {
-            "id": REVIEW_REQUEST["id"],
+            "id": self.review_request["id"],
             "assigned_users": [
                 {
                     "user_assignees": ["some-user"],
                     "group_assignees": [],
-                    "deadline": "2023-04-19",
+                    "deadline": "2022-04-14",
                     "email_notification": True,
                 }
             ],
@@ -235,7 +257,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         request = MagicMock()
         request.user = User.objects.get(
-            username=REVIEW_REQUEST["requester"]["username"]
+            username=self.review_request["requester"]["username"]
         )
         task = MagicMock()
         task.form_key = "zac:configureAdviceRequest"
@@ -243,9 +265,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         zaak_context = MagicMock()
         zaak_context.zaak = self.zaak
 
-        rr = factory_review_request(REVIEW_REQUEST)
+        rr = factory_review_request(self.review_request)
         # Avoid patching fetch_reviews and everything
-        rr.reviews = factory_reviews(REVIEWS_ADVICE).reviews
+        reviews_advice = ReviewsAdviceFactory()
+        rr.reviews = factory_reviews(reviews_advice).reviews
         rr.fetched_reviews = True
         with patch(
             "zac.contrib.objects.kownsl.camunda.get_zaak_context",
@@ -273,10 +296,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             return_value=REVIEW_REQUEST_OBJECT,
         ):
             review_request = update_review_request(
-                REVIEW_REQUEST["id"], requester=self.user, data=serializer.data
+                self.review_request["id"], requester=self.user, data=serializer.data
             )
 
-        self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(str(review_request.id), self.review_request["id"])
         self.assertEqual(
             m.last_request.json(),
             {
@@ -298,7 +321,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                                 ],
                                 "groupAssignees": [],
                                 "emailNotification": True,
-                                "deadline": "2023-04-19",
+                                "deadline": "2022-04-14",
                             }
                         ],
                         "created": "2022-04-14 15:49:09.830235+00:00",
@@ -318,7 +341,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                         },
                         "reviewType": "advice",
                         "toelichting": "some-toelichting",
-                        "userDeadlines": {"user:some-user": "2023-04-19"},
+                        "userDeadlines": {"user:some-user": "2022-04-14"},
                         "zaak": "https://zaken.nl/api/zaken/0c79c41d-72ef-4ea2-8c4c-03c9945da2a2",
                     },
                     "geometry": "None",
@@ -347,7 +370,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.patch(REVIEW_REQUEST_OBJECT["url"], json=rr)
 
         review_request = lock_review_request(
-            REVIEW_REQUEST["id"], lock_reason="some-reason"
+            self.review_request["id"], lock_reason="some-reason"
         )
-        self.assertEqual(str(review_request.id), REVIEW_REQUEST["id"])
+        self.assertEqual(str(review_request.id), self.review_request["id"])
         self.assertTrue(m.last_request.json()["record"]["data"]["locked"])
