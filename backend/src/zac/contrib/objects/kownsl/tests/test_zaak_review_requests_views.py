@@ -9,7 +9,7 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
@@ -76,7 +76,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             startdatum="2020-12-25",
             uiterlijkeEinddatumAfdoening="2021-01-04",
         )
-        cls.documenttype = generate_oas_component(
+        cls.informatieobjecttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
@@ -90,7 +90,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             url=DOCUMENT_URL,
             identificatie="DOC-2020-007",
             bronorganisatie="123456782",
-            informatieobjecttype=cls.documenttype["url"],
+            informatieobjecttype=cls.informatieobjecttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             bestandsomvang=10,
         )
@@ -102,15 +102,20 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=zaak
         )
+        document = factory(Document, cls.document)
+        document.informatieobjecttype = factory(
+            InformatieObjectType, cls.informatieobjecttype
+        )
+        document.last_edited_date = None  # avoid patching fetching audit trail
+        es_document = create_informatieobject_document(document)
 
-        document = create_informatieobject_document(factory(Document, cls.document))
         cls.search_informatieobjects_patcher = patch(
             "zac.contrib.objects.kownsl.data.search_informatieobjects",
-            return_value=[document],
+            return_value=[es_document],
         )
         cls.get_supported_extensions_patcher = patch(
             "zac.contrib.dowc.utils.get_supported_extensions",
-            return_value=[path.splitext(document.bestandsnaam)],
+            return_value=[path.splitext(es_document.bestandsnaam)],
         )
 
         cls.revreq = {
@@ -285,7 +290,10 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                         "deleteUrl": "",
                         "downloadUrl": "/core/documenten/123456782/DOC-2020-007/",
                         "identificatie": self.document["identificatie"],
-                        "informatieobjecttype": {"url": None, "omschrijving": None},
+                        "informatieobjecttype": {
+                            "url": self.informatieobjecttype["url"],
+                            "omschrijving": self.informatieobjecttype["omschrijving"],
+                        },
                         "lastEditedDate": None,
                         "locked": self.document["locked"],
                         "readUrl": "",
@@ -459,7 +467,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             startdatum="2020-12-25",
             uiterlijkeEinddatumAfdoening="2021-01-04",
         )
-        cls.documenttype = generate_oas_component(
+        cls.informatieobjecttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
             url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
@@ -473,7 +481,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             url=DOCUMENT_URL,
             identificatie="DOC-2020-007",
             bronorganisatie="123456782",
-            informatieobjecttype=cls.documenttype["url"],
+            informatieobjecttype=cls.informatieobjecttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.beperkt_openbaar,
             bestandsomvang=10,
         )

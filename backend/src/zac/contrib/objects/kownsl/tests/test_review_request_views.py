@@ -92,8 +92,10 @@ class ViewTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
 
         rr = factory_review_request(REVIEW_REQUEST)
+        # Avoid patching fetch_reviews and everything
         rr.reviews = []
         rr.fetched_reviews = True
+
         user = UserFactory(username=ADVICE["author"]["username"])
         self.client.force_authenticate(user=user)
         url = reverse(
@@ -113,8 +115,10 @@ class ViewTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
 
         rr = factory_review_request(REVIEW_REQUEST)
+        # Avoid patching fetch_reviews and everything
         rr.reviews = factory_reviews(REVIEWS_ADVICE).reviews
         rr.fetched_reviews = True
+
         user = UserFactory(username=ADVICE["author"]["username"])
         self.client.force_authenticate(user=user)
         url = reverse(
@@ -176,8 +180,10 @@ class ViewTests(ClearCachesMixin, APITestCase):
         reviews_advice = deepcopy(REVIEWS_ADVICE)
         reviews_advice["reviews"] = [advice]
 
+        # Avoid patching fetch_reviews and everything
         rr.reviews = factory_reviews(reviews_advice).reviews
         rr.fetched_reviews = True
+
         user = UserFactory(username=ADVICE["author"]["username"])
         user.groups.add(self.group)
 

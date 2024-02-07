@@ -142,7 +142,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
-        cls.document.last_edited_date = None
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
         cls.document_es = create_informatieobject_document(cls.document)
 
         cls.zaak_context = ZaakContext(
@@ -694,7 +694,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
-        cls.document.last_edited_date = None
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
         cls.document_es = create_informatieobject_document(cls.document)
 
         cls.patch_get_documenten_validator = patch(

@@ -177,7 +177,9 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
     review_type = serializers.ChoiceField(
         choices=KownslTypes.choices, help_text=_("The review type.")
     )
-    open_reviews = OpenReviewSerializer(many=True, read_only=True)
+    open_reviews = OpenReviewSerializer(
+        many=True, read_only=True, source="get_open_reviews"
+    )
     is_being_reconfigured = serializers.BooleanField(
         help_text=_(
             "Boolean flag to indicate if review request is currently being reconfigured."

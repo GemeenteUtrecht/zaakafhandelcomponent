@@ -22,7 +22,6 @@ from zac.contrib.objects.kownsl.tests.utils import (
     ZAAK_URL,
     ZAKEN_ROOT,
 )
-from zac.contrib.objects.services import factory_reviews
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
@@ -99,13 +98,26 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
             username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
         )
 
-    def test_workstack_review_requests_endpoint_no_zaak(self, m):
+    @patch("zac.core.services.fetch_objecttypes", return_value=[])
+    def test_workstack_review_requests_endpoint_no_zaak(self, m, *mocks):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         mock_resource_get(m, self.catalogus)
         self.refresh_index()
 
+        m.post(
+            f"{OBJECTS_ROOT}objects/search?pageSize=20&page=1",
+            json=paginated_response([REVIEW_REQUEST_OBJECT]),
+        )
+
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.endpoint)
+
+        with patch(
+            "zac.contrib.objects.services.fetch_reviews",
+            return_value=[],
+        ):
+            response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
@@ -119,28 +131,20 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                         "reviewType": REVIEW_REQUEST["reviewType"],
                         "openReviews": [
                             {
-                                "deadline": "2022-04-15",
-                                "users": [{"fullName": "some-other-author"}],
+                                "deadline": "2022-04-14",
                                 "groups": [],
-                            }
+                                "users": ["Some First Some Last"],
+                            },
+                            {
+                                "deadline": "2022-04-15",
+                                "groups": [],
+                                "users": ["Some Other First Some Last"],
+                            },
                         ],
                         "isBeingReconfigured": REVIEW_REQUEST["isBeingReconfigured"],
-                        "completed": REVIEW_REQUEST["numAdvices"]
-                        + REVIEW_REQUEST["numApprovals"],
+                        "completed": 0,
                         "zaak": None,
-                        "advices": [
-                            {
-                                "created": ADVICE["created"],
-                                "user": {
-                                    "firstName": ADVICE["author"]["firstName"],
-                                    "lastName": ADVICE["author"]["lastName"],
-                                    "username": ADVICE["author"]["username"],
-                                    "fullName": ADVICE["author"]["username"],
-                                },
-                                "advice": ADVICE["advice"],
-                                "group": ADVICE["group"],
-                            }
-                        ],
+                        "advices": [],
                     }
                 ],
             },
@@ -180,7 +184,13 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                     {
                         "id": REVIEW_REQUEST["id"],
                         "reviewType": REVIEW_REQUEST["reviewType"],
-                        "openReviews": [],
+                        "openReviews": [
+                            {
+                                "deadline": "2022-04-15",
+                                "groups": [],
+                                "users": ["Some Other First Some Last"],
+                            }
+                        ],
                         "isBeingReconfigured": REVIEW_REQUEST["isBeingReconfigured"],
                         "completed": 1,
                         "zaak": {

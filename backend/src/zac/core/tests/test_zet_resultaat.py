@@ -203,6 +203,8 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             username=REVIEW_REQUEST["assignedUsers"][1]["userAssignees"][0]
         )
         rr = factory(ReviewRequest, REVIEW_REQUEST)
+
+        # Avoid patching fetch_reviews and everything
         reviews = factory(Reviews, REVIEWS_ADVICE)
         rr.fetched_reviews = True
 

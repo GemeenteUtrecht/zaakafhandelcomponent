@@ -244,6 +244,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         zaak_context.zaak = self.zaak
 
         rr = factory_review_request(REVIEW_REQUEST)
+        # Avoid patching fetch_reviews and everything
         rr.reviews = factory_reviews(REVIEWS_ADVICE).reviews
         rr.fetched_reviews = True
         with patch(

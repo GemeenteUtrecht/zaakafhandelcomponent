@@ -11,7 +11,12 @@ from rest_framework import exceptions
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import (
+    InformatieObjectType,
+    ResultaatType,
+    ZaakType,
+)
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -23,6 +28,7 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.objects.kownsl.data import KownslTypes, ReviewRequest, Reviews
 from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.api import create_informatieobject_document
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
@@ -33,6 +39,7 @@ from ..camunda import (
 )
 from .utils import (
     ADVICE,
+    CATALOGI_ROOT,
     DOCUMENT_URL,
     DOCUMENTS_ROOT,
     REVIEW_REQUEST,
@@ -75,9 +82,25 @@ def _get_task(**overrides):
 class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.maxDiff = None
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
+        )
+        cls.informatieobjecttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=cls.catalogus["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
@@ -85,7 +108,13 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             bestandsnaam="some-bestandsnaam.ext",
         )
         cls.document = factory(Document, document)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        cls.document.informatieobjecttype = factory(
+            InformatieObjectType, cls.informatieobjecttype
+        )
+
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
+        cls.document_es = create_informatieobject_document(cls.document)
+
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -294,67 +323,76 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         )
 
         UserFactory.create(username="some-other-author")
+
         rr = factory(ReviewRequest, REVIEW_REQUEST)
+        rr.documents = [self.document.url]
+
+        # Avoid patching fetch_reviews and everything
         rr.reviews = []
         rr.fetched_reviews = True
+
         with patch(
-            "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
-            return_value=rr,
+            "zac.contrib.objects.kownsl.camunda.search_informatieobjects",
+            return_value=[self.document_es],
         ):
-            task_data = UserTaskData(task=task, context=_get_context(task))
-            serializer = AdviceApprovalContextSerializer(instance=task_data)
-            self.assertEqual(
-                {
-                    "camunda_assigned_users": {
-                        "user_assignees": [],
-                        "group_assignees": [],
-                    },
-                    "documents_link": reverse(
-                        "zaak-documents-es",
-                        kwargs={
-                            "bronorganisatie": self.zaak.bronorganisatie,
-                            "identificatie": self.zaak.identificatie,
-                        },
-                    ),
-                    "id": REVIEW_REQUEST["id"],
-                    "previously_assigned_users": [
-                        {
-                            "user_assignees": [
-                                {
-                                    "first_name": "Some First",
-                                    "full_name": "Some First Some Last",
-                                    "last_name": "Some Last",
-                                    "username": "some-author",
-                                }
-                            ],
+            with patch(
+                "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
+                return_value=rr,
+            ):
+                task_data = UserTaskData(task=task, context=_get_context(task))
+                serializer = AdviceApprovalContextSerializer(instance=task_data)
+                self.assertEqual(
+                    {
+                        "camunda_assigned_users": {
+                            "user_assignees": [],
                             "group_assignees": [],
-                            "email_notification": False,
-                            "deadline": "2022-04-14",
                         },
-                        {
-                            "user_assignees": [
-                                {
-                                    "first_name": "Some Other First",
-                                    "full_name": "Some Other First Some Last",
-                                    "last_name": "Some Last",
-                                    "username": "some-other-author",
-                                }
-                            ],
-                            "group_assignees": [],
-                            "email_notification": False,
-                            "deadline": "2022-04-15",
+                        "documents_link": reverse(
+                            "zaak-documents-es",
+                            kwargs={
+                                "bronorganisatie": self.zaak.bronorganisatie,
+                                "identificatie": self.zaak.identificatie,
+                            },
+                        ),
+                        "id": REVIEW_REQUEST["id"],
+                        "previously_assigned_users": [
+                            {
+                                "user_assignees": [
+                                    {
+                                        "first_name": "Some First",
+                                        "full_name": "Some First Some Last",
+                                        "last_name": "Some Last",
+                                        "username": "some-author",
+                                    }
+                                ],
+                                "group_assignees": [],
+                                "email_notification": False,
+                                "deadline": "2022-04-14",
+                            },
+                            {
+                                "user_assignees": [
+                                    {
+                                        "first_name": "Some Other First",
+                                        "full_name": "Some Other First Some Last",
+                                        "last_name": "Some Last",
+                                        "username": "some-other-author",
+                                    }
+                                ],
+                                "group_assignees": [],
+                                "email_notification": False,
+                                "deadline": "2022-04-15",
+                            },
+                        ],
+                        "review_type": KownslTypes.advice,
+                        "previously_selected_documents": [self.document.url],
+                        "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                        "zaak_informatie": {
+                            "omschrijving": self.zaak.omschrijving,
+                            "toelichting": self.zaak.toelichting,
                         },
-                    ],
-                    "review_type": KownslTypes.advice,
-                    "previously_selected_documents": [],
-                    "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
-                    "zaak_informatie": {
-                        "omschrijving": self.zaak.omschrijving,
-                        "toelichting": self.zaak.toelichting,
                     },
-                },
-                serializer.data["context"],
-            )
+                    serializer.data["context"],
+                )
 
 
 class ConfigureReviewRequestSerializersTests(APITestCase):
@@ -365,10 +403,37 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.group = GroupFactory.create()
         cls.users_2 = UserFactory.create_batch(3)
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
+        )
+        cls.informatieobjecttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=cls.catalogus["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
         document = generate_oas_component(
-            "drc", "schemas/EnkelvoudigInformatieObject", url=DOCUMENT_URL
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=DOCUMENT_URL,
+            bestandsnaam="some-bestandsnaam.ext",
         )
         cls.document = factory(Document, document)
+        cls.document.informatieobjecttype = factory(
+            InformatieObjectType, cls.informatieobjecttype
+        )
+
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
+        cls.document_es = create_informatieobject_document(cls.document)
+
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -387,8 +452,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             return_value=cls.zaak_context,
         )
         cls.patch_get_documenten = patch(
-            "zac.core.api.validators.get_documenten_es",
-            return_value=[cls.document],
+            "zac.core.api.validators.search_informatieobjects",
+            return_value=[cls.document_es],
         )
         rr = deepcopy(REVIEW_REQUEST)
         rr["documents"] = [cls.document.url]
@@ -760,8 +825,11 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
 
         rr = factory(ReviewRequest, REVIEW_REQUEST)
+
+        # Avoid patching fetch_reviews and everything
         rr.reviews = factory(Reviews, REVIEWS_ADVICE).reviews
         rr.fetched_reviews = True
+
         with patch(
             "zac.contrib.objects.kownsl.camunda.get_review_request",
             return_value=rr,
