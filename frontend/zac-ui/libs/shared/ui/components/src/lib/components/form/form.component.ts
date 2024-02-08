@@ -5,6 +5,7 @@ import {FormService} from './form.service';
 import {Document, ReadWriteDocument, Zaak} from '@gu/models';
 import {DocumentenService} from '@gu/services';
 import { DocumentenComponent } from '../../../../../../../features/zaak-detail/src/lib/documenten/documenten.component';
+import { interval, Subscription } from 'rxjs';
 
 
 /**
@@ -39,6 +40,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Input() buttonSize: 'small' | 'large' = 'large';
   @Input() editable: boolean | string = true;
   @Input() verifyToggle = false;
+  @Input() autoSaveInterval: number;
   @Input() title = '';
   @Input() keys?: string[] = null;
   @Input() resetAfterSubmit = false;
@@ -54,6 +56,7 @@ export class FormComponent implements OnInit, OnChanges {
   @Output() formChange: EventEmitter<any> = new EventEmitter<any>();
   @Output() formSubmit: EventEmitter<any> = new EventEmitter<any>();
   @Output() formIsInEditMode: EventEmitter<any> = new EventEmitter<any>();
+  @Output() autoSaveSubmit: EventEmitter<any> = new EventEmitter<any>();
 
   /**
    * @type {Object} Documents mapping.
@@ -90,6 +93,8 @@ export class FormComponent implements OnInit, OnChanges {
    * @type {string[]} Keys resolved either from keys or form.
    */
   resolvedKeys = [];
+
+  autoSaveSubscription: Subscription;
 
   /**
    * Constructor method.
@@ -164,7 +169,7 @@ export class FormComponent implements OnInit, OnChanges {
       return;
     }
 
-    this.getContextData()
+    this.getContextData();
   }
 
   //
@@ -294,6 +299,31 @@ export class FormComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Start auto save
+   */
+  initiateAutoSave() {
+    // Check if there's an existing subscription to avoid multiple intervals running concurrently
+    if (!this.autoSaveSubscription || this.autoSaveSubscription.closed) {
+      this.autoSaveSubscription = interval(this.autoSaveInterval*1000) // Emit a value every second
+        .subscribe(() => {
+          this._autoSaveSubmit();
+        });
+    } else {
+      this.stopInterval();
+    }
+  }
+
+  /**
+   * Cancels interval subscription
+   */
+  stopInterval() {
+    // Stop the interval when needed
+    if (this.autoSaveSubscription && !this.autoSaveSubscription.closed) {
+      this.autoSaveSubscription.unsubscribe();
+    }
+  }
+
   //
   // Events.
   //
@@ -365,6 +395,9 @@ export class FormComponent implements OnInit, OnChanges {
   switchToggle() {
     if (this.editable === 'toggle') {
       this.isInEditMode = !this.isInEditMode;
+      if (this.autoSaveInterval) {
+        this.initiateAutoSave();
+      }
       if (!this.isInEditMode) {
         // reset to initial form values when exiting isInEditMode mode
         this.resolvedKeys = this.keys || this.formService.getKeysFromForm(this.form);
@@ -419,6 +452,11 @@ export class FormComponent implements OnInit, OnChanges {
     if (field.onSearch) {
       field.onSearch(term, field);
     }
+  }
+
+  _autoSaveSubmit() {
+    const data = this.formService.serializeForm(this.formGroup, this.form, this.resolvedKeys, this.documents);
+    this.autoSaveSubmit.emit(data)
   }
 
 

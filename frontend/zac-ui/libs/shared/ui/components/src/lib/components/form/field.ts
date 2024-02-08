@@ -142,6 +142,7 @@ export class Field {
     this.name = new FormService().getNameFromFieldConfiguration(fieldConfiguration);
     this.required = (typeof fieldConfiguration.required === 'boolean') ? fieldConfiguration.required : true;
     this.widgetType = this.getWidgetType(fieldConfiguration);
+    this.format = fieldConfiguration.format;
   }
 
   /**

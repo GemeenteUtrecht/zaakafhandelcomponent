@@ -124,7 +124,7 @@
                   <p class="p--bold p--muted p--no-wrap mb-0">{{field.label}}</p>
                 </div>
 
-                <div class="col-12 col-sm-8 col-md-6" *ngIf="!field.choices">
+                <div class="col-12 col-sm-8 col-md-12" *ngIf="!field.choices">
                   <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
                   <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
                   <p class="p--pre-wrap" *ngIf="!field.value && !field.placeholder">-</p>

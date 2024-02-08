@@ -147,7 +147,7 @@ export class FormService {
     // Initial serialized data.
     const rawData = formGroup.getRawValue();
 
-    // Update rawData with support for activeWhen, and use name instead of key key in resulting object.
+    // Update rawData with support for activeWhen, and use name instead of key in resulting object.
     const data = Object.entries(rawData).reduce(
       (acc, [key, value]) => {
         // Find active field by key.

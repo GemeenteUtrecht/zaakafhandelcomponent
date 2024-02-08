@@ -15,10 +15,12 @@
              [buttonPosition]="'top'"
              [buttonSize]="'small'"
              [verifyToggle]='true'
+             [autoSaveInterval]='20'
              title="Takenlijst"
              tooltip="In de takenlijst kun je aangeven welke taken uitgevoerd zijn in deze zaak. Deze vragen kunnen op elk moment tijdens het proces beantwoord worden. Het is mogelijk om een taak toe te wijzen aan een collega."
              (formIsInEditMode)="onClickEditButton($event)"
-             (formSubmit)="onSubmitForm($event)">
+             (formSubmit)="onSubmitForm($event)"
+             (autoSaveSubmit)="onAutoSave($event)">
     </gu-form>
   </ng-container>
 </div>

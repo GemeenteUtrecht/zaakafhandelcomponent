@@ -17,8 +17,6 @@ import {KetenProcessenService} from '../keten-processen/keten-processen.service'
 import {FormGroup} from '@angular/forms';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FormComponent} from '@gu/components';
-import { logger } from 'codelyzer/util/logger';
-
 
 /**
  * <gu-checklist [bronorganisatie]="bronorganisatie" [identificatie]="identificatie"></gu-checklist>
@@ -244,6 +242,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
         }, {
           label: `Voeg opmerking toe`,
           name: `__remarks_${question.question}`,
+          format: 'long',
           required: false,
           value: answer?.remarks,
           readonly: !this.canForceEdit
@@ -302,6 +301,61 @@ export class ChecklistComponent implements OnInit, OnChanges {
     })
   }
 
+  /**
+   * Gets called when a checklist form is submitted.
+   * @param {Object} answerData
+   */
+  submitForm(answerData, isFormSubmit?): void {
+    const answers: ChecklistAnswer[] = Object.entries(answerData)
+      .filter(([key, value]) => !key.match(/^__/))
+      .map(([question, answer]) => {
+        const documentKey = `__document_${question}`;
+        const document = answerData[documentKey];
+        const documentUrl = document?.url;
+
+        const remarksKey = `__remarks_${question}`;
+        const remarks = answerData[remarksKey];
+
+        const userAssigneeKey = `__userAssignee_${question}`;
+        const userAssignee = answerData[userAssigneeKey];
+
+        const groupAssigneeKey = `__groupAssignee_${question}`;
+        const groupAssignee = answerData[groupAssigneeKey];
+
+        return ({
+          answer: answer as string || '',
+          created: new Date().toISOString(),
+          document: documentUrl,
+          question: question,
+          remarks: remarks || '',
+          userAssignee: userAssignee,
+          groupAssignee: groupAssignee,
+        });
+      });
+
+    if (this.checklist) {
+      this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(() =>{
+          if (isFormSubmit) {
+            this.fetchChecklistData()
+          }
+          this.hasChecklist = false;
+          this.documents = {};
+        },
+        this.reportError.bind(this),
+        () => this.isSubmitting = false
+      );
+    } else {
+      this.checklistService.createChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(() =>{
+        if (isFormSubmit) {
+          this.fetchChecklistData()
+        }
+      },
+      this.reportError.bind(this),
+        () => this.isSubmitting = false
+      )
+    }
+  }
+
   //
   // Events.
   //
@@ -338,55 +392,20 @@ export class ChecklistComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Gets called when a checklist form is submitted.
-   * @param {Object} answerData
+   * Submit form
+   * @param answerData
    */
   onSubmitForm(answerData): void {
     this.isSubmitting = true;
+    this.submitForm(answerData, true);
+  }
 
-    const answers: ChecklistAnswer[] = Object.entries(answerData)
-      .filter(([key, value]) => !key.match(/^__/))
-      .map(([question, answer]) => {
-        const documentKey = `__document_${question}`;
-        const document = answerData[documentKey];
-        const documentUrl = document?.url;
-
-        const remarksKey = `__remarks_${question}`;
-        const remarks = answerData[remarksKey];
-
-        const userAssigneeKey = `__userAssignee_${question}`;
-        const userAssignee = answerData[userAssigneeKey];
-
-        const groupAssigneeKey = `__groupAssignee_${question}`;
-        const groupAssignee = answerData[groupAssigneeKey];
-
-        return ({
-          answer: answer as string || '',
-          created: new Date().toISOString(),
-          document: documentUrl,
-          question: question,
-          remarks: remarks || '',
-          userAssignee: userAssignee,
-          groupAssignee: groupAssignee,
-        });
-      });
-
-    if (this.checklist) {
-      this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(() =>{
-        this.fetchChecklistData()
-          this.hasChecklist = false;
-          this.documents = {};
-        },
-        this.reportError.bind(this),
-        () => this.isSubmitting = false
-      );
-    } else {
-      this.checklistService.createChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(
-        this.fetchChecklistData.bind(this),
-        this.reportError.bind(this),
-        () => this.isSubmitting = false
-      );
-    }
+  /**
+   * Auto save form
+   * @param answerData
+   */
+  onAutoSave(answerData): void {
+    this.submitForm(answerData);
   }
 
   //
