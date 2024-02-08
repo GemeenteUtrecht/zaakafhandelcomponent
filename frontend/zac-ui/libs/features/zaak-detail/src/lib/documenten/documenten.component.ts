@@ -95,8 +95,8 @@ export class DocumentenComponent implements OnChanges {
     }
     this.page = 1;
     setTimeout(() => {
-      this.fetchDocuments()
-    }, 1500)
+      this.fetchDocuments(this.page);
+    }, 3000)
   }
 
   /**
