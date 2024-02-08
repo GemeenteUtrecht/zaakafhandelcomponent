@@ -68,10 +68,10 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
         call_command("add_blueprint_permissions_for_zaaktypen")
 
         self.assertEqual(BlueprintPermission.objects.count(), 16)
-        zaak_permission = BlueprintPermission.objects.get(object_type="zaak")
-        self.assertEqual(zaak_permission.role, self.role)
+        zaak_permissions = BlueprintPermission.objects.filter(object_type="zaak")
+        self.assertEqual(zaak_permissions[0].role, self.role)
         self.assertEqual(
-            zaak_permission.policy,
+            zaak_permissions[0].policy,
             {
                 "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
