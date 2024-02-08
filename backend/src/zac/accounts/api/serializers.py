@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import date, datetime
 
 from django.contrib.auth.models import Group
@@ -13,7 +14,13 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.utils import permissions_related_to_user
 from zac.api.polymorphism import GroupPolymorphicSerializer
 from zac.core.permissions import zaken_inzien
-from zac.core.services import find_zaak, get_zaak
+from zac.core.services import (
+    find_zaak,
+    get_catalogi,
+    get_informatieobjecttypen_for_zaaktype,
+    get_zaak,
+    get_zaaktypen,
+)
 from zgw.models.zrc import Zaak
 
 from ..constants import (
@@ -492,6 +499,12 @@ class GroupBlueprintSerializer(GroupPolymorphicSerializer):
 
 
 class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    This serializer assumes the object_type == 'zaak' and automatically links
+    the relevant informatieobjecttypes related to the ZAAKTYPE of ZAAK.
+
+    """
+
     blueprint_permissions = GroupBlueprintSerializer(
         many=True,
         source="group_permissions",
@@ -517,6 +530,46 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         return blueprint_permissions
 
     @staticmethod
+    def create_informatieobjecttype_blueprint_permissions(group_permissions):
+        catalogi = {cat.domein: cat for cat in get_catalogi()}
+        iot_blueprint_permissions = []
+        for group in group_permissions:
+            if group["object_type"] == PermissionObjectTypeChoices.document:
+                continue  # they have already been created in create_blueprint_permissions if somehow given in payload
+
+            elif group["object_type"] == PermissionObjectTypeChoices.zaak:
+                policies = group["policies"]
+                # create permissions
+                for policy in policies:
+                    catalogus = catalogi.get(policy["catalogus"], None)
+                    if not catalogus:
+                        continue  # no point
+
+                    zt = get_zaaktypen(
+                        omschrijving=policy["zaaktype_omschrijving"],
+                        catalogus=catalogus.url,
+                    )
+
+                    if not zt:
+                        continue  # no point
+
+                    iots = get_informatieobjecttypen_for_zaaktype(zt[0])
+                    for iot in iots:
+                        policy = {
+                            "catalogus": catalogus.domein,
+                            "iotype_omschrijving": iot.omschrijving,
+                            "max_va": policy["max_va"],
+                        }
+                        permission, created = BlueprintPermission.objects.get_or_create(
+                            role=group["role"],
+                            object_type=PermissionObjectTypeChoices.document,
+                            policy=deepcopy(policy),
+                        )
+                        iot_blueprint_permissions.append(permission)
+
+        return iot_blueprint_permissions
+
+    @staticmethod
     def get_group_permissions(auth_profile) -> list:
         """
         Permissions are grouped by role and object_type
@@ -530,6 +583,9 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
         auth_profile = super().create(validated_data)
 
         blueprint_permissions = self.create_blueprint_permissions(group_permissions)
+        blueprint_permissions += self.create_informatieobjecttype_blueprint_permissions(
+            group_permissions
+        )
         auth_profile.blueprint_permissions.add(*blueprint_permissions)
         auth_profile.group_permissions = self.get_group_permissions(auth_profile)
         return auth_profile
@@ -541,6 +597,9 @@ class AuthProfileSerializer(serializers.HyperlinkedModelSerializer):
 
         auth_profile.blueprint_permissions.clear()
         blueprint_permissions = self.create_blueprint_permissions(group_permissions)
+        blueprint_permissions += self.create_informatieobjecttype_blueprint_permissions(
+            group_permissions
+        )
         auth_profile.blueprint_permissions.add(*blueprint_permissions)
         auth_profile.group_permissions = self.get_group_permissions(auth_profile)
         return auth_profile

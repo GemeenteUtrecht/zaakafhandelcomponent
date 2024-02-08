@@ -29,7 +29,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
     def test_add_blueprint_permissions_for_zaaktype(self, m):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        catalogus = catalogus = generate_oas_component(
+        catalogus = generate_oas_component(
             "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
         )
         mock_resource_get(m, catalogus)
@@ -67,7 +67,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
 
         call_command("add_blueprint_permissions_for_zaaktypen")
 
-        self.assertEqual(BlueprintPermission.objects.count(), 2)
+        self.assertEqual(BlueprintPermission.objects.count(), 16)
         zaak_permission = BlueprintPermission.objects.get(object_type="zaak")
         self.assertEqual(zaak_permission.role, self.role)
         self.assertEqual(
