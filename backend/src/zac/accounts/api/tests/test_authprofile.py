@@ -79,6 +79,26 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         omschrijving="ZT2",
         informatieobjecttypen=[],
     )
+    iotype = generate_oas_component(
+        "ztc",
+        "schemas/InformatieObjectType",
+        url=f"{CATALOGI_ROOT}informatieobjecttypen/2f4c1d80-764c-45f9-95c9-32816b26a436",
+        omschrijving="IOT2",
+        catalogus=CATALOGUS_URL,
+        vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+    )
+    ziot1 = generate_oas_component(
+        "ztc",
+        "schemas/ZaakTypeInformatieObjectType",
+        zaaktype=zaaktype1["url"],
+        informatieobjecttype=iotype["url"],
+    )
+    ziot2 = generate_oas_component(
+        "ztc",
+        "schemas/ZaakTypeInformatieObjectType",
+        zaaktype=zaaktype2["url"],
+        informatieobjecttype=iotype["url"],
+    )
 
     def setUp(self) -> None:
         super().setUp()
@@ -254,11 +274,21 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
     def test_create_auth_profile(self, m):
         # setup mocks
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([self.catalogus]))
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype1, self.zaaktype2]),
         )
         mock_resource_get(m, self.catalogus)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={self.zaaktype1['url']}",
+            json=paginated_response([self.ziot1]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={self.zaaktype2['url']}",
+            json=paginated_response([self.ziot2]),
+        )
+        mock_resource_get(m, self.iotype)
 
         role1, role2 = RoleFactory.create_batch(2)
         url = reverse_lazy("authorizationprofile-list")
@@ -303,10 +333,12 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         auth_profile = AuthorizationProfile.objects.get()
 
         self.assertEqual(auth_profile.name, "some name")
-        self.assertEqual(auth_profile.blueprint_permissions.count(), 3)
+        self.assertEqual(auth_profile.blueprint_permissions.count(), 5)
 
-        permission1, permission2, permission3 = list(
-            auth_profile.blueprint_permissions.all()
+        permission1, permission2 = list(
+            auth_profile.blueprint_permissions.filter(
+                object_type=PermissionObjectTypeChoices.zaak
+            )
         )
         self.assertEqual(permission1.role, role1)
         self.assertEqual(permission1.object_type, PermissionObjectTypeChoices.zaak)
@@ -328,6 +360,32 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 "max_va": "openbaar",
             },
         )
+
+        permission1, permission2, permission3 = list(
+            auth_profile.blueprint_permissions.filter(
+                object_type=PermissionObjectTypeChoices.document
+            )
+        )
+        self.assertEqual(permission1.role, role1)
+        self.assertEqual(permission1.object_type, PermissionObjectTypeChoices.document)
+        self.assertEqual(
+            permission1.policy,
+            {
+                "catalogus": "DOME",
+                "iotype_omschrijving": "IOT2",
+                "max_va": "zeer_geheim",
+            },
+        )
+        self.assertEqual(permission2.role, role1)
+        self.assertEqual(permission2.object_type, PermissionObjectTypeChoices.document)
+        self.assertEqual(
+            permission2.policy,
+            {
+                "catalogus": "DOME",
+                "iotype_omschrijving": "IOT2",
+                "max_va": "openbaar",
+            },
+        )
         self.assertEqual(permission3.role, role2)
         self.assertEqual(permission3.object_type, PermissionObjectTypeChoices.document)
         self.assertEqual(
@@ -343,11 +401,21 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
     def test_create_auth_profile_reuse_existing_permissions(self, m):
         # setup mocks
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([self.catalogus]))
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype1, self.zaaktype2]),
         )
         mock_resource_get(m, self.catalogus)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={self.zaaktype1['url']}",
+            json=paginated_response([self.ziot1]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={self.zaaktype2['url']}",
+            json=paginated_response([self.ziot2]),
+        )
+        mock_resource_get(m, self.iotype)
 
         role1, role2 = RoleFactory.create_batch(2)
         blueprint_permission1 = BlueprintPermissionFactory.create(
@@ -410,6 +478,7 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 },
             ],
         }
+        self.assertEqual(BlueprintPermission.objects.count(), 3)
 
         response = self.client.post(url, data)
 
@@ -419,17 +488,8 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         auth_profile = AuthorizationProfile.objects.get()
 
         self.assertEqual(auth_profile.name, "some name")
-        self.assertEqual(auth_profile.blueprint_permissions.count(), 3)
-        self.assertEqual(BlueprintPermission.objects.count(), 3)
-
-        for permission in [
-            blueprint_permission1,
-            blueprint_permission2,
-            blueprint_permission3,
-        ]:
-            self.assertTrue(
-                auth_profile.blueprint_permissions.filter(id=permission.id).exists()
-            )
+        self.assertEqual(auth_profile.blueprint_permissions.count(), 5)
+        self.assertEqual(BlueprintPermission.objects.count(), 5)
 
     def test_create_auth_profile_policy_incorrect_shape(self):
         role = RoleFactory.create()
@@ -465,11 +525,21 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
     def test_update_auth_profile(self, m):
         # setup mocks
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([self.catalogus]))
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
             json=paginated_response([self.zaaktype1, self.zaaktype2]),
         )
         mock_resource_get(m, self.catalogus)
+        m.get(
+            f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={self.zaaktype1['url']}",
+            json=paginated_response([self.ziot1]),
+        )
+        m.get(
+            f"{CATALOGI_ROOT}zaaktype-informatieobjecttypen?zaaktype={self.zaaktype2['url']}",
+            json=paginated_response([self.ziot2]),
+        )
+        mock_resource_get(m, self.iotype)
 
         role = RoleFactory.create()
         blueprint_permission = BlueprintPermissionFactory.create(
@@ -506,14 +576,28 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         auth_profile.refresh_from_db()
-        self.assertEqual(auth_profile.blueprint_permissions.count(), 1)
+        self.assertEqual(auth_profile.blueprint_permissions.count(), 2)
 
-        permission = auth_profile.blueprint_permissions.get()
+        permission = auth_profile.blueprint_permissions.filter(
+            object_type=PermissionObjectTypeChoices.zaak
+        )
         self.assertEqual(
-            permission.policy,
+            permission[0].policy,
             {
                 "catalogus": "DOME",
                 "zaaktype_omschrijving": "ZT2",
+                "max_va": "openbaar",
+            },
+        )
+
+        permission = auth_profile.blueprint_permissions.filter(
+            object_type=PermissionObjectTypeChoices.document
+        )
+        self.assertEqual(
+            permission[0].policy,
+            {
+                "catalogus": "DOME",
+                "iotype_omschrijving": "IOT2",
                 "max_va": "openbaar",
             },
         )

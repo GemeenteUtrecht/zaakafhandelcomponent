@@ -29,7 +29,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
     def test_add_blueprint_permissions_for_zaaktype(self, m):
         # mock API requests
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        catalogus = catalogus = generate_oas_component(
+        catalogus = generate_oas_component(
             "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
         )
         mock_resource_get(m, catalogus)
@@ -67,24 +67,26 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
 
         call_command("add_blueprint_permissions_for_zaaktypen")
 
-        self.assertEqual(BlueprintPermission.objects.count(), 2)
-        zaak_permission = BlueprintPermission.objects.get(object_type="zaak")
-        self.assertEqual(zaak_permission.role, self.role)
+        self.assertEqual(BlueprintPermission.objects.count(), 16)
+        zaak_permissions = BlueprintPermission.objects.filter(object_type="zaak")
+        self.assertEqual(zaak_permissions.count(), 8)
+        self.assertEqual(zaak_permissions[0].role, self.role)
         self.assertEqual(
-            zaak_permission.policy,
+            zaak_permissions[0].policy,
             {
                 "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
         )
-        doc_permission = BlueprintPermission.objects.get(object_type="document")
-        self.assertEqual(doc_permission.role, self.role)
+        doc_permissions = BlueprintPermission.objects.filter(object_type="document")
+        self.assertEqual(zaak_permissions.count(), 8)
+        self.assertEqual(doc_permissions[0].role, self.role)
         self.assertEqual(
-            doc_permission.policy,
+            doc_permissions[0].policy,
             {
                 "catalogus": catalogus["domein"],
                 "iotype_omschrijving": "IOT2",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
         )

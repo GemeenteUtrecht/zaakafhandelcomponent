@@ -318,6 +318,13 @@ class AtomicPermissionViewSet(
     destroy=extend_schema(summary=_("Delete authorization profile.")),
 )
 class AuthProfileViewSet(viewsets.ModelViewSet):
+    """
+    This view assumes the user can only select object_type == zaak and
+    adds the relevant INFORMATIEOBJECTTYPEs (related to ZAAKTYPE) policies with
+    the same `vertrouwelijkheidaanduiding` as the ZAAKTYPE policies.
+
+    """
+
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = AuthorizationProfile.objects.prefetch_related(
