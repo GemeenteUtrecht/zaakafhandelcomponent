@@ -248,6 +248,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             titel="a",
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             bestandsnaam="some-bestandsnaam1.ext1",
+            locked=True
         ),
     )
     document1.informatieobjecttype = iot
@@ -274,6 +275,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             url=f"{ZRC_ROOT}zaakinformatieobjecten/8c21296c-af29-4f7a-86fd-02706a8187a2",
             zaak=zaak1["url"],
             informatieobject=document1.url,
+            locked=False
         ),
     )
     zio2 = factory(
