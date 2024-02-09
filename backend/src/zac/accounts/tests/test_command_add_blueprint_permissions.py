@@ -69,22 +69,24 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
 
         self.assertEqual(BlueprintPermission.objects.count(), 16)
         zaak_permissions = BlueprintPermission.objects.filter(object_type="zaak")
+        self.assertEqual(zaak_permissions.count(), 8)
         self.assertEqual(zaak_permissions[0].role, self.role)
         self.assertEqual(
             zaak_permissions[0].policy,
             {
                 "catalogus": catalogus["domein"],
                 "zaaktype_omschrijving": "ZT1",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
         )
-        doc_permission = BlueprintPermission.objects.get(object_type="document")
-        self.assertEqual(doc_permission.role, self.role)
+        doc_permissions = BlueprintPermission.objects.filter(object_type="document")
+        self.assertEqual(zaak_permissions.count(), 8)
+        self.assertEqual(doc_permissions[0].role, self.role)
         self.assertEqual(
-            doc_permission.policy,
+            doc_permissions[0].policy,
             {
                 "catalogus": catalogus["domein"],
                 "iotype_omschrijving": "IOT2",
-                "max_va": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "max_va": VertrouwelijkheidsAanduidingen.openbaar,
             },
         )
