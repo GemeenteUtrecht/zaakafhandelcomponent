@@ -53,9 +53,30 @@ from ...services import (
 class KownslAPITests(ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.maxDiff = None
         super().setUpTestData()
+        Service.objects.create(
+            label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
+        )
+        objects_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTS_ROOT
+        )
+        objecttypes_service = Service.objects.create(
+            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
+        )
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = objects_service
+        config.primary_objecttypes_api = objecttypes_service
+        config.save()
+
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.review_request_objecttype = REVIEW_REQUEST_OBJECTTYPE["url"]
+        meta_config.review_objecttype = REVIEW_OBJECTTYPE["url"]
+        meta_config.save()
+
         zaak_json = generate_oas_component("zrc", "schemas/Zaak", url=ZAAK_URL)
         cls.zaak = factory(Zaak, zaak_json)
+
         user_assignees = UserAssigneeFactory(
             **{
                 "username": "some-other-author",
@@ -97,24 +118,6 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         cls.user = User.objects.get(
             username=cls.review_request["requester"]["username"]
         )
-        Service.objects.create(
-            label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
-        )
-        objects_service = Service.objects.create(
-            api_type=APITypes.orc, api_root=OBJECTS_ROOT
-        )
-        objecttypes_service = Service.objects.create(
-            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
-        )
-        config = CoreConfig.get_solo()
-        config.primary_objects_api = objects_service
-        config.primary_objecttypes_api = objecttypes_service
-        config.save()
-
-        meta_config = MetaObjectTypesConfig.get_solo()
-        meta_config.review_request_objecttype = REVIEW_REQUEST_OBJECTTYPE["url"]
-        meta_config.review_objecttype = REVIEW_OBJECTTYPE["url"]
-        meta_config.save()
 
     def test_get_review_request(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
@@ -176,6 +179,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             ],
             "documents": ["http://some-documents.nl"],
             "toelichting": "some-toelichting",
+            "zaakeigenschappen": [],
         }
         request = MagicMock()
         request.user = self.user
@@ -240,19 +244,6 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
 
-        data = {
-            "id": self.review_request["id"],
-            "assigned_users": [
-                {
-                    "user_assignees": ["some-user"],
-                    "group_assignees": [],
-                    "deadline": "2022-04-14",
-                    "email_notification": True,
-                }
-            ],
-            "documents": ["http://some-documents.nl"],
-            "toelichting": "some-toelichting",
-        }
         user = UserFactory(username="some-user")
 
         request = MagicMock()
@@ -270,6 +261,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         reviews_advice = ReviewsAdviceFactory()
         rr.reviews = factory_reviews(reviews_advice).reviews
         rr.fetched_reviews = True
+
         with patch(
             "zac.contrib.objects.kownsl.camunda.get_zaak_context",
             return_value=zaak_context,
@@ -278,6 +270,20 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                 "zac.contrib.objects.kownsl.camunda.get_review_request",
                 return_value=rr,
             ):
+                data = {
+                    "id": self.review_request["id"],
+                    "assigned_users": [
+                        {
+                            "user_assignees": ["some-user"],
+                            "group_assignees": [],
+                            "deadline": "2022-04-14",
+                            "email_notification": True,
+                        }
+                    ],
+                    "documents": ["http://some-documents.nl"],
+                    "toelichting": "some-toelichting",
+                    "zaakeigenschappen": [],
+                }
                 serializer = ConfigureReviewRequestSerializer(
                     data=data, context=context
                 )
@@ -298,8 +304,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             review_request = update_review_request(
                 self.review_request["id"], requester=self.user, data=serializer.data
             )
+        print(serializer.data)
 
         self.assertEqual(str(review_request.id), self.review_request["id"])
+        print(m.last_request.json())
         self.assertEqual(
             m.last_request.json(),
             {
@@ -342,7 +350,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
                         "reviewType": "advice",
                         "toelichting": "some-toelichting",
                         "userDeadlines": {"user:some-user": "2022-04-14"},
-                        "zaak": "https://zaken.nl/api/zaken/0c79c41d-72ef-4ea2-8c4c-03c9945da2a2",
+                        "zaak": ZAAK_URL,
+                        "zaakeigenschappen": [],
                     },
                     "geometry": "None",
                     "startAt": "1999-12-31",

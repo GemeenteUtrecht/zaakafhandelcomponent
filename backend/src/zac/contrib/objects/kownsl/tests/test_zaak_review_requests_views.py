@@ -291,6 +291,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "bronorganisatie": self.zaak["bronorganisatie"],
                     "url": self.zaak["url"],
                 },
+                "zaakeigenschappen": [],
                 "zaakDocuments": [
                     {
                         "auteur": self.document["auteur"],

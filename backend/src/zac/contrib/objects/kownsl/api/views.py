@@ -63,6 +63,7 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
 
     * Requires that the requesting user is authenticated and found in review_request.user_deadlines and an
     assignee parameter is found in both the get as well as the post.
+
     """
 
     permission_classes = (

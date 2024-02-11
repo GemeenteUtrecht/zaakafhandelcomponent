@@ -15,7 +15,9 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import register, usertask_context_serializer
 from zac.contrib.objects.services import get_review_request
 from zac.core.api.fields import SelectDocumentsCamundaField
+from zac.core.api.serializers import ZaakEigenschapSerializer
 from zac.core.camunda.utils import resolve_assignee
+from zac.core.services import get_zaak_eigenschappen
 from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
@@ -28,6 +30,7 @@ from .api.serializers import (
 from .cache import invalidate_review_requests_cache
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
 from .data import AdviceApprovalContext, AssignedUsers, ReviewRequest
+from .fields import SelectZaakEigenschappenKownslField
 
 
 class ZaakInformatieTaskSerializer(APIModelSerializer):
@@ -147,10 +150,16 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
         help_text=_("A list of previously selected documents."),
         required=False,
     )
+    previously_selected_zaakeigenschappen = serializers.ListField(
+        child=serializers.URLField(required=False),
+        help_text=_("A list of previously selected ZAAKEIGENSCHAPs."),
+        required=False,
+    )
     toelichting = serializers.CharField(
         help_text=_("A previously given comment regarding the review request."),
         required=False,
     )
+    zaakeigenschappen = ZaakEigenschapSerializer(many=True)
     zaak_informatie = ZaakInformatieTaskSerializer()
 
     class Meta:
@@ -162,8 +171,10 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
             "previously_assigned_users",
             "review_type",
             "previously_selected_documents",
+            "previously_selected_zaakeigenschappen",
             "title",
             "toelichting",
+            "zaakeigenschappen",
             "zaak_informatie",
         )
 
@@ -188,8 +199,8 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         help_text=_(
             "Supporting documents for the review request. If reconfiguring this field will be ignored."
         ),
-        required=True,
-        allow_empty=False,
+        required=False,
+        allow_empty=True,
     )
     id = serializers.UUIDField(
         allow_null=True,
@@ -215,6 +226,13 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         help_text=_("An object with usernames and their deadlines.")
     )
     zaak = serializers.SerializerMethodField(help_text=_("URL-reference to ZAAK."))
+    zaakeigenschappen = SelectZaakEigenschappenKownslField(
+        help_text=_(
+            "Supporting ZAAKEIGENSCHAPs for the review request. If reconfiguring this field will be ignored."
+        ),
+        required=False,
+        allow_empty=True,
+    )
 
     class Meta:
         model = ReviewRequest
@@ -229,6 +247,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "toelichting",
             "user_deadlines",
             "zaak",
+            "zaakeigenschappen",
         ]
 
     def _get_review_request(self, obj) -> Optional[ReviewRequest]:
@@ -331,6 +350,14 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
 
     def validate(self, data):
         validated_data = super().validate(data)
+        # Make sure either a document or zaakeigenschap is selected
+        if not validated_data.get("documents", []) and not validated_data.get(
+            "zaakeigenschappen", []
+        ):
+            raise serializers.ValidationError(
+                _("Select either documents or ZAAKEIGENSCHAPs.")
+            )
+
         # Make sure new assignees haven't already reviewed
         if (
             review_request := self._get_review_request(validated_data)
@@ -420,7 +447,6 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                 email_notification_list[user] = data["email_notification"]
 
         return {
-            "kownslDocuments": self.review_request.documents,
             "kownslUsersList": kownsl_users_list,
             "kownslReviewRequestId": str(self.review_request.id),
             "kownslFrontendUrl": self.review_request.get_frontend_url(),
@@ -483,11 +509,15 @@ def get_review_request_from_task(task: Task) -> Optional[ReviewRequest]:
 def get_review_context(task: Task) -> AdviceApprovalContext:
     rr = get_review_request_from_task(task)
     zaak_context = get_zaak_context(task, require_zaaktype=True)
+    zaak = zaak_context.zaak
+    zaak.zaaktype = zaak_context.zaaktype
+    zaakeigenschappen = get_zaak_eigenschappen(zaak)
     context = {
         "camunda_assigned_users": get_camunda_assigned_users(task),
         "documents_link": zaak_context.documents_link,
         "title": f"{zaak_context.zaaktype.omschrijving} - {zaak_context.zaaktype.versiedatum}",
         "zaak_informatie": zaak_context.zaak,
+        "zaakeigenschappen": zaakeigenschappen,
     }
     if rr:
         context["id"] = rr.id
@@ -496,6 +526,9 @@ def get_review_context(task: Task) -> AdviceApprovalContext:
         )
         context["previously_assigned_users"] = rr.assigned_users
         context["previously_selected_documents"] = rr.documents
+        context["previously_selected_zaakeigenschappen"] = [
+            zei for zei in zaakeigenschappen if zei.url in rr.zaakeigenschappen
+        ]
 
     return context
 

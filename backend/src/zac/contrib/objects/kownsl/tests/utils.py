@@ -11,7 +11,7 @@ OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
 OBJECTS_ROOT = "http://object.nl/api/v2/"
 
 DOCUMENT_URL = f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten/30e4deca-29ca-4798-bab1-3ad75cf29c30"
-ZAAK_URL = f"{ZAKEN_ROOT}api/zaken/0c79c41d-72ef-4ea2-8c4c-03c9945da2a2"
+ZAAK_URL = f"{ZAKEN_ROOT}zaken/0c79c41d-72ef-4ea2-8c4c-03c9945da2a2"
 
 ZAAK_DOCUMENT = {
     "bronorganisatie": "002220647",
@@ -84,6 +84,7 @@ class ReviewRequestFactory(factory.DictFactory):
         }
     )
     zaak = deepcopy(ZAAK_URL)
+    zaakeigenschappen = factory.List([])
 
     class Meta:
         rename = {

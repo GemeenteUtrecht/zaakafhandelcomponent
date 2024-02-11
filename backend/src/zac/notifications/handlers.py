@@ -32,6 +32,7 @@ from zac.core.cache import (
     invalidate_rollen_cache,
     invalidate_zaak_cache,
     invalidate_zaak_list_cache,
+    invalidate_zaakeigenschappen_cache,
     invalidate_zaakobjecten_cache,
     invalidate_zaaktypen_cache,
 )
@@ -234,6 +235,7 @@ class ZakenHandler:
     def _handle_zaakeigenschap_change(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
+        invalidate_zaakeigenschappen_cache(zaak_url)
 
         # index in ES
         update_eigenschappen_in_zaak_document(zaak)

@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from djchoices import ChoiceItem, DjangoChoices
 from furl import furl
 from zgw_consumers.api_models.base import Model, factory
-from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.api_models.zaken import ZaakEigenschap
 
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.user_tasks import Context
@@ -114,6 +114,7 @@ class ReviewRequest(Model):
     num_reviews_given_before_change: int
     toelichting: str
     zaak: str
+    zaakeigenschappen: List[str]
 
     assigned_users: List[AssignedUsers] = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
@@ -266,9 +267,11 @@ class AdviceApprovalContext(Context):
     review_type: str
     title: str
     zaak_informatie: Zaak
+    zaakeigenschappen: List[ZaakEigenschap]
 
     documents: Optional[List[InformatieObjectDocument]] = None
     id: Optional[UUID] = None
     previously_selected_documents: list = field(default_factory=list)
     previously_assigned_users: list = field(default_factory=list)
+    previously_selected_zaakeigenschappen: list = field(default_factory=list)
     update: bool = False

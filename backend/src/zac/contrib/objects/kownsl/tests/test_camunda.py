@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from django.contrib.sites.models import Site
 from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
 
 import requests_mock
 from django_camunda.utils import serialize_variable, underscoreize
@@ -16,7 +17,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.api.context import ZaakContext
@@ -25,6 +26,7 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.objects.kownsl.data import KownslTypes, ReviewRequest, Reviews
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
@@ -116,8 +118,24 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/e13e72de-56ba-42b6-be36-5c280e9b30ce",
+            catalogus=cls.catalogus["url"],
         )
         cls.zaaktype = factory(ZaakType, zaaktype)
+        cls.eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+            url=f"{CATALOGI_ROOT}eigenschappen/68b5b40c-c479-4008-a57b-a268b280df99",
+        )
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -125,6 +143,15 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             zaaktype=zaaktype["url"],
         )
         cls.zaak = factory(Zaak, zaak)
+
+        cls.zaakeigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            zaak=zaak["url"],
+            eigenschap=cls.eigenschap["url"],
+            naam=cls.eigenschap["naam"],
+            waarde="bar",
+        )
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype,
@@ -167,6 +194,14 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_advice_context_serializer(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([self.eigenschap]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[self.zaakeigenschap])
+
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
         m.get(
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
@@ -179,6 +214,8 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
 
+        print(serializer.data["context"])
+        self.maxDiff = None
         self.assertEqual(
             {
                 "camunda_assigned_users": {
@@ -192,11 +229,26 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "identificatie": self.zaak.identificatie,
                     },
                 ),
+                "zaakeigenschappen": [self.zaakeigenschap["url"]],
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.advice,
                 "previously_selected_documents": [],
+                "previously_selected_zaakeigenschappen": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                "zaakeigenschappen": [
+                    {
+                        "url": self.zaakeigenschap["url"],
+                        "formaat": self.eigenschap["specificatie"]["formaat"],
+                        "waarde": self.zaakeigenschap["waarde"],
+                        "eigenschap": {
+                            "url": self.eigenschap["url"],
+                            "naam": self.eigenschap["naam"],
+                            "toelichting": self.eigenschap["toelichting"],
+                            "specificatie": self.eigenschap["specificatie"],
+                        },
+                    }
+                ],
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
                     "toelichting": self.zaak.toelichting,
@@ -207,6 +259,14 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_approval_context_serializer(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
         task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
         group = GroupFactory.create(name="some-group")
         m.get(
@@ -238,10 +298,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "identificatie": self.zaak.identificatie,
                     },
                 ),
+                "zaakeigenschappen": [],
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
                 "previously_selected_documents": [],
+                "previously_selected_zaakeigenschappen": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
@@ -252,6 +314,14 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_approval_context_serializer_with_user(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
+
         task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
         user = UserFactory.create(
             username="some-user", first_name="First", last_name="Last"
@@ -288,10 +358,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "identificatie": self.zaak.identificatie,
                     },
                 ),
+                "zaakeigenschappen": [],
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
                 "previously_selected_documents": [],
+                "previously_selected_zaakeigenschappen": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
@@ -302,6 +374,14 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_advice_context_serializer_previously_assigned_users(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
+
         user_assignees = UserAssigneeFactory(
             **{
                 "username": "some-other-author",
@@ -369,6 +449,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                                 "identificatie": self.zaak.identificatie,
                             },
                         ),
+                        "zaakeigenschappen": [],
                         "id": review_request["id"],
                         "previously_assigned_users": [
                             {
@@ -400,6 +481,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         ],
                         "review_type": KownslTypes.advice,
                         "previously_selected_documents": [self.document.url],
+                        "previously_selected_zaakeigenschappen": [],
                         "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                         "zaak_informatie": {
                             "omschrijving": self.zaak.omschrijving,
@@ -613,6 +695,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "toelichting": "some-toelichting",
             "documents": [self.document.url],
             "id": None,
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -661,6 +744,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "documents": [self.document.url],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -685,7 +769,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "documents": [""],
+            "documents": [],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -695,7 +780,10 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-        self.assertEqual(err.exception.detail["documents"][0][0].code, "blank")
+        self.assertEqual(
+            err.exception.detail["non_field_errors"][0],
+            _("Select either documents or ZAAKEIGENSCHAPs."),
+        )
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_unique_users(self):
@@ -717,6 +805,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "documents": [self.document.url],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -742,6 +831,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
             "documents": [self.document.url],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -769,6 +859,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "toelichting": "some-toelichting",
             "documents": [self.document.url],
             "id": None,
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -791,7 +882,6 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         self.assertEqual(
             variables,
             {
-                "kownslDocuments": serializer.validated_data["documents"],
                 "kownslUsersList": [
                     [f"user:{user}" for user in self.users_1] + [f"group:{self.group}"]
                 ],
@@ -816,6 +906,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "toelichting": "some-toelichting",
             "documents": [self.document.url],
             "id": None,
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -860,6 +951,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "toelichting": "some-toelichting",
             "documents": [self.document.url],
             "id": review_request["id"],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})

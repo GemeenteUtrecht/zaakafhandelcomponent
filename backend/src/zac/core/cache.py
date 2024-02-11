@@ -204,3 +204,8 @@ def invalidate_document_url_cache(url: str):
 
     if is_redis_cache():
         cache.delete_pattern(f"*{url}*")
+
+
+def invalidate_zaakeigenschappen_cache(zaak: Zaak):
+    key = f"zaakeigenschappen:{zaak.url}"
+    cache.delete(key)

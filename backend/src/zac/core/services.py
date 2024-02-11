@@ -636,21 +636,24 @@ def get_status(zaak: Zaak) -> Optional[Status]:
     return status
 
 
+@cache_result("zaakeigenschappen:{zaak.url}", timeout=AN_HOUR)
+def fetch_zaakeigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
+    zrc_client = _client_from_object(zaak)
+    zaak_eigenschappen = zrc_client.list("zaakeigenschap", zaak_uuid=zaak.uuid)
+    return factory(ZaakEigenschap, zaak_eigenschappen)
+
+
 def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     perf_logger.info("      Fetching eigenschappen for zaak %s", zaak.identificatie)
 
-    zrc_client = _client_from_object(zaak)
     eigenschappen = {
         eigenschap.url: eigenschap for eigenschap in get_eigenschappen(zaak.zaaktype)
     }
-
-    zaak_eigenschappen = zrc_client.list("zaakeigenschap", zaak_uuid=zaak.uuid)
+    zaak_eigenschappen = fetch_zaakeigenschappen(zaak)
 
     perf_logger.info(
         "      Done fetching eigenschappen for zaak %s", zaak.identificatie
     )
-
-    zaak_eigenschappen = factory(ZaakEigenschap, zaak_eigenschappen)
 
     # resolve relations
     for zaak_eigenschap in zaak_eigenschappen:
