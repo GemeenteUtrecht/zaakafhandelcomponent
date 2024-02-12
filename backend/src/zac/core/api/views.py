@@ -915,7 +915,7 @@ class ZaakDocumentView(views.APIView):
         return editing_history
 
     def get_response_serializer(self, instance: Document) -> GetZaakDocumentSerializer:
-        open_documenten = check_document_status([instance.url])
+        open_documenten = check_document_status(documents=[instance.url])
         editing_history = self.get_document_audit_trail(instance)
         serializer = GetZaakDocumentSerializer(
             instance=instance,

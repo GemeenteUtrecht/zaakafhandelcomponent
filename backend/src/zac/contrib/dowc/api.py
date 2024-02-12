@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List, Optional, Tuple
 
 from django.http import Http404
@@ -19,6 +20,8 @@ from .constants import DocFileTypes
 from .data import DowcResponse, OpenDowc
 from .exceptions import DOWCCreateError
 from .models import DowcConfig
+
+logger = logging.getLogger(__name__)
 
 
 def get_client(user: Optional[User] = None, force: bool = False) -> Client:
@@ -129,21 +132,19 @@ def patch_and_destroy_doc(
 
 @optional_service
 def check_document_status(
-    documenten: Optional[List[str]] = None, zaak: Optional[str] = None
-) -> Optional[Dict]:
-    if not documenten and not zaak:
-        raise RuntimeError("Need one of: [documenten, zaak].")
-
+    documents: Optional[List[str]] = None, zaak: Optional[str] = None
+) -> List[OpenDowc]:
+    if not documents and not zaak:
+        logger.warning("Need one of: [documents, zaak].")
+        return []
     client = get_client(force=True)
     operation_id = "documenten_status_create"
     url = get_operation_url(client.schema, operation_id)
-
     payload = dict()
-    if documenten:
-        payload["documenten"] = documenten
+    if documents:
+        payload["documents"] = documents
     if zaak:
         payload["zaak"] = zaak
-
     try:
         response = client.request(
             url,

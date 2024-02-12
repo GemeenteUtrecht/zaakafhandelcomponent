@@ -365,7 +365,7 @@ class WorkStackSummaryView(views.APIView):
             return {"key": "zaken", "val": count}
 
         def _count_review_requests():
-            count = count_review_requests_by_user(user=request.user)
+            count = count_review_requests_by_user(requester=request.user)
             return {"key": "reviews", "val": count or 0}
 
         def _count_user_activities():
