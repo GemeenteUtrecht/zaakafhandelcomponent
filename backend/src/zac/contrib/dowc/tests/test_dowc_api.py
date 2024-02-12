@@ -26,7 +26,7 @@ from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
 
-from ..api import check_document_status, get_client, get_open_documenten_for_user
+from ..api import check_document_status, get_client
 from ..constants import DocFileTypes
 from ..data import DowcResponse, OpenDowc
 from ..models import DowcConfig
@@ -387,34 +387,6 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"errors": "this is already locked"})
-
-    def test_get_open_documenten_for_user(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
-        self.client.force_authenticate(user=self.user)
-        m.get(
-            f"{DOWC_API_ROOT}/api/v1/documenten",
-            status_code=200,
-            json=[self.dowc_response],
-        )
-
-        response = get_open_documenten_for_user(self.user)
-        self.assertEqual(
-            "https://dowc.nl/api/v1/documenten?purpose=write",
-            m.last_request.url,
-        )
-        self.assertEqual(response, [factory(DowcResponse, self.dowc_response)])
-
-    def test_get_open_documenten_for_user_empty(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
-        self.client.force_authenticate(user=self.user)
-        m.get(f"{DOWC_API_ROOT}/api/v1/documenten", status_code=404, json=[])
-
-        response = get_open_documenten_for_user(self.user)
-        self.assertEqual(
-            "https://dowc.nl/api/v1/documenten?purpose=write",
-            m.last_request.url,
-        )
-        self.assertEqual(response, [])
 
     def test_check_document_status_documenten(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
