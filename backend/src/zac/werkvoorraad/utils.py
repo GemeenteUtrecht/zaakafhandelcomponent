@@ -3,11 +3,7 @@ from itertools import groupby
 from typing import Dict, List
 from urllib.request import Request
 
-from zgw_consumers.api_models.base import factory
-
-from zac.accounts.models import AccessRequest, User
-from zac.contrib.kownsl.api import get_client as get_kownsl_client
-from zac.contrib.kownsl.data import ReviewRequest
+from zac.accounts.models import AccessRequest
 from zac.core.permissions import zaken_handle_access
 from zac.elasticsearch.searches import search_zaken
 
@@ -109,14 +105,3 @@ def get_checklist_answers_groups(
     return [
         ChecklistAnswerGroup(**group) for group in checklist_answers_groups_with_zaak
     ]
-
-
-def get_review_requests_for_requester(user: User) -> List[ReviewRequest]:
-    client = get_kownsl_client()
-    results = client.list("review_requests", query_params={"requester": user.username})
-    review_requests = factory(ReviewRequest, results)
-
-    # fix relation reference
-    for result, review_request in zip(results, review_requests):
-        review_request.user_deadlines = result["userDeadlines"]
-    return review_requests

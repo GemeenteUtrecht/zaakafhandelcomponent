@@ -6,6 +6,6 @@ export interface AssignedUser {
 export interface AssignUsersForm {
   form: string;
   assignedUsers: AssignedUser[];
-  selectedDocuments: string[];
+  documents: string[];
   toelichting: string;
 }

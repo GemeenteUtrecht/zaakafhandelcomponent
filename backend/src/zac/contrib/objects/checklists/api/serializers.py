@@ -12,14 +12,12 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.fields import GroupSlugRelatedField, UserSlugRelatedField
 from zac.accounts.models import User
-from zac.contrib.objects.services import fetch_checklist, fetch_checklisttype
-from zac.core.models import MetaObjectTypesConfig
-from zac.core.services import (
-    create_object,
-    fetch_objecttype,
-    relate_object_to_zaak,
-    update_object_record_data,
+from zac.contrib.objects.services import (
+    create_meta_object_and_relate_to_zaak,
+    fetch_checklist,
+    fetch_checklisttype,
 )
+from zac.core.services import update_object_record_data
 
 from ..data import (
     Checklist,
@@ -206,43 +204,14 @@ class ChecklistSerializer(APIModelSerializer):
         if checklist:
             raise serializers.ValidationError(_("Checklist already exists."))
 
-        # Get objecttype associated to checklist
-        checklist_obj_type_url = MetaObjectTypesConfig.get_solo().checklist_objecttype
-        checklist_obj_type = fetch_objecttype(checklist_obj_type_url)
-
-        # Get latest version of objecttype
-        latest_version = fetch_objecttype(max(checklist_obj_type["versions"]))
-
         # Use data from request - the serializer was (ab)used to validate, not serialize.
         data = {
             **self.initial_data,
-            "meta": True,
             "zaak": self.context["zaak"].url,
             "locked_by": None,
         }
-        checklist = create_object(
-            {
-                "type": checklist_obj_type["url"],
-                "record": {
-                    "typeVersion": latest_version["version"],
-                    "data": camelize(data, **api_settings.JSON_UNDERSCOREIZE),
-                    "startAt": datetime.date.today().isoformat(),
-                },
-            }
-        )
-        relate_object_to_zaak(
-            {
-                "zaak": self.context["zaak"].url,
-                "object": checklist["url"],
-                "object_type": "overige",
-                "object_type_overige": checklist_obj_type["name"],
-                "object_type_overige_definitie": {
-                    "url": latest_version["url"],
-                    "schema": ".jsonSchema",
-                    "objectData": ".record.data",
-                },
-                "relatieomschrijving": "Checklist van de ZAAK.",
-            }
+        create_meta_object_and_relate_to_zaak(
+            "checklist", data, self.context["zaak"].url
         )
 
         return factory(Checklist, self.validated_data)
@@ -251,7 +220,6 @@ class ChecklistSerializer(APIModelSerializer):
         data = {
             **self.initial_data,
             "zaak": self.context["zaak"].url,
-            "meta": True,
             "lockedBy": None,
         }  # unlock the checklist at update
         checklist_obj = self.context["checklist_object"]

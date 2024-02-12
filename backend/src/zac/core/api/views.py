@@ -92,7 +92,7 @@ from ..services import (
     get_statustype,
     get_statustypen,
     get_zaak,
-    get_zaak_eigenschappen,
+    get_zaakeigenschappen,
     get_zaakobjecten,
     get_zaaktype,
     get_zaaktypen,
@@ -430,7 +430,7 @@ class ZaakEigenschappenView(GetZaakMixin, views.APIView):
     def get(self, request, **kwargs):
         zaak = self.get_object()
         serializer = self.serializer_class(
-            instance=get_zaak_eigenschappen(zaak),
+            instance=get_zaakeigenschappen(zaak),
             context={"request": self.request, "view": self},
             many=True,
         )

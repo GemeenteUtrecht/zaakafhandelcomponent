@@ -1,11 +1,34 @@
+from typing import Dict, Type
+
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import fields
+from rest_framework import fields, relations
+from rest_framework.serializers import Serializer
 
 from .validators import ZaakDocumentsValidator
 
 
-class SelectDocumentsField(fields.ListField):
+class SerializerSlugRelatedField(relations.SlugRelatedField):
+    response_serializer = None
+
+    def get_response_serializer(self, obj: object) -> Type[Serializer]:
+        assert self.response_serializer
+        return self.response_serializer(obj)
+
+    def to_representation(self, obj) -> Dict:
+        if self.allow_null and not obj:
+            return dict()
+
+        return self.get_response_serializer(obj).data
+
+
+class SelectDocumentsCamundaField(fields.ListField):
+    """
+    Specialized field for camunda tasks where document selection takes place.
+    Requires a `get_zaak_from_context` method on the serializer.
+
+    """
+
     child = fields.URLField()
 
     default_validators = [
@@ -13,7 +36,7 @@ class SelectDocumentsField(fields.ListField):
     ]
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("label", _("Select the relevant documents"))
+        kwargs.setdefault("label", _("Select the relevant documents for Camunda task."))
         kwargs.setdefault(
             "help_text",
             _(

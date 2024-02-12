@@ -21,14 +21,13 @@ from zac.camunda.user_tasks.api import (
     get_killable_camunda_tasks,
     get_zaak_urls_from_tasks,
 )
-from zac.contrib.kownsl.api import (
-    count_review_requests_by_user,
-    get_review_requests_paginated,
-)
-from zac.contrib.kownsl.data import ReviewRequest
+from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.services import (
+    count_review_requests_by_user,
     fetch_all_checklists_for_user_groups,
     fetch_all_unanswered_checklists_for_user,
+    get_review_requests_paginated,
+    get_reviews_for_requester,
 )
 from zac.core.api.pagination import ProxyPagination
 from zac.core.api.permissions import CanHandleAccessRequests
@@ -223,7 +222,7 @@ class WorkStackChecklistQuestionsView(views.APIView):
     def get(self, request, *args, **kwargs):
         grouped_checklist_answers = self.get_assigned_checklist_answers()
         checklist_answers = get_checklist_answers_groups(
-            self.request, grouped_checklist_answers
+            request, grouped_checklist_answers
         )
         serializer = self.serializer_class(checklist_answers, many=True)
         return Response(serializer.data)
@@ -292,8 +291,10 @@ class WorkStackReviewRequestsView(views.APIView):
             ),
         }
 
-    def resolve_zaken(self, review_requests: List[ReviewRequest]) -> Dict:
-        urls = list({rr.for_zaak for rr in review_requests})
+    def resolve_zaken(
+        self, review_requests: List[ReviewRequest]
+    ) -> List[ReviewRequest]:
+        urls = list({rr.zaak for rr in review_requests})
         zaken = {
             z.url: z
             for z in search_zaken(
@@ -301,15 +302,34 @@ class WorkStackReviewRequestsView(views.APIView):
             )
         }
         for rr in review_requests:
-            rr.for_zaak = zaken.get(rr.for_zaak, None)
+            rr.zaak = zaken.get(rr.zaak, None)
+        return review_requests
+
+    def resolve_reviews(
+        self, review_requests: List[ReviewRequest]
+    ) -> List[ReviewRequest]:
+        reviews = {}
+        for review in get_reviews_for_requester(self.request.user):
+            if review.review_request in reviews:
+                reviews[review.review_request] += review.reviews
+            else:
+                reviews[review.review_request] = review.reviews
+
+        for rr in review_requests:
+            rr.reviews = sorted(
+                reviews.get(str(rr.id), []), key=lambda x: x.created, reverse=True
+            )
+            rr.fetched_reviews = True
         return review_requests
 
     def get(self, request, *args, **kwargs):
         results, _query_params = get_review_requests_paginated(
             query_params=self.get_query_params(),
-            requester=self.request.user,
+            requester=request.user,
         )
         review_requests = self.resolve_zaken(results["results"])
+        review_requests = self.resolve_reviews(results["results"])
+
         results["results"] = self.serializer_class(
             instance=review_requests, many=True
         ).data
@@ -341,11 +361,11 @@ class WorkStackSummaryView(views.APIView):
             return {"key": "group_tasks", "val": count}
 
         def _count_zaken():
-            count = count_by_behandelaar(request=self.request)
+            count = count_by_behandelaar(request=request)
             return {"key": "zaken", "val": count}
 
         def _count_review_requests():
-            count = count_review_requests_by_user(user=self.request.user)
+            count = count_review_requests_by_user(user=request.user)
             return {"key": "reviews", "val": count or 0}
 
         def _count_user_activities():
@@ -354,7 +374,7 @@ class WorkStackSummaryView(views.APIView):
 
         def _count_group_activities():
             user_groups = [
-                n[0] for n in list(self.request.user.groups.all().values_list("id"))
+                n[0] for n in list(request.user.groups.all().values_list("id"))
             ]
             count = (
                 Activity.objects.filter(group_assignee__in=user_groups).count()
@@ -364,7 +384,7 @@ class WorkStackSummaryView(views.APIView):
             return {"key": "group_activities", "val": count}
 
         def _count_access_requests():
-            count = count_access_requests(self.request)
+            count = count_access_requests(request)
             return {"key": "access_requests", "val": count}
 
         fetch_these = [

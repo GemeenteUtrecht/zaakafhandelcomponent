@@ -6,13 +6,13 @@ from zgw_consumers.drf.serializers import APIModelSerializer
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
 from zac.api.polymorphism import PolymorphicSerializer
-from zac.contrib.kownsl.constants import KownslTypes
-from zac.contrib.kownsl.serializers import (
+from zac.contrib.objects.checklists.data import ChecklistAnswer
+from zac.contrib.objects.kownsl.api.serializers import (
     AdviceSerializer,
     ApprovalSerializer,
     OpenReviewSerializer,
 )
-from zac.contrib.objects.checklists.data import ChecklistAnswer
+from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.elasticsearch.drf_api.serializers import (
     StatusDocumentSerializer,
     ZaakTypeDocumentSerializer,
@@ -160,11 +160,11 @@ class WorkStackAdviceSerializer(AdviceSerializer):
 
 
 class WorkStackAdviceReviewsSerializer(serializers.Serializer):
-    advices = WorkStackAdviceSerializer(many=True, source="get_reviews_summary")
+    advices = WorkStackAdviceSerializer(many=True, source="get_reviews")
 
 
 class WorkStackApprovalReviewsSerializer(serializers.Serializer):
-    approvals = ApprovalSerializer(many=True, source="get_reviews_summary")
+    approvals = ApprovalSerializer(many=True, source="get_reviews")
 
 
 class WorkStackReviewRequestSerializer(PolymorphicSerializer):
@@ -177,7 +177,9 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
     review_type = serializers.ChoiceField(
         choices=KownslTypes.choices, help_text=_("The review type.")
     )
-    open_reviews = OpenReviewSerializer(many=True, read_only=True)
+    open_reviews = OpenReviewSerializer(
+        many=True, read_only=True, source="get_open_reviews"
+    )
     is_being_reconfigured = serializers.BooleanField(
         help_text=_(
             "Boolean flag to indicate if review request is currently being reconfigured."
@@ -185,11 +187,16 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
         required=True,
     )
     completed = serializers.IntegerField(
-        label=_("completed requests"), help_text=_("The number of completed requests.")
+        label=_("completed requests"),
+        help_text=_("The number of completed requests."),
+        source="get_completed",
     )
     zaak = SummaryZaakDocumentSerializer(
-        help_text=_("ZAAK that review request belongs to."), source="for_zaak"
+        help_text=_("ZAAK that review request belongs to.")
     )
+
+    def get_completed(self, obj) -> int:
+        return len(obj.reviews)
 
 
 class WorkStackSummarySerializer(serializers.Serializer):

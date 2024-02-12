@@ -1,4 +1,5 @@
 import uuid
+from copy import deepcopy
 from pathlib import Path
 from unittest.mock import patch
 
@@ -26,8 +27,12 @@ from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.dowc.data import OpenDowc
-from zac.contrib.kownsl.constants import KownslTypes
-from zac.contrib.kownsl.data import ReviewRequest
+from zac.contrib.objects.kownsl.constants import KownslTypes
+from zac.contrib.objects.kownsl.tests.utils import (
+    ReviewRequestFactory,
+    ReviewsAdviceFactory,
+)
+from zac.contrib.objects.services import factory_review_request, factory_reviews
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
@@ -140,7 +145,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
-        cls.document.last_edited_date = None
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
         cls.document_es = create_informatieobject_document(cls.document)
 
         cls.zaak_context = ZaakContext(
@@ -239,7 +244,10 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureAdviceRequest"}),
     )
-    @patch("zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None)
+    @patch(
+        "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
+        return_value=None,
+    )
     def test_get_configure_advice_review_request_context(self, m, gt, grr):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
@@ -261,11 +269,16 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         with patch(
-            "zac.contrib.kownsl.camunda.get_zaak_context",
+            "zac.contrib.objects.kownsl.camunda.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            response = self.client.get(self.task_endpoint)
+            with patch(
+                "zac.contrib.objects.kownsl.camunda.get_zaakeigenschappen",
+                return_value=[],
+            ) as patch_get_zaakeigenschappen:
+                response = self.client.get(self.task_endpoint)
 
+        patch_get_zaakeigenschappen.assert_called_once()
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
@@ -276,12 +289,14 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 [
                     "camundaAssignedUsers",
                     "zaakInformatie",
+                    "zaakeigenschappen",
                     "title",
                     "documentsLink",
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
                     "previouslySelectedDocuments",
+                    "previouslySelectedZaakeigenschappen",
                 ]
             ),
         )
@@ -296,7 +311,10 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         "zac.camunda.api.views.get_task",
         return_value=_get_task(**{"formKey": "zac:configureApprovalRequest"}),
     )
-    @patch("zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None)
+    @patch(
+        "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
+        return_value=None,
+    )
     def test_get_configure_approval_review_request_context(self, m, gt, grr):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(
@@ -318,11 +336,16 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             },
         )
         with patch(
-            "zac.contrib.kownsl.camunda.get_zaak_context",
+            "zac.contrib.objects.kownsl.camunda.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            response = self.client.get(self.task_endpoint)
+            with patch(
+                "zac.contrib.objects.kownsl.camunda.get_zaakeigenschappen",
+                return_value=[],
+            ) as patch_get_zaakeigenschappen:
+                response = self.client.get(self.task_endpoint)
 
+        patch_get_zaakeigenschappen.assert_called_once()
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
@@ -333,12 +356,14 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 [
                     "camundaAssignedUsers",
                     "zaakInformatie",
+                    "zaakeigenschappen",
                     "title",
                     "documentsLink",
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
                     "previouslySelectedDocuments",
+                    "previouslySelectedZaakeigenschappen",
                 ]
             ),
         )
@@ -372,71 +397,63 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         users = UserFactory.create_batch(3)
-        review_request_data = {
-            "assignedUsers": [
-                {
-                    "deadline": "2020-01-01",
-                    "user_assignees": [user.username for user in users],
-                    "group_assignees": [],
-                    "email_notification": False,
-                },
-            ],
-            "created": "2022-04-14T15:49:09.830235Z",
-            "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
-            "forZaak": self.zaak.url,
-            "reviewType": KownslTypes.advice,
-            "documents": [],
-            "frontendUrl": "https://zac.cg-intern.utrecht.nl/ui/kownsl/14aec7a0-06de-4b55-b839-a1c9a0415b46/",
-            "numAdvices": 1,
-            "numApprovals": 0,
-            "numAssignedUsers": 1,
-            "openReviews": [
-                {
-                    "deadline": "2022-04-15",
-                    "users": ["user:some-other-author"],
-                    "groups": [],
-                }
-            ],
-            "toelichting": "some-toelichting",
-            "userDeadlines": {
-                "user:some-author": "2022-04-14",
-                "user:some-other-author": "2022-04-15",
+        review_request_data = ReviewRequestFactory()
+        review_request_data["assignedUsers"] = [
+            {
+                "deadline": "2020-01-01",
+                "userAssignees": [
+                    {
+                        "username": user.username,
+                        "firstName": user.first_name,
+                        "lastName": user.last_name,
+                        "fullName": user.get_full_name(),
+                    }
+                    for user in users
+                ],
+                "groupAssignees": [],
+                "emailNotification": False,
             },
-            "requester": {
-                "username": "some-user",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-            "metadata": {
-                "taskDefinitionId": "submitAdvice",
-                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
-            },
-            "zaakDocuments": [],
-            "reviews": [],
-            "locked": False,
-            "lockReason": "",
+        ]
+        review_request_data["zaak"] = self.zaak.url
+        review_request_data["userDeadlines"] = {
+            "user:some-author": "2022-04-14",
+            "user:some-other-author": "2022-04-15",
         }
-        review_request = factory(ReviewRequest, review_request_data)
+        review_request_data["metadata"] = {
+            "taskDefinitionId": "submitAdvice",
+            "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+        }
+        review_request_data["requester"] = {
+            "username": "some-user",
+            "firstName": "",
+            "lastName": "",
+            "fullName": "",
+        }
+        review_request = factory_review_request(review_request_data)
         m.get(
             f"{CAMUNDA_URL}task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
 
         with patch(
-            "zac.contrib.kownsl.camunda.search_informatieobjects",
+            "zac.contrib.objects.kownsl.camunda.search_informatieobjects",
             return_value=[self.document_es],
         ):
             with patch(
-                "zac.contrib.kownsl.camunda.get_zaak_context",
+                "zac.contrib.objects.kownsl.camunda.get_zaak_context",
                 return_value=self.zaak_context,
             ):
                 with patch(
-                    "zac.contrib.kownsl.camunda.get_review_request_from_task",
+                    "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
                     return_value=review_request,
                 ):
-                    response = self.client.get(self.task_endpoint)
+                    with patch(
+                        "zac.contrib.objects.kownsl.camunda.get_zaakeigenschappen",
+                        return_value=[],
+                    ) as patch_get_zaakeigenschappen:
+                        response = self.client.get(self.task_endpoint)
 
+        patch_get_zaakeigenschappen.assert_called_once()
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -455,34 +472,22 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     {
                         "userAssignees": [
                             {
-                                "id": users[0].id,
                                 "username": users[0].username,
                                 "firstName": "",
                                 "fullName": users[0].get_full_name(),
                                 "lastName": "",
-                                "isStaff": False,
-                                "email": users[0].email,
-                                "groups": [],
                             },
                             {
-                                "id": users[1].id,
                                 "username": users[1].username,
                                 "firstName": "",
                                 "fullName": users[1].get_full_name(),
                                 "lastName": "",
-                                "isStaff": False,
-                                "email": users[1].email,
-                                "groups": [],
                             },
                             {
-                                "id": users[2].id,
                                 "username": users[2].username,
                                 "firstName": "",
                                 "fullName": users[2].get_full_name(),
                                 "lastName": "",
-                                "isStaff": False,
-                                "email": users[2].email,
-                                "groups": [],
                             },
                         ],
                         "groupAssignees": [],
@@ -492,11 +497,13 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 ],
                 "reviewType": "advice",
                 "previouslySelectedDocuments": [],
+                "previouslySelectedZaakeigenschappen": [],
                 "title": f"{self.zaak_context.zaaktype.omschrijving} - {self.zaak_context.zaaktype.versiedatum}",
                 "zaakInformatie": {
                     "omschrijving": self.zaak_context.zaak.omschrijving,
                     "toelichting": self.zaak_context.zaak.toelichting,
                 },
+                "zaakeigenschappen": [],
             },
         )
 
@@ -587,26 +594,8 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
-        review_request_data = {
-            "id": uuid.uuid4(),
-            "created": "2020-01-01T15:15:22Z",
-            "forZaak": self.zaak.url,
-            "reviewType": KownslTypes.approval,
-            "documents": [self.document],
-            "frontendUrl": "http://some.kownsl.com/frontendurl/",
-            "numAdvices": 0,
-            "numApprovals": 1,
-            "numAssignedUsers": 1,
-            "toelichting": "some-toelichting",
-            "userDeadlines": {},
-            "requester": {
-                "username": "some-henkie",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-        }
-        review_request = factory(ReviewRequest, review_request_data)
+        review_request = factory_review_request(ReviewRequestFactory())
+        reviews = factory_reviews(ReviewsAdviceFactory())
         mock_resource_get(m, self.zaaktype)
         resultaattype = generate_oas_component(
             "ztc",
@@ -644,12 +633,12 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                         return_value=self.zaak,
                     ):
                         with patch(
-                            "zac.core.camunda.zet_resultaat.context.get_all_review_requests_for_zaak",
-                            return_value=[review_request],
+                            "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
+                            return_value=[factory(ResultaatType, resultaattype)],
                         ):
                             with patch(
-                                "zac.core.camunda.zet_resultaat.context.get_resultaattypen",
-                                return_value=[factory(ResultaatType, resultaattype)],
+                                "zac.core.camunda.zet_resultaat.context.get_reviews_for_zaak",
+                                return_value=[reviews],
                             ):
                                 response = self.client.get(self.task_endpoint)
 
@@ -729,7 +718,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
         cls.zaak = factory(Zaak, zaak)
 
-        cls.document.last_edited_date = None
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
         cls.document_es = create_informatieobject_document(cls.document)
 
         cls.patch_get_documenten_validator = patch(
@@ -867,56 +856,44 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                     "deadline": "2020-01-01",
                 },
             ],
-            "selectedDocuments": [self.document.url],
+            "documents": [self.document.url],
             "toelichting": "some-toelichting",
             "id": None,
         }
-        review_request_data = {
-            "assignedUsers": [
-                {
-                    "deadline": "2020-01-01",
-                    "user_assignees": [user.username for user in users],
-                    "group_assignees": [],
-                    "email_notification": False,
-                },
-            ],
-            "created": "2022-04-14T15:49:09.830235Z",
-            "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
-            "forZaak": self.zaak.url,
-            "reviewType": KownslTypes.advice,
-            "documents": [],
-            "frontendUrl": "https://zac.cg-intern.utrecht.nl/ui/kownsl/14aec7a0-06de-4b55-b839-a1c9a0415b46/",
-            "numAdvices": 1,
-            "numApprovals": 0,
-            "numAssignedUsers": 1,
-            "openReviews": [
-                {
-                    "deadline": "2022-04-15",
-                    "users": ["user:some-other-author"],
-                    "groups": [],
-                }
-            ],
-            "toelichting": "some-toelichting",
-            "userDeadlines": {
-                "user:some-author": "2022-04-14",
-                "user:some-other-author": "2022-04-15",
+        rr = ReviewRequestFactory()
+        rr["assignedUsers"] = [
+            {
+                "deadline": "2020-01-01",
+                "userAssignees": [
+                    {
+                        "username": user.username,
+                        "firstName": user.first_name,
+                        "lastName": user.last_name,
+                        "fullName": user.get_full_name(),
+                    }
+                    for user in users
+                ],
+                "groupAssignees": [],
+                "emailNotification": False,
             },
-            "requester": {
-                "username": "some-user",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-            "metadata": {
-                "taskDefinitionId": "submitAdvice",
-                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
-            },
-            "zaakDocuments": [],
-            "reviews": [],
-            "locked": False,
-            "lockReason": "",
+        ]
+        rr["zaak"] = self.zaak.url
+        rr["userDeadlines"] = {
+            "user:some-author": "2022-04-14",
+            "user:some-other-author": "2022-04-15",
         }
-        review_request = factory(ReviewRequest, review_request_data)
+        rr["metadata"] = {
+            "taskDefinitionId": "submitAdvice",
+            "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+        }
+        rr["requester"] = {
+            "username": "some-user",
+            "firstName": "",
+            "lastName": "",
+            "fullName": "",
+        }
+        rr["documents"] = [self.document.url]
+        review_request = factory_review_request(rr)
 
         m.post(
             f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
@@ -927,11 +904,11 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             return_value=self.zaak_context,
         ):
             with patch(
-                "zac.contrib.kownsl.camunda.get_zaak_context",
+                "zac.contrib.objects.kownsl.camunda.get_zaak_context",
                 return_value=self.zaak_context,
             ):
                 with patch(
-                    "zac.contrib.kownsl.camunda.create_review_request",
+                    "zac.contrib.objects.kownsl.camunda.create_review_request",
                     return_value=review_request,
                 ):
                     response = self.client.put(self.task_endpoint, payload)
@@ -947,57 +924,53 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def test_put_reconfigure_advice_review_request_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
-        review_request_data = {
-            "assignedUsers": [
-                {
-                    "deadline": "2020-01-01",
-                    "user_assignees": [user.username for user in users],
-                    "group_assignees": [],
-                    "email_notification": False,
-                },
-            ],
-            "created": "2022-04-14T15:49:09.830235Z",
-            "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
-            "forZaak": self.zaak.url,
-            "reviewType": KownslTypes.advice,
-            "documents": [],
-            "frontendUrl": "https://zac.cg-intern.utrecht.nl/ui/kownsl/14aec7a0-06de-4b55-b839-a1c9a0415b46/",
-            "numAdvices": 1,
-            "numApprovals": 0,
-            "numAssignedUsers": 1,
-            "openReviews": [
-                {
-                    "deadline": "2022-04-15",
-                    "users": ["user:some-other-author"],
-                    "groups": [],
-                }
-            ],
-            "toelichting": "some-toelichting",
-            "userDeadlines": {
-                "user:some-author": "2022-04-14",
-                "user:some-other-author": "2022-04-15",
+        rr = ReviewRequestFactory()
+        rr["assignedUsers"] = [
+            {
+                "deadline": "2020-01-01",
+                "userAssignees": [
+                    {
+                        "username": user.username,
+                        "firstName": user.first_name,
+                        "lastName": user.last_name,
+                        "fullName": user.get_full_name(),
+                    }
+                    for user in users
+                ],
+                "groupAssignees": [],
+                "emailNotification": False,
             },
-            "requester": {
-                "username": "some-user",
-                "firstName": "",
-                "lastName": "",
-                "fullName": "",
-            },
-            "metadata": {
-                "taskDefinitionId": "submitAdvice",
-                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
-            },
-            "zaakDocuments": [],
-            "reviews": [],
-            "locked": False,
-            "lockReason": "",
+        ]
+        rr["zaak"] = self.zaak.url
+        rr["userDeadlines"] = {
+            "user:some-author": "2022-04-14",
+            "user:some-other-author": "2022-04-15",
         }
-        review_request = factory(ReviewRequest, review_request_data)
+        rr["metadata"] = {
+            "taskDefinitionId": "submitAdvice",
+            "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+        }
+        rr["requester"] = {
+            "username": "some-user",
+            "firstName": "",
+            "lastName": "",
+            "fullName": "",
+        }
+        rr["documents"] = [self.document.url]
+        review_request = factory_review_request(rr)
+        payload_assigned_users = [
+            {
+                "deadline": "2020-01-01",
+                "userAssignees": [user.username for user in users],
+                "groupAssignees": [],
+                "emailNotification": False,
+            },
+        ]
         payload = {
-            "id": review_request_data["id"],
-            "assignedUsers": review_request_data["assignedUsers"],
-            "toelichting": review_request_data["toelichting"],
-            "selectedDocuments": [],
+            "id": rr["id"],
+            "assignedUsers": payload_assigned_users,
+            "toelichting": rr["toelichting"],
+            "documents": [self.document.url],
         }
 
         m.post(
@@ -1009,31 +982,21 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             return_value=self.zaak_context,
         ):
             with patch(
-                "zac.contrib.kownsl.camunda.get_zaak_context",
+                "zac.contrib.objects.kownsl.camunda.get_zaak_context",
                 return_value=self.zaak_context,
             ):
                 with patch(
-                    "zac.contrib.kownsl.camunda.get_review_request",
+                    "zac.contrib.objects.kownsl.camunda.get_review_request",
                     return_value=review_request,
                 ):
                     with patch(
-                        "zac.contrib.kownsl.camunda.retrieve_advices",
-                        return_value=[],
-                    ) as radv:
-                        with patch(
-                            "zac.contrib.kownsl.camunda.retrieve_approvals",
-                            return_value=[],
-                        ) as rapp:
-                            with patch(
-                                "zac.contrib.kownsl.camunda.update_assigned_users_review_request",
-                                return_value=review_request,
-                            ) as purr:
-                                response = self.client.put(self.task_endpoint, payload)
+                        "zac.contrib.objects.kownsl.camunda.update_review_request",
+                        return_value=review_request,
+                    ) as purr:
+                        response = self.client.put(self.task_endpoint, payload)
 
         self.assertEqual(response.status_code, 204)
         purr.assert_called_once()
-        rapp.assert_not_called()
-        radv.assert_called()
 
     @patch(
         "zac.camunda.api.views.get_task",
@@ -1139,7 +1102,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=[],
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(

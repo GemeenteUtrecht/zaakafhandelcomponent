@@ -27,7 +27,6 @@ from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-KOWNSL_ROOT = "https://kownsl.nl/"
 OBJECTS_ROOT = "https://objects.nl/api/v2/"
 OBJECTTYPES_ROOT = "https://objecttypes.nl/api/v2/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"

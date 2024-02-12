@@ -1,8 +1,9 @@
-from copy import deepcopy
 from datetime import date
 from unittest.mock import MagicMock, patch
 
+from django.contrib.sites.models import Site
 from django.urls import reverse
+from django.utils.translation import ugettext_lazy as _
 
 import requests_mock
 from django_camunda.utils import serialize_variable, underscoreize
@@ -11,9 +12,10 @@ from rest_framework import exceptions
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
+from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.constants import APITypes, AuthTypes
+from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
@@ -21,25 +23,29 @@ from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
-from zac.contrib.kownsl.data import KownslTypes, ReviewRequest
+from zac.contrib.objects.kownsl.data import KownslTypes, ReviewRequest, Reviews
 from zac.core.tests.utils import ClearCachesMixin
+from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
     AdviceApprovalContextSerializer,
+    AssignedUsersSerializer,
     ConfigureReviewRequestSerializer,
-    WriteAssignedUsersSerializer,
     ZaakInformatieTaskSerializer,
 )
-from ..models import KownslConfig
 from .utils import (
-    ADVICE,
+    CATALOGI_ROOT,
     DOCUMENT_URL,
     DOCUMENTS_ROOT,
-    KOWNSL_ROOT,
-    REVIEW_REQUEST,
     ZAAK_URL,
     ZAKEN_ROOT,
+    AdviceFactory,
+    AssignedUsersFactory,
+    ReviewRequestFactory,
+    ReviewsAdviceFactory,
+    UserAssigneeFactory,
 )
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
@@ -76,9 +82,25 @@ def _get_task(**overrides):
 class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.maxDiff = None
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
+        )
+        cls.informatieobjecttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=cls.catalogus["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",
@@ -86,12 +108,34 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             bestandsnaam="some-bestandsnaam.ext",
         )
         cls.document = factory(Document, document)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        cls.document.informatieobjecttype = factory(
+            InformatieObjectType, cls.informatieobjecttype
+        )
+
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
+        cls.document_es = create_informatieobject_document(cls.document)
+
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/e13e72de-56ba-42b6-be36-5c280e9b30ce",
+            catalogus=cls.catalogus["url"],
         )
         cls.zaaktype = factory(ZaakType, zaaktype)
+        cls.eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+            url=f"{CATALOGI_ROOT}eigenschappen/68b5b40c-c479-4008-a57b-a268b280df99",
+        )
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -99,6 +143,15 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             zaaktype=zaaktype["url"],
         )
         cls.zaak = factory(Zaak, zaak)
+
+        cls.zaakeigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            zaak=zaak["url"],
+            eigenschap=cls.eigenschap["url"],
+            naam=cls.eigenschap["naam"],
+            waarde="bar",
+        )
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype,
@@ -111,16 +164,11 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             ),
         )
         cls.patch_get_zaak_context = patch(
-            "zac.contrib.kownsl.camunda.get_zaak_context",
+            "zac.contrib.objects.kownsl.camunda.get_zaak_context",
             return_value=cls.zaak_context,
         )
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
-        )
-
-        cls.patch_search_informatieobjects = patch(
-            "zac.contrib.kownsl.camunda.search_informatieobjects",
-            return_value=[cls.document],
         )
 
     def setUp(self):
@@ -128,9 +176,6 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
-
-        self.patch_search_informatieobjects.start()
-        self.addCleanup(self.patch_search_informatieobjects.stop)
 
     def test_zaak_informatie_task_serializer(self):
         # Sanity check
@@ -149,17 +194,28 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_advice_context_serializer(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([self.eigenschap]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[self.zaakeigenschap])
+
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
         m.get(
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
             status_code=404,
         )
         with patch(
-            "zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None
+            "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
+            return_value=None,
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
 
+        print(serializer.data["context"])
+        self.maxDiff = None
         self.assertEqual(
             {
                 "camunda_assigned_users": {
@@ -173,11 +229,26 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "identificatie": self.zaak.identificatie,
                     },
                 ),
+                "zaakeigenschappen": [self.zaakeigenschap["url"]],
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.advice,
                 "previously_selected_documents": [],
+                "previously_selected_zaakeigenschappen": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                "zaakeigenschappen": [
+                    {
+                        "url": self.zaakeigenschap["url"],
+                        "formaat": self.eigenschap["specificatie"]["formaat"],
+                        "waarde": self.zaakeigenschap["waarde"],
+                        "eigenschap": {
+                            "url": self.eigenschap["url"],
+                            "naam": self.eigenschap["naam"],
+                            "toelichting": self.eigenschap["toelichting"],
+                            "specificatie": self.eigenschap["specificatie"],
+                        },
+                    }
+                ],
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
                     "toelichting": self.zaak.toelichting,
@@ -188,6 +259,14 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_approval_context_serializer(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
         task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
         group = GroupFactory.create(name="some-group")
         m.get(
@@ -195,7 +274,8 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             json=serialize_variable(["group:some-group"]),
         )
         with patch(
-            "zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None
+            "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
+            return_value=None,
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
@@ -208,7 +288,6 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         {
                             "full_name": "Groep: some-group",
                             "name": "some-group",
-                            "id": group.id,
                         }
                     ],
                 },
@@ -219,10 +298,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "identificatie": self.zaak.identificatie,
                     },
                 ),
+                "zaakeigenschappen": [],
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
                 "previously_selected_documents": [],
+                "previously_selected_zaakeigenschappen": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
@@ -233,6 +314,14 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_approval_context_serializer_with_user(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
+
         task = _get_task(**{"formKey": "zac:configureApprovalRequest"})
         user = UserFactory.create(
             username="some-user", first_name="First", last_name="Last"
@@ -242,7 +331,8 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             json=serialize_variable(["user:some-user"]),
         )
         with patch(
-            "zac.contrib.kownsl.camunda.get_review_request_from_task", return_value=None
+            "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
+            return_value=None,
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
@@ -254,12 +344,9 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         {
                             "username": "some-user",
                             "full_name": user.get_full_name(),
-                            "id": user.id,
                             "first_name": user.first_name,
                             "last_name": user.last_name,
-                            "is_staff": user.is_staff,
                             "email": user.email,
-                            "groups": [],
                         }
                     ],
                     "group_assignees": [],
@@ -271,10 +358,12 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                         "identificatie": self.zaak.identificatie,
                     },
                 ),
+                "zaakeigenschappen": [],
                 "id": None,
                 "previously_assigned_users": [],
                 "review_type": KownslTypes.approval,
                 "previously_selected_documents": [],
+                "previously_selected_zaakeigenschappen": [],
                 "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
                 "zaak_informatie": {
                     "omschrijving": self.zaak.omschrijving,
@@ -285,6 +374,33 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
     @requests_mock.Mocker()
     def test_advice_context_serializer_previously_assigned_users(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype.url}",
+            json=paginated_response([]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
+
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
+        )
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
+        )
+        review_request = ReviewRequestFactory()
+        review_request["assignedUsers"].append(assigned_users2)
+
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
         m.get(
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
@@ -292,84 +408,88 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         )
         m.get(
             f"https://camunda.example.com/engine-rest/task/{TASK_DATA['id']}/variables/kownslReviewRequestId?deserializeValue=false",
-            json=serialize_variable(REVIEW_REQUEST["id"]),
+            json=serialize_variable(review_request["id"]),
         )
 
-        service = Service.objects.create(
-            label="Kownsl",
-            api_type=APITypes.orc,
-            api_root=KOWNSL_ROOT,
-            auth_type=AuthTypes.zgw,
-            client_id="zac",
-            secret="supersecret",
-            user_id="zac",
-        )
-        config = KownslConfig.get_solo()
-        config.service = service
-        config.save()
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
-            json=REVIEW_REQUEST,
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}/advices",
-            json=[ADVICE],
-        )
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][0]["user_assignees"][0]
+            username=review_request["assignedUsers"][0]["userAssignees"][0]
         )
         UserFactory.create(
-            username=REVIEW_REQUEST["assignedUsers"][1]["user_assignees"][0]
+            username=review_request["assignedUsers"][1]["userAssignees"][0]
         )
 
-        user = UserFactory.create(username="some-other-author")
-        task_data = UserTaskData(task=task, context=_get_context(task))
-        serializer = AdviceApprovalContextSerializer(instance=task_data)
-        self.assertEqual(
-            {
-                "camunda_assigned_users": {
-                    "user_assignees": [],
-                    "group_assignees": [],
-                },
-                "documents_link": reverse(
-                    "zaak-documents-es",
-                    kwargs={
-                        "bronorganisatie": self.zaak.bronorganisatie,
-                        "identificatie": self.zaak.identificatie,
-                    },
-                ),
-                "id": REVIEW_REQUEST["id"],
-                "previously_assigned_users": [
+        rr = factory(ReviewRequest, review_request)
+        rr.documents = [self.document.url]
+
+        # Avoid patching fetch_reviews and everything
+        rr.reviews = []
+        rr.fetched_reviews = True
+
+        with patch(
+            "zac.contrib.objects.kownsl.camunda.search_informatieobjects",
+            return_value=[self.document_es],
+        ):
+            with patch(
+                "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
+                return_value=rr,
+            ):
+                task_data = UserTaskData(task=task, context=_get_context(task))
+                serializer = AdviceApprovalContextSerializer(instance=task_data)
+                self.assertEqual(
                     {
-                        "user_assignees": [
+                        "camunda_assigned_users": {
+                            "user_assignees": [],
+                            "group_assignees": [],
+                        },
+                        "documents_link": reverse(
+                            "zaak-documents-es",
+                            kwargs={
+                                "bronorganisatie": self.zaak.bronorganisatie,
+                                "identificatie": self.zaak.identificatie,
+                            },
+                        ),
+                        "zaakeigenschappen": [],
+                        "id": review_request["id"],
+                        "previously_assigned_users": [
                             {
-                                "id": user.id,
-                                "username": user.username,
-                                "first_name": user.first_name,
-                                "full_name": user.get_full_name(),
-                                "last_name": user.last_name,
-                                "is_staff": user.is_staff,
-                                "email": user.email,
-                                "groups": [],
-                            }
+                                "user_assignees": [
+                                    {
+                                        "first_name": "Some First",
+                                        "full_name": "Some First Some Last",
+                                        "last_name": "Some Last",
+                                        "username": "some-author",
+                                    }
+                                ],
+                                "group_assignees": [],
+                                "email_notification": False,
+                                "deadline": "2022-04-14",
+                            },
+                            {
+                                "user_assignees": [
+                                    {
+                                        "first_name": "Some Other First",
+                                        "full_name": "Some Other First Some Last",
+                                        "last_name": "Some Last",
+                                        "username": "some-other-author",
+                                    }
+                                ],
+                                "group_assignees": [],
+                                "email_notification": False,
+                                "deadline": "2022-04-15",
+                            },
                         ],
-                        "group_assignees": [],
-                        "email_notification": False,
-                        "deadline": "2022-04-15",
-                    }
-                ],
-                "review_type": KownslTypes.advice,
-                "previously_selected_documents": [],
-                "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
-                "zaak_informatie": {
-                    "omschrijving": self.zaak.omschrijving,
-                    "toelichting": self.zaak.toelichting,
-                },
-            },
-            serializer.data["context"],
-        )
+                        "review_type": KownslTypes.advice,
+                        "previously_selected_documents": [self.document.url],
+                        "previously_selected_zaakeigenschappen": [],
+                        "title": f"{self.zaaktype.omschrijving} - {self.zaaktype.versiedatum}",
+                        "zaak_informatie": {
+                            "omschrijving": self.zaak.omschrijving,
+                            "toelichting": self.zaak.toelichting,
+                        },
+                    },
+                    serializer.data["context"],
+                )
 
 
 class ConfigureReviewRequestSerializersTests(APITestCase):
@@ -380,10 +500,41 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.group = GroupFactory.create()
         cls.users_2 = UserFactory.create_batch(3)
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        site = Site.objects.get_current()
+        site.domain = "example"
+        site.save()
+
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOME",
+        )
+        cls.informatieobjecttype = generate_oas_component(
+            "ztc",
+            "schemas/InformatieObjectType",
+            url=f"{CATALOGI_ROOT}informatieobjecttypen/d5d7285d-ce95-4f9e-a36f-181f1c642aa6",
+            omschrijving="bijlage",
+            catalogus=cls.catalogus["url"],
+            vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
         document = generate_oas_component(
-            "drc", "schemas/EnkelvoudigInformatieObject", url=DOCUMENT_URL
+            "drc",
+            "schemas/EnkelvoudigInformatieObject",
+            url=DOCUMENT_URL,
+            bestandsnaam="some-bestandsnaam.ext",
         )
         cls.document = factory(Document, document)
+        cls.document.informatieobjecttype = factory(
+            InformatieObjectType, cls.informatieobjecttype
+        )
+
+        cls.document.last_edited_date = None  # avoid patching fetching audit trail
+        cls.document_es = create_informatieobject_document(cls.document)
+
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -393,12 +544,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
         )
-        cls.patch_search_informatieobjects = patch(
-            "zac.contrib.kownsl.camunda.search_informatieobjects",
-            return_value=[cls.document],
-        )
         cls.patch_get_zaak_context = patch(
-            "zac.contrib.kownsl.camunda.get_zaak_context",
+            "zac.contrib.objects.kownsl.camunda.get_zaak_context",
             return_value=cls.zaak_context,
         )
         cls.patch_get_zaak_context_doc_ser = patch(
@@ -407,17 +554,35 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         cls.patch_get_documenten = patch(
             "zac.core.api.validators.search_informatieobjects",
-            return_value=[cls.document],
+            return_value=[cls.document_es],
         )
-        rr = deepcopy(REVIEW_REQUEST)
+
+        user_assignees = UserAssigneeFactory(
+            **{
+                "username": "some-other-author",
+                "first_name": "Some Other First",
+                "last_name": "Some Last",
+                "full_name": "Some Other First Some Last",
+            }
+        )
+        assigned_users2 = AssignedUsersFactory(
+            **{
+                "deadline": "2022-04-15",
+                "user_assignees": [user_assignees],
+                "group_assignees": [],
+                "email_notification": False,
+            }
+        )
+        rr = ReviewRequestFactory()
         rr["documents"] = [cls.document.url]
+        rr["assignedUsers"].append(assigned_users2)
 
         # Let resolve_assignee get the right users and groups
-        UserFactory.create(username=rr["assignedUsers"][0]["user_assignees"][0])
-        UserFactory.create(username=rr["assignedUsers"][1]["user_assignees"][0])
+        UserFactory.create(username=rr["assignedUsers"][0]["userAssignees"][0])
+        UserFactory.create(username=rr["assignedUsers"][1]["userAssignees"][0])
         cls.review_request = factory(ReviewRequest, rr)
         cls.patch_create_review_request = patch(
-            "zac.contrib.kownsl.camunda.create_review_request",
+            "zac.contrib.objects.kownsl.camunda.create_review_request",
             return_value=cls.review_request,
         )
         cls.task_endpoint = reverse(
@@ -430,17 +595,14 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         self.patch_get_zaak_context.start()
         self.addCleanup(self.patch_get_zaak_context.stop)
 
-        self.patch_get_zaak_context_doc_ser.start()
-        self.addCleanup(self.patch_get_zaak_context_doc_ser.stop)
+        # self.patch_get_zaak_context_doc_ser.start()
+        # self.addCleanup(self.patch_get_zaak_context_doc_ser.stop)
 
         self.patch_create_review_request.start()
         self.addCleanup(self.patch_create_review_request.stop)
 
         self.patch_get_documenten.start()
         self.addCleanup(self.patch_get_documenten.stop)
-
-        self.patch_search_informatieobjects.start()
-        self.addCleanup(self.patch_search_informatieobjects.stop)
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_select_users_rev_req_serializer(self):
@@ -451,7 +613,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = WriteAssignedUsersSerializer(data=payload)
+        serializer = AssignedUsersSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
         self.assertEqual(
             sorted(list(serializer.validated_data.keys())),
@@ -477,7 +639,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = WriteAssignedUsersSerializer(data=payload)
+        serializer = AssignedUsersSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError, "Assigned users need to be unique."
         ):
@@ -491,7 +653,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "2020-01-01",
         }
-        serializer = WriteAssignedUsersSerializer(data=payload)
+        serializer = AssignedUsersSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError, "Assigned groups need to be unique."
         ):
@@ -505,7 +667,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             "email_notification": False,
             "deadline": "01-01-2010",
         }
-        serializer = WriteAssignedUsersSerializer(data=payload)
+        serializer = AssignedUsersSerializer(data=payload)
         with self.assertRaisesMessage(
             exceptions.ValidationError,
             "Date heeft het verkeerde formaat, gebruik 1 van deze formaten: YYYY-MM-DD.",
@@ -531,8 +693,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [self.document.url],
+            "documents": [self.document.url],
             "id": None,
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -558,9 +721,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
                 },
             ],
         )
-        self.assertEqual(
-            serializer.validated_data["selected_documents"], [self.document.url]
-        )
+        self.assertEqual(serializer.validated_data["documents"], [self.document.url])
         self.assertEqual(serializer.validated_data["toelichting"], "some-toelichting")
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -582,7 +743,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [self.document.url],
+            "documents": [self.document.url],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -607,7 +769,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [""],
+            "documents": [],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -617,7 +780,10 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         )
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
-        self.assertEqual(err.exception.detail["selected_documents"][0][0].code, "blank")
+        self.assertEqual(
+            err.exception.detail["non_field_errors"][0],
+            _("Select either documents or ZAAKEIGENSCHAPs."),
+        )
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_configure_review_request_serializer_unique_users(self):
@@ -638,7 +804,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [self.document.url],
+            "documents": [self.document.url],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -663,7 +830,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [self.document.url],
+            "documents": [self.document.url],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -689,8 +857,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [self.document.url],
+            "documents": [self.document.url],
             "id": None,
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -709,15 +878,15 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         email_notification_list[f"group:{self.group}"] = False
 
         variables = serializer.get_process_variables()
+        self.maxDiff = None
         self.assertEqual(
             variables,
             {
-                "kownslDocuments": serializer.validated_data["selected_documents"],
                 "kownslUsersList": [
                     [f"user:{user}" for user in self.users_1] + [f"group:{self.group}"]
                 ],
                 "kownslReviewRequestId": str(self.review_request.id),
-                "kownslFrontendUrl": f"http://example.com/ui/kownsl/review-request/advice?uuid={self.review_request.id}",
+                "kownslFrontendUrl": f"http://example/ui/kownsl/review-request/advice?uuid={self.review_request.id}",
                 "emailNotificationList": email_notification_list,
             },
         )
@@ -735,8 +904,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [self.document.url],
+            "documents": [self.document.url],
             "id": None,
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
@@ -757,28 +927,10 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
     @freeze_time("1999-12-31T23:59:59Z")
     @requests_mock.Mocker()
     def test_reconfigure_review_request_serializer_user_already_reviewed(self, m):
-        service = Service.objects.create(
-            label="Kownsl",
-            api_type=APITypes.orc,
-            api_root=KOWNSL_ROOT,
-            auth_type=AuthTypes.zgw,
-            client_id="zac",
-            secret="supersecret",
-            user_id="zac",
-        )
-        config = KownslConfig.get_solo()
-        config.service = service
-        config.save()
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}",
-            json=REVIEW_REQUEST,
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests/{REVIEW_REQUEST['id']}/advices",
-            json=[ADVICE],
-        )
-        user = UserFactory.create(username=ADVICE["author"]["username"])
+        advice = AdviceFactory()
+        review_request = ReviewRequestFactory()
+        reviews_advice = ReviewsAdviceFactory()
+        user = UserFactory.create(username=advice["author"]["username"])
         assigned_users = [
             {
                 "user_assignees": [user.username for user in self.users_1]
@@ -797,18 +949,29 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         payload = {
             "assigned_users": assigned_users,
             "toelichting": "some-toelichting",
-            "selected_documents": [self.document.url],
-            "id": REVIEW_REQUEST["id"],
+            "documents": [self.document.url],
+            "id": review_request["id"],
+            "zaakeigenschappen": [],
         }
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
 
-        serializer = ConfigureReviewRequestSerializer(
-            data=payload, context={"task": task}
-        )
+        rr = factory(ReviewRequest, review_request)
 
-        with self.assertRaises(ValidationError) as exc:
-            serializer.is_valid(raise_exception=True)
+        # Avoid patching fetch_reviews and everything
+        rr.reviews = factory(Reviews, reviews_advice).reviews
+        rr.fetched_reviews = True
+
+        with patch(
+            "zac.contrib.objects.kownsl.camunda.get_review_request",
+            return_value=rr,
+        ):
+            serializer = ConfigureReviewRequestSerializer(
+                data=payload, context={"task": task}
+            )
+
+            with self.assertRaises(ValidationError) as exc:
+                serializer.is_valid(raise_exception=True)
 
         self.assertEqual(
             exc.exception.detail["non_field_errors"][0],

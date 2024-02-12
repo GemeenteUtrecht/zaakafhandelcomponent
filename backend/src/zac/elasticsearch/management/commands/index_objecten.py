@@ -7,6 +7,7 @@ from django.core.management import BaseCommand
 from elasticsearch_dsl.query import Term, Terms
 
 from zac.core.cache import invalidate_fetch_object_cache
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
     fetch_objects,
     fetch_objects_all_paginated,
@@ -26,7 +27,6 @@ from ...documents import (
     ZaakDocument,
     ZaakObjectDocument,
 )
-from ...utils import check_if_index_exists
 from .base_index import IndexCommand
 
 perf_logger = logging.getLogger("performance")
@@ -43,6 +43,14 @@ class Command(IndexCommand, BaseCommand):
         settings.ES_INDEX_ZAKEN: ZaakDocument,
         settings.ES_INDEX_ZO: ZaakObjectDocument,
     }
+
+    @property
+    def meta_config_urls(self) -> List[str]:
+        if not hasattr(self, "_meta_config_urls"):
+            self._meta_config_urls = list(
+                MetaObjectTypesConfig.get_solo().meta_objecttype_urls.values()
+            )
+        return self._meta_config_urls
 
     def batch_index(self) -> Iterator[ObjectDocument]:
         super().batch_index()
@@ -121,11 +129,12 @@ class Command(IndexCommand, BaseCommand):
 
         related_zaken = self.resolve_related_zaken(object_documenten)
         for obj in objects:
-            object_document = object_documenten[obj["url"]]
-            object_document.type = objecttype_documenten[obj["url"]]
-            object_document.related_zaken = related_zaken.get(obj["url"], [])
-            od = object_document.to_dict(True)
-            yield od
+            if obj["type"] not in self.meta_config_urls:
+                object_document = object_documenten[obj["url"]]
+                object_document.type = objecttype_documenten[obj["url"]]
+                object_document.related_zaken = related_zaken.get(obj["url"], [])
+                od = object_document.to_dict(True)
+                yield od
 
     def create_related_zaken(
         self,

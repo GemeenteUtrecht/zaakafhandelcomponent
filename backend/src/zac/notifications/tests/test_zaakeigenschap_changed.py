@@ -158,8 +158,12 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCa
         zaak_document.save()
         self.refresh_index()
 
-        response = self.client.post(path, NOTIFICATION_DESTROY)
+        with patch(
+            "zac.notifications.handlers.invalidate_zaakeigenschappen_cache"
+        ) as mock_invalidate_zei_cache:
+            response = self.client.post(path, NOTIFICATION_DESTROY)
 
+        mock_invalidate_zei_cache.assert_called_once()
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         zaak_document = ZaakDocument.get(id=zaak_document.meta.id)

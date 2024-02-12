@@ -13,7 +13,7 @@ from zac.core.services import (
     fetch_zaaktype,
     get_rollen,
     get_status,
-    get_zaak_eigenschappen,
+    get_zaakeigenschappen,
     get_zaaktypen,
     get_zaken_all_paginated,
 )
@@ -218,7 +218,7 @@ class Command(IndexCommand, BaseCommand):
     ) -> Dict[str, EigenschapDocument]:
         # Prefetch zaakeigenschappen
         with parallel(max_workers=self.max_workers) as executor:
-            list_of_eigenschappen = list(executor.map(get_zaak_eigenschappen, zaken))
+            list_of_eigenschappen = list(executor.map(get_zaakeigenschappen, zaken))
 
         eigenschappen_documenten = {
             zen[0].zaak: create_eigenschappen_document(zen)

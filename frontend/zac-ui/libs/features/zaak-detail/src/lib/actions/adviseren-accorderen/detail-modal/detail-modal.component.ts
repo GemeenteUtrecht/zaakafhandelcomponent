@@ -155,7 +155,7 @@ export class DetailModalComponent  {
     const bodyData = reviewDocuments.map((doc: ReviewDocument) => {
       return {
         cellData: {
-          title: doc.title,
+          title: doc.bestandsnaam,
 
           source: {
             type: 'button',

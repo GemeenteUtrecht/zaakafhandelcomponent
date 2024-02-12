@@ -273,7 +273,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=[],
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(
@@ -338,7 +338,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=dict(),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(
@@ -396,7 +396,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=dict(),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(

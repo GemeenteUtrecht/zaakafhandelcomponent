@@ -18,7 +18,6 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.contrib.kownsl.models import KownslConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -26,7 +25,6 @@ from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-KOWNSL_ROOT = "https://kownsl.nl/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
@@ -103,7 +101,7 @@ class ZaakEigenschappenResponseTests(ClearCachesMixin, APITestCase):
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
-    def test_get_zaak_eigenschappen(self, m):
+    def test_get_zaakeigenschappen(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaak)
@@ -149,7 +147,7 @@ class ZaakEigenschappenResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response_data, expected)
 
     def test_no_properties(self, m):
-        with patch("zac.core.api.views.get_zaak_eigenschappen", return_value=[]):
+        with patch("zac.core.api.views.get_zaakeigenschappen", return_value=[]):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
@@ -168,11 +166,6 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        kownsl = Service.objects.create(api_type=APITypes.orc, api_root=KOWNSL_ROOT)
-
-        config = KownslConfig.get_solo()
-        config.service = kownsl
-        config.save()
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -206,7 +199,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
         cls.get_eigenschappen_patcher = patch(
-            "zac.core.api.views.get_zaak_eigenschappen", return_value=[]
+            "zac.core.api.views.get_zaakeigenschappen", return_value=[]
         )
 
         cls.endpoint = reverse(
@@ -243,14 +236,10 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
     def test_has_perm_but_not_for_zaaktype(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response([]),
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
         )
         mock_resource_get(m, self.catalogus)
         # gives them access to the page, but no catalogus specified -> nothing visible
@@ -274,7 +263,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
     def test_has_perm_but_not_for_va(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(m, KOWNSL_ROOT, "kownsl")
+
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
@@ -282,10 +271,6 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
             json=paginated_response([]),
-        )
-        m.get(
-            f"{KOWNSL_ROOT}api/v1/review-requests?for_zaak={self.zaak['url']}",
-            json=[],
         )
         mock_resource_get(m, self.catalogus)
         user = UserFactory.create()

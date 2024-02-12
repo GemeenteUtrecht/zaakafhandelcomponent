@@ -117,6 +117,20 @@ class MetaObjectTypesConfig(SingletonModel):
         ),
         default="",
     )
+    review_objecttype = models.URLField(
+        _("URL-reference to review in OBJECTTYPES API."),
+        help_text=_(
+            "URL-reference to the review OBJECTTYPE. This is used to register an advice/approval to a review request."
+        ),
+        default="",
+    )
+    review_request_objecttype = models.URLField(
+        _("URL-reference to review request in OBJECTTYPES API."),
+        help_text=_(
+            "URL-reference to the review request OBJECTTYPE. This is used to register a review request."
+        ),
+        default="",
+    )
     start_camunda_process_form_objecttype = models.URLField(
         _("URL-reference to StartCamundaForms in OBJECTTYPES API."),
         help_text=_(

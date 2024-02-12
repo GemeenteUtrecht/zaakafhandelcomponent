@@ -40,11 +40,6 @@ DESIRED = [
         "channel": "objecten",
         "filters": {},
     },
-    {
-        "path": reverse_lazy("notifications:kownsl-callback"),
-        "channel": "kownsl",
-        "filters": {},
-    },
 ]
 
 

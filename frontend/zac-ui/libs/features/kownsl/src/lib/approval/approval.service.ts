@@ -12,7 +12,7 @@ export class ApprovalService {
   constructor(private http: ApplicationHttpClient) { }
 
   getApproval(uuid: string, assignee: string): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/approval`);
+    const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/review`);
     const options = {
       observe: 'response' as 'response',
       params: new HttpParams().set('assignee', assignee)
@@ -21,6 +21,6 @@ export class ApprovalService {
   }
 
   postApproval(formData: ApprovalForm, uuid: string, assignee: string): Observable<any> {
-    return this.http.Post<ApprovalForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/approval?assignee=${assignee}`), formData);
+    return this.http.Post<ApprovalForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/review?assignee=${assignee}`), formData);
   }
 }

@@ -6,7 +6,13 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, serializers
 
 from zac.contrib.objects.services import fetch_zaaktypeattributen_objects_for_zaaktype
-from zac.core.services import get_eigenschap, get_eigenschappen, get_zaak, get_zaaktype
+from zac.core.services import (
+    fetch_zaakeigenschappen,
+    get_eigenschap,
+    get_eigenschappen,
+    get_zaak,
+    get_zaaktype,
+)
 from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
@@ -20,6 +26,9 @@ def validate_zaak_documents(selected_documents: List[str], zaak: Zaak):
             _("Please select each document only once."),
             code="invalid-choice",
         )
+
+    if not selected_documents:
+        return
 
     documents = search_informatieobjects(
         zaak=zaak.url, urls=selected_documents, size=len(selected_documents)
@@ -50,6 +59,46 @@ class ZaakDocumentsValidator:
             )
         zaak = serializer.get_zaak_from_context()
         validate_zaak_documents(value, zaak)
+
+
+def validate_zaakeigenschappen(selected_zaakeigenschappen: List[str], zaak: Zaak):
+    # Make sure selected documents are unique
+    if len((set(selected_zaakeigenschappen))) != len(selected_zaakeigenschappen):
+        raise exceptions.ValidationError(
+            _("Please select each `ZAAKEIGENSCHAPs` only once."),
+            code="invalid-choice",
+        )
+
+    if not selected_zaakeigenschappen:
+        return
+
+    zeis = fetch_zaakeigenschappen(zaak)
+    valid_zeis = [zei.url for zei in zeis]
+    invalid_zeis = [url for url in selected_zaakeigenschappen if url not in valid_zeis]
+
+    if invalid_zeis:
+        raise exceptions.ValidationError(
+            _(
+                "Selected ZAAKEIGENSCHAPpen: `{invalid_zeis}` are invalid. Please choose one of the "
+                "following ZAAKEIGENSCHAPpen: {valid_zeis}."
+            ).format(invalid_zeis=invalid_zeis, valid_zeis=valid_zeis),
+            code="invalid-choice",
+        )
+
+
+class ZaakEigenschappenValidator:
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        serializer = serializer_field.parent
+
+        if not hasattr(serializer, "get_zaak_from_context"):
+            raise ImproperlyConfigured(
+                f"Serializer '{serializer.__class__}' needs a 'get_zaak_from_context' method "
+                "to validate the documents."
+            )
+        zaak = serializer.get_zaak_from_context()
+        validate_zaakeigenschappen(value, zaak)
 
 
 class ZaakFileValidator:

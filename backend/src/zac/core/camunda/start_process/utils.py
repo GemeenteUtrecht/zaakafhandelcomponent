@@ -12,7 +12,7 @@ from zac.core.services import (
     get_informatieobjecttypen_for_zaaktype,
     get_rollen,
     get_roltypen,
-    get_zaak_eigenschappen,
+    get_zaakeigenschappen,
 )
 from zac.elasticsearch.searches import count_by_iot_in_zaak
 
@@ -104,7 +104,7 @@ def get_required_zaakeigenschappen(
     # required zaakeigenschappen. Drop those that are already created.
     zaak_context.zaak.zaaktype = zaak_context.zaaktype
     zaakeigenschappen = [
-        zei.eigenschap.naam for zei in get_zaak_eigenschappen(zaak_context.zaak)
+        zei.eigenschap.naam for zei in get_zaakeigenschappen(zaak_context.zaak)
     ]
     eigenschappen = {ei.naam: ei for ei in get_eigenschappen(zaak_context.zaaktype)}
     required_eigenschappen = camunda_start_process.process_eigenschappen

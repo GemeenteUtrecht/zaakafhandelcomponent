@@ -59,7 +59,7 @@ ZAC
    :members:
    :exclude-members: DoesNotExist, MultipleObjectsReturned, save, clean, save
 
-.. automodule:: zac.contrib.kownsl.models
+.. automodule:: zac.contrib.objects.kownsl.models
    :members:
    :exclude-members: DoesNotExist, MultipleObjectsReturned, save, clean
 

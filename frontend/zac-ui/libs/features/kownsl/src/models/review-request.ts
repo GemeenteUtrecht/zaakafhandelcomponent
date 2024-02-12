@@ -20,15 +20,11 @@ export interface Requester {
 export interface ReviewRequest {
   created: Date;
   id: string;
-  forZaak: string;
   reviewType: string;
   documents: string[];
   frontendUrl: string;
-  numAdvices: number;
-  numApprovals: number;
   numAssignedUsers: number;
   toelichting: string;
-  userDeadlines: any;
   requester: Requester;
   metadata: Metadata;
   zaakDocuments: ZaakDocument[];

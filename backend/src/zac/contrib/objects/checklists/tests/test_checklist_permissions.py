@@ -236,7 +236,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=cls.checklisttype,
         )
         cls.patch_fetch_objecttype = patch(
-            "zac.contrib.objects.checklists.api.serializers.fetch_objecttype",
+            "zac.contrib.objects.services.fetch_objecttype",
             return_value={
                 "versions": [
                     f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1"
@@ -256,12 +256,12 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
 
         cls.patch_create_object = patch(
-            "zac.contrib.objects.checklists.api.serializers.create_object",
+            "zac.contrib.objects.services.create_object",
             return_value=CHECKLIST_OBJECT,
         )
 
         cls.patch_relate_object_to_zaak = patch(
-            "zac.contrib.objects.checklists.api.serializers.relate_object_to_zaak",
+            "zac.contrib.objects.services.relate_object_to_zaak",
             return_value=None,
         )
 
@@ -583,7 +583,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             return_value=cls.checklisttype,
         )
         cls.patch_fetch_objecttype = patch(
-            "zac.contrib.objects.checklists.api.serializers.fetch_objecttype",
+            "zac.contrib.objects.services.fetch_objecttype",
             return_value={
                 "versions": [
                     f"{OBJECTTYPES_ROOT}objecttypen/e13e72de-56ba-42b6-be36-5c280e9b30cf/version/1"

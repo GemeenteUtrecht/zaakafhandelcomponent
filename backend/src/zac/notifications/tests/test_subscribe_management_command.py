@@ -31,25 +31,9 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
         )
 
         result = subscribe_all("https://zac.example.com")
-
-        self.assertEqual(len(result), 6)
-        self.assertEqual(len(m.request_history), 7)
-
-        token = Token.objects.get()
-        self.assertEqual(
-            m.last_request.json(),
-            {
-                "callbackUrl": "https://zac.example.com/api/v1/kownsl-callbacks",
-                "auth": f"Token {token.key}",
-                "kanalen": [
-                    {
-                        "naam": "kownsl",
-                        "filters": {},
-                    }
-                ],
-            },
-        )
-        self.assertEqual(Subscription.objects.count(), 6)
+        self.assertEqual(len(result), 5)
+        self.assertEqual(len(m.request_history), 6)
+        self.assertEqual(Subscription.objects.count(), 5)
 
     @requests_mock.Mocker()
     def test_verify_existing(self, m):
@@ -61,11 +45,11 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
             existing.url,
             json={
                 "url": existing.url,
-                "callbackUrl": "https://zac.example.com/api/v1/kownsl-callbacks",
+                "callbackUrl": "https://zac.example.com/api/v1/notification-callbacks",
                 "auth": f"Token dummy",
                 "kanalen": [
                     {
-                        "naam": "kownsl",
+                        "naam": "objecten",
                         "filters": {},
                     }
                 ],
@@ -79,8 +63,8 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
 
         result = subscribe_all("https://zac.example.com")
 
-        self.assertEqual(len(result), 5)
-        self.assertEqual(len(m.request_history), 7)
+        self.assertEqual(len(result), 4)
+        self.assertEqual(len(m.request_history), 6)
 
         token = Token.objects.get()
         self.assertEqual(
@@ -90,10 +74,10 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
                 "auth": f"Token {token.key}",
                 "kanalen": [
                     {
-                        "naam": "objecten",
+                        "naam": "documenten",
                         "filters": {},
                     }
                 ],
             },
         )
-        self.assertEqual(Subscription.objects.count(), 6)
+        self.assertEqual(Subscription.objects.count(), 5)
