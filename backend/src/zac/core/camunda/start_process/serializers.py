@@ -20,7 +20,7 @@ from zac.core.api.serializers import (
     RolTypeSerializer,
     ZaakEigenschapSerializer,
 )
-from zac.core.services import get_rollen, get_roltypen, get_zaak_eigenschappen
+from zac.core.services import get_rollen, get_roltypen, get_zaakeigenschappen
 from zac.elasticsearch.searches import count_by_iot_in_zaak
 
 from .data import (
@@ -142,7 +142,7 @@ class GetCurrentZaakInformation:
         self.mapping = {
             "bijlagen": partial(count_by_iot_in_zaak, zaakcontext.zaak.url),
             "rollen": partial(get_rollen, zaakcontext.zaak),
-            "zaakeigenschappen": partial(get_zaak_eigenschappen, zaakcontext.zaak),
+            "zaakeigenschappen": partial(get_zaakeigenschappen, zaakcontext.zaak),
         }
 
     def __call__(self):

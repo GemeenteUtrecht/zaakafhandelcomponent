@@ -76,7 +76,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(m, self.catalogus)
 
         with patch(
-            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakeigenschappen",
             return_value=[],
         ):
             call_command("index_zaken", stdout=StringIO())
@@ -164,7 +164,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
         with patch(
-            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakeigenschappen",
             return_value=[],
         ):
             call_command("index_zaken", stdout=StringIO())
@@ -251,7 +251,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
         with patch(
-            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakeigenschappen",
             return_value=[],
         ):
             call_command("index_zaken", stdout=StringIO())
@@ -616,7 +616,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak['url']}", json=[])
         with patch(
-            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakeigenschappen",
             return_value=[],
         ):
             call_command("index_zaken", stdout=StringIO())
@@ -652,7 +652,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
         with patch(
-            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakeigenschappen",
             return_value=[],
         ):
             call_command("index_zaken")
@@ -674,7 +674,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         )
         m.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={zaak2['url']}", json=[])
         with patch(
-            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakeigenschappen",
             return_value=[],
         ):
             call_command("index_zaken", reindex_last=1)

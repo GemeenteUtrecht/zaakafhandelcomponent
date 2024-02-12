@@ -126,7 +126,6 @@ class ApprovalFactory(factory.DictFactory):
 
 class ReviewsAdviceFactory(factory.DictFactory):
     id = "6a9a169e-aa6f-4dd7-bbea-6bedea74c456"
-    meta = True
     reviews = factory.List([factory.SubFactory(AdviceFactory)])
     review_request = deepcopy(RR_ID)
     review_type = KownslTypes.advice
@@ -244,7 +243,6 @@ REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION = {
         ],
         "properties": {
             "id": {"type": "string"},
-            "meta": True,
             "zaak": {"type": "string"},
             "locked": {"type": "boolean"},
             "created": {"type": "string"},
@@ -395,7 +393,6 @@ REVIEW_OBJECTTYPE_LATEST_VERSION = {
         "required": ["id", "meta", "reviewRequest", "reviewType", "zaak", "reviews"],
         "properties": {
             "id": {"$ref": "#/$defs/id"},
-            "meta": True,
             "zaak": {"$ref": "#/$defs/zaak"},
             "reviews": {
                 "type": "array",

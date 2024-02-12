@@ -227,12 +227,6 @@ class ObjecttypeVersionTests(ClearCachesMixin, APITestCase):
                 ],
                 "required": ["REGIO_NUMMER", "GBWPCL_WIJK_OMSCHRIJVING"],
                 "properties": {
-                    "meta": {
-                        "type": "boolean",
-                        "default": False,
-                        "readonly": True,
-                        "description": "Meta status of object",
-                    },
                     "REGIO_NUMMER": {"type": "string", "description": "regio nummer"},
                     "GBWPCL_WIJK_OMSCHRIJVING": {
                         "type": "string",
@@ -358,7 +352,6 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                     "adres": "Utrechtsestraat 41",
                     "status": "In ontwikkeling",
                     "objectid": 2,
-                    "meta": False,
                 },
                 "geometry": {
                     "type": "Point",

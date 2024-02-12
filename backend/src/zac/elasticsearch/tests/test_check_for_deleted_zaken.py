@@ -103,7 +103,7 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(m, zaaktype)
         mock_resource_get(m, catalogus)
         with patch(
-            "zac.elasticsearch.management.commands.index_zaken.get_zaak_eigenschappen",
+            "zac.elasticsearch.management.commands.index_zaken.get_zaakeigenschappen",
             return_value=[],
         ):
             call_command("index_zaken", stdout=StringIO())

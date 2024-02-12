@@ -9,9 +9,10 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
+from zgw_consumers.api_models.catalogi import Eigenschap, InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -59,6 +60,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
 
+        # Mock ZRC/ZTC components
         cls.zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -66,6 +68,20 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
             catalogus=CATALOGUS_URL,
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
+        )
+        cls.eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=cls.zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+            url=f"{CATALOGI_ROOT}eigenschappen/68b5b40c-c479-4008-a57b-a268b280df99",
         )
         cls.zaak = generate_oas_component(
             "zrc",
@@ -77,6 +93,14 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             startdatum="2020-12-25",
             uiterlijkeEinddatumAfdoening="2021-01-04",
+        )
+        cls.zaakeigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            zaak=cls.zaak["url"],
+            eigenschap=cls.eigenschap["url"],
+            naam=cls.eigenschap["naam"],
+            waarde="bar",
         )
         cls.informatieobjecttype = generate_oas_component(
             "ztc",
@@ -97,29 +121,23 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             bestandsomvang=10,
         )
 
+        # Dict to models
         zaak = factory(Zaak, cls.zaak)
         zaak.zaaktype = factory(ZaakType, cls.zaaktype)
+        zaakeigenschap = factory(ZaakEigenschap, cls.zaakeigenschap)
+        zaakeigenschap.eigenschap = factory(Eigenschap, cls.eigenschap)
 
-        cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
-        cls.get_zaak_patcher = patch(
-            "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=zaak
-        )
+        # Mock DRC components
         document = factory(Document, cls.document)
         document.informatieobjecttype = factory(
             InformatieObjectType, cls.informatieobjecttype
         )
         document.last_edited_date = None  # avoid patching fetching audit trail
+
+        # Create elasticsearch document
         es_document = create_informatieobject_document(document)
 
-        cls.search_informatieobjects_patcher = patch(
-            "zac.contrib.objects.kownsl.data.search_informatieobjects",
-            return_value=[es_document],
-        )
-        cls.get_supported_extensions_patcher = patch(
-            "zac.contrib.dowc.utils.get_supported_extensions",
-            return_value=[path.splitext(es_document.bestandsnaam)],
-        )
-
+        # Mock kownsl components
         user_assignees = UserAssigneeFactory(
             **{
                 "username": "some-other-author",
@@ -140,14 +158,31 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             documents=[deepcopy(DOCUMENT_URL)]
         )
         cls.review_request_dict["assignedUsers"].append(assigned_users2)
-
+        cls.review_request = factory(ReviewRequest, cls.review_request_dict)
         cls.reviews = ReviewsAdviceFactory()
         reviews = factory_reviews(cls.reviews)
+
+        # Patchers
+        cls.get_zaakeigenschappen_patcher = patch(
+            "zac.contrib.objects.kownsl.data.get_zaakeigenschappen",
+            return_value=[zaakeigenschap],
+        )
+        cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
+        cls.get_zaak_patcher = patch(
+            "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=zaak
+        )
+        cls.search_informatieobjects_patcher = patch(
+            "zac.contrib.objects.kownsl.data.search_informatieobjects",
+            return_value=[es_document],
+        )
+        cls.get_supported_extensions_patcher = patch(
+            "zac.contrib.dowc.utils.get_supported_extensions",
+            return_value=[path.splitext(es_document.bestandsnaam)],
+        )
         cls.get_reviews_patcher = patch(
             "zac.contrib.objects.services.get_reviews_for_review_request",
             return_value=reviews,
         )
-        cls.review_request = factory(ReviewRequest, cls.review_request_dict)
         cls.get_review_request_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=cls.review_request,
@@ -156,6 +191,8 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.api.views.get_all_review_requests_for_zaak",
             return_value=[cls.review_request],
         )
+
+        # set endpoints
         cls.endpoint_summary = reverse(
             "kownsl:zaak-review-requests-summary",
             kwargs={
@@ -254,17 +291,21 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         )
 
     def test_get_zaak_review_requests_detail(self, m):
-        with self.get_review_request_patcher:
+        rr = deepcopy(self.review_request)
+        rr.zaakeigenschappen = [self.zaakeigenschap["url"]]
+        with patch(
+            "zac.contrib.objects.kownsl.api.views.get_review_request", return_value=rr
+        ):
             with self.get_reviews_patcher:
                 with self.get_zaak_patcher:
                     with self.search_informatieobjects_patcher:
                         with self.get_supported_extensions_patcher:
-                            response = self.client.get(self.endpoint_detail)
+                            with self.get_zaakeigenschappen_patcher:
+                                response = self.client.get(self.endpoint_detail)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         self.assertEqual(
-            response_data,
             {
                 "created": self.review_request_dict["created"],
                 "documents": [DOCUMENT_URL],
@@ -291,7 +332,19 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "bronorganisatie": self.zaak["bronorganisatie"],
                     "url": self.zaak["url"],
                 },
-                "zaakeigenschappen": [],
+                "zaakeigenschappen": [
+                    {
+                        "url": self.zaakeigenschap["url"],
+                        "formaat": self.eigenschap["specificatie"]["formaat"],
+                        "waarde": self.zaakeigenschap["waarde"],
+                        "eigenschap": {
+                            "url": self.eigenschap["url"],
+                            "naam": self.eigenschap["naam"],
+                            "toelichting": self.eigenschap["toelichting"],
+                            "specificatie": self.eigenschap["specificatie"],
+                        },
+                    }
+                ],
                 "zaakDocuments": [
                     {
                         "auteur": self.document["auteur"],
@@ -341,6 +394,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     }
                 ],
             },
+            response_data,
         )
 
     def test_no_review_request(self, m):

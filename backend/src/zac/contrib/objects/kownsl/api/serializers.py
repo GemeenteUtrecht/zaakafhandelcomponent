@@ -15,7 +15,7 @@ from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.core.api.fields import SerializerSlugRelatedField
-from zac.core.api.serializers import ZaakSerializer
+from zac.core.api.serializers import ZaakEigenschapSerializer, ZaakSerializer
 from zac.elasticsearch.drf_api.serializers import ESListZaakDocumentSerializer
 
 from ..constants import KownslTypes
@@ -310,6 +310,9 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
         choices=KownslTypes.choices, help_text=_("The review type.")
     )
     zaak = ZaakSerializer(help_text=_("ZAAK related to review."))
+    zaakeigenschappen = ZaakEigenschapSerializer(
+        source="get_zaakeigenschappen", many=True, read_only=True
+    )
     zaak_documents = ESListZaakDocumentSerializer(
         help_text=_("The supporting documents for the review."),
         many=True,

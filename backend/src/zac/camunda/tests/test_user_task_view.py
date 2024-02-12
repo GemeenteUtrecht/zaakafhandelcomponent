@@ -272,8 +272,13 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.camunda.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            response = self.client.get(self.task_endpoint)
+            with patch(
+                "zac.contrib.objects.kownsl.camunda.get_zaakeigenschappen",
+                return_value=[],
+            ) as patch_get_zaakeigenschappen:
+                response = self.client.get(self.task_endpoint)
 
+        patch_get_zaakeigenschappen.assert_called_once()
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
@@ -284,12 +289,14 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 [
                     "camundaAssignedUsers",
                     "zaakInformatie",
+                    "zaakeigenschappen",
                     "title",
                     "documentsLink",
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
                     "previouslySelectedDocuments",
+                    "previouslySelectedZaakeigenschappen",
                 ]
             ),
         )
@@ -332,8 +339,13 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.camunda.get_zaak_context",
             return_value=self.zaak_context,
         ):
-            response = self.client.get(self.task_endpoint)
+            with patch(
+                "zac.contrib.objects.kownsl.camunda.get_zaakeigenschappen",
+                return_value=[],
+            ) as patch_get_zaakeigenschappen:
+                response = self.client.get(self.task_endpoint)
 
+        patch_get_zaakeigenschappen.assert_called_once()
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sorted(list(data.keys())), sorted(["form", "task", "context"]))
@@ -344,12 +356,14 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 [
                     "camundaAssignedUsers",
                     "zaakInformatie",
+                    "zaakeigenschappen",
                     "title",
                     "documentsLink",
                     "reviewType",
                     "id",
                     "previouslyAssignedUsers",
                     "previouslySelectedDocuments",
+                    "previouslySelectedZaakeigenschappen",
                 ]
             ),
         )
@@ -433,8 +447,13 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
                     return_value=review_request,
                 ):
-                    response = self.client.get(self.task_endpoint)
+                    with patch(
+                        "zac.contrib.objects.kownsl.camunda.get_zaakeigenschappen",
+                        return_value=[],
+                    ) as patch_get_zaakeigenschappen:
+                        response = self.client.get(self.task_endpoint)
 
+        patch_get_zaakeigenschappen.assert_called_once()
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -478,11 +497,13 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 ],
                 "reviewType": "advice",
                 "previouslySelectedDocuments": [],
+                "previouslySelectedZaakeigenschappen": [],
                 "title": f"{self.zaak_context.zaaktype.omschrijving} - {self.zaak_context.zaaktype.versiedatum}",
                 "zaakInformatie": {
                     "omschrijving": self.zaak_context.zaak.omschrijving,
                     "toelichting": self.zaak_context.zaak.toelichting,
                 },
+                "zaakeigenschappen": [],
             },
         )
 
@@ -1081,7 +1102,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=[],
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaak_eigenschappen",
+        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(

@@ -23,7 +23,7 @@ from zac.core.services import (
     get_status,
     get_statustype,
     get_zaak,
-    get_zaak_eigenschappen,
+    get_zaakeigenschappen,
     get_zaakinformatieobjecten_related_to_informatieobject,
     get_zaakobjecten_related_to_object,
     get_zaaktypen,
@@ -214,7 +214,7 @@ def create_eigenschappen_document(eigenschappen: List[ZaakEigenschap]) -> dict:
 
 
 def update_eigenschappen_in_zaak_document(zaak: Zaak) -> None:
-    zaak.eigenschappen = get_zaak_eigenschappen(zaak)
+    zaak.eigenschappen = get_zaakeigenschappen(zaak)
     eigenschappen_doc = create_eigenschappen_document(zaak.eigenschappen)
 
     zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)

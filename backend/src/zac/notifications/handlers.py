@@ -235,7 +235,7 @@ class ZakenHandler:
     def _handle_zaakeigenschap_change(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
-        invalidate_zaakeigenschappen_cache(zaak_url)
+        invalidate_zaakeigenschappen_cache(zaak)
 
         # index in ES
         update_eigenschappen_in_zaak_document(zaak)

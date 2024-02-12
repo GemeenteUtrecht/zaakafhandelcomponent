@@ -640,10 +640,10 @@ def get_status(zaak: Zaak) -> Optional[Status]:
 def fetch_zaakeigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     zrc_client = _client_from_object(zaak)
     zaak_eigenschappen = zrc_client.list("zaakeigenschap", zaak_uuid=zaak.uuid)
-    return factory(ZaakEigenschap, zaak_eigenschappen)
+    return sorted(factory(ZaakEigenschap, zaak_eigenschappen), key=lambda zei: zei.naam)
 
 
-def get_zaak_eigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
+def get_zaakeigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     perf_logger.info("      Fetching eigenschappen for zaak %s", zaak.identificatie)
 
     eigenschappen = {

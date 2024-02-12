@@ -101,7 +101,7 @@ class ZaakEigenschappenResponseTests(ClearCachesMixin, APITestCase):
         # ensure that we have a user with all permissions
         self.client.force_authenticate(user=self.user)
 
-    def test_get_zaak_eigenschappen(self, m):
+    def test_get_zaakeigenschappen(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.zaak)
@@ -147,7 +147,7 @@ class ZaakEigenschappenResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response_data, expected)
 
     def test_no_properties(self, m):
-        with patch("zac.core.api.views.get_zaak_eigenschappen", return_value=[]):
+        with patch("zac.core.api.views.get_zaakeigenschappen", return_value=[]):
             response = self.client.get(self.endpoint)
 
         self.assertEqual(response.data, [])
@@ -199,7 +199,7 @@ class ZaakPropertiesPermissionTests(ClearCachesMixin, APITestCase):
 
         cls.find_zaak_patcher = patch("zac.core.api.views.find_zaak", return_value=zaak)
         cls.get_eigenschappen_patcher = patch(
-            "zac.core.api.views.get_zaak_eigenschappen", return_value=[]
+            "zac.core.api.views.get_zaakeigenschappen", return_value=[]
         )
 
         cls.endpoint = reverse(

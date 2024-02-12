@@ -15,6 +15,7 @@ from zgw_consumers.api_models.zaken import ZaakEigenschap
 
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.user_tasks import Context
+from zac.core.services import get_zaak, get_zaakeigenschappen
 from zac.core.utils import build_absolute_url
 from zac.elasticsearch.documents import InformatieObjectDocument
 from zac.elasticsearch.searches import search_informatieobjects
@@ -258,6 +259,23 @@ class ReviewRequest(Model):
             )
 
         return self.zaak_documents
+
+    def get_zaakeigenschappen(self) -> List[ZaakEigenschap]:
+        if self.zaakeigenschappen and not hasattr(self, "_zaakeigenschappen"):
+            zaak = (
+                self.zaak
+                if isinstance(self.zaak, Zaak)
+                else get_zaak(zaak_url=self.zaak)
+            )
+            zeis = {zei.url: zei for zei in get_zaakeigenschappen(zaak)}
+            self._zaakeigenschappen = [
+                zeis.get(url, None)
+                for url in self.zaakeigenschappen
+                if zeis.get(url, None)
+            ]
+        else:
+            self._zaakeigenschappen = self.zaakeigenschappen
+        return self._zaakeigenschappen
 
 
 @dataclass

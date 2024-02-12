@@ -207,7 +207,6 @@ class ChecklistSerializer(APIModelSerializer):
         # Use data from request - the serializer was (ab)used to validate, not serialize.
         data = {
             **self.initial_data,
-            "meta": True,
             "zaak": self.context["zaak"].url,
             "locked_by": None,
         }
@@ -221,7 +220,6 @@ class ChecklistSerializer(APIModelSerializer):
         data = {
             **self.initial_data,
             "zaak": self.context["zaak"].url,
-            "meta": True,
             "lockedBy": None,
         }  # unlock the checklist at update
         checklist_obj = self.context["checklist_object"]

@@ -17,7 +17,7 @@ from zac.contrib.objects.services import get_review_request
 from zac.core.api.fields import SelectDocumentsCamundaField
 from zac.core.api.serializers import ZaakEigenschapSerializer
 from zac.core.camunda.utils import resolve_assignee
-from zac.core.services import get_zaak_eigenschappen
+from zac.core.services import get_zaakeigenschappen
 from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
@@ -511,7 +511,7 @@ def get_review_context(task: Task) -> AdviceApprovalContext:
     zaak_context = get_zaak_context(task, require_zaaktype=True)
     zaak = zaak_context.zaak
     zaak.zaaktype = zaak_context.zaaktype
-    zaakeigenschappen = get_zaak_eigenschappen(zaak)
+    zaakeigenschappen = get_zaakeigenschappen(zaak)
     context = {
         "camunda_assigned_users": get_camunda_assigned_users(task),
         "documents_link": zaak_context.documents_link,
