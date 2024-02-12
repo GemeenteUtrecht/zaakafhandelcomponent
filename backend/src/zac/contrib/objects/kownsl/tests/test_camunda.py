@@ -213,9 +213,6 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
         serializer = AdviceApprovalContextSerializer(instance=task_data)
-
-        print(serializer.data["context"])
-        self.maxDiff = None
         self.assertEqual(
             {
                 "camunda_assigned_users": {
@@ -878,7 +875,6 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         email_notification_list[f"group:{self.group}"] = False
 
         variables = serializer.get_process_variables()
-        self.maxDiff = None
         self.assertEqual(
             variables,
             {

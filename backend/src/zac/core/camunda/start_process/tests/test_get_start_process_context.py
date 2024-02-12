@@ -313,7 +313,6 @@ class GetCamundaZaakProcessContextUserTaskViewTests(ClearCachesMixin, APITestCas
                     ],
                 ):
                     response = self.client.get(self.task_endpoint)
-        self.maxDiff = None
         self.assertEqual(
             response.json(),
             {

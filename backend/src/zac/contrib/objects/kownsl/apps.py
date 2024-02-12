@@ -2,8 +2,8 @@ from django.apps import AppConfig
 
 
 class KownslConfig(AppConfig):
-    name = "zac.contrib.kownsl"
+    name = "zac.contrib.objects.kownsl"
 
     def ready(self):
-        #  register the user task context
         from . import camunda  # noqa
+        from . import permissions  # noqa
