@@ -254,24 +254,12 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                 return_value=search_informatieobjects,
             ) as mock_search_informatieobjects:
                 with patch(
-                    "zac.core.api.views.get_open_documenten_for_user",
-                    return_value=[
-                        DowcResponse(
-                            drc_url=self.document["url"],
-                            magic_url="",
-                            purpose="write",
-                            uuid=uuid4(),
-                            unversioned_url=self.document["url"],
-                        )
-                    ],
+                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                    return_value=factory(AuditTrailData, self.audit_trail),
                 ):
-                    with patch(
-                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                        return_value=factory(AuditTrailData, self.audit_trail),
-                    ):
-                        response = self.client.post(
-                            self.endpoint, post_data, format="multipart"
-                        )
+                    response = self.client.post(
+                        self.endpoint, post_data, format="multipart"
+                    )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         mock_search_informatieobjects.assert_called()
 
@@ -427,24 +415,12 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                     return_value=factory(Document, self.document),
                 ):
                     with patch(
-                        "zac.core.api.views.get_open_documenten_for_user",
-                        return_value=[
-                            DowcResponse(
-                                drc_url=self.document["url"],
-                                magic_url="",
-                                purpose="write",
-                                uuid=uuid4(),
-                                unversioned_url=self.document["url"],
-                            )
-                        ],
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=factory(AuditTrailData, self.audit_trail),
                     ):
-                        with patch(
-                            "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                            return_value=factory(AuditTrailData, self.audit_trail),
-                        ):
-                            response = self.client.patch(
-                                self.endpoint, post_data, format="multipart"
-                            )
+                        response = self.client.patch(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_search_informatieobjects.assert_called()
@@ -554,24 +530,12 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
                     return_value=factory(Document, self.document),
                 ):
                     with patch(
-                        "zac.core.api.views.get_open_documenten_for_user",
-                        return_value=[
-                            DowcResponse(
-                                drc_url=self.document["url"],
-                                magic_url="",
-                                purpose="write",
-                                uuid=uuid4(),
-                                unversioned_url=self.document["url"],
-                            )
-                        ],
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=factory(AuditTrailData, self.audit_trail),
                     ):
-                        with patch(
-                            "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                            return_value=factory(AuditTrailData, self.audit_trail),
-                        ):
-                            response = self.client.patch(
-                                self.endpoint, post_data, format="multipart"
-                            )
+                        response = self.client.patch(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_search_informatieobjects.assert_called()
@@ -745,16 +709,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                     return_value=[fext],
                 ):
                     with patch(
-                        "zac.core.api.views.get_open_documenten_for_user",
-                        return_value=[],
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
                     ):
-                        with patch(
-                            "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                            return_value=audit_trail,
-                        ):
-                            response = self.client.post(
-                                self.endpoint, post_data, format="multipart"
-                            )
+                        response = self.client.post(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         mock_search_informatieobjects.assert_called()
 
@@ -914,16 +874,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                     return_value=[fext],
                 ):
                     with patch(
-                        "zac.core.api.views.get_open_documenten_for_user",
-                        return_value=[],
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
                     ):
-                        with patch(
-                            "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                            return_value=audit_trail,
-                        ):
-                            response = self.client.post(
-                                self.endpoint, post_data, format="multipart"
-                            )
+                        response = self.client.post(
+                            self.endpoint, post_data, format="multipart"
+                        )
 
         mock_search_informatieobjects.assert_called()
         # Check that zaakinformatieobjecten url was called
@@ -1232,13 +1188,6 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             },
         )
         audit_trail = factory(AuditTrailData, audit_trail)
-        dowc_obj = DowcResponse(
-            drc_url=document["url"],
-            unversioned_url=document["url"],
-            magic_url="",
-            purpose="write",
-            uuid=uuid4(),
-        )
         dowc_status = OpenDowc(
             document=document["url"],
             locked_by=user.email,
@@ -1262,16 +1211,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                     return_value=[fext],
                 ):
                     with patch(
-                        "zac.core.api.views.get_open_documenten_for_user",
-                        return_value=[dowc_obj],
+                        "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                        return_value=audit_trail,
                     ):
-                        with patch(
-                            "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                            return_value=audit_trail,
-                        ):
-                            response = self.client.patch(
-                                self.endpoint, post_data, format="multipart"
-                            )
+                        response = self.client.patch(
+                            self.endpoint, post_data, format="multipart"
+                        )
         mock_search_informatieobjects.assert_called()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -1282,7 +1227,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             "bestandsomvang": None,
             "currentUserIsEditing": True,
             "deleteUrl": reverse_lazy(
-                "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_obj.uuid}
+                "dowc:patch-destroy-doc", kwargs={"dowc_uuid": dowc_status.uuid}
             ),
             "downloadUrl": reverse_lazy(
                 "core:download-document",
@@ -1461,20 +1406,16 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         audit_trail = factory(AuditTrailData, audit_trail)
 
         with patch(
-            "zac.core.api.views.get_open_documenten_for_user",
+            "zac.core.api.views.check_document_status",
             return_value=[],
         ):
             with patch(
-                "zac.core.api.views.check_document_status",
-                return_value=[],
+                "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                return_value=audit_trail,
             ):
-                with patch(
-                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                    return_value=audit_trail,
-                ):
-                    response = self.client.post(
-                        self.endpoint, post_data, format="multipart"
-                    )
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -1535,16 +1476,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             return_value=[],
         ):
             with patch(
-                "zac.core.api.views.get_open_documenten_for_user",
-                return_value=[],
+                "zac.core.api.views.fetch_latest_audit_trail_data_document",
+                return_value=audit_trail,
             ):
-                with patch(
-                    "zac.core.api.views.fetch_latest_audit_trail_data_document",
-                    return_value=audit_trail,
-                ):
-                    response = self.client.post(
-                        self.endpoint, post_data, format="multipart"
-                    )
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(

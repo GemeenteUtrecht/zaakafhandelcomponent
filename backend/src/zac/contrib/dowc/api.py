@@ -92,7 +92,6 @@ def create_doc(
 
 
 @optional_service
-@cache_result("open_documenten:{user.username}")
 def get_open_documenten_for_user(user: User) -> List[Optional[DowcResponse]]:
     client = get_client(user)
     operation_id = "documenten_list"
