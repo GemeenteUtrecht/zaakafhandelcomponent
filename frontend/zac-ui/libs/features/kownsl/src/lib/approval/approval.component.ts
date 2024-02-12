@@ -76,7 +76,7 @@ export class ApprovalComponent implements OnInit {
           return of(null)
         }),
         switchMap(res => {
-          const {zaak} = res?;
+          const {zaak} = res;
           return this.getZaakDetails(zaak.bronorganisatie, zaak.identificatie)
         })
       )
