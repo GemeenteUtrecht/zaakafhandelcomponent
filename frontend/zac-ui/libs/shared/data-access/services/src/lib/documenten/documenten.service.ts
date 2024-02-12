@@ -40,9 +40,10 @@ export class DocumentenService {
     return this.http.Post<ReadWriteDocument>(endpoint);
   }
 
-  openDocumentEdit(writeUrl: string): Observable<ReadWriteDocument> {
+  openDocumentEdit(writeUrl: string, zaak: string): Observable<ReadWriteDocument> {
     const endpoint = encodeURI(writeUrl);
-    return this.http.Post<ReadWriteDocument>(endpoint);
+    const formData = { zaak };
+    return this.http.Post<ReadWriteDocument>(endpoint, formData);
   }
 
   closeDocumentEdit(deleteUrl: string): Observable<any> {
@@ -91,7 +92,7 @@ export class DocumentenService {
       // the buttons will also be hidden.
       const icon = (element.locked && !element.currentUserIsEditing) ? 'lock' : 'lock_open'
       const iconColor = (element.locked && !element.currentUserIsEditing) ? 'orange' : 'green'
-      const iconInfo = (element.locked && !element.currentUserIsEditing) ? 'Het document wordt al door een ander persoon bewerkt.' : 'U kunt het document bewerken. Klik op "Bewerkingen opslaan" na het bewerken.'
+      const iconInfo = (element.locked && !element.currentUserIsEditing) ? `Het document wordt al door "${element.lockedBy}" bewerkt.` : 'U kunt het document bewerken. Klik op "Bewerkingen opslaan" na het bewerken.'
       const editLabel = element.currentUserIsEditing ? 'Bewerkingen opslaan' : 'Bewerken';
       const editUrl = element.currentUserIsEditing ? element.deleteUrl : element.writeUrl;
       const editButtonStyle = element.currentUserIsEditing ? 'primary' : 'tertiary';

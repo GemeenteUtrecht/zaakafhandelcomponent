@@ -204,7 +204,7 @@ export class DocumentenComponent implements OnChanges {
    */
   openDocumentEdit(writeUrl) {
     this.isLoading = true;
-    this.documentenService.openDocumentEdit(writeUrl).subscribe((res: ReadWriteDocument) => {
+    this.documentenService.openDocumentEdit(writeUrl, this.zaak.url).subscribe((res: ReadWriteDocument) => {
 
       // Check if Microsoft Office application file
       if (res.magicUrl.substr(0, 3) === "ms-") {
@@ -215,8 +215,8 @@ export class DocumentenComponent implements OnChanges {
 
       // Refresh table layout so "Bewerkingen opslaan" button will be shown
       this.fetchDocuments();
-    }, () => {
-      this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
+    }, error => {
+      this.reportError(error);
       this.isLoading = false;
     })
   }
