@@ -9,6 +9,7 @@ export interface Document {
   identificatie: string;
   informatieobjecttype: InformatieObjectType;
   locked: boolean;
+  lockedBy: string;
   readUrl: string;
   titel: string;
   url: string;

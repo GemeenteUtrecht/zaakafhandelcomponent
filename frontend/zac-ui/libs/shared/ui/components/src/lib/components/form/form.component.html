@@ -120,18 +120,18 @@
             <!-- Read-only field. -->
             <div class="row">
               <ng-container *ngIf="field.widgetType == 'readonly' && !field.writeonly">
-                <div class="col-12 col-sm-4 col-md-6">
-                  <p class="p--bold p--muted p--no-wrap mb-0">{{field.label}}</p>
+                <div class="col-12 col-sm-4 col-xl-5">
+                  <p class="p--bold p--no-wrap mb-0">{{field.label}}</p>
                 </div>
 
-                <div class="col-12 col-sm-8 col-md-12" *ngIf="!field.choices">
+                <div class="col-12 col-sm-8 col-xl-7" *ngIf="!field.choices">
                   <p class="p--pre-wrap" *ngIf="field.value" [innerHTML]="field.value|urlize:'_blank'"></p>
                   <p class="p--pre-wrap" *ngIf="!field.value && field.placeholder"><em>{{field.placeholder}}</em></p>
                   <p class="p--pre-wrap" *ngIf="!field.value && !field.placeholder">-</p>
                 </div>
 
 
-                <div class="col-12 col-sm-8 col-md-6" *ngIf="field.choices">
+                <div class="col-12 col-sm-8 col-xl-7" *ngIf="field.choices">
                   <p class="p--pre-wrap">{{getSelectedChoice(field)?.label||getSelectedChoice(field)?.value||"-"}}</p>
                 </div>
               </ng-container>
