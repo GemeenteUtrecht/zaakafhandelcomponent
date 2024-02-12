@@ -42,7 +42,6 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.maxDiff = None
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)

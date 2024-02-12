@@ -230,7 +230,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         help_text=_(
             "Supporting ZAAKEIGENSCHAPs for the review request. If reconfiguring this field will be ignored."
         ),
-        required=False,
+        default=list(),
         allow_empty=True,
     )
 

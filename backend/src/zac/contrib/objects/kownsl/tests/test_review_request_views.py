@@ -77,7 +77,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         self.client.force_authenticate(user=self.user)
         url = reverse(
-            "kownsl:reviewrequest-review",
+            "kownsl:reviewrequest-advice",
             kwargs={"request_uuid": self.review_request["id"]},
         )
         body = {"dummy": "data"}
@@ -89,7 +89,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
     def test_fail_get_review_request_query_param(self, m):
         self.client.force_authenticate(user=self.user)
         url = reverse(
-            "kownsl:reviewrequest-review",
+            "kownsl:reviewrequest-advice",
             kwargs={"request_uuid": self.review_request["id"]},
         )
 
@@ -109,7 +109,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
         user = UserFactory(username=self.advice["author"]["username"])
         self.client.force_authenticate(user=user)
         url = reverse(
-            "kownsl:reviewrequest-review",
+            "kownsl:reviewrequest-advice",
             kwargs={"request_uuid": self.review_request["id"]},
         )
         url = furl(url).set({"assignee": f"user:{user}"})
@@ -132,7 +132,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
         user = UserFactory(username=self.advice["author"]["username"])
         self.client.force_authenticate(user=user)
         url = reverse(
-            "kownsl:reviewrequest-review",
+            "kownsl:reviewrequest-advice",
             kwargs={"request_uuid": self.review_request["id"]},
         )
         url = furl(url).set({"assignee": f"user:{user}"})
@@ -199,7 +199,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         self.client.force_authenticate(user=user)
         url = reverse(
-            "kownsl:reviewrequest-review",
+            "kownsl:reviewrequest-advice",
             kwargs={"request_uuid": self.review_request["id"]},
         )
         url = furl(url).set({"assignee": f"group:{self.group}"})

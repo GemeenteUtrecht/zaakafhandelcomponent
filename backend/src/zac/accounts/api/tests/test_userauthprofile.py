@@ -143,7 +143,6 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         with self.subTest("Authprofile filter"):
             response = self.client.get(url + f"?auth_profile={auth_profile2.uuid}")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.maxDiff = None
             self.assertEqual(
                 response.json(),
                 {

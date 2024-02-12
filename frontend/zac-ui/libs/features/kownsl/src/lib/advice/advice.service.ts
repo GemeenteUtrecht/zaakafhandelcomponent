@@ -14,7 +14,7 @@ export class AdviceService {
   constructor(private http: ApplicationHttpClient) { }
 
   getAdvice(uuid: string, assignee: string): Observable<HttpResponse<any>> {
-    const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/review`);
+    const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/advice`);
     const options = {
       observe: 'response' as 'response',
       params: new HttpParams().set('assignee', assignee),
@@ -23,7 +23,7 @@ export class AdviceService {
   }
 
   postAdvice(formData: AdviceForm, uuid: string, assignee: string): Observable<AdviceForm> {
-    return this.http.Post<AdviceForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/review?assignee=${assignee}`), formData);
+    return this.http.Post<AdviceForm>(encodeURI(`/api/kownsl/review-requests/${uuid}/advice?assignee=${assignee}`), formData);
   }
 
   readDocument(bronorganisatie: string, identificatie: string, zaakUrl: string): Observable<ReadWriteDocument> {

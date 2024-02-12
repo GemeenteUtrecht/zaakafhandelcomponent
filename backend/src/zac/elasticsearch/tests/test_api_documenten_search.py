@@ -320,7 +320,6 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         Index(settings.ES_INDEX_DOCUMENTEN).refresh()
 
     def setUp(self):
-        self.maxDiff = None
         super().setUp()
 
         Service.objects.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)

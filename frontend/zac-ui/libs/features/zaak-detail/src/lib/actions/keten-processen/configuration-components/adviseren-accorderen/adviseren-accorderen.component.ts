@@ -428,7 +428,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
     const formData = {
       form: this.taskContextData.form,
       assignedUsers: assignedUsers,
-      selectedDocuments: this.selectedDocuments,
+      documents: this.selectedDocuments,
       toelichting: toelichting,
       id: this.taskContextData.context.previouslyAssignedUsers.length > 0 ? this.taskContextData.context.id : null
     };

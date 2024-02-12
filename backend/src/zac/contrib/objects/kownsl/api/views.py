@@ -131,6 +131,14 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
         return Response(SubmitReviewSerializer(reviews.reviews, many=True).data)
 
 
+class SubmitApprovalView(SubmitReviewView):
+    pass
+
+
+class SubmitAdviceView(SubmitReviewView):
+    pass
+
+
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
     authentication_classes = (authentication.SessionAuthentication,)
     permission_classes = (

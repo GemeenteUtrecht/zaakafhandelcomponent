@@ -53,7 +53,6 @@ from ...services import (
 class KownslAPITests(ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.maxDiff = None
         super().setUpTestData()
         Service.objects.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
@@ -304,10 +303,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             review_request = update_review_request(
                 self.review_request["id"], requester=self.user, data=serializer.data
             )
-        print(serializer.data)
 
         self.assertEqual(str(review_request.id), self.review_request["id"])
-        print(m.last_request.json())
         self.assertEqual(
             m.last_request.json(),
             {

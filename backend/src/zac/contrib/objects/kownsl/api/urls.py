@@ -1,7 +1,8 @@
 from django.urls import path
 
 from .views import (
-    SubmitReviewView,
+    SubmitAdviceView,
+    SubmitApprovalView,
     ZaakReviewRequestDetailView,
     ZaakReviewRequestReminderView,
     ZaakReviewRequestSummaryView,
@@ -11,9 +12,14 @@ app_name = "kownsl"
 
 urlpatterns = [
     path(
-        "review-requests/<uuid:request_uuid>/review",
-        SubmitReviewView.as_view(),
-        name="reviewrequest-review",
+        "review-requests/<uuid:request_uuid>/advice",
+        SubmitAdviceView.as_view(),
+        name="reviewrequest-advice",
+    ),
+    path(
+        "review-requests/<uuid:request_uuid>/approval",
+        SubmitApprovalView.as_view(),
+        name="reviewrequest-approval",
     ),
     path(
         "zaak-review-requests/<str:bronorganisatie>/<str:identificatie>/summary",
