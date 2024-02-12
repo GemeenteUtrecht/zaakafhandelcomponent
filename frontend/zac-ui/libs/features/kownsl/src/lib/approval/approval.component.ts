@@ -76,7 +76,7 @@ export class ApprovalComponent implements OnInit {
           return of(null)
         }),
         switchMap(res => {
-          const {zaak} = res?.body;
+          const {zaak} = res?;
           return this.getZaakDetails(zaak.bronorganisatie, zaak.identificatie)
         })
       )
@@ -88,10 +88,10 @@ export class ApprovalComponent implements OnInit {
   }
 
   setLayout(res) {
-    this.setZaakUrl(res.body.zaak);
-    this.approvalData = res.body;
+    this.setZaakUrl(res.zaak);
+    this.approvalData = res;
     this.getStringifiedUser(this.approvalData.requester);
-    this.tableData = this.createTableData(res.body);
+    this.tableData = this.createTableData(res);
   }
 
   /**

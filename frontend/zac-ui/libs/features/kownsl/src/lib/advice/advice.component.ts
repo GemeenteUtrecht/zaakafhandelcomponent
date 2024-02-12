@@ -90,7 +90,7 @@ export class AdviceComponent implements OnInit {
           return of(null)
         }),
         switchMap(res => {
-          const { zaak } = res?.body;
+          const { zaak } = res;
           return this.getZaakDetails(zaak.bronorganisatie, zaak.identificatie)
         })
       )
@@ -102,12 +102,12 @@ export class AdviceComponent implements OnInit {
   }
 
   setLayout(res) {
-    this.setZaakUrl(res.body.zaak);
-    this.bronorganisatie = res.body.zaak.bronorganisatie;
-    this.adviceData = res.body;
+    this.setZaakUrl(res.zaak);
+    this.bronorganisatie = res.zaak.bronorganisatie;
+    this.adviceData = res;
     this.getStringifiedUser(this.adviceData.requester);
-    this.tableData.bodyData = this.createTableData(res.body.reviews);
-    this.documentTableData.bodyData = this.createDocumentTableData(res.body.zaakDocuments);
+    this.tableData.bodyData = this.createTableData(res.reviews);
+    this.documentTableData.bodyData = this.createDocumentTableData(res.zaakDocuments);
   }
 
   /**
