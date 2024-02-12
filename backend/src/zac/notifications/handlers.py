@@ -16,7 +16,6 @@ from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
-from zac.contrib.objects.cache import invalidate_meta_objects
 from zac.contrib.objects.kownsl.cache import invalidate_review_requests_cache
 from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.services import (
@@ -354,7 +353,6 @@ class ObjectenHandler:
     def handle(self, data: dict) -> None:
         if data["resource"] == "object":
             invalidate_fetch_object_cache(data["hoofd_object"])
-            invalidate_meta_objects(data["kenmerken"])
             if data["actie"] in ["create", "update", "partial_update"]:
                 object = fetch_object(data["hoofd_object"])
                 meta_object_handler = self._meta_object_handler()

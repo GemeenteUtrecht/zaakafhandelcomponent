@@ -1490,7 +1490,7 @@ def update_object_record_data(
     return obj
 
 
-@cache_result("objecttype:{url}", timeout=A_DAY)
+@cache_result("objecttype:{url}", timeout=AN_HOUR)
 def fetch_objecttype(url: str, client: Optional[Client] = None) -> dict:
     if not client:
         client = get_objecttypes_client()
@@ -1499,7 +1499,7 @@ def fetch_objecttype(url: str, client: Optional[Client] = None) -> dict:
     return object_type
 
 
-@cache_result("objecttype:all", timeout=A_DAY)
+@cache_result("objecttype:all", timeout=AN_HOUR)
 def fetch_objecttypes() -> List[dict]:
     client = get_objecttypes_client()
     objecttypes_data = client.list("objecttype")
