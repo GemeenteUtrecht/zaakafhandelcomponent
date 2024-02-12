@@ -338,7 +338,7 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
         )
         page = list(self.paginate_results(search))
 
-        open_documenten = check_document_status([doc.url for doc in page])
+        open_documenten = check_document_status(documents=[doc.url for doc in page])
         serializer = ESListZaakDocumentSerializer(
             page,
             many=True,

@@ -400,13 +400,13 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
                 {"document": doc, "uuid": str(_uuid), "lockedBy": "some-user@zac.nl"}
             ],
         )
-        response = check_document_status(documenten=[doc])
+        response = check_document_status(documents=[doc])
         self.assertEqual(
             "https://dowc.nl/api/v1/documenten/status",
             m.last_request.url,
         )
         self.assertEqual(
-            {"documenten": ["https://some-doc.nl/"]},
+            {"documents": ["https://some-doc.nl/"]},
             m.last_request.json(),
         )
         self.assertEqual(
