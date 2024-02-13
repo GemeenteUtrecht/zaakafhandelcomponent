@@ -200,7 +200,7 @@
         </div>
       </ng-template>
 
-      <mat-expansion-panel *ngIf="_fieldsets.length > 1" [expanded]="isInEditMode">
+      <mat-expansion-panel *ngIf="_fieldsets.length > 1" [expanded]="isInEditMode && !fieldset.fields[0].value">
 
         <mat-expansion-panel-header>
           <mat-panel-title><strong>{{fieldset.label}}</strong></mat-panel-title>
