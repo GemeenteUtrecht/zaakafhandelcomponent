@@ -361,15 +361,15 @@ class WorkStackSummaryView(views.APIView):
             return {"key": "group_tasks", "val": count}
 
         def _count_zaken():
-            count = count_by_behandelaar(request=request)
+            count = count_by_behandelaar(request=self.request)
             return {"key": "zaken", "val": count}
 
         def _count_review_requests():
-            count = count_review_requests_by_user(requester=request.user)
+            count = count_review_requests_by_user(requester=self.request.user)
             return {"key": "reviews", "val": count or 0}
 
         def _count_user_activities():
-            count = Activity.objects.filter(user_assignee=request.user).count()
+            count = Activity.objects.filter(user_assignee=self.request.user).count()
             return {"key": "user_activities", "val": count}
 
         def _count_group_activities():
