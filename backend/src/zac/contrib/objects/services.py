@@ -546,7 +546,9 @@ def get_review_requests_paginated(
 
 
 def count_review_requests_by_user(requester: User) -> Optional[int]:
-    response, query_params = get_review_requests_paginated(requester, page_size=1)
+    response, query_params = get_review_requests_paginated(
+        requester=requester, page_size=1
+    )
     return response.get("count", None)
 
 
