@@ -1,6 +1,6 @@
 export interface AdviceForm {
   advice: string;
-  documents: AdviceDocument[] | []
+  adviceDocuments: AdviceDocument[] | [];
 }
 
 export interface AdviceDocument {

@@ -79,10 +79,10 @@
       </div>
 
       <!-- Collapsible table with previous advices -->
-      <ng-template [ngIf]="!!adviceData.reviews && adviceData.reviews.length > 0">
-        <section *ngIf="adviceData.reviews.length > 0" class="row no-gutters">
+      <ng-template [ngIf]="!!adviceData.advices && adviceData.advices.length > 0">
+        <section *ngIf="adviceData.advices.length > 0" class="row no-gutters">
           <div class="col-12 col-lg-8">
-            <h2 class="mb-4">Vorige adviezen</h2>
+            <h3 class="mb-4">Vorige adviezen</h3>
             <gu-table [table]="tableData"
                       [expandable]="true">
             </gu-table>
@@ -95,7 +95,7 @@
         <ng-template [ngIf]="!!adviceData.documents && adviceData.documents.length > 0">
           <section *ngIf="adviceData.documents.length > 0" class="row no-gutters">
             <div class="col-12 col-lg-8">
-              <h2 class="mb-4">Documenten</h2>
+              <h3 class="mb-4">Documenten</h3>
                 <gu-table [table]="documentTableData" (buttonOutput)="handleTableButtonOutput($event)"
               ></gu-table>
             </div>
@@ -105,7 +105,7 @@
         <!-- Advice text -->
         <section class="row no-gutters mb-2">
           <div class="col-12 col-lg-8">
-            <label class="h2 d-inline-block" for="textarea_advice">Uw advies</label><small class="ml-1">(maximaal 1000 karakters)</small>
+            <label class="h3 d-inline-block" for="textarea_advice">Uw advies</label><small class="ml-1">(maximaal 1000 karakters)</small>
             <gu-textarea class="mb-0"
                          id="textarea_advice"
                          label="Inhoudelijk advies"

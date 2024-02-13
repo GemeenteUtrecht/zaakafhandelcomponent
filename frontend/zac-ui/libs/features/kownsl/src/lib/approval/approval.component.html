@@ -79,10 +79,10 @@
       </div>
 
       <!-- Collapsible table with previous approvals -->
-      <ng-template [ngIf]="!!approvalData.reviews && approvalData.reviews.length > 0">
-        <section *ngIf="approvalData.reviews.length > 0" class="row no-gutters">
+      <ng-template [ngIf]="!!approvalData.approvals && approvalData.approvals.length > 0">
+        <section *ngIf="approvalData.approvals.length > 0" class="row no-gutters">
           <div class="col-12 col-lg-8">
-          <h2 class="mb-4">Vorige accorderingen</h2>
+          <h3 class="mb-4">Vorige accorderingen</h3>
             <gu-table [table]="tableData"
                       [expandable]="true">
             </gu-table>
@@ -93,10 +93,10 @@
       <!-- Documents -->
       <ng-template [ngIf]="!!approvalData.documents && approvalData.documents.length > 0" class="row no-gutters">
         <section *ngIf="approvalData.documents.length > 0">
-          <h2 class="mb-4">Documenten</h2>
+          <h3 class="mb-4">Documenten</h3>
           <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
             <gu-file
-              [fileName]="file.name"
+              [fileName]="file.bestandsnaam"
               [readUrl]="file.readUrl"
             ></gu-file>
           </div>
@@ -107,7 +107,7 @@
       <form [formGroup]="approvalForm">
         <section class="row no-gutters mb-2">
           <div class="col-12 col-lg-8">
-            <label class="h2 d-inline-block">Geef akkoord</label>
+            <label class="h3 d-inline-block">Geef akkoord</label>
             <div class="row">
               <div class="col-12">
                 <gu-radio id="1" label="Akkoord" value="true" radioFormControl="approved"></gu-radio>

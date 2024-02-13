@@ -6,12 +6,12 @@ import { AdviceForm } from '../../models/advice-form';
 import {Requester, ReviewRequest} from '../../models/review-request';
 import {DocumentUrls, ReadWriteDocument, RowData, Table, User, Zaak} from '@gu/models';
 import { Review } from '../../models/review';
-import { ZaakDocument } from '../../models/zaak-document';
 import { CloseDocument } from '../../models/close-document';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { AccountsService, UserService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
+import { Document } from '@gu/models';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -44,7 +44,7 @@ export class AdviceComponent implements OnInit {
   adviceForm: FormGroup;
   adviceFormData: AdviceForm = {
     advice: "",
-    documents: []
+    adviceDocuments: [],
   };
 
   docsInEditMode: string[] = [];
@@ -106,7 +106,7 @@ export class AdviceComponent implements OnInit {
     this.bronorganisatie = res.zaak.bronorganisatie;
     this.adviceData = res;
     this.getStringifiedUser(this.adviceData.requester);
-    this.tableData.bodyData = this.createTableData(res.reviews);
+    this.tableData.bodyData = this.createTableData(res.advices);
     this.documentTableData.bodyData = this.createDocumentTableData(res.zaakDocuments);
   }
 
@@ -164,10 +164,9 @@ export class AdviceComponent implements OnInit {
 
   // Document Edit
 
-  createDocumentTableData(documents: ZaakDocument[]): RowData[] {
-
+  createDocumentTableData(documents: Document[]): RowData[] {
     return documents.map( document => {
-      const docName = `${document.name} (${document.title})`;
+      const docName = document.bestandsnaam;
       const rowData: RowData = {
         cellData: {
           lezen: {
@@ -249,7 +248,7 @@ export class AdviceComponent implements OnInit {
       .pipe(
         switchMap( (closedDocs: CloseDocument[]) => {
           if (closedDocs.length > 0) {
-            this.adviceFormData.documents = closedDocs.map( (doc, i) => {
+            this.adviceFormData.adviceDocuments = closedDocs.map( (doc, i) => {
               return {
                 document: this.deleteUrls[i].drcUrl,
                 editedDocument: doc.versionedUrl
