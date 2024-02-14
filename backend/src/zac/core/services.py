@@ -646,6 +646,11 @@ def fetch_zaakeigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
 def get_zaakeigenschappen(zaak: Zaak) -> List[ZaakEigenschap]:
     perf_logger.info("      Fetching eigenschappen for zaak %s", zaak.identificatie)
 
+    zaak.zaaktype = (
+        zaak.zaaktype
+        if isinstance(zaak.zaaktype, ZaakType)
+        else get_zaaktype(zaak.zaaktype)
+    )
     eigenschappen = {
         eigenschap.url: eigenschap for eigenschap in get_eigenschappen(zaak.zaaktype)
     }
