@@ -35,6 +35,21 @@
         </div>
       </div>
     </article>
+    <article class="configuration-details">
+      <label class="h4 d-inline-block">Zaakinformatie</label>
+      <p>Over welke zaakinformatie gaat het?</p>
+      <ul>
+        <li class="configuration-properties" *ngFor="let eigenschap of taskContextData.context.zaakeigenschappen">
+          <gu-checkbox (change)="updateSelectedUsers($event)"
+                       [value]="eigenschap.url"
+                       [checked]="isInSelectedProperties(eigenschap.url)"
+                       class="d-inline-block mr-1"
+          >
+            {{eigenschap.eigenschap.naam}}: {{eigenschap.waarde}}
+          </gu-checkbox>
+        </li>
+      </ul>
+    </article>
     <article class="configuration-details" *ngFor="let step of [].constructor(steps); let i = index">
       <label class="h4 d-inline-block">{{assignedUsersTitle[reviewType]}}</label>
       <p *ngIf="reviewType === 'advice'">Van wie wil je advies? Selecteer hier onder één of meerdere collega's. Je kunt ook gebruikersgroepen selecteren. Geef daarbij ook aan wat de einddatum is van de vraag.</p>

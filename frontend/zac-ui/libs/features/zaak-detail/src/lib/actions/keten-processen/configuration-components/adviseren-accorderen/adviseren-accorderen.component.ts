@@ -11,10 +11,10 @@ import {
   Table,
   UserGroupDetail,
   UserSearchResult,
-  Zaak
 } from '@gu/models';
 import { ModalService, PaginatorComponent, SnackbarService } from '@gu/components';
 import { KownslSummaryComponent } from '../../../adviseren-accorderen/kownsl-summary.component';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 
 /**
  * <gu-config-adviseren-accorderen [taskContextData]="taskContextData"></gu-config-adviseren-accorderen>
@@ -68,6 +68,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
   submitSuccess: boolean;
   errorMessage: string;
   error: any;
+  selectedProperties: string[] = [];
 
   constructor(
     private datePipe: DatePipe,
@@ -317,6 +318,15 @@ export class AdviserenAccorderenComponent implements OnChanges {
     }
   }
 
+  /**
+   * Check if user exists in current selected properties array.
+   * @param {UserSearchResult} user
+   * @returns {boolean}
+   */
+  isInSelectedProperties(property) {
+    return this.selectedProperties.some(prop => prop === property);
+  }
+
   //
   // Events.
   //
@@ -348,6 +358,21 @@ export class AdviserenAccorderenComponent implements OnChanges {
    */
   onDocSelect(event) {
     this.selectedDocuments = event;
+  }
+
+  /**
+   * Update selected users array.
+   * @param {MatCheckboxChange} event
+   */
+  updateSelectedUsers(event: MatCheckboxChange) {
+    const selectedValue = event.source.value;
+    const isInSelectedProperties = this.isInSelectedProperties(selectedValue);
+    if (event.checked && !isInSelectedProperties) {
+      this.selectedProperties.push(selectedValue)
+    } else if (!event.checked && isInSelectedProperties) {
+      const i = this.selectedProperties.findIndex(property => property === selectedValue);
+      this.selectedProperties.splice(i, 1);
+    }
   }
 
   /**
@@ -429,6 +454,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
       form: this.taskContextData.form,
       assignedUsers: assignedUsers,
       documents: this.selectedDocuments,
+      zaakeigenschappen: this.selectedProperties,
       toelichting: toelichting,
       id: this.taskContextData.context.previouslyAssignedUsers.length > 0 ? this.taskContextData.context.id : null
     };

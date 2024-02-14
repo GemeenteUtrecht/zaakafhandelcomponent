@@ -10,7 +10,7 @@
 
   <!-- Disable edit possibility if case is closed and the user is not allowed to force edit -->
   <div *ngIf="zaak && properties && !isLoading && zaaktypeEigenschappen">
-    <gu-form [title]="'Zaak informatie'"
+    <gu-form [title]="'Zaakinformatie'"
              [form]="form"
              [editable]="canForceEdit ? 'toggle' : false"
              [buttonSize]="'small'"

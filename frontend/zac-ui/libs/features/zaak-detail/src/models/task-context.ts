@@ -1,4 +1,4 @@
-import { Task } from '@gu/models';
+import { EigenschapWaarde, Task } from '@gu/models';
 
 export interface Document {
   beschrijving: string;
@@ -109,6 +109,7 @@ export interface Context {
   informatieobjecttypen?: InformatieObjectType[];
   title?: string;
   zaakInformatie?: ZaakInformatie;
+  zaakeigenschappen?: EigenschapWaarde[];
   reviewType?: 'advice' | 'approval';
   formFields?: FormField[],
   redirectTo?: string,
