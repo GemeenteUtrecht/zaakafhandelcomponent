@@ -1,9 +1,12 @@
 import factory
 
+from ..constants import ActivityStatuses
+
 
 class ActivityFactory(factory.django.DjangoModelFactory):
     zaak = factory.Faker("url")
     name = factory.Faker("bs")
+    status = ActivityStatuses.on_going
 
     class Meta:
         model = "activities.Activity"

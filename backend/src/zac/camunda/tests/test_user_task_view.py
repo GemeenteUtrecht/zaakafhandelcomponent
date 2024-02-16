@@ -1,4 +1,5 @@
 import uuid
+from copy import deepcopy
 from pathlib import Path
 from unittest.mock import patch
 
@@ -23,9 +24,12 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
+from zac.activities.constants import ActivityStatuses
+from zac.activities.tests.factories import ActivityFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.dowc.data import OpenDowc
+from zac.contrib.objects.checklists.tests.utils import CHECKLIST_OBJECT
 from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.contrib.objects.kownsl.tests.utils import ReviewRequestFactory, ReviewsFactory
 from zac.contrib.objects.services import factory_review_request, factory_reviews
@@ -1144,7 +1148,31 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
-        with patch(
+
+        rr = factory_review_request(
+            ReviewRequestFactory(
+                user_deadlines={
+                    "user:some-author": "2022-04-14",
+                }
+            )
+        )
+
+        activity = ActivityFactory.create(zaak=self.zaak.url)
+        checklist_object = deepcopy(CHECKLIST_OBJECT)
+        checklist_object["record"]["data"]["answers"][0] = {
+            "answer": "",
+            "question": "Ja?",
+            "userAssignee": "some-user",
+        }
+        patch_get_zaak_context = patch(
+            "zac.core.camunda.zet_resultaat.serializers.get_zaak_context",
+            return_value=self.zaak_context,
+        )
+        patch_get_resultaattypen = patch(
+            "zac.core.camunda.zet_resultaat.serializers.get_resultaattypen",
+            return_value=[factory(ResultaatType, self.resultaattype)],
+        )
+        patch_check_document_status = patch(
             "zac.core.camunda.zet_resultaat.serializers.check_document_status",
             return_value=factory(
                 OpenDowc,
@@ -1156,19 +1184,56 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                     }
                 ],
             ),
-        ):
-            with patch(
-                "zac.core.camunda.zet_resultaat.serializers.patch_and_destroy_doc",
-                return_value={"some-key": "some-value"},
-            ) as patch_and_destroy_doc:
-                with patch(
-                    "zac.core.camunda.zet_resultaat.serializers.get_zaak_context",
-                    return_value=self.zaak_context,
-                ):
-                    with patch(
-                        "zac.core.camunda.zet_resultaat.serializers.get_resultaattypen",
-                        return_value=[factory(ResultaatType, self.resultaattype)],
-                    ):
-                        response = self.client.put(self.task_endpoint, payload)
+        )
+        patch_patch_and_destroy_doc = patch(
+            "zac.core.camunda.zet_resultaat.serializers.patch_and_destroy_doc",
+            return_value={"some-key": "some-value"},
+        )
+        patch_get_all_review_requests_for_zaak = patch(
+            "zac.core.camunda.zet_resultaat.serializers.get_all_review_requests_for_zaak",
+            return_value=[rr],
+        )
+        patch_get_reviews_for_zaak = patch(
+            "zac.core.camunda.zet_resultaat.serializers.get_reviews_for_zaak",
+            return_value=[],
+        )
+        patch_lock_review_request = patch(
+            "zac.core.camunda.zet_resultaat.serializers.lock_review_request",
+        )
+        patch_fetch_checklist_object = patch(
+            "zac.core.camunda.zet_resultaat.serializers.fetch_checklist_object",
+            return_value=checklist_object,
+        )
+        patch_update_object_record_data = patch(
+            "zac.core.camunda.zet_resultaat.serializers.update_object_record_data",
+            return_value=checklist_object,
+        )
+
+        with patch_get_zaak_context as pgzc:
+            with patch_get_resultaattypen as pgrt:
+                with patch_check_document_status as pcds:
+                    with patch_patch_and_destroy_doc as ppdd:
+                        with patch_get_all_review_requests_for_zaak as pgrrfz:
+                            with patch_get_reviews_for_zaak as pgrz:
+                                with patch_lock_review_request as plrr:
+                                    with patch_fetch_checklist_object as pfco:
+                                        with patch_update_object_record_data as puor:
+                                            response = self.client.put(
+                                                self.task_endpoint, payload
+                                            )
         self.assertEqual(response.status_code, 204)
-        patch_and_destroy_doc.assert_called_once_with(str(_uuid), force=True)
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.status, ActivityStatuses.finished)
+        self.assertEqual(activity.user_assignee, None)
+        self.assertEqual(activity.group_assignee, None)
+
+        pgzc.assert_called()
+        pgrt.assert_called()
+        pcds.assert_called_once()
+        ppdd.assert_called_once()
+        pgrrfz.assert_called_once()
+        pgrz.assert_called_once()
+        plrr.assert_called_once()
+        pfco.assert_called_once()
+        puor.assert_called_once()
