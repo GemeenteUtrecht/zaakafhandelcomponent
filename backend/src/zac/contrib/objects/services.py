@@ -521,6 +521,7 @@ def get_review_requests_paginated(
     query_params: Optional[Dict] = None,
     zaak: Optional[Zaak] = None,
     requester: Optional[User] = None,
+    not_locked: Optional[bool] = False,
     page_size: int = 100,
 ) -> Tuple[List[Dict], Dict]:
 
@@ -530,6 +531,8 @@ def get_review_requests_paginated(
         data_attrs += [f"zaak__exact__{zaak.url}"]
     if requester:
         data_attrs += [f"requester__username__exact__{requester.username}"]
+    if not_locked:
+        data_attrs += [f"locked__icontains__false"]
 
     response, query_params = _search_meta_objects(
         "review_request_objecttype",
@@ -547,7 +550,7 @@ def get_review_requests_paginated(
 
 def count_review_requests_by_user(requester: User) -> Optional[int]:
     response, query_params = get_review_requests_paginated(
-        requester=requester, page_size=1
+        requester=requester, page_size=1, not_locked=True
     )
     return response.get("count", None)
 

@@ -171,16 +171,6 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
     def _lock_review_requests(self):
         zaakcontext = self._get_zaak_context()
         review_requests = get_all_review_requests_for_zaak(zaakcontext.zaak)
-        reviews_given = {
-            str(rev.review_request): rev.reviews
-            for rev in get_reviews_for_zaak(zaakcontext.zaak)
-        }
-        open_review_requests = []
-        for rr in review_requests:
-            rr.reviews = reviews_given.get(str(rr.id), [])
-            rr.fetched_reviews = True
-            if rr.get_completed() < rr.num_assigned_users:
-                open_review_requests.append(rr)
 
         def _lock_review_requests(uuid: str):
             return lock_review_request(
@@ -190,7 +180,7 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         with parallel(max_workers=settings.MAX_WORKERS) as executor:
             list(
                 executor.map(
-                    _lock_review_requests, [str(rr.id) for rr in open_review_requests]
+                    _lock_review_requests, [str(rr.id) for rr in review_requests]
                 )
             )
 
