@@ -4,6 +4,8 @@ from typing import Dict, List, Optional
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from djangorestframework_camel_case.settings import api_settings
+from djangorestframework_camel_case.util import camelize
 from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import ResultaatType
 from zgw_consumers.api_models.documenten import Document
@@ -11,6 +13,7 @@ from zgw_consumers.concurrent import parallel
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.activities.api.serializers import ReadActivitySerializer
+from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
 from zac.api.context import get_zaak_context
 from zac.camunda.api.serializers import TaskSerializer
@@ -22,9 +25,15 @@ from zac.contrib.objects.checklists.api.serializers import ChecklistQuestionSeri
 from zac.contrib.objects.checklists.data import ChecklistQuestion
 from zac.contrib.objects.kownsl.api.serializers import ZaakRevReqSummarySerializer
 from zac.contrib.objects.kownsl.data import ReviewRequest
+from zac.contrib.objects.services import (
+    fetch_checklist_object,
+    get_all_review_requests_for_zaak,
+    get_reviews_for_zaak,
+    lock_review_request,
+)
 from zac.core.api.serializers import ResultaatTypeSerializer
 from zac.core.cache import invalidate_zaak_cache
-from zac.core.services import get_resultaattypen
+from zac.core.services import get_resultaattypen, update_object_record_data
 
 
 @dataclass
@@ -145,12 +154,7 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
         """
         return {"resultaat": self.validated_data["resultaat"]}
 
-    def on_task_submission(self) -> None:
-        """
-        Asserts serializer is validated.
-        """
-        assert hasattr(self, "validated_data"), "Serializer is not validated."
-
+    def _close_documents(self):
         zaakcontext = self._get_zaak_context()
         open_documents = check_document_status(zaak=zaakcontext.zaak.url)
 
@@ -163,6 +167,87 @@ class ZetResultaatTaskSerializer(serializers.Serializer):
                     _patch_and_destroy_doc, [str(doc.uuid) for doc in open_documents]
                 )
             )
+
+    def _lock_review_requests(self):
+        zaakcontext = self._get_zaak_context()
+        review_requests = get_all_review_requests_for_zaak(zaakcontext.zaak)
+        reviews_given = {
+            str(rev.review_request): rev.reviews
+            for rev in get_reviews_for_zaak(zaakcontext.zaak)
+        }
+        open_review_requests = []
+        for rr in review_requests:
+            rr.reviews = reviews_given.get(str(rr.id), [])
+            rr.fetched_reviews = True
+            if rr.get_completed() < rr.num_assigned_users:
+                open_review_requests.append(rr)
+
+        def _lock_review_requests(uuid: str):
+            return lock_review_request(
+                uuid, f"Zaak is {self.validated_data['resultaat']}."
+            )
+
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
+            list(
+                executor.map(
+                    _lock_review_requests, [str(rr.id) for rr in open_review_requests]
+                )
+            )
+
+    def _close_activities(self):
+        zaakcontext = self._get_zaak_context()
+        activities = Activity.objects.prefetch_related("events").filter(
+            zaak=zaakcontext.zaak.url, status=ActivityStatuses.on_going
+        )
+        for activity in activities:
+            activity.user_assignee = None
+            activity.group_assignee = None
+            activity.status = ActivityStatuses.finished
+            activity.save()
+
+    def _lock_checklist(self):
+        zaakcontext = self._get_zaak_context()
+        checklist = fetch_checklist_object(zaakcontext.zaak)
+        if checklist:
+            updated = False
+            for answer in checklist["record"]["data"]["answers"]:
+                if not answer["answer"] and (
+                    answer.get("userAssignee") or answer.get("groupAssignee")
+                ):
+                    updated = True
+                    answer["userAssignee"] = ""
+                    answer["groupAssignee"] = ""
+            checklist["record"]["data"]["lockedBy"] = (
+                f"{self.context['request'].user}" or "service-account"
+            )
+
+            if updated:
+                update_object_record_data(
+                    object=checklist,
+                    data=camelize(
+                        checklist["record"]["data"], **api_settings.JSON_UNDERSCOREIZE
+                    ),
+                    user=self.context["request"].user,
+                )
+
+    def on_task_submission(self) -> None:
+        """
+        Asserts serializer is validated.
+
+        Closes all "open" documents in DoWC.
+        Locks all review requests.
+        Ends all activities.
+        Unassigns all unanswered checklist questions.
+        Process instance is gracefully ended.
+
+        """
+        assert hasattr(self, "validated_data"), "Serializer is not validated."
+        zaakcontext = self._get_zaak_context()
+
+        self._close_documents()
+        self._lock_review_requests()
+        self._close_activities()
+        self._lock_checklist()
 
         # Clear all related cache.
         invalidate_zaak_cache(zaakcontext.zaak)
