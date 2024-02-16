@@ -23,7 +23,7 @@ from zac.contrib.objects.kownsl.tests.utils import (
     AdviceFactory,
     AssignedUsersFactory,
     ReviewRequestFactory,
-    ReviewsAdviceFactory,
+    ReviewsFactory,
     UserAssigneeFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
@@ -42,6 +42,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.maxDiff = None
         super().setUpTestData()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -92,6 +93,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -194,7 +196,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
         advice = AdviceFactory()
-        reviews_advice = ReviewsAdviceFactory()
+        reviews_advice = ReviewsFactory()
         reviews_advice["reviews"] = [advice]
 
         review_object = deepcopy(REVIEW_OBJECT)
@@ -253,6 +255,7 @@ class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
                         "advices": [
                             {
                                 "author": {
+                                    "email": advice["author"]["email"],
                                     "firstName": advice["author"]["firstName"],
                                     "lastName": advice["author"]["lastName"],
                                     "username": advice["author"]["username"],

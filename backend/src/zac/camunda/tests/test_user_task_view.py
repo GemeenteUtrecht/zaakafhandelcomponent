@@ -1,5 +1,4 @@
 import uuid
-from copy import deepcopy
 from pathlib import Path
 from unittest.mock import patch
 
@@ -28,10 +27,7 @@ from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.dowc.data import OpenDowc
 from zac.contrib.objects.kownsl.constants import KownslTypes
-from zac.contrib.objects.kownsl.tests.utils import (
-    ReviewRequestFactory,
-    ReviewsAdviceFactory,
-)
+from zac.contrib.objects.kownsl.tests.utils import ReviewRequestFactory, ReviewsFactory
 from zac.contrib.objects.services import factory_review_request, factory_reviews
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
@@ -594,8 +590,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
-        review_request = factory_review_request(ReviewRequestFactory())
-        reviews = factory_reviews(ReviewsAdviceFactory())
+        reviews = factory_reviews(ReviewsFactory())
         mock_resource_get(m, self.zaaktype)
         resultaattype = generate_oas_component(
             "ztc",

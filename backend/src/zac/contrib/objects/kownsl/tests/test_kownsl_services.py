@@ -28,7 +28,7 @@ from zac.contrib.objects.kownsl.tests.utils import (
     AdviceFactory,
     AssignedUsersFactory,
     ReviewRequestFactory,
-    ReviewsAdviceFactory,
+    ReviewsFactory,
     UserAssigneeFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
@@ -78,6 +78,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -95,7 +96,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         cls.review_request = ReviewRequestFactory()
         cls.review_request["assignedUsers"].append(assigned_users2)
         cls.advice = AdviceFactory()
-        cls.reviews_advice = ReviewsAdviceFactory()
+        cls.reviews_advice = ReviewsFactory()
         cls.reviews_advice["reviews"] = [cls.advice]
 
         cls.review_object = deepcopy(REVIEW_OBJECT)
@@ -257,7 +258,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         rr = factory_review_request(self.review_request)
         # Avoid patching fetch_reviews and everything
-        reviews_advice = ReviewsAdviceFactory()
+        reviews_advice = ReviewsFactory()
         rr.reviews = factory_reviews(reviews_advice).reviews
         rr.fetched_reviews = True
 

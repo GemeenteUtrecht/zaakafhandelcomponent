@@ -1,4 +1,6 @@
 import logging
+from copy import deepcopy
+from typing import Optional
 
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
@@ -34,7 +36,8 @@ from ..permissions import (
     ReviewIsUnlocked,
 )
 from .serializers import (
-    SubmitReviewSerializer,
+    SubmitAdviceSerializer,
+    SubmitApprovalSerializer,
     UpdateZaakReviewRequestSerializer,
     ZaakRevReqDetailSerializer,
     ZaakRevReqSummarySerializer,
@@ -72,7 +75,12 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
         HasNotReviewed,
         ReviewIsUnlocked,
     )
-    serializer_class = ZaakRevReqDetailSerializer
+    serializer_class = None
+
+    def get_assignee_from_query_param(self) -> Optional[str]:
+        if not (assignee := self.request.query_params.get("assignee", None)):
+            raise exceptions.ValidationError("`assignee` query parameter is required.")
+        return assignee
 
     @extend_schema(
         summary=_("Retrieve review request."),
@@ -88,19 +96,51 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
         responses={200: ZaakRevReqDetailSerializer},
     )
     def get(self, request, request_uuid):
-        if not (request.query_params.get("assignee")):
-            raise exceptions.ValidationError("'assignee' query parameter is required.")
+        # check filter
+        self.get_assignee_from_query_param()
 
+        # check permissions
         review_request = self.get_object()
         review_request.zaak = get_zaak(zaak_url=review_request.zaak)
-        serializer = self.serializer_class(
+        serializer = ZaakRevReqDetailSerializer(
             instance=review_request,
             context={"request": request, "view": self},
         )
         return Response(serializer.data)
 
+    def post(self, request, request_uuid):
+        # check filter
+        assignee = self.get_assignee_from_query_param()
+        # check permissions
+        rr = self.get_object()
+
+        # resolve assignee
+        data = deepcopy(request.data)
+        assignee = resolve_assignee(assignee)
+        if isinstance(assignee, Group):
+            data["group"] = f"{assignee}"
+        data["author"] = request.user.username
+        data["requester"] = rr.requester
+
+        # pass to serializer
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        # submit review
+        submit_review(serializer.data, review_request=rr)
+
+        # invalidate the review request cache
+        invalidate_review_cache(rr)
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+        )
+
+
+class SubmitAdviceView(SubmitReviewView):
+    serializer_class = SubmitAdviceSerializer
+
     @extend_schema(
-        summary=_("Create review for review request."),
+        summary=_("Create advice for review request."),
         parameters=[
             OpenApiParameter(
                 name="assignee",
@@ -110,33 +150,32 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
                 location=OpenApiParameter.QUERY,
             )
         ],
-        request=SubmitReviewSerializer,
-        responses={201: SubmitReviewSerializer(many=True)},
+        request=SubmitAdviceSerializer,
+        responses={204: None},
     )
     def post(self, request, request_uuid):
-        if not (assignee := request.query_params.get("assignee")):
-            raise exceptions.ValidationError("'assignee' query parameter is required.")
-
-        data = {**request.data}
-        assignee = resolve_assignee(assignee)
-        if isinstance(assignee, Group):
-            data["group"] = f"{assignee}"
-
-        rr = self.get_object()  # check permissions
-        data["review_type"] = rr.review_type
-        serializer = SubmitReviewSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        reviews = submit_review(serializer.data, review_request=rr)
-        invalidate_review_cache(rr)
-        return Response(SubmitReviewSerializer(reviews.reviews, many=True).data)
+        return super().post(request, request_uuid)
 
 
 class SubmitApprovalView(SubmitReviewView):
-    pass
+    serializer_class = SubmitApprovalSerializer
 
-
-class SubmitAdviceView(SubmitReviewView):
-    pass
+    @extend_schema(
+        summary=_("Create approval for review request."),
+        parameters=[
+            OpenApiParameter(
+                name="assignee",
+                required=True,
+                type=OpenApiTypes.STR,
+                description=_("Assignee of the user task in camunda."),
+                location=OpenApiParameter.QUERY,
+            )
+        ],
+        request=SubmitApprovalSerializer,
+        responses={204: None},
+    )
+    def post(self, request, request_uuid):
+        return super().post(request, request_uuid)
 
 
 class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):

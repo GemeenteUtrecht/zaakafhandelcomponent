@@ -22,7 +22,7 @@ from .utils import (
     AdviceFactory,
     AssignedUsersFactory,
     ReviewRequestFactory,
-    ReviewsAdviceFactory,
+    ReviewsFactory,
     UserAssigneeFactory,
 )
 
@@ -50,6 +50,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -67,14 +68,10 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         cls.review_request["assignedUsers"].append(assigned_users2)
         cls.advice = AdviceFactory()
-        cls.reviews_advice = ReviewsAdviceFactory()
+        cls.reviews_advice = ReviewsFactory()
         cls.group = GroupFactory.create(name="some-group")
 
-    def setUp(self):
-        super().setUp()
-
     def test_fail_create_review_query_param(self, m):
-
         self.client.force_authenticate(user=self.user)
         url = reverse(
             "kownsl:reviewrequest-advice",
@@ -84,7 +81,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["'assignee' query parameter is required."])
+        self.assertEqual(response.json(), ["`assignee` query parameter is required."])
 
     def test_fail_get_review_request_query_param(self, m):
         self.client.force_authenticate(user=self.user)
@@ -95,7 +92,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["'assignee' query parameter is required."])
+        self.assertEqual(response.json(), ["`assignee` query parameter is required."])
 
     def test_success_get_review_request(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -185,7 +182,7 @@ class ViewTests(ClearCachesMixin, APITestCase):
         rr = factory_review_request(rev_req)
 
         advice = deepcopy(self.advice)
-        advice["adviceDocuments"] = list()
+        advice["reviewDocuments"] = list()
         advice["group"] = {"name": "some-other-group", "fullName": "groeop some group"}
         reviews_advice = deepcopy(self.reviews_advice)
         reviews_advice["reviews"] = [advice]

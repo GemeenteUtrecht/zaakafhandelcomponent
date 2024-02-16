@@ -35,17 +35,26 @@ class OpenReview(Model):
 
 
 @dataclass
-class AdviceDocument(Model):
-    advice_version: int
+class ReviewDocument(Model):
+    review_version: int
     source_version: int
     document: str
+
+
+@dataclass
+class KownslZaakEigenschap(Model):
+    url: str
+    naam: str
+    waarde: str
 
 
 @dataclass
 class Advice(Model):
     created: datetime
     advice: str
-    advice_documents: List[AdviceDocument]
+    review_documents: List[ReviewDocument]
+    zaakeigenschappen: List[KownslZaakEigenschap]
+
     author: dict = field(default_factory=dict)
     group: dict = field(default_factory=dict)
 
@@ -57,9 +66,15 @@ class Advice(Model):
 class Approval(Model):
     created: datetime
     approved: bool
+    review_documents: List[ReviewDocument]
+    zaakeigenschappen: List[KownslZaakEigenschap]
+
     author: dict = field(default_factory=dict)
     group: dict = field(default_factory=dict)
     toelichting: str = ""
+
+    # for internal use only
+    documents: list = field(default_factory=list)
 
 
 @dataclass
@@ -147,26 +162,30 @@ class ReviewRequest(Model):
     def get_completed(self) -> int:
         return len(self.get_reviews())
 
-    def _resolve_advice_documents_for_advices(
-        self, advices: List[Advice]
+    def _resolve_review_documents_for_reviews(
+        self, reviews: Union[List[Advice], List[Approval]]
     ) -> List[Advice]:
-        documents = set(
-            advice_document.document
-            for advice in advices
-            for advice_document in advice.advice_documents
+        documents = list(
+            set(
+                furl(review_document.document).remove(args=True).url
+                for review in reviews
+                for review_document in review.review_documents
+            )
         )
         if documents:
-            _documents = search_informatieobjects(urls=list(documents))
+            _documents = search_informatieobjects(urls=documents, size=len(documents))
             documents = {doc.url: doc for doc in _documents}
-            for advice in advices:
-                advice_documents = []
-                for advice_document in advice.advice_documents:
-                    advice_document.document = documents[advice_document.document]
-                    advice_documents.append(advice_document)
+            for review in reviews:
+                review_documents = []
+                for review_document in review.review_documents:
+                    review_document.document = documents[
+                        furl(review_document.document).remove(args=True).url
+                    ]
+                    review_documents.append(review_document)
 
-                advice.documents = advice_documents
+                review.documents = review_documents
 
-        return advices
+        return reviews
 
     def get_reviews(self) -> List[Union[Advice, Approval]]:
         if not self.fetched_reviews:
@@ -174,10 +193,7 @@ class ReviewRequest(Model):
 
             if reviews := get_reviews_for_review_request(self):
                 self.reviews = reviews.reviews
-                if self.review_type == KownslTypes.advice:
-                    self.reviews = self._resolve_advice_documents_for_advices(
-                        self.reviews
-                    )
+                self.reviews = self._resolve_review_documents_for_reviews(self.reviews)
             else:
                 self.reviews = []
 
@@ -279,7 +295,7 @@ class ReviewRequest(Model):
 
 
 @dataclass
-class AdviceApprovalContext(Context):
+class ReviewContext(Context):
     camunda_assigned_users: AssignedUsers
     documents_link: str
     review_type: str
