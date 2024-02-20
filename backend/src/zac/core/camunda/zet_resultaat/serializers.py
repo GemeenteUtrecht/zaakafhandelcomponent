@@ -28,7 +28,6 @@ from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.services import (
     fetch_checklist_object,
     get_all_review_requests_for_zaak,
-    get_reviews_for_zaak,
     lock_review_request,
 )
 from zac.core.api.serializers import ResultaatTypeSerializer
