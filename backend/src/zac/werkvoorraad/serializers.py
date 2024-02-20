@@ -195,9 +195,6 @@ class WorkStackReviewRequestSerializer(PolymorphicSerializer):
         help_text=_("ZAAK that review request belongs to.")
     )
 
-    def get_completed(self, obj) -> int:
-        return len(obj.reviews)
-
 
 class WorkStackSummarySerializer(serializers.Serializer):
     user_tasks = serializers.IntegerField()

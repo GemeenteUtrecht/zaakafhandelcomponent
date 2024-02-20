@@ -315,6 +315,7 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
                     "locked": False,
                     "lock_reason": "",
                     "is_being_reconfigured": False,
+                    "status": "pending",
                 }
             ],
         )
