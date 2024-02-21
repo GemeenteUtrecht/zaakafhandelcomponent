@@ -211,6 +211,7 @@ class ApprovalSerializer(APIModelSerializer):
         required=False,
         help_text=_("`name` of the group that author answered for."),
         allow_null=True,
+        allow_empty=True,
     )
     review_documents = ReviewDocumentSerializer(
         label=_("review documents"),
@@ -421,6 +422,7 @@ class SubmitApprovalSerializer(APIModelSerializer):
     group = KownslGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
+        required=False,
         help_text=_("`name` of the group that author answered for."),
         allow_null=True,
     )
@@ -428,8 +430,9 @@ class SubmitApprovalSerializer(APIModelSerializer):
         label=_("review documents"),
         help_text=_("Documents relevant to the review."),
         many=True,
+        required=False,
     )
-    zaakeigenschappen = KownslZaakEigenschapSerializer(many=True)
+    zaakeigenschappen = KownslZaakEigenschapSerializer(many=True, required=False)
 
     class Meta:
         model = Approval

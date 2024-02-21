@@ -133,6 +133,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
             informatieobjecttype=cls.informatieobjecttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             bestandsomvang=10,
+            versie=1,
         )
 
         # Dict to models
@@ -391,7 +392,10 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
         mock_resource_get(m, self.zaak_json)
-        rr = factory_review_request(self.review_request)
+        _rr = deepcopy(self.review_request)
+        _rr["documents"] = [self.document.url]
+
+        rr = factory_review_request(_rr)
         rr.fetched_reviews = True
         rr.reviews = []
         rr.review_type = KownslTypes.approval
@@ -402,12 +406,6 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         payload = {
             "approved": True,
             "toelichting": "some toelichting here",
-            "group": "",
-            "reviewDocuments": [
-                {
-                    "document": self.document.url + "?versie=1",
-                }
-            ],
             "zaakeigenschappen": [
                 {
                     "url": self.zaakeigenschap.url,
@@ -421,19 +419,23 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         reviews_object = deepcopy(REVIEW_OBJECT)
         reviews_object["record"]["data"] = reviews
 
-        with patch(
-            "zac.contrib.objects.kownsl.api.views.get_review_request", return_value=rr
-        ):
-            with patch("zac.contrib.objects.services.fetch_reviews", return_value=None):
+        with self.search_informatieobjects_patcher:
+            with patch(
+                "zac.contrib.objects.kownsl.api.views.get_review_request",
+                return_value=rr,
+            ):
                 with patch(
-                    "zac.contrib.objects.services._create_unique_uuid_for_object",
-                    return_value=reviews["id"],
+                    "zac.contrib.objects.services.fetch_reviews", return_value=None
                 ):
                     with patch(
-                        "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
-                        return_value=reviews_object,
-                    ) as mock_create_object:
-                        response = self.client.post(url, payload)
+                        "zac.contrib.objects.services._create_unique_uuid_for_object",
+                        return_value=reviews["id"],
+                    ):
+                        with patch(
+                            "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
+                            return_value=reviews_object,
+                        ) as mock_create_object:
+                            response = self.client.post(url, payload)
 
         self.assertEqual(response.status_code, 204)
         mock_create_object.assert_called_once_with(
@@ -452,7 +454,6 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                             "username": self.user.username,
                         },
                         "created": "2022-04-14T15:51:09.830235Z",
-                        "group": dict(),
                         "approved": payload["approved"],
                         "review_documents": [
                             {
@@ -461,6 +462,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                                 "source_version": 1,
                             }
                         ],
+                        "group": None,
                         "toelichting": payload["toelichting"],
                         "zaakeigenschappen": [
                             {

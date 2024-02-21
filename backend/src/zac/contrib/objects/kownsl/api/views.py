@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.api import send_message
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from furl import furl
 from rest_framework import authentication, exceptions, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -27,6 +28,7 @@ from ...services import (
     update_review_request,
 )
 from ..cache import invalidate_review_cache, invalidate_review_requests_cache
+from ..constants import KownslTypes
 from ..data import ReviewRequest
 from ..permissions import (
     CanReadOrUpdateReviews,
@@ -121,6 +123,14 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
             data["group"] = f"{assignee}"
         data["author"] = request.user.username
         data["requester"] = rr.requester
+
+        # in approvals documents can't be changed - set them here.
+        if rr.review_type == KownslTypes.approval:
+            docs = rr.get_zaak_documents()
+            data["review_documents"] = [
+                {"document": furl(doc.url).set({"versie": doc.versie}).url}
+                for doc in docs
+            ]
 
         # pass to serializer
         serializer = self.serializer_class(data=data)
