@@ -39,12 +39,13 @@ export class AdviceComponent implements OnInit {
 
   tableData: Table = new Table(['Adviseur', 'Gedaan op'], []);
 
-  documentTableData: Table = new Table(['Acties', '', 'Documentnaam'], []);
+  documentTableData: Table = new Table(['Bestandsnaam', 'Acties', ''], []);
 
   adviceForm: FormGroup;
   adviceFormData: AdviceForm = {
     advice: "",
-    adviceDocuments: [],
+    reviewDocuments: [],
+    zaakeigenschappen: []
   };
 
   docsInEditMode: string[] = [];
@@ -169,6 +170,7 @@ export class AdviceComponent implements OnInit {
       const docName = document.bestandsnaam;
       const rowData: RowData = {
         cellData: {
+          docName: docName,
           lezen: {
             type: 'button',
             label: 'Lezen',
@@ -178,8 +180,7 @@ export class AdviceComponent implements OnInit {
             type: 'button',
             label: 'Bewerken',
             value: document.identificatie
-          },
-          docName: docName
+          }
         }
       }
       return rowData
@@ -243,12 +244,19 @@ export class AdviceComponent implements OnInit {
 
 
     this.adviceFormData.advice = this.adviceForm.controls['advice'].value;
+    this.adviceFormData.zaakeigenschappen = this.adviceData.zaakeigenschappen.map(eigenschap => {
+      return {
+        url: eigenschap.url,
+        naam: eigenschap.eigenschap.naam,
+        waarde: eigenschap.waarde,
+      }
+    })
 
     this.adviceService.closeDocumentEdit(this.deleteUrls)
       .pipe(
         switchMap( (closedDocs: CloseDocument[]) => {
           if (closedDocs.length > 0) {
-            this.adviceFormData.adviceDocuments = closedDocs.map( (doc, i) => {
+            this.adviceFormData.reviewDocuments = closedDocs.map( (doc, i) => {
               return {
                 document: this.deleteUrls[i].drcUrl,
                 editedDocument: doc.versionedUrl
@@ -263,7 +271,7 @@ export class AdviceComponent implements OnInit {
             return of(null)
           }
         }),
-        switchMap((formData: AdviceForm) => {
+        switchMap(() => {
           return this.adviceService.postAdvice(this.adviceFormData, this.uuid, this.assignee)
         })
       ).subscribe( () => {

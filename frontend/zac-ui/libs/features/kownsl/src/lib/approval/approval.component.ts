@@ -154,7 +154,14 @@ export class ApprovalComponent implements OnInit {
   submitForm(): void {
     const formData: ApprovalForm = {
       approved: this.approvalForm.controls['approved'].value,
-      toelichting: this.approvalForm.controls['toelichting'].value
+      toelichting: this.approvalForm.controls['toelichting'].value,
+      zaakeigenschappen: this.approvalData.zaakeigenschappen.map(eigenschap => {
+        return {
+          url: eigenschap.url,
+          naam: eigenschap.eigenschap.naam,
+          waarde: eigenschap.waarde,
+        }
+      })
     }
     this.postApproval(formData);
   }

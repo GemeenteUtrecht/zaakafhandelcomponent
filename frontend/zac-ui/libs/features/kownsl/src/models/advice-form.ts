@@ -1,9 +1,14 @@
 export interface AdviceForm {
   advice: string;
-  adviceDocuments: AdviceDocument[] | [];
+  reviewDocuments: ReviewDocument[] | [];
+  zaakeigenschappen: {
+    url: string,
+    naam: string,
+    waarde: string
+  }[]
 }
 
-export interface AdviceDocument {
+export interface ReviewDocument {
   document: string;
   editedDocument: string;
 }

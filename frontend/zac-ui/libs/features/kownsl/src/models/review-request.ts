@@ -2,7 +2,7 @@ import { Review } from './review';
 import { Zaak } from './zaak';
 import {Approval} from "./approval";
 import {Advice} from "./advice";
-import {Document, User, UserGroupDetail} from '@gu/models';
+import { Document, EigenschapWaarde, User, UserGroupDetail, ZaaktypeEigenschap } from '@gu/models';
 
 export interface Metadata {
   taskDefinitionId: string;
@@ -28,7 +28,7 @@ export interface ReviewRequest {
   metadata: Metadata;
   zaak: Zaak;
   zaakDocuments: Document[];
-  zaakeigenschappen: any[];
+  zaakeigenschappen: EigenschapWaarde[];
   approvals?: Review[];
   advices?: Review[];
 }

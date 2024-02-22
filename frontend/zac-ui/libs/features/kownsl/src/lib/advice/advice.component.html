@@ -20,18 +20,18 @@
         <h3>{{zaakData.zaaktype.omschrijving}}</h3>
       </div>
       <div class="col-12 col-lg-2 mr-2 mb-2">
-        <p class="p p--nomargin">Zaakomschrijving:</p>
+        <p class="p p--bold p--nomargin">Zaakomschrijving:</p>
       </div>
       <div class="col-12 col-lg-8">
-        <p *ngIf="zaakData.omschrijving" class="p p--bold">{{zaakData.omschrijving}}</p>
+        <p *ngIf="zaakData.omschrijving" class="p">{{zaakData.omschrijving}}</p>
       </div>
 
       <ng-container *ngIf="zaakData.toelichting">
         <div class="col-12 col-lg-2 mr-2 mb-2">
-          <p class="p p--nomargin">Zaaktoelichting:</p>
+          <p class="p p--bold p--nomargin">Zaaktoelichting:</p>
         </div>
         <div class="col-12 col-lg-8">
-          <p *ngIf="zaakData.toelichting" class="p p--bold">{{zaakData.toelichting}}</p>
+          <p *ngIf="zaakData.toelichting" class="p">{{zaakData.toelichting}}</p>
         </div>
       </ng-container>
     </div>
@@ -41,37 +41,48 @@
       <div class="mb-4">
         <div *ngIf="zaakData.identificatie && zaakUrl" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Zaak:</p>
+            <p class="p p--bold p--nomargin">Zaak:</p>
           </div>
-          <div class="col-12 col-lg-8 mb-4">
+          <div class="col-12 col-lg-8 mb-2">
             <a class="anchor mb-4" target="_blank" *ngIf="zaakUrl" [routerLink]="[zaakUrl]">{{zaakData.identificatie}}</a>
           </div>
         </div>
 
-        <div *ngIf="adviceData.created" class="row no-gutters">
+        <div *ngIf="adviceData.zaakeigenschappen" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Aanvraag ingediend op:</p>
+            <p class="p p--bold p--nomargin">Zaakinformatie:</p>
           </div>
-          <div class="col-12 col-lg-8">
-            <p  class="p p--bold">{{adviceData.created | date:'fullDate'}}</p>
+          <div class="col-12 col-lg-8 mb-4">
+            <p class="p p--nomargin" *ngFor='let eigenschap of adviceData.zaakeigenschappen'>
+              {{eigenschap.eigenschap.naam}}: {{eigenschap.waarde}}
+            </p>
           </div>
         </div>
 
         <div *ngIf="adviceData.created" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Ingediend door:</p>
+            <p class="p p--bold p--nomargin">Aanvraag ingediend op:</p>
           </div>
           <div class="col-12 col-lg-8">
-            <p  class="p p--bold">{{requester}}</p>
+            <p  class="p">{{adviceData.created | date:'fullDate'}}</p>
+          </div>
+        </div>
+
+        <div *ngIf="adviceData.created" class="row no-gutters">
+          <div class="col-12 col-lg-2 mr-2 mb-2">
+            <p class="p p--bold p--nomargin">Ingediend door:</p>
+          </div>
+          <div class="col-12 col-lg-8">
+            <p  class="p">{{requester}}</p>
           </div>
         </div>
 
         <div *ngIf="adviceData.toelichting" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Toelichting aanvraag:</p>
+            <p class="p p--bold p--nomargin">Toelichting aanvraag:</p>
           </div>
           <div class="col-12 col-lg-8">
-            <p class="p p--bold p--nomargin">
+            <p class="p p--nomargin">
               {{adviceData.toelichting}}
             </p>
           </div>
@@ -82,7 +93,7 @@
       <ng-template [ngIf]="!!adviceData.advices && adviceData.advices.length > 0">
         <section *ngIf="adviceData.advices.length > 0" class="row no-gutters">
           <div class="col-12 col-lg-8">
-            <h3 class="mb-4">Vorige adviezen</h3>
+            <h4 class="mb-2">Vorige adviezen</h4>
             <gu-table [table]="tableData"
                       [expandable]="true">
             </gu-table>
@@ -95,7 +106,7 @@
         <ng-template [ngIf]="!!adviceData.documents && adviceData.documents.length > 0">
           <section *ngIf="adviceData.documents.length > 0" class="row no-gutters">
             <div class="col-12 col-lg-8">
-              <h3 class="mb-4">Documenten</h3>
+              <h4 class="mb-2">Documenten</h4>
                 <gu-table [table]="documentTableData" (buttonOutput)="handleTableButtonOutput($event)"
               ></gu-table>
             </div>
@@ -105,10 +116,11 @@
         <!-- Advice text -->
         <section class="row no-gutters mb-2">
           <div class="col-12 col-lg-8">
-            <label class="h3 d-inline-block" for="textarea_advice">Uw advies</label><small class="ml-1">(maximaal 1000 karakters)</small>
+            <label class="h4 d-inline-block" for="textarea_advice">Uw advies</label><small class="ml-1">(maximaal 1000 karakters)</small>
             <gu-textarea class="mb-0"
                          id="textarea_advice"
                          label="Inhoudelijk advies"
+                         [required]="true"
                          [control]="adviceControl"
                          [maxlength]="'1000'"
             >
