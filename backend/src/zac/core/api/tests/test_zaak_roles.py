@@ -27,8 +27,9 @@ from zac.accounts.tests.factories import (
 )
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.objects.oudbehandelaren.tests.factories import (
-    OUDBEHANDELAREN_OBJECT,
-    OUDBEHANDELAREN_OBJECTTYPE,
+    OudbehandelarenObjectFactory,
+    OudbehandelarenObjectTypeFactory,
+    OudbehandelarenObjectTypeVersionFactory,
 )
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.permissions import zaken_inzien, zaken_wijzigen
@@ -39,6 +40,10 @@ from zgw.models.zrc import Zaak
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+
+OUDBEHANDELAREN_OBJECT = OudbehandelarenObjectFactory()
+OUDBEHANDELAREN_OBJECTTYPE = OudbehandelarenObjectTypeFactory()
+OUDBEHANDELAREN_OBJECTTYPE_VERSION = OudbehandelarenObjectTypeVersionFactory()
 
 
 @requests_mock.Mocker()
@@ -837,7 +842,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.oudbehandelaren.utils.fetch_objecttype",
-            return_value=OUDBEHANDELAREN_OBJECTTYPE,
+            side_effect=[
+                OUDBEHANDELAREN_OBJECTTYPE,
+                OUDBEHANDELAREN_OBJECTTYPE_VERSION,
+            ],
         ):
             with patch(
                 "zac.contrib.objects.oudbehandelaren.utils.fetch_oudbehandelaren_object",

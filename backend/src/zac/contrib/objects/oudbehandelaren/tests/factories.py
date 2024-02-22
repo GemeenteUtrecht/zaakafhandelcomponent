@@ -15,9 +15,41 @@ ZAAK_URL = f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7"
 
 def OudbehandelarenObjectTypeFactory(**kwargs):
     default_data = {
-        "url": f"{OBJECTTYPES_ROOT}objecttypes/b4ec3f47-bc20-4872-955c-cb5f67646eae/versions/4",
+        "url": f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f",
+        "uuid": "f640b0b9-2a6e-43ff-871e-121fd2789d1f",
+        "name": "Oudbehandelaar",
+        "namePlural": "Oudbehandelaren",
+        "description": "Describes the json schema of oudbehandelaren.",
+        "dataClassification": "open",
+        "maintainerOrganization": "",
+        "maintainerDepartment": "",
+        "contactPerson": "",
+        "contactEmail": "",
+        "source": "",
+        "updateFrequency": "unknown",
+        "providerOrganization": "",
+        "documentationUrl": "",
+        "labels": dict(),
+        "createdAt": "1999-12-31",
+        "modifiedAt": "1999-12-31",
+        "versions": [
+            f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f/versions/4",
+            f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f/versions/3",
+            f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f/versions/2",
+            f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f/versions/1",
+        ],
+    }
+    if kwargs:
+        update_dictionary_from_kwargs(default_data, kwargs)
+
+    return generate_oas_component("objecttypes", "schemas/ObjectType", **default_data)
+
+
+def OudbehandelarenObjectTypeVersionFactory(**kwargs):
+    default_data = {
+        "url": f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f/versions/4",
         "version": 4,
-        "objectType": f"{OBJECTTYPES_ROOT}objecttypes/b4ec3f47-bc20-4872-955c-cb5f67646eae",
+        "objectType": f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f",
         "status": "published",
         "jsonSchema": yaml.safe_load(read_schema("metaobjecttypes"))["components"][
             "schemas"
@@ -38,7 +70,7 @@ def OudbehandelarenObjectFactory(**kwargs):
     default_data = {
         "url": f"{OBJECTS_ROOT}objects/85e6c250-9f51-4286-8340-25109d0b96d1",
         "uuid": "85e6c250-9f51-4286-8340-25109d0b96d1",
-        "type": f"{OBJECTTYPES_ROOT}objecttypes/5d7182f4-dc2f-4aaa-b2a2-bdc72a2ce0b4",
+        "type": f"{OBJECTTYPES_ROOT}objecttypes/f640b0b9-2a6e-43ff-871e-121fd2789d1f",
         "record": {
             "index": 1,
             "typeVersion": 3,
