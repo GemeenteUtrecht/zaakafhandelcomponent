@@ -545,7 +545,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                             "username": self.user.username,
                         },
                         "created": "2022-04-14T15:51:09.830235Z",
-                        "group": dict(),
+                        "group": None,
                         "review_documents": [
                             {
                                 "document": self.document.url + "?versie=1",
@@ -661,7 +661,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                                     "username": user.username,
                                 },
                                 "created": "2022-04-14T15:51:09.830235Z",
-                                "group": dict(),
+                                "group": None,
                                 "reviewDocuments": [
                                     {
                                         "document": self.document.url + "?versie=2",
@@ -726,7 +726,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                             "username": user.username,
                         },
                         "created": "2022-04-14T15:51:09.830235Z",
-                        "group": dict(),
+                        "group": None,
                         "reviewDocuments": [
                             {
                                 "document": self.document.url + "?versie=2",

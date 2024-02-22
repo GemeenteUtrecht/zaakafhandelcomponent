@@ -208,7 +208,6 @@ class ApprovalSerializer(APIModelSerializer):
     group = KownslGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
-        required=False,
         help_text=_("`name` of the group that author answered for."),
         allow_null=True,
         allow_empty=True,
@@ -251,7 +250,6 @@ class AdviceSerializer(APIModelSerializer):
     group = KownslGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
-        required=False,
         help_text=_("`name` of the group that author answered for."),
         allow_null=True,
         allow_empty=True,
@@ -422,9 +420,9 @@ class SubmitApprovalSerializer(APIModelSerializer):
     group = KownslGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
-        required=False,
         help_text=_("`name` of the group that author answered for."),
         allow_null=True,
+        default=None,
     )
     review_documents = SubmitReviewDocumentSerializer(
         label=_("review documents"),
@@ -449,11 +447,6 @@ class SubmitApprovalSerializer(APIModelSerializer):
             "approved": {"required": True},
             "toelichting": {"required": False},
         }
-
-    def validate_group(self, group):
-        if not group:
-            return ""
-        return group
 
     def validate(self, data):
         if not data.get("zaakeigenschappen") and not data.get("review_documents"):
@@ -480,7 +473,7 @@ class SubmitAdviceSerializer(APIModelSerializer):
     group = KownslGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
-        required=False,
+        default=None,
         help_text=_("`name` of the group that author answered for."),
         allow_null=True,
     )
@@ -505,11 +498,6 @@ class SubmitAdviceSerializer(APIModelSerializer):
         extra_kwargs = {
             "advice": {"help_text": _("Advice given for review request.")},
         }
-
-    def validate_group(self, group):
-        if not group:
-            return ""
-        return group
 
     def validate(self, data):
         if not data.get("zaakeigenschappen") and not data.get("review_documents"):
