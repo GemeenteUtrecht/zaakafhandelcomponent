@@ -26,7 +26,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.contrib.objects.oudbehandelaren.tests.utils import (
+from zac.contrib.objects.oudbehandelaren.tests.factories import (
     OUDBEHANDELAREN_OBJECT,
     OUDBEHANDELAREN_OBJECTTYPE,
 )

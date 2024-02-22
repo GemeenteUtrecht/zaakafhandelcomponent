@@ -30,9 +30,12 @@ from zac.activities.tests.factories import ActivityFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.dowc.data import OpenDowc
-from zac.contrib.objects.checklists.tests.utils import CHECKLIST_OBJECT
+from zac.contrib.objects.checklists.tests.factories import ChecklistObjectFactory
 from zac.contrib.objects.kownsl.constants import KownslTypes
-from zac.contrib.objects.kownsl.tests.utils import ReviewRequestFactory, ReviewsFactory
+from zac.contrib.objects.kownsl.tests.factories import (
+    ReviewRequestFactory,
+    ReviewsFactory,
+)
 from zac.contrib.objects.services import factory_review_request, factory_reviews
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
@@ -426,39 +429,41 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         users = UserFactory.create_batch(3)
-        review_request_data = ReviewRequestFactory()
-        review_request_data["assignedUsers"] = [
-            {
-                "deadline": "2020-01-01",
-                "userAssignees": [
-                    {
-                        "username": user.username,
-                        "firstName": user.first_name,
-                        "lastName": user.last_name,
-                        "fullName": user.get_full_name(),
-                    }
-                    for user in users
-                ],
-                "groupAssignees": [],
-                "emailNotification": False,
+        review_request_data = ReviewRequestFactory(
+            assignedUsers=[
+                {
+                    "deadline": "2020-01-01",
+                    "userAssignees": [
+                        {
+                            "username": user.username,
+                            "firstName": user.first_name,
+                            "lastName": user.last_name,
+                            "fullName": user.get_full_name(),
+                        }
+                        for user in users
+                    ],
+                    "groupAssignees": [],
+                    "emailNotification": False,
+                },
+            ],
+            zaak=self.zaak.url,
+            userDeadlines={
+                "user:some-author": "2022-04-14",
+                "user:some-other-author": "2022-04-15",
             },
-        ]
-        review_request_data["zaak"] = self.zaak.url
-        review_request_data["userDeadlines"] = {
-            "user:some-author": "2022-04-14",
-            "user:some-other-author": "2022-04-15",
-        }
-        review_request_data["metadata"] = {
-            "taskDefinitionId": "submitAdvice",
-            "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
-        }
-        review_request_data["requester"] = {
-            "username": "some-user",
-            "firstName": "",
-            "lastName": "",
-            "fullName": "",
-        }
-        review_request_data["zaakeigenschappen"] = [self.zaakeigenschap["url"]]
+            zaakeigenschappen= [self.zaakeigenschap["url"]],
+            metadata={
+                "taskDefinitionId": "submitAdvice",
+                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+            },
+            requester={
+                "username": "some-user",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
+        )
+
         review_request = factory_review_request(review_request_data)
         m.get(
             f"{CAMUNDA_URL}task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
@@ -891,38 +896,41 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "id": None,
         }
         rr = ReviewRequestFactory()
-        rr["assignedUsers"] = [
-            {
-                "deadline": "2020-01-01",
-                "userAssignees": [
-                    {
-                        "username": user.username,
-                        "firstName": user.first_name,
-                        "lastName": user.last_name,
-                        "fullName": user.get_full_name(),
-                    }
-                    for user in users
-                ],
-                "groupAssignees": [],
-                "emailNotification": False,
+        review_request_data = ReviewRequestFactory(
+            assignedUsers=[
+                {
+                    "deadline": "2020-01-01",
+                    "userAssignees": [
+                        {
+                            "username": user.username,
+                            "firstName": user.first_name,
+                            "lastName": user.last_name,
+                            "fullName": user.get_full_name(),
+                        }
+                        for user in users
+                    ],
+                    "groupAssignees": [],
+                    "emailNotification": False,
+                },
+            ],
+            zaak=self.zaak.url,
+            userDeadlines={
+                "user:some-author": "2022-04-14",
+                "user:some-other-author": "2022-04-15",
             },
-        ]
-        rr["zaak"] = self.zaak.url
-        rr["userDeadlines"] = {
-            "user:some-author": "2022-04-14",
-            "user:some-other-author": "2022-04-15",
-        }
-        rr["metadata"] = {
-            "taskDefinitionId": "submitAdvice",
-            "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
-        }
-        rr["requester"] = {
-            "username": "some-user",
-            "firstName": "",
-            "lastName": "",
-            "fullName": "",
-        }
-        rr["documents"] = [self.document.url]
+            metadata={
+                "taskDefinitionId": "submitAdvice",
+                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+            },
+            requester={
+                "username": "some-user",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
+            documents=[self.document.url],
+        )
+
         review_request = factory_review_request(rr)
 
         m.post(
@@ -960,38 +968,40 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
         rr = ReviewRequestFactory()
-        rr["assignedUsers"] = [
-            {
-                "deadline": "2020-01-01",
-                "userAssignees": [
-                    {
-                        "username": user.username,
-                        "firstName": user.first_name,
-                        "lastName": user.last_name,
-                        "fullName": user.get_full_name(),
-                    }
-                    for user in users
-                ],
-                "groupAssignees": [],
-                "emailNotification": False,
+        review_request_data = ReviewRequestFactory(
+            assignedUsers=[
+                {
+                    "deadline": "2020-01-01",
+                    "userAssignees": [
+                        {
+                            "username": user.username,
+                            "firstName": user.first_name,
+                            "lastName": user.last_name,
+                            "fullName": user.get_full_name(),
+                        }
+                        for user in users
+                    ],
+                    "groupAssignees": [],
+                    "emailNotification": False,
+                },
+            ],
+            zaak=self.zaak.url,
+            userDeadlines={
+                "user:some-author": "2022-04-14",
+                "user:some-other-author": "2022-04-15",
             },
-        ]
-        rr["zaak"] = self.zaak.url
-        rr["userDeadlines"] = {
-            "user:some-author": "2022-04-14",
-            "user:some-other-author": "2022-04-15",
-        }
-        rr["metadata"] = {
-            "taskDefinitionId": "submitAdvice",
-            "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
-        }
-        rr["requester"] = {
-            "username": "some-user",
-            "firstName": "",
-            "lastName": "",
-            "fullName": "",
-        }
-        rr["documents"] = [self.document.url]
+            metadata={
+                "taskDefinitionId": "submitAdvice",
+                "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
+            },
+            requester={
+                "username": "some-user",
+                "firstName": "",
+                "lastName": "",
+                "fullName": "",
+            },
+        )
+
         review_request = factory_review_request(rr)
         payload_assigned_users = [
             {
@@ -1190,6 +1200,21 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             status_code=201,
         )
 
+        rr = factory_review_request(
+            ReviewRequestFactory(
+                userDeadlines={
+                    "user:some-author": "2022-04-14",
+                }
+            )
+        )
+
+        activity = ActivityFactory.create(zaak=self.zaak.url)
+        checklist_object = ChecklistObjectFactory()
+        checklist_object["record"]["data"]["answers"][0] = {
+            "answer": "",
+            "question": "Ja?",
+            "userAssignee": "some-user",
+        }
         patch_get_zaak_context = patch(
             "zac.core.camunda.zet_resultaat.serializers.get_zaak_context",
             return_value=self.zaak_context,

@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 from django.urls import reverse_lazy
@@ -20,20 +19,21 @@ from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from ..models import ChecklistLock
-from .utils import (
+from .factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
-    CHECKLIST_OBJECT,
-    CHECKLIST_OBJECTTYPE,
-    CHECKLIST_OBJECTTYPE_LATEST_VERSION,
-    CHECKLISTTYPE_OBJECT,
-    CHECKLISTTYPE_OBJECTTYPE,
     IDENTIFICATIE,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
     ChecklistLockFactory,
+    ChecklistFactory,
+    ChecklistObjectFactory,
+    ChecklistObjectTypeFactory,
+    ChecklistObjectTypeVersionFactory,
+    ChecklistTypeObjectFactory,
+    ChecklistTypeObjectTypeVersionFactory,
 )
 
 
@@ -68,9 +68,12 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         config.primary_objecttypes_api = objecttypes_service
         config.save()
 
+        cls.checklisttype_objecttype = ChecklistTypeObjectTypeVersionFactory()
+        cls.checklist_objecttype = ChecklistObjectTypeFactory()
+
         meta_config = MetaObjectTypesConfig.get_solo()
-        meta_config.checklisttype_objecttype = CHECKLISTTYPE_OBJECTTYPE["url"]
-        meta_config.checklist_objecttype = CHECKLIST_OBJECTTYPE["url"]
+        meta_config.checklisttype_objecttype = cls.checklisttype_objecttype["url"]
+        meta_config.checklist_objecttype = cls.checklist_objecttype["url"]
         meta_config.save()
 
         cls.catalogus = generate_oas_component(
@@ -96,6 +99,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             identificatie=IDENTIFICATIE,
         )
         cls.user = SuperUserFactory.create(is_staff=True)
+        cls.checklist_object = ChecklistObjectFactory()
+        cls.checklisttype_object = ChecklistTypeObjectFactory()
 
     def test_retrieve_checklist(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -112,11 +117,11 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=self.checklist_object,
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklisttype_object",
-                return_value=[CHECKLISTTYPE_OBJECT],
+                return_value=[self.checklisttype_object],
             ):
                 response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 200)
@@ -153,10 +158,13 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
-        mock_resource_get(m, CHECKLIST_OBJECTTYPE)
-        mock_resource_get(m, CHECKLIST_OBJECTTYPE_LATEST_VERSION)
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[CHECKLIST_OBJECTTYPE])
-        m.post(f"{OBJECTS_ROOT}objects", json=CHECKLIST_OBJECT, status_code=201)
+        mock_resource_get(m, self.checklist_objecttype)
+
+        checklist_objecttype_version = ChecklistObjectTypeVersionFactory()
+        mock_resource_get(m, checklist_objecttype_version)
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.checklist_objecttype])
+
+        m.post(f"{OBJECTS_ROOT}objects", json=self.checklist_object, status_code=201)
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {
             "answers": [
@@ -169,14 +177,13 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         }
 
         self.client.force_authenticate(user=self.user)
-
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=[CHECKLISTTYPE_OBJECT],
+            return_value=[self.checklisttype_object],
         ):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.checklist_object,
             ):
                 with patch(
                     "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
@@ -190,8 +197,10 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             {
                 "answers": [
                     {
-                        "question": "Ja?",
-                        "answer": "Ja",
+                        "question": self.checklist_object["record"]["data"]["answers"][
+                            0
+                        ]["question"],
+                        "answer": "",
                         "remarks": "",
                         "document": "",
                         "groupAssignee": None,
@@ -199,7 +208,9 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "created": "1999-12-31T23:59:59Z",
                     },
                     {
-                        "question": "Nee?",
+                        "question": self.checklist_object["record"]["data"]["answers"][
+                            1
+                        ]["question"],
                         "answer": "",
                         "remarks": "",
                         "document": "",
@@ -272,7 +283,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=[CHECKLISTTYPE_OBJECT],
+            return_value=[self.checklisttype_object],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -316,7 +327,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=[CHECKLISTTYPE_OBJECT],
+            return_value=[self.checklisttype_object],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -345,13 +356,19 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
+
         data = {
             "answers": [
                 {
                     "question": "some-non-existent-question",
                     "answer": "",
                 },
-                {"question": "Nee?", "answer": ""},
+                {
+                    "question": self.checklist_object["record"]["data"]["answers"][1][
+                        "question"
+                    ],
+                    "answer": "",
+                },
             ],
         }
 
@@ -359,7 +376,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=[CHECKLISTTYPE_OBJECT],
+            return_value=[self.checklisttype_object],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklist_object",
@@ -396,10 +413,9 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 {"question": "Nee?", "answer": "Nee"},
             ],
         }
-        json_response = deepcopy(CHECKLIST_OBJECT)
-        json_response["record"]["data"]["answers"] = data["answers"]
+        json_response = ChecklistFactory(record__data__answers=data['answers'])
         m.patch(
-            f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
+            f"{OBJECTS_ROOT}objects/{self.checklist_object['uuid']}",
             json=json_response,
             status_code=200,
         )
@@ -407,11 +423,11 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         # Put checklist
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            side_effect=[CHECKLIST_OBJECT, json_response],
+            side_effect=[self.checklist_object, json_response],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklisttype_object",
-                return_value=[CHECKLISTTYPE_OBJECT],
+                return_value=[self.checklisttype_object],
             ):
                 response = self.client.put(self.endpoint, data=data)
 
@@ -516,22 +532,35 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 {"question": "Nee?", "answer": ""},
             ],
         }
-        json_response = deepcopy(CHECKLIST_OBJECT)
-        json_response["record"]["data"]["answers"] = data["answers"]
+        checklist_object = ChecklistObjectFactory(record__data__answers=[
+                {
+                    "question": checklist_object["record"]["data"]["answers"][0][
+                        "question"
+                    ],
+                    "answer": "Ja",
+                },
+                {
+                    "question": checklist_object["record"]["data"]["answers"][1][
+                        "question"
+                    ],
+                    "answer": "",
+                },
+            ])
+
         m.patch(
-            f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
-            json=json_response,
+            f"{OBJECTS_ROOT}objects/{checklist_object['uuid']}",
+            json=checklist_object,
             status_code=200,
         )
         self.client.force_authenticate(user=self.user)
         # Put checklist
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            side_effect=[CHECKLIST_OBJECT, json_response],
+            side_effect=[self.checklist_object, checklist_object],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklisttype_object",
-                return_value=[CHECKLISTTYPE_OBJECT],
+                return_value=[self.checklisttype_object],
             ):
                 with patch(
                     "zac.contrib.objects.checklists.api.serializers.update_object_record_data"
@@ -545,8 +574,10 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             {
                 "answers": [
                     {
-                        "question": "Ja?",
-                        "answer": "Ja",
+                        "question": checklist_object["record"]["data"]["answers"][0][
+                            "question"
+                        ],
+                        "answer": data["answers"][0]["answer"],
                         "remarks": "",
                         "document": "",
                         "groupAssignee": None,
@@ -554,8 +585,10 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "created": "1999-12-31T23:59:59Z",
                     },
                     {
-                        "question": "Nee?",
-                        "answer": "",
+                        "question": checklist_object["record"]["data"]["answers"][1][
+                            "question"
+                        ],
+                        "answer": data["answers"][1]["answer"],
                         "remarks": "",
                         "document": "",
                         "groupAssignee": None,
@@ -583,8 +616,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
 
         m.patch(
-            f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
-            json=CHECKLIST_OBJECT,
+            f"{OBJECTS_ROOT}objects/{self.checklist_object['uuid']}",
+            json=self.checklist_object,
             status_code=200,
         )
         self.client.force_authenticate(user=self.user)
@@ -595,7 +628,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=deepcopy(CHECKLIST_OBJECT),
+            return_value=self.checklist_object,
         ):
             response = self.client.post(lock_endpoint)
 
@@ -619,10 +652,14 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "lock-zaak-checklist",
             kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
         )
-        lock = ChecklistLockFactory.create(url=CHECKLIST_OBJECT["url"], user=self.user)
+        checklist_object = ChecklistObjectFactory(
+            record__data__locked=True
+        )
+        lock = ChecklistLockFactory.create(url=checklist_object["url"], user=self.user)
+        
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=checklist_object,
         ):
             response = self.client.post(lock_endpoint)
 
@@ -642,9 +679,11 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
 
+        checklist_object = ChecklistObjectFactory()
+
         m.patch(
-            f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
-            json=CHECKLIST_OBJECT,
+            f"{OBJECTS_ROOT}objects/{checklist_object['uuid']}",
+            json=checklist_object,
             status_code=200,
         )
         self.client.force_authenticate(user=self.user)
@@ -652,16 +691,21 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "unlock-zaak-checklist",
             kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
         )
-        lock = ChecklistLockFactory.create(url=CHECKLIST_OBJECT["url"], user=self.user)
+
+        checklist_object = ChecklistObjectFactory(
+            record__data__locked=True
+        )
+        lock = ChecklistLockFactory.create(url=checklist_object["url"], user=self.user)
+
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=checklist_object,
         ):
             response = self.client.post(unlock_endpoint)
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(
-            ChecklistLock.objects.filter(url=CHECKLIST_OBJECT["url"]).exists()
+            ChecklistLock.objects.filter(url=checklist_object["url"]).exists()
         )
 
     def test_unlock_checklist_but_checklist_is_not_locked(self, m):
@@ -684,14 +728,14 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=self.checklist_object,
         ):
             response = self.client.post(unlock_endpoint)
 
         self.assertEqual(response.status_code, 404)
 
     def test_lock_checklist_for_zaak(self, m):
-        checklist_object = deepcopy(CHECKLIST_OBJECT)
+        checklist_object = ChecklistObjectFactory()
         answer = checklist_object["record"]["data"]["answers"][0]
         answer["userAssignee"] = "some-user"
         answer["answer"] = ""

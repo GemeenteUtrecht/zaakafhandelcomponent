@@ -18,11 +18,9 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.models import DowcConfig
 from zac.contrib.objects.kownsl.data import ReviewRequest, Reviews
-from zac.contrib.objects.kownsl.tests.utils import (
-    AssignedUsersFactory,
+from zac.contrib.objects.kownsl.tests.factories import (
     ReviewRequestFactory,
     ReviewsFactory,
-    UserAssigneeFactory,
 )
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -62,11 +60,13 @@ TASK_DATA = {
     "tenantId": "aTenantId",
 }
 
-from zac.contrib.objects.checklists.tests.utils import (
-    CHECKLIST_OBJECT,
-    CHECKLISTTYPE_OBJECT,
+from zac.contrib.objects.checklists.tests.factories import (
+    ChecklistObjectFactory,
+    ChecklistTypeObjectFactory,
 )
 from zac.core.tests.utils import ClearCachesMixin
+
+CHECKLISTTYPE_OBJECT = ChecklistTypeObjectFactory()
 
 
 def _get_task(**overrides):
@@ -196,28 +196,10 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}resultaattypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.resultaattype]),
         )
-        checklist = deepcopy(CHECKLIST_OBJECT)
+        checklist = ChecklistObjectFactory()
         checklist["record"]["data"]["answers"][0]["answer"] = ""
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
         review_request = ReviewRequestFactory()
-        review_request["assignedUsers"].append(assigned_users2)
         rr = factory(ReviewRequest, review_request)
 
         # Avoid patching fetch_reviews and everything

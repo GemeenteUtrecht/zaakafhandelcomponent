@@ -25,15 +25,15 @@ from zac.tests.utils import mock_resource_get, paginated_response
 from ..data import ChecklistType
 from ..models import ChecklistLock
 from ..permissions import checklists_inzien, checklists_schrijven
-from .utils import (
+from .factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
-    CHECKLIST_OBJECT,
     IDENTIFICATIE,
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
     ChecklistLockFactory,
+    ChecklistObjectFactory,
 )
 
 
@@ -177,7 +177,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=ChecklistObjectFactory(),
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -227,7 +227,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create()
 
         cls.checklisttype = generate_oas_component(
-            "checklists_objects",
+            "metaobjecttypes",
             "schemas/ChecklistType",
             zaaktypeCatalogus=cls.catalogus["domein"],
             zaaktypeIdentificaties=[cls.zaaktype["identificatie"]],
@@ -251,12 +251,12 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         cls.patch_fetch_checklist_object_views = patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            side_effect=[None, CHECKLIST_OBJECT],
+            side_effect=[None, cls.checklist_object],
         )
-
+        cls.checklist_object = ChecklistObjectFactory()
         cls.patch_create_object = patch(
             "zac.contrib.objects.services.create_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=cls.checklist_object,
         )
 
         cls.patch_relate_object_to_zaak = patch(
@@ -545,7 +545,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=self.checklist_object,
         ):
             with patch(
                 "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
@@ -608,7 +608,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create()
 
         cls.checklisttype = generate_oas_component(
-            "checklists_objects",
+            "metaobjecttypes",
             "schemas/ChecklistType",
             zaaktypeCatalogus=cls.catalogus["domein"],
             zaaktypeIdentificaties=[cls.zaaktype["identificatie"]],
@@ -630,8 +630,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 "version": 1,
             },
         )
-        data = deepcopy(CHECKLIST_OBJECT)
-        data["record"]["data"]["locked"] = False
+        data = ChecklistObjectFactory(record__data__locked=False)
         cls.patch_fetch_checklist_object_views = patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=data,
@@ -761,7 +760,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         )
         self.client.force_authenticate(user=self.user)
         checklist_lock = ChecklistLockFactory.create(
-            zaak=self.zaak["url"], url=CHECKLIST_OBJECT["url"], user=self.user
+            zaak=self.zaak["url"], url=self.checklist_object["url"], user=self.user
         )
         response = self.client.put(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -862,7 +861,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             object_url=self.zaak["url"],
         )
         checklist_lock = ChecklistLockFactory.create(
-            zaak=self.zaak["url"], url=CHECKLIST_OBJECT["url"], user=self.user
+            zaak=self.zaak["url"], url=self.checklist_object["url"], user=self.user
         )
         self.client.force_authenticate(user=self.user)
         response = self.client.put(self.endpoint, data)
@@ -901,8 +900,8 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             object_url=self.zaak["url"],
         )
         self.client.force_authenticate(user=self.user)
-        data = deepcopy(CHECKLIST_OBJECT)
-        data["record"]["data"]["locked"] = False
+        data = ChecklistObjectFactory(record__data__locked=False)
+
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=data,
@@ -944,13 +943,16 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # create some-other-user
         user = UserFactory.create(username="some-other-user")
+        checklist_object = ChecklistObjectFactory(
+            record__data__locked=True
+        )
 
         checklist_lock = ChecklistLockFactory.create(
-            zaak=self.zaak["url"], url=CHECKLIST_OBJECT["url"], user=user
+            zaak=self.zaak["url"], url=checklist_object["url"], user=user
         )
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=checklist_object,
         ):
             response = self.client.put(self.endpoint, data)
 
@@ -999,8 +1001,10 @@ class LockAndUnlockChecklistPermissionTests(
         bronorganisatie=BRONORGANISATIE,
         identificatie=IDENTIFICATIE,
     )
-    data = deepcopy(CHECKLIST_OBJECT)
-    data["record"]["data"]["zaak"] = zaak["url"]
+    lock_checklist_object = ChecklistObjectFactory(record__data__locked=True, record__data__zaak=zaak['url'])
+    unlock_checklist_object = ChecklistObjectFactory(
+            record__data__locked=False
+        )
 
     def setUp(self):
         super().setUp()
@@ -1013,12 +1017,19 @@ class LockAndUnlockChecklistPermissionTests(
             api_root=CATALOGI_ROOT,
         )
         self.user = UserFactory.create()
+        self.patch_update_object_record_data = patch(
+            "zac.contrib.objects.checklists.api.views.update_object_record_data",
+            return_value=None,
+        )
+        
+        self.patch_update_object_record_data.start()
+        self.addCleanup(self.patch_update_object_record_data.stop)        
 
     def test_unlock_checklist_not_logged_in(self, m):
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1026,7 +1037,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1047,7 +1058,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1055,7 +1066,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1086,7 +1097,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1094,7 +1105,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1125,7 +1136,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -1136,11 +1147,11 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 lock = ChecklistLockFactory.create(
                     zaak=self.zaak["url"],
-                    url=CHECKLIST_OBJECT["url"],
+                    url=self.lock_checklist_object["url"],
                     user=self.user,
                 )
                 response = self.client.post(self.unlock_endpoint)
@@ -1173,7 +1184,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1181,7 +1192,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1220,7 +1231,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -1231,11 +1242,11 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 lock = ChecklistLockFactory.create(
                     zaak=self.zaak["url"],
-                    url=CHECKLIST_OBJECT["url"],
+                    url=self.lock_checklist_object["url"],
                     user=self.user,
                 )
                 response = self.client.post(self.unlock_endpoint)
@@ -1265,7 +1276,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1273,7 +1284,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1302,7 +1313,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -1313,11 +1324,11 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 lock = ChecklistLockFactory.create(
                     zaak=self.zaak["url"],
-                    url=CHECKLIST_OBJECT["url"],
+                    url=self.lock_checklist_object["url"],
                     user=self.user,
                 )
                 response = self.client.post(self.unlock_endpoint)
@@ -1353,14 +1364,14 @@ class LockAndUnlockChecklistPermissionTests(
         # create some-other-user
         user = UserFactory.create(username="some-other-user")
         lock = ChecklistLockFactory.create(
-            zaak=self.zaak["url"], url=CHECKLIST_OBJECT["url"], user=user
+            zaak=self.zaak["url"], url=self.unlock_checklist_object["url"], user=user
         )
 
         self.client.force_authenticate(user=self.user)
         with self.subTest("LOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.unlock_checklist_object,
             ):
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -1377,7 +1388,7 @@ class LockAndUnlockChecklistPermissionTests(
         with self.subTest("UNLOCK"):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=CHECKLIST_OBJECT,
+                return_value=self.lock_checklist_object,
             ):
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

@@ -12,15 +12,18 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
-from zac.contrib.objects.kownsl.tests.utils import (
-    REVIEW_REQUEST_OBJECT,
-    REVIEW_REQUEST_OBJECTTYPE,
+from zac.contrib.objects.kownsl.tests.factories import (
     ZAKEN_ROOT,
     ReviewRequestFactory,
+    ReviewRequestObjectFactory,
+    ReviewRequestObjectTypeVersionFactory,
 )
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
+
+REVIEW_REQUEST_OBJECTTYPE = ReviewRequestObjectTypeVersionFactory()
+REVIEW_REQUEST_OBJECT = ReviewRequestObjectFactory()
 
 NOTIFICATION = {
     "kanaal": "objecten",
