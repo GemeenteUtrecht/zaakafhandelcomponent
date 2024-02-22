@@ -250,7 +250,7 @@ class WorkStackGroupChecklistQuestionsView(WorkStackChecklistQuestionsView):
 
 
 @extend_schema(
-    summary=_("List review requests initiated by user."),
+    summary=_("List review requests initiated by user that are not locked."),
     parameters=[
         OpenApiParameter(
             name=ProxyPagination().page_size_query_param,
@@ -326,6 +326,7 @@ class WorkStackReviewRequestsView(views.APIView):
         results, _query_params = get_review_requests_paginated(
             query_params=self.get_query_params(),
             requester=request.user,
+            not_locked=True,
         )
         review_requests = self.resolve_zaken(results["results"])
         review_requests = self.resolve_reviews(results["results"])

@@ -76,7 +76,7 @@ def get_context(task: Task) -> ZetResultaatContext:
     }
     open_review_requests = []
     for rr in review_requests:
-        rr.reviews = reviews_given.get(str(rr.id))
+        rr.reviews = reviews_given.get(str(rr.id), [])
         rr.fetched_reviews = True
         if rr.get_completed() < rr.num_assigned_users:
             open_review_requests.append(rr)
