@@ -1,0 +1,483 @@
+components:
+  schemas: 
+    Checklist:
+      type: object
+      title: Checklist
+      required:
+        - answers
+        - zaak
+        - lockedBy
+      properties:
+        zaak:
+          type: string
+        answers:
+          type: array
+          items:
+            type: object
+            title: ChecklistAnswer
+            required:
+              - question
+              - answer
+            properties:
+              answer:
+                type: string
+              remarks:
+                type: string
+              document:
+                type: string
+              question:
+                type: string
+              userAssignee:
+                type:
+                  - string
+                  - 'null'
+              groupAssignee:
+                type:
+                  - string
+                  - 'null'
+        lockedBy:
+          type:
+            - string
+            - 'null'
+    ChecklistType:
+      type: object
+      title: ChecklistType
+      required:
+        - zaaktypeCatalogus
+        - zaaktypeIdentificaties
+        - questions
+      properties:
+        questions:
+          type: array
+          items:
+            type: object
+            title: ChecklistQuestion
+            required:
+              - question
+              - choices
+              - order
+            properties:
+              order:
+                type: integer
+              choices:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+              question:
+                type: string
+        zaaktypeCatalogus:
+          type: string
+        zaaktypeIdentificaties:
+          type: array
+          items:
+            type: string
+    Oudbehandelaar:
+      type: object
+      title: OudBehandelaren
+      required:
+        - oudbehandelaren
+        - zaak
+      properties:
+        zaak:
+          type: string
+        oudbehandelaren:
+          type: array
+          items:
+            type: object
+            title: oudbehandelaar
+            required:
+              - email
+              - ended
+              - started
+              - identificatie
+            properties:
+              email:
+                type: string
+              ended:
+                type: string
+              started:
+                type: string
+              identificatie:
+                type: string
+    Review:
+      type: object
+      $defs:
+        id:
+          type: string
+        user:
+          type: object
+          title: user
+          required:
+            - username
+            - firstName
+            - fullName
+            - lastName
+            - email
+          properties:
+            email:
+              type: string
+            fullName:
+              type: string
+            lastName:
+              type: string
+            username:
+              type: string
+            firstName:
+              type: string
+        zaak:
+          type: string
+        group:
+          type:
+            - object
+            - 'null'
+          title: group
+          required:
+            - name
+            - fullName
+          properties:
+            name:
+              type: string
+            fullName:
+              type: string
+        advice:
+          type: object
+          title: Advice
+          required:
+            - advice
+            - author
+            - created
+          properties:
+            group:
+              $ref: '#/components/schemas/Review/$defs/group'
+            advice:
+              type: string
+            author:
+              $ref: '#/components/schemas/Review/$defs/user'
+            created:
+              $ref: '#/components/schemas/Review/$defs/created'
+            reviewDocuments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review/$defs/reviewDocument'
+            zaakeigenschappen:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review/$defs/zaakeigenschap'
+        created:
+          type: string
+        approval:
+          name: Approval
+          type: object
+          required:
+            - approved
+            - author
+            - created
+            - toelichting
+          properties:
+            group:
+              $ref: '#/components/schemas/Review/$defs/group'
+            author:
+              $ref: '#/components/schemas/Review/$defs/user'
+            created:
+              $ref: '#/components/schemas/Review/$defs/created'
+            approved:
+              type: boolean
+            toelichting:
+              type: string
+            reviewDocuments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review/$defs/reviewDocument'
+            zaakeigenschappen:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review/$defs/zaakeigenschap'
+        reviewType:
+          type: string
+        reviewRequest:
+          type: string
+        reviewDocument:
+          type: object
+          title: reviewDocument
+          required:
+            - document
+            - sourceVersion
+            - reviewVersion
+          properties:
+            document:
+              type: string
+            reviewVersion:
+              type: integer
+            sourceVersion:
+              type: integer
+        zaakeigenschap:
+          type: object
+          title: zaakeigenschap
+          required:
+            - url
+            - naam
+            - waarde
+          properties:
+            url:
+              type: string
+            naam:
+              type: string
+            waarde:
+              type: string
+      title: Reviews
+      required:
+        - id
+        - requester
+        - reviewRequest
+        - reviewType
+        - reviews
+        - zaak
+      properties:
+        id:
+          $ref: '#/Review/$defs/id'
+        zaak:
+          $ref: '#/Review/$defs/zaak'
+        reviews:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/Review/$defs/advice'
+              - $ref: '#/components/schemas/Review/$defs/approval'
+        requester:
+          $ref: '#/components/schemas/Review/$defs/user'
+        reviewType:
+          $ref: '#/components/schemas/Review/$defs/reviewType'
+        reviewRequest:
+          $ref: '#/components/schemas/Review/$defs/reviewRequest'
+    ReviewRequest:
+      type: object
+      $defs:
+        user:
+          type: object
+          title: user
+          required:
+            - username
+            - firstName
+            - fullName
+            - lastName
+            - email
+          properties:
+            email:
+              type: string
+            fullName:
+              type: string
+            lastName:
+              type: string
+            username:
+              type: string
+            firstName:
+              type: string
+        group:
+          type: object
+          title: group
+          required:
+            - name
+            - fullName
+          properties:
+            name:
+              type: string
+            fullName:
+              type: string
+        assignedUser:
+          type: object
+          title: AssignedUser
+          required:
+            - deadline
+            - emailNotification
+            - userAssignees
+            - groupAssignees
+          properties:
+            deadline:
+              type: string
+            userAssignees:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReviewRequest/$defs/user'
+            groupAssignees:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReviewRequest/$defs/group'
+            emailNotification:
+              type: boolean
+      title: ReviewRequest
+      required:
+        - assignedUsers
+        - created
+        - documents
+        - id
+        - isBeingReconfigured
+        - locked
+        - lockReason
+        - metadata
+        - numReviewsGivenBeforeChange
+        - requester
+        - reviewType
+        - toelichting
+        - userDeadlines
+        - zaak
+        - zaakeigenschappen
+      properties:
+        id:
+          type: string
+        zaak:
+          type: string
+        locked:
+          type: boolean
+        created:
+          type: string
+        metadata:
+          type: object
+          title: Metadata
+          properties:
+            taskDefinitionId:
+              type: string
+            processInstanceId:
+              type: string
+        documents:
+          type: array
+          items:
+            type: string
+        requester:
+          $ref: '#/components/schemas/ReviewRequest/$defs/user'
+        lockReason:
+          type: string
+        reviewType:
+          type: string
+        toelichting:
+          type: string
+        assignedUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewRequest/$defs/assignedUser'
+        userDeadlines:
+          type: object
+        zaakeigenschappen:
+          type: array
+          items:
+            type: string
+        isBeingReconfigured:
+          type: boolean
+        numReviewsGivenBeforeChange:
+          type: integer
+    StartCamundaProcessForm:
+      type: object
+      title: StartCamundaProcessForm
+      required:
+        - zaaktypeCatalogus
+        - zaaktypeIdentificaties
+        - camundaProcessDefinitionKey
+        - processEigenschappen
+        - processRollen
+        - processInformatieObjecten
+      properties:
+        processRollen:
+          type: array
+          items:
+            type: object
+            title: processRol
+            required:
+              - roltypeOmschrijving
+              - betrokkeneType
+              - label
+              - required
+              - order
+            properties:
+              label:
+                type: string
+              order:
+                type: integer
+              required:
+                type: boolean
+              betrokkeneType:
+                enum:
+                  - natuurlijk_persoon
+                  - niet_natuurlijk_persoon
+                  - vestiging
+                  - organisatorische_eenheid
+                  - medewerker
+                type: string
+              roltypeOmschrijving:
+                type: string
+        zaaktypeCatalogus:
+          type: string
+        processEigenschappen:
+          type: array
+          items:
+            type: object
+            title: processEigenschap
+            required:
+              - eigenschapnaam
+              - label
+              - default
+              - required
+              - order
+            properties:
+              label:
+                type: string
+              order:
+                type: integer
+              default:
+                type: string
+              required:
+                type: boolean
+              eigenschapnaam:
+                type: string
+        zaaktypeIdentificaties:
+          type: array
+          items:
+            type: string
+        processInformatieObjecten:
+          type: array
+          items:
+            type: object
+            title: processInformatieObject
+            required:
+              - informatieobjecttypeOmschrijving
+              - allowMultiple
+              - label
+              - required
+              - order
+            properties:
+              label:
+                type: string
+              order:
+                type: integer
+              required:
+                type: boolean
+              allowMultiple:
+                type: boolean
+              informatieobjecttypeOmschrijving:
+                type: string
+    ZaaktypeAttribute:
+      type: object
+      title: ZaaktypeAttributen
+      required:
+        - naam
+        - waarde
+        - zaaktypeIdentificaties
+        - zaaktypeCatalogus
+      properties:
+        enum:
+          type: array
+          items:
+            type: string
+        naam:
+          type: string
+        waarde:
+          type: string
+        zaaktypeCatalogus:
+          type: string
+        zaaktypeIdentificaties:
+          type: array
+          items:
+            type: string

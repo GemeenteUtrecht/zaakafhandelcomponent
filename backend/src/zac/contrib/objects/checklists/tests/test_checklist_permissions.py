@@ -23,14 +23,14 @@ from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..data import ChecklistType
 from ..permissions import checklists_inzien, checklists_schrijven
-from .utils import (
+from .factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
-    CHECKLIST_OBJECT,
     IDENTIFICATIE,
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
+    ChecklistObjectFactory,
 )
 
 
@@ -174,7 +174,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=ChecklistObjectFactory(),
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -224,7 +224,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create()
 
         cls.checklisttype = generate_oas_component(
-            "checklists_objects",
+            "metaobjecttypes",
             "schemas/ChecklistType",
             zaaktypeCatalogus=cls.catalogus["domein"],
             zaaktypeIdentificaties=[cls.zaaktype["identificatie"]],
@@ -254,10 +254,10 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
             return_value=None,
         )
-
+        cls.checklist_object = ChecklistObjectFactory()
         cls.patch_create_object = patch(
             "zac.contrib.objects.services.create_object",
-            return_value=CHECKLIST_OBJECT,
+            return_value=cls.checklist_object,
         )
 
         cls.patch_relate_object_to_zaak = patch(
@@ -571,7 +571,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create()
 
         cls.checklisttype = generate_oas_component(
-            "checklists_objects",
+            "metaobjecttypes",
             "schemas/ChecklistType",
             zaaktypeCatalogus=cls.catalogus["domein"],
             zaaktypeIdentificaties=[cls.zaaktype["identificatie"]],
@@ -593,8 +593,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 "version": 1,
             },
         )
-        data = deepcopy(CHECKLIST_OBJECT)
-        data["record"]["data"]["lockedBy"] = cls.user.username
+        data = ChecklistObjectFactory(record__data__lockedBy=cls.user.username)
         cls.patch_fetch_checklist_object_views = patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=data,
@@ -898,8 +897,8 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             object_url=self.zaak["url"],
         )
         self.client.force_authenticate(user=self.user)
-        data = deepcopy(CHECKLIST_OBJECT)
-        data["record"]["data"]["lockedBy"] = None
+        data = ChecklistObjectFactory(record__data__lockedBy=None)
+
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             return_value=data,
@@ -941,8 +940,9 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # create some-other-user
         user = UserFactory.create(username="some-other-user")
-        checklist_object = deepcopy(CHECKLIST_OBJECT)
-        checklist_object["record"]["data"]["lockedBy"] = "some-other-user"
+        checklist_object = ChecklistObjectFactory(
+            record__data__lockedBy="some-other-user"
+        )
 
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
@@ -1004,15 +1004,16 @@ class LockAndUnlockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCa
             identificatie=IDENTIFICATIE,
         )
         cls.user = UserFactory.create()
-        data = deepcopy(CHECKLIST_OBJECT)
-        data["record"]["data"]["zaak"] = cls.zaak["url"]
+        data = ChecklistObjectFactory()
+        data = ChecklistObjectFactory(record__data__zaak=cls.zaak["url"])
         cls.patch_update_object_record_data = patch(
             "zac.contrib.objects.checklists.api.views.update_object_record_data",
             return_value=None,
         )
-        cls.lock_checklist_object = deepcopy(CHECKLIST_OBJECT)
-        cls.unlock_checklist_object = deepcopy(CHECKLIST_OBJECT)
-        cls.unlock_checklist_object["record"]["data"]["lockedBy"] = cls.user.username
+        cls.lock_checklist_object = ChecklistObjectFactory()
+        cls.unlock_checklist_object = ChecklistObjectFactory(
+            record__data__lockedBy=cls.user.username
+        )
 
     def setUp(self):
         super().setUp()
@@ -1323,8 +1324,7 @@ class LockAndUnlockChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         self.client.force_authenticate(user=self.user)
         # create some-other-user
         user = UserFactory.create(username="some-other-user")
-        checklist_object = deepcopy(CHECKLIST_OBJECT)
-        checklist_object["record"]["data"]["lockedBy"] = "some-other-user"
+        checklist_object = ChecklistObjectFactory(record__data__lockedBy=user.username)
 
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",

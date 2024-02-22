@@ -21,23 +21,21 @@ from zac.accounts.models import User
 from zac.accounts.tests.factories import UserFactory
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.contrib.objects.kownsl.constants import KownslTypes
-from zac.contrib.objects.kownsl.tests.utils import (
+from zac.contrib.objects.kownsl.tests.factories import (
     CATALOGI_ROOT,
     DOCUMENT_URL,
     DOCUMENTS_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
-    REVIEW_OBJECT,
-    REVIEW_OBJECTTYPE,
-    REVIEW_REQUEST_OBJECTTYPE,
     ZAAK_URL,
     ZAKEN_ROOT,
     AdviceFactory,
     ApprovalFactory,
-    AssignedUsersFactory,
+    ReviewObjectFactory,
+    ReviewObjectTypeFactory,
     ReviewRequestFactory,
+    ReviewRequestObjectTypeFactory,
     ReviewsFactory,
-    UserAssigneeFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -48,6 +46,8 @@ from zgw.models.zrc import Zaak
 from ...services import factory_review_request, factory_reviews
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+REVIEW_REQUEST_OBJECTTYPE = ReviewRequestObjectTypeFactory()
+REVIEW_OBJECTTYPE = ReviewObjectTypeFactory()
 
 
 @freeze_time("2022-04-14T15:51:09.830235")
@@ -154,31 +154,11 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
 
         cls.zaak = factory(Zaak, cls.zaak_json)
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
         cls.review_request = ReviewRequestFactory()
-        cls.review_request["assignedUsers"].append(assigned_users2)
         cls.advice = AdviceFactory()
-        cls.reviews_advice = ReviewsFactory()
-        cls.reviews_advice["reviews"] = [cls.advice]
+        cls.reviews_advice = ReviewsFactory(reviews=[cls.advice])
 
-        cls.review_object = deepcopy(REVIEW_OBJECT)
-        cls.review_object["record"]["data"] = cls.reviews_advice
+        cls.review_object = ReviewObjectFactory(record__data=cls.reviews_advice)
 
         cls.get_zaakeigenschappen_patcher = patch(
             "zac.contrib.objects.kownsl.data.get_zaakeigenschappen",
@@ -415,9 +395,8 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
             ],
         }
         approval = ApprovalFactory()
-        reviews = ReviewsFactory(reviews=[approval], review_type=KownslTypes.approval)
-        reviews_object = deepcopy(REVIEW_OBJECT)
-        reviews_object["record"]["data"] = reviews
+        reviews = ReviewsFactory(reviews=[approval], reviewType=KownslTypes.approval)
+        reviews_object = ReviewObjectFactory(record__data=reviews)
 
         with self.search_informatieobjects_patcher:
             with patch(
@@ -510,8 +489,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                 }
             ],
         }
-        reviews_object = deepcopy(REVIEW_OBJECT)
-        reviews_object["record"]["data"] = self.reviews_advice
+        reviews_object = ReviewObjectFactory(record__data=self.reviews_advice)
 
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request", return_value=rr
@@ -603,8 +581,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                 }
             ],
         }
-        reviews_object = deepcopy(REVIEW_OBJECT)
-        reviews_object["record"]["data"] = self.reviews_advice
+        reviews_object = ReviewObjectFactory(record__data=self.reviews_advice)
 
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request", return_value=rr

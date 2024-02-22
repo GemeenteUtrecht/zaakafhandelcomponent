@@ -17,13 +17,13 @@ from zac.accounts.tests.factories import (
     SuperUserFactory,
     UserFactory,
 )
-from zac.contrib.objects.checklists.tests.utils import (
+from zac.contrib.objects.checklists.tests.factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
-    CHECKLIST_OBJECT,
     IDENTIFICATIE,
     ZAAK_URL,
     ZAKEN_ROOT,
+    ChecklistFactory,
 )
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
@@ -98,7 +98,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        user_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
+        user_checklist = ChecklistFactory()
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         user_checklist["answers"][0]["answer"] = ""
         self.client.force_authenticate(user=self.user)
@@ -150,7 +150,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         self.refresh_index()
 
         self.client.force_authenticate(user=self.user)
-        user_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
+        user_checklist = ChecklistFactory()
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
@@ -174,7 +174,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user=user)
 
-        user_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
+        user_checklist = ChecklistFactory()
         user_checklist["answers"][0]["user_assignee"] = self.user.username
         self.client.force_authenticate(user=self.user)
         with patch(
@@ -205,7 +205,7 @@ class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
             },
         )
 
-        group_checklist = deepcopy(CHECKLIST_OBJECT["record"]["data"])
+        group_checklist = ChecklistFactory()
         group_checklist["answers"][0]["group_assignee"] = self.group_1.name
         group_checklist["answers"][0]["answer"] = ""
         self.client.force_authenticate(user=self.user)

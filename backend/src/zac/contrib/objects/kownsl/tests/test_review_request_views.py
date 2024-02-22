@@ -15,15 +15,13 @@ from zac.contrib.objects.services import factory_review_request, factory_reviews
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
 
-from .utils import (
+from .factories import (
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
     AdviceFactory,
-    AssignedUsersFactory,
     ReviewRequestFactory,
     ReviewsFactory,
-    UserAssigneeFactory,
 )
 
 
@@ -47,26 +45,6 @@ class ViewTests(ClearCachesMixin, APITestCase):
             username="some-user", first_name="John", last_name="Doe"
         )
         cls.review_request = ReviewRequestFactory()
-
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-
-        cls.review_request["assignedUsers"].append(assigned_users2)
         cls.advice = AdviceFactory()
         cls.reviews_advice = ReviewsFactory()
         cls.group = GroupFactory.create(name="some-group")

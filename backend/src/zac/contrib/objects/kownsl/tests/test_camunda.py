@@ -35,17 +35,15 @@ from ..camunda import (
     ReviewContextSerializer,
     ZaakInformatieTaskSerializer,
 )
-from .utils import (
+from .factories import (
     CATALOGI_ROOT,
     DOCUMENT_URL,
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
     AdviceFactory,
-    AssignedUsersFactory,
     ReviewRequestFactory,
     ReviewsFactory,
-    UserAssigneeFactory,
 )
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
@@ -379,25 +377,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         )
         m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
         review_request = ReviewRequestFactory()
-        review_request["assignedUsers"].append(assigned_users2)
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
         m.get(
@@ -557,26 +537,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             return_value=[cls.document_es],
         )
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        rr = ReviewRequestFactory()
-        rr["documents"] = [cls.document.url]
-        rr["assignedUsers"].append(assigned_users2)
+        rr = ReviewRequestFactory(documents=[cls.document.url])
 
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
@@ -932,8 +893,10 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
     @requests_mock.Mocker()
     def test_reconfigure_review_request_serializer_user_already_reviewed(self, m):
         advice = AdviceFactory()
-        review_request = ReviewRequestFactory()
-        reviews_advice = ReviewsFactory()
+        review_request = ReviewRequestFactory(reviewType=KownslTypes.advice)
+        reviews_advice = ReviewsFactory(
+            reviews=[advice], reviewType=review_request["reviewType"]
+        )
         user = UserFactory.create(username=advice["author"]["username"])
         assigned_users = [
             {
