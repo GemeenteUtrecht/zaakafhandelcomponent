@@ -19,8 +19,8 @@ from zac.accounts.tests.factories import (
 )
 from zac.activities.tests.factories import ActivityFactory, EventFactory
 from zac.camunda.constants import AssigneeTypeChoices
-from zac.contrib.objects.checklists.tests.utils import CATALOGI_ROOT, ZAKEN_ROOT
-from zac.contrib.objects.kownsl.tests.utils import CATALOGI_ROOT, ZAKEN_ROOT
+from zac.contrib.objects.checklists.tests.factories import CATALOGI_ROOT, ZAKEN_ROOT
+from zac.contrib.objects.kownsl.tests.factories import CATALOGI_ROOT, ZAKEN_ROOT
 from zac.core.permissions import zaken_handle_access, zaken_inzien
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
