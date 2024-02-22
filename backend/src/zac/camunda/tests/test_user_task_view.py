@@ -1193,10 +1193,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.zet_resultaat.serializers.get_all_review_requests_for_zaak",
             return_value=[rr],
         )
-        patch_get_reviews_for_zaak = patch(
-            "zac.core.camunda.zet_resultaat.serializers.get_reviews_for_zaak",
-            return_value=[],
-        )
         patch_lock_review_request = patch(
             "zac.core.camunda.zet_resultaat.serializers.lock_review_request",
         )
@@ -1214,12 +1210,12 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                 with patch_check_document_status as pcds:
                     with patch_patch_and_destroy_doc as ppdd:
                         with patch_get_all_review_requests_for_zaak as pgrrfz:
-                                with patch_lock_review_request as plrr:
-                                    with patch_fetch_checklist_object as pfco:
-                                        with patch_update_object_record_data as puor:
-                                            response = self.client.put(
-                                                self.task_endpoint, payload
-                                            )
+                            with patch_lock_review_request as plrr:
+                                with patch_fetch_checklist_object as pfco:
+                                    with patch_update_object_record_data as puor:
+                                        response = self.client.put(
+                                            self.task_endpoint, payload
+                                        )
         self.assertEqual(response.status_code, 204)
 
         activity.refresh_from_db()
