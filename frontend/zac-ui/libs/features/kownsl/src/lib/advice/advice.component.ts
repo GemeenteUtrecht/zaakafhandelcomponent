@@ -6,12 +6,12 @@ import { AdviceForm } from '../../models/advice-form';
 import {Requester, ReviewRequest} from '../../models/review-request';
 import {DocumentUrls, ReadWriteDocument, RowData, Table, User, Zaak} from '@gu/models';
 import { Review } from '../../models/review';
-import { ZaakDocument } from '../../models/zaak-document';
 import { CloseDocument } from '../../models/close-document';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { AccountsService, UserService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
+import { Document } from '@gu/models';
 
 @Component({
   selector: 'gu-features-kownsl-advice',
@@ -39,12 +39,13 @@ export class AdviceComponent implements OnInit {
 
   tableData: Table = new Table(['Adviseur', 'Gedaan op'], []);
 
-  documentTableData: Table = new Table(['Acties', '', 'Documentnaam'], []);
+  documentTableData: Table = new Table(['Bestandsnaam', 'Acties', ''], []);
 
   adviceForm: FormGroup;
   adviceFormData: AdviceForm = {
     advice: "",
-    documents: []
+    reviewDocuments: [],
+    zaakeigenschappen: []
   };
 
   docsInEditMode: string[] = [];
@@ -106,7 +107,7 @@ export class AdviceComponent implements OnInit {
     this.bronorganisatie = res.zaak.bronorganisatie;
     this.adviceData = res;
     this.getStringifiedUser(this.adviceData.requester);
-    this.tableData.bodyData = this.createTableData(res.reviews);
+    this.tableData.bodyData = this.createTableData(res.advices);
     this.documentTableData.bodyData = this.createDocumentTableData(res.zaakDocuments);
   }
 
@@ -164,12 +165,12 @@ export class AdviceComponent implements OnInit {
 
   // Document Edit
 
-  createDocumentTableData(documents: ZaakDocument[]): RowData[] {
-
+  createDocumentTableData(documents: Document[]): RowData[] {
     return documents.map( document => {
-      const docName = `${document.name} (${document.title})`;
+      const docName = document.bestandsnaam;
       const rowData: RowData = {
         cellData: {
+          docName: docName,
           lezen: {
             type: 'button',
             label: 'Lezen',
@@ -179,8 +180,7 @@ export class AdviceComponent implements OnInit {
             type: 'button',
             label: 'Bewerken',
             value: document.identificatie
-          },
-          docName: docName
+          }
         }
       }
       return rowData
@@ -244,12 +244,19 @@ export class AdviceComponent implements OnInit {
 
 
     this.adviceFormData.advice = this.adviceForm.controls['advice'].value;
+    this.adviceFormData.zaakeigenschappen = this.adviceData.zaakeigenschappen.map(eigenschap => {
+      return {
+        url: eigenschap.url,
+        naam: eigenschap.eigenschap.naam,
+        waarde: eigenschap.waarde,
+      }
+    })
 
     this.adviceService.closeDocumentEdit(this.deleteUrls)
       .pipe(
         switchMap( (closedDocs: CloseDocument[]) => {
           if (closedDocs.length > 0) {
-            this.adviceFormData.documents = closedDocs.map( (doc, i) => {
+            this.adviceFormData.reviewDocuments = closedDocs.map( (doc, i) => {
               return {
                 document: this.deleteUrls[i].drcUrl,
                 editedDocument: doc.versionedUrl
@@ -264,7 +271,7 @@ export class AdviceComponent implements OnInit {
             return of(null)
           }
         }),
-        switchMap((formData: AdviceForm) => {
+        switchMap(() => {
           return this.adviceService.postAdvice(this.adviceFormData, this.uuid, this.assignee)
         })
       ).subscribe( () => {

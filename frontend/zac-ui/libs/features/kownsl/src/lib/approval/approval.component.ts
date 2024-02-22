@@ -76,9 +76,9 @@ export class ApprovalComponent implements OnInit {
           return of(null)
         }),
         switchMap(res => {
-          const {zaak} = res;
+          const {zaak} = res
           return this.getZaakDetails(zaak.bronorganisatie, zaak.identificatie)
-        })
+        }),
       )
       .subscribe(() => {
         this.isLoading = false;
@@ -131,7 +131,7 @@ export class ApprovalComponent implements OnInit {
     const tableData: Table = new Table(['Accordeur', 'Gedaan op', 'Akkoord'], []);
 
     // Add table body data
-    tableData.bodyData = approvalData.reviews.map(review => {
+    tableData.bodyData = approvalData.approvals.map(review => {
       const author = `${review.author.firstName} ${review.author.lastName}`;
       const approved = review.approved ? 'Akkoord' : 'Niet Akkoord';
       const rowData: RowData = {
@@ -154,7 +154,14 @@ export class ApprovalComponent implements OnInit {
   submitForm(): void {
     const formData: ApprovalForm = {
       approved: this.approvalForm.controls['approved'].value,
-      toelichting: this.approvalForm.controls['toelichting'].value
+      toelichting: this.approvalForm.controls['toelichting'].value,
+      zaakeigenschappen: this.approvalData.zaakeigenschappen.map(eigenschap => {
+        return {
+          url: eigenschap.url,
+          naam: eigenschap.eigenschap.naam,
+          waarde: eigenschap.waarde,
+        }
+      })
     }
     this.postApproval(formData);
   }

@@ -26,13 +26,13 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.objects.kownsl.data import KownslTypes, ReviewRequest, Reviews
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
-    AdviceApprovalContextSerializer,
     AssignedUsersSerializer,
     ConfigureReviewRequestSerializer,
+    ReviewContextSerializer,
     ZaakInformatieTaskSerializer,
 )
 from .utils import (
@@ -44,7 +44,7 @@ from .utils import (
     AdviceFactory,
     AssignedUsersFactory,
     ReviewRequestFactory,
-    ReviewsAdviceFactory,
+    ReviewsFactory,
     UserAssigneeFactory,
 )
 
@@ -212,7 +212,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             return_value=None,
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
-        serializer = AdviceApprovalContextSerializer(instance=task_data)
+        serializer = ReviewContextSerializer(instance=task_data)
         self.assertEqual(
             {
                 "camunda_assigned_users": {
@@ -275,7 +275,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             return_value=None,
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
-        serializer = AdviceApprovalContextSerializer(instance=task_data)
+        serializer = ReviewContextSerializer(instance=task_data)
         self.assertEqual(
             serializer.data["context"],
             {
@@ -332,7 +332,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
             return_value=None,
         ):
             task_data = UserTaskData(task=task, context=_get_context(task))
-        serializer = AdviceApprovalContextSerializer(instance=task_data)
+        serializer = ReviewContextSerializer(instance=task_data)
         self.assertEqual(
             serializer.data["context"],
             {
@@ -381,6 +381,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -410,10 +411,10 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
 
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
-            username=review_request["assignedUsers"][0]["userAssignees"][0]
+            username=review_request["assignedUsers"][0]["userAssignees"][0]["username"]
         )
         UserFactory.create(
-            username=review_request["assignedUsers"][1]["userAssignees"][0]
+            username=review_request["assignedUsers"][1]["userAssignees"][0]["username"]
         )
 
         rr = factory(ReviewRequest, review_request)
@@ -432,7 +433,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                 return_value=rr,
             ):
                 task_data = UserTaskData(task=task, context=_get_context(task))
-                serializer = AdviceApprovalContextSerializer(instance=task_data)
+                serializer = ReviewContextSerializer(instance=task_data)
                 self.assertEqual(
                     {
                         "camunda_assigned_users": {
@@ -452,6 +453,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                             {
                                 "user_assignees": [
                                     {
+                                        "email": "some-author@email.zac",
                                         "first_name": "Some First",
                                         "full_name": "Some First Some Last",
                                         "last_name": "Some Last",
@@ -465,6 +467,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                             {
                                 "user_assignees": [
                                     {
+                                        "email": "some-other-author@email.zac",
                                         "first_name": "Some Other First",
                                         "full_name": "Some Other First Some Last",
                                         "last_name": "Some Last",
@@ -556,6 +559,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -575,8 +579,12 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         rr["assignedUsers"].append(assigned_users2)
 
         # Let resolve_assignee get the right users and groups
-        UserFactory.create(username=rr["assignedUsers"][0]["userAssignees"][0])
-        UserFactory.create(username=rr["assignedUsers"][1]["userAssignees"][0])
+        UserFactory.create(
+            username=rr["assignedUsers"][0]["userAssignees"][0]["username"]
+        )
+        UserFactory.create(
+            username=rr["assignedUsers"][1]["userAssignees"][0]["username"]
+        )
         cls.review_request = factory(ReviewRequest, rr)
         cls.patch_create_review_request = patch(
             "zac.contrib.objects.kownsl.camunda.create_review_request",
@@ -925,7 +933,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
     def test_reconfigure_review_request_serializer_user_already_reviewed(self, m):
         advice = AdviceFactory()
         review_request = ReviewRequestFactory()
-        reviews_advice = ReviewsAdviceFactory()
+        reviews_advice = ReviewsFactory()
         user = UserFactory.create(username=advice["author"]["username"])
         assigned_users = [
             {

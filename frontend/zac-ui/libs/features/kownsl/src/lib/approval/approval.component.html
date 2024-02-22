@@ -20,18 +20,18 @@
         <h3>{{zaakData.zaaktype.omschrijving}}</h3>
       </div>
       <div class="col-12 col-lg-2 mr-2 mb-2">
-        <p class="p p--nomargin">Zaakomschrijving:</p>
+        <p class="p p--bold p--nomargin">Zaakomschrijving:</p>
       </div>
       <div class="col-12 col-lg-8">
-        <p *ngIf="zaakData.omschrijving"  class="p p--bold">{{zaakData.omschrijving}}</p>
+        <p *ngIf="zaakData.omschrijving"  class="p">{{zaakData.omschrijving}}</p>
       </div>
 
       <ng-container *ngIf="zaakData.toelichting">
         <div class="col-12 col-lg-2 mr-2 mb-2">
-          <p class="p p--nomargin">Zaaktoelichting:</p>
+          <p class="p p--bold p--nomargin">Zaaktoelichting:</p>
         </div>
         <div class="col-12 col-lg-8">
-          <p *ngIf="zaakData.toelichting" class="p p--bold">{{zaakData.toelichting}}</p>
+          <p *ngIf="zaakData.toelichting" class="p">{{zaakData.toelichting}}</p>
         </div>
       </ng-container>
     </div>
@@ -41,37 +41,48 @@
       <div class="mb-4">
         <div *ngIf="zaakData.identificatie && zaakUrl" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Zaak:</p>
+            <p class="p p--bold p--nomargin">Zaak:</p>
           </div>
           <div class="col-12 col-lg-8 mb-4">
             <a class="anchor mb-4" target="_blank" *ngIf="zaakUrl" [routerLink]="[zaakUrl]">{{zaakData.identificatie}}</a>
           </div>
         </div>
 
-        <div *ngIf="approvalData.created" class="row no-gutters">
+        <div *ngIf="approvalData.zaakeigenschappen" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Aanvraag ingediend op:</p>
+            <p class="p p--bold p--nomargin">Zaakinformatie:</p>
           </div>
-          <div class="col-12 col-lg-8">
-            <p  class="p p--bold">{{approvalData.created | date:'fullDate'}}</p>
+          <div class="col-12 col-lg-8 mb-4">
+            <p class="p p--nomargin" *ngFor='let eigenschap of approvalData.zaakeigenschappen'>
+              {{eigenschap.eigenschap.naam}}: {{eigenschap.waarde}}
+            </p>
           </div>
         </div>
 
         <div *ngIf="approvalData.created" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Ingediend door:</p>
+            <p class="p p--bold p--nomargin">Aanvraag ingediend op:</p>
           </div>
           <div class="col-12 col-lg-8">
-            <p  class="p p--bold">{{requester}}</p>
+            <p  class="p">{{approvalData.created | date:'fullDate'}}</p>
+          </div>
+        </div>
+
+        <div *ngIf="approvalData.created" class="row no-gutters">
+          <div class="col-12 col-lg-2 mr-2 mb-2">
+            <p class="p p--bold p--nomargin">Ingediend door:</p>
+          </div>
+          <div class="col-12 col-lg-8">
+            <p  class="p">{{requester}}</p>
           </div>
         </div>
 
         <div *ngIf="approvalData.toelichting" class="row no-gutters">
           <div class="col-12 col-lg-2 mr-2 mb-2">
-            <p class="p p--nomargin">Toelichting aanvraag:</p>
+            <p class="p p--bold p--nomargin">Toelichting aanvraag:</p>
           </div>
           <div class="col-12 col-lg-8">
-            <p class="p p--bold p--nomargin">
+            <p class="p p--nomargin">
               {{approvalData.toelichting}}
             </p>
           </div>
@@ -79,10 +90,10 @@
       </div>
 
       <!-- Collapsible table with previous approvals -->
-      <ng-template [ngIf]="!!approvalData.reviews && approvalData.reviews.length > 0">
-        <section *ngIf="approvalData.reviews.length > 0" class="row no-gutters">
+      <ng-template [ngIf]="!!approvalData.approvals && approvalData.approvals.length > 0">
+        <section *ngIf="approvalData.approvals.length > 0" class="row no-gutters">
           <div class="col-12 col-lg-8">
-          <h2 class="mb-4">Vorige accorderingen</h2>
+          <h4 class="mb-2">Vorige accorderingen</h4>
             <gu-table [table]="tableData"
                       [expandable]="true">
             </gu-table>
@@ -93,10 +104,10 @@
       <!-- Documents -->
       <ng-template [ngIf]="!!approvalData.documents && approvalData.documents.length > 0" class="row no-gutters">
         <section *ngIf="approvalData.documents.length > 0">
-          <h2 class="mb-4">Documenten</h2>
+          <h4 class="mb-2">Documenten</h4>
           <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
             <gu-file
-              [fileName]="file.name"
+              [fileName]="file.bestandsnaam"
               [readUrl]="file.readUrl"
             ></gu-file>
           </div>
@@ -107,16 +118,16 @@
       <form [formGroup]="approvalForm">
         <section class="row no-gutters mb-2">
           <div class="col-12 col-lg-8">
-            <label class="h2 d-inline-block">Geef akkoord</label>
+            <label class="h4 d-inline-block">Geef akkoord</label>
             <div class="row">
               <div class="col-12">
                 <gu-radio id="1" label="Akkoord" value="true" radioFormControl="approved"></gu-radio>
               </div>
-              <div class="col-12 mb-4">
+              <div class="col-12 mb-2">
                 <gu-radio id="2" label="Niet akkoord" value="false" radioFormControl="approved"></gu-radio>
               </div>
               <div class="col-12">
-                <gu-textarea label="Toelichting op uw akkoord" [control]="toelichtingControl" class="mb-0" id="textarea_approval"></gu-textarea>
+                <gu-textarea label="Toelichting op uw akkoord" [required]="true" [control]="toelichtingControl" class="mb-0" id="textarea_approval"></gu-textarea>
               </div>
             </div>
           </div>

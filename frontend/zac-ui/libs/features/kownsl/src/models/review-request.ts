@@ -1,9 +1,8 @@
 import { Review } from './review';
-import { ZaakDocument } from './zaak-document';
 import { Zaak } from './zaak';
 import {Approval} from "./approval";
 import {Advice} from "./advice";
-import {User, UserGroupDetail} from '@gu/models';
+import { Document, EigenschapWaarde, User, UserGroupDetail, ZaaktypeEigenschap } from '@gu/models';
 
 export interface Metadata {
   taskDefinitionId: string;
@@ -27,9 +26,11 @@ export interface ReviewRequest {
   toelichting: string;
   requester: Requester;
   metadata: Metadata;
-  zaakDocuments: ZaakDocument[];
-  reviews: Review[];
   zaak: Zaak;
+  zaakDocuments: Document[];
+  zaakeigenschappen: EigenschapWaarde[];
+  approvals?: Review[];
+  advices?: Review[];
 }
 
 export interface ReviewRequestSummary {

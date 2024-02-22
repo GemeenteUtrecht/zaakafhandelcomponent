@@ -1,7 +1,7 @@
 import datetime
 import logging
 from typing import Callable, Dict, List, Optional, Tuple, Union
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from django.conf import settings
 from django.http import Http404
@@ -630,15 +630,17 @@ def get_reviews_for_requester(
 def create_reviews_for_review_request(
     data: Dict, review_request: ReviewRequest
 ) -> Reviews:
-    data = {
+    object_data = {
         "zaak": review_request.zaak,
-        "review_request": review_request.id,
+        "review_request": str(review_request.id),
         "review_type": review_request.review_type,
         "reviews": [data],
         "id": _create_unique_uuid_for_object(fetch_review_on_id),
         "requester": review_request.requester,
     }
-    result = create_meta_object_and_relate_to_zaak("review", data, data["zaak"])
+    result = create_meta_object_and_relate_to_zaak(
+        "review", object_data, review_request.zaak
+    )
     return factory_reviews(result["record"]["data"])
 
 
@@ -651,7 +653,7 @@ def update_reviews_for_review_request(data: Dict, reviews_object: Dict) -> Revie
 
 
 def submit_review(data: Dict, review_request: ReviewRequest) -> Reviews:
-    reviews_object = fetch_reviews(review_request=review_request.id)
+    reviews_object = fetch_reviews(review_request=str(review_request.id))
     if reviews_object:
         return update_reviews_for_review_request(data, reviews_object[0])
 

@@ -22,12 +22,15 @@ ZAAK_DOCUMENT = {
     "title": "v2",
 }
 
+RR_ID = "14aec7a0-06de-4b55-b839-a1c9a0415b46"
+
 
 class UserAssigneeFactory(factory.DictFactory):
-    username = "some-author"
+    email = "some-author@email.zac"
     first_name = "Some First"
-    last_name = "Some Last"
     full_name = "Some First Some Last"
+    username = "some-author"
+    last_name = "Some Last"
 
     class Meta:
         rename = {
@@ -59,9 +62,6 @@ class MetaDataFactory(factory.DictFactory):
             "task_definition_id": "taskDefinitionId",
             "process_instance_id": "processInstanceId",
         }
-
-
-RR_ID = "14aec7a0-06de-4b55-b839-a1c9a0415b46"
 
 
 class ReviewRequestFactory(factory.DictFactory):
@@ -96,36 +96,53 @@ class ReviewRequestFactory(factory.DictFactory):
         }
 
 
-class AdviceDocumentFactory(factory.DictFactory):
-    document = deepcopy(DOCUMENT_URL)
+class ReviewDocumentFactory(factory.DictFactory):
+    document = deepcopy(DOCUMENT_URL) + "?versie=1"
     source_version = 1
-    advice_version = 2
+    review_version = 2
 
     class Meta:
-        rename = {"source_version": "sourceVersion", "advice_version": "adviceVersion"}
+        rename = {"source_version": "sourceVersion", "review_version": "reviewVersion"}
+
+
+class KownslZaakEigenschapFactory(factory.DictFactory):
+    url = f"{ZAAK_URL}zaakeigenschappen/c0524527-3539-4313-8c00-41358069e65b"
+    naam = "SomeEigenschap"
+    waarde = "SomeWaarde"
 
 
 class AdviceFactory(factory.DictFactory):
-    created = "2022-04-14T15:50:09.830235Z"
     author = factory.SubFactory(UserAssigneeFactory)
     advice = "some-advice"
-    advice_documents = factory.List([factory.SubFactory(AdviceDocumentFactory)])
+    created = "2022-04-14T15:50:09.830235Z"
+    group = factory.Dict(dict())
+    review_documents = factory.List([factory.SubFactory(ReviewDocumentFactory)])
+    zaakeigenschappen = factory.List([factory.SubFactory(KownslZaakEigenschapFactory)])
 
     class Meta:
         rename = {
-            "advice_documents": "adviceDocuments",
+            "review_documents": "reviewDocuments",
         }
 
 
 class ApprovalFactory(factory.DictFactory):
-    created = ("2022-04-14T15:51:09.830235Z",)
     author = factory.SubFactory(UserAssigneeFactory)
     approved = True
+    created = "2022-04-14T15:51:09.830235Z"
+    group = factory.Dict(dict())
+    review_documents = factory.List([factory.SubFactory(ReviewDocumentFactory)])
     toelichting = "some-toelichting"
+    zaakeigenschappen = factory.List([factory.SubFactory(KownslZaakEigenschapFactory)])
+
+    class Meta:
+        rename = {
+            "review_documents": "reviewDocuments",
+        }
 
 
-class ReviewsAdviceFactory(factory.DictFactory):
+class ReviewsFactory(factory.DictFactory):
     id = "6a9a169e-aa6f-4dd7-bbea-6bedea74c456"
+    requester = factory.SubFactory(UserAssigneeFactory)
     reviews = factory.List([factory.SubFactory(AdviceFactory)])
     review_request = deepcopy(RR_ID)
     review_type = KownslTypes.advice
@@ -357,9 +374,13 @@ REVIEW_OBJECTTYPE_LATEST_VERSION = {
                     "advice": {"type": "string"},
                     "author": {"$ref": "#/$defs/user"},
                     "created": {"$ref": "#/$defs/created"},
-                    "adviceDocuments": {
+                    "reviewDocuments": {
                         "type": "array",
-                        "items": {"$ref": "#/$defs/adviceDocument"},
+                        "items": {"$ref": "#/$defs/reviewDocument"},
+                    },
+                    "zaakeigenschappen": {
+                        "type": "array",
+                        "items": {"$ref": "#/$defs/zaakeigenschap"},
                     },
                 },
             },
@@ -374,23 +395,48 @@ REVIEW_OBJECTTYPE_LATEST_VERSION = {
                     "created": {"$ref": "#/$defs/created"},
                     "approved": {"type": "boolean"},
                     "toelichting": {"type": "string"},
+                    "reviewDocuments": {
+                        "type": "array",
+                        "items": {"$ref": "#/$defs/reviewDocument"},
+                    },
+                    "zaakeigenschappen": {
+                        "type": "array",
+                        "items": {"$ref": "#/$defs/zaakeigenschap"},
+                    },
                 },
             },
             "reviewType": {"type": "string"},
             "reviewRequest": {"type": "string"},
-            "adviceDocument": {
+            "reviewDocument": {
                 "type": "object",
-                "title": "AdviceDocument",
-                "required": ["url", "sourceVersion", "adviceVersion"],
+                "title": "reviewDocument",
+                "required": ["document", "sourceVersion", "reviewVersion"],
+                "properties": {
+                    "document": {"type": "string"},
+                    "reviewVersion": {"type": "string"},
+                    "sourceVersion": {"type": "string"},
+                },
+            },
+            "zaakeigenschap": {
+                "type": "object",
+                "title": "zaakeigenschap",
+                "required": ["url", "naam", "waarde"],
                 "properties": {
                     "url": {"type": "string"},
-                    "adviceVersion": {"type": "string"},
-                    "sourceVersion": {"type": "string"},
+                    "naam": {"type": "string"},
+                    "waarde": {"type": "string"},
                 },
             },
         },
         "title": "Reviews",
-        "required": ["id", "meta", "reviewRequest", "reviewType", "zaak", "reviews"],
+        "required": [
+            "id",
+            "requester",
+            "reviewRequest",
+            "reviewType",
+            "reviews",
+            "zaak",
+        ],
         "properties": {
             "id": {"$ref": "#/$defs/id"},
             "zaak": {"$ref": "#/$defs/zaak"},
@@ -400,6 +446,7 @@ REVIEW_OBJECTTYPE_LATEST_VERSION = {
                     "oneOf": [{"$ref": "#/$defs/advice"}, {"$ref": "#/$defs/approval"}]
                 },
             },
+            "requester": {"$ref": "#/$defs/user"},
             "reviewType": {"$ref": "#/$defs/reviewType"},
             "reviewRequest": {"$ref": "#/$defs/reviewRequest"},
         },

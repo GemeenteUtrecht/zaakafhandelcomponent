@@ -38,8 +38,9 @@ from .utils import (
     ZAKEN_ROOT,
     AdviceFactory,
     AssignedUsersFactory,
+    KownslZaakEigenschapFactory,
     ReviewRequestFactory,
-    ReviewsAdviceFactory,
+    ReviewsFactory,
     UserAssigneeFactory,
 )
 
@@ -54,6 +55,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.maxDiff = None
         super().setUpTestData()
         cls.user = SuperUserFactory.create()
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
@@ -140,6 +142,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         # Mock kownsl components
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -159,7 +162,13 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         )
         cls.review_request_dict["assignedUsers"].append(assigned_users2)
         cls.review_request = factory(ReviewRequest, cls.review_request_dict)
-        cls.reviews = ReviewsAdviceFactory()
+        zei = KownslZaakEigenschapFactory(
+            url=zaakeigenschap.url,
+            waarde=zaakeigenschap.waarde,
+            naam=cls.eigenschap["naam"],
+        )
+        advice = AdviceFactory(zaakeigenschappen=[zei])
+        cls.reviews = ReviewsFactory(reviews=[advice])
         reviews = factory_reviews(cls.reviews)
 
         # Patchers
@@ -307,6 +316,33 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         response_data = response.json()
         self.assertEqual(
             {
+                "advices": [
+                    {
+                        "advice": self.reviews["reviews"][0]["advice"],
+                        "author": self.reviews["reviews"][0]["author"],
+                        "created": self.reviews["reviews"][0]["created"],
+                        "group": {},
+                        "reviewDocuments": [
+                            {
+                                "bestandsnaam": self.document["bestandsnaam"],
+                                "document": self.document["url"],
+                                "downloadReviewUrl": f"/core/documenten/{self.document['bronorganisatie']}/{self.document['identificatie']}/?versie=2",
+                                "downloadSourceUrl": f"/core/documenten/{self.document['bronorganisatie']}/{self.document['identificatie']}/?versie=1",
+                                "reviewUrl": "",
+                                "reviewVersion": 2,
+                                "sourceUrl": "",
+                                "sourceVersion": 1,
+                            }
+                        ],
+                        "zaakeigenschappen": [
+                            {
+                                "naam": self.eigenschap["naam"],
+                                "url": self.zaakeigenschap["url"],
+                                "waarde": self.zaakeigenschap["waarde"],
+                            }
+                        ],
+                    }
+                ],
                 "created": self.review_request_dict["created"],
                 "documents": [DOCUMENT_URL],
                 "id": str(self.review_request.id),
@@ -321,6 +357,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     }
                 ],
                 "requester": {
+                    "email": "some-author@email.zac",
                     "firstName": "Some First",
                     "fullName": "Some First Some Last",
                     "lastName": "Some Last",
@@ -328,23 +365,10 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                 },
                 "reviewType": self.review_request.review_type,
                 "zaak": {
-                    "identificatie": self.zaak["identificatie"],
                     "bronorganisatie": self.zaak["bronorganisatie"],
+                    "identificatie": self.zaak["identificatie"],
                     "url": self.zaak["url"],
                 },
-                "zaakeigenschappen": [
-                    {
-                        "url": self.zaakeigenschap["url"],
-                        "formaat": self.eigenschap["specificatie"]["formaat"],
-                        "waarde": self.zaakeigenschap["waarde"],
-                        "eigenschap": {
-                            "url": self.eigenschap["url"],
-                            "naam": self.eigenschap["naam"],
-                            "toelichting": self.eigenschap["toelichting"],
-                            "specificatie": self.eigenschap["specificatie"],
-                        },
-                    }
-                ],
                 "zaakDocuments": [
                     {
                         "auteur": self.document["auteur"],
@@ -374,23 +398,17 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                         "writeUrl": "",
                     }
                 ],
-                "advices": [
+                "zaakeigenschappen": [
                     {
-                        "advice": self.reviews["reviews"][0]["advice"],
-                        "adviceDocuments": [
-                            {
-                                "adviceUrl": "?versie=2",
-                                "adviceVersion": 2,
-                                "downloadAdviceUrl": "/core/documenten/123456782/DOC-2020-007/?versie=2",
-                                "downloadSourceUrl": "/core/documenten/123456782/DOC-2020-007/?versie=1",
-                                "sourceUrl": "?versie=1",
-                                "sourceVersion": 1,
-                                "bestandsnaam": self.document["bestandsnaam"],
-                            }
-                        ],
-                        "author": self.reviews["reviews"][0]["author"],
-                        "created": self.reviews["reviews"][0]["created"],
-                        "group": {},
+                        "eigenschap": {
+                            "url": self.eigenschap["url"],
+                            "naam": self.eigenschap["naam"],
+                            "toelichting": self.eigenschap["toelichting"],
+                            "specificatie": self.eigenschap["specificatie"],
+                        },
+                        "formaat": self.eigenschap["specificatie"]["formaat"],
+                        "url": self.zaakeigenschap["url"],
+                        "waarde": self.zaakeigenschap["waarde"],
                     }
                 ],
             },
@@ -570,6 +588,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",

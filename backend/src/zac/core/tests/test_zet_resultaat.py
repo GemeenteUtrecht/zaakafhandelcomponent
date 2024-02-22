@@ -21,7 +21,7 @@ from zac.contrib.objects.kownsl.data import ReviewRequest, Reviews
 from zac.contrib.objects.kownsl.tests.utils import (
     AssignedUsersFactory,
     ReviewRequestFactory,
-    ReviewsAdviceFactory,
+    ReviewsFactory,
     UserAssigneeFactory,
 )
 from zac.tests.utils import mock_resource_get, paginated_response
@@ -201,6 +201,7 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -220,7 +221,7 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
         rr = factory(ReviewRequest, review_request)
 
         # Avoid patching fetch_reviews and everything
-        reviews = factory(Reviews, ReviewsAdviceFactory())
+        reviews = factory(Reviews, ReviewsFactory())
         rr.fetched_reviews = True
 
         with patch(

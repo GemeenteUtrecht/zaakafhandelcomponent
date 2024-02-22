@@ -76,6 +76,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",
@@ -95,10 +96,14 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
 
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
-            username=cls.review_request["assignedUsers"][0]["userAssignees"][0]
+            username=cls.review_request["assignedUsers"][0]["userAssignees"][0][
+                "username"
+            ]
         )
         UserFactory.create(
-            username=cls.review_request["assignedUsers"][1]["userAssignees"][0]
+            username=cls.review_request["assignedUsers"][1]["userAssignees"][0][
+                "username"
+            ]
         )
         review_request = factory(ReviewRequest, cls.review_request)
         cls.get_review_request_patcher = patch(
@@ -203,6 +208,7 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
 
         user_assignees = UserAssigneeFactory(
             **{
+                "email": "some-other-author@email.zac",
                 "username": "some-other-author",
                 "first_name": "Some Other First",
                 "last_name": "Some Last",

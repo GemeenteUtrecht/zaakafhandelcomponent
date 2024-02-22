@@ -19,6 +19,10 @@
   .configuration-details {
     margin-bottom: 0.875rem;
   }
+  .configuration-properties {
+    list-style: none;
+    display: flex;
+  }
   .step-label {
     display: inline-block;
     font-size: 0.875rem;

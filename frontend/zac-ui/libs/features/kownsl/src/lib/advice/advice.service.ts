@@ -5,6 +5,7 @@ import { AdviceForm } from '../../models/advice-form';
 import {HttpParams, HttpResponse} from '@angular/common/http';
 import { CloseDocument } from '../../models/close-document';
 import {DocumentUrls, ReadWriteDocument} from "@gu/models";
+import { ReviewRequest } from '@gu/kownsl';
 
 @Injectable({
   providedIn: 'root'
@@ -13,10 +14,9 @@ export class AdviceService {
 
   constructor(private http: ApplicationHttpClient) { }
 
-  getAdvice(uuid: string, assignee: string): Observable<HttpResponse<any>> {
+  getAdvice(uuid: string, assignee: string): Observable<ReviewRequest> {
     const endpoint = encodeURI(`/api/kownsl/review-requests/${uuid}/advice`);
     const options = {
-      observe: 'response' as 'response',
       params: new HttpParams().set('assignee', assignee),
     }
     return this.http.Get<any>(endpoint, options);

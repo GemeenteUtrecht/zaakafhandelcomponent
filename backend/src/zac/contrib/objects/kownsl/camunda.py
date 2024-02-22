@@ -29,7 +29,7 @@ from .api.serializers import (
 )
 from .cache import invalidate_review_requests_cache
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
-from .data import AdviceApprovalContext, AssignedUsers, ReviewRequest
+from .data import AssignedUsers, ReviewContext, ReviewRequest
 from .fields import SelectZaakEigenschappenKownslField
 
 
@@ -132,7 +132,7 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
 
 
 @usertask_context_serializer
-class AdviceApprovalContextSerializer(APIModelSerializer):
+class ReviewContextSerializer(APIModelSerializer):
     camunda_assigned_users = CamundaAssignedUsersSerializer(
         help_text=_("Users or groups assigned from within the camunda process.")
     )
@@ -163,7 +163,7 @@ class AdviceApprovalContextSerializer(APIModelSerializer):
     zaak_informatie = ZaakInformatieTaskSerializer()
 
     class Meta:
-        model = AdviceApprovalContext
+        model = ReviewContext
         fields = (
             "camunda_assigned_users",
             "documents_link",
@@ -506,7 +506,7 @@ def get_review_request_from_task(task: Task) -> Optional[ReviewRequest]:
     return review_request
 
 
-def get_review_context(task: Task) -> AdviceApprovalContext:
+def get_review_context(task: Task) -> ReviewContext:
     rr = get_review_request_from_task(task)
     zaak_context = get_zaak_context(task, require_zaaktype=True)
     zaak = zaak_context.zaak
@@ -535,21 +535,21 @@ def get_review_context(task: Task) -> AdviceApprovalContext:
 
 @register(
     "zac:configureAdviceRequest",
-    AdviceApprovalContextSerializer,
+    ReviewContextSerializer,
     ConfigureReviewRequestSerializer,
 )
-def get_advice_context(task: Task) -> AdviceApprovalContext:
+def get_advice_context(task: Task) -> ReviewContext:
     context = get_review_context(task)
     context["review_type"] = KownslTypes.advice
-    return AdviceApprovalContext(**context)
+    return ReviewContext(**context)
 
 
 @register(
     "zac:configureApprovalRequest",
-    AdviceApprovalContextSerializer,
+    ReviewContextSerializer,
     ConfigureReviewRequestSerializer,
 )
-def get_approval_context(task: Task) -> AdviceApprovalContext:
+def get_approval_context(task: Task) -> ReviewContext:
     context = get_review_context(task)
     context["review_type"] = KownslTypes.approval
-    return AdviceApprovalContext(**context)
+    return ReviewContext(**context)
