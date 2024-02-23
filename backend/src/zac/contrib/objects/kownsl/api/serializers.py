@@ -18,7 +18,7 @@ from zac.core.api.fields import SerializerSlugRelatedField
 from zac.core.api.serializers import ZaakEigenschapSerializer, ZaakSerializer
 from zac.elasticsearch.drf_api.serializers import ESListZaakDocumentSerializer
 
-from ..constants import KownslTypes
+from ..constants import KownslStatus, KownslTypes
 from ..data import (
     Advice,
     Approval,
@@ -578,6 +578,11 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
         help_text=_("The number of completed requests."),
         source="get_completed",
     )
+    status = serializers.ChoiceField(
+        help_text=_("The status of the review request"),
+        source="get_status",
+        choices=KownslStatus.choices,
+    )
 
     class Meta:
         model = ReviewRequest
@@ -590,6 +595,7 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
             "lock_reason",
             "num_assigned_users",
             "review_type",
+            "status",
         )
 
     def get_can_lock(self, obj) -> bool:
@@ -598,9 +604,6 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
         ) and request.user.username == obj.requester["username"]:
             return True
         return False
-
-    def get_completed(self, obj) -> int:
-        return len(obj.reviews)
 
 
 ###################################################

@@ -8,7 +8,6 @@ from uuid import UUID
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-from djchoices import ChoiceItem, DjangoChoices
 from furl import furl
 from zgw_consumers.api_models.base import Model, factory
 from zgw_consumers.api_models.zaken import ZaakEigenschap
@@ -21,10 +20,7 @@ from zac.elasticsearch.documents import InformatieObjectDocument
 from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
-
-class KownslTypes(DjangoChoices):
-    advice = ChoiceItem("advice", _("Advice"))
-    approval = ChoiceItem("approval", _("Approval"))
+from .constants import KownslStatus, KownslTypes
 
 
 @dataclass
@@ -292,6 +288,18 @@ class ReviewRequest(Model):
         else:
             self._zaakeigenschappen = self.zaakeigenschappen
         return self._zaakeigenschappen
+
+    def get_status(self) -> str:
+        if self.get_completed() >= self.num_assigned_users:
+            if self.review_type == KownslTypes.advice:
+                return KownslStatus.approved
+            else:
+                return (
+                    KownslStatus.approved
+                    if all([review.approved for review in self.get_reviews()])
+                    else KownslStatus.not_approved
+                )
+        return KownslStatus.pending
 
 
 @dataclass

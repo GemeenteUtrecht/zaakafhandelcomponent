@@ -192,6 +192,10 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.services.get_reviews_for_review_request",
             return_value=reviews,
         )
+        cls.get_reviews_for_zaak_patcher = patch(
+            "zac.contrib.objects.kownsl.api.views.get_reviews_for_zaak",
+            return_value=[reviews],
+        )
         cls.get_review_request_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=cls.review_request,
@@ -244,6 +248,28 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "locked": False,
                     "lockReason": "",
                     "isBeingReconfigured": False,
+                    "status": "pending",
+                }
+            ],
+        )
+
+    def test_get_zaak_review_requests_status(self, m):
+        response = self.client.get(self.endpoint_summary)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual(
+            response_data,
+            [
+                {
+                    "id": str(self.review_request.id),
+                    "reviewType": KownslTypes.advice,
+                    "completed": 0,
+                    "numAssignedUsers": 2,
+                    "canLock": False,
+                    "locked": False,
+                    "lockReason": "",
+                    "isBeingReconfigured": False,
+                    "status": "pending",
                 }
             ],
         )
@@ -268,6 +294,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "locked": False,
                     "lockReason": "",
                     "isBeingReconfigured": False,
+                    "status": "pending",
                 }
             ],
         )
@@ -295,6 +322,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "locked": True,
                     "lockReason": "just a reason",
                     "isBeingReconfigured": False,
+                    "status": "pending",
                 }
             ],
         )
