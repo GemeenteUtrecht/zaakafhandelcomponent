@@ -27,5 +27,6 @@ def invalidate_review_cache(rr: ReviewRequest):
     keys = [
         f"reviews:zaak:{zaak_uuid}",
         f"reviews:review_request:{rr.id}",
+        f"reviews:requester:{rr.requester['username']}",
     ]
     cache.delete_many(keys)
