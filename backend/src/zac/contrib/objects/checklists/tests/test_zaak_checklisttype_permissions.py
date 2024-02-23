@@ -19,13 +19,13 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..permissions import checklisttypes_inzien
-from .utils import (
+from .factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
-    CHECKLISTTYPE_OBJECT,
     IDENTIFICATIE,
     ZAAK_URL,
     ZAKEN_ROOT,
+    ChecklistTypeObjectFactory,
 )
 
 
@@ -56,11 +56,12 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         cls.catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
+        cls.checklisttype_object = ChecklistTypeObjectFactory()
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
             url=cls.catalogus_url,
-            domein=CHECKLISTTYPE_OBJECT["record"]["data"]["zaaktypeCatalogus"],
+            domein=cls.checklisttype_object["record"]["data"]["zaaktypeCatalogus"],
         )
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -149,7 +150,7 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         self.client.force_authenticate(self.user)
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=[CHECKLISTTYPE_OBJECT],
+            return_value=[self.checklisttype_object],
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -176,7 +177,7 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         self.client.force_authenticate(self.user)
         with patch(
             "zac.contrib.objects.services.fetch_checklisttype_object",
-            return_value=[CHECKLISTTYPE_OBJECT],
+            return_value=[self.checklisttype_object],
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

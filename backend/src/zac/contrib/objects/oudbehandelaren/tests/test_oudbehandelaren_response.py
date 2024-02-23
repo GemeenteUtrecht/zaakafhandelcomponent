@@ -15,16 +15,18 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 from zgw.models import Zaak
 
-from .utils import (
+from .factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
     IDENTIFICATIE,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
-    OUDBEHANDELAREN_OBJECT,
-    OUDBEHANDELAREN_OBJECTTYPE,
     ZAAK_URL,
+    OudbehandelarenObjectFactory,
+    OudbehandelarenObjectTypeFactory,
 )
+
+OUDBEHANDELAREN_OBJECTTYPE = OudbehandelarenObjectTypeFactory()
 
 
 @requests_mock.Mocker()
@@ -61,9 +63,10 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
         )
+        cls.oudbehandelaren_object = OudbehandelarenObjectFactory()
         cls.user = SuperUserFactory.create(
             is_staff=True,
-            username=OUDBEHANDELAREN_OBJECT["record"]["data"]["oudbehandelaren"][0][
+            username=cls.oudbehandelaren_object["record"]["data"]["oudbehandelaren"][0][
                 "identificatie"
             ],
         )
@@ -74,7 +77,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
 
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
-            json=paginated_response([OUDBEHANDELAREN_OBJECT]),
+            json=paginated_response([self.oudbehandelaren_object]),
         )
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[OUDBEHANDELAREN_OBJECTTYPE])
         self.client.force_authenticate(user=self.user)
