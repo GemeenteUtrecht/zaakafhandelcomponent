@@ -139,7 +139,7 @@ class HasNotReviewed(permissions.BasePermission):
                 if assignee_is_user:
                     continue
 
-                if assignee.name == review.group["name"]:
+                if assignee.name == review.group.get("name"):
                     self.message = self._message.format(
                         assignee=assignee.name, identificatie=zaak.identificatie
                     )

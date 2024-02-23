@@ -203,7 +203,7 @@ class ReviewRequest(Model):
             # remove those who have already reviewed
             for review in self.get_reviews():
                 # if the reviewer is a group remove the group and...
-                if name := review.group.get("name"):
+                if review.group and (name := review.group.get("name")):
                     user_deadlines.pop(f"{AssigneeTypeChoices.group}:{name}", None)
 
                 # ... the user if the reviewer is a user
