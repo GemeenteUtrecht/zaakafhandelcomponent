@@ -308,7 +308,7 @@ class WorkStackReviewRequestsView(views.APIView):
     def resolve_reviews(
         self, review_requests: List[ReviewRequest]
     ) -> List[ReviewRequest]:
-        reviews = {}
+
         # resolve relations
         reviews = {
             review.review_request: review.reviews
