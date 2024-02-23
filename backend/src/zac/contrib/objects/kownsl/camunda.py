@@ -370,7 +370,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             for given_review in review_request.get_reviews():
                 already_reviewed.append(
                     given_review.group["name"]
-                    if given_review.group.get("name")
+                    if given_review.group and given_review.group.get("name")
                     else given_review.author["username"]
                 )
             assignees = []
@@ -479,7 +479,7 @@ def get_review_request_from_task(task: Task) -> Optional[ReviewRequest]:
             remove_these_users.append(
                 (
                     given_review.group["name"]
-                    if given_review.group.get("name")
+                    if given_review.group and given_review.group.get("name")
                     else given_review.author["username"]
                 )
             )
