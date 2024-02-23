@@ -564,7 +564,7 @@ def factory_reviews(data: Dict) -> Reviews:
     return factory(Reviews, data)
 
 
-def fetch_review_on_id(id: str):
+def fetch_review_on_id(id: str) -> Optional[Dict]:
     return fetch_reviews(id=id)
 
 
@@ -611,9 +611,9 @@ def get_reviews_for_zaak(zaak: Zaak) -> List[Reviews]:
 def get_reviews_for_review_request(
     review_request: ReviewRequest,
 ) -> Optional[Reviews]:
-    reviews = fetch_reviews(review_request=review_request.id)
-    if reviews:
-        return factory_reviews(reviews["record"]["data"])
+    results = fetch_reviews(review_request=review_request.id)
+    if results:
+        return factory_reviews(results[0]["record"]["data"])
     return None
 
 
@@ -656,8 +656,8 @@ def update_reviews_for_review_request(data: Dict, reviews_object: Dict) -> Revie
 
 
 def submit_review(data: Dict, review_request: ReviewRequest) -> Reviews:
-    reviews_object = fetch_reviews(review_request=str(review_request.id))
-    if reviews_object:
-        return update_reviews_for_review_request(data, reviews_object[0])
+    results = fetch_reviews(review_request=str(review_request.id))
+    if results:
+        return update_reviews_for_review_request(data, results[0])
 
     return create_reviews_for_review_request(data, review_request)
