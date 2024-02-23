@@ -308,12 +308,12 @@ class WorkStackReviewRequestsView(views.APIView):
     def resolve_reviews(
         self, review_requests: List[ReviewRequest]
     ) -> List[ReviewRequest]:
-        reviews = {}
-        for review in get_reviews_for_requester(self.request.user):
-            if review.review_request in reviews:
-                reviews[review.review_request] += review.reviews
-            else:
-                reviews[review.review_request] = review.reviews
+
+        # resolve relations
+        reviews = {
+            review.review_request: review.reviews
+            for review in get_reviews_for_requester(self.request.user)
+        }
 
         for rr in review_requests:
             rr.reviews = sorted(

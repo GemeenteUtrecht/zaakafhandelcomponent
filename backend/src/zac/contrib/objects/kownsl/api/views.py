@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.api import send_message
+from django_camunda.client import get_client as get_camunda_client
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from furl import furl
@@ -13,7 +14,11 @@ from rest_framework import authentication, exceptions, permissions, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from zgw_consumers.api_models.base import factory
 
+from zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.data import Task
+from zac.camunda.user_tasks.api import set_assignee_and_complete_task
 from zac.core.api.permissions import CanReadZaken
 from zac.core.api.views import GetZaakMixin
 from zac.core.camunda.utils import resolve_assignee
@@ -141,6 +146,41 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
 
         # invalidate the review request cache
         invalidate_review_cache(rr)
+
+        # look up and complete the user task in Camunda
+        group_assignee = (
+            f'{AssigneeTypeChoices.group}:{data["group"]}'
+            if data.get("group", None)
+            else None
+        )
+        user_assignee = f'{AssigneeTypeChoices.user}:{data["author"]}'
+
+        camunda_client = get_camunda_client()
+        params = {
+            "processInstanceId": rr.metadata["process_instance_id"],
+            "taskDefinitionKey": rr.metadata["task_definition_id"],
+            "assignee": group_assignee or user_assignee,
+        }
+        logger.debug("Finding user tasks matching %r", params)
+        tasks = camunda_client.get("task", params)
+
+        if not tasks:
+            logger.info(
+                "No user tasks found - possibly they were already marked completed. "
+            )
+            return
+
+        if len(tasks) > 1:
+            logger.warning(
+                "Multiple user tasks with the same assignee and definition found in a single process instance!",
+                extra={"tasks": tasks, "params": params},
+            )
+
+        tasks = factory(Task, tasks)
+        for task in tasks:
+            set_assignee_and_complete_task(
+                task, user_assignee, variables={"author": user_assignee}
+            )
         return Response(
             status=status.HTTP_204_NO_CONTENT,
         )
@@ -204,12 +244,10 @@ class ZaakReviewRequestSummaryView(GetZaakMixin, APIView):
         review_requests = get_all_review_requests_for_zaak(zaak)
         if review_requests:
             # resolve relations
-            reviews = {}
-            for review in get_reviews_for_zaak(zaak):
-                if review.review_request in reviews:
-                    reviews[review.review_request].append(review.reviews)
-                else:
-                    reviews[review.review_request] = [review.reviews]
+            reviews = {
+                review.review_request: review.reviews
+                for review in get_reviews_for_zaak(zaak)
+            }
 
             for rr in review_requests:
                 rr.reviews = sorted(

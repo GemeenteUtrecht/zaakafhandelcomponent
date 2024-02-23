@@ -5,6 +5,8 @@ from unittest.mock import patch
 from django.urls import reverse_lazy
 
 import requests_mock
+from django_camunda.client import get_client
+from django_camunda.models import CamundaConfig
 from django_camunda.utils import underscoreize
 from freezegun import freeze_time
 from rest_framework.test import APITestCase
@@ -20,6 +22,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.models import User
 from zac.accounts.tests.factories import UserFactory
 from zac.camunda.constants import AssigneeTypeChoices
+from zac.camunda.data import Task
 from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.contrib.objects.kownsl.tests.utils import (
     CATALOGI_ROOT,
@@ -48,6 +51,17 @@ from zgw.models.zrc import Zaak
 from ...services import factory_review_request, factory_reviews
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CAMUNDA_ROOT = "https://some.camunda.nl/"
+CAMUNDA_API_PATH = "engine-rest/"
+CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+
+
+def _get_camunda_client():
+    config = CamundaConfig.get_solo()
+    config.root_url = CAMUNDA_ROOT
+    config.rest_api_path = CAMUNDA_API_PATH
+    config.save()
+    return get_client()
 
 
 @freeze_time("2022-04-14T15:51:09.830235")
@@ -180,6 +194,31 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         cls.review_object = deepcopy(REVIEW_OBJECT)
         cls.review_object["record"]["data"] = cls.reviews_advice
 
+        # Mock camunda task
+        cls.task = {
+            "id": "fc9c465d-b0d7-11ec-a5f0-32fe9303dc32",
+            "name": "Adviseren",
+            "assignee": None,
+            "created": "2022-03-31T09:50:24.420+0000",
+            "due": None,
+            "follow_up": None,
+            "delegation_state": None,
+            "description": None,
+            "execution_id": "fc9c4659-b0d7-11ec-a5f0-32fe9303dc32",
+            "owner": None,
+            "parent_task_id": None,
+            "priority": 50,
+            "process_definition_id": "Beleid_opstellen:6:85ff7b20-a149-11ec-a0c6-dec9c846e7c7",
+            "process_instance_id": cls.review_request["metadata"]["processInstanceId"],
+            "task_definition_key": "submitAdvice",
+            "case_execution_id": None,
+            "case_instance_id": None,
+            "case_definition_id": None,
+            "suspended": False,
+            "form_key": None,
+            "tenant_id": None,
+        }
+
         cls.get_zaakeigenschappen_patcher = patch(
             "zac.contrib.objects.kownsl.data.get_zaakeigenschappen",
             return_value=[cls.zaakeigenschap],
@@ -198,6 +237,12 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         cls.fetch_reviews_patcher = patch(
             "zac.contrib.objects.services.fetch_reviews",
             return_value=cls.review_object,
+        )
+        cls.patch_get_camunda_client = patch(
+            "django_camunda.api.get_client", return_value=_get_camunda_client()
+        )
+        cls.patch_set_assignee_and_complete_task = patch(
+            "zac.contrib.objects.kownsl.api.views.set_assignee_and_complete_task"
         )
 
         # Make sure all users associated to the REVIEW REQUEST exist
@@ -391,6 +436,10 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
+        m.get(
+            f"{CAMUNDA_URL}task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee={AssigneeTypeChoices.user}:{self.user}",
+            json=[self.task],
+        )
         mock_resource_get(m, self.zaak_json)
         _rr = deepcopy(self.review_request)
         _rr["documents"] = [self.document.url]
@@ -435,9 +484,16 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                             "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
                             return_value=reviews_object,
                         ) as mock_create_object:
-                            response = self.client.post(url, payload)
+                            with self.patch_get_camunda_client:
+                                with self.patch_set_assignee_and_complete_task as mock_set_assignee_and_complete_task:
+                                    response = self.client.post(url, payload)
 
         self.assertEqual(response.status_code, 204)
+        mock_set_assignee_and_complete_task.assert_called_once_with(
+            factory(Task, self.task),
+            f"{AssigneeTypeChoices.user}:{self.user}",
+            variables={"author": f"{AssigneeTypeChoices.user}:{self.user}"},
+        )
         mock_create_object.assert_called_once_with(
             "review",
             {
@@ -484,6 +540,10 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
+        m.get(
+            f"{CAMUNDA_URL}task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee={AssigneeTypeChoices.user}:{self.user}",
+            json=[self.task],
+        )
         mock_resource_get(m, self.zaak_json)
         rr = factory_review_request(self.review_request)
         rr.fetched_reviews = True
@@ -514,7 +574,8 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         reviews_object["record"]["data"] = self.reviews_advice
 
         with patch(
-            "zac.contrib.objects.kownsl.api.views.get_review_request", return_value=rr
+            "zac.contrib.objects.kownsl.api.views.get_review_request",
+            return_value=rr,
         ):
             with patch("zac.contrib.objects.services.fetch_reviews", return_value=None):
                 with patch(
@@ -525,8 +586,15 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                         "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
                         return_value=reviews_object,
                     ) as mock_create_object:
-                        response = self.client.post(url, payload)
+                        with self.patch_get_camunda_client:
+                            with self.patch_set_assignee_and_complete_task as mock_set_assignee_and_complete_task:
+                                response = self.client.post(url, payload)
 
+        mock_set_assignee_and_complete_task.assert_called_once_with(
+            factory(Task, self.task),
+            f"{AssigneeTypeChoices.user}:{self.user}",
+            variables={"author": f"{AssigneeTypeChoices.user}:{self.user}"},
+        )
         self.assertEqual(response.status_code, 204)
         mock_create_object.assert_called_once_with(
             "review",
@@ -573,7 +641,6 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
 
-        mock_resource_get(m, self.zaak_json)
         rr = factory_review_request(self.review_request)
         rr.fetched_reviews = True
         rr.reviews = factory_reviews(self.reviews_advice).reviews
@@ -582,9 +649,14 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         user = User.objects.get(
             username=rr.assigned_users[1].user_assignees[0]["username"]
         )
-
         self.client.force_authenticate(user=user)
         url = self.review_url + f"?assignee={AssigneeTypeChoices.user}:{user}"
+
+        m.get(
+            f"{CAMUNDA_URL}task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee={AssigneeTypeChoices.user}:{user}",
+            json=[self.task],
+        )
+        mock_resource_get(m, self.zaak_json)
 
         payload = {
             "advice": "some more advice",
@@ -607,7 +679,8 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         reviews_object["record"]["data"] = self.reviews_advice
 
         with patch(
-            "zac.contrib.objects.kownsl.api.views.get_review_request", return_value=rr
+            "zac.contrib.objects.kownsl.api.views.get_review_request",
+            return_value=rr,
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_reviews",
@@ -621,8 +694,15 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                         "zac.contrib.objects.services.update_object_record_data",
                         return_value=reviews_object,
                     ) as mock_update_object:
-                        response = self.client.post(url, payload)
+                        with self.patch_get_camunda_client:
+                            with self.patch_set_assignee_and_complete_task as mock_set_assignee_and_complete_task:
+                                response = self.client.post(url, payload)
 
+        mock_set_assignee_and_complete_task.assert_called_once_with(
+            factory(Task, self.task),
+            f"{AssigneeTypeChoices.user}:{user}",
+            variables={"author": f"{AssigneeTypeChoices.user}:{user}"},
+        )
         self.assertEqual(response.status_code, 204)
         mock_update_object.assert_called_once_with(
             {
