@@ -249,7 +249,6 @@ REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION = {
             "isBeingReconfigured",
             "locked",
             "lockReason",
-            "meta",
             "metadata",
             "numReviewsGivenBeforeChange",
             "requester",
