@@ -132,7 +132,6 @@ class ChecklistSerializer(APIModelSerializer):
     answers = ChecklistAnswerSerializer(
         many=True,
     )
-    # meta = serializers.HiddenField(default=True)
     locked_by = UserSlugRelatedField(
         help_text=_("Checklist is locked by this user."),
         slug_field="username",

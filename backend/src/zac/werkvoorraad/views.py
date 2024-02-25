@@ -327,6 +327,7 @@ class WorkStackReviewRequestsView(views.APIView):
             query_params=self.get_query_params(),
             requester=request.user,
             not_locked=True,
+            latest_version=True,
         )
         review_requests = self.resolve_zaken(results["results"])
         review_requests = self.resolve_reviews(results["results"])

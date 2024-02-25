@@ -45,6 +45,7 @@ def _search_meta_objects(
     data_attrs: List = [],
     paginated: bool = False,
     query_params: Optional[Dict] = None,
+    extra_kwargs: Optional[Dict] = None,
     page_size: int = 100,
 ) -> Union[List[dict], Tuple[Dict, Dict]]:
 
@@ -59,6 +60,9 @@ def _search_meta_objects(
         return []
 
     object_filters = {"type": ot_url, "data_attrs": []}
+    if extra_kwargs:
+        object_filters.update(extra_kwargs)
+
     if zaaktype:
         catalogus = fetch_catalogus(zaaktype.catalogus)
         object_filters["data_attrs"] += [
@@ -116,10 +120,7 @@ def create_meta_object_and_relate_to_zaak(
 
     # Get latest version of objecttype
     latest_version = fetch_objecttype(max(objecttype["versions"]))
-
-    # Set meta to always True
     data = camelize(data, **camelize_settings)
-    data["meta"] = True
 
     result = create_object(
         {
@@ -522,6 +523,7 @@ def get_review_requests_paginated(
     zaak: Optional[Zaak] = None,
     requester: Optional[User] = None,
     not_locked: Optional[bool] = False,
+    latest_version: Optional[bool] = True,
     page_size: int = 100,
 ) -> Tuple[List[Dict], Dict]:
 
@@ -533,10 +535,15 @@ def get_review_requests_paginated(
         data_attrs += [f"requester__username__exact__{requester.username}"]
     if not_locked:
         data_attrs += [f"locked__icontains__false"]
+    if latest_version:
+        future_date = datetime.date.today() + datetime.timedelta(
+            days=100 * 365
+        )  # 100 years lawl
 
     response, query_params = _search_meta_objects(
         "review_request_objecttype",
         data_attrs=data_attrs,
+        extra_kwargs={"date": future_date.isoformat()} if latest_version else None,
         paginated=True,
         page_size=page_size,
         query_params=query_params,
