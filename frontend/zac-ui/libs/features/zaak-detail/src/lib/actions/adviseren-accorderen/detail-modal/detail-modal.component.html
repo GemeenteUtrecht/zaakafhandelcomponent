@@ -1,5 +1,6 @@
-<h1 *ngIf="title">{{title}}</h1>
-<div class="gu-adviseren-accorderen-detail">
+<gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
+<div class="gu-adviseren-accorderen-detail" *ngIf="!isLoading">
+  <h1 *ngIf="title">{{title}}</h1>
   <p *ngIf="reviewRequestSummary?.locked && reviewRequestSummary?.lockReason">
     <b>Deze aanvraag is geannuleerd</b>
     Reden annulering: {{reviewRequestSummary.lockReason}}
@@ -19,10 +20,10 @@
       <span>Deadline: </span><span><strong>{{openReview.deadline | date:'shortDate'}}</strong></span>
       <ul>
         <ng-container *ngFor="let user of openReview.users">
-          <li>{{user.fullName}}</li>
+          <li>{{user}}</li>
         </ng-container>
         <ng-container *ngFor="let group of openReview.groups">
-          <li>{{group.fullName}}</li>
+          <li>{{group}}</li>
         </ng-container>
       </ul>
     </div>

@@ -41,6 +41,7 @@ export interface ReviewRequestSummary {
   canLock: boolean;
   locked: boolean;
   lockReason: string;
+  status: "approved" | "not_approved" | "pending" | "canceled" | "completed"
 }
 
 export interface OpenReview {

@@ -26,8 +26,8 @@ export class KownslSummaryComponent implements OnInit {
   /** @type {boolean} Whether the summary is loading. */
   isSummariesLoading = false
 
-  /** @type {boolean} Whether details are loading. */
-  isDetailsLoading = false;
+  /** @type {boolean} Wether the details of the selected review request are loading. */
+  isLoadingSelectedReviewRequestDetails: boolean;
 
   /** @type {ReviewRequestSummary[]} The review request summaries used for initial list. */
   reviewRequestSummaries: ReviewRequestSummary[];
@@ -106,22 +106,7 @@ export class KownslSummaryComponent implements OnInit {
    * @param {ReviewRequestSummary[]} reviewRequestSummaries
    */
   fetchReviewRequestDetails(reviewRequestSummaries: ReviewRequestSummary[]): void {
-    const reviewRequestUuids = reviewRequestSummaries.map(r => r.id);
-
-    this.isDetailsLoading = true;
-
     this.tableData = this.reviewRequestSummaryAsTable(this.reviewRequestSummaries);
-
-    this.reviewRequestsService.retrieveReviewRequestDetailsBatch(reviewRequestUuids).subscribe(
-      (reviewRequestDetails) => {
-        this.reviewRequestDetails[reviewRequestDetails.id] = reviewRequestDetails;
-        this.tableData = this.reviewRequestSummaryAsTable(this.reviewRequestSummaries);
-      },
-      this.reportError.bind(this),
-      () => {
-        this.isDetailsLoading = false;
-      }
-    );
   }
 
   /**
@@ -131,6 +116,22 @@ export class KownslSummaryComponent implements OnInit {
    */
   getReviewRequestDetailsForSummary(reviewRequestSummary: ReviewRequestSummary): ReviewRequestDetails | null {
     return this.reviewRequestDetails[reviewRequestSummary.id] || null;
+  }
+
+  /**
+   * Returns the details object for a review request summary.
+   * @param {ReviewRequestSummary} reviewRequestSummary
+   * @return {ReviewRequestDetails}
+   */
+  getReviewRequestDetails(reviewRequestSummary: ReviewRequestSummary): void {
+    this.isLoadingSelectedReviewRequestDetails = true;
+    this.reviewRequestsService.retrieveReviewRequestDetails(reviewRequestSummary.id).subscribe(reviewDetails => {
+      this.selectedReviewRequestDetails = reviewDetails;
+      this.isLoadingSelectedReviewRequestDetails = false;
+    }, error => {
+      this.isLoadingSelectedReviewRequestDetails = false;
+      this.reportError(error);
+    })
   }
 
   /**
@@ -235,7 +236,7 @@ export class KownslSummaryComponent implements OnInit {
    */
   tableClick(reviewRequestSummary: ReviewRequestSummary): void {
     this.selectedReviewRequestSummary = reviewRequestSummary;
-    this.selectedReviewRequestDetails = this.getReviewRequestDetailsForSummary(reviewRequestSummary);
+    this.getReviewRequestDetails(reviewRequestSummary);
     this.modalService.open('adviseren-accorderen-detail-modal')
   }
 }
