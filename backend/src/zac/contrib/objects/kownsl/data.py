@@ -203,7 +203,7 @@ class ReviewRequest(Model):
             # remove those who have already reviewed
             for review in self.get_reviews():
                 # if the reviewer is a group remove the group and...
-                if name := review.group.get("name"):
+                if review.group and (name := review.group.get("name")):
                     user_deadlines.pop(f"{AssigneeTypeChoices.group}:{name}", None)
 
                 # ... the user if the reviewer is a user
@@ -292,13 +292,15 @@ class ReviewRequest(Model):
     def get_status(self) -> str:
         if self.get_completed() >= self.num_assigned_users:
             if self.review_type == KownslTypes.advice:
-                return KownslStatus.approved
+                return KownslStatus.completed
             else:
                 return (
                     KownslStatus.approved
                     if all([review.approved for review in self.get_reviews()])
                     else KownslStatus.not_approved
                 )
+        elif self.locked:
+            return KownslStatus.canceled
         return KownslStatus.pending
 
 

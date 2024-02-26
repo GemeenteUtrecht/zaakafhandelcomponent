@@ -335,7 +335,7 @@ class ObjectenHandler:
             try:
                 send_message(
                     "cancel-process",
-                    [rr.metadata.get("processInstanceId")],
+                    [rr.metadata.get("process_instance_id")],
                 )
             except HTTPError as exc:
                 logger.info(
