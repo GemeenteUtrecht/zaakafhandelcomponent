@@ -9,14 +9,25 @@
     Met de gegevens hieronder kun je akkoord vragen aan een medewerker. Deze medewerker ontvangt hiervoor een mail met een link naar de zaak.
   </p>
 
+  <p><u>Selecteer minimaal één document of zaakeigenschap.</u></p>
+
   <ng-container *ngIf="(documentsData?.length === 0)">
     <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
   </ng-container>
 
+  <ng-container *ngIf="(documentsData?.length === 0)">
+    <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
+  </ng-container>
+
+  <ng-container *ngIf="(taskContextData.context.zaakeigenschappen?.length === 0)">
+    <p class="p--danger"><i>Deze zaak heeft nog geen geconfigureerde zaakeigenschappen.</i></p>
+  </ng-container>
+
+
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="documentsData?.length > 0">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Documenten</label>
-      <p>Over welke documenten gaat het? <u>Selecteer minimaal één document.</u></p>
+      <p>Over welke documenten gaat het?</p>
       <div class="configuration-files">
         <div class="row pl-3">
           <div class="d-block">
@@ -37,10 +48,10 @@
     </article>
     <article class="configuration-details">
       <label class="h4 d-inline-block">Zaakinformatie</label>
-      <p>Over welke zaakinformatie gaat het?</p>
+      <p>Over welke zaakeigenschap gaat het?</p>
       <ul>
         <li class="configuration-properties" *ngFor="let eigenschap of taskContextData.context.zaakeigenschappen">
-          <gu-checkbox (change)="updateSelectedUsers($event)"
+          <gu-checkbox (change)="updateSelectedProperties($event)"
                        [value]="eigenschap.url"
                        [checked]="isInSelectedProperties(eigenschap.url)"
                        class="d-inline-block mr-1"

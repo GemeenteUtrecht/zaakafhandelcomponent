@@ -361,10 +361,10 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   /**
-   * Update selected users array.
+   * Update selected properties array.
    * @param {MatCheckboxChange} event
    */
-  updateSelectedUsers(event: MatCheckboxChange) {
+  updateSelectedProperties(event: MatCheckboxChange) {
     const selectedValue = event.source.value;
     const isInSelectedProperties = this.isInSelectedProperties(selectedValue);
     if (event.checked && !isInSelectedProperties) {
