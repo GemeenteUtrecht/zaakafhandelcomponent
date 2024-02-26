@@ -233,6 +233,39 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_zaak_review_requests_completed(self, m):
+        rr = ReviewRequestFactory()
+        rr.update(
+            {
+                "locked": True,
+                "lockReason": "Alle verzoeken zijn uitgevoerd.",
+                "assignedUsers": [],
+            }
+        )
+        with patch(
+            "zac.contrib.objects.kownsl.api.views.get_all_review_requests_for_zaak",
+            return_value=[factory(ReviewRequest, rr)],
+        ):
+            response = self.client.get(self.endpoint_summary)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.json()
+        self.assertEqual(
+            response_data,
+            [
+                {
+                    "id": str(self.review_request.id),
+                    "reviewType": KownslTypes.advice,
+                    "completed": 0,
+                    "numAssignedUsers": 0,
+                    "canLock": False,
+                    "locked": True,
+                    "lockReason": "Alle verzoeken zijn uitgevoerd.",
+                    "isBeingReconfigured": False,
+                    "status": "completed",
+                }
+            ],
+        )
+
+    def test_get_zaak_review_requests_status_pending(self, m):
         response = self.client.get(self.endpoint_summary)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
@@ -253,8 +286,14 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             ],
         )
 
-    def test_get_zaak_review_requests_status(self, m):
-        response = self.client.get(self.endpoint_summary)
+    def test_get_zaak_review_requests_status_canceled(self, m):
+        rr = ReviewRequestFactory()
+        rr.update({"locked": True, "lockReason": "canceled by user"})
+        with patch(
+            "zac.contrib.objects.kownsl.api.views.get_all_review_requests_for_zaak",
+            return_value=[factory(ReviewRequest, rr)],
+        ):
+            response = self.client.get(self.endpoint_summary)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         self.assertEqual(
@@ -264,12 +303,12 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "id": str(self.review_request.id),
                     "reviewType": KownslTypes.advice,
                     "completed": 0,
-                    "numAssignedUsers": 2,
+                    "numAssignedUsers": 1,
                     "canLock": False,
-                    "locked": False,
-                    "lockReason": "",
+                    "locked": True,
+                    "lockReason": "canceled by user",
                     "isBeingReconfigured": False,
-                    "status": "pending",
+                    "status": "canceled",
                 }
             ],
         )
@@ -293,34 +332,6 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "canLock": True,
                     "locked": False,
                     "lockReason": "",
-                    "isBeingReconfigured": False,
-                    "status": "pending",
-                }
-            ],
-        )
-
-    def test_get_zaak_review_requests_is_locked(self, m):
-        rr = deepcopy(self.review_request)
-        rr.locked = True
-        rr.lock_reason = "just a reason"
-        with patch(
-            "zac.contrib.objects.kownsl.api.views.get_all_review_requests_for_zaak",
-            return_value=[rr],
-        ):
-            response = self.client.get(self.endpoint_summary)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_data = response.json()
-        self.assertEqual(
-            response_data,
-            [
-                {
-                    "id": str(rr.id),
-                    "reviewType": KownslTypes.advice,
-                    "completed": 0,
-                    "numAssignedUsers": 2,
-                    "canLock": False,
-                    "locked": True,
-                    "lockReason": "just a reason",
                     "isBeingReconfigured": False,
                     "status": "pending",
                 }
