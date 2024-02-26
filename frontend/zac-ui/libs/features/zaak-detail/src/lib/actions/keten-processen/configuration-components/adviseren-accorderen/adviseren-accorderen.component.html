@@ -126,7 +126,7 @@
     <div class="d-flex justify-content-start">
       <button gu-button
               (click)="submitForm()"
-              [disabled]="!assignUsersForm.valid || isSubmitting || selectedDocuments.length < 1"
+              [disabled]="!assignUsersForm.valid || isSubmitting || (selectedDocuments.length < 1 && selectedProperties.length < 1)"
               [loading]="isSubmitting">
         {{reviewType === 'advice' ? 'Advies vragen' : reviewType === 'approval' ? 'Akkoord vragen' : ''}}
       </button>
