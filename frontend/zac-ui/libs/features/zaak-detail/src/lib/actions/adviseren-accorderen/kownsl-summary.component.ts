@@ -146,7 +146,7 @@ export class KownslSummaryComponent implements OnInit {
       const [icon, iconColor] = this.reviewRequestsService.getReviewRequestIcon(reviewRequestSummary, reviewRequestDetails);
       const status = this.reviewRequestsService.getReviewRequestStatus(reviewRequestSummary, reviewRequestDetails);
       const date = reviewRequestDetails ? this.reviewRequestsService.getReviewRequestLastUpdate(reviewRequestDetails) : null;
-      const showRemindButton = reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers
+      const showRemindButton = reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers && !reviewRequestSummary.locked;
       const showCancelButton = reviewRequestSummary.canLock && !reviewRequestSummary.locked && (reviewRequestSummary.completed < reviewRequestSummary.numAssignedUsers)
 
       return {
