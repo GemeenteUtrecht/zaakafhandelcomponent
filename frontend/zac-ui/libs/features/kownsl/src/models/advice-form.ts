@@ -10,5 +10,5 @@ export interface AdviceForm {
 
 export interface ReviewDocument {
   document: string;
-  editedDocument: string;
+  editedDocument?: string;
 }

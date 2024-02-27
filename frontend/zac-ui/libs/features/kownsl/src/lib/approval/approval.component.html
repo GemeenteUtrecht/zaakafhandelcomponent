@@ -105,12 +105,15 @@
       <ng-template [ngIf]="!!approvalData.documents && approvalData.documents.length > 0" class="row no-gutters">
         <section *ngIf="approvalData.documents.length > 0">
           <h4 class="mb-2">Documenten</h4>
-          <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
-            <gu-file
-              [fileName]="file.bestandsnaam"
-              [readUrl]="file.readUrl"
-            ></gu-file>
-          </div>
+          <ng-container *ngIf="approvalData.zaakDocuments?.length > 0">
+            <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
+              <gu-file
+                [fileName]="file.bestandsnaam"
+                [readUrl]="file.readUrl"
+              ></gu-file>
+            </div>
+          </ng-container>
+          <p *ngIf="approvalData.zaakDocuments?.length === 0">Er zijn geen documenten meegegeven in deze aanvraag.</p>
         </section>
       </ng-template>
 

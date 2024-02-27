@@ -131,6 +131,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
         toelichting: this.fb.control("", [Validators.maxLength(4000)])
       })
       this.selectedDocuments = this.taskContextData.context.previouslySelectedDocuments;
+      this.selectedProperties = this.taskContextData.context.previouslySelectedZaakeigenschappen;
       this.fetchDocuments();
       this.checkPredefinedAssignees();
       this.addPreviouslyAssignedUsersStep();
@@ -319,8 +320,8 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   /**
-   * Check if user exists in current selected properties array.
-   * @param {UserSearchResult} user
+   * Check if property exists in current selected properties array.
+   * @param {string} property
    * @returns {boolean}
    */
   isInSelectedProperties(property) {
@@ -361,10 +362,10 @@ export class AdviserenAccorderenComponent implements OnChanges {
   }
 
   /**
-   * Update selected users array.
+   * Update selected properties array.
    * @param {MatCheckboxChange} event
    */
-  updateSelectedUsers(event: MatCheckboxChange) {
+  updateSelectedProperties(event: MatCheckboxChange) {
     const selectedValue = event.source.value;
     const isInSelectedProperties = this.isInSelectedProperties(selectedValue);
     if (event.checked && !isInSelectedProperties) {

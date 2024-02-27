@@ -22,7 +22,9 @@
   [closeIcon]="true"
 >
   <gu-detail-modal [reviewRequestDetails]="selectedReviewRequestDetails"
-                   [reviewRequestSummary]="selectedReviewRequestSummary"></gu-detail-modal>
+                   [reviewRequestSummary]="selectedReviewRequestSummary"
+                   [isLoading]="isLoadingSelectedReviewRequestDetails"
+  ></gu-detail-modal>
 </gu-modal>
 
 <!-- Cancel review -->

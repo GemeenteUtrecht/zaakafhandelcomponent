@@ -23,6 +23,7 @@ import { ModalService, SnackbarService } from '@gu/components';
 export class DetailModalComponent  {
   @Input() reviewRequestDetails: ReviewRequestDetails;
   @Input() reviewRequestSummary: ReviewRequestSummary;
+  @Input() isLoading: boolean;
 
 
   constructor(

@@ -16,7 +16,7 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
     icon: 'check_circle',
     iconColor: 'green',
     label: 'Akkoord',
-    value: 'Akkoord',  // As in API response.
+    value: 'Akkoord',
   },
 
   NOT_APPROVED: {
@@ -26,13 +26,6 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
     value: 'Niet akkoord',  // As in API response.
   },
 
-  ADVICE_COMPLETE: {
-    icon: 'check_circle',
-    iconColor: 'green',
-    label: 'Afgehandeld',
-    value: 'Afgehandeld',
-  },
-
   PENDING: {
     icon: 'timer',
     iconColor: 'orange',
@@ -40,18 +33,18 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
     value: 'pending',
   },
 
-  LOCKED: {
-    icon: 'lock',
+  CANCELED: {
+    icon: 'cancel',
     iconColor: 'red',
     label: 'Geannuleerd',
-    value: 'locked',
+    value: 'Geannuleerd',
   },
 
-  LOADING: {  // API loading.
-    icon: 'cached',
-    iconColor: 'gray',
-    label: '…',
-    value: null,
+  ADVICE_COMPLETE: {
+    icon: 'check_circle',
+    iconColor: 'green',
+    label: 'Afgehandeld',
+    value: 'Afgehandeld',
   }
 }
 
@@ -62,24 +55,6 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
 export class ReviewRequestsService {
 
   constructor(private http: ApplicationHttpClient) {
-  }
-
-  /**
-   * Returns whether all advice/approval requests are are completed.
-   * @param {ReviewRequestSummary} reviewRequest
-   * @return {boolean}
-   */
-  isReviewRequestCompleted(reviewRequest: ReviewRequestSummary): boolean {
-    return reviewRequest.completed >= reviewRequest.numAssignedUsers;
-  }
-
-  /**
-   * Returns whether no advice/approval requests are completed.
-   * @param {ReviewRequestSummary} reviewRequest
-   * @return {boolean}
-   */
-  isReviewRequestPristine(reviewRequest: ReviewRequestSummary): boolean {
-    return reviewRequest.completed < 1;
   }
 
   /**
@@ -100,54 +75,17 @@ export class ReviewRequestsService {
    * @return {ReviewRequestStatus}
    */
   getReviewRequestStatus(reviewRequestSummary: ReviewRequestSummary, reviewRequestDetails: ReviewRequestDetails): ReviewRequestStatus {
-    const responses = reviewRequestDetails?.approvals || reviewRequestDetails?.advices;
-
-    // Locked request
-    if (reviewRequestSummary.locked) {
-      return REVIEW_REQUEST_STATUSES.LOCKED;
-    }
-
-    // No responses.
-    if (this.isReviewRequestPristine(reviewRequestSummary)) {
-      return REVIEW_REQUEST_STATUSES.PENDING;
-    }
-
-    // Details not yet loaded.
-    if (!reviewRequestDetails) {
-      return REVIEW_REQUEST_STATUSES.LOADING;
-    }
-
-    // All advices given.
-    if (reviewRequestSummary.reviewType === 'advice' && this.isReviewRequestCompleted(reviewRequestSummary)) {
-      return REVIEW_REQUEST_STATUSES.ADVICE_COMPLETE;
-    }
-
-    // Whether all approved.
-    const isApproved = this.isReviewRequestCompleted(reviewRequestSummary) &&
-      responses.length &&
-      responses.every(a => {
-        if(reviewRequestSummary.reviewType === 'approval') {
-          return String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.APPROVED.value.toLowerCase();
-        } else if (reviewRequestSummary.reviewType === 'advice') {
-          return String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.ADVICE_COMPLETE.value.toLowerCase();
-        }
-        return true;
-      });
-
-    // Whether one or or more did not approve.
-    const isNotApproved = responses.length &&
-      responses.some(a => {
-        if(reviewRequestSummary.reviewType === 'approval') {
-          return String(a.status).toLowerCase() === REVIEW_REQUEST_STATUSES.NOT_APPROVED.value.toLowerCase();
-        }
-      });
-
-    if (isApproved) {
-      return REVIEW_REQUEST_STATUSES.APPROVED;
-    } else if (isNotApproved) {
-      return REVIEW_REQUEST_STATUSES.NOT_APPROVED;
-    } else {
-      return REVIEW_REQUEST_STATUSES.PENDING;  // One but not all approved or adviced.
+    switch (reviewRequestSummary.status) {
+      case 'approved':
+        return REVIEW_REQUEST_STATUSES.APPROVED
+      case 'not_approved':
+        return REVIEW_REQUEST_STATUSES.NOT_APPROVED
+      case 'pending':
+        return REVIEW_REQUEST_STATUSES.PENDING
+      case 'canceled':
+        return REVIEW_REQUEST_STATUSES.CANCELED
+      case 'completed':
+        return REVIEW_REQUEST_STATUSES.ADVICE_COMPLETE
     }
   }
 
@@ -179,25 +117,6 @@ export class ReviewRequestsService {
   retrieveReviewRequestDetails(requestUuid: string): Observable<ReviewRequestDetails> {
     const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${requestUuid}/detail`);
     return this.http.Get<ReviewRequestDetails>(endpoint);
-  }
-
-  /**
-   * Calls retrieveReviewRequestDetails() for every requestUuid in requestUuids.
-   * Subscribe.next() is called once for every result.
-   * @param {string[]} requestUuids
-   * @return {Observable}
-   */
-  retrieveReviewRequestDetailsBatch(requestUuids: string[]): Observable<ReviewRequestDetails> {
-    return new Observable(((subscriber) => {
-      requestUuids.forEach((requestUuid) => {
-        const endpoint = encodeURI(`/api/kownsl/zaak-review-requests/${requestUuid}/detail`);
-
-        this.http.Get<ReviewRequestDetails>(endpoint).subscribe(
-          (reviewRequestDetails) => subscriber.next(reviewRequestDetails),
-          (err) => subscriber.error(err),
-        )
-      });
-    }));
   }
 
   /**
