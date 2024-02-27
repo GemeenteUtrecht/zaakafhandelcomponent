@@ -12,15 +12,20 @@
     <bpmn:userTask id="aTaskDefinitionKey" name="aName">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="stringField" label="Some label" type="string" defaultValue="aDefaultValue" />
-          <camunda:formField id="intField" label="intField" type="long" />
-          <camunda:formField id="boolField" label="boolField" type="boolean" />
-          <camunda:formField id="dateField" label="dateField" type="date" />
-          <camunda:formField id="enumField" label="enumField" type="enum" defaultValue="first">
-            <camunda:value id="first" name="First" />
-            <camunda:value id="second" />
+          <camunda:formField id="formfield-01" label="EIGENSCHAP" type="string" defaultValue="waarde1">
+            <camunda:properties>
+              <camunda:property id="validateZaakeigenschap" value="1" />
+              <camunda:property id="catalogusDomein" value="DOMEI" />
+              <camunda:property id="zaaktypeIdentificatie" value="ZAAKTYPE-01" />
+              <camunda:property id="zaakeigenschapNaam" value="EIGENSCHAP" />
+            </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="snake_case" type="string" />
+          <camunda:formField id="formfield-02" label="SOMELABEL-02" type="enum">
+            <camunda:properties>
+                <camunda:value id="first" name="First" />
+                <camunda:value id="second" name="Second" />
+            </camunda:properties>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1hrwhib</bpmn:incoming>

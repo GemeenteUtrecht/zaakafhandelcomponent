@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from xml.etree.ElementTree import Element
 
 from django import forms
@@ -7,8 +7,78 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.bpmn import CAMUNDA_NS
 from django_camunda.camunda_models import Task
 
+from zac.core.utils import A_DAY
+from zac.utils.decorators import cache
+
 from .bpmn import get_bpmn
+from .dynamic_forms.data import CamundaFormField
 from .user_tasks.context import REGISTRY
+
+
+@cache("camundaField:choices:{field.id}", timeout=A_DAY)
+def extract_choices_from_enum_field(field: CamundaFormField) -> List[Tuple[str, str]]:
+    values = field.element.findall(".//camunda:value", CAMUNDA_NS)
+    return [
+        (value.attrib.get("id"), value.attrib.get("name", value.attrib["id"]))
+        for value in values
+        if value.attrib.get("id")
+    ]
+
+
+@cache("camundaField:constraints:{field.id}", timeout=A_DAY)
+def extract_constraint_from_field(field: CamundaFormField):
+    return field.element.findall(".//camunda:constraint", CAMUNDA_NS)
+
+
+@cache("camundaField:props:{field.id}", timeout=A_DAY)
+def extract_properties_from_field(field: CamundaFormField) -> Dict[str, str]:
+    return {
+        prop.attrib.get("id", ""): prop.attrib.get("value", "")
+        for prop in field.element.findall(".//camunda:property", CAMUNDA_NS)
+        if prop.attrib.get("id", "")
+    }
+
+
+def extract_task_form_fields(task: Task) -> Optional[List[Element]]:
+    """
+    Get the Camunda form fields definition from the BPMN definition.
+
+    Camunda embeds form fields as an extension into the BPMN definition. We can extract
+    these and map them to form or serializer fields.
+    """
+    if task.form_key and task.form_key in REGISTRY:
+        return None
+
+    tree = get_bpmn(task.process_definition_id)
+
+    task_id = task.task_definition_key
+    task_definition = tree.find(f".//bpmn:userTask[@id='{task_id}']", CAMUNDA_NS)
+    formfields = task_definition.findall(".//camunda:formField", CAMUNDA_NS)
+    if not formfields:
+        return None
+
+    return formfields
+
+
+def extract_task_form_key(task: Task) -> str:
+    """
+    Get the Camunda form key of a user task from the BPMN definition.
+
+    Camunda embeds the form key as an attribute into the BPMN definition.
+    """
+
+    tree = get_bpmn(task.process_definition_id)
+
+    task_id = task.task_definition_key
+    task_definition = tree.find(f".//bpmn:userTask[@id='{task_id}']", CAMUNDA_NS)
+    form_key = task_definition.attrib.get(
+        "{" + CAMUNDA_NS["camunda"] + "}formKey", None
+    )
+    return form_key
+
+
+def extract_task_form(task: Task, form_key_mapping: dict) -> bool:
+    return form_key_mapping.get(task.form_key)
 
 
 class MessageForm(forms.Form):
@@ -100,45 +170,3 @@ class BaseTaskFormSet(TaskFormSetMixin, forms.BaseFormSet):
 
 class DummyForm(TaskFormMixin, forms.Form):
     pass
-
-
-def extract_task_form_fields(task: Task) -> Optional[List[Element]]:
-    """
-    Get the Camunda form fields definition from the BPMN definition.
-
-    Camunda embeds form fields as an extension into the BPMN definition. We can extract
-    these and map them to form or serializer fields.
-    """
-    if task.form_key and task.form_key in REGISTRY:
-        return None
-
-    tree = get_bpmn(task.process_definition_id)
-
-    task_id = task.task_definition_key
-    task_definition = tree.find(f".//bpmn:userTask[@id='{task_id}']", CAMUNDA_NS)
-    formfields = task_definition.findall(".//camunda:formField", CAMUNDA_NS)
-    if not formfields:
-        return None
-
-    return formfields
-
-
-def extract_task_form_key(task: Task) -> str:
-    """
-    Get the Camunda form key of a user task from the BPMN definition.
-
-    Camunda embeds the form key as an attribute into the BPMN definition.
-    """
-
-    tree = get_bpmn(task.process_definition_id)
-
-    task_id = task.task_definition_key
-    task_definition = tree.find(f".//bpmn:userTask[@id='{task_id}']", CAMUNDA_NS)
-    form_key = task_definition.attrib.get(
-        "{" + CAMUNDA_NS["camunda"] + "}formKey", None
-    )
-    return form_key
-
-
-def extract_task_form(task: Task, form_key_mapping: dict) -> bool:
-    return form_key_mapping.get(task.form_key)
