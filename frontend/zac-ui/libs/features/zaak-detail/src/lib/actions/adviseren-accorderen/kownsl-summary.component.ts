@@ -165,7 +165,7 @@ export class KownslSummaryComponent implements OnInit {
           'opgehaald': `${reviewRequestSummary.completed}/${reviewRequestSummary.numAssignedUsers}`,
 
           'last_update': reviewRequestSummary.locked
-            ? `Geannuleerd: ${reviewRequestSummary.lockReason}`
+            ? reviewRequestSummary.lockReason
             : {
               type: date === null ? 'text' : 'date',
               date: String(date),

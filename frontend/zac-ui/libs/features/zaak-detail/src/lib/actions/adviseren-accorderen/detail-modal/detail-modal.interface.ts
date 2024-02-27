@@ -12,16 +12,19 @@ export interface Review {
     username: string;
   };
   created: string;
-  status?: 'Akkoord' | 'Niet akkoord';
+  approved?: boolean;
   advice?: string;
   toelichting?: string;
-  documents?: ReviewDocument[];
+  reviewDocuments?: ReviewDocument[];
 }
 
 export interface ReviewDocument {
-  adviceUrl: string;
-  adviceVersion: number;
+  bestandsnaam: string;
+  document: string;
+  downloadReviewUrl: string;
+  downloadSourceUrl: string;
+  reviewUrl: string;
+  reviewVersion: number;
   sourceUrl: string;
   sourceVersion: number;
-  bestandsnaam: string;
 }
