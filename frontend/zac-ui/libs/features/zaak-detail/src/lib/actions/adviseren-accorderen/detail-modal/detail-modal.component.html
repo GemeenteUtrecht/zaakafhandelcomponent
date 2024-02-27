@@ -2,8 +2,7 @@
 <div class="gu-adviseren-accorderen-detail" *ngIf="!isLoading">
   <h1 *ngIf="title">{{title}}</h1>
   <p *ngIf="reviewRequestSummary?.locked && reviewRequestSummary?.lockReason">
-    <b>Deze aanvraag is geannuleerd</b>
-    Reden annulering: {{reviewRequestSummary.lockReason}}
+    {{reviewRequestSummary.lockReason}}
   </p>
   <div class="gu-adviseren-accorderen-detail__table mb-4">
     <gu-table [table]="table"

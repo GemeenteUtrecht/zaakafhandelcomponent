@@ -139,7 +139,7 @@
         <section class="row no-gutters">
           <div class="col-12 col-lg-8 d-flex justify-content-end">
           <button gu-button
-            [disabled]="!approvalForm.valid"
+            [disabled]="!approvalForm.valid || isSubmitting"
             [loading]="isSubmitting"
             buttonStyle="primary"
             size="large"

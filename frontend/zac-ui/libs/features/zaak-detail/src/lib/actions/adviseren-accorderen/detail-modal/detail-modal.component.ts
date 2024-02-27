@@ -84,8 +84,8 @@ export class DetailModalComponent  {
 
     const bodyData = reviewRequestDetails.advices.map((review: Review) => {
       const author = this.getAuthorName(review.author);
-      const docAdviezen = review.documents ? review.documents.length.toString() : '-';
-      const reviewDocumentTableData = review.documents?.length > 0 ? this.formatTableReviewDoc(review.documents) : null;
+      const docAdviezen = review.reviewDocuments ? review.reviewDocuments.length.toString() : '-';
+      const reviewDocumentTableData = review.reviewDocuments?.length > 0 ? this.formatTableReviewDoc(review.reviewDocuments) : null;
 
       const cellData: RowData = {
         cellData: {
@@ -118,8 +118,8 @@ export class DetailModalComponent  {
     const bodyData = reviewRequestDetails.approvals.map((review: Review) => {
       const author = this.getAuthorName(review.author);
 
-      const icon = review.status === 'Akkoord' ? 'done' : 'close'
-      const iconColor = review.status === 'Akkoord' ? 'green' : 'red'
+      const icon = review.approved ? 'done' : 'close';
+      const iconColor = review.approved ? 'green' : 'red'
 
       const cellData: RowData = {
         cellData: {
@@ -147,11 +147,11 @@ export class DetailModalComponent  {
 
   /**
    * Returns table for review documents.
-   * @param {ReviewDocument[]} reviewDocumentss
+   * @param {ReviewDocument[]} reviewDocuments
    * @return {Table}
    */
   formatTableReviewDoc(reviewDocuments: ReviewDocument[]): Table {
-    const headData = ['Document', 'Originele versie', 'Aangepaste versie'];
+    const headData = ['Bestandsnaam', 'Originele versie', 'Aangepaste versie'];
 
     const bodyData = reviewDocuments.map((doc: ReviewDocument) => {
       return {
@@ -166,8 +166,8 @@ export class DetailModalComponent  {
 
           advice: {
             type: 'button',
-            label: doc.adviceVersion.toString(10),
-            value: doc.adviceUrl
+            label: doc.reviewVersion.toString(10),
+            value: doc.reviewUrl
           } as ExtensiveCell,
         }
       }
