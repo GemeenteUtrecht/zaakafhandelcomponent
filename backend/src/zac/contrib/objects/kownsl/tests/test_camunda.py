@@ -236,14 +236,8 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
                 "zaakeigenschappen": [
                     {
                         "url": self.zaakeigenschap["url"],
-                        "formaat": self.eigenschap["specificatie"]["formaat"],
                         "waarde": self.zaakeigenschap["waarde"],
-                        "eigenschap": {
-                            "url": self.eigenschap["url"],
-                            "naam": self.eigenschap["naam"],
-                            "toelichting": self.eigenschap["toelichting"],
-                            "specificatie": self.eigenschap["specificatie"],
-                        },
+                        "naam": self.eigenschap["naam"],
                     }
                 ],
                 "zaak_informatie": {

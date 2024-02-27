@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
@@ -131,6 +132,14 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
         return attrs
 
 
+class ZaakEigenschapReviewContextSerializer(APIModelSerializer):
+    naam = serializers.CharField(source="eigenschap.naam")
+
+    class Meta:
+        model = ZaakEigenschap
+        fields = ("naam", "waarde", "url")
+
+
 @usertask_context_serializer
 class ReviewContextSerializer(APIModelSerializer):
     camunda_assigned_users = CamundaAssignedUsersSerializer(
@@ -159,7 +168,7 @@ class ReviewContextSerializer(APIModelSerializer):
         help_text=_("A previously given comment regarding the review request."),
         required=False,
     )
-    zaakeigenschappen = ZaakEigenschapSerializer(many=True)
+    zaakeigenschappen = ZaakEigenschapReviewContextSerializer(many=True)
     zaak_informatie = ZaakInformatieTaskSerializer()
 
     class Meta:
@@ -527,7 +536,7 @@ def get_review_context(task: Task) -> ReviewContext:
         context["previously_assigned_users"] = rr.assigned_users
         context["previously_selected_documents"] = rr.documents
         context["previously_selected_zaakeigenschappen"] = [
-            zei for zei in zaakeigenschappen if zei.url in rr.zaakeigenschappen
+            zei.url for zei in zaakeigenschappen if zei.url in rr.zaakeigenschappen
         ]
 
     return context

@@ -19,6 +19,7 @@ from zgw_consumers.api_models.catalogi import (
 )
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -115,6 +116,20 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             identificatie="ZT1",
             omschrijving="ZT1",
         )
+        cls.eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=cls.zaaktype["url"],
+            naam="some-property",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "3",
+                "kardinaliteit": "1",
+                "waardenverzameling": [],
+            },
+            url=f"{CATALOGI_ROOT}eigenschappen/68b5b40c-c479-4008-a57b-a268b280df99",
+        )
         cls.zaaktype_obj = factory(ZaakType, cls.zaaktype)
 
         cls.documenttype = generate_oas_component(
@@ -137,13 +152,21 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             InformatieObjectType, cls.documenttype
         )
 
-        zaak = generate_oas_component(
+        cls.zaak_dict = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
         )
-        cls.zaak = factory(Zaak, zaak)
+        cls.zaakeigenschap = generate_oas_component(
+            "zrc",
+            "schemas/ZaakEigenschap",
+            zaak=cls.zaak_dict["url"],
+            eigenschap=cls.eigenschap["url"],
+            naam=cls.eigenschap["naam"],
+            waarde="bar",
+        )
+        cls.zaak = factory(Zaak, cls.zaak_dict)
 
         cls.document.last_edited_date = None  # avoid patching fetching audit trail
         cls.document_es = create_informatieobject_document(cls.document)
@@ -382,10 +405,17 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
     @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     def test_get_reconfigure_advice_review_request_user_task(self, m, gt, ct):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
         )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([self.eigenschap]),
+        )
+        m.get(f"{self.zaak.url}/zaakeigenschappen", json=[self.zaakeigenschap])
+
         BlueprintPermissionFactory.create(
             role__permissions=[zaakproces_usertasks.name],
             for_user=self.user,
@@ -429,6 +459,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             "lastName": "",
             "fullName": "",
         }
+        review_request_data["zaakeigenschappen"] = [self.zaakeigenschap["url"]]
         review_request = factory_review_request(review_request_data)
         m.get(
             f"{CAMUNDA_URL}task/{TASK_DATA['id']}/variables/assignedUsers?deserializeValue=false",
@@ -447,13 +478,8 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                     "zac.contrib.objects.kownsl.camunda.get_review_request_from_task",
                     return_value=review_request,
                 ):
-                    with patch(
-                        "zac.contrib.objects.kownsl.camunda.get_zaakeigenschappen",
-                        return_value=[],
-                    ) as patch_get_zaakeigenschappen:
-                        response = self.client.get(self.task_endpoint)
+                    response = self.client.get(self.task_endpoint)
 
-        patch_get_zaakeigenschappen.assert_called_once()
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -497,13 +523,19 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 ],
                 "reviewType": "advice",
                 "previouslySelectedDocuments": [],
-                "previouslySelectedZaakeigenschappen": [],
+                "previouslySelectedZaakeigenschappen": [self.zaakeigenschap["url"]],
                 "title": f"{self.zaak_context.zaaktype.omschrijving} - {self.zaak_context.zaaktype.versiedatum}",
                 "zaakInformatie": {
                     "omschrijving": self.zaak_context.zaak.omschrijving,
                     "toelichting": self.zaak_context.zaak.toelichting,
                 },
-                "zaakeigenschappen": [],
+                "zaakeigenschappen": [
+                    {
+                        "naam": self.eigenschap["naam"],
+                        "waarde": self.zaakeigenschap["waarde"],
+                        "url": self.zaakeigenschap["url"],
+                    }
+                ],
             },
         )
 
