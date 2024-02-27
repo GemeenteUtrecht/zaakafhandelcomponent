@@ -104,13 +104,14 @@
       <!-- Documents and document upload -->
       <form [formGroup]="adviceForm">
         <ng-template [ngIf]="!!adviceData.documents && adviceData.documents.length > 0">
-          <section *ngIf="adviceData.documents.length > 0" class="row no-gutters">
+          <section *ngIf="adviceData.zaakDocuments.length > 0" class="row no-gutters">
             <div class="col-12 col-lg-8">
               <h4 class="mb-2">Documenten</h4>
                 <gu-table [table]="documentTableData" (buttonOutput)="handleTableButtonOutput($event)"
               ></gu-table>
             </div>
           </section>
+          <p *ngIf="adviceData.zaakDocuments?.length === 0">Er zijn geen documenten meegegeven in deze aanvraag.</p>
         </ng-template>
 
         <!-- Advice text -->

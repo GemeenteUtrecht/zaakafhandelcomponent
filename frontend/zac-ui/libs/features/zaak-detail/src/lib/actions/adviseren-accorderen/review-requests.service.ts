@@ -45,13 +45,6 @@ export const REVIEW_REQUEST_STATUSES: { [status: string]: ReviewRequestStatus } 
     iconColor: 'green',
     label: 'Afgehandeld',
     value: 'Afgehandeld',
-  },
-
-  LOADING: {  // API loading.
-    icon: 'cached',
-    iconColor: 'gray',
-    label: '…',
-    value: null,
   }
 }
 

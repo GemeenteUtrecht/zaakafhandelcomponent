@@ -255,14 +255,14 @@ export class AdviceComponent implements OnInit {
     this.adviceService.closeDocumentEdit(this.deleteUrls)
       .pipe(
         switchMap( (closedDocs: CloseDocument[]) => {
-          if (closedDocs.length > 0) {
-            this.adviceFormData.reviewDocuments = closedDocs.map( (doc, i) => {
-              return {
-                document: this.deleteUrls[i].drcUrl,
-                editedDocument: doc.versionedUrl
-              }
-            })
-          }
+          const allDocs = this.adviceData.zaakDocuments.map(({ identificatie, url, versie }) => ({ id: identificatie, document: `${url}?versie=${versie}` }));
+
+          const uneditedDocs = allDocs.filter(({ id }) => !this.deleteUrls.some(doc => doc.id === id)).map(({ document }) => ({ document }));
+
+          const closedReviewDocs = closedDocs.map((doc, i) => ({ document: this.deleteUrls[i].drcUrl, editedDocument: doc.versionedUrl }));
+
+          this.adviceFormData.reviewDocuments = closedDocs.length > 0 ? [...uneditedDocs, ...closedReviewDocs] : uneditedDocs;
+
           return of(this.adviceFormData);
         }),
         catchError(res => {
@@ -272,7 +272,7 @@ export class AdviceComponent implements OnInit {
           }
         }),
         switchMap(() => {
-          return this.adviceService.postAdvice(this.adviceFormData, this.uuid, this.assignee)
+          return this.adviceService.postAdvice(this.adviceFormData, this.uuid, this.assignee);
         })
       ).subscribe( () => {
       this.isSubmitting = false;

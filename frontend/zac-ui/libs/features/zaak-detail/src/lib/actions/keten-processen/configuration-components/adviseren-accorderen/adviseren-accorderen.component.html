@@ -15,10 +15,6 @@
     <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
   </ng-container>
 
-  <ng-container *ngIf="(documentsData?.length === 0)">
-    <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
-  </ng-container>
-
   <ng-container *ngIf="(taskContextData.context.zaakeigenschappen?.length === 0)">
     <p class="p--danger"><i>Deze zaak heeft nog geen geconfigureerde zaakeigenschappen.</i></p>
   </ng-container>
