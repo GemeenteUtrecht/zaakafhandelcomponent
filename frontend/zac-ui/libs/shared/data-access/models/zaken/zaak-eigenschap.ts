@@ -10,6 +10,7 @@ export interface EigenschapWaarde {
   formaat: string;
   url: string;
   waarde: string;
+  naam?: string;
 }
 
 export interface NieuweEigenschap {

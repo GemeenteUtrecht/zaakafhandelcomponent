@@ -105,6 +105,7 @@ export interface Context {
   camundaAssignedUsers: AssignedUsers;
   previouslyAssignedUsers: PreviouslyAssignedUser[];
   previouslySelectedDocuments: string[];
+  previouslySelectedZaakeigenschappen: string[];
   documentsLink?: string;
   informatieobjecttypen?: InformatieObjectType[];
   title?: string;

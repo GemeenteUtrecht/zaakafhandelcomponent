@@ -45,14 +45,14 @@
     <article class="configuration-details">
       <label class="h4 d-inline-block">Zaakinformatie</label>
       <p>Over welke zaakeigenschap gaat het?</p>
-      <ul>
+      <ul *ngIf="selectedProperties">
         <li class="configuration-properties" *ngFor="let eigenschap of taskContextData.context.zaakeigenschappen">
           <gu-checkbox (change)="updateSelectedProperties($event)"
                        [value]="eigenschap.url"
                        [checked]="isInSelectedProperties(eigenschap.url)"
                        class="d-inline-block mr-1"
           >
-            {{eigenschap.eigenschap.naam}}: {{eigenschap.waarde}}
+            {{eigenschap.naam}}: {{eigenschap.waarde}}
           </gu-checkbox>
         </li>
       </ul>
