@@ -557,6 +557,7 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
     review_type = serializers.ChoiceField(
         choices=KownslTypes.choices, help_text=_("The review type.")
     )
+    toelichting = serializers.CharField(help_text=_("Comment on the review request."))
     zaak = ZaakSerializer(help_text=_("ZAAK related to review."))
     zaakeigenschappen = ZaakEigenschapSerializer(
         source="get_zaakeigenschappen", many=True, read_only=True
