@@ -57,7 +57,7 @@ class FormFieldSerializer(PolymorphicSerializer):
     serializer_mapping = {
         "enum": EnumSerializer,
         "string": StringSerializer,
-        "int": IntSerializer,
+        "long": IntSerializer,
         "boolean": BooleanSerializer,
         "date": DatetimeSerializer,
     }

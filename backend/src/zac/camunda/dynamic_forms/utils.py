@@ -89,7 +89,7 @@ FIELD_TYPE_MAP = {
 INPUT_TYPE_MAP = {
     "enum": "enum",
     "string": "string",
-    "long": "int",
+    "long": "long",
     "boolean": "boolean",
     "date": "date",
 }

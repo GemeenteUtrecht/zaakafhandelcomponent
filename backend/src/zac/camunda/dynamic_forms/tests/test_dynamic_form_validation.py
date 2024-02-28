@@ -72,288 +72,306 @@ def _get_camunda_client():
     return get_client()
 
 
-# @requests_mock.Mocker()
-# class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
-#     @classmethod
-#     def setUpTestData(cls):
-#         super().setUpTestData()
-#         cls.maxDiff = None
-#         cls.user = SuperUserFactory.create()
-#         cls.patch_get_client_bpmn = patch(
-#             "django_camunda.bpmn.get_client", return_value=_get_camunda_client()
-#         )
-#         cls.mock_parallel = patch(
-#             "zac.core.services.parallel", return_value=mock_parallel()
-#         )
+@requests_mock.Mocker()
+class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.maxDiff = None
+        cls.user = SuperUserFactory.create()
+        cls.patch_get_client_bpmn = patch(
+            "django_camunda.bpmn.get_client", return_value=_get_camunda_client()
+        )
+        cls.mock_parallel = patch(
+            "zac.core.services.parallel", return_value=mock_parallel()
+        )
 
-#         cls.task_endpoint = reverse(
-#             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
-#         )
+        cls.task_endpoint = reverse(
+            "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
+        )
 
-#         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
-#         cls.catalogus = generate_oas_component(
-#             "ztc",
-#             "schemas/Catalogus",
-#             url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
-#             domein="DOMEI",
-#         )
-#         cls.zaaktype = generate_oas_component(
-#             "ztc",
-#             "schemas/ZaakType",
-#             catalogus=cls.catalogus["url"],
-#             url=f"{CATALOGI_ROOT}zaaktypen/6ba8130e-29c0-4105-8b67-0fa861f76923",
-#             identificatie="ZAAKTYPE-01",
-#             omschrijving="ZT1",
-#         )
+        cls.catalogus = generate_oas_component(
+            "ztc",
+            "schemas/Catalogus",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            domein="DOMEI",
+        )
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            catalogus=cls.catalogus["url"],
+            url=f"{CATALOGI_ROOT}zaaktypen/6ba8130e-29c0-4105-8b67-0fa861f76923",
+            identificatie="ZAAKTYPE-01",
+            omschrijving="ZT1",
+        )
 
-#     def setUp(self) -> None:
-#         super().setUp()
-#         self.client.force_authenticate(self.user)
-#         self.patch_get_client_bpmn.start()
-#         self.addCleanup(self.patch_get_client_bpmn.stop)
-#         self.mock_parallel.start()
-#         self.addCleanup(self.mock_parallel.stop)
+    def setUp(self) -> None:
+        super().setUp()
+        self.client.force_authenticate(self.user)
+        self.patch_get_client_bpmn.start()
+        self.addCleanup(self.patch_get_client_bpmn.stop)
+        self.mock_parallel.start()
+        self.addCleanup(self.mock_parallel.stop)
 
-#     @patch(
-#         "zac.camunda.api.views.get_task",
-#         return_value=_get_task(),
-#     )
-#     def test_get_context_no_eigenschappen_enum_from_camunda_values(self, m, gt):
-#         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(),
+    )
+    def test_get_context_no_eigenschappen_enum_from_camunda_values(self, m, gt):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-#         # mock for zac.camunda.forms.get_bpmn
-#         m.get(
-#             f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
-#             headers={"Content-Type": "application/json"},
-#             json=BPMN_DATA,
-#         )
+        # mock for zac.camunda.forms.get_bpmn
+        m.get(
+            f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
+            headers={"Content-Type": "application/json"},
+            json=BPMN_DATA,
+        )
 
-#         # mock for zac.camunda.dynamic_forms.utils.get_catalogi
-#         m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([]))
+        # mock for zac.camunda.dynamic_forms.utils.get_catalogi
+        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([]))
 
-#         self.client.force_authenticate(user=self.user)
+        self.client.force_authenticate(user=self.user)
 
-#         response = self.client.get(self.task_endpoint)
-#         self.assertEqual(
-#             response.json(),
-#             {
-#                 "form": "",
-#                 "task": {
-#                     "id": TASK_DATA["id"],
-#                     "name": TASK_DATA["name"],
-#                     "created": "2013-01-23T11:42:42Z",
-#                     "hasForm": False,
-#                     "assigneeType": "",
-#                     "canCancelTask": False,
-#                     "formKey": TASK_DATA["formKey"],
-#                     "assignee": None,
-#                 },
-#                 "context": {
-#                     "formFields": [
-#                         {
-#                             "name": "formfield-01",
-#                             "label": "EIGENSCHAP",
-#                             "inputType": "string",
-#                             "value": "waarde1",
-#                         },
-#                         {
-#                             "name": "formfield-02",
-#                             "label": "SOMELABEL-02",
-#                             "inputType": "enum",
-#                             "value": None,
-#                             "enum": [["first", "First"], ["second", "Second"]],
-#                         },
-#                     ]
-#                 },
-#             },
-#         )
+        response = self.client.get(self.task_endpoint)
+        self.assertEqual(
+            response.json(),
+            {
+                "form": "",
+                "task": {
+                    "id": TASK_DATA["id"],
+                    "name": TASK_DATA["name"],
+                    "created": "2013-01-23T11:42:42Z",
+                    "hasForm": False,
+                    "assigneeType": "",
+                    "canCancelTask": False,
+                    "formKey": TASK_DATA["formKey"],
+                    "assignee": None,
+                },
+                "context": {
+                    "formFields": [
+                        {
+                            "name": "formfield-01",
+                            "label": "EIGENSCHAP",
+                            "inputType": "string",
+                            "value": "waarde1",
+                        },
+                        {
+                            "name": "formfield-02",
+                            "label": "SOMELABEL-02",
+                            "inputType": "enum",
+                            "value": None,
+                            "enum": [["first", "First"], ["second", "Second"]],
+                        },
+                        {
+                            "name": "formfield-03",
+                            "label": "LONG-FIELD",
+                            "inputType": "long",
+                            "value": None,
+                        },
+                    ]
+                },
+            },
+        )
 
-#     @patch(
-#         "zac.camunda.api.views.get_task",
-#         return_value=_get_task(),
-#     )
-#     def test_get_context_with_eigenschap_enum_from_waardenverzameling(self, m, gt):
-#         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(),
+    )
+    def test_get_context_with_eigenschap_enum_from_waardenverzameling(self, m, gt):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-#         # mock for zac.camunda.forms.get_bpmn
-#         m.get(
-#             f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
-#             headers={"Content-Type": "application/json"},
-#             json=BPMN_DATA,
-#         )
+        # mock for zac.camunda.forms.get_bpmn
+        m.get(
+            f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
+            headers={"Content-Type": "application/json"},
+            json=BPMN_DATA,
+        )
 
-#         # mock for zac.camunda.dynamic_forms.utils.get_catalogi
-#         m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([self.catalogus]))
+        # mock for zac.camunda.dynamic_forms.utils.get_catalogi
+        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([self.catalogus]))
 
-#         # mock for zac.camunda.dynamic_forms.utils.get_zaaktypen
-#         m.get(
-#             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}",
-#             json=paginated_response([self.zaaktype]),
-#         )
-#         # mock for zac.camunda.dynamic_forms.utils.get_eigenschappen_for_zaaktypen
-#         eigenschap = generate_oas_component(
-#             "ztc",
-#             "schemas/Eigenschap",
-#             zaaktype=self.zaaktype["url"],
-#             naam="EIGENSCHAP",
-#             specificatie={
-#                 "groep": "dummy",
-#                 "formaat": "tekst",
-#                 "lengte": "7",
-#                 "kardinaliteit": "1",
-#                 "waardenverzameling": ["waarde1", "waarde2"],
-#             },
-#             url=f"{CATALOGI_ROOT}eigenschappen/88e425b4-8b8f-4a35-b577-20d63ce24d9c",
-#         )
-#         m.get(
-#             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
-#             json=paginated_response([eigenschap]),
-#         )
+        # mock for zac.camunda.dynamic_forms.utils.get_zaaktypen
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        # mock for zac.camunda.dynamic_forms.utils.get_eigenschappen_for_zaaktypen
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=self.zaaktype["url"],
+            naam="EIGENSCHAP",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "7",
+                "kardinaliteit": "1",
+                "waardenverzameling": ["waarde1", "waarde2"],
+            },
+            url=f"{CATALOGI_ROOT}eigenschappen/88e425b4-8b8f-4a35-b577-20d63ce24d9c",
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
 
-#         self.client.force_authenticate(user=self.user)
-#         with patch(
-#             "zac.camunda.dynamic_forms.utils.fetch_zaaktypeattributen_objects_for_zaaktype",
-#             return_value=[],
-#         ):
-#             response = self.client.get(self.task_endpoint)
+        self.client.force_authenticate(user=self.user)
+        with patch(
+            "zac.camunda.dynamic_forms.utils.fetch_zaaktypeattributen_objects_for_zaaktype",
+            return_value=[],
+        ):
+            response = self.client.get(self.task_endpoint)
 
-#         self.assertEqual(
-#             response.json(),
-#             {
-#                 "form": "",
-#                 "task": {
-#                     "id": TASK_DATA["id"],
-#                     "name": TASK_DATA["name"],
-#                     "created": "2013-01-23T11:42:42Z",
-#                     "hasForm": False,
-#                     "assigneeType": "",
-#                     "canCancelTask": False,
-#                     "formKey": TASK_DATA["formKey"],
-#                     "assignee": None,
-#                 },
-#                 "context": {
-#                     "formFields": [
-#                         {
-#                             "name": "formfield-01",
-#                             "label": "EIGENSCHAP",
-#                             "inputType": "enum",  # <- NOT STRING - test successful
-#                             "value": "waarde1",
-#                             "enum": [
-#                                 ["waarde1", "waarde1"],
-#                                 ["waarde2", "waarde2"],
-#                             ],  # <- values from eigenschap specificatie waardenverzameling
-#                         },
-#                         {
-#                             "name": "formfield-02",
-#                             "label": "SOMELABEL-02",
-#                             "inputType": "enum",
-#                             "value": None,
-#                             "enum": [["first", "First"], ["second", "Second"]],
-#                         },
-#                     ]
-#                 },
-#             },
-#         )
+        self.assertEqual(
+            response.json(),
+            {
+                "form": "",
+                "task": {
+                    "id": TASK_DATA["id"],
+                    "name": TASK_DATA["name"],
+                    "created": "2013-01-23T11:42:42Z",
+                    "hasForm": False,
+                    "assigneeType": "",
+                    "canCancelTask": False,
+                    "formKey": TASK_DATA["formKey"],
+                    "assignee": None,
+                },
+                "context": {
+                    "formFields": [
+                        {
+                            "name": "formfield-01",
+                            "label": "EIGENSCHAP",
+                            "inputType": "enum",  # <- NOT STRING - test successful
+                            "value": "waarde1",
+                            "enum": [
+                                ["waarde1", "waarde1"],
+                                ["waarde2", "waarde2"],
+                            ],  # <- values from eigenschap specificatie waardenverzameling
+                        },
+                        {
+                            "name": "formfield-02",
+                            "label": "SOMELABEL-02",
+                            "inputType": "enum",
+                            "value": None,
+                            "enum": [["first", "First"], ["second", "Second"]],
+                        },
+                        {
+                            "name": "formfield-03",
+                            "label": "LONG-FIELD",
+                            "inputType": "long",
+                            "value": None,
+                        },
+                    ]
+                },
+            },
+        )
 
-#     @patch(
-#         "zac.camunda.api.views.get_task",
-#         return_value=_get_task(),
-#     )
-#     def test_get_context_with_eigenschap_enum_from_zaaktype_attributes(self, m, gt):
-#         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+    @patch(
+        "zac.camunda.api.views.get_task",
+        return_value=_get_task(),
+    )
+    def test_get_context_with_eigenschap_enum_from_zaaktype_attributes(self, m, gt):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
 
-#         # mock for zac.camunda.forms.get_bpmn
-#         m.get(
-#             f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
-#             headers={"Content-Type": "application/json"},
-#             json=BPMN_DATA,
-#         )
+        # mock for zac.camunda.forms.get_bpmn
+        m.get(
+            f"{CAMUNDA_URL}process-definition/aProcDefId/xml",
+            headers={"Content-Type": "application/json"},
+            json=BPMN_DATA,
+        )
 
-#         # mock for zac.camunda.dynamic_forms.utils.get_catalogi
-#         m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([self.catalogus]))
+        # mock for zac.camunda.dynamic_forms.utils.get_catalogi
+        m.get(f"{CATALOGI_ROOT}catalogussen", json=paginated_response([self.catalogus]))
 
-#         # mock for zac.camunda.dynamic_forms.utils.get_zaaktypen
-#         m.get(
-#             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}",
-#             json=paginated_response([self.zaaktype]),
-#         )
-#         # mock for zac.camunda.dynamic_forms.utils.get_eigenschappen_for_zaaktypen
-#         eigenschap = generate_oas_component(
-#             "ztc",
-#             "schemas/Eigenschap",
-#             zaaktype=self.zaaktype["url"],
-#             naam="EIGENSCHAP",
-#             specificatie={
-#                 "groep": "dummy",
-#                 "formaat": "tekst",
-#                 "lengte": "7",
-#                 "kardinaliteit": "1",
-#                 "waardenverzameling": ["waarde1", "waarde2"],
-#             },
-#             url=f"{CATALOGI_ROOT}eigenschappen/88e425b4-8b8f-4a35-b577-20d63ce24d9c",
-#         )
-#         m.get(
-#             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
-#             json=paginated_response([eigenschap]),
-#         )
+        # mock for zac.camunda.dynamic_forms.utils.get_zaaktypen
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.catalogus['url']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        # mock for zac.camunda.dynamic_forms.utils.get_eigenschappen_for_zaaktypen
+        eigenschap = generate_oas_component(
+            "ztc",
+            "schemas/Eigenschap",
+            zaaktype=self.zaaktype["url"],
+            naam="EIGENSCHAP",
+            specificatie={
+                "groep": "dummy",
+                "formaat": "tekst",
+                "lengte": "7",
+                "kardinaliteit": "1",
+                "waardenverzameling": ["waarde1", "waarde2"],
+            },
+            url=f"{CATALOGI_ROOT}eigenschappen/88e425b4-8b8f-4a35-b577-20d63ce24d9c",
+        )
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
 
-#         zaaktype_attributes = [
-#             {
-#                 "enum": ["zaaktype-attribuut-01", "zaaktype-attribuut-02"],
-#                 "naam": eigenschap["naam"],
-#                 "waarde": "",
-#                 "zaaktypeCatalogus": self.catalogus["domein"],
-#                 "zaaktypeIdentificaties": [
-#                     self.zaaktype["identificatie"],
-#                 ],
-#             }
-#         ]
+        zaaktype_attributes = [
+            {
+                "enum": ["zaaktype-attribuut-01", "zaaktype-attribuut-02"],
+                "naam": eigenschap["naam"],
+                "waarde": "",
+                "zaaktypeCatalogus": self.catalogus["domein"],
+                "zaaktypeIdentificaties": [
+                    self.zaaktype["identificatie"],
+                ],
+            }
+        ]
 
-#         self.client.force_authenticate(user=self.user)
-#         with patch(
-#             "zac.camunda.dynamic_forms.utils.fetch_zaaktypeattributen_objects_for_zaaktype",
-#             return_value=zaaktype_attributes,
-#         ):
-#             response = self.client.get(self.task_endpoint)
+        self.client.force_authenticate(user=self.user)
+        with patch(
+            "zac.camunda.dynamic_forms.utils.fetch_zaaktypeattributen_objects_for_zaaktype",
+            return_value=zaaktype_attributes,
+        ):
+            response = self.client.get(self.task_endpoint)
 
-#         self.assertEqual(
-#             response.json(),
-#             {
-#                 "form": "",
-#                 "task": {
-#                     "id": TASK_DATA["id"],
-#                     "name": TASK_DATA["name"],
-#                     "created": "2013-01-23T11:42:42Z",
-#                     "hasForm": False,
-#                     "assigneeType": "",
-#                     "canCancelTask": False,
-#                     "formKey": TASK_DATA["formKey"],
-#                     "assignee": None,
-#                 },
-#                 "context": {
-#                     "formFields": [
-#                         {
-#                             "name": "formfield-01",
-#                             "label": "EIGENSCHAP",
-#                             "inputType": "enum",  # <- NOT STRING - test successful
-#                             "value": "waarde1",
-#                             "enum": [
-#                                 ["zaaktype-attribuut-01", "zaaktype-attribuut-01"],
-#                                 ["zaaktype-attribuut-02", "zaaktype-attribuut-02"],
-#                             ],  # <- values from eigenschap specificatie waardenverzameling
-#                         },
-#                         {
-#                             "name": "formfield-02",
-#                             "label": "SOMELABEL-02",
-#                             "inputType": "enum",
-#                             "value": None,
-#                             "enum": [["first", "First"], ["second", "Second"]],
-#                         },
-#                     ]
-#                 },
-#             },
-#         )
+        self.assertEqual(
+            response.json(),
+            {
+                "form": "",
+                "task": {
+                    "id": TASK_DATA["id"],
+                    "name": TASK_DATA["name"],
+                    "created": "2013-01-23T11:42:42Z",
+                    "hasForm": False,
+                    "assigneeType": "",
+                    "canCancelTask": False,
+                    "formKey": TASK_DATA["formKey"],
+                    "assignee": None,
+                },
+                "context": {
+                    "formFields": [
+                        {
+                            "name": "formfield-01",
+                            "label": "EIGENSCHAP",
+                            "inputType": "enum",  # <- NOT STRING - test successful
+                            "value": "waarde1",
+                            "enum": [
+                                ["zaaktype-attribuut-01", "zaaktype-attribuut-01"],
+                                ["zaaktype-attribuut-02", "zaaktype-attribuut-02"],
+                            ],  # <- values from eigenschap specificatie waardenverzameling
+                        },
+                        {
+                            "name": "formfield-02",
+                            "label": "SOMELABEL-02",
+                            "inputType": "enum",
+                            "value": None,
+                            "enum": [["first", "First"], ["second", "Second"]],
+                        },
+                        {
+                            "name": "formfield-03",
+                            "label": "LONG-FIELD",
+                            "inputType": "long",
+                            "value": None,
+                        },
+                    ]
+                },
+            },
+        )
 
 
 @requests_mock.Mocker()
@@ -421,7 +439,11 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
         with self.subTest("Fail validation on enum"):
             response = self.client.put(
                 self.task_endpoint,
-                {"formfield-01": "some-value-01", "formfield-02": "some-other-value"},
+                {
+                    "formfield-01": "some-value-01",
+                    "formfield-02": "some-other-value",
+                    "formfield-03": 3,
+                },
             )
             self.assertEqual(
                 response.json(),
@@ -432,7 +454,11 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
             with patch("zac.camunda.api.views.set_assignee_and_complete_task"):
                 response = self.client.put(
                     self.task_endpoint,
-                    {"formfield-01": "some-value-01", "formfield-02": "second"},
+                    {
+                        "formfield-01": "some-value-01",
+                        "formfield-02": "second",
+                        "formfield-03": 3,
+                    },
                 )
                 self.assertEqual(response.status_code, 204)
 
@@ -486,7 +512,11 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
             with self.subTest("Fail validation on enum"):
                 response = self.client.put(
                     self.task_endpoint,
-                    {"formfield-01": "some-value-01", "formfield-02": "second"},
+                    {
+                        "formfield-01": "some-value-01",
+                        "formfield-02": "second",
+                        "formfield-03": 3,
+                    },
                 )
                 self.assertEqual(
                     response.json(),
@@ -497,7 +527,11 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                 with patch("zac.camunda.api.views.set_assignee_and_complete_task"):
                     response = self.client.put(
                         self.task_endpoint,
-                        {"formfield-01": "waarde1", "formfield-02": "second"},
+                        {
+                            "formfield-01": "waarde1",
+                            "formfield-02": "second",
+                            "formfield-03": 3,
+                        },
                     )
                     self.assertEqual(response.status_code, 204)
 
@@ -564,7 +598,11 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
             ):
                 response = self.client.put(
                     self.task_endpoint,
-                    {"formfield-01": "some-value-01", "formfield-02": "second"},
+                    {
+                        "formfield-01": "some-value-01",
+                        "formfield-02": "second",
+                        "formfield-03": 3,
+                    },
                 )
                 self.assertEqual(
                     response.json(),
@@ -594,6 +632,7 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                         {
                             "formfield-01": "zaaktype-attribuut-01",
                             "formfield-02": "second",
+                            "formfield-03": 3,
                         },
                     )
                     self.assertEqual(
@@ -628,6 +667,7 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                         {
                             "formfield-01": "hihihoo",
                             "formfield-02": "second",
+                            "formfield-03": 3,
                         },
                     )
                     self.assertEqual(response.status_code, 204)
