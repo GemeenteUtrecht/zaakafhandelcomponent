@@ -358,6 +358,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                 ],
                 "requester": self.review_request["requester"],
                 "reviewType": KownslTypes.approval,
+                "toelichting": self.review_request["toelichting"],
                 "zaak": {
                     "identificatie": self.zaak.identificatie,
                     "bronorganisatie": self.zaak.bronorganisatie,
@@ -420,6 +421,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                 ],
                 "requester": self.review_request["requester"],
                 "reviewType": KownslTypes.advice,
+                "toelichting": self.review_request["toelichting"],
                 "zaak": {
                     "identificatie": self.zaak.identificatie,
                     "bronorganisatie": self.zaak.bronorganisatie,

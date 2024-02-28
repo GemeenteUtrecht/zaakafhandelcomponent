@@ -403,6 +403,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "username": "some-author",
                 },
                 "reviewType": self.review_request.review_type,
+                "toelichting": self.review_request.toelichting,
                 "zaak": {
                     "bronorganisatie": self.zaak["bronorganisatie"],
                     "identificatie": self.zaak["identificatie"],
