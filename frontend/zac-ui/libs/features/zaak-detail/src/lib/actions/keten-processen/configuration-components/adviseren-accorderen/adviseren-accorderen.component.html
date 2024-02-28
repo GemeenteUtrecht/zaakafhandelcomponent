@@ -20,7 +20,7 @@
   </ng-container>
 
 
-  <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="documentsData?.length > 0">
+  <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="documentsData?.length > 0 || taskContextData.context.zaakeigenschappen?.length > 0">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Documenten</label>
       <p>Over welke documenten gaat het?</p>

@@ -131,7 +131,9 @@ export class AdviserenAccorderenComponent implements OnChanges {
         toelichting: this.fb.control("", [Validators.maxLength(4000)])
       })
       this.selectedDocuments = this.taskContextData.context.previouslySelectedDocuments;
-      this.selectedProperties = this.taskContextData.context.previouslySelectedZaakeigenschappen;
+      this.selectedProperties = this.taskContextData.context.previouslySelectedZaakeigenschappen.length > 0 ?
+        this.taskContextData.context.previouslySelectedZaakeigenschappen :
+        this.taskContextData.context.zaakeigenschappen.map(doc => doc.url) 
       this.fetchDocuments();
       this.checkPredefinedAssignees();
       this.addPreviouslyAssignedUsersStep();
