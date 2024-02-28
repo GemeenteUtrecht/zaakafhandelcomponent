@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List, Optional, Tuple
 
+from django.conf import settings
 from django.http import Http404
 
 from furl import furl
@@ -9,12 +10,14 @@ from zds_client.client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import AuthTypes
 
 from zac.accounts.models import User
 from zac.client import Client
 from zac.core.utils import A_DAY
 from zac.utils.decorators import cache as cache_result, optional_service
+from zgw.models.zrc import Zaak
 
 from .constants import DocFileTypes
 from .data import DowcResponse, OpenDowc
@@ -175,3 +178,18 @@ def get_supported_extensions() -> Optional[List[str]]:
         return response["extensions"]
     except ClientError:
         return []
+
+
+# Close all open documents related to zaak
+@optional_service
+def bulk_close_all_documents_for_zaak(zaak: Zaak) -> None:
+    def _patch_and_destroy_doc(uuid: str):
+        return patch_and_destroy_doc(uuid, force=True)
+
+    open_documents = check_document_status(zaak=zaak.url)
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
+        list(
+            executor.map(
+                _patch_and_destroy_doc, [str(doc.uuid) for doc in open_documents]
+            )
+        )

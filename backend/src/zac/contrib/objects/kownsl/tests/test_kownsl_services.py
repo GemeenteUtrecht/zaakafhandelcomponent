@@ -32,11 +32,12 @@ from zac.contrib.objects.kownsl.tests.utils import (
     UserAssigneeFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
-from zac.core.tests.utils import ClearCachesMixin
+from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ...services import (
+    bulk_lock_review_requests_for_zaak,
     create_review_request,
     factory_review_request,
     factory_reviews,
@@ -381,3 +382,28 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         )
         self.assertEqual(str(review_request.id), self.review_request["id"])
         self.assertTrue(m.last_request.json()["record"]["data"]["locked"])
+
+    def test_bulk_lock_review_request_for_zaak(self, m):
+        rr1 = ReviewRequestFactory()
+        rr1["locked"] = True
+        rr2 = ReviewRequestFactory()
+        rr2["locked"] = False
+        review_requests = [
+            factory_review_request(rr1),
+            factory_review_request(rr2),
+        ]
+
+        with patch(
+            "zac.contrib.objects.services.parallel", return_value=mock_parallel()
+        ):
+            with patch("zac.contrib.objects.services.get_status"):
+                with patch(
+                    "zac.contrib.objects.services.get_all_review_requests_for_zaak",
+                    return_value=review_requests,
+                ):
+                    with patch(
+                        "zac.contrib.objects.services.lock_review_request"
+                    ) as mock_lock_review_request:
+                        bulk_lock_review_requests_for_zaak(self.zaak)
+
+        mock_lock_review_request.assert_called_once()

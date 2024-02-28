@@ -1180,21 +1180,6 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             status_code=201,
         )
 
-        rr = factory_review_request(
-            ReviewRequestFactory(
-                user_deadlines={
-                    "user:some-author": "2022-04-14",
-                }
-            )
-        )
-
-        activity = ActivityFactory.create(zaak=self.zaak.url)
-        checklist_object = deepcopy(CHECKLIST_OBJECT)
-        checklist_object["record"]["data"]["answers"][0] = {
-            "answer": "",
-            "question": "Ja?",
-            "userAssignee": "some-user",
-        }
         patch_get_zaak_context = patch(
             "zac.core.camunda.zet_resultaat.serializers.get_zaak_context",
             return_value=self.zaak_context,
@@ -1203,62 +1188,11 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "zac.core.camunda.zet_resultaat.serializers.get_resultaattypen",
             return_value=[factory(ResultaatType, self.resultaattype)],
         )
-        patch_check_document_status = patch(
-            "zac.core.camunda.zet_resultaat.serializers.check_document_status",
-            return_value=factory(
-                OpenDowc,
-                [
-                    {
-                        "document": self.document.url,
-                        "uuid": str(_uuid),
-                        "lockedBy": "some-user@zac.nl",
-                    }
-                ],
-            ),
-        )
-        patch_patch_and_destroy_doc = patch(
-            "zac.core.camunda.zet_resultaat.serializers.patch_and_destroy_doc",
-            return_value={"some-key": "some-value"},
-        )
-        patch_get_all_review_requests_for_zaak = patch(
-            "zac.core.camunda.zet_resultaat.serializers.get_all_review_requests_for_zaak",
-            return_value=[rr],
-        )
-        patch_lock_review_request = patch(
-            "zac.core.camunda.zet_resultaat.serializers.lock_review_request",
-        )
-        patch_fetch_checklist_object = patch(
-            "zac.core.camunda.zet_resultaat.serializers.fetch_checklist_object",
-            return_value=checklist_object,
-        )
-        patch_update_object_record_data = patch(
-            "zac.core.camunda.zet_resultaat.serializers.update_object_record_data",
-            return_value=checklist_object,
-        )
 
         with patch_get_zaak_context as pgzc:
             with patch_get_resultaattypen as pgrt:
-                with patch_check_document_status as pcds:
-                    with patch_patch_and_destroy_doc as ppdd:
-                        with patch_get_all_review_requests_for_zaak as pgrrfz:
-                            with patch_lock_review_request as plrr:
-                                with patch_fetch_checklist_object as pfco:
-                                    with patch_update_object_record_data as puor:
-                                        response = self.client.put(
-                                            self.task_endpoint, payload
-                                        )
+                response = self.client.put(self.task_endpoint, payload)
         self.assertEqual(response.status_code, 204)
-
-        activity.refresh_from_db()
-        self.assertEqual(activity.status, ActivityStatuses.finished)
-        self.assertEqual(activity.user_assignee, None)
-        self.assertEqual(activity.group_assignee, None)
 
         pgzc.assert_called()
         pgrt.assert_called()
-        pcds.assert_called_once()
-        ppdd.assert_called_once()
-        pgrrfz.assert_called_once()
-        plrr.assert_called_once()
-        pfco.assert_called_once()
-        puor.assert_called_once()

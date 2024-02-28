@@ -34,6 +34,11 @@ def invalidate_zaaktypen_cache(catalogus: str = ""):
     cache.delete(key)
 
 
+def invalidate_fetch_zaaktype_cache(url: str):
+    key = f"zaaktype:{url}"
+    cache.delete(key)
+
+
 def invalidate_informatieobjecttypen_cache(catalogus: str = ""):
     key = f"informatieobjecttypen:{catalogus}"
     cache.delete(key)
@@ -208,4 +213,9 @@ def invalidate_document_url_cache(url: str):
 
 def invalidate_zaakeigenschappen_cache(zaak: Zaak):
     key = f"zaakeigenschappen:{zaak.url}"
+    cache.delete(key)
+
+
+def invalidate_zaak_get_status(url: str):
+    key = f"zaak-status:{url}"
     cache.delete(key)

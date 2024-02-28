@@ -1,35 +1,36 @@
 import logging
 from typing import Dict
 
-from django.conf import settings
-
 from django_camunda.api import send_message
 from elasticsearch.exceptions import NotFoundError
 from requests.exceptions import HTTPError
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import StatusType, ZaakType
 from zgw_consumers.api_models.constants import RolOmschrijving
 from zgw_consumers.api_models.zaken import Status
-from zgw_consumers.concurrent import parallel
 
 from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
+from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
 from zac.contrib.board.models import BoardItem
+from zac.contrib.dowc.api import bulk_close_all_documents_for_zaak
 from zac.contrib.objects.kownsl.cache import invalidate_review_requests_cache
 from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.services import (
-    get_all_review_requests_for_zaak,
+    bulk_lock_review_requests_for_zaak,
     get_review_request,
-    lock_review_request,
+    lock_checklist_for_zaak,
 )
 from zac.core.cache import (
     invalidate_document_other_cache,
     invalidate_document_url_cache,
     invalidate_fetch_object_cache,
+    invalidate_fetch_zaaktype_cache,
     invalidate_informatieobjecttypen_cache,
     invalidate_rollen_cache,
     invalidate_zaak_cache,
+    invalidate_zaak_get_status,
     invalidate_zaak_list_cache,
     invalidate_zaakeigenschappen_cache,
     invalidate_zaakobjecten_cache,
@@ -43,7 +44,9 @@ from zac.core.services import (
     fetch_rol,
     fetch_zaak_informatieobject,
     fetch_zaakobject,
+    fetch_zaaktype,
     get_document,
+    get_status,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
@@ -55,7 +58,6 @@ from zac.elasticsearch.api import (
     delete_informatieobject_document,
     delete_object_document,
     delete_zaak_document,
-    get_zaak_document,
     get_zaakinformatieobject_document,
     get_zaakobject_document,
     update_eigenschappen_in_zaak_document,
@@ -131,17 +133,15 @@ class ZakenHandler:
     def _retrieve_zaak(zaak_url) -> Zaak:
         client = _client_from_url(zaak_url)
         zaak = client.retrieve("zaak", url=zaak_url)
-
-        if isinstance(zaak["zaaktype"], str):
-            zrc_client = _client_from_url(zaak["zaaktype"])
-            zaaktype = zrc_client.retrieve("zaaktype", url=zaak["zaaktype"])
-            zaak["zaaktype"] = factory(ZaakType, zaaktype)
-
         zaak = factory(Zaak, zaak)
+
+        if isinstance(zaak.zaaktype, str):
+            invalidate_fetch_zaaktype_cache(zaak.zaaktype)
+            zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+
         if zaak.status and isinstance(zaak.status, str):
-            zrc_client = _client_from_url(zaak.status)
-            status = zrc_client.retrieve("status", url=zaak.status)
-            zaak.status = factory(Status, status)
+            invalidate_zaak_get_status(zaak.status)
+            zaak.status = get_status(zaak)
 
         return zaak
 
@@ -150,19 +150,26 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
-        # Determine if einddatum is updated.
-        if is_closed := zaak.einddatum:
-            zaak_document = get_zaak_document(zaak_url)
-            was_closed = None if not zaak_document else zaak_document.einddatum
+        # if zaak is closed ->
+        if zaak.status and zaak.status.statustype.is_eindstatus:
+            # Lock all review requests related to zaak
+            bulk_lock_review_requests_for_zaak(zaak)
 
-            def _lock_review_request(rr: ReviewRequest):
-                lock_review_request(str(rr.id), lock_reason="Zaak is gesloten.")
+            # Close all open documents
+            bulk_close_all_documents_for_zaak(zaak)
 
-            # lock all review requests related to zaak
-            if is_closed and is_closed != was_closed:
-                review_requests = get_all_review_requests_for_zaak(zaak)
-                with parallel(max_workers=settings.MAX_WORKERS) as executor:
-                    list(executor.map(_lock_review_request, review_requests))
+            # Close all open activities
+            activities = Activity.objects.prefetch_related("events").filter(
+                zaak=zaak.url, status=ActivityStatuses.on_going
+            )
+            for activity in activities:
+                activity.user_assignee = None
+                activity.group_assignee = None
+                activity.status = ActivityStatuses.finished
+                activity.save()
+
+            # Lock checklist
+            lock_checklist_for_zaak(zaak)
 
         # index in ES
         update_zaak_document(zaak)
