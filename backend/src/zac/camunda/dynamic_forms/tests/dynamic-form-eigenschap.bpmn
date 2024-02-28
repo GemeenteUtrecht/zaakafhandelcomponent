@@ -26,6 +26,7 @@
                 <camunda:value id="second" name="Second" />
             </camunda:properties>
           </camunda:formField>
+          <camunda:formField id="formfield-03" label="LONG-FIELD" type="long" /> 
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1hrwhib</bpmn:incoming>
