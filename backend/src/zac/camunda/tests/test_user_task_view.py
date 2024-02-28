@@ -95,7 +95,6 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         cls.user = UserFactory.create()
         Service.objects.create(
-            label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )

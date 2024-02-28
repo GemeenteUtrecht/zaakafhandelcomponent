@@ -9,53 +9,7 @@ from zac.api.polymorphism import PolymorphicSerializer
 
 from ..data import Task
 from ..user_tasks import usertask_context_serializer
-
-
-def get_default_field_kwargs(definition: dict):
-    initial = definition["value"]
-    return {
-        "label": definition["label"],
-        "initial": initial if initial is not None else fields.empty,
-    }
-
-
-def enum_field_kwargs(definition):
-    base = get_default_field_kwargs(definition)
-    choices = definition["enum"]
-    return {**base, "choices": choices}
-
-
-FIELD_TYPE_MAP = {
-    "enum": (
-        serializers.ChoiceField,
-        enum_field_kwargs,
-    ),
-    "string": (
-        serializers.CharField,
-        get_default_field_kwargs,
-    ),
-    "long": (
-        serializers.IntegerField,
-        get_default_field_kwargs,
-    ),
-    "boolean": (
-        serializers.BooleanField,
-        get_default_field_kwargs,
-    ),
-    "date": (
-        serializers.DateTimeField,
-        get_default_field_kwargs,
-    ),
-}
-
-
-INPUT_TYPE_MAP = {
-    "enum": "enum",
-    "string": "string",
-    "long": "int",
-    "boolean": "boolean",
-    "date": "date",
-}
+from .utils import FIELD_TYPE_MAP, INPUT_TYPE_MAP
 
 
 class EnumField(serializers.ListField):
@@ -142,9 +96,8 @@ def get_dynamic_form_serializer_fields(task: Task) -> Dict[str, fields.Field]:
 
     fields = {}
     for field in formfields:
-        field_type = field.attrib["type"]
         field_definition = get_field_definition(field)
-        field_cls, get_kwargs = FIELD_TYPE_MAP[field_type]
+        field_cls, get_kwargs = FIELD_TYPE_MAP[field_definition["input_type"]]
         name = field_definition.pop("name")
         fields[name] = field_cls(**get_kwargs(field_definition))
 
