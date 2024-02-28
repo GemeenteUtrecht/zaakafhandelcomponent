@@ -26,7 +26,6 @@ from zac.core.cache import (
     invalidate_document_other_cache,
     invalidate_document_url_cache,
     invalidate_fetch_object_cache,
-    invalidate_fetch_zaaktype_cache,
     invalidate_informatieobjecttypen_cache,
     invalidate_rollen_cache,
     invalidate_zaak_cache,
@@ -44,9 +43,7 @@ from zac.core.services import (
     fetch_rol,
     fetch_zaak_informatieobject,
     fetch_zaakobject,
-    fetch_zaaktype,
     get_document,
-    get_status,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
@@ -131,17 +128,23 @@ class ZakenHandler:
 
     @staticmethod
     def _retrieve_zaak(zaak_url) -> Zaak:
-        client = _client_from_url(zaak_url)
-        zaak = client.retrieve("zaak", url=zaak_url)
+        zrc_client = _client_from_url(zaak_url)
+        zaak = zrc_client.retrieve("zaak", url=zaak_url)
         zaak = factory(Zaak, zaak)
 
         if isinstance(zaak.zaaktype, str):
-            invalidate_fetch_zaaktype_cache(zaak.zaaktype)
-            zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
+            ztc_client = _client_from_url(zaak.zaaktype)
+            zaaktype = ztc_client.retrieve("zaaktype", url=zaak.zaaktype)
+            zaak.zaaktype = factory(ZaakType, zaaktype)
 
         if zaak.status and isinstance(zaak.status, str):
-            invalidate_zaak_get_status(zaak.status)
-            zaak.status = get_status(zaak)
+            status = zrc_client.retrieve("status", url=zaak.status)
+            status = factory(Status, status)
+
+            ztc_client = _client_from_url(status.statustype)
+            statustype = ztc_client.retrieve("statustype", url=status.statustype)
+            status.statustype = factory(StatusType, statustype)
+            zaak.status = status
 
         return zaak
 
@@ -213,6 +216,7 @@ class ZakenHandler:
     def _handle_status_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
+        invalidate_zaak_get_status(zaak.status.url)
 
         # index in ES
         update_status_in_zaak_document(zaak)
