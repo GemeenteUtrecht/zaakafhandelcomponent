@@ -22,7 +22,6 @@ from zac.core.services import (
     create_object,
     fetch_catalogus,
     fetch_objecttype,
-    get_status,
     get_zaakobjecten,
     relate_object_to_zaak,
     search_objects,
@@ -482,7 +481,7 @@ def get_review_request(uuid: str) -> Optional[ReviewRequest]:
     return None
 
 
-@cache("review_request:zaak:{zaak.uuid}")
+@cache("review_requests:zaak:{zaak.uuid}")
 def get_all_review_requests_for_zaak(zaak: Zaak) -> List[Optional[ReviewRequest]]:
     data_attrs = [f"zaak__exact__{zaak.url}"]
     if objs := _search_meta_objects("review_request_objecttype", data_attrs=data_attrs):
@@ -507,13 +506,13 @@ def create_review_request(data: Dict) -> ReviewRequest:
     return factory_review_request(result["record"]["data"])
 
 
-def bulk_lock_review_requests_for_zaak(zaak: Zaak):
+def bulk_lock_review_requests_for_zaak(zaak: Zaak, reason: str = ""):
     def _lock_review_request(rr: ReviewRequest):
         return lock_review_request(
-            str(rr.id), lock_reason=f"Zaak is {status.statustype.omschrijving}."
+            str(rr.id),
+            lock_reason=reason or "Verzoek is geannuleerd.",
         )
 
-    status = get_status(zaak) if type(zaak.status) == str else zaak.status
     review_requests = get_all_review_requests_for_zaak(zaak)
     review_requests = [rr for rr in review_requests if not rr.locked]
     with parallel(max_workers=settings.MAX_WORKERS) as executor:

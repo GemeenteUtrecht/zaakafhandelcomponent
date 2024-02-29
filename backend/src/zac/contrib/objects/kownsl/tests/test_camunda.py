@@ -870,7 +870,8 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             data=payload, context={"task": task, "request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.on_task_submission()
+        with patch("zac.contrib.objects.kownsl.cache.get_zaak", return_value=self.zaak):
+            serializer.on_task_submission()
         self.assertTrue(hasattr(serializer, "review_request"))
 
         email_notification_list = {f"user:{user}": False for user in self.users_1}
