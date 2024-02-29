@@ -103,7 +103,7 @@ export class DynamicFormComponent implements OnChanges {
         case 'date':
           value = this.datePipe.transform(value, "yyyy-MM-dd hh:mm:ss");
           break;
-        case 'int': value = parseInt(value, 10); break;
+        case 'long': value = parseInt(value, 10); break;
       }
       formData[control] = value;
     })
