@@ -35,7 +35,7 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b3
 
 @requests_mock.Mocker()
 @freeze_time("2021-12-16T12:00:00Z")
-class ChecklistAnswersTests(ESMixin, ClearCachesMixin, APITestCase):
+class ChecklistAnswersTests(ClearCachesMixin, ESMixin, APITestCase):
     """
     Test the checklists questions API endpoint.
     """

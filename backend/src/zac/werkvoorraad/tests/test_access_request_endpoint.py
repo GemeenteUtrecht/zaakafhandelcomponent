@@ -26,7 +26,7 @@ CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 
 
 @requests_mock.Mocker()
-class AccessRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
+class AccessRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
     """
     Test the access requests API endpoint.
 

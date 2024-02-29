@@ -68,9 +68,13 @@ def get_access_requests_groups(request: Request) -> List[dict]:
     return requested_zaken
 
 
-def filter_on_existing_zaken(request: Request, groups: List[Dict]) -> List[Dict]:
+def filter_on_existing_zaken(
+    request: Request, groups: List[Dict], **kwargs
+) -> List[Dict]:
     zaak_urls = list({group["zaak_url"] for group in groups})
-    es_results = search_zaken(request=request, urls=zaak_urls, size=len(zaak_urls))
+    es_results = search_zaken(
+        request=request, urls=zaak_urls, size=len(zaak_urls), **kwargs
+    )
     zaken = {zaak.url: zaak for zaak in es_results}
 
     # Make sure groups without a zaak in elasticsearch are not returned.
@@ -92,7 +96,9 @@ def filter_on_existing_zaken(request: Request, groups: List[Dict]) -> List[Dict]
 def get_activity_groups(
     request: Request, grouped_activities: dict
 ) -> List[ActivityGroup]:
-    activity_groups_with_zaak = filter_on_existing_zaken(request, grouped_activities)
+    activity_groups_with_zaak = filter_on_existing_zaken(
+        request, grouped_activities, only_allowed=False
+    )
     return [ActivityGroup(**group) for group in activity_groups_with_zaak]
 
 
@@ -100,7 +106,7 @@ def get_checklist_answers_groups(
     request: Request, grouped_checklist_answers: List[dict]
 ) -> List[ChecklistAnswerGroup]:
     checklist_answers_groups_with_zaak = filter_on_existing_zaken(
-        request, grouped_checklist_answers
+        request, grouped_checklist_answers, only_allowed=False
     )
     return [
         ChecklistAnswerGroup(**group) for group in checklist_answers_groups_with_zaak

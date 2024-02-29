@@ -36,7 +36,7 @@ ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 
 
 @requests_mock.Mocker()
-class SummaryTests(ESMixin, ClearCachesMixin, APITransactionTestCase):
+class SummaryTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     """
     Test the access requests API endpoint.
 
