@@ -8,7 +8,6 @@ from elasticsearch_dsl import Index
 from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
@@ -21,11 +20,9 @@ from zac.elasticsearch.api import (
     _get_uuid_from_url,
     create_object_document,
     create_related_zaak_document,
-    create_zaak_document,
     create_zaakobject_document,
-    create_zaaktype_document,
 )
-from zac.elasticsearch.documents import ObjectDocument, ZaakDocument, ZaakObjectDocument
+from zac.elasticsearch.documents import ObjectDocument, ZaakObjectDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak

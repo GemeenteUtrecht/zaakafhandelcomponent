@@ -67,7 +67,6 @@ CATALOGUS_RESPONSE = generate_oas_component(
     "ztc", "schemas/Catalogus", url=CATALOGUS, domein="DOME"
 )
 
-
 ZAAKTYPE_RESPONSE = generate_oas_component(
     "ztc",
     "schemas/ZaakType",

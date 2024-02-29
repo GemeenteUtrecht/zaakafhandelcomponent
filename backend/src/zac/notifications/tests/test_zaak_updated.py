@@ -66,7 +66,7 @@ NOTIFICATION = {
 
 
 @requests_mock.Mocker()
-class ZaakUpdateTests(ESMixin, ClearCachesMixin, APITestCase):
+class ZaakUpdateTests(ClearCachesMixin, ESMixin, APITestCase):
     """
     Test that the appropriate actions happen on zaak-update notifications.
     """
@@ -123,6 +123,7 @@ class ZaakUpdateTests(ESMixin, ClearCachesMixin, APITestCase):
 
         for kwargs in matrix:
             with self.subTest(**kwargs):
+                super().setUp()  # clear cache
                 # call to populate cache
                 get_zaak(**kwargs)
                 self.assertEqual(rm.last_request.url, ZAAK)
