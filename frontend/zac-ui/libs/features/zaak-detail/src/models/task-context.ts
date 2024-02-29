@@ -18,7 +18,7 @@ export interface ZaakInformatie {
 export interface FormField {
   name: string;
   label: string;
-  inputType: 'enum' | 'string' | 'int' | 'boolean' | 'date';
+  inputType: 'enum' | 'string' | 'long' | 'boolean' | 'date';
   value: string | number | boolean;
   enum?: Array<string[]>;
 }
