@@ -18,6 +18,7 @@ from zac.tests.utils import mock_resource_get
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
+    CATALOGUS_RESPONSE,
     IDENTIFICATIE,
     ZAAK,
     ZAAK_RESPONSE,
@@ -59,12 +60,12 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
         cache.clear()
         self.client.force_authenticate(user=self.user)
 
-    @patch("zac.core.services.fetch_zaaktype", return_value=None)
-    def test_find_zaak_resultaat_created(self, rm, mock_zaaktype):
+    def test_find_zaak_resultaat_created(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
 
         path = reverse("notifications:callback")
 
@@ -86,6 +87,7 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
 
         path = reverse("notifications:callback")
 

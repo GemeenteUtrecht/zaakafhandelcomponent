@@ -5,7 +5,6 @@ from django_camunda.api import send_message
 from elasticsearch.exceptions import NotFoundError
 from requests.exceptions import HTTPError
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import StatusType, ZaakType
 from zgw_consumers.api_models.constants import RolOmschrijving
 from zgw_consumers.api_models.zaken import Status
 
@@ -19,7 +18,6 @@ from zac.contrib.objects.kownsl.cache import invalidate_review_requests_cache
 from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.services import (
     bulk_lock_review_requests_for_zaak,
-    get_review_request,
     lock_checklist_for_zaak,
 )
 from zac.core.cache import (
@@ -42,7 +40,9 @@ from zac.core.services import (
     fetch_rol,
     fetch_zaak_informatieobject,
     fetch_zaakobject,
+    fetch_zaaktype,
     get_document,
+    get_statustype,
     update_medewerker_identificatie_rol,
 )
 from zac.elasticsearch.api import (
@@ -88,7 +88,7 @@ class ZakenHandler:
             self._handle_zaakeigenschap_change(data["hoofd_object"])
 
         elif data["resource"] == "status" and data["actie"] == "create":
-            self._handle_status_create(data["hoofd_object"])
+            self._handle_status_create(data)
 
         elif data["resource"] == "resultaat" and data["actie"] == "create":
             self._handle_related_create(data["hoofd_object"])
@@ -132,17 +132,12 @@ class ZakenHandler:
         zaak = factory(Zaak, zaak)
 
         if isinstance(zaak.zaaktype, str):
-            ztc_client = _client_from_url(zaak.zaaktype)
-            zaaktype = ztc_client.retrieve("zaaktype", url=zaak.zaaktype)
-            zaak.zaaktype = factory(ZaakType, zaaktype)
+            zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
         if zaak.status and isinstance(zaak.status, str):
             status = zrc_client.retrieve("status", url=zaak.status)
             status = factory(Status, status)
-
-            ztc_client = _client_from_url(status.statustype)
-            statustype = ztc_client.retrieve("statustype", url=status.statustype)
-            status.statustype = factory(StatusType, statustype)
+            status.statustype = get_statustype(status.statustype)
             zaak.status = status
 
         return zaak
@@ -191,14 +186,24 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
-    def _handle_status_create(self, zaak_url: str):
-        zaak = self._retrieve_zaak(zaak_url)
+    def _handle_status_create(self, data: Dict):
+        zaak = self._retrieve_zaak(data["hoofd_object"])
         invalidate_zaak_cache(zaak)
 
-        # if zaak is closed ->
-        if zaak.status and zaak.status.statustype.is_eindstatus:
+        zrc_client = _client_from_url(
+            data["resource_url"]
+        )  # make sure we fetch the status that was created HERE (could be race conditions)
+        status = zrc_client.retrieve("status", url=data["resource_url"])
+        status = factory(Status, status)
+        status.statustype = get_statustype(status.statustype)
+        zaak.status = status
+
+        # if THIS status means the zaak is closed ->
+        if zaak.status.statustype.is_eindstatus:
             # Lock all review requests related to zaak
-            bulk_lock_review_requests_for_zaak(zaak)
+            bulk_lock_review_requests_for_zaak(
+                zaak, reason=f"Zaak is {zaak.status.statustype.omschrijving.lower()}."
+            )
 
             # Close all open documents
             bulk_close_all_documents_for_zaak(zaak)
@@ -338,7 +343,6 @@ class ObjectenHandler:
     def _review_request_object_handler(self, data: dict) -> None:
         rr = factory(ReviewRequest, data["record"]["data"])
         invalidate_review_requests_cache(rr)
-        rr = get_review_request(rr.id)
         if rr.locked:
             # End the current process instance gracefully
             try:

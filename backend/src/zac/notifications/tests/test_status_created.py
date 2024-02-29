@@ -36,7 +36,7 @@ NOTIFICATION = {
     "kanaal": "zaken",
     "hoofdObject": ZAAK,
     "resource": "status",
-    "resourceUrl": f"{ZAKEN_ROOT}statussen/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resourceUrl": STATUS,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -69,6 +69,7 @@ class StatusCreatedTests(ESMixin, APITestCase):
     def test_find_zaak_status_created(self, rm, *mocks):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, STATUS_RESPONSE)
@@ -86,11 +87,12 @@ class StatusCreatedTests(ESMixin, APITestCase):
 
             # second call should not hit the cache
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
-            self.assertEqual(m.call_count, 2)
+            self.assertEqual(m.call_count, 1)
 
     def test_get_zaak_status_created(self, rm, *mocks):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, STATUS_RESPONSE)
@@ -126,8 +128,10 @@ class StatusCreatedTests(ESMixin, APITestCase):
     def test_zaak_updated_is_closed(self, rm):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
+
         zaak = deepcopy(ZAAK_RESPONSE)
         zaak["status"] = STATUS
+
         mock_resource_get(rm, zaak)
         mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)

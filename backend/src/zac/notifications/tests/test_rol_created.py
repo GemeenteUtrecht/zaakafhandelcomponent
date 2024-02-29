@@ -28,6 +28,7 @@ from zgw.models.zrc import Zaak
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
+    CATALOGUS_RESPONSE,
     ZAAK,
     ZAAK_RESPONSE,
     ZAAKTYPE,
@@ -144,6 +145,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
 
         rol = {**ROL_RESPONSE, "betrokkeneType": "organisatorische_eenheid"}
         mock_resource_get(rm, rol)
@@ -166,6 +168,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         rol = {
             **ROL_RESPONSE,
             "omschrijvingGeneriek": "behandelaar",
@@ -203,6 +206,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
         rol = {
             **ROL_RESPONSE,
             "omschrijvingGeneriek": "initiator",
@@ -241,6 +245,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, ROLTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
 
         # Some more mocks
         rol_old = {
@@ -317,6 +322,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, ROL_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
 
         rm.get(
             f"{ZAKEN_ROOT}rollen?zaak={ZAAK}",
@@ -355,6 +361,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
 
         empty_user = UserFactory.create(username="empty", first_name="", last_name="")
 
@@ -401,6 +408,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(rm, ZAAK_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, ROLTYPE_RESPONSE)
+        mock_resource_get(rm, CATALOGUS_RESPONSE)
 
         # Some more mocks
         rol = {

@@ -7,13 +7,11 @@ from django.urls import reverse_lazy
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import APITypes, Service
-from zgw_consumers.test import generate_oas_component
+from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
-from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.contrib.objects.kownsl.tests.utils import (
     REVIEW_REQUEST_OBJECT,
     REVIEW_REQUEST_OBJECTTYPE,
@@ -69,15 +67,10 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        rr = deepcopy(REVIEW_REQUEST_OBJECT)
+        rr["locked"] = True
         cls.user = UserFactory.create(username="notifs")
-        cls.patch_fetch_object = patch(
-            "zac.notifications.handlers.fetch_object",
-            return_value={
-                **REVIEW_REQUEST_OBJECT,
-                "type": REVIEW_REQUEST_OBJECTTYPE,
-                "stringRepresentation": "",
-            },
-        )
         confg = MetaObjectTypesConfig.get_solo()
         confg.review_request_objecttype = REVIEW_REQUEST_OBJECTTYPE["url"]
         confg.save()
@@ -86,19 +79,23 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         cls.task_data["processInstanceId"] = cls.review_request["metadata"][
             "processInstanceId"
         ]
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=REVIEW_REQUEST_OBJECT["record"]["data"]["zaak"],
+        )
 
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(user=self.user)
-        self.patch_fetch_object.start()
-        self.addCleanup(self.patch_fetch_object.stop)
 
     @patch(
         "zac.contrib.objects.kownsl.api.views.invalidate_review_requests_cache",
         return_value=None,
     )
     def test_user_task_send_message_locked(self, m, mock_invalidate_cache):
-        mock_resource_get(m, REVIEW_REQUEST_OBJECT)
+        mock_service_oas_get(m, ZAKEN_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
         m.get(
             f"https://camunda.example.com/engine-rest/task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee=user%3Abob",
             json=[{**self.task_data, "assignee": f"user:bob"}],
@@ -106,26 +103,26 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         m.post(
             "https://camunda.example.com/engine-rest/message",
         )
-
-        rr = factory(ReviewRequest, self.review_request)
-        rr.locked = True
-        with patch("zac.notifications.handlers.get_review_request", return_value=rr):
+        rr = deepcopy(REVIEW_REQUEST_OBJECT)
+        rr["record"]["data"]["locked"] = True
+        rr["type"] = REVIEW_REQUEST_OBJECTTYPE
+        rr["stringRepresentation"] = ""
+        with patch(
+            "zac.notifications.handlers.fetch_object",
+            return_value=rr,
+        ):
             response = self.client.post(self.endpoint, NOTIFICATION)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-        self.assertEqual(m.last_request.method, "POST")
+        self.assertEqual(m.request_history[-1].method, "POST")
         self.assertEqual(
-            m.last_request.url,
+            m.request_history[-1].url,
             "https://camunda.example.com/engine-rest/message",
         )
 
     def test_review_request_updated_clears_cache(self, m):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        zaak = generate_oas_component(
-            "zrc", "schemas/Zaak", url=self.review_request["zaak"]
-        )
-        mock_resource_get(m, REVIEW_REQUEST_OBJECT)
+        mock_service_oas_get(m, ZAKEN_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
 
         m.get(
             f"https://camunda.example.com/engine-rest/task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee=user%3Abob",
@@ -140,10 +137,15 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         self.assertTrue(
             cache.has_key(f"review_request:detail:{self.review_request['id']}")
         )
-
-        rr = factory(ReviewRequest, self.review_request)
-        with patch("zac.notifications.handlers.get_review_request", return_value=rr):
+        rr = deepcopy(REVIEW_REQUEST_OBJECT)
+        rr["type"] = REVIEW_REQUEST_OBJECTTYPE
+        rr["stringRepresentation"] = ""
+        with patch(
+            "zac.notifications.handlers.fetch_object",
+            return_value=rr,
+        ):
             response = self.client.post(self.endpoint, NOTIFICATION)
+
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(
             cache.has_key(f"review_request:detail:{self.review_request['id']}")
