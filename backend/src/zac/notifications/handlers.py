@@ -152,27 +152,6 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
 
-        # if zaak is closed ->
-        if zaak.status and zaak.status.statustype.is_eindstatus:
-            # Lock all review requests related to zaak
-            bulk_lock_review_requests_for_zaak(zaak)
-
-            # Close all open documents
-            bulk_close_all_documents_for_zaak(zaak)
-
-            # Close all open activities
-            activities = Activity.objects.prefetch_related("events").filter(
-                zaak=zaak.url, status=ActivityStatuses.on_going
-            )
-            for activity in activities:
-                activity.user_assignee = None
-                activity.group_assignee = None
-                activity.status = ActivityStatuses.finished
-                activity.save()
-
-            # Lock checklist
-            lock_checklist_for_zaak(zaak)
-
         # index in ES
         update_zaak_document(zaak)
 
@@ -215,6 +194,27 @@ class ZakenHandler:
     def _handle_status_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
+
+        # if zaak is closed ->
+        if zaak.status and zaak.status.statustype.is_eindstatus:
+            # Lock all review requests related to zaak
+            bulk_lock_review_requests_for_zaak(zaak)
+
+            # Close all open documents
+            bulk_close_all_documents_for_zaak(zaak)
+
+            # Close all open activities
+            activities = Activity.objects.prefetch_related("events").filter(
+                zaak=zaak.url, status=ActivityStatuses.on_going
+            )
+            for activity in activities:
+                activity.user_assignee = None
+                activity.group_assignee = None
+                activity.status = ActivityStatuses.finished
+                activity.save()
+
+            # Lock checklist
+            lock_checklist_for_zaak(zaak)
 
         # index in ES
         update_status_in_zaak_document(zaak)

@@ -1,8 +1,4 @@
-from copy import deepcopy
-from unittest.mock import patch
-
 from django.conf import settings
-from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 
@@ -17,7 +13,6 @@ from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
-from zac.activities.tests.factories import ActivityFactory, ActivityStatuses
 from zac.core.services import get_zaak
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import (
@@ -40,7 +35,6 @@ from .utils import (
     CATALOGI_ROOT,
     CATALOGUS_RESPONSE,
     OBJECT_RESPONSE,
-    STATUS,
     STATUS_RESPONSE,
     STATUSTYPE_RESPONSE,
     ZAAK,
@@ -296,41 +290,3 @@ class ZaakUpdateTests(ClearCachesMixin, ESMixin, APITestCase):
             "some updated omschrijving",
         )
         self.assertEqual(object_document.meta.version, 2)
-
-    def test_zaak_updated_is_closed(self, rm):
-        mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
-        mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
-        zaak = deepcopy(ZAAK_RESPONSE)
-        zaak["status"] = STATUS
-        mock_resource_get(rm, zaak)
-        mock_resource_get(rm, CATALOGUS_RESPONSE)
-        mock_resource_get(rm, ZAAKTYPE_RESPONSE)
-        mock_resource_get(rm, STATUS_RESPONSE)
-        statustype = deepcopy(STATUSTYPE_RESPONSE)
-        statustype["is_eindstatus"] = True
-        mock_resource_get(rm, statustype)
-
-        path = reverse("notifications:callback")
-
-        activity = ActivityFactory.create(
-            zaak=zaak["url"], status=ActivityStatuses.on_going
-        )
-        with patch(
-            "zac.notifications.handlers.bulk_lock_review_requests_for_zaak"
-        ) as mock_bulk_lock_rr_for_zaak:
-            with patch(
-                "zac.notifications.handlers.bulk_close_all_documents_for_zaak"
-            ) as mock_bulk_close_all_documents_for_zaak:
-                with patch(
-                    "zac.notifications.handlers.lock_checklist_for_zaak"
-                ) as mock_lock_checklist_for_zaak:
-                    response = self.client.post(path, NOTIFICATION)
-
-        mock_bulk_lock_rr_for_zaak.assert_called_once()
-        mock_bulk_close_all_documents_for_zaak.assert_called_once()
-        mock_lock_checklist_for_zaak.assert_called_once()
-
-        activity.refresh_from_db()
-        self.assertEqual(activity.status, ActivityStatuses.finished)
-        self.assertEqual(activity.user_assignee, None)
-        self.assertEqual(activity.group_assignee, None)
