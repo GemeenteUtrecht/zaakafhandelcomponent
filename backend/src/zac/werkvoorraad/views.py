@@ -116,6 +116,7 @@ class WorkStackAssigneeCasesView(ListAPIView):
                 request=self.request,
                 behandelaar=self.request.user.username,
                 ordering=ordering,
+                only_allowed=False,
             )
             self._qs = [zaak for zaak in zaken if not zaak.einddatum]
         return self._qs
@@ -162,7 +163,7 @@ class WorkStackUserTasksView(ListAPIView):
             zaken = {
                 zaak.url: zaak
                 for zaak in search_zaken(
-                    request=self.request, urls=urls, size=len(urls)
+                    request=self.request, urls=urls, size=len(urls), only_allowed=False
                 )
             }
             task_zaken = dict()

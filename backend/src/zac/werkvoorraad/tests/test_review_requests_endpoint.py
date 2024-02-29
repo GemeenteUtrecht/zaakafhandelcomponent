@@ -35,7 +35,7 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30
 
 
 @requests_mock.Mocker()
-class ReviewRequestsTests(ESMixin, ClearCachesMixin, APITestCase):
+class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
     """
     Test the checklists questions API endpoint.
     """
