@@ -941,8 +941,13 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                     "zac.contrib.objects.kownsl.camunda.create_review_request",
                     return_value=review_request,
                 ):
-                    response = self.client.put(self.task_endpoint, payload)
+                    with patch(
+                        "zac.contrib.objects.kownsl.cache.get_zaak",
+                        return_value=self.zaak,
+                    ) as mock_get_zaak:
+                        response = self.client.put(self.task_endpoint, payload)
 
+        mock_get_zaak.assert_called_once()
         self.assertEqual(response.status_code, 204)
 
     @freeze_time("1999-12-31T23:59:59Z")
@@ -1023,10 +1028,15 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
                         "zac.contrib.objects.kownsl.camunda.update_review_request",
                         return_value=review_request,
                     ) as purr:
-                        response = self.client.put(self.task_endpoint, payload)
+                        with patch(
+                            "zac.contrib.objects.kownsl.cache.get_zaak",
+                            return_value=self.zaak,
+                        ) as mock_get_zaak:
+                            response = self.client.put(self.task_endpoint, payload)
 
         self.assertEqual(response.status_code, 204)
         purr.assert_called_once()
+        mock_get_zaak.assert_called_once()
 
     @patch(
         "zac.camunda.api.views.get_task",
