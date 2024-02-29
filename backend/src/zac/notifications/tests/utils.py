@@ -77,7 +77,7 @@ ZAAKTYPE_RESPONSE = generate_oas_component(
 )
 
 STATUSTYPE_RESPONSE = generate_oas_component(
-    "ztc", "schemas/StatusType", url=STATUSTYPE, is_eindstatus=True
+    "ztc", "schemas/StatusType", url=STATUSTYPE, isEindstatus=False
 )
 
 STATUS_RESPONSE = generate_oas_component(

@@ -306,7 +306,9 @@ class ZaakUpdateTests(ClearCachesMixin, ESMixin, APITestCase):
         mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, STATUS_RESPONSE)
-        mock_resource_get(rm, STATUSTYPE_RESPONSE)
+        statustype = deepcopy(STATUSTYPE_RESPONSE)
+        statustype["is_eindstatus"] = True
+        mock_resource_get(rm, statustype)
 
         path = reverse("notifications:callback")
 
