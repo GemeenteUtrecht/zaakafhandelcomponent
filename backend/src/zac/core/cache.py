@@ -214,8 +214,3 @@ def invalidate_document_url_cache(url: str):
 def invalidate_zaakeigenschappen_cache(zaak: Zaak):
     key = f"zaakeigenschappen:{zaak.url}"
     cache.delete(key)
-
-
-def invalidate_zaak_get_status(url: str):
-    key = f"zaak-status:{url}"
-    cache.delete(key)

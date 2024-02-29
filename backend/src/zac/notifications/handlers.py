@@ -29,7 +29,6 @@ from zac.core.cache import (
     invalidate_informatieobjecttypen_cache,
     invalidate_rollen_cache,
     invalidate_zaak_cache,
-    invalidate_zaak_get_status,
     invalidate_zaak_list_cache,
     invalidate_zaakeigenschappen_cache,
     invalidate_zaakobjecten_cache,
@@ -216,7 +215,6 @@ class ZakenHandler:
     def _handle_status_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
-        invalidate_zaak_get_status(zaak.status.url)
 
         # index in ES
         update_status_in_zaak_document(zaak)
