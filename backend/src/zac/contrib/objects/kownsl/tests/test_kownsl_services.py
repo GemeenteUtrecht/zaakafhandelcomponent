@@ -7,6 +7,8 @@ import requests_mock
 from django_camunda.utils import underscoreize
 from freezegun import freeze_time
 from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import StatusType
+from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -16,6 +18,7 @@ from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.kownsl.camunda import ConfigureReviewRequestSerializer
 from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.contrib.objects.kownsl.tests.utils import (
+    CATALOGI_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
     REVIEW_OBJECT,
@@ -32,11 +35,12 @@ from zac.contrib.objects.kownsl.tests.utils import (
     UserAssigneeFactory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
-from zac.core.tests.utils import ClearCachesMixin
-from zac.tests.utils import paginated_response
+from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 from ...services import (
+    bulk_lock_review_requests_for_zaak,
     create_review_request,
     factory_review_request,
     factory_reviews,
@@ -54,9 +58,8 @@ class KownslAPITests(ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(
-            label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
-        )
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         objects_service = Service.objects.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
@@ -381,3 +384,48 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         )
         self.assertEqual(str(review_request.id), self.review_request["id"])
         self.assertTrue(m.last_request.json()["record"]["data"]["locked"])
+
+    def test_bulk_lock_review_request_for_zaak(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+
+        rr1 = ReviewRequestFactory()
+        rr1["locked"] = True
+        rr2 = ReviewRequestFactory()
+        rr2["locked"] = False
+        review_requests = [
+            factory_review_request(rr1),
+            factory_review_request(rr2),
+        ]
+
+        status = generate_oas_component(
+            "zrc",
+            "schemas/Status",
+            url=f"{ZAKEN_ROOT}statussen/dd4573d0-4d99-4e90-a05c-e08911e8673e",
+            statustype=f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74",
+            statustoelichting="some-statustoelichting",
+        )
+        status = factory(Status, status)
+        statustype = generate_oas_component(
+            "ztc",
+            "schemas/StatusType",
+            url=f"{CATALOGI_ROOT}statustypen/c612f300-8e16-4811-84f4-78c99fdebe74",
+            is_eindstatus=True,
+        )
+        status.statustype = factory(StatusType, statustype)
+        zaak = deepcopy(self.zaak)
+        zaak.status = status
+
+        with patch(
+            "zac.contrib.objects.services.parallel", return_value=mock_parallel()
+        ):
+            with patch(
+                "zac.contrib.objects.services.get_all_review_requests_for_zaak",
+                return_value=review_requests,
+            ):
+                with patch(
+                    "zac.contrib.objects.services.lock_review_request"
+                ) as mock_lock_review_request:
+                    bulk_lock_review_requests_for_zaak(zaak)
+
+        mock_lock_review_request.assert_called_once()

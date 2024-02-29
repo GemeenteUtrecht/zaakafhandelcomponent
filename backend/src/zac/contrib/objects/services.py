@@ -22,6 +22,7 @@ from zac.core.services import (
     create_object,
     fetch_catalogus,
     fetch_objecttype,
+    get_status,
     get_zaakobjecten,
     relate_object_to_zaak,
     search_objects,
@@ -401,6 +402,28 @@ def fetch_all_locked_checklists():
     return []
 
 
+def lock_checklist_for_zaak(zaak: Zaak):
+    checklist = fetch_checklist_object(zaak)
+    if checklist:
+        updated = False
+        for answer in checklist["record"]["data"]["answers"]:
+            if not answer["answer"] and (
+                answer.get("userAssignee") or answer.get("groupAssignee")
+            ):
+                updated = True
+                answer["userAssignee"] = ""
+                answer["groupAssignee"] = ""
+        checklist["record"]["data"]["lockedBy"] = "service-account"
+
+        if updated:
+            update_object_record_data(
+                object=checklist,
+                data=camelize(
+                    checklist["record"]["data"], **api_settings.JSON_UNDERSCOREIZE
+                ),
+            )
+
+
 ###################################################
 #                Oudbehandelaren                  #
 ###################################################
@@ -482,6 +505,19 @@ def create_review_request(data: Dict) -> ReviewRequest:
         "review_request", data, data["zaak"], camelize_settings=camelize_settings
     )
     return factory_review_request(result["record"]["data"])
+
+
+def bulk_lock_review_requests_for_zaak(zaak: Zaak):
+    def _lock_review_request(rr: ReviewRequest):
+        return lock_review_request(
+            str(rr.id), lock_reason=f"Zaak is {status.statustype.omschrijving}."
+        )
+
+    status = get_status(zaak) if type(zaak.status) == str else zaak.status
+    review_requests = get_all_review_requests_for_zaak(zaak)
+    review_requests = [rr for rr in review_requests if not rr.locked]
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
+        list(executor.map(_lock_review_request, review_requests))
 
 
 def lock_review_request(

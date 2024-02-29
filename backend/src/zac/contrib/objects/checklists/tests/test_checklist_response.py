@@ -6,14 +6,17 @@ from django.urls import reverse_lazy
 import requests_mock
 from freezegun import freeze_time
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.models import APITypes, Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory
+from zac.contrib.objects.services import lock_checklist_for_zaak
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
+from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
@@ -551,3 +554,21 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             response = self.client.post(unlock_endpoint)
 
         self.assertEqual(response.status_code, 400)
+
+    def test_lock_checklist_for_zaak(self, m):
+        checklist_object = deepcopy(CHECKLIST_OBJECT)
+        answer = checklist_object["record"]["data"]["answers"][0]
+        answer["userAssignee"] = "some-user"
+        answer["answer"] = ""
+
+        with patch(
+            "zac.contrib.objects.services.fetch_checklist_object",
+            return_value=checklist_object,
+        ) as mock_fetch_checklist_object:
+            with patch(
+                "zac.contrib.objects.services.update_object_record_data"
+            ) as mock_update_object_record_data:
+                lock_checklist_for_zaak(factory(Zaak, self.zaak))
+
+        mock_fetch_checklist_object.assert_called_once()
+        mock_update_object_record_data.assert_called_once()
