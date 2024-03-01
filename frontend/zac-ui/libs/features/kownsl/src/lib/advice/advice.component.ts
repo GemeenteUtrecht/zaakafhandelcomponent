@@ -242,7 +242,6 @@ export class AdviceComponent implements OnInit {
   submitForm(): void {
     this.isSubmitting = true;
 
-
     this.adviceFormData.advice = this.adviceForm.controls['advice'].value;
     this.adviceFormData.zaakeigenschappen = this.adviceData.zaakeigenschappen.map(eigenschap => {
       return {
@@ -259,7 +258,7 @@ export class AdviceComponent implements OnInit {
 
           const uneditedDocs = allDocs.filter(({ id }) => !this.deleteUrls.some(doc => doc.id === id)).map(({ document }) => ({ document }));
 
-          const closedReviewDocs = closedDocs.map((doc, i) => ({ document: this.deleteUrls[i].drcUrl, editedDocument: doc.versionedUrl }));
+          const closedReviewDocs = closedDocs.length > 0 ? closedDocs.map((doc, i) => ({ document: this.deleteUrls[i].drcUrl, editedDocument: doc.versionedUrl })) : [];
 
           this.adviceFormData.reviewDocuments = closedDocs.length > 0 ? [...uneditedDocs, ...closedReviewDocs] : uneditedDocs;
 
