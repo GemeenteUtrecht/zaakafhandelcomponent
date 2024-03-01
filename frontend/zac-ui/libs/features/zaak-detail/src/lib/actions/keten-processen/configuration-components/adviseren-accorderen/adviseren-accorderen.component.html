@@ -11,20 +11,12 @@
 
   <p><u>Selecteer minimaal één document of zaakeigenschap.</u></p>
 
-  <ng-container *ngIf="(documentsData?.length === 0)">
-    <p class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
-  </ng-container>
-
-  <ng-container *ngIf="(taskContextData.context.zaakeigenschappen?.length === 0)">
-    <p class="p--danger"><i>Deze zaak heeft nog geen geconfigureerde zaakeigenschappen.</i></p>
-  </ng-container>
-
-
   <form class="configuration-form" [formGroup]="assignUsersForm" *ngIf="documentsData?.length > 0 || taskContextData.context.zaakeigenschappen?.length > 0">
     <article class="configuration-details">
       <label class="h4 d-inline-block">Documenten</label>
-      <p>Over welke documenten gaat het?</p>
-      <div class="configuration-files">
+        <p *ngIf="(documentsData?.length === 0)" class="p--danger"><i>Deze zaak heeft nog geen documenten. Voeg documenten toe in het tabblad "Documenten".</i></p>
+      <div *ngIf="(documentsData?.length > 0)" class="configuration-files">
+        <p>Over welke documenten gaat het?</p>
         <div class="row pl-3">
           <div class="d-block">
             <gu-table *ngIf="(documentsData?.length > 0) && tableData"
@@ -44,18 +36,21 @@
     </article>
     <article class="configuration-details">
       <label class="h4 d-inline-block">Zaakinformatie</label>
-      <p>Over welke zaakeigenschap gaat het?</p>
-      <ul *ngIf="selectedProperties">
-        <li class="configuration-properties" *ngFor="let eigenschap of taskContextData.context.zaakeigenschappen">
-          <gu-checkbox (change)="updateSelectedProperties($event)"
-                       [value]="eigenschap.url"
-                       [checked]="isInSelectedProperties(eigenschap.url)"
-                       class="d-inline-block mr-1"
-          >
-            {{eigenschap.naam}}: {{eigenschap.waarde}}
-          </gu-checkbox>
-        </li>
-      </ul>
+      <p *ngIf="(taskContextData.context.zaakeigenschappen?.length === 0)" class="p--danger"><i>Deze zaak heeft nog geen geconfigureerde zaakeigenschappen.</i></p>
+      <ng-container *ngIf="(taskContextData.context.zaakeigenschappen?.length > 0)" >
+        <p>Over welke zaakeigenschap(pen) gaat het?</p>
+        <ul *ngIf="selectedProperties">
+          <li class="configuration-properties" *ngFor="let eigenschap of taskContextData.context.zaakeigenschappen">
+            <gu-checkbox (change)="updateSelectedProperties($event)"
+                         [value]="eigenschap.url"
+                         [checked]="isInSelectedProperties(eigenschap.url)"
+                         class="d-inline-block mr-1"
+            >
+              {{eigenschap.naam}}: {{eigenschap.waarde}}
+            </gu-checkbox>
+          </li>
+        </ul>
+      </ng-container>
     </article>
     <article class="configuration-details" *ngFor="let step of [].constructor(steps); let i = index">
       <label class="h4 d-inline-block">{{assignedUsersTitle[reviewType]}}</label>

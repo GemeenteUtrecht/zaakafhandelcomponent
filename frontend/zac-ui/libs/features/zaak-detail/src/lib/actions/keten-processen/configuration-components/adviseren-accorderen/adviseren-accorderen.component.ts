@@ -133,7 +133,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
       this.selectedDocuments = this.taskContextData.context.previouslySelectedDocuments;
       this.selectedProperties = this.taskContextData.context.previouslySelectedZaakeigenschappen.length > 0 ?
         this.taskContextData.context.previouslySelectedZaakeigenschappen :
-        this.taskContextData.context.zaakeigenschappen.map(doc => doc.url) 
+        this.taskContextData.context.zaakeigenschappen.map(doc => doc.url)
       this.fetchDocuments();
       this.checkPredefinedAssignees();
       this.addPreviouslyAssignedUsersStep();
