@@ -7,13 +7,14 @@ components:
         - answers
         - zaak
         - meta
-        - lockedBy
+        - locked
         properties:
           meta: true
           zaak:
             type: string
-          lockedBy:
-            type: string
+          locked:
+            type: bool
+            value: false
           answers:
             type: array
             items:

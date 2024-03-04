@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from zgw_consumers.api_models.base import Model
 
 from zac.accounts.models import User
+
+from .models import ChecklistLock
 
 
 @dataclass
@@ -22,7 +23,14 @@ class ChecklistAnswer(Model):
 @dataclass
 class Checklist(Model):
     answers: List[ChecklistAnswer]
-    locked_by: Optional[str] = None
+    locked: bool
+    zaak: str
+
+    def get_locked_by(self) -> Optional[User]:
+        qs = ChecklistLock.objects.filter(url=self.zaak)
+        if qs.exists():
+            return ChecklistLock.user
+        return None
 
 
 @dataclass

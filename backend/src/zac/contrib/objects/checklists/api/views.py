@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -7,7 +7,6 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import permissions, status, views
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 
 from zac.contrib.objects.checklists.cache import invalidate_cache_fetch_checklist_object
 from zac.contrib.objects.services import (
@@ -16,17 +15,22 @@ from zac.contrib.objects.services import (
     fetch_checklisttype,
 )
 from zac.core.api.permissions import CanForceEditClosedZaken
-from zac.core.services import find_zaak, update_object_record_data
+from zac.core.services import find_zaak
 from zgw.models.zrc import Zaak
 
 from ..data import Checklist, ChecklistAnswer, ChecklistType
+from ..models import ChecklistLock
 from .permission_loaders import add_permissions_for_checklist_assignee
 from .permissions import (
     CanReadOrWriteChecklistsPermission,
     CanReadZaakChecklistTypePermission,
     ChecklistIsLockedByCurrentUser,
 )
-from .serializers import ChecklistSerializer, ChecklistTypeSerializer
+from .serializers import (
+    ChecklistLockSerializer,
+    ChecklistSerializer,
+    ChecklistTypeSerializer,
+)
 
 zaak_checklist_parameters = [
     OpenApiParameter(
@@ -98,20 +102,22 @@ class BaseZaakChecklistView(views.APIView):
             self._zaak = find_zaak(bronorganisatie, identificatie)
         return self._zaak
 
-    def get_checklist_object(self) -> Dict:
-        if not hasattr(self, "_checklist_object"):
+    def get_checklist_object(self, uncached: bool = False) -> Dict:
+        if not hasattr(self, "_checklist_object") or uncached:
             if not (checklist_object := fetch_checklist_object(self.get_zaak())):
                 raise Http404("Checklist not found for ZAAK.")
             self._checklist_object = checklist_object
         return self._checklist_object
 
-    def get_object(self) -> Checklist:
+    def get_object(self, uncached: bool = False) -> Optional[Checklist]:
         zaak = self.get_zaak()
         self.check_object_permissions(self.request, zaak)
-        checklist_object = self.get_checklist_object()
-        if not hasattr(self, "_checklist"):
-            self._checklist = fetch_checklist(
-                zaak, checklist_object_data=checklist_object
+        checklist_object = self.get_checklist_object(uncached=uncached)
+        if not hasattr(self, "_checklist") or uncached:
+            self._checklist = (
+                fetch_checklist(zaak, checklist_object_data=checklist_object)
+                if checklist_object
+                else None
             )
         return self._checklist
 
@@ -158,17 +164,17 @@ class ZaakChecklistView(BaseZaakChecklistView):
         )
         serializer.is_valid(raise_exception=True)
         checklist = serializer.create()
+        invalidate_cache_fetch_checklist_object(zaak)
 
         # Add permissions:
         self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
 
-        invalidate_cache_fetch_checklist_object(zaak)
         return Response(
             self.get_serializer(checklist).data, status=status.HTTP_201_CREATED
         )
 
     @extend_schema(
-        summary=_("Update checklist and related answers."),
+        summary=_("Update checklist. Deletes lock on checklist."),
         parameters=zaak_checklist_parameters,
         responses={200: ChecklistSerializer},
     )
@@ -187,14 +193,48 @@ class ZaakChecklistView(BaseZaakChecklistView):
         )
         serializer.is_valid(raise_exception=True)
         checklist = serializer.update()
+        invalidate_cache_fetch_checklist_object(zaak)
+
         self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
-        invalidate_cache_fetch_checklist_object(self.get_zaak())
+
+        # Delete lock
+        ChecklistLock.objects.filter(url=self.get_checklist_object()["url"]).delete()
         return Response(self.get_serializer(checklist).data, status=status.HTTP_200_OK)
 
 
-class LockZaakChecklistView(BaseZaakChecklistView):
+class EditLockZaakChecklistView(BaseZaakChecklistView):
     @extend_schema(
-        summary=_("Lock a checklist."),
+        summary=_("Lock a checklist for editing."),
+        parameters=zaak_checklist_parameters,
+        request=None,
+        responses={204: None},
+    )
+    def post(self, request, *args, **kwargs):
+        self.get_object()  # check permissions
+        checklist_object = self.get_checklist_object()
+        zaak = self.get_zaak()
+
+        if not ChecklistLock.objects.filter(url=checklist_object["url"]).exists():
+            serializer = ChecklistLockSerializer(
+                data={
+                    "url": checklist_object["url"],
+                    "user": request.user,
+                    "zaak": zaak.url,
+                    "zaak_identificatie": zaak.identificatie,
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            invalidate_cache_fetch_checklist_object(self.get_zaak())
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class EditUnlockZaakChecklistView(BaseZaakChecklistView):
+    @extend_schema(
+        summary=_("Unlock a checklist after editing."),
         parameters=zaak_checklist_parameters,
         request=None,
         responses={204: None},
@@ -202,36 +242,11 @@ class LockZaakChecklistView(BaseZaakChecklistView):
     def post(self, request, *args, **kwargs):
         self.get_object()  # check permissions
         checklist_obj = self.get_checklist_object()
-        if checklist_obj["record"]["data"]["lockedBy"]:
-            raise ValidationError(_("Checklist is already locked."))
 
-        checklist_obj["record"]["data"]["lockedBy"] = request.user.username
-        update_object_record_data(
-            object=checklist_obj,
-            data=checklist_obj["record"]["data"],
-            user=request.user,
-        )
+        qs = ChecklistLock.objects.filter(url=checklist_obj["url"], user=request.user)
+        if not qs.exists():
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        qs.delete()
         invalidate_cache_fetch_checklist_object(self.get_zaak())
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class UnlockZaakChecklistView(BaseZaakChecklistView):
-    @extend_schema(
-        summary=_("Unlock a checklist."),
-        parameters=zaak_checklist_parameters,
-        request=None,
-        responses={204: None},
-    )
-    def post(self, request, *args, **kwargs):
-        self.get_object()  # check permissions
-        checklist_obj = self.get_checklist_object()
-        if not checklist_obj["record"]["data"]["lockedBy"]:
-            raise ValidationError(_("Checklist is not locked."))
-        checklist_obj["record"]["data"]["lockedBy"] = None
-        update_object_record_data(
-            object=checklist_obj,
-            data=checklist_obj["record"]["data"],
-            user=request.user,
-        )
-        invalidate_cache_fetch_checklist_object(self.get_zaak())
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK)

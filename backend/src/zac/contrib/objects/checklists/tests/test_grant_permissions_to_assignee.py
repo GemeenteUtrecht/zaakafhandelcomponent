@@ -119,10 +119,10 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {
             "answers": [
-                {"question": "Ja?", "answer": ""},
+                {"question": "Ja?", "answer": "Ja"},
                 {
                     "question": "Nee?",
-                    "answer": "",
+                    "answer": "Nee",
                 },
             ],
         }
@@ -135,7 +135,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         ):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=[],
+                return_value=CHECKLIST_OBJECT,
             ):
                 with patch(
                     "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
@@ -185,7 +185,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         ):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=None,
+                return_value=created,
             ):
                 with patch(
                     "zac.contrib.objects.services.fetch_checklist_object",
@@ -235,6 +235,8 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 },
             ],
         }
+        created = deepcopy(CHECKLIST_OBJECT)
+        created["record"]["data"]["answers"] = data["answers"]
 
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
@@ -245,7 +247,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         ):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=[],
+                return_value=created,
             ):
                 with patch(
                     "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
@@ -304,7 +306,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            side_effect=[CHECKLIST_OBJECT, json_response],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklisttype_object",

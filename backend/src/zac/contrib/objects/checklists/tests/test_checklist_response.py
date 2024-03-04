@@ -18,6 +18,7 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
+from ..models import ChecklistLock
 from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
@@ -31,6 +32,7 @@ from .utils import (
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
+    ChecklistLockFactory,
 )
 
 
@@ -157,10 +159,10 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {
             "answers": [
-                {"question": "Ja?", "answer": ""},
+                {"question": "Ja?", "answer": "Ja"},
                 {
                     "question": "Nee?",
-                    "answer": "",
+                    "answer": "Nee",
                 },
             ],
         }
@@ -173,9 +175,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         ):
             with patch(
                 "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-                return_value=[],
+                return_value=CHECKLIST_OBJECT,
             ):
-
                 with patch(
                     "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
                     return_value=None,
@@ -189,7 +190,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 "answers": [
                     {
                         "question": "Ja?",
-                        "answer": "",
+                        "answer": "Ja",
                         "remarks": "",
                         "document": "",
                         "groupAssignee": None,
@@ -197,14 +198,16 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                     },
                     {
                         "question": "Nee?",
-                        "answer": "",
+                        "answer": "Nee",
                         "remarks": "",
                         "document": "",
                         "groupAssignee": None,
                         "userAssignee": None,
                     },
                 ],
+                "locked": False,
                 "lockedBy": None,
+                "zaak": self.zaak["url"],
             },
         )
 
@@ -401,7 +404,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         # Put checklist
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=CHECKLIST_OBJECT,
+            side_effect=[CHECKLIST_OBJECT, json_response],
         ):
             with patch(
                 "zac.contrib.objects.services.fetch_checklisttype_object",
@@ -431,7 +434,9 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "userAssignee": None,
                     },
                 ],
+                "locked": False,
                 "lockedBy": None,
+                "zaak": self.zaak["url"],
             },
         )
 
@@ -485,16 +490,15 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "lock-zaak-checklist",
             kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
         )
-        checklist_object = deepcopy(CHECKLIST_OBJECT)
-        checklist_object["record"]["data"]["lockedBy"] = self.user.username
+        lock = ChecklistLockFactory.create(url=CHECKLIST_OBJECT["url"], user=self.user)
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=checklist_object,
+            return_value=CHECKLIST_OBJECT,
         ):
             response = self.client.post(lock_endpoint)
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["Checklist is already locked."])
+        self.assertEqual(response.status_code, 200)
+        lock.delete()
 
     def test_unlock_checklist(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -519,15 +523,17 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "unlock-zaak-checklist",
             kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
         )
-        checklist_object = deepcopy(CHECKLIST_OBJECT)
-        checklist_object["record"]["data"]["lockedBy"] = self.user.username
+        lock = ChecklistLockFactory.create(url=CHECKLIST_OBJECT["url"], user=self.user)
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=checklist_object,
+            return_value=CHECKLIST_OBJECT,
         ):
             response = self.client.post(unlock_endpoint)
 
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            ChecklistLock.objects.filter(url=CHECKLIST_OBJECT["url"]).exists()
+        )
 
     def test_unlock_checklist_but_checklist_is_not_locked(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -553,7 +559,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         ):
             response = self.client.post(unlock_endpoint)
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 404)
 
     def test_lock_checklist_for_zaak(self, m):
         checklist_object = deepcopy(CHECKLIST_OBJECT)

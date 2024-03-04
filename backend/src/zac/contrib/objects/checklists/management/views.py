@@ -19,7 +19,7 @@ class UnlockChecklistsView(APIView):
     @extend_schema(
         summary=_("Unlock all locked checklists."),
         description=_(
-            "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess. TODO: implement a worker instead of blocking the app."
+            "This is NOT meant for everyday usage but rather an emergency endpoint for solving a hot mess."
         ),
         request=None,
         responses={200: UnlockCountSerializer},

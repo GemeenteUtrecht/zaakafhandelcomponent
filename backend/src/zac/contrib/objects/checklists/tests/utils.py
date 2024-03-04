@@ -1,4 +1,22 @@
+import factory
+
+from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
+
+
+class ChecklistLockFactory(factory.django.DjangoModelFactory):
+    url = factory.Faker("url")
+    user = factory.SubFactory(UserFactory)
+    zaak = factory.Faker("url")
+    zaak_identificatie = factory.Faker("word")
+
+    class Meta:
+        model = "checklists.ChecklistLock"
+        django_get_or_create = (
+            "url",
+            "zaak",
+        )
+
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
@@ -116,7 +134,7 @@ CHECKLIST_OBJECTTYPE_LATEST_VERSION = {
     "jsonSchema": {
         "type": "object",
         "title": "Checklist",
-        "required": ["answers", "zaak", "lockedBy"],
+        "required": ["answers", "zaak", "locked"],
         "properties": {
             "zaak": {"type": "string"},
             "answers": {
@@ -135,7 +153,7 @@ CHECKLIST_OBJECTTYPE_LATEST_VERSION = {
                     },
                 },
             },
-            "lockedBy": {"type": ["string", "null"]},
+            "locked": {"type": "bool", "value": False},
         },
     },
     "createdAt": "1999-12-31",
@@ -156,7 +174,7 @@ CHECKLIST_OBJECT = {
                 {"answer": "Ja", "question": "Ja?"},
                 {"answer": "Nee", "question": "Nee?"},
             ],
-            "lockedBy": None,
+            "locked": False,
         },
         "geometry": "None",
         "startAt": "1999-12-31",

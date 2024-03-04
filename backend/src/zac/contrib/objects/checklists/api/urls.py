@@ -4,8 +4,8 @@ from rest_framework.routers import DefaultRouter
 
 from ..management.urls import urls as management_urls
 from .views import (
-    LockZaakChecklistView,
-    UnlockZaakChecklistView,
+    EditLockZaakChecklistView,
+    EditUnlockZaakChecklistView,
     ZaakChecklistTypeView,
     ZaakChecklistView,
 )
@@ -27,12 +27,12 @@ urlpatterns += [
     ),
     path(
         "zaak-checklists/<str:bronorganisatie>/<str:identificatie>/lock",
-        LockZaakChecklistView.as_view(),
+        EditLockZaakChecklistView.as_view(),
         name="lock-zaak-checklist",
     ),
     path(
         "zaak-checklists/<str:bronorganisatie>/<str:identificatie>/unlock",
-        UnlockZaakChecklistView.as_view(),
+        EditUnlockZaakChecklistView.as_view(),
         name="unlock-zaak-checklist",
     ),
 ]

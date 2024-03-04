@@ -305,21 +305,12 @@ def fetch_checklist(
         checklist_object_data = fetch_checklist_object(zaak)
 
     if checklist_object_data:
-        from zac.contrib.objects.checklists.api.serializers import ChecklistSerializer
-
-        serializer = ChecklistSerializer(
-            data=underscoreize(
-                checklist_object_data["record"]["data"],
-                **api_settings.JSON_UNDERSCOREIZE,
-            ),
-        )
-        serializer.is_valid(raise_exception=True)
-        return factory(Checklist, serializer.validated_data)
+        return factory(Checklist, checklist_object_data["record"]["data"])
     return None
 
 
 def fetch_all_unanswered_checklists_for_user(user: User) -> List[dict]:
-    data_attrs = [f"answers__icontains__{user.username}"]
+    data_attrs = [f"answers__icontains__{user.username}", "locked__icontains__false"]
     if objs := _search_meta_objects("checklist_objecttype", data_attrs=data_attrs):
         checklists = [
             underscoreize(
@@ -394,13 +385,6 @@ def fetch_checklist_zaakobject(
     return None
 
 
-def fetch_all_locked_checklists():
-    data_attrs = ["lockedBy__icontains__"]
-    if objs := _search_meta_objects("checklist_objecttype", data_attrs=data_attrs):
-        return objs
-    return []
-
-
 def lock_checklist_for_zaak(zaak: Zaak):
     checklist = fetch_checklist_object(zaak)
     if checklist:
@@ -412,7 +396,7 @@ def lock_checklist_for_zaak(zaak: Zaak):
                 updated = True
                 answer["userAssignee"] = ""
                 answer["groupAssignee"] = ""
-        checklist["record"]["data"]["lockedBy"] = "service-account"
+        checklist["record"]["data"]["locked"] = True
 
         if updated:
             update_object_record_data(
