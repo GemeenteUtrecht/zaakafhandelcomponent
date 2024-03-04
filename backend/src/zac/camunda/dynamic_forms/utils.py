@@ -172,7 +172,4 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
             raise NotImplementedError(f"Unknown field type '{field_type}'")
         field_definition["input_type"] = INPUT_TYPE_MAP[field_type]
 
-    if not field_definition.get("spec"):
-        field_definition["spec"] = None
-
     return field_definition
