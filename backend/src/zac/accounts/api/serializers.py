@@ -484,7 +484,7 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
 class GroupBlueprintSerializer(GroupPolymorphicSerializer):
     serializer_mapping = {
         object_type.name: object_type.blueprint_class
-        for object_type in list(object_type_registry.values())
+        for object_type in object_type_registry.values()
     }
     discriminator_field = "object_type"
     group_field = "policies"

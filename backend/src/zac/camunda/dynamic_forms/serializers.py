@@ -6,6 +6,7 @@ from rest_framework import fields, serializers
 from rest_framework.utils.serializer_helpers import BindingDict
 
 from zac.api.polymorphism import PolymorphicSerializer
+from zac.core.api.serializers import EigenschapSpecificatieJsonSerializer
 
 from ..data import Task
 from ..user_tasks import usertask_context_serializer
@@ -57,7 +58,7 @@ class FormFieldSerializer(PolymorphicSerializer):
     serializer_mapping = {
         "enum": EnumSerializer,
         "string": StringSerializer,
-        "long": IntSerializer,
+        "int": IntSerializer,
         "boolean": BooleanSerializer,
         "date": DatetimeSerializer,
     }
@@ -78,6 +79,7 @@ class FormFieldSerializer(PolymorphicSerializer):
         choices=list(INPUT_TYPE_MAP.values()),
         required=True,
     )
+    spec = EigenschapSpecificatieJsonSerializer(required=False, allow_null=True)
 
 
 @usertask_context_serializer
