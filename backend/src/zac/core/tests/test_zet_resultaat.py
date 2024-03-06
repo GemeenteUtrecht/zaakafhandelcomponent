@@ -281,11 +281,17 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             serializer.data["context"]["checklist_vragen"],
             [
                 {
-                    "question": checklist["record"]["data"]["answers"][0]["question"],
+                    "question": "Ja?",
                     "order": 1,
                     "choices": [{"name": "Ja", "value": "Ja"}],
                     "is_multiple_choice": True,
-                }
+                },
+                {
+                    "question": "Nee?",
+                    "order": 2,
+                    "choices": [{"name": "Nee", "value": "Nee"}],
+                    "is_multiple_choice": True,
+                },
             ],
         )
         self.assertEqual(
