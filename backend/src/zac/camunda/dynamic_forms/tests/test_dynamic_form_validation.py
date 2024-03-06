@@ -670,7 +670,7 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                         response.json(),
                         {
                             "formfield-01": [
-                                "A ZAAKEIGENSCHAP with `name` formfield-01 requires a maximum length of 7."
+                                "A ZAAKEIGENSCHAP with `name`: EIGENSCHAP requires a maximum length of 7."
                             ]
                         },
                     )
