@@ -394,8 +394,8 @@ def lock_checklist_for_zaak(zaak: Zaak):
                 answer.get("userAssignee") or answer.get("groupAssignee")
             ):
                 updated = True
-                answer["userAssignee"] = ""
-                answer["groupAssignee"] = ""
+                answer["userAssignee"] = None
+                answer["groupAssignee"] = None
         checklist["record"]["data"]["locked"] = True
 
         if updated:
@@ -410,10 +410,6 @@ def lock_checklist_for_zaak(zaak: Zaak):
 ###################################################
 #                Oudbehandelaren                  #
 ###################################################
-
-
-def factory_oudbehandelaren(data: Dict) -> ReviewRequest:
-    return
 
 
 @cache("fetch_oudbehandelaren_object:{zaak.url}", timeout=A_DAY)

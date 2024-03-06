@@ -75,7 +75,7 @@ class ChecklistIsLockedByCurrentUser(BasePermission):
             checklist_lock = ChecklistLock.objects.filter(url=obj["url"])
             if checklist_lock.exists():
                 self.message = f"{checklist_lock[0]}"
-                return checklist_lock[0].user == request.user
+                return checklist_lock.get().user == request.user
 
             # if put is attempted but there is no username the resource wasn't locked - return 403
             if request.method == "PUT" and not checklist_lock.exists():

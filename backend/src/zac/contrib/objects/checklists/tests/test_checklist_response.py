@@ -162,7 +162,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 {"question": "Ja?", "answer": "Ja"},
                 {
                     "question": "Nee?",
-                    "answer": "Nee",
+                    "answer": "",
                 },
             ],
         }
@@ -195,14 +195,16 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "document": "",
                         "groupAssignee": None,
                         "userAssignee": None,
+                        "created": "1999-12-31T23:59:59Z",
                     },
                     {
                         "question": "Nee?",
-                        "answer": "Nee",
+                        "answer": "",
                         "remarks": "",
                         "document": "",
                         "groupAssignee": None,
                         "userAssignee": None,
+                        "created": "1999-12-31T23:59:59Z",
                     },
                 ],
                 "locked": False,
@@ -389,8 +391,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         data = {
             "answers": [
-                {"question": "Ja?", "answer": "Ja"},
-                {"question": "Nee?", "answer": ""},
+                {"question": "Ja?", "answer": "Ja", "userAssignee": self.user.username},
+                {"question": "Nee?", "answer": "Nee"},
             ],
         }
         json_response = deepcopy(CHECKLIST_OBJECT)
@@ -423,7 +425,132 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "remarks": "",
                         "document": "",
                         "groupAssignee": None,
+                        "userAssignee": {
+                            "email": self.user.email,
+                            "firstName": self.user.first_name,
+                            "fullName": self.user.get_full_name(),
+                            "lastName": self.user.last_name,
+                            "username": self.user.username,
+                        },
+                        "created": "1999-12-31T23:59:59Z",
+                    },
+                    {
+                        "question": "Nee?",
+                        "answer": "Nee",
+                        "remarks": "",
+                        "document": "",
+                        "groupAssignee": None,
                         "userAssignee": None,
+                        "created": "1999-12-31T23:59:59Z",
+                    },
+                ],
+                "locked": False,
+                "lockedBy": None,
+                "zaak": self.zaak["url"],
+            },
+        )
+
+        self.assertEqual(
+            m.last_request.json(),
+            {
+                "record": {
+                    "index": 1,
+                    "typeVersion": 3,
+                    "data": {
+                        "answers": [
+                            {
+                                "answer": "Ja",
+                                "question": "Ja?",
+                                "groupAssignee": None,
+                                "userAssignee": {
+                                    "email": self.user.email,
+                                    "firstName": self.user.first_name,
+                                    "fullName": self.user.get_full_name(),
+                                    "lastName": self.user.last_name,
+                                    "username": self.user.username,
+                                },
+                                "created": "1999-12-31T23:59:59+00:00",
+                                "document": "",
+                                "remarks": "",
+                            },
+                            {
+                                "question": "Nee?",
+                                "answer": "Nee",
+                                "remarks": "",
+                                "document": "",
+                                "groupAssignee": None,
+                                "userAssignee": None,
+                                "created": "1999-12-31T23:59:59+00:00",
+                            },
+                        ],
+                        "zaak": self.zaak["url"],
+                        "locked": False,
+                    },
+                    "geometry": "None",
+                    "startAt": "1999-12-31",
+                    "endAt": "None",
+                    "registrationAt": "1999-12-31",
+                    "correctionFor": 1,
+                    "correctedBy": self.user.username,
+                }
+            },
+        )
+
+    def test_update_checklist_no_update_object_called(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie=123456789&identificatie=ZAAK-0000001",
+            json=paginated_response([self.zaak]),
+        )
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
+
+        data = {
+            "answers": [
+                {"question": "Ja?", "answer": "Ja"},
+                {"question": "Nee?", "answer": ""},
+            ],
+        }
+        json_response = deepcopy(CHECKLIST_OBJECT)
+        json_response["record"]["data"]["answers"] = data["answers"]
+        m.patch(
+            f"{OBJECTS_ROOT}objects/{CHECKLIST_OBJECT['uuid']}",
+            json=json_response,
+            status_code=200,
+        )
+        self.client.force_authenticate(user=self.user)
+        # Put checklist
+        with patch(
+            "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
+            side_effect=[CHECKLIST_OBJECT, json_response],
+        ):
+            with patch(
+                "zac.contrib.objects.services.fetch_checklisttype_object",
+                return_value=[CHECKLISTTYPE_OBJECT],
+            ):
+                with patch(
+                    "zac.contrib.objects.checklists.api.serializers.update_object_record_data"
+                ) as mock_update_object:
+                    response = self.client.put(self.endpoint, data=data)
+
+        mock_update_object.assert_not_called()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "answers": [
+                    {
+                        "question": "Ja?",
+                        "answer": "Ja",
+                        "remarks": "",
+                        "document": "",
+                        "groupAssignee": None,
+                        "userAssignee": None,
+                        "created": "1999-12-31T23:59:59Z",
                     },
                     {
                         "question": "Nee?",
@@ -432,6 +559,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                         "document": "",
                         "groupAssignee": None,
                         "userAssignee": None,
+                        "created": "1999-12-31T23:59:59Z",
                     },
                 ],
                 "locked": False,

@@ -24,6 +24,8 @@ components:
               - question
               - answer
               properties:
+                created:
+                  type: string
                 answer:
                   type: string
                 remarks:
@@ -33,9 +35,14 @@ components:
                 question:
                   type: string
                 userAssignee:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
                 groupAssignee:
-                  type: string
+                  type:
+                    - string
+                    - 'null'
+                
       ChecklistType:
         type: object
         title: ChecklistType

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from django.utils.translation import gettext_lazy as _
 
@@ -14,10 +15,11 @@ from .models import ChecklistLock
 class ChecklistAnswer(Model):
     question: str
     answer: str
+    created: datetime
     remarks: Optional[str] = ""
     document: Optional[str] = ""
-    user_assignee: Optional[str] = None
-    group_assignee: Optional[str] = None
+    user_assignee: Optional[Dict] = None
+    group_assignee: Optional[Dict] = None
 
 
 @dataclass
@@ -27,9 +29,9 @@ class Checklist(Model):
     zaak: str
 
     def get_locked_by(self) -> Optional[User]:
-        qs = ChecklistLock.objects.filter(url=self.zaak)
+        qs = ChecklistLock.objects.filter(zaak=self.zaak)
         if qs.exists():
-            return ChecklistLock.user
+            return qs.get().user
         return None
 
 

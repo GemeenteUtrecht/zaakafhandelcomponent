@@ -127,10 +127,10 @@ class ZaakChecklistView(BaseZaakChecklistView):
         self, zaak, answers: List[ChecklistAnswer]
     ):
         for answer in answers:
-            if answer.user_assignee:
-                add_permissions_for_checklist_assignee(zaak, answer.user_assignee)
-            if answer.group_assignee:
-                users = answer.group_assignee.user_set.all()
+            if answer.get("user_assignee", None):
+                add_permissions_for_checklist_assignee(zaak, answer["user_assignee"])
+            if answer.get("group_assignee", None):
+                users = answer["group_assignee"].user_set.all()
                 for user in users:
                     add_permissions_for_checklist_assignee(zaak, user)
 
@@ -167,7 +167,9 @@ class ZaakChecklistView(BaseZaakChecklistView):
         invalidate_cache_fetch_checklist_object(zaak)
 
         # Add permissions:
-        self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
+        self._add_permissions_for_checklist_assignee(
+            zaak, serializer.validated_data["answers"]
+        )
 
         return Response(
             self.get_serializer(checklist).data, status=status.HTTP_201_CREATED
@@ -195,11 +197,15 @@ class ZaakChecklistView(BaseZaakChecklistView):
         checklist = serializer.update()
         invalidate_cache_fetch_checklist_object(zaak)
 
-        self._add_permissions_for_checklist_assignee(zaak, checklist.answers)
+        self._add_permissions_for_checklist_assignee(
+            zaak, serializer.validated_data["answers"]
+        )
 
         # Delete lock
         ChecklistLock.objects.filter(url=self.get_checklist_object()["url"]).delete()
-        return Response(self.get_serializer(checklist).data, status=status.HTTP_200_OK)
+        return Response(
+            self.get_serializer(instance=checklist).data, status=status.HTTP_200_OK
+        )
 
 
 class EditLockZaakChecklistView(BaseZaakChecklistView):

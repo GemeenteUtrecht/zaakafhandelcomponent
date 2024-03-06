@@ -18,6 +18,10 @@ from zac.core.api.fields import SerializerSlugRelatedField
 from zac.core.api.serializers import ZaakEigenschapSerializer, ZaakSerializer
 from zac.elasticsearch.drf_api.serializers import ESListZaakDocumentSerializer
 
+from ...serializers import (
+    MetaObjectGroupSerializerSlugRelatedField,
+    MetaObjectUserSerializerSlugRelatedField,
+)
 from ..constants import KownslStatus, KownslTypes
 from ..data import (
     Advice,
@@ -27,61 +31,6 @@ from ..data import (
     ReviewDocument,
     ReviewRequest,
 )
-
-###################################################
-#                  Kownsl Users                   #
-###################################################
-
-
-class KownslUserSerializer(UserSerializer):
-    full_name = serializers.SerializerMethodField(
-        help_text=_("User-friendly full name of user.")
-    )
-
-    class Meta:
-        model = UserSerializer.Meta.model
-        fields = (
-            "email",
-            "first_name",
-            "full_name",
-            "last_name",
-            "username",
-        )
-
-    def get_full_name(self, obj) -> str:
-        full_name = ""
-        if isinstance(obj, User):
-            full_name = obj.get_full_name()
-        else:
-            full_name = obj.get("full_name")
-        return full_name
-
-
-class KownslGroupSerializer(GroupSerializer):
-    full_name = serializers.SerializerMethodField(
-        help_text=_("User-friendly full name of group.")
-    )
-
-    class Meta:
-        model = GroupSerializer.Meta.model
-        fields = ("full_name", "name")
-
-    def get_full_name(self, obj: Union[Dict, Group]) -> str:
-        full_name = ""
-        if isinstance(obj, Group):
-            full_name = super().get_full_name(obj)
-        else:
-            full_name = obj.get("full_name")
-        return full_name
-
-
-class KownslUserSerializerSlugRelatedField(SerializerSlugRelatedField):
-    response_serializer = KownslUserSerializer
-
-
-class KownslGroupSerializerSlugRelatedField(SerializerSlugRelatedField):
-    response_serializer = KownslGroupSerializer
-
 
 ###################################################
 #                 Reviews - read                  #
@@ -193,7 +142,7 @@ class ReviewDocumentSerializer(APIModelSerializer):
 
 
 class ApprovalSerializer(APIModelSerializer):
-    author = KownslUserSerializerSlugRelatedField(
+    author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
         required=True,
@@ -205,7 +154,7 @@ class ApprovalSerializer(APIModelSerializer):
         help_text=_("Datetime review request was created."),
         default=lambda: datetime.now(),
     )
-    group = KownslGroupSerializerSlugRelatedField(
+    group = MetaObjectGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
         help_text=_("`name` of the group that author answered for."),
@@ -237,7 +186,7 @@ class ApprovalSerializer(APIModelSerializer):
 
 
 class AdviceSerializer(APIModelSerializer):
-    author = KownslUserSerializerSlugRelatedField(
+    author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
         required=True,
@@ -247,7 +196,7 @@ class AdviceSerializer(APIModelSerializer):
         help_text=_("Datetime review request was created."),
         default=lambda: datetime.now(),
     )
-    group = KownslGroupSerializerSlugRelatedField(
+    group = MetaObjectGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
         help_text=_("`name` of the group that author answered for."),
@@ -405,7 +354,7 @@ class SubmitReviewDocumentSerializer(APIModelSerializer):
 
 
 class SubmitApprovalSerializer(APIModelSerializer):
-    author = KownslUserSerializerSlugRelatedField(
+    author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
         required=True,
@@ -417,7 +366,7 @@ class SubmitApprovalSerializer(APIModelSerializer):
         help_text=_("Datetime review request was created."),
         default=lambda: datetime.now(),
     )
-    group = KownslGroupSerializerSlugRelatedField(
+    group = MetaObjectGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
         help_text=_("`name` of the group that author answered for."),
@@ -460,7 +409,7 @@ class SubmitApprovalSerializer(APIModelSerializer):
 
 
 class SubmitAdviceSerializer(APIModelSerializer):
-    author = KownslUserSerializerSlugRelatedField(
+    author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
         required=True,
@@ -470,7 +419,7 @@ class SubmitAdviceSerializer(APIModelSerializer):
         help_text=_("Datetime review request was created."),
         default=lambda: datetime.now(),
     )
-    group = KownslGroupSerializerSlugRelatedField(
+    group = MetaObjectGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
         default=None,
@@ -548,7 +497,7 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
     open_reviews = OpenReviewSerializer(
         many=True, read_only=True, source="get_open_reviews"
     )
-    requester = KownslUserSerializerSlugRelatedField(
+    requester = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.prefetch_related("groups").all(),
         required=True,

@@ -324,7 +324,6 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
         return ({
           answer: answer as string || '',
-          created: new Date().toISOString(),
           document: documentUrl,
           question: question,
           remarks: remarks || '',

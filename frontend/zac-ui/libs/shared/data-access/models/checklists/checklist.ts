@@ -5,7 +5,6 @@ export interface ChecklistAnswer {
   remarks: string;
   question: string,
   answer: string,
-  created: string,
   document?: string
   groupAssignee?: UserGroupDetail,
   userAssignee?: User,
@@ -14,5 +13,4 @@ export interface ChecklistAnswer {
 export interface Checklist {
   answers: ChecklistAnswer[],
   url?: string,
-  created?: string,
 }
