@@ -304,6 +304,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
   /**
    * Gets called when a checklist form is submitted.
    * @param {Object} answerData
+   * @param {boolean} isFormSubmit
    */
   submitForm(answerData, isFormSubmit?): void {
     const answers: ChecklistAnswer[] = Object.entries(answerData)
@@ -335,7 +336,8 @@ export class ChecklistComponent implements OnInit, OnChanges {
     if (this.checklist) {
       this.checklistService.updateChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(() =>{
           if (isFormSubmit) {
-            this.fetchChecklistData()
+            this.unlockChecklist(false);
+            this.fetchChecklistData();
           }
           this.hasChecklist = false;
           this.documents = {};
@@ -346,6 +348,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
     } else {
       this.checklistService.createChecklistAndRelatedAnswers(this.zaak.bronorganisatie, this.zaak.identificatie, answers).subscribe(() =>{
         if (isFormSubmit) {
+          this.unlockChecklist(false);
           this.fetchChecklistData()
         }
       },
