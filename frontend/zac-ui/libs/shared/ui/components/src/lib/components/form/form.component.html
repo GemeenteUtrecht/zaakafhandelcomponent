@@ -56,7 +56,7 @@
               <!-- Has document -->
               <div *ngIf="field.value" class="mat-form-field-wrapper pb-1">
                 <div class="">
-                  <p class="p--bold p--muted d-inline">Document:&nbsp;</p>
+                  <p class="p--bold d-inline">Document:&nbsp;</p>
                   <a class="anchor" (click)="onDocumentClick(field.value.readUrl)">{{field.value.titel}}</a>
                 </div>
               </div>
@@ -111,8 +111,8 @@
                 </div>
 
                 <ng-container class="p--pre-wrap" *ngIf="!isInEditMode && !field.value">
-                  <p class="p--bold p--muted mb-0">{{field.label}}</p>
-                  <p class="p--pre-wrap ml-1">-</p>
+                  <p class="p--bold mb-0">{{field.label}}</p>
+                  <p class="p--pre-wrap">-</p>
                 </ng-container>
               </div>
             </div>

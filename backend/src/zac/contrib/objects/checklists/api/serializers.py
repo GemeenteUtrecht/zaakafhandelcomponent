@@ -1,7 +1,7 @@
-import datetime
 from typing import Dict
 
 from django.contrib.auth.models import Group
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from djangorestframework_camel_case.settings import api_settings
@@ -10,7 +10,8 @@ from rest_framework import serializers
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.drf.serializers import APIModelSerializer
 
-from zac.accounts.api.fields import GroupSlugRelatedField, UserSlugRelatedField
+from zac.accounts.api.fields import UserSlugRelatedField
+from zac.accounts.api.serializers import UserSerializer
 from zac.accounts.models import User
 from zac.contrib.objects.services import (
     create_meta_object_and_relate_to_zaak,
@@ -19,6 +20,10 @@ from zac.contrib.objects.services import (
 )
 from zac.core.services import update_object_record_data
 
+from ...serializers import (
+    MetaObjectGroupSerializerSlugRelatedField,
+    MetaObjectUserSerializerSlugRelatedField,
+)
 from ..data import (
     Checklist,
     ChecklistAnswer,
@@ -26,6 +31,7 @@ from ..data import (
     ChecklistType,
     QuestionChoice,
 )
+from ..models import ChecklistLock
 
 
 class QuestionChoiceSerializer(APIModelSerializer):
@@ -78,19 +84,23 @@ class ChecklistTypeSerializer(APIModelSerializer):
 
 
 class ChecklistAnswerSerializer(APIModelSerializer):
-    group_assignee = GroupSlugRelatedField(
+    group_assignee = MetaObjectGroupSerializerSlugRelatedField(
         slug_field="name",
-        queryset=Group.objects.prefetch_related("user_set").all(),
-        required=False,
+        queryset=Group.objects.all(),
         help_text=_("`name` of the group assigned to answer."),
         allow_null=True,
+        default=None,
     )
-    user_assignee = UserSlugRelatedField(
+    user_assignee = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
-        queryset=User.objects.prefetch_related("groups").all(),
-        required=False,
+        queryset=User.objects.all(),
         help_text=_("`username` of the user assigned to answer."),
         allow_null=True,
+        default=None,
+    )
+    created = serializers.DateTimeField(
+        help_text=_("Datetime answer was given."),
+        read_only=True,
     )
 
     class Meta:
@@ -98,6 +108,7 @@ class ChecklistAnswerSerializer(APIModelSerializer):
         fields = (
             "question",
             "answer",
+            "created",
             "remarks",
             "document",
             "group_assignee",
@@ -111,19 +122,19 @@ class ChecklistAnswerSerializer(APIModelSerializer):
             },
             "remarks": {
                 "help_text": _("Remarks in addition to the answer."),
-                "required": False,
                 "allow_blank": True,
+                "default": "",
             },
             "document": {
                 "help_text": _("URL-reference to document related to answer."),
-                "required": False,
                 "allow_blank": True,
+                "default": "",
             },
             "answer": {
-                "required": True,
                 "min_length": 0,
                 "help_text": _("Answer to the question."),
                 "allow_blank": True,
+                "default": "",
             },
         }
 
@@ -132,24 +143,33 @@ class ChecklistSerializer(APIModelSerializer):
     answers = ChecklistAnswerSerializer(
         many=True,
     )
-    locked_by = UserSlugRelatedField(
+    locked_by = UserSerializer(
         help_text=_("Checklist is locked by this user."),
-        slug_field="username",
         allow_null=True,
-        queryset=User.objects.prefetch_related("groups").all(),
-        default=None,
+        source="get_locked_by",
+        read_only=True,
+    )
+    zaak = serializers.URLField(
+        read_only=True, help_text=_("URL-reference of ZAAK checklist belongs to.")
     )
 
     class Meta:
         model = Checklist
-        fields = ("answers", "locked_by")
+        fields = ("answers", "locked_by", "zaak", "locked")
+        extra_kwargs = {"locked": {"read_only": True}}
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if zaak := self.context.get("zaak"):
             validated_data["zaak"] = zaak.url
-            self.bulk_validate_answers(validated_data["answers"])
+        else:
+            raise RuntimeError(
+                "This serializer requires the ZAAK to be passed into its context."
+            )
 
+        validated_data["answers"] = self.bulk_validate_answers(
+            validated_data["answers"]
+        )
         return validated_data
 
     def bulk_validate_answers(self, answers: Dict):
@@ -187,6 +207,7 @@ class ChecklistSerializer(APIModelSerializer):
                         "An answer to a checklist question can not be assigned to both a user and a group."
                     )
                 )
+            answer["created"] = timezone.now().isoformat()
 
         # Check if all questions are given (unanswered questions should be empty)
         questions_answered = [answer["question"] for answer in answers]
@@ -195,6 +216,7 @@ class ChecklistSerializer(APIModelSerializer):
                 raise serializers.ValidationError(
                     _("Question {question} not answered.").format(question=question)
                 )
+
         return answers
 
     def create(self) -> Checklist:
@@ -203,28 +225,87 @@ class ChecklistSerializer(APIModelSerializer):
         if checklist:
             raise serializers.ValidationError(_("Checklist already exists."))
 
-        # Use data from request - the serializer was (ab)used to validate, not serialize.
-        data = {
-            **self.initial_data,
-            "zaak": self.context["zaak"].url,
-            "locked_by": None,
-        }
+        data = {**self.data, "zaak": self.context["zaak"].url, "locked": False}
         create_meta_object_and_relate_to_zaak(
             "checklist", data, self.context["zaak"].url
         )
 
-        return factory(Checklist, self.validated_data)
-
-    def update(self) -> Checklist:
-        data = {
-            **self.initial_data,
-            "zaak": self.context["zaak"].url,
-            "lockedBy": None,
-        }  # unlock the checklist at update
-        checklist_obj = self.context["checklist_object"]
-        update_object_record_data(
-            object=checklist_obj,
-            data=camelize(data, **api_settings.JSON_UNDERSCOREIZE),
-            user=self.context["request"].user,
+        return factory(
+            Checklist,
+            data,
         )
-        return factory(Checklist, self.validated_data)
+
+    def update(self) -> bool:
+        assert self.is_valid(), "Serializer must be valid."
+
+        old_answers = {answer["question"]: answer for answer in self.data["answers"]}
+
+        # check if object changed - "autosave" creates many duplicate records
+        new_answers = {
+            answer["question"]: answer
+            for answer in ChecklistAnswerSerializer(
+                self.validated_data["answers"], many=True
+            ).data
+        }
+
+        # create new dictionary to be uploaded to objects in case change is detected
+        new_checklist_data = {"answers": []}
+
+        # changes in these keys are 'key' - haha - to proceed with update
+        change_in_keys = [
+            "answer",
+            "user_assignee",
+            "group_assignee",
+            "remarks",
+            "document",
+        ]
+
+        # set update flag to false until change has been detected
+        update = False
+        for question, new_answer in new_answers.items():
+            answer = {}
+            answer["answer"] = new_answer["answer"]
+            if question not in old_answers:
+                update = True
+                new_checklist_data["answers"].append(new_answer)
+
+            elif (old_answer := old_answers.get(question)) and any(
+                [
+                    new_answer.get(key, None) != old_answer.get(key, None)
+                    for key in change_in_keys
+                ]
+            ):
+                update = True
+                new_checklist_data["answers"].append(new_answer)
+            else:
+                new_checklist_data["answers"].append(old_answer)
+
+        data = {
+            "answers": new_checklist_data["answers"],
+            "zaak": self.context["zaak"].url,
+            "locked": False,
+        }
+        if update:
+            # unlock the checklist at update
+            update_object_record_data(
+                object=self.context["checklist_object"],
+                data=camelize(data, **api_settings.JSON_UNDERSCOREIZE),
+                user=self.context["request"].user,
+            )
+        return factory(
+            Checklist,
+            data,
+        )
+
+
+class ChecklistLockSerializer(serializers.ModelSerializer):
+    user = UserSlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.prefetch_related("groups").all(),
+        allow_null=True,
+        required=True,
+    )
+
+    class Meta:
+        model = ChecklistLock
+        fields = ("url", "user", "zaak", "zaak_identificatie")

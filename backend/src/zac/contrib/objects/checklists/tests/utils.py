@@ -1,4 +1,22 @@
+import factory
+
+from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
+
+
+class ChecklistLockFactory(factory.django.DjangoModelFactory):
+    url = factory.Faker("url")
+    user = factory.SubFactory(UserFactory)
+    zaak = factory.Faker("url")
+    zaak_identificatie = factory.Faker("word")
+
+    class Meta:
+        model = "checklists.ChecklistLock"
+        django_get_or_create = (
+            "url",
+            "zaak",
+        )
+
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
@@ -115,27 +133,58 @@ CHECKLIST_OBJECTTYPE_LATEST_VERSION = {
     "status": "published",
     "jsonSchema": {
         "type": "object",
+        "$defs": {
+            "user": {
+                "type": ["null", "object"],
+                "title": "user",
+                "required": [
+                    "username",
+                    "firstName",
+                    "fullName",
+                    "lastName",
+                    "email",
+                ],
+                "properties": {
+                    "email": {"type": "string"},
+                    "fullName": {"type": "string"},
+                    "lastName": {"type": "string"},
+                    "username": {"type": "string"},
+                    "firstName": {"type": "string"},
+                },
+            },
+            "group": {
+                "type": ["null", "object"],
+                "title": "group",
+                "required": ["name", "fullName"],
+                "properties": {
+                    "name": {"type": "string"},
+                    "fullName": {"type": "string"},
+                },
+            },
+            "answer": {
+                "type": "object",
+                "title": "ChecklistAnswer",
+                "required": ["question", "answer", "created"],
+                "properties": {
+                    "answer": {"type": "string"},
+                    "remarks": {"type": "string"},
+                    "document": {"type": "string"},
+                    "question": {"type": "string"},
+                    "userAssignee": {"$ref": "#/$defs/user"},
+                    "groupAssignee": {"$ref": "#/$defs/group"},
+                    "created": {"type": "string"},
+                },
+            },
+        },
         "title": "Checklist",
-        "required": ["answers", "zaak", "lockedBy"],
+        "required": ["answers", "zaak", "locked"],
         "properties": {
             "zaak": {"type": "string"},
             "answers": {
                 "type": "array",
-                "items": {
-                    "type": "object",
-                    "title": "ChecklistAnswer",
-                    "required": ["question", "answer"],
-                    "properties": {
-                        "answer": {"type": "string"},
-                        "remarks": {"type": "string"},
-                        "document": {"type": "string"},
-                        "question": {"type": "string"},
-                        "userAssignee": {"type": ["string", "null"]},
-                        "groupAssignee": {"type": ["string", "null"]},
-                    },
-                },
+                "items": {"$ref": "#/$defs/answer"},
             },
-            "lockedBy": {"type": ["string", "null"]},
+            "locked": {"type": "boolean", "value": False},
         },
     },
     "createdAt": "1999-12-31",
@@ -153,10 +202,26 @@ CHECKLIST_OBJECT = {
         "data": {
             "zaak": ZAAK_URL,
             "answers": [
-                {"answer": "Ja", "question": "Ja?"},
-                {"answer": "Nee", "question": "Nee?"},
+                {
+                    "answer": "Ja",
+                    "question": "Ja?",
+                    "groupAssignee": None,
+                    "userAssignee": None,
+                    "created": "1999-12-31T23:59:59+00:00",
+                    "document": "",
+                    "remarks": "",
+                },
+                {
+                    "answer": "",
+                    "question": "Nee?",
+                    "groupAssignee": None,
+                    "userAssignee": None,
+                    "created": "1999-12-31T23:59:59+00:00",
+                    "document": "",
+                    "remarks": "",
+                },
             ],
-            "lockedBy": None,
+            "locked": False,
         },
         "geometry": "None",
         "startAt": "1999-12-31",

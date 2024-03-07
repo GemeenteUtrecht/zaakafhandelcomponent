@@ -1,28 +1,38 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
-from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from zgw_consumers.api_models.base import Model
 
 from zac.accounts.models import User
 
+from .models import ChecklistLock
+
 
 @dataclass
 class ChecklistAnswer(Model):
     question: str
     answer: str
+    created: datetime
     remarks: Optional[str] = ""
     document: Optional[str] = ""
-    user_assignee: Optional[str] = None
-    group_assignee: Optional[str] = None
+    user_assignee: Optional[Dict] = None
+    group_assignee: Optional[Dict] = None
 
 
 @dataclass
 class Checklist(Model):
     answers: List[ChecklistAnswer]
-    locked_by: Optional[str] = None
+    locked: bool
+    zaak: str
+
+    def get_locked_by(self) -> Optional[User]:
+        qs = ChecklistLock.objects.filter(zaak=self.zaak)
+        if qs.exists():
+            return qs.get().user
+        return None
 
 
 @dataclass

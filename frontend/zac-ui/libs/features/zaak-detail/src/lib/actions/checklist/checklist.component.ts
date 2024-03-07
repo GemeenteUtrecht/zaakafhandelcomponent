@@ -324,7 +324,6 @@ export class ChecklistComponent implements OnInit, OnChanges {
 
         return ({
           answer: answer as string || '',
-          created: new Date().toISOString(),
           document: documentUrl,
           question: question,
           remarks: remarks || '',
@@ -361,34 +360,48 @@ export class ChecklistComponent implements OnInit, OnChanges {
   //
 
   /**
-   * Lock or unlock checlist according to event
+   * Lock or unlock checklist according to event
    * @param formIsInEditMode
    */
   onClickEditButton(formIsInEditMode) {
     this.isLocking = true;
     this.isInEditMode = !formIsInEditMode;
-    if (!formIsInEditMode) {
-      this.isLocking = true
-      this.checklistService.lockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
-        {
-          this.formComponent.switchToggle();
-          this.isLocking = false;
-        },
-        error => {
-          this.reportError(error);
-        }
-      )
+    if (formIsInEditMode) {
+      this.unlockChecklist(formIsInEditMode);
     } else {
-      this.checklistService.unLockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
-        {
-          this.formComponent.switchToggle();
-          this.isLocking = false;
-        },
-        error => {
-          this.reportError(error);
-        }
-      )
+      this.lockChecklist();
     }
+  }
+
+  lockChecklist() {
+    this.isLocking = true
+    this.checklistService.lockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
+      {
+        this.isLocking = false;
+        this.formComponent.switchToggle();
+      },
+      error => {
+        this.isLocking = false;
+        this.reportError(error);
+      }
+    )
+  }
+
+  unlockChecklist(formIsInEditMode) {
+    this.isLocking = true
+    this.checklistService.unLockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
+      {
+        this.isLocking = false;
+        this.formComponent.switchToggle();
+      },
+      error => {
+        this.isLocking = false;
+        if (formIsInEditMode) {
+          this.formComponent.switchToggle();
+        }
+        this.reportError(error);
+      }
+    )
   }
 
   /**

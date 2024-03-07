@@ -8,12 +8,11 @@ from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from zac.accounts.models import User
 from zac.api.permissions import DefinitionBasePermission, ZaakDefinitionPermission
-from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import find_zaak
 from zgw.models.zrc import Zaak
 
+from ..models import ChecklistLock
 from ..permissions import checklists_inzien, checklists_schrijven, checklisttypes_inzien
 
 logger = logging.getLogger(__name__)
@@ -67,15 +66,19 @@ class ChecklistIsLockedByCurrentUser(BasePermission):
             # if lock is attempted, the lock will bounce if it's not the same locker. it's harmless to call lock an extra time.
             # if unlock is attempted the unlock will bounce if it's not the same locker. an unlock on an unlocked resource is harmless
             # if put is attempted the put will only be successful if the resource is locked by the updater
-            if username := obj["record"]["data"]["lockedBy"]:
-                user = resolve_assignee(username)
-                self.message = _("Checklist is currently locked by `{name}`.").format(
-                    name=user.get_full_name()
+            if obj["record"]["data"]["locked"]:
+                self.message = _(
+                    "Checklist has been locked because the ZAAK is closed."
                 )
-                return request.user.username == username
+                return False
+
+            checklist_lock = ChecklistLock.objects.filter(url=obj["url"])
+            if checklist_lock.exists():
+                self.message = f"{checklist_lock[0]}"
+                return checklist_lock.get().user == request.user
 
             # if put is attempted but there is no username the resource wasn't locked - return 403
-            if request.method == "PUT" and not username:
+            if request.method == "PUT" and not checklist_lock.exists():
                 self.message = _(
                     "Checklist needs to be locked before you can update it."
                 )

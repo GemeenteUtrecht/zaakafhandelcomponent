@@ -16,18 +16,17 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import register, usertask_context_serializer
 from zac.contrib.objects.services import get_review_request
 from zac.core.api.fields import SelectDocumentsCamundaField
-from zac.core.api.serializers import ZaakEigenschapSerializer
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import get_zaakeigenschappen
 from zac.elasticsearch.searches import search_informatieobjects
 from zgw.models.zrc import Zaak
 
-from ..services import create_review_request, update_review_request
-from .api.serializers import (
-    KownslGroupSerializerSlugRelatedField,
-    KownslUserSerializer,
-    KownslUserSerializerSlugRelatedField,
+from ..serializers import (
+    MetaObjectGroupSerializerSlugRelatedField,
+    MetaObjectUserSerializer,
+    MetaObjectUserSerializerSlugRelatedField,
 )
+from ..services import create_review_request, update_review_request
 from .cache import invalidate_review_requests_cache
 from .constants import FORM_KEY_REVIEW_TYPE_MAPPING, KownslTypes
 from .data import AssignedUsers, ReviewContext, ReviewRequest
@@ -50,7 +49,7 @@ class CamundaAssignedUsersSerializer(APIModelSerializer):
 
     """
 
-    user_assignees = KownslUserSerializerSlugRelatedField(
+    user_assignees = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
         # help_text=_(
@@ -60,7 +59,7 @@ class CamundaAssignedUsersSerializer(APIModelSerializer):
         allow_null=True,
         required=True,
     )
-    group_assignees = KownslGroupSerializerSlugRelatedField(
+    group_assignees = MetaObjectGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
         help_text=_(
@@ -286,7 +285,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         return FORM_KEY_REVIEW_TYPE_MAPPING[self.context["task"].form_key]
 
     def get_requester(self, obj) -> Dict[str, str]:
-        return KownslUserSerializer(instance=self.context["request"].user).data
+        return MetaObjectUserSerializer(instance=self.context["request"].user).data
 
     def get_user_deadlines(self, obj) -> Dict[str, str]:
         return {
