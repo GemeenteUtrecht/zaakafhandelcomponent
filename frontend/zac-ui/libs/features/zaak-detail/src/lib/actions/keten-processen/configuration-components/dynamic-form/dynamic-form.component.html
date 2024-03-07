@@ -21,6 +21,7 @@
 <!--          string-->
           <gu-textarea *ngSwitchCase="'string'"
                     [required]="true"
+                    [maxlength]="formField.spec.maxLength.toString()"
                     [control]="dynamicFormField(formField.name)"
                     [value]="formField.value"
                     id="dyn-form-str-{{formField.name}}"

@@ -21,6 +21,11 @@ export interface FormField {
   inputType: 'enum' | 'string' | 'int' | 'boolean' | 'date';
   value: string | number | boolean;
   enum?: Array<string[]>;
+  spec: {
+    maxLength?: number;
+    minLength?: number;
+    type: string;
+  }
 }
 
 interface InformatieObjectType {
