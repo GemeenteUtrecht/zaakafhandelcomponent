@@ -42,9 +42,17 @@ def get_default_field_kwargs(definition: dict):
     if spec := definition.get("spec", None):
         validators = []
         if min_length := spec.get("min_length", None):
-            validators.append(minLengthValidator(min_length=min_length))
+            validators.append(
+                minLengthValidator(
+                    min_length=min_length, eigenschap=definition["label"]
+                )
+            )
 
-        validators.append(maxLengthValidator(max_length=spec.get("max_length", 255)))
+        validators.append(
+            maxLengthValidator(
+                max_length=spec.get("max_length", 255), eigenschap=definition["label"]
+            )
+        )
         if validators:
             kwargs["validators"] = validators
 
@@ -71,7 +79,7 @@ FIELD_TYPE_MAP = {
         serializers.CharField,
         get_default_field_kwargs,
     ),
-    "long": (
+    "int": (
         serializers.IntegerField,
         get_default_field_kwargs,
     ),
@@ -89,7 +97,7 @@ FIELD_TYPE_MAP = {
 INPUT_TYPE_MAP = {
     "enum": "enum",
     "string": "string",
-    "long": "long",
+    "long": "int",
     "boolean": "boolean",
     "date": "date",
 }
@@ -168,8 +176,11 @@ def get_field_definition(field: Element) -> Dict[str, Any]:
         field_definition["enum"] = choices
         field_definition["input_type"] = INPUT_TYPE_MAP["enum"]
     else:
-        if (field_type := field.attrib["type"]) not in FIELD_TYPE_MAP:
+        if (field_type := field.attrib["type"]) not in INPUT_TYPE_MAP:
             raise NotImplementedError(f"Unknown field type '{field_type}'")
         field_definition["input_type"] = INPUT_TYPE_MAP[field_type]
+
+    if not field_definition.get("spec"):
+        field_definition["spec"] = None
 
     return field_definition

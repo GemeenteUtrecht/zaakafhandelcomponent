@@ -21,12 +21,13 @@
 <!--          string-->
           <gu-textarea *ngSwitchCase="'string'"
                     [required]="true"
+                    [maxlength]="formField.spec.maxLength.toString()"
                     [control]="dynamicFormField(formField.name)"
                     [value]="formField.value"
                     id="dyn-form-str-{{formField.name}}"
           ></gu-textarea>
 <!--          number-->
-          <gu-input *ngSwitchCase="'long'"
+          <gu-input *ngSwitchCase="'int'"
                     type="number"
                     [required]="true"
                     [control]="dynamicFormField(formField.name)"

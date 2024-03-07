@@ -156,6 +156,7 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
                             "label": "EIGENSCHAP",
                             "inputType": "string",
                             "value": "waarde1",
+                            "spec": None,
                         },
                         {
                             "name": "formfield-02",
@@ -163,12 +164,14 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
                             "inputType": "enum",
                             "value": None,
                             "enum": [["first", "First"], ["second", "Second"]],
+                            "spec": None,
                         },
                         {
                             "name": "formfield-03",
                             "label": "LONG-FIELD",
-                            "inputType": "long",
+                            "inputType": "int",
                             "value": None,
+                            "spec": None,
                         },
                     ]
                 },
@@ -249,6 +252,15 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
                                 ["waarde1", "waarde1"],
                                 ["waarde2", "waarde2"],
                             ],  # <- values from eigenschap specificatie waardenverzameling
+                            "spec": {
+                                "enum": [
+                                    {"label": "waarde1", "value": "waarde1"},
+                                    {"label": "waarde2", "value": "waarde2"},
+                                ],
+                                "maxLength": 7,
+                                "minLength": 1,
+                                "type": "string",
+                            },
                         },
                         {
                             "name": "formfield-02",
@@ -256,12 +268,14 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
                             "inputType": "enum",
                             "value": None,
                             "enum": [["first", "First"], ["second", "Second"]],
+                            "spec": None,
                         },
                         {
                             "name": "formfield-03",
                             "label": "LONG-FIELD",
-                            "inputType": "long",
+                            "inputType": "int",
                             "value": None,
+                            "spec": None,
                         },
                     ]
                 },
@@ -354,6 +368,21 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
                                 ["zaaktype-attribuut-01", "zaaktype-attribuut-01"],
                                 ["zaaktype-attribuut-02", "zaaktype-attribuut-02"],
                             ],  # <- values from eigenschap specificatie waardenverzameling
+                            "spec": {
+                                "enum": [
+                                    {
+                                        "label": "zaaktype-attribuut-01",
+                                        "value": "zaaktype-attribuut-01",
+                                    },
+                                    {
+                                        "label": "zaaktype-attribuut-02",
+                                        "value": "zaaktype-attribuut-02",
+                                    },
+                                ],
+                                "maxLength": 7,
+                                "minLength": 1,
+                                "type": "string",
+                            },
                         },
                         {
                             "name": "formfield-02",
@@ -361,12 +390,14 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
                             "inputType": "enum",
                             "value": None,
                             "enum": [["first", "First"], ["second", "Second"]],
+                            "spec": None,
                         },
                         {
                             "name": "formfield-03",
                             "label": "LONG-FIELD",
-                            "inputType": "long",
+                            "inputType": "int",
                             "value": None,
+                            "spec": None,
                         },
                     ]
                 },
@@ -639,7 +670,7 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                         response.json(),
                         {
                             "formfield-01": [
-                                "A ZAAKEIGENSCHAP with `name` formfield-01 requires a maximum length of 7."
+                                "A ZAAKEIGENSCHAP with `name`: EIGENSCHAP requires a maximum length of 7."
                             ]
                         },
                     )

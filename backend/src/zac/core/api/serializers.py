@@ -1422,7 +1422,7 @@ class NumberEnumSerializer(BaseEnumSerializer):
         return ret
 
 
-class SearchEigenschapSpecificatieSerializer(GroupPolymorphicSerializer):
+class EigenschapSpecificatieJsonSerializer(GroupPolymorphicSerializer):
     serializer_mapping = {
         TypeChoices.string: StringEnumSerializer,
         TypeChoices.number: NumberEnumSerializer,
@@ -1455,7 +1455,7 @@ class SearchEigenschapSpecificatieSerializer(GroupPolymorphicSerializer):
 
 class SearchEigenschapSerializer(serializers.Serializer):
     name = serializers.CharField(help_text=_("Name of EIGENSCHAP"))
-    spec = SearchEigenschapSpecificatieSerializer(
+    spec = EigenschapSpecificatieJsonSerializer(
         label=_("property definition"),
         help_text=_("JSON schema-ish specification of related ZAAK-EIGENSCHAP values."),
     )

@@ -153,8 +153,8 @@ INSTALLED_APPS = [
     # Project applications.
     "zac.elasticsearch",
     "zac.accounts",
-    "zac.camunda",
     "zac.core",
+    "zac.camunda",
     "zac.notifications",
     "zac.forms",
     "zac.landing",
