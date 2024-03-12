@@ -129,6 +129,7 @@ INSTALLED_APPS = [
     # External applications.
     # organize admin
     # "django_extensions",
+    "simple_certmanager",
     "solo",
     "axes",
     "corsheaders",
@@ -136,8 +137,6 @@ INSTALLED_APPS = [
     "zgw_consumers",
     "django_camunda",
     "import_export",
-    "django_auth_adfs",
-    "django_auth_adfs_db",
     "mozilla_django_oidc",
     "mozilla_django_oidc_db",
     "rest_framework",
@@ -425,11 +424,6 @@ CSRF_TRUSTED_ORIGINS = [
     f"localhost:{_angular_dev_server_port}",
     f"127.0.0.1:{_angular_dev_server_port}",
 ]
-
-#
-# DJANGO AUTH ADFS
-#
-AUTH_ADFS = {"SETTINGS_CLASS": "django_auth_adfs_db.settings.Settings"}
 
 #
 # MOZILLA DJANGO OIDC DB

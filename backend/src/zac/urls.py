@@ -14,7 +14,6 @@ urlpatterns = [
     path("admin/hijack/", include("hijack.urls")),
     path("admin/", admin.site.urls),
     path("admin/login/failure/", AdminLoginFailure.as_view(), name="admin-oidc-error"),
-    path("adfs/", include("django_auth_adfs.urls")),
     path("api/", include("zac.api.urls")),
     path("accounts/", include("zac.accounts.urls")),
     path("core/", include("zac.core.urls")),

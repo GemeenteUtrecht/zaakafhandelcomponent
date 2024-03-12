@@ -1,5 +1,5 @@
 # Helpers
-pip-tools
+pip-tools>=0.7.0
 bumpversion
 
 # Debug tooling

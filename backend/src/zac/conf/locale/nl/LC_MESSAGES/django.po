@@ -791,14 +791,14 @@ msgstr "applicatietoken autorisaties"
 
 #: src/zac/accounts/templates/accounts/login.html:13
 #: src/zac/templates/admin/login.html:58
-msgid "Login with ADFS"
-msgstr "Inloggen met ADFS"
+msgid "Login with SSO"
+msgstr "Inloggen met SSO"
 
 #: src/zac/accounts/templates/accounts/login.html:22
 #, fuzzy
-#| msgid "Login with ADFS"
+#| msgid "Login with SSO"
 msgid "Login with OIDC"
-msgstr "Inloggen met ADFS"
+msgstr "Inloggen met SSO"
 
 #: src/zac/accounts/templates/accounts/login.html:41
 #: src/zac/accounts/templates/accounts/login.html:43
@@ -3565,12 +3565,12 @@ msgstr ""
 "naar de juiste applicatie op de Open Zaak Autorisaties API"
 
 #: src/zac/core/models.py:60
-msgid "Non-ADFS login enabled"
-msgstr "Niet-ADFS inloggen ingeschakeld"
+msgid "Non-SSO login enabled"
+msgstr "Niet-SSO inloggen ingeschakeld"
 
 #: src/zac/core/models.py:61
-msgid "A flag that allows non-ADFS login (True) or not (False)."
-msgstr "Een flag die non-ADFS inloggen toestaat (True) of niet (False)."
+msgid "A flag that allows non-SSO login (True) or not (False)."
+msgstr "Een flag die non-SSO inloggen toestaat (True) of niet (False)."
 
 #: src/zac/core/models.py:66
 msgid "global configuration"

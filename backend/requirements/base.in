@@ -16,12 +16,11 @@ psutil
 
 # zgw-integration
 gemma-zds-client>=1.0.1
-zgw-consumers[drf]~=0.16.0
+zgw-consumers[drf]<=0.23.2
 
 # Framework libraries
 Django
 django-admin-index
-django-auth-adfs-db
 django-axes[ipware]
 django-better-admin-arrayfield
 django-camunda

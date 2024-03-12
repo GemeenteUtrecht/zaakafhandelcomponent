@@ -23,10 +23,6 @@ ZAC
    :members:
    :exclude-members: DoesNotExist, MultipleObjectsReturned, save, clean
 
-.. automodule:: django_auth_adfs_db.models
-   :members:
-   :exclude-members: DoesNotExist, MultipleObjectsReturned, save, clean
-
 .. automodule:: django_camunda.models
    :members:
    :exclude-members: DoesNotExist, MultipleObjectsReturned, save, clean

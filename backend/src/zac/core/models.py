@@ -59,9 +59,9 @@ class CoreConfig(SingletonModel):
         ),
         default="",
     )
-    non_adfs_login_enabled = models.BooleanField(
-        _("Non-ADFS login enabled"),
-        help_text=_("A flag that allows non-ADFS login (True) or not (False)."),
+    non_sso_login_enabled = models.BooleanField(
+        _("Non-SSO login enabled"),
+        help_text=_("A flag that allows non-SSO login (True) or not (False)."),
         default=True,
     )
 
