@@ -7,20 +7,27 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='SearchReport',
+            name="SearchReport",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='name')),
-                ('query', models.JSONField(verbose_name='search query')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, verbose_name="name")),
+                ("query", models.JSONField(verbose_name="search query")),
             ],
             options={
-                'verbose_name': 'search report',
-                'verbose_name_plural': 'search reports',
+                "verbose_name": "search report",
+                "verbose_name_plural": "search reports",
             },
         ),
     ]

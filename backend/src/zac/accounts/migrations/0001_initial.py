@@ -16,194 +16,674 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('auth', '0012_alter_user_first_name_max_length'),
+        ("auth", "0012_alter_user_first_name_max_length"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('email', models.EmailField(blank=True, max_length=254, verbose_name='email address')),
-                ('first_name', models.CharField(blank=True, max_length=255, verbose_name='first name')),
-                ('last_name', models.CharField(blank=True, max_length=255, verbose_name='last name')),
-                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
-                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
-                ('recently_viewed', models.JSONField(blank=True, default=list, help_text='A list of recently viewed ZAAKs.', verbose_name='recently viewed ZAAKs')),
-                ('uuid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('username', models.CharField(error_messages={'unique': 'A user with that `username` already exists.'}, help_text='Required. 150 characters or fewer.', max_length=150, unique=True, verbose_name='username')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
+                (
+                    "last_login",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="last login"
+                    ),
+                ),
+                (
+                    "is_superuser",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates that this user has all permissions without explicitly assigning them.",
+                        verbose_name="superuser status",
+                    ),
+                ),
+                (
+                    "date_joined",
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, verbose_name="date joined"
+                    ),
+                ),
+                (
+                    "email",
+                    models.EmailField(
+                        blank=True, max_length=254, verbose_name="email address"
+                    ),
+                ),
+                (
+                    "first_name",
+                    models.CharField(
+                        blank=True, max_length=255, verbose_name="first name"
+                    ),
+                ),
+                (
+                    "last_name",
+                    models.CharField(
+                        blank=True, max_length=255, verbose_name="last name"
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Designates whether this user should be treated as active. Unselect this instead of deleting accounts.",
+                        verbose_name="active",
+                    ),
+                ),
+                (
+                    "is_staff",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates whether the user can log into this admin site.",
+                        verbose_name="staff status",
+                    ),
+                ),
+                (
+                    "recently_viewed",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text="A list of recently viewed ZAAKs.",
+                        verbose_name="recently viewed ZAAKs",
+                    ),
+                ),
+                (
+                    "uuid",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                (
+                    "username",
+                    models.CharField(
+                        error_messages={
+                            "unique": "A user with that `username` already exists."
+                        },
+                        help_text="Required. 150 characters or fewer.",
+                        max_length=150,
+                        unique=True,
+                        verbose_name="username",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'user',
-                'verbose_name_plural': 'users',
-                'permissions': [('use_scim', 'Can use the SCIM endpoints')],
+                "verbose_name": "user",
+                "verbose_name_plural": "users",
+                "permissions": [("use_scim", "Can use the SCIM endpoints")],
             },
             managers=[
-                ('objects', zac.accounts.managers.UserManager()),
+                ("objects", zac.accounts.managers.UserManager()),
             ],
         ),
         migrations.CreateModel(
-            name='AccessRequest',
+            name="AccessRequest",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('zaak', models.URLField(help_text='URL-reference to the ZAAK in its API', max_length=1000, verbose_name='zaak')),
-                ('comment', models.CharField(blank=True, help_text='Comment provided by the requester', max_length=1000, verbose_name='comment')),
-                ('result', models.CharField(blank=True, choices=[('approve', 'approved'), ('reject', 'rejected')], help_text='Result of the access request', max_length=50, verbose_name='result')),
-                ('requested_date', models.DateField(default=datetime.date.today, help_text='Date when the access request was created', verbose_name='requested date')),
-                ('handled_date', models.DateField(blank=True, help_text='Date when the access request was handled', null=True, verbose_name='end date')),
-                ('handler', models.ForeignKey(blank=True, help_text='user who has handled the request', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='handled_requests', to=settings.AUTH_USER_MODEL)),
-                ('requester', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='initiated_requests', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "zaak",
+                    models.URLField(
+                        help_text="URL-reference to the ZAAK in its API",
+                        max_length=1000,
+                        verbose_name="zaak",
+                    ),
+                ),
+                (
+                    "comment",
+                    models.CharField(
+                        blank=True,
+                        help_text="Comment provided by the requester",
+                        max_length=1000,
+                        verbose_name="comment",
+                    ),
+                ),
+                (
+                    "result",
+                    models.CharField(
+                        blank=True,
+                        choices=[("approve", "approved"), ("reject", "rejected")],
+                        help_text="Result of the access request",
+                        max_length=50,
+                        verbose_name="result",
+                    ),
+                ),
+                (
+                    "requested_date",
+                    models.DateField(
+                        default=datetime.date.today,
+                        help_text="Date when the access request was created",
+                        verbose_name="requested date",
+                    ),
+                ),
+                (
+                    "handled_date",
+                    models.DateField(
+                        blank=True,
+                        help_text="Date when the access request was handled",
+                        null=True,
+                        verbose_name="end date",
+                    ),
+                ),
+                (
+                    "handler",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="user who has handled the request",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="handled_requests",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "requester",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="initiated_requests",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ApplicationToken',
+            name="ApplicationToken",
             fields=[
-                ('token', models.CharField(max_length=40, primary_key=True, serialize=False, verbose_name='token')),
-                ('contact_person', models.CharField(help_text='Name of the person in the organization who can access the API', max_length=200, verbose_name='contact person')),
-                ('email', models.EmailField(help_text='Email of the person, who can access the API', max_length=254, verbose_name='email')),
-                ('organization', models.CharField(blank=True, help_text='Organization which has access to the API', max_length=200, verbose_name='organization')),
-                ('last_modified', models.DateTimeField(auto_now=True, help_text='Last date when the token was modified', verbose_name='last modified')),
-                ('created', models.DateTimeField(auto_now_add=True, help_text='Date when the token was created', verbose_name='created')),
-                ('application', models.CharField(blank=True, help_text='Application which has access to the API', max_length=200, verbose_name='application')),
-                ('administration', models.CharField(blank=True, help_text='Administration which has access to the API', max_length=200, verbose_name='administration')),
-                ('has_all_reading_rights', models.BooleanField(default=False, verbose_name='has all reading rights')),
+                (
+                    "token",
+                    models.CharField(
+                        max_length=40,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="token",
+                    ),
+                ),
+                (
+                    "contact_person",
+                    models.CharField(
+                        help_text="Name of the person in the organization who can access the API",
+                        max_length=200,
+                        verbose_name="contact person",
+                    ),
+                ),
+                (
+                    "email",
+                    models.EmailField(
+                        help_text="Email of the person, who can access the API",
+                        max_length=254,
+                        verbose_name="email",
+                    ),
+                ),
+                (
+                    "organization",
+                    models.CharField(
+                        blank=True,
+                        help_text="Organization which has access to the API",
+                        max_length=200,
+                        verbose_name="organization",
+                    ),
+                ),
+                (
+                    "last_modified",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="Last date when the token was modified",
+                        verbose_name="last modified",
+                    ),
+                ),
+                (
+                    "created",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Date when the token was created",
+                        verbose_name="created",
+                    ),
+                ),
+                (
+                    "application",
+                    models.CharField(
+                        blank=True,
+                        help_text="Application which has access to the API",
+                        max_length=200,
+                        verbose_name="application",
+                    ),
+                ),
+                (
+                    "administration",
+                    models.CharField(
+                        blank=True,
+                        help_text="Administration which has access to the API",
+                        max_length=200,
+                        verbose_name="administration",
+                    ),
+                ),
+                (
+                    "has_all_reading_rights",
+                    models.BooleanField(
+                        default=False, verbose_name="has all reading rights"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'application token authorization',
-                'verbose_name_plural': 'application token authorizations',
+                "verbose_name": "application token authorization",
+                "verbose_name_plural": "application token authorizations",
             },
         ),
         migrations.CreateModel(
-            name='AtomicPermission',
+            name="AtomicPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('object_type', models.CharField(choices=[('zaak', 'zaak'), ('document', 'document')], help_text='Type of the objects this permission applies to', max_length=50, verbose_name='object type')),
-                ('permission', models.CharField(help_text='Name of the permission', max_length=255, verbose_name='Permission')),
-                ('object_url', models.CharField(help_text='URL of the object in one of ZGW APIs this permission applies to', max_length=1000, verbose_name='object URL')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "object_type",
+                    models.CharField(
+                        choices=[("zaak", "zaak"), ("document", "document")],
+                        help_text="Type of the objects this permission applies to",
+                        max_length=50,
+                        verbose_name="object type",
+                    ),
+                ),
+                (
+                    "permission",
+                    models.CharField(
+                        help_text="Name of the permission",
+                        max_length=255,
+                        verbose_name="Permission",
+                    ),
+                ),
+                (
+                    "object_url",
+                    models.CharField(
+                        help_text="URL of the object in one of ZGW APIs this permission applies to",
+                        max_length=1000,
+                        verbose_name="object URL",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'atomic permission',
-                'verbose_name_plural': 'atomic permissions',
-                'unique_together': {('permission', 'object_url')},
+                "verbose_name": "atomic permission",
+                "verbose_name_plural": "atomic permissions",
+                "unique_together": {("permission", "object_url")},
             },
         ),
         migrations.CreateModel(
-            name='AuthorizationProfile',
+            name="AuthorizationProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('uuid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('name', models.CharField(help_text="Use an easily recognizable name that maps to the function of users that's unique.", max_length=255, unique=True, verbose_name='name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "uuid",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Use an easily recognizable name that maps to the function of users that's unique.",
+                        max_length=255,
+                        unique=True,
+                        verbose_name="name",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'authorization profile',
-                'verbose_name_plural': 'authorization profiles',
+                "verbose_name": "authorization profile",
+                "verbose_name_plural": "authorization profiles",
             },
         ),
         migrations.CreateModel(
-            name='Role',
+            name="Role",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Name of the role', max_length=100, unique=True, verbose_name='name')),
-                ('permissions', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=255, verbose_name='permission'), default=list, help_text='List of the permissions', size=None)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Name of the role",
+                        max_length=100,
+                        unique=True,
+                        verbose_name="name",
+                    ),
+                ),
+                (
+                    "permissions",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(
+                            max_length=255, verbose_name="permission"
+                        ),
+                        default=list,
+                        help_text="List of the permissions",
+                        size=None,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'role',
-                'verbose_name_plural': 'roles',
+                "verbose_name": "role",
+                "verbose_name_plural": "roles",
             },
         ),
         migrations.CreateModel(
-            name='UserAuthorizationProfile',
+            name="UserAuthorizationProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.DateTimeField(default=django.utils.timezone.now, verbose_name='start')),
-                ('end', models.DateTimeField(default=datetime.datetime(2999, 12, 31, 0, 0, tzinfo=utc), verbose_name='end')),
-                ('auth_profile', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.authorizationprofile')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "start",
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, verbose_name="start"
+                    ),
+                ),
+                (
+                    "end",
+                    models.DateTimeField(
+                        default=datetime.datetime(2999, 12, 31, 0, 0, tzinfo=utc),
+                        verbose_name="end",
+                    ),
+                ),
+                (
+                    "auth_profile",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.authorizationprofile",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='UserAtomicPermission',
+            name="UserAtomicPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('reason', models.CharField(blank=True, choices=[('betrokkene', 'betrokkene'), ('toegang verlenen', 'toegang verlenen'), ('activiteit', 'activiteit'), ('adviseur', 'adviseur'), ('accordeur', 'accordeur'), ('checklist', 'checklist')], help_text='The reason why the permission was granted to the user', max_length=50, verbose_name='reason')),
-                ('comment', models.CharField(blank=True, help_text='Comment provided by the granter of the permission', max_length=1000, verbose_name='comment')),
-                ('start_date', models.DateTimeField(default=django.utils.timezone.now, help_text='Start date of the permission', verbose_name='start date')),
-                ('end_date', models.DateTimeField(blank=True, help_text='End date of the permission', null=True, verbose_name='end date')),
-                ('access_request', models.ForeignKey(default=None, help_text='Access request that created this permission.', null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.accessrequest')),
-                ('atomic_permission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.atomicpermission')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "reason",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("betrokkene", "betrokkene"),
+                            ("toegang verlenen", "toegang verlenen"),
+                            ("activiteit", "activiteit"),
+                            ("adviseur", "adviseur"),
+                            ("accordeur", "accordeur"),
+                            ("checklist", "checklist"),
+                        ],
+                        help_text="The reason why the permission was granted to the user",
+                        max_length=50,
+                        verbose_name="reason",
+                    ),
+                ),
+                (
+                    "comment",
+                    models.CharField(
+                        blank=True,
+                        help_text="Comment provided by the granter of the permission",
+                        max_length=1000,
+                        verbose_name="comment",
+                    ),
+                ),
+                (
+                    "start_date",
+                    models.DateTimeField(
+                        default=django.utils.timezone.now,
+                        help_text="Start date of the permission",
+                        verbose_name="start date",
+                    ),
+                ),
+                (
+                    "end_date",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="End date of the permission",
+                        null=True,
+                        verbose_name="end date",
+                    ),
+                ),
+                (
+                    "access_request",
+                    models.ForeignKey(
+                        default=None,
+                        help_text="Access request that created this permission.",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="accounts.accessrequest",
+                    ),
+                ),
+                (
+                    "atomic_permission",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.atomicpermission",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'accounts_user_atomic_permissions',
+                "db_table": "accounts_user_atomic_permissions",
             },
         ),
         migrations.CreateModel(
-            name='BlueprintPermission',
+            name="BlueprintPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('hashkey', models.CharField(blank=True, max_length=32, null=True, unique=True)),
-                ('object_type', models.CharField(choices=[('zaak', 'zaak'), ('document', 'document')], help_text='Type of the objects this permission applies to', max_length=50, verbose_name='object type')),
-                ('policy', models.JSONField(help_text='Blueprint permission definitions, used to check the access to objects based on their properties i.e. ZAAKTYPE, INFORMATIEOBJECTTYPE', verbose_name='policy')),
-                ('role', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='blueprint_permissions', to='accounts.role')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "hashkey",
+                    models.CharField(blank=True, max_length=32, null=True, unique=True),
+                ),
+                (
+                    "object_type",
+                    models.CharField(
+                        choices=[("zaak", "zaak"), ("document", "document")],
+                        help_text="Type of the objects this permission applies to",
+                        max_length=50,
+                        verbose_name="object type",
+                    ),
+                ),
+                (
+                    "policy",
+                    models.JSONField(
+                        help_text="Blueprint permission definitions, used to check the access to objects based on their properties i.e. ZAAKTYPE, INFORMATIEOBJECTTYPE",
+                        verbose_name="policy",
+                    ),
+                ),
+                (
+                    "role",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="blueprint_permissions",
+                        to="accounts.role",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'blueprint permission',
-                'verbose_name_plural': 'blueprint permissions',
-                'ordering': ('role', 'object_type', 'policy__zaaktype_omschrijving'),
-                'unique_together': {('role', 'policy', 'object_type')},
+                "verbose_name": "blueprint permission",
+                "verbose_name_plural": "blueprint permissions",
+                "ordering": ("role", "object_type", "policy__zaaktype_omschrijving"),
+                "unique_together": {("role", "policy", "object_type")},
             },
         ),
         migrations.AddField(
-            model_name='authorizationprofile',
-            name='blueprint_permissions',
-            field=models.ManyToManyField(related_name='auth_profiles', to='accounts.BlueprintPermission', verbose_name='blueprint permissions'),
+            model_name="authorizationprofile",
+            name="blueprint_permissions",
+            field=models.ManyToManyField(
+                related_name="auth_profiles",
+                to="accounts.BlueprintPermission",
+                verbose_name="blueprint permissions",
+            ),
         ),
         migrations.CreateModel(
-            name='ApplicationTokenAuthorizationProfile',
+            name="ApplicationTokenAuthorizationProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.DateTimeField(default=django.utils.timezone.now, verbose_name='start')),
-                ('end', models.DateTimeField(blank=True, null=True, verbose_name='end')),
-                ('application', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.applicationtoken')),
-                ('auth_profile', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='accounts.authorizationprofile')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "start",
+                    models.DateTimeField(
+                        default=django.utils.timezone.now, verbose_name="start"
+                    ),
+                ),
+                (
+                    "end",
+                    models.DateTimeField(blank=True, null=True, verbose_name="end"),
+                ),
+                (
+                    "application",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.applicationtoken",
+                    ),
+                ),
+                (
+                    "auth_profile",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="accounts.authorizationprofile",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='applicationtoken',
-            name='auth_profiles',
-            field=models.ManyToManyField(blank=True, through='accounts.ApplicationTokenAuthorizationProfile', to='accounts.AuthorizationProfile'),
+            model_name="applicationtoken",
+            name="auth_profiles",
+            field=models.ManyToManyField(
+                blank=True,
+                through="accounts.ApplicationTokenAuthorizationProfile",
+                to="accounts.AuthorizationProfile",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='atomic_permissions',
-            field=models.ManyToManyField(blank=True, related_name='users', through='accounts.UserAtomicPermission', to='accounts.AtomicPermission', verbose_name='atomic permissions'),
+            model_name="user",
+            name="atomic_permissions",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="users",
+                through="accounts.UserAtomicPermission",
+                to="accounts.AtomicPermission",
+                verbose_name="atomic permissions",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='auth_profiles',
-            field=models.ManyToManyField(blank=True, through='accounts.UserAuthorizationProfile', to='accounts.AuthorizationProfile'),
+            model_name="user",
+            name="auth_profiles",
+            field=models.ManyToManyField(
+                blank=True,
+                through="accounts.UserAuthorizationProfile",
+                to="accounts.AuthorizationProfile",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='groups',
-            field=models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups'),
+            model_name="user",
+            name="groups",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+                related_name="user_set",
+                related_query_name="user",
+                to="auth.Group",
+                verbose_name="groups",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='manages_groups',
-            field=models.ManyToManyField(blank=True, related_name='manager', to='auth.Group', verbose_name='manages groups'),
+            model_name="user",
+            name="manages_groups",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="manager",
+                to="auth.Group",
+                verbose_name="manages groups",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='user_permissions',
-            field=models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions'),
+            model_name="user",
+            name="user_permissions",
+            field=models.ManyToManyField(
+                blank=True,
+                help_text="Specific permissions for this user.",
+                related_name="user_set",
+                related_query_name="user",
+                to="auth.Permission",
+                verbose_name="user permissions",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='user',
-            constraint=models.UniqueConstraint(condition=models.Q(('email', ''), _negated=True), fields=('email',), name='filled_email_unique'),
+            model_name="user",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("email", ""), _negated=True),
+                fields=("email",),
+                name="filled_email_unique",
+            ),
         ),
     ]

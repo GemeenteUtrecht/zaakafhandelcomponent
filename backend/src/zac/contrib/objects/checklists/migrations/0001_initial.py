@@ -16,18 +16,32 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ChecklistLock',
+            name="ChecklistLock",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('url', models.URLField(unique=True)),
-                ('zaak', models.URLField(unique=True)),
-                ('zaak_identificatie', models.CharField(blank=True, max_length=255)),
-                ('created', models.DateTimeField(default=django.utils.timezone.now)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("url", models.URLField(unique=True)),
+                ("zaak", models.URLField(unique=True)),
+                ("zaak_identificatie", models.CharField(blank=True, max_length=255)),
+                ("created", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Checklist lock',
-                'verbose_name_plural': 'Checklist locks',
+                "verbose_name": "Checklist lock",
+                "verbose_name_plural": "Checklist locks",
             },
         ),
     ]
