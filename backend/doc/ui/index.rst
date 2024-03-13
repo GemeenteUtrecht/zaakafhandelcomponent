@@ -1,6 +1,8 @@
-===
-UI
-===
+.. _ui_index:
+
+==
+UI design
+==
 
 This section of the documentation is aimed at general users.
 
