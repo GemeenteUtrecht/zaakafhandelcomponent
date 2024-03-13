@@ -18,16 +18,14 @@
   <ng-template #default>
     <ng-container *ngIf="target === '_blank'">
       <gu-message type="primary" class='d-block mb-4'>
-        <p>De taak is geopend in een nieuw pop-up venster. Zorg er voor dat uw browser pop-up blockers uitgeschakeld zijn.</p>
-
-        <p class="p--marginsmall"><strong>Heeft u de taak afgerond? Klik dan op de knop hieronder.</strong></p>
+        <p>De vervolgzaak is geopend in een nieuw venster, zorg ervoor dat uw pop-up blockers uitgeschakeld zijn. Het proces op de huidige zaak is succesvol doorlopen, sluit openstaande taken en ga verder met behandelen in de vervolgzaak.</p>
       </gu-message>
       <div class="d-flex justify-content-start">
         <button gu-button
                 (click)="submitForm()"
                 [disabled]="isSubmitting"
                 [loading]="isSubmitting">
-          Taak afronden
+          Taak afhandelen
         </button>
       </div>
     </ng-container>
