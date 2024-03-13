@@ -37,6 +37,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.maxDiff = None
         super().setUpTestData()
 
         objects_service = Service.objects.create(
@@ -66,7 +67,7 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             is_staff=True,
             username=OUDBEHANDELAREN_OBJECT["record"]["data"]["oudbehandelaren"][0][
                 "identificatie"
-            ],
+            ].split(":")[-1],
         )
 
     def test_retrieve_oudbehandelaren(self, m):
@@ -95,6 +96,16 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
                         "ended": "2023-01-01T00:00:00Z",
                         "started": "2023-01-02T00:00:00Z",
                         "user": {
+                            "id": self.user.id,
+                            "username": self.user.username,
+                            "firstName": "",
+                            "fullName": self.user.username,
+                            "lastName": "",
+                            "isStaff": True,
+                            "email": self.user.email,
+                            "groups": [],
+                        },
+                        "changer": {
                             "id": self.user.id,
                             "username": self.user.username,
                             "firstName": "",

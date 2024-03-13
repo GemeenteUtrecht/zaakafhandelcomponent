@@ -15,15 +15,13 @@ class OudbehandelaarSerializer(APIModelSerializer):
     user = UserSerializer(
         help_text=_("User data of `oudbehandelaar`."),
     )
+    changer = UserSerializer(
+        help_text=_("User data of user that created `oudbehandelaar`."), allow_null=True
+    )
 
     class Meta:
         model = Oudbehandelaar
-        fields = (
-            "email",
-            "ended",
-            "started",
-            "user",
-        )
+        fields = ("email", "ended", "started", "user", "changer")
         extra_kwargs = {
             "ended": {"help_text": _("Datetime at which ROL ended.")},
             "started": {
