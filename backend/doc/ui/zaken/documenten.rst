@@ -5,7 +5,7 @@ Documenten
 
 This is the overview of all the documents related to a :class:`.Zaak`.
 
-.. figure:: ../_assets/ui/zaken/documenten/documenten.png
+.. figure:: ../../_assets/ui/zaken/documenten/documenten.png
 
     Document overview interface
 
@@ -18,10 +18,10 @@ The user can perform these actions on a document:
 
 There are two ways to add a new document to a case:
 
-.. figure:: ../_assets/ui/zaken/documenten/documenten_add.png
+.. figure:: ../../_assets/ui/zaken/documenten/documenten_add.png
 
     1. Add document from drive
 
-.. figure:: ../_assets/ui/zaken/documenten/documenten_add-alfresco.png
+.. figure:: ../../_assets/ui/zaken/documenten/documenten_add-alfresco.png
 
     2. Add Alfresco document

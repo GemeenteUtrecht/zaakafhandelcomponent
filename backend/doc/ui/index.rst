@@ -1,8 +1,6 @@
-.. _ui_index:
-
-==
-UI design
-==
+============
+UI/UX design
+============
 
 This section of the documentation is aimed at general users.
 
@@ -12,7 +10,7 @@ This section of the documentation is aimed at general users.
 
 .. toctree::
    :maxdepth: 2
-   :caption: UI
+   :caption: Components
 
    startpagina
    werkvoorraad
@@ -23,5 +21,4 @@ This section of the documentation is aimed at general users.
    autorisaties
    kownsl
    login
-
 

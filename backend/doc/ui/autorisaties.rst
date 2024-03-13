@@ -4,7 +4,7 @@ Autorisaties
 ======================
 
 Autorisatieprofielen
---------------
+---------------------
 
 Authorization profiles consist of one or more roles along with their associated case types.
 
@@ -21,11 +21,11 @@ Rollen
 
 A role is a set of rights.
 
-.. figure:: ../_assets/ui/autorisaties/autorisaties_rollen.png
+.. figure:: ../../_assets/ui/autorisaties/autorisaties_rollen.png
 
     Roles
 
-.. figure:: ../_assets/ui/autorisaties/autorisaties_rollen_add.png
+.. figure:: ../../_assets/ui/autorisaties/autorisaties_rollen_add.png
 
     Create role
 
