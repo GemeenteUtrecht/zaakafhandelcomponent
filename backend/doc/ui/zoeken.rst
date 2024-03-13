@@ -13,7 +13,7 @@ Find a case with properties as filters.
     Search case
 
 Zoeken op object
---------------
+-----------------
 
 Find an object with properties as filters.
 
