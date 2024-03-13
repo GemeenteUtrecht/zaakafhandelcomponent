@@ -17,7 +17,7 @@ eigen backend.
 
 ## Documentatie
 
-Voor configuratie, instellingen en algemene beheerdocumentatie: [![Documentation status](https://readthedocs.org/projects/zac-gu/badge/?version=latest)](https://zac-gu.readthedocs.io/en/latest/?badge=latest)  
+Voor configuratie, instellingen en algemene beheerdocumentatie: [![Documentation status](https://readthedocs.org/projects/zac-gu/badge/?version=latest)](https://zac-gu.readthedocs.io/nl/latest/?badge=latest)  
 Voor [API documentatie](https://zac.cg-intern.utrecht.nl/api/docs/).
 
 ## Projectstructuur
