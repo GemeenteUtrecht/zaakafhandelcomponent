@@ -4,6 +4,7 @@ import uuid
 from datetime import date, datetime
 from hashlib import blake2b
 from typing import Optional
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
@@ -177,7 +178,9 @@ class AccessRequest(models.Model):
     """
 
     requester = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="initiated_requests"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="initiated_requests",
     )
     handler = models.ForeignKey(
         settings.AUTH_USER_MODEL,

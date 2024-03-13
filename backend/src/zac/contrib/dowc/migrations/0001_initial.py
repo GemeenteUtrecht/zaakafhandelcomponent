@@ -9,18 +9,34 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('zgw_consumers', '0017_auto_20240313_1347'),
+        ("zgw_consumers", "0016_auto_20220818_1412"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DowcConfig',
+            name="DowcConfig",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('service', models.ForeignKey(limit_choices_to={'api_type': 'orc'}, null=True, on_delete=django.db.models.deletion.SET_NULL, to='zgw_consumers.service')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "service",
+                    models.ForeignKey(
+                        limit_choices_to={"api_type": "orc"},
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="zgw_consumers.service",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Dowc configuration',
+                "verbose_name": "Dowc configuration",
             },
         ),
     ]
