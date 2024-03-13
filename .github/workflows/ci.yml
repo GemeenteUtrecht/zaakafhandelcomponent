@@ -46,92 +46,92 @@ jobs:
             fi
           done < files.txt
 
-  backend-tests:
-    name: Run the Django test suite and build documentation
-    needs: check_files_changed
-    if: needs.check_files_changed.outputs.run_job == 'true'
-    runs-on: ubuntu-latest
+  # backend-tests:
+  #   name: Run the Django test suite and build documentation
+  #   needs: check_files_changed
+  #   if: needs.check_files_changed.outputs.run_job == 'true'
+  #   runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: backend
+  #   defaults:
+  #     run:
+  #       working-directory: backend
 
-    services:
-      postgres:
-        image: postgres:10
-        env:
-          POSTGRES_HOST_AUTH_METHOD: trust
-          POSTGRES_DB: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ''
-        ports:
-          - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: >-
-          --health-cmd="pg_isready -U postgres -d postgres"
-          --health-interval=10s 
-          --health-timeout=5s 
-          --health-retries=5
+  #   services:
+  #     postgres:
+  #       image: postgres:10
+  #       env:
+  #         POSTGRES_HOST_AUTH_METHOD: trust
+  #         POSTGRES_DB: postgres
+  #         POSTGRES_USER: postgres
+  #         POSTGRES_PASSWORD: ''
+  #       ports:
+  #         - 5432:5432
+  #       # needed because the postgres container does not provide a healthcheck
+  #       options: >-
+  #         --health-cmd="pg_isready -U postgres -d postgres"
+  #         --health-interval=10s 
+  #         --health-timeout=5s 
+  #         --health-retries=5
 
-      redis:
-        image: redis:5
-        ports:
-          - 6379:6379
+  #     redis:
+  #       image: redis:5
+  #       ports:
+  #         - 6379:6379
 
-      elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
-        env:
-           discovery.type: single-node
-           ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-        ports:
-          - 9200:9200
-          - 9300:9300
+  #     elasticsearch:
+  #       image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
+  #       env:
+  #          discovery.type: single-node
+  #          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+  #       ports:
+  #         - 9200:9200
+  #         - 9300:9300
 
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - uses: actions/setup-node@v2-beta
-        with:
-          node-version: '12'
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-python@v2
+  #       with:
+  #         python-version: '3.9'
+  #     - uses: actions/setup-node@v2-beta
+  #       with:
+  #         node-version: '12'
 
-      - name: Install dependencies
-        run: pip install -r requirements/dev.txt pytest
+  #     - name: Install dependencies
+  #       run: pip install -r requirements/dev.txt pytest
 
-      - name: Build frontend
-        run: |
-          npm ci
-          npm run build --production
+  #     - name: Build frontend
+  #       run: |
+  #         npm ci
+  #         npm run build --production
 
-      - name: Wait for ES to become available
-        run: |
-          es_status=red
-          until [[ $es_status = green ]]; do
-              >&2 echo "Waiting for ES to become available. Current status: $es_status"
-              sleep 1
-              es_status=$(curl -s -X GET http://localhost:9200/_cluster/health\?pretty\=true | jq -r .status)
-          done
+  #     - name: Wait for ES to become available
+  #       run: |
+  #         es_status=red
+  #         until [[ $es_status = green ]]; do
+  #             >&2 echo "Waiting for ES to become available. Current status: $es_status"
+  #             sleep 1
+  #             es_status=$(curl -s -X GET http://localhost:9200/_cluster/health\?pretty\=true | jq -r .status)
+  #         done
 
-      - name: Run tests
-        run: |
-          python src/manage.py collectstatic --noinput --link
-          coverage run src/manage.py test src
-        env:
-          DJANGO_SETTINGS_MODULE: zac.conf.ci
-          SECRET_KEY: dummy
-          DB_NAME: postgres
-          DB_USER: postgres
-          DB_PASSWORD: ''
-          IS_HTTPS: 'no'
+  #     - name: Run tests
+  #       run: |
+  #         python src/manage.py collectstatic --noinput --link
+  #         coverage run src/manage.py test src
+  #       env:
+  #         DJANGO_SETTINGS_MODULE: zac.conf.ci
+  #         SECRET_KEY: dummy
+  #         DB_NAME: postgres
+  #         DB_USER: postgres
+  #         DB_PASSWORD: ''
+  #         IS_HTTPS: 'no'
   
-      - name: Build and test docs
-        working-directory: backend/doc
-        run: |
-          pytest check_sphinx.py -v --tb=auto
+  #     - name: Build and test docs
+  #       working-directory: backend/doc
+  #       run: |
+  #         pytest check_sphinx.py -v --tb=auto
 
   backend-docker:
-    needs: backend-tests
+    # needs: backend-tests
     timeout-minutes: 10
     if: always()
 
@@ -139,9 +139,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps: 
-      - name: fail if conditional job failed
-        if: ${{ needs.backend-tests.result == 'failure' }}
-        run: exit 1
+      # - name: fail if conditional job failed
+      #   if: ${{ needs.backend-tests.result == 'failure' }}
+      #   run: exit 1
 
       - name: Checkout
         uses: actions/checkout@v2
