@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from hashlib import blake2b
 from typing import Optional
-
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -161,7 +161,7 @@ class UserAuthorizationProfile(models.Model):
     User authorization profiles serve to relate a user to an authorization profile from a start to end date.
     """
 
-    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     auth_profile = models.ForeignKey("AuthorizationProfile", on_delete=models.CASCADE)
 
     start = models.DateTimeField(_("start"), default=timezone.now)
@@ -177,10 +177,10 @@ class AccessRequest(models.Model):
     """
 
     requester = models.ForeignKey(
-        "User", on_delete=models.CASCADE, related_name="initiated_requests"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="initiated_requests"
     )
     handler = models.ForeignKey(
-        "User",
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -272,7 +272,7 @@ class UserAtomicPermission(models.Model):
     User atomic permissions serve to relate a user to an atomic permission from a start to end date.
     """
 
-    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     atomic_permission = models.ForeignKey("AtomicPermission", on_delete=models.CASCADE)
     access_request = models.ForeignKey(
         "AccessRequest",

@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
+from django.conf import settings
 
 class ChecklistLock(models.Model):
     """
@@ -13,7 +13,7 @@ class ChecklistLock(models.Model):
     """
 
     url = models.URLField(unique=True)
-    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     zaak = models.URLField(unique=True)
     zaak_identificatie = models.CharField(max_length=255, blank=True)
     created = models.DateTimeField(default=timezone.now)
