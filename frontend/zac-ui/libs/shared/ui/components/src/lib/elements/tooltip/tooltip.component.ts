@@ -7,7 +7,7 @@ import { Component, Input, OnInit } from '@angular/core';
 })
 export class TooltipComponent implements OnInit {
 
-  @Input() position: 'top' | 'top-center' | 'bottom' = 'top'
+  @Input() position: 'top' | 'top-center' | 'bottom' | 'absolute' = 'top'
   @Input() type: 'primary' | 'accent' | 'warn' = 'primary'
   @Input() inline: boolean;
   isHovered = false;

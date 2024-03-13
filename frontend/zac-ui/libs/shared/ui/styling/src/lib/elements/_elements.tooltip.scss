@@ -30,6 +30,12 @@
     z-index: 3;
   }
 
+  &--absolute &__content {
+    position: absolute;
+    left: 26px;
+    bottom: 0;
+  }
+
   &--top &__content {
     bottom: 26px;
   }
