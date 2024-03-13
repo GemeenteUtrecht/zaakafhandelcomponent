@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group
-
+from django.conf import settings
 import factory
 import factory.fuzzy
 
@@ -12,7 +12,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: f"user-{n}@zac")
 
     class Meta:
-        model = "accounts.User"
+        model = settings.AUTH_USER_MODEL
         django_get_or_create = ("username",)
 
 
