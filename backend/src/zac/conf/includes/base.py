@@ -348,7 +348,7 @@ LOGGING = {
 #
 # AUTH settings - user accounts, passwords, backends...
 #
-AUTH_USER_MODEL = "accounts.User"
+# AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
