@@ -23,6 +23,7 @@ Welcome to the documentation for the zaakafhandelcomponent (ZAC).
    developers/index
    development/index
    models/index
+   ui/index
    troubleshooting/index
 
 Indices and tables
