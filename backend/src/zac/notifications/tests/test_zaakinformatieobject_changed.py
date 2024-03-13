@@ -13,7 +13,8 @@ from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.models import APITypes, Service
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
 from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER

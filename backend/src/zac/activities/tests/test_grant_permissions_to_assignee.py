@@ -3,7 +3,8 @@ from django.urls import reverse
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zgw_consumers.models import APITypes, Service
+from zgw_consumers.constants import APITypes
+from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import PermissionReason

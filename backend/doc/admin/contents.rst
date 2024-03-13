@@ -139,14 +139,6 @@ Camunda tasks
 
 :class:`.KillableTask`: manage which camunda tasks are killable and which aren't. I.e., can be cancelled by users.
 
-Django auth adfs db
--------------------
-
-ADFS configuration (legacy)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-:class:`.ADFSConfig`: manage the ADFS config. You can switch the ADFS on or off, configure the settings, secrets and username claims.
-
 Elasticsearch configuration
 ---------------------------
 
@@ -197,7 +189,7 @@ Forms configuration
 Global configuration
 ~~~~~~~~~~~~~~~~~~~~
 
-:class:`.CoreConfig`: manage the core configuration of the ZAC. In here you configure the primary services, authorization ID of the BPTL and whether or not you allow non-ADFS login.
+:class:`.CoreConfig`: manage the core configuration of the ZAC. In here you configure the primary services, authorization ID of the BPTL and whether or not you allow non-SSO login.
 The names of the fields are designed to be self-explanatory.
 
 Kadaster configuration

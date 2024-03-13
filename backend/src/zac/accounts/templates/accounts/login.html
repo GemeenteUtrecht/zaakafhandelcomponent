@@ -6,15 +6,6 @@
 
 
 {% block content %}
-{% get_solo 'django_auth_adfs_db.ADFSConfig' as adfs_config %}
-{% if adfs_config.enabled %}
-    <div class="form form--centered form--centered-content">
-        <a href="{% url 'django_auth_adfs:login' %}" class="btn btn--primary">
-            {% trans "Login with ADFS" %}
-        </a>
-    </div>
-    <div class="divider divider--short"></div>
-{% endif %}
 {% get_solo 'mozilla_django_oidc_db.OpenIDConnectConfig' as oidc_config %}
 {% if oidc_config.enabled %}
     <div class="form form--centered form--centered-content">
@@ -25,7 +16,7 @@
     <div class="divider divider--short"></div>
 {% endif %}
 {% get_solo 'core.CoreConfig' as core_config %}
-{% if core_config.non_adfs_login_enabled %}
+{% if core_config.non_sso_login_enabled %}
     <form action="." method="post" class="form form--centered form--large">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.GET.next }}">
@@ -37,7 +28,7 @@
         {% form_field form.username %}
         {% form_field form.password %}
 
-        {% if adfs_config.enabled %}
+        {% if oidc_config.enabled %}
             {% widget 'form:submit' label=_("Log in") primary=False %}
         {% else %}
             {% widget 'form:submit' label=_("Log in") primary=True %}
