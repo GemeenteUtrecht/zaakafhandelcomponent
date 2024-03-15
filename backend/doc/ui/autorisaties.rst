@@ -21,11 +21,11 @@ Rollen
 
 A role is a set of rights.
 
-.. figure:: ../../_assets/ui/autorisaties/autorisaties_rollen.png
+.. figure:: ../_assets/ui/autorisaties/autorisaties_rollen.png
 
     Roles
 
-.. figure:: ../../_assets/ui/autorisaties/autorisaties_rollen_add.png
+.. figure:: ../_assets/ui/autorisaties/autorisaties_rollen_add.png
 
     Create role
 
@@ -34,10 +34,10 @@ Groepen
 
 Group of users
 
-.. figure:: ../_assets/ui/zaken/autorisaties/autorisaties_gebruikersgroepen.png
+.. figure:: ../_assets/ui/autorisaties/autorisaties_gebruikersgroepen.png
 
     User groups
 
-.. figure:: ../_assets/ui/zaken/autorisaties/autorisaties_gebruikersgroepen_add.png
+.. figure:: ../_assets/ui/autorisaties/autorisaties_gebruikersgroepen_add.png
 
     Create user groups
