@@ -14,11 +14,12 @@ This section of the documentation is aimed at general users.
 
    startpagina
    werkvoorraad
+   zaken/index
    zoeken
    zaak-starten
    dashboard
    rapportages
    autorisaties
-   kownsl
+   kownsl/index
    login
 

@@ -34,10 +34,10 @@ Groepen
 
 Group of users
 
-.. figure:: ../_assets/ui/autorisaties/autorisaties_gebruikersgroepen.png
+.. figure:: ../_assets/ui/autorisaties/autorisaties_gebruikersgroep.png
 
     User groups
 
-.. figure:: ../_assets/ui/autorisaties/autorisaties_gebruikersgroepen_add.png
+.. figure:: ../_assets/ui/autorisaties/autorisaties_gebruikersgroep_add.png
 
     Create user groups
