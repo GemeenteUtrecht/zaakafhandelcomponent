@@ -200,7 +200,7 @@ jobs:
 
 
   frontend-docker:
-    needs: frontend-tests
+    # needs: frontend-tests
 
     name: Build (and push) frontend Docker image
     runs-on: ubuntu-latest
