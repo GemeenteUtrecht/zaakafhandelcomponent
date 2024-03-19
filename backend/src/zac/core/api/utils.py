@@ -101,7 +101,7 @@ def convert_eigenschap_spec_to_json_schema(spec) -> dict:
 
     if spec.formaat == "tekst":
         tekst_schema = {"min_length": 1, "max_length": int(spec.lengte)}
-        if int(spec.lengte) > 200:
+        if int(spec.lengte) > 254:
             tekst_schema["format"] = "long"
         json_schema.update(tekst_schema)
 
