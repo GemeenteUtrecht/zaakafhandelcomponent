@@ -46,7 +46,7 @@ jobs:
             fi
           done < files.txt
 
-  # backend-tests:
+  backend-tests:
     name: Run the Django test suite and build documentation
     needs: check_files_changed
     if: needs.check_files_changed.outputs.run_job == 'true'
