@@ -294,10 +294,12 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
   }
 
   setUrl(tab) {
-    if (tab === 'acties') {
-      this.ketenProcessenComponent.setIsVisible(true);
-    } else {
-      this.ketenProcessenComponent.setIsVisible(false);
+    if (this.ketenProcessenComponent) {
+      if (tab === 'acties') {
+        this.ketenProcessenComponent.setIsVisible(true);
+      } else {
+        this.ketenProcessenComponent.setIsVisible(false);
+      }
     }
     this.location.go(this.getTabLink(tab))
   }
