@@ -125,6 +125,9 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   /** @type {boolean} loading indicator */
   isLoadingResults = false;
 
+  /** @type {boolean} check if submit button has been used*/
+  hasSubmittedOnce = false;
+
   /**
    * Constructor method.
    * @param {FormBuilder} fb
@@ -324,7 +327,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
         name: `property`,
         key: `${objectType.uuid}.property`,
         required: false,
-        value: choices[0].value,
+        value: '',
       }
     }).filter(f => f);
   }
@@ -344,10 +347,11 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
         let activeMapMarkers = []
 
-        if (!zaakObjects.results.length) {
+        if (zaakObjects.results.length === 0) {
           this.isLoading = false;
           this.isLoadingResults = false;
           this.isLoadingResult.emit(false);
+          this.cdRef.detectChanges();
           return;
         }
 
@@ -453,6 +457,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
     this.searchObjects.emit();
     this.isLoading = true;
     this.isLoadingResult.emit(true);
+    this.hasSubmittedOnce = true;
     const geometry: Geometry = (data.geometry) ? JSON.parse(data.geometry) : null;
 
     this.zaakObjects = [];
