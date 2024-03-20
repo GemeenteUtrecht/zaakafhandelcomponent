@@ -253,7 +253,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             specificatie={
                 "groep": "dummy",
                 "formaat": "tekst",
-                "lengte": "201",
+                "lengte": "255",
                 "kardinaliteit": "1",
                 "waardenverzameling": [],
             },
@@ -286,7 +286,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
                         "type": "string",
                         "format": "long",
                         "minLength": 1,
-                        "maxLength": 201,
+                        "maxLength": 255,
                     },
                 },
                 {
