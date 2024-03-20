@@ -4,7 +4,7 @@
   <p *ngIf="reviewRequestSummary?.locked && reviewRequestSummary?.lockReason">
     {{reviewRequestSummary.lockReason}}
   </p>
-  <div class="gu-adviseren-accorderen-detail__table mb-4">
+  <div class="gu-adviseren-accorderen-detail__table card mb-4">
     <gu-table [table]="table"
               [expandable]="true"
               [wrap]="true"
@@ -13,9 +13,9 @@
     </gu-table>
   </div>
 
-  <div class="open-reviews" *ngIf="reviewRequestDetails && reviewRequestDetails.openReviews?.length > 0">
+  <div class="open-reviews card" *ngIf="reviewRequestDetails && reviewRequestDetails.openReviews?.length > 0">
     <h4>Openstaande aanvragen</h4>
-    <div class="open-review" *ngFor="let openReview of reviewRequestDetails.openReviews">
+    <div class="open-review ml-4" *ngFor="let openReview of reviewRequestDetails.openReviews">
       <span>Deadline: </span><span><strong>{{openReview.deadline | date:'shortDate'}}</strong></span>
       <ul>
         <ng-container *ngFor="let user of openReview.users">
@@ -26,9 +26,11 @@
         </ng-container>
       </ul>
     </div>
-    <button gu-button *ngIf="!reviewRequestSummary?.locked && !reviewRequestDetails.isBeingReconfigured" class="mb-2" buttonStyle="tertiary" size="small" (click)="editReceivers(reviewRequestDetails.id)">
-      Ontvangers aanpassen
-    </button>
+    <div class="d-flex justify-content-end">
+      <button gu-button *ngIf="!reviewRequestSummary?.locked && !reviewRequestDetails.isBeingReconfigured" class="mb-2" buttonStyle="tertiary" size="small" (click)="editReceivers(reviewRequestDetails.id)">
+        Ontvangers aanpassen
+      </button>
+    </div>
     <p class="p--danger" *ngIf="reviewRequestDetails.isBeingReconfigured">Er staat een actie klaar om de ontvangers van deze aanvraag aan te passen.</p>
   </div>
 </div>

@@ -140,7 +140,7 @@ export class KownslSummaryComponent implements OnInit {
    * @return {Table}
    */
   reviewRequestSummaryAsTable(reviewRequestSummaries: ReviewRequestSummary[]): Table {
-    const table = new Table(['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', 'Laatste update', '', ''], []);
+    const table = new Table(['', 'Resultaat', 'Soort aanvraag', 'Opgehaald', '', 'Laatste update', '', ''], []);
 
     table.bodyData = reviewRequestSummaries.map((reviewRequestSummary): RowData => {
       const reviewRequestDetails = this.getReviewRequestDetailsForSummary(reviewRequestSummary);
@@ -163,6 +163,16 @@ export class KownslSummaryComponent implements OnInit {
           'type': reviewRequestSummary.reviewType === 'approval' ? 'Akkoord aanvraag' : 'Advies aanvraag',
 
           'opgehaald': `${reviewRequestSummary.completed}/${reviewRequestSummary.numAssignedUsers}`,
+
+          'toelichting': reviewRequestSummary.completed > 0 ? {
+            type: 'button',
+            label: 'Klik hier om toelichting te lezen',
+            style: 'no-minwidth',
+            value: reviewRequestSummary
+          } : {
+            type: 'text',
+            label: 'Geen toelichting bijgevoegd',
+          },
 
           'last_update': reviewRequestSummary.locked
             ? reviewRequestSummary.lockReason
@@ -227,6 +237,10 @@ export class KownslSummaryComponent implements OnInit {
         .subscribe(() => {
           this.snackbarService.openSnackBar('Verzonden', 'Sluiten', 'primary');
         })
+    } else if (event.toelichting) {
+      this.selectedReviewRequestSummary = event.toelichting;
+      this.getReviewRequestDetails(event.toelichting);
+      this.modalService.open('adviseren-accorderen-detail-modal')
     }
   }
 
