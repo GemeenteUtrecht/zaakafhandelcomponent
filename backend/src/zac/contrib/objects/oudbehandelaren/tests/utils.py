@@ -33,6 +33,7 @@ OUDBEHANDELAREN_OBJECTTYPE = {
                         "ended": {"type": "string"},
                         "identificatie": {"type": "string"},
                         "started": {"type": "string"},
+                        "changedBy": {"type": "string"},
                     },
                 },
             },
@@ -60,7 +61,8 @@ OUDBEHANDELAREN_OBJECT = {
                     "email": "some-email@email.com",
                     "ended": "2023-01-01",
                     "started": "2023-01-02",
-                    "identificatie": "some-username",
+                    "identificatie": "user:some-username",
+                    "changedBy": "user:some-username",
                 }
             ],
         },
