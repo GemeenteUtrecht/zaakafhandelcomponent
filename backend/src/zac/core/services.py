@@ -117,7 +117,9 @@ def _get_from_catalogus(resource: str, catalogus: str = "", **extra_query) -> Li
 
     result = []
     for client in clients:
-        result += get_paginated_results(client, resource, query_params=query_params)
+        result += get_paginated_results(
+            client, resource, request_kwargs={"params": query_params}
+        )
 
     return result
 
@@ -237,7 +239,7 @@ def get_zaaktype(url: str, request: Optional[Request] = None) -> Optional[ZaakTy
 def get_statustypen(zaaktype: ZaakType) -> List[StatusType]:
     client = _client_from_object(zaaktype)
     _statustypen = get_paginated_results(
-        client, "statustype", query_params={"zaaktype": zaaktype.url}
+        client, "statustype", request_kwargs={"params": {"zaaktype": zaaktype.url}}
     )
     statustypen = factory(StatusType, _statustypen)
     return statustypen
@@ -257,7 +259,7 @@ def get_resultaattypen(zaaktype: ZaakType) -> List[ResultaatType]:
     resultaattypen = get_paginated_results(
         client,
         "resultaattype",
-        query_params={"zaaktype": zaaktype.url},
+        request_kwargs={"params": {"zaaktype": zaaktype.url}},
     )
 
     resultaattypen = factory(ResultaatType, resultaattypen)
@@ -275,7 +277,7 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
     eigenschappen = get_paginated_results(
         client,
         "eigenschap",
-        query_params={"zaaktype": zaaktype.url},
+        request_kwargs={"params": {"zaaktype": zaaktype.url}},
     )
 
     eigenschappen = factory(Eigenschap, eigenschappen)
@@ -349,7 +351,9 @@ def get_roltypen(zaaktype: ZaakType, omschrijving_generiek: str = "") -> list:
     if omschrijving_generiek:
         query_params.update({"omschrijvingGeneriek": omschrijving_generiek})
     client = _client_from_object(zaaktype)
-    roltypen = get_paginated_results(client, "roltype", query_params=query_params)
+    roltypen = get_paginated_results(
+        client, "roltype", request_kwargs={"params": query_params}
+    )
     roltypen = factory(RolType, roltypen)
     return roltypen
 
@@ -363,7 +367,9 @@ def get_informatieobjecttypen_for_zaaktype(
     """
     client = _client_from_object(zaaktype)
     results = get_paginated_results(
-        client, "zaakinformatieobjecttype", query_params={"zaaktype": zaaktype.url}
+        client,
+        "zaakinformatieobjecttype",
+        request_kwargs={"params": {"zaaktype": zaaktype.url}},
     )
     urls = [
         iot["informatieobjecttype"]
@@ -435,7 +441,7 @@ def _find_zaken(
     _zaken = get_paginated_results(
         client,
         "zaak",
-        query_params=query,
+        request_kwargs={"params": query},
         minimum=minimum,
     )
     return _zaken
@@ -471,7 +477,9 @@ def get_zaken_all(
     clients = [zrc.build_client() for zrc in zrcs]
 
     def _get_paginated_results(client):
-        return get_paginated_results(client, "zaak", query_params=query_params)
+        return get_paginated_results(
+            client, "zaak", request_kwargs={"params": query_params}
+        )
 
     with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = executor.map(_get_paginated_results, clients)
@@ -501,7 +509,7 @@ def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
         related_objects = []
         for query in queries:
             related_objects += get_paginated_results(
-                client, resource, query_params=query
+                client, resource, request_kwargs={"params": query}
             )
         return related_objects
 
@@ -578,7 +586,9 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
         zaak = None
         for zrc in zrcs:
             client = zrc.build_client()
-            results = get_paginated_results(client, "zaak", query_params=query)
+            results = get_paginated_results(
+                client, "zaak", request_kwargs={"params": query}
+            )
 
             if not results:
                 continue
@@ -609,7 +619,7 @@ def get_statussen(zaak: Zaak) -> List[Status]:
 
     # fetch the statusses
     _statussen = get_paginated_results(
-        client, "status", query_params={"zaak": zaak.url}
+        client, "status", request_kwargs={"params": {"zaak": zaak.url}}
     )
 
     statussen = factory(Status, _statussen)
@@ -807,7 +817,7 @@ def get_zaakobjecten(zaak: Zaak) -> List[ZaakObject]:
     zaakobjecten = get_paginated_results(
         client,
         "zaakobject",
-        query_params={"zaak": zaak.url},
+        request_kwargs={"params": {"zaak": zaak.url}},
     )
 
     return factory(ZaakObject, zaakobjecten)
@@ -820,7 +830,7 @@ def get_zaakobjecten_related_to_object(object_url: str) -> List[ZaakObject]:
     for zrc in zrcs:
         client = zrc.build_client()
         result = get_paginated_results(
-            client, "zaakobject", query_params={"object": object_url}
+            client, "zaakobject", request_kwargs={"params": {"object": object_url}}
         )
 
         if not result:
@@ -852,7 +862,9 @@ def get_rollen(zaak: Zaak) -> List[Rol]:
     perf_logger.info("      Fetching rollen for zaak %s", zaak.identificatie)
     # fetch the rollen
     client = _client_from_object(zaak)
-    _rollen = get_paginated_results(client, "rol", query_params={"zaak": zaak.url})
+    _rollen = get_paginated_results(
+        client, "rol", request_kwargs={"params": {"zaak": zaak.url}}
+    )
     perf_logger.info("      Done fetching rollen for zaak %s", zaak.identificatie)
 
     rollen = factory(Rol, _rollen)
@@ -1014,7 +1026,9 @@ def get_rollen_all(**query_params) -> List[Rol]:
     for zrc in zrcs:
         client = zrc.build_client()
 
-        _rollen = get_paginated_results(client, "rol", query_params=query_params)
+        _rollen = get_paginated_results(
+            client, "rol", request_kwargs={"params": query_params}
+        )
 
         all_rollen += factory(Rol, _rollen)
 
@@ -1137,7 +1151,7 @@ def find_document(
         for drc in drcs:
             client = drc.build_client()
             results = get_paginated_results(
-                client, "enkelvoudiginformatieobject", query_params=query
+                client, "enkelvoudiginformatieobject", request_kwargs={"params": query}
             )
 
             if not results:
@@ -1315,7 +1329,9 @@ def get_besluiten(zaak: Zaak) -> List[Besluit]:
     results = []
     for brc in brcs:
         client = brc.build_client()
-        results += get_paginated_results(client, "besluit", query_params=query)
+        results += get_paginated_results(
+            client, "besluit", request_kwargs={"params": query}
+        )
 
     besluiten = factory(Besluit, results)
 
