@@ -836,16 +836,12 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         m.delete(initiator["url"], status_code=status.HTTP_204_NO_CONTENT)
 
         with patch(
-            "zac.contrib.objects.oudbehandelaren.utils.fetch_objecttype",
-            return_value=OUDBEHANDELAREN_OBJECTTYPE,
+            "zac.contrib.objects.oudbehandelaren.utils.update_object_record_data",
+            return_value=OUDBEHANDELAREN_OBJECT,
         ):
-            with patch(
-                "zac.contrib.objects.oudbehandelaren.utils.fetch_oudbehandelaren_object",
-                return_value=OUDBEHANDELAREN_OBJECT,
-            ):
-                response = self.client.delete(
-                    self.endpoint + "?url=" + initiator["url"],
-                )
+            response = self.client.delete(
+                self.endpoint + "?url=" + initiator["url"],
+            )
 
         OUDBEHANDELAREN_OBJECT["record"]["data"]["behandelaren"] = [
             {
