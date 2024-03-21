@@ -67,6 +67,11 @@ class Command(IndexCommand, BaseCommand):
                 objects, query_params = fetch_objects_all_paginated(
                     client, query_params=query_params
                 )
+                objects["results"] = [
+                    obj
+                    for obj in objects["results"]
+                    if obj["type"] not in self.meta_config_urls
+                ]
                 perf_logger.info("Fetched %d OBJECTen.", len(objects["results"]))
                 get_more = query_params.get("page", None)
                 for obj in objects["results"]:
@@ -116,12 +121,18 @@ class Command(IndexCommand, BaseCommand):
                     if zon:
                         # Fetch objects from OBJECTs API.
                         objects = fetch_objects(objects, max_workers=self.max_workers)
+                        objects = [
+                            obj
+                            for obj in objects
+                            if obj["type"]["url"] not in self.meta_config_urls
+                        ]
 
-                        # Log how many were retrieved.
-                        self.stdout.write(
-                            f"Retrieved OBJECTs from OBJECTs API: {len(objects)}."
-                        )
-                        yield from self.documenten_generator(objects)
+                        if objects:
+                            # Log how many were retrieved.
+                            self.stdout.write(
+                                f"Retrieved OBJECTs from OBJECTs API: {len(objects)}."
+                            )
+                            yield from self.documenten_generator(objects)
 
     def documenten_generator(self, objects: List[Dict]) -> Iterator[ObjectDocument]:
         object_documenten = self.create_objecten_documenten(objects)
@@ -129,12 +140,11 @@ class Command(IndexCommand, BaseCommand):
 
         related_zaken = self.resolve_related_zaken(object_documenten)
         for obj in objects:
-            if obj["type"] not in self.meta_config_urls:
-                object_document = object_documenten[obj["url"]]
-                object_document.type = objecttype_documenten[obj["url"]]
-                object_document.related_zaken = related_zaken.get(obj["url"], [])
-                od = object_document.to_dict(True)
-                yield od
+            object_document = object_documenten[obj["url"]]
+            object_document.type = objecttype_documenten[obj["url"]]
+            object_document.related_zaken = related_zaken.get(obj["url"], [])
+            od = object_document.to_dict(True)
+            yield od
 
     def create_related_zaken(
         self,

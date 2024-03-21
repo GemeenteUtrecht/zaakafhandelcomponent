@@ -376,8 +376,9 @@ def get_informatieobjecttypen_for_zaaktype(
         for iot in sorted(results, key=lambda iot: iot["volgnummer"])
     ]
     with parallel(max_workers=settings.MAX_WORKERS) as executor:
-        results = executor.map(get_informatieobjecttype, urls)
-    return list(results)
+        results = list(executor.map(get_informatieobjecttype, urls))
+
+    return results
 
 
 @cache_result("informatieobjecttype:{url}", timeout=A_DAY)
