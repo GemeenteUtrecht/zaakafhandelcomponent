@@ -313,6 +313,11 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
         config.primary_objects_api = cls.objects_service
         config.primary_objecttypes_api = cls.objecttypes_service
         config.save()
+
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.review_objecttype = f"{OBJECTTYPES_ROOT}objecttypes/12345"
+        meta_config.save()
+
         cls.objecttype = {
             "url": f"{OBJECTTYPES_ROOT}objecttypes/1",
             "name": "Laadpaal",
@@ -460,4 +465,123 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                     "stringRepresentation": "Laadpaal, Utrechtsestraat 41 - In ontwikkeling",
                 }
             ],
+        )
+
+    def test_filter_objecttype_not_found(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(
+            list_url,
+            {
+                "geometry": {
+                    "within": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [5.040241219103334, 52.09434351690135],
+                                [5.145297981798648, 52.13018632964422],
+                                [5.196109749376771, 52.07409013759298],
+                                [5.084873177111147, 52.0386246041859],
+                                [5.040241219103334, 52.09434351690135],
+                            ]
+                        ],
+                    }
+                },
+                "type": f"{OBJECTTYPES_ROOT}objecttypes/2",
+                "data_attrs": "adres__exact__Utrechtsestraat 41",
+                "date": "2021-07-19",
+            },
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(
+            response.json(),
+            {
+                "type": [
+                    "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/2 not found."
+                ]
+            },
+        )
+
+    def test_filter_objecttype_is_meta(self, m):
+        mock_service_oas_get(m, OBJECTS_ROOT, "objects")
+        mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
+        ot2 = {
+            "url": f"{OBJECTTYPES_ROOT}objecttypes/12345",
+            "name": "Laadpaal",
+            "namePlural": "Laadpalen",
+            "description": "",
+            "data_classification": "",
+            "maintainer_organization": "",
+            "maintainer_department": "",
+            "contact_person": "",
+            "contact_email": "",
+            "source": "",
+            "update_frequency": "",
+            "provider_organization": "",
+            "documentation_url": "",
+            "labels": {
+                "stringRepresentation": [
+                    "field__type",
+                    ", ",
+                    "field__adres",
+                    " - ",
+                    "field__status",
+                ]
+            },
+            "created_at": "2019-08-24",
+            "modified_at": "2019-08-24",
+            "versions": [],
+        }
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype, ot2])
+
+        config = CoreConfig.get_solo()
+        config.primary_objects_api = self.objects_service
+        config.save()
+
+        user = UserFactory.create()
+        self.client.force_authenticate(user=user)
+
+        list_url = reverse("object-search")
+        response = self.client.post(
+            list_url,
+            {
+                "geometry": {
+                    "within": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [5.040241219103334, 52.09434351690135],
+                                [5.145297981798648, 52.13018632964422],
+                                [5.196109749376771, 52.07409013759298],
+                                [5.084873177111147, 52.0386246041859],
+                                [5.040241219103334, 52.09434351690135],
+                            ]
+                        ],
+                    }
+                },
+                "type": ot2["url"],
+                "data_attrs": "adres__exact__Utrechtsestraat 41",
+                "date": "2021-07-19",
+            },
+        )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(
+            response.json(),
+            {
+                "type": [
+                    "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/12345 is a `meta`-objecttype."
+                ]
+            },
         )

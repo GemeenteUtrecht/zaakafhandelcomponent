@@ -1393,17 +1393,12 @@ class ObjectSearchView(views.APIView):
         if page := request.query_params.get(pc.page_query_param):
             qp[pc.page_query_param] = page
 
-        filters = deepcopy(request.data)
-        if "data_attrs" in filters:
-            filters["data_attrs"] = ",".join(
-                filters["data_attrs"].split(",") + ["meta__icontains__false"]
-            )
-        else:
-            filters["data_attrs"] = "meta__icontains__false"
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         try:
             objects, _qp = search_objects(
-                filters=filters,
+                filters=request.data,
                 query_params=qp,
             )
         except ClientError as exc:

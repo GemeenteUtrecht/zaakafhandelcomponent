@@ -59,9 +59,11 @@ from zac.contrib.objects.services import (
 )
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.fields import DownloadDocumentURLField
+from zac.core.models import MetaObjectTypesConfig
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_object,
+    fetch_objecttypes,
     fetch_rol,
     fetch_zaaktype,
     get_document,
@@ -1534,6 +1536,24 @@ class ObjectFilterProxySerializer(ProxySerializer):
         "application/json",
         "schema",
     ]
+    type = serializers.URLField(
+        required=True,
+        allow_blank=False,
+        help_text=_("OBJECTTYPE of OBJECT. Must be provided."),
+    )
+
+    def validate_type(self, ot: str) -> str:
+        ots = fetch_objecttypes()
+        if ot not in [ot["url"] for ot in ots]:
+            raise serializers.ValidationError("OBJECTTYPE %s not found." % ot)
+
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_config.meta_objecttype_urls
+        if ot in list(MetaObjectTypesConfig.get_solo().meta_objecttype_urls.values()):
+            raise serializers.ValidationError(
+                "OBJECTTYPE %s is a `meta`-objecttype." % ot
+            )
+        return ot
 
 
 class ZaakObjectProxySerializer(ProxySerializer):
