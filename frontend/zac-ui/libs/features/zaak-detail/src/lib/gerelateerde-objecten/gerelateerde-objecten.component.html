@@ -33,7 +33,8 @@
   <!-- End table -->
 
   <!-- Modal object search -->
-  <gu-modal [closeIcon]="true"
+  <gu-modal *ngIf="zaak.zaaktype"
+            [closeIcon]="true"
             [id]="modalObjectSearchId"
             title="Object toevoegen"
             size="medium"

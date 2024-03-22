@@ -173,7 +173,7 @@ export class DocumentenComponent implements OnChanges {
       // Show message if the user is already editing another document.
     } else if (!selectedDoc.currentUserIsEditing && hasOpenDoc) {
       const message = "U kunt maar één document tegelijk bewerken."
-      this.snackbarService.openSnackBar(message, "Sluiten")
+      this.snackbarService.openSnackBar(message, "Sluiten", "accent")
       // Exit edit mode
     } else {
       this.closeDocumentEdit(url);
@@ -229,7 +229,7 @@ export class DocumentenComponent implements OnChanges {
     this.isLoading = true;
     this.documentenService.closeDocumentEdit(deleteUrl).subscribe(() => {
       // Refresh section
-      this.fetchDocuments();
+      this.refreshDocs();
     }, () => {
       this.snackbarService.openSnackBar(this.errorMessage, "Sluiten", 'warn')
       this.isLoading = false;

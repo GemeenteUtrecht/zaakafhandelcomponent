@@ -5,7 +5,7 @@
       <a mat-tab-link *ngFor="let tab of tabs; index as i"
          [href]="tab.link"
          (click)="handleTabClick($event, tab)"
-         [active]="activatedChildRoute === tab.link">
+         [active]="'/zoeken/'+activatedChildRoute === tab.link">
         {{tab.title}}
       </a>
     </nav>
