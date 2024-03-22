@@ -1,9 +1,9 @@
 <div class="betrokkenen card">
   <div class="d-flex justify-content-between">
     <h3 class="mr-1">Betrokkenen</h3>
-    <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="small" icon="settings"
+    <button gu-button class="form__edit-toggle" buttonStyle="tertiary" size="small" icon="edit"
             (click)="toggleEdit()">
-      {{edit ? 'Annuleren' : '' }}
+      {{edit ? 'Annuleren' : 'Bewerken' }}
     </button>
   </div>
   <gu-loading-indicator *ngIf="isLoading"></gu-loading-indicator>
