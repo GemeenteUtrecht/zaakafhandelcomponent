@@ -196,7 +196,6 @@ export class ZaakObjectSearchFormComponent implements OnInit {
       showAllObjectTypes: false,
     })
     this.getContextData();
-    this.fetchObjects()
   }
 
   //
@@ -216,13 +215,15 @@ export class ZaakObjectSearchFormComponent implements OnInit {
       this.isLoadingResult.emit(false);
     })
 
-    this.objectsService.listObjectTypesForZaakType(this.zaaktype).subscribe(data => {
-      this.getObjectTypesContext(data, false)
-    }, error => {
-      this.reportError(error)
-      this.isLoading = false;
-      this.isLoadingResult.emit(false);
-    })
+    if (this.zaaktype) {
+      this.objectsService.listObjectTypesForZaakType(this.zaaktype).subscribe(data => {
+        this.getObjectTypesContext(data, false)
+      }, error => {
+        this.reportError(error)
+        this.isLoading = false;
+        this.isLoadingResult.emit(false);
+      })
+    }
   }
 
   /**
@@ -295,7 +296,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
       choices: choices,
       label: 'Objecttype',
       name: 'objectType',
-      required: false,
+      required: true,
       value: choices[0].value,
     }
   }
