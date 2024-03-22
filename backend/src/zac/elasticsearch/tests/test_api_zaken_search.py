@@ -426,7 +426,7 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         ## ZAAKOBJECTEN
         zaakobject = {
             "url": f"{ZAKEN_ROOT}zaakobjecten/4abe87ea-3670-42c8-afc7-5e9fb071971d",
-            "object": "https://objects.nl/api/v1/objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
+            "object": f"{OBJECTS_ROOT}objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
             "zaak": zaak1["url"],
             "object_type": "",
             "object_type_overige": "",
@@ -731,3 +731,11 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             results = response.json()
             self.assertEqual(results["count"], 1)
             self.assertEqual(results["results"][0]["url"], zaak3["url"])
+
+        with self.subTest("Search with empty list of urls"):
+            data = {"object": f"{OBJECTS_ROOT}objects/123"}
+
+            response = self.client.post(self.endpoint, data=data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            results = response.json()
+            self.assertEqual(results["count"], 0)
