@@ -6,27 +6,29 @@
     <p class="mb-0">Toon objecttypen van alle zaaktypen</p>
   </gu-checkbox>
 
-  <gu-form class="d-block mb-4" *ngIf="objectTypeVersions" [form]="form" buttonLabel="Object zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading" [buttonSize]="'small'"
+  <gu-form class="d-block" *ngIf="objectTypeVersions" [form]="form" buttonLabel="Object zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading" [buttonSize]="'small'"
            (formSubmit)="submitForm($event)"></gu-form>
 
-  <div class="object-search-result" *ngIf="hasSubmittedOnce && zaakObjects.length === 0 && !selectedZaakObject && !isLoading">
-    <p>Er zijn geen objecten gevonden.</p>
-  </div>
-  <div class="object-search-result" *ngIf="zaakObjects.length > 0 && !selectedZaakObject">
-    <gu-loading-indicator *ngIf="isLoadingResults"></gu-loading-indicator>
-    <gu-table [table]="zaakObjectsTableData"
-              [sortable]="false"
-              [expandable]="true"
-              [wrap]="true"
-              (buttonOutput)="_selectZaakObject($event, $event)"
-    ></gu-table>
-    <gu-paginator (page)="onPageSelect($event)"
-                  [pageSize]="20"
-                  [length]="resultLength"
-    ></gu-paginator>
+  <div class="mt-4">
+    <div class="object-search-result" *ngIf="hasSubmittedOnce && zaakObjects.length === 0 && !selectedZaakObject && !isLoading">
+      <p>Er zijn geen objecten gevonden.</p>
+    </div>
+    <div class="object-search-result" *ngIf="zaakObjects.length > 0 && !selectedZaakObject">
+      <gu-loading-indicator *ngIf="isLoadingResults"></gu-loading-indicator>
+      <gu-table [table]="zaakObjectsTableData"
+                [sortable]="false"
+                [expandable]="true"
+                [wrap]="true"
+                (buttonOutput)="_selectZaakObject($event, $event)"
+      ></gu-table>
+      <gu-paginator (page)="onPageSelect($event)"
+                    [pageSize]="20"
+                    [length]="resultLength"
+      ></gu-paginator>
 
-  </div>
-  <div class="selected-object" *ngIf="selectedZaakObject">
-    <p class="p--nomargin">Gerelateerde zaken voor: <strong>{{selectedZaakObject}}</strong></p>
+    </div>
+    <div class="selected-object" *ngIf="selectedZaakObject">
+      <p class="p--nomargin">Gerelateerde zaken voor: <strong>{{selectedZaakObject}}</strong></p>
+    </div>
   </div>
 </div>
