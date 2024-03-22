@@ -8,6 +8,7 @@ from elasticsearch_dsl.query import (
     Bool,
     Exists,
     Match,
+    MatchNone,
     MultiMatch,
     Nested,
     Query,
@@ -178,18 +179,19 @@ def search_zaken(
 
     if object:
         zon = search_zaakobjecten(zaken=urls, objecten=[object])
-        if not urls:
-            urls = []
+        zaakobject_zaakurls = [zo.zaak for zo in zon]
+        if urls:
+            urls += zaakobject_zaakurls
+        else:
+            urls = zaakobject_zaakurls
 
-        for zo in zon:
-            if zo.zaak not in urls:
-                urls.append(zo.zaak)
+    if urls:
+        s = s.filter(Terms(url=list(set(urls))))
+    elif type(urls) == list:  # apparently we've gotten an empty list -> show nothing.
+        s = s.filter(MatchNone())
 
     if not include_closed:
         s = s.filter(~Exists(field="einddatum"))
-
-    if urls:
-        s = s.filter(Terms(url=urls))
 
     # display only allowed zaken
     if only_allowed:
