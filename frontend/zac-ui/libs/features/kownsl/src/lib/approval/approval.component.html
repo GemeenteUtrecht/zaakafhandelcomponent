@@ -109,7 +109,8 @@
             <div class="mb-1" *ngFor="let file of approvalData.zaakDocuments">
               <gu-file
                 [fileName]="file.bestandsnaam"
-                [readUrl]="file.readUrl || file.downloadUrl"
+                [readUrl]="file.readUrl"
+                [downloadUrl]="file.downloadUrl"
               ></gu-file>
             </div>
           </ng-container>
