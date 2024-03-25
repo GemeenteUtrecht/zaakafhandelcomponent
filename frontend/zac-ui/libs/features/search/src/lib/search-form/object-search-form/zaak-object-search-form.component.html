@@ -9,7 +9,7 @@
   <gu-form class="d-block" *ngIf="objectTypeVersions" [form]="form" buttonLabel="Object zoeken" (formChange)="changeForm($event)" [isLoading]="isLoading" [buttonSize]="'small'"
            (formSubmit)="submitForm($event)"></gu-form>
 
-  <div class="mt-4">
+  <div class="mt-4" *ngIf="hasSubmittedOnce" >
     <div class="object-search-result" *ngIf="hasSubmittedOnce && zaakObjects.length === 0 && !selectedZaakObject && !isLoading">
       <p>Er zijn geen objecten gevonden.</p>
     </div>
