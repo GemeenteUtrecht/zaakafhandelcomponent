@@ -338,6 +338,8 @@ export class ChecklistComponent implements OnInit, OnChanges {
           if (isFormSubmit) {
             this.unlockChecklist(false);
             this.fetchChecklistData();
+          } else {
+            this.lockChecklist(true);
           }
           this.hasChecklist = false;
           this.documents = {};
@@ -350,6 +352,8 @@ export class ChecklistComponent implements OnInit, OnChanges {
         if (isFormSubmit) {
           this.unlockChecklist(false);
           this.fetchChecklistData()
+        } else {
+          this.lockChecklist(true);
         }
       },
       this.reportError.bind(this),
@@ -372,16 +376,18 @@ export class ChecklistComponent implements OnInit, OnChanges {
     if (formIsInEditMode) {
       this.unlockChecklist(formIsInEditMode);
     } else {
-      this.lockChecklist();
+      this.lockChecklist(false);
     }
   }
 
-  lockChecklist() {
+  lockChecklist(formIsInEditMode) {
     this.isLocking = true
     this.checklistService.lockChecklist(this.zaak.bronorganisatie, this.zaak.identificatie).subscribe(() =>
       {
         this.isLocking = false;
-        this.formComponent.switchToggle();
+        if (!formIsInEditMode) {
+          this.formComponent.switchToggle();
+        }
       },
       error => {
         this.isLocking = false;
