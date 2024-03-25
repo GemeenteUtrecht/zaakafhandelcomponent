@@ -38,6 +38,8 @@ def get_client(user: Optional[User] = None, force: bool = False) -> Client:
     if user:
         service.user_id = user.username
         claims["email"] = user.email
+        claims["first_name"] = user.first_name
+        claims["last_name"] = user.last_name
 
     if force:
         assert (

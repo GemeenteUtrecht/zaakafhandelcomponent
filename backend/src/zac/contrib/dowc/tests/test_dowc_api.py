@@ -155,6 +155,8 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(claims["user_id"], self.user.username)
         self.assertEqual(claims["email"], self.user.email)
+        self.assertEqual(claims["first_name"], self.user.first_name)
+        self.assertEqual(claims["last_name"], self.user.last_name)
         self.assertEqual(len(m.request_history), 1)
         self.assertEqual(m.last_request.url, f"{self.service.oas}?v=3")
 
