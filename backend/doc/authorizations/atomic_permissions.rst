@@ -38,13 +38,13 @@ The display of all the users and their atomic permissions for the ``ZAAK`` is av
 Example
 ^^^^^^^
 
-For example, a user John has a blueprint permission to read all the ``ZAAKs`` of the "Beleid opstellen" ``ZAAKTYPE``. But one of these ``ZAAKs`` has a related ``ZAAK`` with another ``ZAAKTYPE`` ("Bestuurlijke besluitvorming").
-John should not see all "Bestuurlijke besluitvorming" ``ZAAKs``, but he can be granted an
+For example, a user John has a blueprint permission to read all the ``ZAAK``en of the "Beleid opstellen" ``ZAAKTYPE``. But one of these ``ZAAK``en has a related ``ZAAK`` with another ``ZAAKTYPE`` ("Bestuurlijke besluitvorming").
+John should not see all "Bestuurlijke besluitvorming" ``ZAAK``en, but he can be granted an
 atomic permission for the particular ``ZAAK``.
 
 To grant a permission an admin page can be used, but it's easier to do it in the app itself.
 
-If you have a permission to manage access to ``ZAAKs``, go to the page of the ``ZAAK`` with the
+If you have a permission to manage access to ``ZAAK``en, go to the page of the ``ZAAK`` with the
 "Bestuurlijke besluitvorming" ``ZAAKTYPE``. In the top right corner of the page click on "Toegang verlenen"
 button and select John as the user to who you grant access. After clicking on "Versturen" button the
 atomic permission is created.

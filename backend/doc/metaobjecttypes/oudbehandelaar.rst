@@ -16,7 +16,6 @@ The current implementation of the ``OudBehandelaren`` objecttype:
             "zaak"
         ],
         "properties":{
-            "meta":true,
             "zaak":{
                 "type":"string"
             },
@@ -39,6 +38,9 @@ The current implementation of the ``OudBehandelaren`` objecttype:
                         "type":"string"
                     },
                     "started":{
+                        "type":"string"
+                    },
+                    "changedBy":{
                         "type":"string"
                     },
                     "identificatie":{

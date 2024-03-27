@@ -139,6 +139,14 @@ Camunda tasks
 
 :class:`.KillableTask`: manage which camunda tasks are killable and which aren't. I.e., can be cancelled by users.
 
+Checklist
+---------
+
+Checklist locks
+~~~~~~~~~~~~~~~
+
+:class:`.ChecklistLock`: manage checklist locking to prevent data loss caused by concurrent editing of a checklist.
+
 Elasticsearch configuration
 ---------------------------
 

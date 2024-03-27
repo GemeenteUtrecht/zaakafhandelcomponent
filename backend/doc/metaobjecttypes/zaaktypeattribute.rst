@@ -16,8 +16,7 @@ The current implementation of the ``ZaakTypeAttribute`` objecttype:
             "naam",
             "waarde",
             "zaaktypeIdentificaties",
-            "zaaktypeCatalogus",
-            "meta"
+            "zaaktypeCatalogus"
         ],
         "properties":{
             "enum":{
@@ -26,7 +25,6 @@ The current implementation of the ``ZaakTypeAttribute`` objecttype:
                     "type":"string"
                 }
             },
-            "meta":true,
             "naam":{
                 "type":"string"
             },
