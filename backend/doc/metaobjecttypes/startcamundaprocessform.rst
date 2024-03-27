@@ -13,7 +13,6 @@ The current implementation of ``StartCamundaProcessForm``:
         "type":"object",
         "title":"StartCamundaProcessForm",
         "required":[
-            "meta",
             "zaaktypeCatalogus",
             "zaaktypeIdentificaties",
             "camundaProcessDefinitionKey",
@@ -22,7 +21,6 @@ The current implementation of ``StartCamundaProcessForm``:
             "processInformatieObjecten"
         ],
         "properties":{
-            "meta":true,
             "processRollen":{
                 "type":"array",
                 "items":{

@@ -8,6 +8,8 @@ to create custom add-on features such as:
 
 * :ref:`Checklist`,
 * :ref:`ChecklistType`, 
+* :ref:`Review`,
+* :ref:`ReviewRequest`,
 * :ref:`OudBehandelaren`,
 * :ref:`StartCamundaProcessForm`,
 * :ref:`ZaakTypeAttribute`.

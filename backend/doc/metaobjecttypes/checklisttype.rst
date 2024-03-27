@@ -14,11 +14,9 @@ more than one checklisttype. Currently, the checklisttype objecttype is defined 
         "required":[
             "zaaktypeCatalogus",
             "zaaktypeIdentificaties",
-            "questions",
-            "meta"
+            "questions"
         ],
         "properties":{
-            "meta":true,
             "questions":{
                 "type":"array",
                 "items":{
