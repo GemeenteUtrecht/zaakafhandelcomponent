@@ -2,13 +2,15 @@ from copy import deepcopy
 from datetime import date, datetime
 
 from django.contrib.auth.models import Group
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import (
+    ObjectDoesNotExist,
+    ValidationError as DJValidationError,
+)
 from django.db import transaction
 from django.utils.timezone import make_aware, now
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.utils import permissions_related_to_user
@@ -653,17 +655,62 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
     class Meta(BaseUserAuthProfileSerializer.Meta):
         model = BaseUserAuthProfileSerializer.Meta.model
         fields = BaseUserAuthProfileSerializer.Meta.fields
-        validators = [
-            UniqueTogetherValidator(
-                queryset=UserAuthorizationProfile.objects.filter(
-                    start__lte=now(), end__gt=now()
-                ).all(),
-                fields=["user", "auth_profile"],
-                message=_(
-                    "A user authorization profile can not be active concurrently to a similar user authorization profile. Please change the start and end dates."
-                ),
+        extra_kwargs = {"is_active": {"default": True}}
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        assert hasattr(
+            self, "_errors"
+        ), "You must call `.is_valid()` before calling `.save()`."
+
+        assert (
+            not self.errors
+        ), "You cannot call `.save()` on a serializer with invalid data."
+
+        # Guard against incorrect use of `serializer.save(commit=False)`
+        assert "commit" not in kwargs, (
+            "'commit' is not a valid keyword argument to the 'save()' method. "
+            "If you need to access data before committing to the database then "
+            "inspect 'serializer.validated_data' instead. "
+            "You can also pass additional keyword arguments to 'save()' if you "
+            "need to set extra attributes on the saved model instance. "
+            "For example: 'serializer.save(owner=request.user)'.'"
+        )
+
+        assert not hasattr(self, "_data"), (
+            "You cannot call `.save()` after accessing `serializer.data`."
+            "If you need to access data before committing to the database then "
+            "inspect 'serializer.validated_data' instead. "
+        )
+
+        if hasattr(self, "instance") and self.instance:
+            model = self.instance
+
+        # In case of post where there should have been a patch/put
+        # deactivate duplicate.
+        elif (
+            qs := UserAuthorizationProfile.objects.filter(
+                user=self.validated_data["user"],
+                auth_profile=self.validated_data["auth_profile"],
             )
-        ]
+        ) and qs.exists():
+            old = qs.get()
+            old.is_active = False
+            old.save()
+            model = self.Meta.model()
+        else:
+            model = self.Meta.model()
+
+        for field, value in self.validated_data.items():
+            setattr(model, field, value)
+
+        try:
+            # Double check
+            model.clean()
+        except DJValidationError as exc:
+            raise serializers.ValidationError(detail=exc.args[0])
+
+        return super().save(**kwargs)
 
 
 class ReadUserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):

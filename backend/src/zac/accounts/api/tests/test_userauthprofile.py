@@ -119,6 +119,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                             "authProfile": str(auth_profile.uuid),
                             "start": "1999-12-31T23:59:59Z",
                             "end": "2999-12-31T00:00:00Z",
+                            "isActive": True,
                         },
                         {
                             "id": userauthprofile3.id,
@@ -135,6 +136,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                             "authProfile": str(auth_profile2.uuid),
                             "start": "1999-12-31T23:59:59Z",
                             "end": "2999-12-31T00:00:00Z",
+                            "isActive": True,
                         },
                     ],
                 },
@@ -165,6 +167,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                             "authProfile": str(auth_profile2.uuid),
                             "start": "1999-12-31T23:59:59Z",
                             "end": "2999-12-31T00:00:00Z",
+                            "isActive": True,
                         },
                         {
                             "id": userauthprofile2.id,
@@ -181,6 +184,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                             "authProfile": str(auth_profile2.uuid),
                             "start": "1999-12-31T23:59:59Z",
                             "end": "2999-12-31T00:00:00Z",
+                            "isActive": True,
                         },
                     ],
                 },
@@ -190,7 +194,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(
                 [
-                    "Please include one of the following query parameters: ['username', 'auth_profile']"
+                    "Please include one of the following query parameters: ['username', 'auth_profile', 'is_active']"
                 ],
                 response.json(),
             )
@@ -252,6 +256,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                     "groups": [],
                 },
                 "authProfile": str(auth_profile.uuid),
+                "isActive": True,
             },
         )
 
@@ -289,6 +294,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 "end": "2999-12-31T00:00:00Z",
                 "user": self.user.username,
                 "authProfile": str(auth_profile.uuid),
+                "isActive": True,
             },
         )
 
@@ -311,7 +317,6 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         data = {
             "user": self.user.username,
             "authProfile": auth_profile.uuid,
-            "start": "1999-12-31T23:59:59Z",
         }
         self.assertEqual(UserAuthorizationProfile.objects.count(), 0)
         response = self.client.post(url, data)
@@ -326,20 +331,32 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 "end": "2999-12-31T00:00:00Z",
                 "user": self.user.username,
                 "authProfile": str(auth_profile.uuid),
+                "isActive": True,
             },
         )
         data = {
             "user": self.user.username,
             "authProfile": auth_profile.uuid,
-            "start": "2001-12-31T23:59:59Z",
+            "start": "2000-12-31T23:59:59Z",
         }
         response = self.client.post(url, data)
+
+        # Make sure it updated
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 2)
+        # Make sure one is active and the other is deactivated
+        self.assertEqual(
+            UserAuthorizationProfile.objects.filter(is_active=True).count(), 1
+        )
+        uap2 = UserAuthorizationProfile.objects.filter(is_active=True).get()
         self.assertEqual(
             response.json(),
             {
-                "nonFieldErrors": [
-                    "A user authorization profile can not be active concurrently to a similar user authorization profile. Please change the start and end dates."
-                ]
+                "authProfile": str(auth_profile.uuid),
+                "end": "2999-12-31T00:00:00Z",
+                "id": uap2.id,
+                "start": "2000-12-31T23:59:59Z",
+                "user": self.user.username,
+                "isActive": True,
             },
         )
 
@@ -357,47 +374,62 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
         auth_profile = AuthorizationProfileFactory.create()
         auth_profile.blueprint_permissions.add(blueprint_permission)
 
+        # Make sure no user auth profiles exist yet
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 0)
+
         url = reverse_lazy("userauthorizationprofile-list")
 
+        # Create one with start date: "1999-12-31T23:59:59Z"
         data = {
             "user": self.user.username,
             "authProfile": auth_profile.uuid,
             "start": "1999-12-31T23:59:59Z",
-            "end": "2001-12-31T00:00:00Z",
+            "end": "2000-12-31T00:00:00Z",
         }
-        self.assertEqual(UserAuthorizationProfile.objects.count(), 0)
         response = self.client.post(url, data)
+
+        # Make sure it's created...
         self.assertEqual(response.status_code, 201)
         self.assertEqual(UserAuthorizationProfile.objects.count(), 1)
+
+        # ... according to expectations.
         userauthprofile = UserAuthorizationProfile.objects.get()
         self.assertEqual(
             response.json(),
             {
                 "id": userauthprofile.id,
                 "start": "1999-12-31T23:59:59Z",
-                "end": "2001-12-31T00:00:00Z",
+                "end": "2000-12-31T00:00:00Z",
                 "user": self.user.username,
                 "authProfile": str(auth_profile.uuid),
+                "isActive": True,
             },
         )
+
+        # Make sure a "new" one gets created in a different time period and the other is deactivated
         data = {
             "user": self.user.username,
             "authProfile": auth_profile.uuid,
             "start": "2001-12-31T23:59:59Z",
         }
         response = self.client.post(url, data)
+
+        # Check if success.
         self.assertEqual(UserAuthorizationProfile.objects.count(), 2)
-        userauthprofile2 = UserAuthorizationProfile.objects.filter(
+        userauthprofile = UserAuthorizationProfile.objects.filter(
             start__exact=make_aware(datetime(2001, 12, 31, 23, 59, 59))
         ).get()
+
+        # Success.
         self.assertEqual(
             response.json(),
             {
                 "authProfile": str(auth_profile.uuid),
                 "end": "2999-12-31T00:00:00Z",
-                "id": userauthprofile2.id,
+                "id": userauthprofile.id,
                 "start": "2001-12-31T23:59:59Z",
                 "user": self.user.username,
+                "isActive": True,
             },
         )
 
@@ -436,6 +468,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 "end": "2999-12-31T00:00:00Z",
                 "user": user2.username,
                 "authProfile": str(auth_profile.uuid),
+                "isActive": True,
             },
         )
 
@@ -477,6 +510,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
                 "end": "2099-12-31T23:59:59Z",
                 "user": user2.username,
                 "authProfile": str(auth_profile.uuid),
+                "isActive": True,
             },
         )
 
