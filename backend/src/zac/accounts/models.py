@@ -10,7 +10,7 @@ from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import JSONField, Q
+from django.db.models import JSONField, Q, UniqueConstraint
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -169,6 +169,36 @@ class UserAuthorizationProfile(models.Model):
     end = models.DateTimeField(
         _("end"), default=timezone.make_aware(datetime(2999, 12, 31))
     )
+    is_active = models.BooleanField(_("is active"), default=True)
+
+    class Meta:
+        verbose_name = _("user-authorization profile")
+        verbose_name_plural = _("user-authorization profiles")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "auth_profile", "is_active"],
+                condition=Q(is_active=True),
+                name="unique_active_userauthorizationprofiles",
+            )
+        ]
+
+    def clean(self, id=Optional[int]):
+        super().clean()
+        if (
+            not id
+            and UserAuthorizationProfile.objects.filter(
+                user=self.user,
+                auth_profile=self.auth_profile,
+                is_active=True,
+            ).exists()
+        ):
+            raise ValidationError(
+                "User already has an active authorization profile, please deactivate first."
+            )
+
+    def save(self, *args, **kwargs):
+        self.clean(id=self.id if hasattr(self, "id") else None)
+        return super().save(*args, **kwargs)
 
 
 class AccessRequest(models.Model):

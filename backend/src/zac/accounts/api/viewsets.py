@@ -428,7 +428,7 @@ class UserAuthorizationProfileViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     filterset_class = UserAuthorizationProfileFilterSet
     ordering_fields = ["user", "auth_profile"]
-    filter_fields = ["user", "auth_profile"]
+    filter_fields = ["user", "auth_profile", "is_active"]
 
     def get_serializer_class(self):
         mapping = {

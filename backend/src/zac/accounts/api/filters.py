@@ -60,10 +60,13 @@ class UserAuthorizationProfileFilterSet(filters.FilterSet):
             "`uuid` of authorization profile that is filtered on. Cannot be empty if given."
         ),
     )
+    is_active = filters.BooleanFilter(
+        help_text=_("Filter based on active profiles."),
+    )
 
     class Meta:
         model = UserAuthorizationProfile
-        fields = ("username", "auth_profile")
+        fields = ("username", "auth_profile", "is_active")
 
     def is_valid(self):
         valid_fields = list(self.get_fields().keys())
