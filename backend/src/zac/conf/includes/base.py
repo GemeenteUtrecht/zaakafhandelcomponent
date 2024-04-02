@@ -500,11 +500,10 @@ ADMIN_INDEX_AUTO_CREATE_APP_GROUP = True
 ADMIN_INDEX_HIDE_APP_INDEX_PAGES = True
 
 # URLs from which DRF spectacular retrieves API schemas
-
 EXTERNAL_API_SCHEMAS = {
     "BAG_API_SCHEMA": config(
         "BAG_API_SCHEMA",
-        "https://api.bag.acceptatie.kadaster.nl/lvbag/individuelebevragingen/v2/openapi.yaml",
+        "https://api.bag.kadaster.nl/lvbag/individuelebevragingen/v2/openapi.json",
     ),
     "DOWC_API_SCHEMA": config(
         "DOWC_API_SCHEMA", "https://dowc.cg-intern.ont.utrecht.nl/api/v1"
