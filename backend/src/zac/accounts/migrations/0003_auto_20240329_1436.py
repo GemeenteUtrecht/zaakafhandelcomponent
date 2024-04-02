@@ -10,10 +10,12 @@ def create_uniquely_active_userauthprofiles(apps, schema_editor):
 
     for user in User.objects.all():
         for ap in AuthorizationProfile.objects.all():
-            qs = UserAuthorizationProfile.objects.filter(user=user, auth_profile=ap)
+            qs = UserAuthorizationProfile.objects.filter(
+                user=user, auth_profile=ap
+            ).order_by("-id")
             if qs.exists():
                 i = 0
-                for i, uap in qs.order_by("-id"):
+                for i, uap in enumerate(list(qs)):
                     if i == 0:
                         uap.is_active = True
                     else:
