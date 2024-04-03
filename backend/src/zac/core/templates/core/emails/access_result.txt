@@ -1,6 +1,6 @@
 {% load i18n %}{% blocktrans with identificatie=zaak.identificatie result=result %}Dear {{ user }},
 
 The access to zaak {{ identificatie }} is{% endblocktrans %}{% if result != "approve" %}{% trans " not" %}{% endif %}{% trans " approved" %}.
-{% if result == "approve" %}{% trans "You can see it here:" %} {{ zaak.absolute_url }}{% endif %}
+{% if result == "approve" %}{% trans "You can see the result " %}<a href="{{ zaak.absolute_url }}">{% trans "here" %}</a>.{% endif %}
 
 {% blocktrans %}This is an automatically generated message from the zaakafhandelcomponent; it's not possible to respond to this message.{% endblocktrans %}

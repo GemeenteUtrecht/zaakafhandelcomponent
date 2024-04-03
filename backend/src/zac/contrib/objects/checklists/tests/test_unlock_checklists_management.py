@@ -13,6 +13,7 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
+from zac.contrib.objects.checklists.models import ChecklistLock
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.tests.utils import mock_resource_get
@@ -99,11 +100,14 @@ class UnlockChecklists(ClearCachesMixin, APITestCase):
         # test email
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
-        subject = _("Checklist of zaak: `%(zaak)s` unlocked.") % {"zaak": IDENTIFICATIE}
+        subject = _("Notification: Checklist of zaak %(zaak)s was automatically unlocked.") % {
+            "zaak": IDENTIFICATIE
+        }
         self.assertEqual(email.subject, subject)
         self.assertEqual(email.to, [self.user.email])
 
         zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
         url = f"http://testserver{zaak_detail_path}"
         self.assertIn(url, email.body)
-        lock.delete()
+
+        self.assertEqual(ChecklistLock.objects.all().count(), 0)

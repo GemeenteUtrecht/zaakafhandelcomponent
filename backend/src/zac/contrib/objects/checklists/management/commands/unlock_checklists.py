@@ -27,6 +27,8 @@ def unlock_command() -> int:
     with parallel(max_workers=settings.MAX_WORKERS) as executor:
         list(executor.map(notify_user_of_unlock, list_to_email))
 
+    ChecklistLock.objects.all().delete()
+
     return len(list_to_email)
 
 
