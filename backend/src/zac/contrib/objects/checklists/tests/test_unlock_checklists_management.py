@@ -100,9 +100,9 @@ class UnlockChecklists(ClearCachesMixin, APITestCase):
         # test email
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
-        subject = _("Notification: Checklist of zaak %(zaak)s was automatically unlocked.") % {
-            "zaak": IDENTIFICATIE
-        }
+        subject = _(
+            "Notification: Checklist of zaak %(zaak)s was automatically unlocked."
+        ) % {"zaak": IDENTIFICATIE}
         self.assertEqual(email.subject, subject)
         self.assertEqual(email.to, [self.user.email])
 
