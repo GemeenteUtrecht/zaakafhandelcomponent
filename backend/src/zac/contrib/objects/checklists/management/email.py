@@ -35,7 +35,9 @@ def send_email_to_locker(user, zaak_url):
 
     message = email_template.render(email_context)
     send_mail(
-        subject=_("Checklist of zaak: `%(zaak)s` unlocked.")
+        subject=_(
+            "Notification: Checklist of zaak %(zaak)s was automatically unlocked."
+        )
         % {"zaak": zaak.identificatie},
         message=message,
         from_email=settings.DEFAULT_FROM_EMAIL,
