@@ -12,16 +12,15 @@
           </div>
         </div>
       </div>
-      <p class="p--bold">Zaakgegevens</p>
-      <div class="row">
-        <gu-form [form]="form"
-                 [buttonSize]="'small'"
-                 buttonLabel='Versturen'
-                 (formSubmit)="submitForm($event)"
-                 [resetAfterSubmit]="false"
-                 [isLoading]="isLoading"
-                 class="col-md-8 col-lg-6">
-        </gu-form>
+      <div class="card col-md-8 col-lg-6">
+        <p class="p--bold">Zaakgegevens</p>
+          <gu-form [form]="form"
+                   [buttonSize]="'small'"
+                   buttonLabel='Versturen'
+                   (formSubmit)="submitForm($event)"
+                   [resetAfterSubmit]="false"
+                   [isLoading]="isLoading">
+          </gu-form>
       </div>
     </div>
   </div>

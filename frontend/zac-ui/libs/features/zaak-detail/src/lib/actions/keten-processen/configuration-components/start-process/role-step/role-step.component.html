@@ -1,4 +1,4 @@
-<div class="start-process__role-step pt-4" *ngIf="startProcessRoleForm">
+<div class="start-process__role-step pt-2" *ngIf="startProcessRoleForm">
   <ng-container [formGroup]="startProcessRoleForm">
     <div class="row" formArrayName="roles" *ngFor="let role of rolesControl.controls; let i = index">
       <!-- Free user input  -->
