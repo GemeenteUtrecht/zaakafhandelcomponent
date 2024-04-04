@@ -9,7 +9,7 @@
         <div class="p-4">
           <form [formGroup]="assignUserForm" *ngIf="!submitSuccess">
             <div class="form-group">
-              <p class="mb-2">Kies een collega die u de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen. De gekozen collega krijgt de taak in zijn of haar werkvoorraad te zien.</p>
+              <p class="mb-2">Kies een collega die je de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen. De gekozen collega krijgt de taak in zijn of haar werkvoorraad te zien.</p>
               <gu-multiselect (search)="onSearchAccounts($event)"
                               [items]="users"
                               [multiple]="false"
@@ -36,7 +36,7 @@
         <div class="p-4">
           <form [formGroup]="assignUserGroupForm" *ngIf="!submitSuccess">
             <div class="form-group">
-              <p class="mb-2">Kies een groep die u de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen. De collega's in de gekozen gebruikersgroep krijgen de taak in zijn of haar werkvoorraad te zien.</p>
+              <p class="mb-2">Kies een groep die je de taak "<strong>{{taskData.name}}</strong>" wilt toewijzen. De collega's in de gekozen gebruikersgroep krijgen de taak in zijn of haar werkvoorraad te zien.</p>
               <gu-multiselect (search)="onSearchUserGroups($event)"
                               [items]="userGroups"
                               [multiple]="false"
