@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ContentChild,
@@ -14,6 +13,7 @@ import {SnackbarService} from '@gu/components';
 import { TitleCasePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RecentlyViewed } from '../models/recently-viewed';
+import { FeaturesWorkstackService } from '../../../workstack/src/lib/features-workstack.service';
 
 /**
  * Landing page component.
@@ -36,10 +36,10 @@ export class FeaturesLandingComponent implements OnInit {
   /** @type {(LandingPage|null)} The landing page once retrieved. */
   landingPage: LandingPage | null = null;
   recentlyViewedCases: RecentlyViewed[] = [];
+  activeCases: number = null;
 
   searchResults: any = [];
   filteredResults: any = [];
-  selectedResult: any;
   selectedFilter: 'Zaken' | 'Documenten' | 'Objecten' | 'all' = 'all';
 
   searchForm: FormGroup =  this.fb.group({
@@ -59,6 +59,7 @@ export class FeaturesLandingComponent implements OnInit {
     private cdRef: ChangeDetectorRef,
     private fb: FormBuilder,
     private landingService: LandingService,
+    private workstackService: FeaturesWorkstackService,
     private snackbarService: SnackbarService,
     private titleCasePipe: TitleCasePipe,
     private zaakService: ZaakService
@@ -96,6 +97,13 @@ export class FeaturesLandingComponent implements OnInit {
       (error) => this.reportError(error),
       () => this.isLoading = false,
     )
+
+    this.workstackService.getWorkstackSummary().subscribe(
+      (res) => {
+        this.activeCases = res?.zaken;
+      }
+    );
+
   }
 
   /**
@@ -128,7 +136,7 @@ export class FeaturesLandingComponent implements OnInit {
    */
   onFilterResults() {
     if (this.selectedFilter !== 'all') {
-      this.filteredResults = this.searchResults.filter(res => {
+      this.filteredResults = this.searchResults.filter((res: { type: string; }) => {
         return res.type === this.selectedFilter
       })
     } else {
@@ -154,7 +162,7 @@ export class FeaturesLandingComponent implements OnInit {
    * @param item
    * @returns {any}
    */
-  searchFunction(term, item) {
+  searchFunction(term: any, item: any) {
     return item
   }
 

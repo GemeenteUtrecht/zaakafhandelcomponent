@@ -21,7 +21,7 @@
       <div>
         <h3>
           Snel zoeken
-          <gu-tooltip type="primary" inline="true">Hiermee zoek je naar zaken, documenten of objecten.</gu-tooltip>
+          <gu-tooltip type="primary" inline="true" position="absolute">Hiermee zoek je naar zaken, documenten of objecten.</gu-tooltip>
         </h3>
         <ng-select class="quick-search"
                    [items]="filteredResults"
@@ -108,6 +108,12 @@
             <a href="{{link.href}}" gu-button type="submit" buttonStyle="action-button" size="huge">
               <mat-icon aria-hidden="true">{{link.icon}}</mat-icon>
               {{link.label}}
+              <gu-chip *ngIf="activeCases && link.href === '/ui/werkvoorraad'"
+                       type="badge"
+                       color="warn"
+                       class="ml-1">
+                {{activeCases}}
+              </gu-chip>
               <mat-icon aria-hidden="true">chevron_right</mat-icon>
             </a>
           </li>
