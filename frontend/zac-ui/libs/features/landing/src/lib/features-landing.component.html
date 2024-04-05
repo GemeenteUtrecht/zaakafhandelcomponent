@@ -108,7 +108,7 @@
             <a href="{{link.href}}" gu-button type="submit" buttonStyle="action-button" size="huge">
               <mat-icon aria-hidden="true">{{link.icon}}</mat-icon>
               {{link.label}}
-              <gu-chip *ngIf="activeCases && link.href === '/ui/werkvoorraad'"
+              <gu-chip *ngIf="activeCases && link.href.split('ui/')[1] === 'werkvoorraad'"
                        type="badge"
                        color="warn"
                        class="ml-1">
