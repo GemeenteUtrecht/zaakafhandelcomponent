@@ -35,3 +35,12 @@
 >
   <gu-cancel-review [reviewRequestSummary]="selectedReviewRequestSummary" (successReload)="closeModal('cancel-review-modal'); update(true)"></gu-cancel-review>
 </gu-modal>
+
+<!-- Remind review -->
+<gu-modal
+  id="remind-review-modal"
+  size='small'
+  [closeIcon]="true"
+>
+  <gu-remind-review [reviewRequestSummary]="selectedReviewRequestSummary" (successReload)="closeModal('remind-review-modal')"></gu-remind-review>
+</gu-modal>

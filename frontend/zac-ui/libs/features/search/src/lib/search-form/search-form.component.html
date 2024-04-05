@@ -23,7 +23,7 @@
       <div class="mt-4" [hidden]="activatedChildRoute !== 'object'">
         <gu-zaak-object-search-form (mapGeometry)="mapGeometry.emit($event)"
                                     (mapMarkers)="mapMarkers.emit($event)"
-                                    (searchObjects)="searchObjects()"
+                                    (searchObjects)="resetResults()"
                                     (selectZaakObject)="selectZaakObject($event)"></gu-zaak-object-search-form>
       </div>
   </div>

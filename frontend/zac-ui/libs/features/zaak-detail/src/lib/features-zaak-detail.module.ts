@@ -24,6 +24,7 @@ import {TaskHistoryComponent} from './actions/task-history/task-history.componen
 import {ChecklistComponent} from './actions/checklist/checklist.component';
 import {CancelReviewComponent} from './actions/adviseren-accorderen/cancel-review/cancel-review.component';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { RemindReviewComponent } from './actions/adviseren-accorderen/remind-review/remind-review.component';
 
 @NgModule({
   imports: [
@@ -60,6 +61,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
     UserPermissionsComponent,
     ZaakMapComponent,
     CancelReviewComponent,
+    RemindReviewComponent,
   ],
   exports: [FeaturesZaakDetailComponent],
   providers: [FormGroupDirective]
