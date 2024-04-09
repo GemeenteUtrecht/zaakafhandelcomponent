@@ -153,49 +153,55 @@ class Command(IndexCommand, BaseCommand):
         else:
             # First to basic checks and fetch <int:self.reindex_last> zaken.
             zaken = self.handle_reindex()
-            for zaak in zaken:
-                # Check to see if there are any zaakinformatieobjecten here before we iterate through a scan.
-                if (
-                    ZaakInformatieObjectDocument.search()
-                    .extra(size=0)
-                    .filter(Term(zaak=zaak.url))
-                    .count()
-                    == 0
-                ):
-                    # continue to next zaak
-                    continue
+            zaken = list(zaken)
+            total = len(zaken)
+            for i, zaak in enumerate(zaken):
+                try:
+                    # Check to see if there are any zaakinformatieobjecten here before we iterate through a scan.
+                    if (
+                        ZaakInformatieObjectDocument.search()
+                        .extra(size=0)
+                        .filter(Term(zaak=zaak.url))
+                        .count()
+                        == 0
+                    ):
+                        # continue to next zaak
+                        continue
 
-                # Use scan here because it can be a very large search
-                zios_scan = (
-                    ZaakInformatieObjectDocument.search()
-                    .filter(Term(zaak=zaak.url))
-                    .params(scroll="15h")
-                    .scan()
-                )
+                    # Use scan here because it can be a very large search
+                    zios_scan = (
+                        ZaakInformatieObjectDocument.search()
+                        .filter(Term(zaak=zaak.url))
+                        .params(scroll="15h")
+                        .scan()
+                    )
 
-                for zios in self.get_chunks(zios_scan):
-                    # Refresh client authentication in case this entire index takes longer than validatity of authentication token.
-                    client.refresh_auth()
+                    for zios in self.get_chunks(zios_scan):
+                        # Refresh client authentication in case this entire index takes longer than validatity of authentication token.
+                        client.refresh_auth()
 
-                    # Create list from chunk of generator.
-                    zios = list(zios)
+                        # Create list from chunk of generator.
+                        zios = list(zios)
 
-                    # Get unique EIO urls.
-                    eios = list({zio.informatieobject for zio in zios})
+                        # Get unique EIO urls.
+                        eios = list({zio.informatieobject for zio in zios})
 
-                    # Log total EIOs found.
-                    self.stdout.write(f"Fetching EIOs from ZIOs: {len(eios)}.")
+                        # Log total EIOs found.
+                        self.stdout.write(f"Fetching EIOs from ZIOs: {len(eios)}.")
 
-                    if eios:
-                        # Fetch documenten from DRC.
-                        documenten = self.get_documenten(client, eios)
+                        if eios:
+                            # Fetch documenten from DRC.
+                            documenten = self.get_documenten(client, eios)
 
-                        # Log how many were retrieved.
-                        self.stdout.write(
-                            f"Retrieved EIOs from DRC: {len(documenten)}."
-                        )
-                        perf_logger.info("Memory usage 3: %s.", get_memory_usage())
-                        yield from self.documenten_generator(documenten)
+                            # Log how many were retrieved.
+                            self.stdout.write(
+                                f"Retrieved EIOs from DRC: {len(documenten)}."
+                            )
+                            perf_logger.info("Memory usage 3: %s.", get_memory_usage())
+                            yield from self.documenten_generator(documenten)
+                except Exception:
+                    self.stdout.write(f"Failed at zaak: {i+1}/{total}")
+                    self.stdout.write(f"Continue reindexing last: {total-i}")
 
         self.stdout.end_progress()
 
