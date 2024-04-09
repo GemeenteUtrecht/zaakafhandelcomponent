@@ -89,23 +89,23 @@ class Command(IndexCommand, BaseCommand):
             f"Starting {self.verbose_name_plural} retrieval from the configured APIs."
         )
 
-        drcs = Service.objects.filter(api_type=APITypes.drc)
-        clients = [drc.build_client() for drc in drcs]
-
-        # Report back which clients will be iterated over and how many IOs each has.
-        total_expected = 0
-        for client in clients:
-            # Fetch the first page so we get the total count to be fetched.
-            response = client.list(self.type)
-            client_total_num = response["count"]
-            total_expected += client_total_num
-            self.stdout.write(
-                f"Number of {self.verbose_name_plural} in {client.base_url}:\n  {client_total_num}."
-            )
-        self.stdout.start_progress()
-        done = 0
         if not self.reindex_last:
             # Just get everything.
+            drcs = Service.objects.filter(api_type=APITypes.drc)
+            clients = [drc.build_client() for drc in drcs]
+
+            # Report back which clients will be iterated over and how many IOs each has.
+            total_expected = 0
+            for client in clients:
+                # Fetch the first page so we get the total count to be fetched.
+                response = client.list(self.type)
+                client_total_num = response["count"]
+                total_expected += client_total_num
+                self.stdout.write(
+                    f"Number of {self.verbose_name_plural} in {client.base_url}:\n  {client_total_num}."
+                )
+            self.stdout.start_progress()
+            done = 0
 
             # Get time at start
             time_at_start = time.time()
@@ -155,6 +155,8 @@ class Command(IndexCommand, BaseCommand):
             zaken = self.handle_reindex()
             zaken = list(zaken)
             total = len(zaken)
+            drc = Service.objects.get(api_type=APITypes.drc)
+            client = drc.build_client()
             for i, zaak in enumerate(zaken):
                 try:
                     # Check to see if there are any zaakinformatieobjecten here before we iterate through a scan.
@@ -212,20 +214,20 @@ class Command(IndexCommand, BaseCommand):
 
     def resolve_audit_trail(self, documenten: List[Document]) -> List[Document]:
         # Bulk fetch_audittrail.
-        with parallel(max_workers=self.max_workers) as executor:
-            audittrails = list(
-                executor.map(
-                    fetch_latest_audit_trail_data_document,
-                    [doc.url for doc in documenten],
-                )
-            )
-            last_edited_dates = {
-                at.resource_url: at.last_edited_date for at in audittrails if at
-            }
+        # with parallel(max_workers=self.max_workers) as executor:
+        #     audittrails = list(
+        #         executor.map(
+        #             fetch_latest_audit_trail_data_document,
+        #             [doc.url for doc in documenten],
+        #         )
+        #     )
+        #     last_edited_dates = {
+        #         at.resource_url: at.last_edited_date for at in audittrails if at
+        #     }
 
         # Bulk resolve audittrails.
         for doc in documenten:
-            doc.last_edited_date = last_edited_dates.get(doc.url, None)
+            doc.last_edited_date = None  # last_edited_dates.get(doc.url, None)
 
         return documenten
 
