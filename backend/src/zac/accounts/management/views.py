@@ -8,13 +8,20 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 from rest_framework.views import APIView
 
+from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.models import User
 
+from ..authentication import ApplicationTokenAuthentication
 from .commands.add_atomic_permissions import add_atomic_permissions
 from .commands.add_blueprint_permissions_for_zaaktypen import (
     add_blueprint_permissions_for_zaaktypen_and_iots,
 )
-from .serializers import AddBlueprintPermissionsSerializer, AxesResetSerializer
+from .serializers import (
+    AddBlueprintPermissionsSerializer,
+    AxesResetSerializer,
+    UserLogSerializer,
+)
+from .utils import send_access_log_email
 
 
 class AxesResetView(APIView):
@@ -104,4 +111,26 @@ class AddAtomicPermissionsView(APIView):
     )
     def post(self, request):
         add_atomic_permissions()
+        return Response(status=HTTP_204_NO_CONTENT)
+
+
+class UserLogView(APIView):
+    authentication_classes = (
+        ApplicationTokenAuthentication,
+        TokenAuthentication,
+    )
+    permission_classes = (HasTokenAuth | IsAdminUser,)
+
+    @extend_schema(
+        summary=_("Email user logs"),
+        description=_("Send daily user logs to recipient list."),
+        request=UserLogSerializer,
+        responses={
+            "204": None,
+        },
+    )
+    def post(self, request):
+        serializer = UserLogSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        send_access_log_email(recipient_list=serializer.data["recipient_list"])
         return Response(status=HTTP_204_NO_CONTENT)

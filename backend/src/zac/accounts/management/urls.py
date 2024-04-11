@@ -5,6 +5,7 @@ from .views import (
     AxesResetView,
     ClearRecentlyViewedView,
     LoadBlueprintPermissionsView,
+    UserLogView,
 )
 
 urls = [
@@ -21,7 +22,8 @@ urls = [
     ),
     path(
         "user/recently-viewed/clear",
-        ClearRecentlyViewedView.as_view(),
+        view=ClearRecentlyViewedView.as_view(),
         name="recently-viewed-clear",
     ),
+    path("axes/logs", view=UserLogView.as_view(), name="axes-logs"),
 ]
