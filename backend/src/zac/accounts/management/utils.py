@@ -54,7 +54,7 @@ def send_access_log_email(recipient_list: List[str]) -> None:
         subject=f"{date.today().isoformat()} - gebruikerlogs zaakafhandelcomponent GU",
         body=body,
         from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[recipient_list],
+        to=recipient_list,
     )
 
     with StringIO() as csv_file:
