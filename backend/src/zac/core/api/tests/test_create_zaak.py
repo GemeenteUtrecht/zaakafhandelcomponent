@@ -261,6 +261,35 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             },
         )
 
+    def test_create_zaak_zaak_omschrijving_too_long(self, m):
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        m.get(
+            f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
+            json=paginated_response([self.zaaktype]),
+        )
+        response = self.client.post(
+            self.url,
+            {
+                "zaaktype_identificatie": self.zaaktype["identificatie"],
+                "zaaktype_catalogus": CATALOGUS_URL,
+                "zaak_details": {
+                    "omschrijving": "x" * 81,
+                    "toelichting": "some-toelichting",
+                },
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.json(),
+            {
+                "zaakDetails": {
+                    "omschrijving": [
+                        "Zorg ervoor dat dit veld niet meer dan 80 karakters bevat.",
+                    ]
+                }
+            },
+        )
+
     def test_create_zaak_zaaktype_not_found(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         m.get(

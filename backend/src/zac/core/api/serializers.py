@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 from datetime import datetime
@@ -480,7 +481,7 @@ class DeleteZaakRelationSerializer(serializers.Serializer):
 
 class CreateZaakDetailsSerializer(serializers.Serializer):
     omschrijving = serializers.CharField(
-        required=True, help_text=_("A short summary of the ZAAK.")
+        required=True, help_text=_("A short summary of the ZAAK."), max_length=80
     )
     toelichting = serializers.CharField(
         help_text=_("A comment on the ZAAK."), default="", allow_blank=True
@@ -553,6 +554,11 @@ class CreateZaakSerializer(serializers.Serializer):
 
     def validate(self, data):
         validated_data = super().validate(data)
+        zaak_details = CreateZaakDetailsSerializer(data=validated_data["zaak_details"])
+        zaak_details.is_valid(raise_exception=True)
+        validated_data["zaak_details"] = json.loads(
+            json.dumps(zaak_details.data)
+        )  # django_camunda.utils can't handle ordereddict
         if object := validated_data.pop("object", None):
             validated_data["object_type_overige"] = (
                 validated_data["object_type_overige"] or object["type"]["name"]
