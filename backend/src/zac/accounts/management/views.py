@@ -128,6 +128,7 @@ class UserLogView(APIView):
         responses={
             "204": None,
         },
+        tags=["management"],
     )
     def post(self, request):
         serializer = UserLogSerializer(data=request.data)
