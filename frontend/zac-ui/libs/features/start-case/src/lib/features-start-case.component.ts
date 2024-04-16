@@ -77,6 +77,7 @@ export class FeaturesStartCaseComponent implements OnInit {
         label: 'Zaakomschrijving',
         name: 'omschrijving',
         required: true,
+        maxlength: 80,
         value: '',
       },
       {
