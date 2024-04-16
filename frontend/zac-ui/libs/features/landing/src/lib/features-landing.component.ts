@@ -184,7 +184,7 @@ export class FeaturesLandingComponent implements OnInit {
    * @param {*} error
    */
   reportError(error: any): void {
-    const message = error.error?.value ? error.error?.value[0] : this.errorMessage;
+    const message = error.error?.value?.[0] || error.error?.detail || this.errorMessage;
     this.snackbarService.openSnackBar(message, 'Sluiten', 'warn');
     this.isLoading = false;
     console.error(error);

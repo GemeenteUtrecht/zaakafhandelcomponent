@@ -75,24 +75,122 @@
     <div class="add-auth-profile__formgroup mb-4">
       <div class="row">
         <h3 class="col-12">Gebruikers</h3>
-        <div class="col-12 col-md-6">
-          <p class="mb-4 mt-2">Selecteer gebruikers die je wilt toevoegen aan de groep.</p>
-          <p class="mb-2"><strong>Geselecteerde gebruikers:</strong></p>
-          <div *ngIf="selectedUsers.length > 0" class="mb-4">
+        <ng-container *ngIf="type === 'edit'">
+            <div class="col-12 col-md-6">
+              <gu-radio id="2" label="Gebruikers toevoegen" value="addUser" radioFormControl="mode"></gu-radio>
+            </div>
+            <div class="col-12 col-md-6 mb-2">
+              <gu-radio id="3" label="Gebruikers verwijderen" value="deleteUser" radioFormControl="mode"></gu-radio>
+            </div>
+        </ng-container>
+
+        <div class="col-12">
+          <!--     Create mode   -->
+          <div *ngIf="type === 'create'" class="mb-4">
+            <p class="mb-4 mt-2">Selecteer gebruikers die je wilt toevoegen aan het autorisatieprofiel.</p>
+            <p class="mb-2"><strong>Geselecteerde gebruikers:</strong></p>
             <ul class="p-0">
               <li class="auth-profile-user" *ngFor="let user of showSelectedUsers()">
                 <gu-chip (click)="updateSelectedUsers(user)"
                          class="mr-1"
                          icon="close"
-                         [color]="'primary'">
+                         [color]="'secondary'">
                   {{user.fullName || user.username}}
                 </gu-chip>
               </li>
             </ul>
           </div>
+
+          <!--     Edit mode | Add user    -->
+          <div *ngIf="type === 'edit' && modeControl.value === 'addUser'" class="row mb-4">
+            <div class="col-6">
+              <p class="p--bold mb-4 mt-2">Selecteer gebruikers die je wilt toevoegen aan het autorisatieprofiel:</p>
+              <ul class="p-0">
+                <li class="auth-profile-user" *ngFor="let user of newUsers">
+                  <gu-chip (click)="updateNewUsers(user)"
+                           class="mr-1"
+                           icon="close"
+                           [color]="'primary'">
+                    {{user.fullName || user.username}}
+                  </gu-chip>
+                </li>
+              </ul>
+              <gu-input [control]="searchValueControl"
+                        (input)="searchUsers()"
+                        [hideNotRequiredLabel]="true"
+                        autocomplete="off"
+                        type="text"
+                        placeholder="Typ om gebruikers te zoeken..."
+                        class="mb-4">
+              </gu-input>
+
+              <ul class="p-0">
+                <li class="auth-profile-user" *ngFor="let user of searchResultUsers">
+                  <gu-chip (click)="updateSelectedUsers(user)"
+                           icon="add"
+                           [color]="'tertiary'"
+                           class="d-inline-block mr-1">
+                    {{user.fullName || user.username}}
+                  </gu-chip>
+                </li>
+              </ul>
+            </div>
+            <div class="col-6">
+              <p class="mb-4 mt-2">Huidige gebruikers in dit autorisatieprofiel:</p>
+              <ul class="p-0">
+                <li class="auth-profile-user" *ngFor="let user of showSelectedUsers()">
+                  <gu-chip class="mr-1"
+                           [color]="'secondary'">
+                    {{user.fullName || user.username}}
+                  </gu-chip>
+                </li>
+              </ul>
+              <gu-paginator *ngIf="filterUserAuthProfiles(selectedAuthProfileUuid).length >= 0"
+                            (page)="onPageSelect(selectedAuthProfileUuid, $event)"
+                            [pageSize]="20"
+                            [length]="resultLength"
+              ></gu-paginator>
+            </div>
+          </div>
+
+          <!--     Edit mode | Delete user    -->
+          <div *ngIf="type === 'edit' && modeControl.value === 'deleteUser'"  class="row mb-4">
+            <div class="col-6">
+              <p class="mb-4 mt-2">Selecteer gebruikers die je wilt verwijderen van het autorisatieprofiel.</p>
+              <ul class="p-0">
+                <li class="auth-profile-user" *ngFor="let userAuthProfile of showSelectedUserAuthProfiles()">
+                  <gu-chip (click)="addToRemovedUsers(userAuthProfile)"
+                           class="mr-1"
+                           icon="close"
+                           [color]="'secondary'">
+                    {{userAuthProfile.user.fullName || userAuthProfile.user.username}}
+                  </gu-chip>
+                </li>
+              </ul>
+              <gu-paginator *ngIf="filterUserAuthProfiles(selectedAuthProfileUuid).length >= 0"
+                            (page)="onPageSelect(selectedAuthProfileUuid, $event)"
+                            [pageSize]="20"
+                            [length]="resultLength"
+              ></gu-paginator>
+            </div>
+            <div class="col-6">
+              <p class="mb-2"><strong>Gebruikers die je wilt verwijderen:</strong></p>
+              <ul class="p-0">
+                <li class="auth-profile-user" *ngFor="let userAuthProfile of removedUsers">
+                  <gu-chip (click)="updateRemovedUsers(userAuthProfile)"
+                           class="mr-1"
+                           icon="close"
+                           [color]="'primary'">
+                    {{userAuthProfile.user?.fullName || userAuthProfile.user?.username}}
+                  </gu-chip>
+                </li>
+              </ul>
+            </div>
+          </div>
+
         </div>
 
-        <div class="col-12 col-md-6">
+        <div *ngIf="type === 'create'" class="col-12 col-md-6">
           <gu-input [control]="searchValueControl"
                     (input)="searchUsers()"
                     [hideNotRequiredLabel]="true"

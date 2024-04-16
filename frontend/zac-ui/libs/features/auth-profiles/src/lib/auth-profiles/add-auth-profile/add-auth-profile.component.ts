@@ -5,17 +5,17 @@ import {
   Input,
   OnChanges,
   OnInit,
-  Output,
-  SimpleChanges
+  Output, QueryList,
+  SimpleChanges, ViewChildren
 } from '@angular/core';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
-import { Choice, ModalService, SnackbarService } from '@gu/components';
+import { Choice, ModalService, PaginatorComponent, SnackbarService } from '@gu/components';
 import {
   AuthProfile,
   MetaConfidentiality,
   MetaZaaktypeResult,
   Role, User,
-  UserAuthProfile,
+  UserAuthProfile, UserAuthProfiles,
   UserSearchResult,
   ZaakPolicy
 } from '@gu/models';
@@ -38,8 +38,8 @@ import { atleastOneValidator } from '@gu/utils';
   styleUrls: ['./add-auth-profile.component.scss']
 })
 export class AddAuthProfileComponent implements OnInit, OnChanges {
+  @ViewChildren(PaginatorComponent) paginators: QueryList<PaginatorComponent>;
   @Input() type: "create" | "edit";
-  @Input() selectedUserAuthProfiles: UserAuthProfile[];
   @Input() selectedAuthProfile: AuthProfile;
   @Input() selectedAuthProfileUuid: string;
   @Input() roles: Role[];
@@ -49,6 +49,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   readonly createAuthProfileSuccessMessage = "Het profiel is aangemaakt."
   readonly updateAuthProfileSuccessMessage = "Het profiel is bijgewerkt."
 
+  readonly getAuthProfilesErrorMessage = "Er is een fout opgetreden bij het ophalen van de autorisatieprofielen.";
   authProfileForm: FormGroup;
   currentAuthProfileUuid: string;
 
@@ -61,11 +62,20 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   currentSearchValue: string;
   searchResultUsers: UserSearchResult[];
   selectedUsers: UserSearchResult[] | User[] = [];
+  selectedUserAuthProfiles: UserAuthProfile[];
+  removedUsers: UserAuthProfile[] = [];
+  removedUsersAuthProfiles: UserAuthProfile[];
+  newUsers: any = [];
+
+  userAuthProfiles: UserAuthProfile[] = [];
 
   isLoading: boolean;
   errorMessage: string;
 
   nBlueprintPermissions = 1;
+
+  page = 1;
+  resultLength = 0;
 
   constructor(
     private fService: FeaturesAuthProfilesService,
@@ -78,12 +88,17 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
       name: this.fb.control("", Validators.required),
       searchValue: this.fb.control(""),
       bluePrintPermissions: this.fb.array([this.addBlueprintPermission()], atleastOneValidator()),
+      mode: this.fb.control("none")
     })
   }
 
   //
   // Getters / setters.
   //
+
+  get modeControl() {
+    return this.authProfileForm.get('mode') as FormControl;
+  }
 
   get authProfileNameControl() {
     return this.authProfileForm.get('name') as FormControl;
@@ -126,6 +141,12 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     const isUpdatedAuthProfile = this.currentAuthProfileUuid !== this.selectedAuthProfileUuid;
     this.currentAuthProfileUuid = isUpdatedAuthProfile ? this.selectedAuthProfileUuid : this.currentAuthProfileUuid;
 
+    if (isUpdatedAuthProfile) {
+      this.modeControl.setValue('none');
+      this.newUsers = [];
+      this.removedUsers = [];
+    }
+
     if (this.type === "edit" && this.selectedAuthProfile) {
       this.setContextEditMode(isUpdatedAuthProfile);
     }
@@ -144,7 +165,8 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
       // Set auth profile name
       this.authProfileNameControl.patchValue(this.selectedAuthProfile?.name ? this.selectedAuthProfile.name : '');
 
-      this.selectedUsers = this.preselectedUsers;
+      // this.selectedUsers = this.getPreselectedUsers();
+      this.getUserAuthProfiles(this.selectedAuthProfileUuid, 1);
 
       // Clear search results
       this.searchValueControl.patchValue('')
@@ -176,6 +198,45 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
       })
     }
   }
+
+  /**
+   * Retrieve auth profiles.
+   */
+  getUserAuthProfiles(uuid, page?) {
+    if (this.paginators && page === 1) {
+      this.paginators.forEach(paginator => {
+        paginator.firstPage();
+      })
+    }
+
+    // Check if the uuid is present in previously requested userAuthProfiles
+    this.isLoading = true;
+    this.fService.getUserAuthProfiles(this.selectedAuthProfileUuid, page, 20).subscribe(
+      (data: UserAuthProfiles) => {
+        this.userAuthProfiles = data.results
+        this.selectedUsers = this.filterUserAuthProfileUsers(this.selectedAuthProfileUuid);
+        this.selectedUserAuthProfiles = this.filterUserAuthProfiles(this.selectedAuthProfileUuid);
+        this.resultLength = data.count;
+        this.isLoading = false;
+      },
+      (err) => {
+        this.isLoading = false;
+        this.errorMessage = this.getAuthProfilesErrorMessage;
+        this.reportError(err);
+      }
+    );
+  }
+
+  filterUserAuthProfiles(uuid) {
+    return this.userAuthProfiles.filter((profile) => profile.authProfile === uuid)
+      .sort((a,b) => ((a.user.fullName || a.user.username) > (b.user.fullName || b.user.username)) ? 1 : (((b.user.fullName || b.user.username) > (a.user.fullName || a.user.username)) ? -1 : 0));
+  }
+
+  filterUserAuthProfileUsers(uuid) {
+    const profiles = this.filterUserAuthProfiles(uuid);
+    return profiles.map((profile) => profile.user);
+  }
+
 
   /**
    * Opens modal.
@@ -299,22 +360,28 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * POST form data to API.
    */
   updateUserAuthProfiles(uuid) {
-    const newUsers = this.selectedUsers.filter(({ id: id1 }) => !this.preselectedUsers.some(({ id: id2 }) => id2 === id1));
-    const removedUsers = this.preselectedUsers.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
 
     // Retrieve user auth profile id of each user that has to be removed
-    const removedUserAuthProfiles = this.selectedUserAuthProfiles.filter(({ user: user }) => removedUsers.some(({ id: id }) => id === user.id));
 
-    this.fService.createUserAuthProfile(newUsers, uuid).subscribe(
-      () => {
-        this.fService.deleteUserAuthProfile(removedUserAuthProfiles).subscribe(
-          () => {
-            this.closeModal('edit-auth-profile-modal');
-            this.snackbarService.openSnackBar(this.updateAuthProfileSuccessMessage, 'Sluiten', 'primary');
-            this.resetForm();
-          }, this.reportError.bind(this))
-      }, this.reportError.bind(this)
-    )
+    if (this.modeControl.value === "addUser") {
+      this.fService.createUserAuthProfile(this.newUsers, uuid).subscribe(
+        () => {
+          this.closeModal('edit-auth-profile-modal');
+          this.snackbarService.openSnackBar(this.updateAuthProfileSuccessMessage, 'Sluiten', 'primary');
+          this.resetForm();
+        }, this.reportError.bind(this)
+      )
+    }
+
+    if (this.modeControl.value === "deleteUser") {
+      // this.removedUsersAuthProfiles
+      this.fService.deleteUserAuthProfile(this.removedUsers).subscribe(
+        () => {
+          this.closeModal('edit-auth-profile-modal');
+          this.snackbarService.openSnackBar(this.updateAuthProfileSuccessMessage, 'Sluiten', 'primary');
+          this.resetForm();
+        }, this.reportError.bind(this))
+    }
   }
 
   /**
@@ -374,19 +441,64 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   }
 
   /**
+   * When paginator fires
+   * @param uuid
+   * @param page
+   */
+  onPageSelect(uuid, page) {
+    this.getUserAuthProfiles(uuid, page.pageIndex + 1);
+  }
+
+  /**
    * Update selected users array.
    * @param {UserSearchResult} user
    */
   updateSelectedUsers(user: UserSearchResult) {
-    const isInSelectedUsers = this.isInSelectedUser(user);
-    if (!isInSelectedUsers) {
-      this.selectedUsers.push(user);
-      this.searchResultUsers = this.searchResultUsers.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
+    if (this.modeControl.value === 'none') {
+      const isInSelectedUsers = this.isInSelectedUser(user);
+      if (!isInSelectedUsers) {
+        this.selectedUsers.push(user);
+        this.searchResultUsers = this.searchResultUsers.filter(({ id: id1 }) => !this.selectedUsers.some(({ id: id2 }) => id2 === id1));
+        this.cdRef.detectChanges();
+      } else if (isInSelectedUsers) {
+        const i = this.selectedUsers.findIndex(userObj => userObj.id === user.id);
+        this.selectedUsers.splice(i, 1);
+        this.searchUsers(true);
+        this.cdRef.detectChanges();
+      }
+    } else if (this.modeControl.value === 'addUser') {
+      this.addToNewUsers(user);
+    }
+  }
+
+  addToNewUsers(user) {
+    const isInNewUser = this.isInNewUser(user);
+    if (!isInNewUser) {
+      this.newUsers.push(user);
       this.cdRef.detectChanges();
-    } else if (isInSelectedUsers) {
-      const i = this.selectedUsers.findIndex(userObj => userObj.id === user.id);
-      this.selectedUsers.splice(i, 1);
-      this.searchUsers(true);
+    }
+  }
+  updateNewUsers(user) {
+    const isInNewUser = this.isInNewUser(user);
+    if (isInNewUser) {
+      const i = this.newUsers.findIndex(userObj => userObj.id === user.id);
+      this.newUsers.splice(i, 1);
+      this.cdRef.detectChanges();
+    }
+  }
+
+  addToRemovedUsers(user) {
+    const isInRemovedUsers = this.isInRemovedUser(user);
+    if (!isInRemovedUsers) {
+      this.removedUsers.push(user);
+      this.cdRef.detectChanges();
+    }
+  }
+  updateRemovedUsers(user) {
+    const isInRemovedUsers = this.isInRemovedUser(user);
+    if (isInRemovedUsers) {
+      const i = this.removedUsers.findIndex(userObj => userObj.id === user.id);
+      this.removedUsers.splice(i, 1);
       this.cdRef.detectChanges();
     }
   }
@@ -403,11 +515,41 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   }
 
   /**
+   * Check if user exists in current selected users array.
+   * @param {UserSearchResult} user
+   * @returns {boolean}
+   */
+  isInRemovedUser(user: UserSearchResult) {
+    return this.removedUsers.some(userObj => {
+      return userObj.id === user.id
+    });
+  }
+
+  /**
+   * Check if user exists in current selected users array.
+   * @param {UserSearchResult} user
+   * @returns {boolean}
+   */
+  isInNewUser(user: UserSearchResult) {
+    return this.newUsers.some(userObj => {
+      return userObj.id === user.id
+    });
+  }
+
+  /**
    * Convert selected users to human readible string.
    * @returns {string[]}
    */
   showSelectedUsers() {
     return this.selectedUsers.sort((a,b) => ((a.fullName || a.username) > (b.fullName || b.username)) ? 1 : (((b.fullName || b.username) > (a.fullName || a.username)) ? -1 : 0))
+  }
+
+  /**
+   * Convert selected users to human readible string.
+   * @returns {string[]}
+   */
+  showSelectedUserAuthProfiles() {
+    return this.selectedUserAuthProfiles.sort((a,b) => ((a.user.fullName || a.user.username) > (b.user.fullName || b.user.username)) ? 1 : (((b.user.fullName || b.user.username) > (a.user.fullName || a.user.username)) ? -1 : 0))
   }
 
   //
@@ -419,7 +561,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
    * @param {*} error
    */
   reportError(error: any): void {
-    this.errorMessage = error.error?.name[0] || 'Er is een fout opgetreden';
+    this.errorMessage = error.error?.detail || 'Er is een fout opgetreden';
     this.snackbarService.openSnackBar(this.errorMessage, 'Sluiten', 'warn');
     this.isLoading = false;
     console.error(error);
