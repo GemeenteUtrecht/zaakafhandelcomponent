@@ -58,7 +58,7 @@
                 </ng-container>
               </ul>
             </ng-container>
-            <gu-paginator *ngIf="filterUserAuthProfiles(authProfile.uuid).length >= 0"
+            <gu-paginator *ngIf="filterUserAuthProfiles(authProfile.uuid).length > 0"
                           (page)="onPageSelect(authProfile.uuid, $event)"
                           [pageSize]="50"
                           [length]="resultLength"
@@ -100,7 +100,6 @@
     <gu-add-auth-profile *ngIf="roles && selectedAuthProfile"
                          [roles]="roles"
                          [type]="'edit'"
-                         [selectedUserAuthProfiles]="selectedUserAuthProfiles"
                          [selectedAuthProfile]="selectedAuthProfile"
                          [selectedAuthProfileUuid]="selectedAuthProfile.uuid"
                          [preselectedUsers]="filterUserAuthProfileUsers(selectedAuthProfile.uuid)"

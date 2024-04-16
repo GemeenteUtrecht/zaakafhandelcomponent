@@ -101,7 +101,7 @@ export class AuthProfilesComponent implements OnInit {
     return authProfile.blueprintPermissions.some(perm => perm.objectType === "zaak")
   }
 
-  filterUserAuthProfiles(uuid, page?) {
+  filterUserAuthProfiles(uuid,) {
     return this.userAuthProfiles.filter((profile) => profile.authProfile === uuid)
       .sort((a,b) => ((a.user.fullName || a.user.username) > (b.user.fullName || b.user.username)) ? 1 : (((b.user.fullName || b.user.username) > (a.user.fullName || a.user.username)) ? -1 : 0));
   }
