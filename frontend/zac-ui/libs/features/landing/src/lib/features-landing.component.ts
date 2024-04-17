@@ -36,7 +36,7 @@ export class FeaturesLandingComponent implements OnInit {
   /** @type {(LandingPage|null)} The landing page once retrieved. */
   landingPage: LandingPage | null = null;
   recentlyViewedCases: RecentlyViewed[] = [];
-  activeCases: number = null;
+  activeCases: number = 0;
 
   searchResults: any = [];
   filteredResults: any = [];
@@ -100,7 +100,7 @@ export class FeaturesLandingComponent implements OnInit {
 
     this.workstackService.getWorkstackSummary().subscribe(
       (res) => {
-        this.activeCases = res?.zaken;
+        this.activeCases = res?.userTasks;
       }
     );
 
