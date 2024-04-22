@@ -8,12 +8,20 @@
 ZAC Documentation
 =================
 
+:Version: 1.0.16
+:Source: https://github.com/GemeenteUtrecht/zaakafhandelcomponent
+:Keywords: zac, zaakafhandelcomponent, VNG, Common Ground
+:PythonVersion: 3.9
+
+|black|
+
 Welcome to the documentation for the zaakafhandelcomponent (ZAC).
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents
 
+   technical_requirements
    admin/index
    config/index
    authorizations/index
@@ -32,3 +40,7 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
+
