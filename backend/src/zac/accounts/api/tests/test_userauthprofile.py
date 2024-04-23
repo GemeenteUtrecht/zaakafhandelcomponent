@@ -360,6 +360,33 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             },
         )
 
+        # regression test for multiple uaps
+        data = {
+            "user": self.user.username,
+            "authProfile": auth_profile.uuid,
+            "start": "2001-01-01T23:59:59Z",
+        }
+        response = self.client.post(url, data)
+
+        # Make sure it updated
+        self.assertEqual(UserAuthorizationProfile.objects.count(), 3)
+        # Make sure one is active and the other is deactivated
+        self.assertEqual(
+            UserAuthorizationProfile.objects.filter(is_active=True).count(), 1
+        )
+        uap3 = UserAuthorizationProfile.objects.filter(is_active=True).get()
+        self.assertEqual(
+            response.json(),
+            {
+                "authProfile": str(auth_profile.uuid),
+                "end": "2999-12-31T00:00:00Z",
+                "id": uap3.id,
+                "start": "2001-01-01T23:59:59Z",
+                "user": self.user.username,
+                "isActive": True,
+            },
+        )
+
     def test_create_user_auth_profile_duplicate_but_different_time_period(self):
         role = RoleFactory.create()
         blueprint_permission = BlueprintPermissionFactory.create(

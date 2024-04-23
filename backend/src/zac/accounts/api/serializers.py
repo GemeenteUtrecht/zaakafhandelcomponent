@@ -692,11 +692,12 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
             qs := UserAuthorizationProfile.objects.filter(
                 user=self.validated_data["user"],
                 auth_profile=self.validated_data["auth_profile"],
+                is_active=True,
             )
         ) and qs.exists():
-            old = qs.get()
-            old.is_active = False
-            old.save()
+            for obj in qs:
+                obj.is_active = False
+                obj.save()
             model = self.Meta.model()
         else:
             model = self.Meta.model()
