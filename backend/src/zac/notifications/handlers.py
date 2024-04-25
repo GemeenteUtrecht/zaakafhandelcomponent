@@ -1,7 +1,9 @@
 import logging
 from typing import Dict
 
-from django_camunda.api import send_message
+from django.conf import settings
+
+from django_camunda.api import complete_task, send_message
 from elasticsearch.exceptions import NotFoundError
 from requests.exceptions import HTTPError
 from zgw_consumers.api_models.base import factory
@@ -12,6 +14,7 @@ from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
+from zac.camunda.user_tasks.api import get_camunda_user_tasks
 from zac.contrib.board.models import BoardItem
 from zac.contrib.dowc.api import bulk_close_all_documents_for_zaak
 from zac.contrib.objects.kownsl.cache import invalidate_review_requests_cache
@@ -198,7 +201,7 @@ class ZakenHandler:
         status.statustype = get_statustype(status.statustype)
         zaak.status = status
 
-        # if THIS status means the zaak is closed ->
+        # if THIS status is set it means the zaak is closed ->
         if zaak.status.statustype.is_eindstatus:
             # Lock all review requests related to zaak
             bulk_lock_review_requests_for_zaak(
@@ -220,6 +223,17 @@ class ZakenHandler:
 
             # Lock checklist
             lock_checklist_for_zaak(zaak)
+
+            # Remove bijdragezaak tasks if they exist - should be handled by
+            tasks = get_camunda_user_tasks(
+                payload={
+                    "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME
+                    + zaak.identificatie
+                }
+            )
+            if tasks:
+                for task in tasks:
+                    complete_task(task.id)
 
         # index in ES
         update_status_in_zaak_document(zaak)

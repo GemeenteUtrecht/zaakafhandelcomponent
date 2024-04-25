@@ -1,6 +1,7 @@
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
@@ -146,6 +147,8 @@ class StatusCreatedTests(ESMixin, APITestCase):
         activity = ActivityFactory.create(
             zaak=zaak["url"], status=ActivityStatuses.on_going
         )
+        task = MagicMock()
+        task.id = "some-id"
         with patch(
             "zac.notifications.handlers.bulk_lock_review_requests_for_zaak"
         ) as mock_bulk_lock_rr_for_zaak:
@@ -155,11 +158,24 @@ class StatusCreatedTests(ESMixin, APITestCase):
                 with patch(
                     "zac.notifications.handlers.lock_checklist_for_zaak"
                 ) as mock_lock_checklist_for_zaak:
-                    response = self.client.post(path, NOTIFICATION)
+                    with patch(
+                        "zac.notifications.handlers.get_camunda_user_tasks",
+                        return_value=[task],
+                    ) as mock_get_camunda_user_tasks:
+                        with patch(
+                            "zac.notifications.handlers.complete_task"
+                        ) as mock_complete_task:
+                            response = self.client.post(path, NOTIFICATION)
 
         mock_bulk_lock_rr_for_zaak.assert_called_once()
         mock_bulk_close_all_documents_for_zaak.assert_called_once()
         mock_lock_checklist_for_zaak.assert_called_once()
+        mock_get_camunda_user_tasks.assert_called_once_with(
+            payload={
+                "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME + zaak["identificatie"]
+            }
+        )
+        mock_complete_task.assert_called_once_with("some-id")
 
         activity.refresh_from_db()
         self.assertEqual(activity.status, ActivityStatuses.finished)
