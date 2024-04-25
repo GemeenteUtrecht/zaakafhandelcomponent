@@ -598,6 +598,8 @@ SCIM_SERVICE_PROVIDER = {
 
 # Custom settings
 UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")
+
+# Custom camunda settings
 CREATE_ZAAK_PROCESS_DEFINITION_KEY = config(
     "CREATE_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_aanmaken"
 )
@@ -605,6 +607,11 @@ RESTART_ZAAK_PROCESS_DEFINITION_KEY = config(
     "RESTART_ZAAK_PROCESS_DEFINITION_KEY", default="zaak_herstarten"
 )
 FILTERED_CAMUNDA_VARIABLES = config("FILTERED_CAMUNDA_VARIABLES", default=["bptlAppId"])
+CAMUNDA_OPEN_BIJDRAGE_TASK_NAME = config(
+    "CAMUNDA_OPEN_BIJDRAGE_TASK_NAME", default="Open bijdragezaak: "
+)
+
+# Custom filters for various objects
 FILTERED_IOTS = config("FILTERED_IOTS", default=["Importdocument"])
 
 # Django-Hijack

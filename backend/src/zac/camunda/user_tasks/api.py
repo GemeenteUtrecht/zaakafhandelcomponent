@@ -116,6 +116,9 @@ def get_camunda_user_tasks(
         client = get_client()
 
     tasks = client.post("task", json=payload)
+    if not tasks:
+        return []
+
     tasks = factory(Task, tasks)
 
     # Group assignees in dictionary for performance
