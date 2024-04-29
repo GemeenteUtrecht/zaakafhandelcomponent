@@ -1,0 +1,14 @@
+<div class="remind-review">
+  <gu-loading-indicator *ngIf="isSubmitting"></gu-loading-indicator>
+  <h3 *ngIf="reviewRequestSummary?.reviewType === 'advice'">Adviseurs rappelleren</h3>
+  <h3 *ngIf="reviewRequestSummary?.reviewType === 'approval'">Accordeurs rappelleren</h3>
+
+  <p>Weet je zeker dat je een rappel wilt versturen?</p>
+
+  <button gu-button
+          (click)="remindReview()"
+          [disabled]="isSubmitting"
+          [loading]="isSubmitting">
+    Versturen
+  </button>
+</div>

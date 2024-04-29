@@ -450,6 +450,13 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   }
 
   /**
+   * Reset selected zaak object value.
+   */
+  resetForm() {
+    this.selectedZaakObject = null;
+  }
+
+  /**
    * Gets called when form is submitted.
    * @param {Object} data
    */

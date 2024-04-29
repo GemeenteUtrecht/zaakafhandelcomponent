@@ -6,7 +6,7 @@ import {SearchService} from '../search.service';
 import {MapGeometry, MapMarker} from "../../../../../shared/ui/components/src/lib/components/map/map";
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-import { SearchResultsComponent } from '../search-results/search-results.component';
+import { ZaakObjectSearchFormComponent } from './object-search-form/zaak-object-search-form.component';
 
 
 /**
@@ -23,6 +23,7 @@ import { SearchResultsComponent } from '../search-results/search-results.compone
   styleUrls: ['./search-form.component.scss']
 })
 export class SearchFormComponent {
+  @ViewChild(ZaakObjectSearchFormComponent) zaakObjectSearchFormComponent: ZaakObjectSearchFormComponent;
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar zaken.'
 
   @Input() sortData: TableSort;
@@ -67,9 +68,9 @@ export class SearchFormComponent {
   //
 
   /**
-   * Gets called when zaak (case) objects are searched for.
+   * Resets results.
    */
-  searchObjects() {
+  resetResults() {
     this.loadResult.emit([]);
     this.resultLength.emit(0);
     this.showResults.emit(false);
@@ -104,10 +105,11 @@ export class SearchFormComponent {
    * @returns {string}
    */
   handleTabClick(event, tab) {
-    event.preventDefault()
+    event.preventDefault();
     this.setUrl(tab.link);
     this.activatedChildRoute = tab.link.split('/')[2];
-    this.searchObjects();
+    this.resetResults();
+    this.zaakObjectSearchFormComponent.resetForm();
   }
 
   /**

@@ -233,10 +233,8 @@ export class KownslSummaryComponent implements OnInit {
       this.selectedReviewRequestSummary = event.cancel;
       this.modalService.open('cancel-review-modal')
     } else if (event.remind) {
-      this.reviewRequestsService.remindReviewRequest(event.remind.id)
-        .subscribe(() => {
-          this.snackbarService.openSnackBar('Verzonden', 'Sluiten', 'primary');
-        })
+      this.selectedReviewRequestSummary = event.remind;
+      this.modalService.open('remind-review-modal')
     } else if (event.toelichting) {
       this.selectedReviewRequestSummary = event.toelichting;
       this.getReviewRequestDetails(event.toelichting);
