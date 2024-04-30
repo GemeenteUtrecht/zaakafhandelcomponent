@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from itertools import chain, islice
-from typing import Iterator
+from typing import Iterator, List, Optional, Union
 
 from django.conf import settings
 from django.core.management.base import CommandParser
@@ -9,7 +9,14 @@ from elasticsearch.helpers import bulk
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 
+from zac.core.cache import (
+    invalidate_zaak_cache,
+    invalidate_zaakeigenschappen_cache,
+    invalidate_zaakobjecten_cache,
+)
+from zac.core.services import get_zaak
 from zac.elasticsearch.documents import ZaakDocument
+from zgw.models import Zaak
 
 from ...utils import check_if_index_exists
 from ..utils import ProgressOutputWrapper
@@ -68,35 +75,20 @@ class IndexCommand(ABC):
         for ind in self.relies_on.keys():
             check_if_index_exists(ind)
 
-    def handle_reindex(self) -> list:
-        # Edge case checks
-        for doc in self.relies_on.values():
-            if doc.search().extra(size=0).count() == 0:
-                self.stdout.end_progress()
-                return []
-
-        # Fetch last <int:self.reindex_last> zaken, the ZIOs related to those zaken
-        # and see if we have all the EIOs related to the ZIOs.
-        return (
-            ZaakDocument.search()
-            .sort("-identificatie.keyword")
-            .extra(size=self.reindex_last)
-            .execute()
-            .hits
-        )
-
     def add_arguments(self, parser: CommandParser) -> None:
         super().add_arguments(parser)
+
+        parser.add_argument(
+            "--chunk-size",
+            type=int,
+            help="Indicates the chunk size for number of a single ES scan iteration. Defaults to 100.",
+            default=settings.CHUNK_SIZE,
+        )
         parser.add_argument(
             "--max-workers",
             type=int,
             help="Indicates the max number of parallel workers (for memory management). Defaults to 4.",
-            default=4,
-        )
-        parser.add_argument(
-            "--reindex-last",
-            type=int,
-            help="Indicates the number of the most recent documents to be reindexed.",
+            default=settings.MAX_WORKERS,
         )
         parser.add_argument(
             "--progress",
@@ -108,10 +100,12 @@ class IndexCommand(ABC):
             ),
         )
         parser.add_argument(
-            "--chunk-size",
+            "--reindex-last",
             type=int,
-            help="Indicates the chunk size for number of a single ES scan iteration. Defaults to 100.",
-            default=100,
+            help="Indicates the number of the most recent documents to be reindexed.",
+        )
+        parser.add_argument(
+            "--reindex-zaak", type=str, help="URL-reference of ZAAK to be reindexed."
         )
 
     def handle(self, **options):
@@ -119,12 +113,18 @@ class IndexCommand(ABC):
         # we have a progress bar
         show_progress = options["progress"]
         self.stdout = ProgressOutputWrapper(show_progress, out=self.stdout._out)
+        self.chunk_size = options["chunk_size"]
         self.max_workers = options["max_workers"]
         self.reindex_last = options["reindex_last"]
-        self.chunk_size = options["chunk_size"]
+        self.reindex_zaak = options.get("reindex_zaak", "")
 
         self.es_client = connections.get_connection()
-        if self.reindex_last:
+        if self.reindex_last and self.reindex_zaak:
+            raise RuntimeError(
+                f"Can only index last {self.reindex_last} ZAAKen or ZAAK: {self.reindex_zaak}."
+            )
+
+        if self.reindex_last or self.reindex_zaak:
             self.handle_reindexing()
         else:
             self.handle_indexing()
@@ -134,16 +134,48 @@ class IndexCommand(ABC):
         for first in iterator:
             yield chain([first], islice(iterator, self.chunk_size - 1))
 
+    def get_reindexable_zaken(self) -> list:
+        # Edge case checks
+        for doc in self.relies_on.values():
+            if doc.search().extra(size=0).count() == 0:
+                self.stdout.end_progress()
+                return []
+
+        # Fetch last <int:self.reindex_last> zaken
+        return (
+            ZaakDocument.search()
+            .sort("-identificatie.keyword")
+            .extra(size=self.reindex_last)
+            .execute()
+            .hits
+        )
+
+    def get_reindexable_zaak(self):
+        zaak = get_zaak(zaak_url=self.reindex_zaak)
+        self.stdout.write(f"Update {self._index} for ZAAK: {zaak.identificatie}.")
+        return zaak
+
     def handle_reindexing(self):
         # Make sure the index exists...
         check_if_index_exists(index=self.index)
-        self.reindexed = (
-            0  # To keep track of how many documents have already been reindexed.
-        )
+
+        if self.reindex_zaak:
+            # make sure we get uncached zaak(eigenschappen)(objecten):
+            zaak = get_zaak(zaak_url=self.reindex_zaak)
+            invalidate_zaak_cache(zaak)
+            invalidate_zaakeigenschappen_cache(zaak)
+            invalidate_zaakobjecten_cache(zaak)
+
         self.bulk_upsert()
-        self.stdout.write(
-            f"{self.verbose_name_plural} for the last {self.reindex_last} ZAAKen are reindexed."
-        )
+
+        if self.reindex_last:
+            self.stdout.write(
+                f"{self.verbose_name_plural} for the last {self.reindex_last} ZAAKen are reindexed."
+            )
+        if self.reindex_zaak:
+            self.stdout.write(
+                f"{self.verbose_name_plural} for the ZAAK: {zaak.identificatie} is reindexed."
+            )
 
     def handle_indexing(self):
         # If we're indexing everything - clear the index.
@@ -164,16 +196,18 @@ class IndexCommand(ABC):
             chunk_size=settings.ES_CHUNK_SIZE,
         )
 
-    def check_if_done_batching(self) -> bool:
-        if self.reindex_last and self.reindex_last - self.reindexed == 0:
-            return True
-        return False
-
     def clear_index(self):
         index = Index(self.index)
         index.delete(ignore=404)
 
+    def get_zaken(self) -> Optional[List[Union[Zaak, ZaakDocument]]]:
+        zaken = None
+        if self.reindex_zaak:
+            zaken = [self.get_reindexable_zaak()]
+        if self.reindex_last:
+            zaken = list(self.get_reindexable_zaken())
+        return zaken
+
     @abstractmethod
     def batch_index(self) -> Iterator:
         self.check_relies_on()
-        pass

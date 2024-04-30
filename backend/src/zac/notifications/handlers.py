@@ -37,7 +37,7 @@ from zac.core.cache import (
 )
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
-    _client_from_url,
+    client_from_url,
     delete_zaakobjecten_of_object,
     fetch_object,
     fetch_rol,
@@ -130,7 +130,7 @@ class ZakenHandler:
 
     @staticmethod
     def _retrieve_zaak(zaak_url) -> Zaak:
-        zrc_client = _client_from_url(zaak_url)
+        zrc_client = client_from_url(zaak_url)
         zaak = zrc_client.retrieve("zaak", url=zaak_url)
         zaak = factory(Zaak, zaak)
 
@@ -166,7 +166,7 @@ class ZakenHandler:
             logger.warning("Could not find informatieobjecten index.")
 
     def _handle_zaak_create(self, zaak_url: str):
-        client = _client_from_url(zaak_url)
+        client = client_from_url(zaak_url)
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_list_cache(client, zaak)
         # index in ES
@@ -193,7 +193,7 @@ class ZakenHandler:
         zaak = self._retrieve_zaak(data["hoofd_object"])
         invalidate_zaak_cache(zaak)
 
-        zrc_client = _client_from_url(
+        zrc_client = client_from_url(
             data["resource_url"]
         )  # make sure we fetch the status that was created HERE (could be race conditions)
         status = zrc_client.retrieve("status", url=data["resource_url"])

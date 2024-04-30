@@ -60,7 +60,9 @@ class Command(IndexCommand, BaseCommand):
         self.stdout.write("Starting OBJECT retrieval from the configured OBJECTs API.")
         client = get_objects_client()
 
-        if not self.reindex_last:
+        zaken = self.get_zaken()
+
+        if not zaken:
             query_params = {"pageSize": 100}
             get_more = True
             while get_more:
@@ -79,7 +81,6 @@ class Command(IndexCommand, BaseCommand):
 
                 yield from self.documenten_generator(objects["results"])
         else:
-            zaken = self.handle_reindex()
             for zaak in zaken:
                 # First check to see if there are any zaakobjecten here before we iterate through a scan.
                 if (

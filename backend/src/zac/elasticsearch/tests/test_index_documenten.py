@@ -165,6 +165,8 @@ class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             f"{DRC_ROOT}enkelvoudiginformatieobjecten",
             json=paginated_response([self.document1, self.document2]),
         )
+        mock_resource_get(m, self.document1)
+        mock_resource_get(m, self.document2)
         m.get(f"{self.document1['url']}/audittrail", status_code=404)
         m.get(f"{self.document2['url']}/audittrail", status_code=404)
         mock_resource_get(m, self.catalogus)

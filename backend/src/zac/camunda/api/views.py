@@ -41,7 +41,7 @@ from zac.camunda.user_tasks.api import (
 from zac.core.api.permissions import CanCreateZaken, CanReadZaken
 from zac.core.api.serializers import ZaakSerializer
 from zac.core.camunda.utils import get_process_zaak_url, resolve_assignee
-from zac.core.services import _client_from_url, fetch_zaaktype, get_roltypen, get_zaak
+from zac.core.services import client_from_url, fetch_zaaktype, get_roltypen, get_zaak
 from zgw.models import Zaak
 
 from ..user_tasks.history import get_camunda_history_for_zaak
@@ -529,7 +529,7 @@ class SetTaskAssigneeView(APIView):
             return
         roltype = roltypen[0]
 
-        zrc_client = _client_from_url(zaak.url)
+        zrc_client = client_from_url(zaak.url)
 
         betrokkene_identificatie = {
             "identificatie": f"{AssigneeTypeChoices.user}:{user}",
