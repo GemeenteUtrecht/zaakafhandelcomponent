@@ -1,12 +1,12 @@
 import datetime
 import logging
 import time
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator, List, Optional, Tuple
+from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
 from django.core.management import BaseCommand
 
-import click
 import requests
 from elasticsearch_dsl.query import Term, Terms
 from requests.models import Response
@@ -33,6 +33,7 @@ from ..utils import get_memory_usage
 from .base_index import IndexCommand
 
 perf_logger = logging.getLogger("performance")
+logger = logging.getLogger(__name__)
 
 
 class Command(IndexCommand, BaseCommand):
@@ -46,13 +47,29 @@ class Command(IndexCommand, BaseCommand):
         settings.ES_INDEX_ZIO: ZaakInformatieObjectDocument,
     }
 
-    def make_request(self, url) -> Response:
-        return requests.get(url, headers=self.headers)
+    def get_request_args(
+        self, clients, eio: str
+    ) -> Optional[Tuple[Dict[str, str], str]]:
+        split_url = urlsplit(eio)
+        scheme_and_domain = urlunsplit(split_url[:2] + ("", "", ""))
+        for base_url, client in clients.items():
+            if base_url.startswith(scheme_and_domain):
+                return (eio, client.auth.credentials())
+        return None
 
-    def get_documenten(self, client, eios: List[str]) -> List[Document]:
-        self.headers = client.auth.credentials()
+    def make_request(self, url_with_header: Tuple[Dict[str, str], str]) -> Response:
+        return requests.get(url_with_header[0], headers=url_with_header[1])
+
+    def get_documenten(self, clients, eios: List[str]) -> List[Document]:
+        requests_args = []
+        for eio in eios:
+            if request_args := self.get_request_args(clients, eio):
+                requests_args.append(request_args)
+            else:
+                logger.warning("Did not find a client for %s." % eio)
+
         with parallel(max_workers=self.max_workers) as executor:
-            responses = list(executor.map(self.make_request, eios))
+            responses = list(executor.map(self.make_request, requests_args))
 
         return [
             factory(Document, resp.json())
@@ -88,15 +105,26 @@ class Command(IndexCommand, BaseCommand):
         self.stdout.write(
             f"Starting {self.verbose_name_plural} retrieval from the configured APIs."
         )
+        drcs = Service.objects.filter(api_type=APITypes.drc)
+        clients = {drc.api_root: drc.build_client() for drc in drcs}
 
-        if not self.reindex_last:
-            # Just get everything.
-            drcs = Service.objects.filter(api_type=APITypes.drc)
-            clients = [drc.build_client() for drc in drcs]
+        zaken = self.get_zaken()
+        if not zaken:
+            # Get all zaken from elasticsearch index and use reindex_last anyway.
+            # See comment under next `if not zaken:`
+            zaken = list(
+                ZaakDocument.search().sort("-identificatie.keyword").execute().hits
+            )
+            self.reindex_last = len(zaken)
 
+        if not zaken:
+            # Currently not supported because alfresco endpoint crashes.
+            # Use --reindex-last <total number of zaken:int> instead.
+
+            # Get everything
             # Report back which clients will be iterated over and how many IOs each has.
             total_expected = 0
-            for client in clients:
+            for client in clients.values():
                 # Fetch the first page so we get the total count to be fetched.
                 response = client.list(self.type)
                 client_total_num = response["count"]
@@ -109,54 +137,30 @@ class Command(IndexCommand, BaseCommand):
 
             # Get time at start
             time_at_start = time.time()
-            with click.progressbar(
-                length=total_expected,
-                label=f"Indexing {self._verbose_name_plural}",
-                file=self.stdout.progress_file(),
-            ) as bar:
-                for client in clients:
-                    perf_logger.info("Starting indexing for client %s.", client)
-                    perf_logger.info("Memory usage: %s.", get_memory_usage())
-                    get_more = True
-                    query_params = {}
-                    while get_more:
-                        # Refresh client authentication in case this entire index takes longer than validatity of authentication token.
-                        client.refresh_auth()
-                        perf_logger.info(
-                            "Fetching indexable objects for client, query params: %r.",
-                            query_params,
-                        )
-                        documenten, query_params = get_documenten_all_paginated(
-                            client, query_params=query_params
-                        )
+            for client in clients.values():
+                perf_logger.info("Starting indexing for client %s.", client)
+                perf_logger.info("Memory usage: %s.", get_memory_usage())
+                get_more = True
+                query_params = {}
+                while get_more:
+                    # Refresh client authentication in case this entire index takes longer than validatity of authentication token.
+                    client.refresh_auth()
+                    perf_logger.info(
+                        "Fetching indexable objects for client, query params: %r.",
+                        query_params,
+                    )
+                    documenten, query_params = get_documenten_all_paginated(
+                        client, query_params=query_params
+                    )
+                    get_more = query_params.get("page", None)
+                    yield from self.documenten_generator(documenten)
 
-                        # Make sure we're not retrieving more information than necessary
-                        if (
-                            self.reindex_last
-                            and self.reindex_last - self.reindexed <= len(documenten)
-                        ):
-                            documenten = documenten[
-                                : self.reindex_last - self.reindexed
-                            ]
-
-                        get_more = query_params.get("page", None)
-                        yield from self.documenten_generator(documenten)
-                        bar.update(len(documenten))
-
-                    # Add to done.
-                    done += len(documenten)
-                    self.log_progress(total_expected, done, time_at_start)
-
-                    if self.check_if_done_batching():
-                        self.stdout.end_progress()
-                        return
+                # Add to done.
+                done += len(documenten)
+                self.log_progress(total_expected, done, time_at_start)
         else:
             # First to basic checks and fetch <int:self.reindex_last> zaken.
-            zaken = self.handle_reindex()
-            zaken = list(zaken)
             total = len(zaken)
-            drc = Service.objects.get(api_type=APITypes.drc)
-            client = drc.build_client()
             for i, zaak in enumerate(zaken):
                 try:
                     # Check to see if there are any zaakinformatieobjecten here before we iterate through a scan.
@@ -180,7 +184,8 @@ class Command(IndexCommand, BaseCommand):
 
                     for zios in self.get_chunks(zios_scan):
                         # Refresh client authentication in case this entire index takes longer than validatity of authentication token.
-                        client.refresh_auth()
+                        for client in clients.values():
+                            client.refresh_auth()
 
                         # Create list from chunk of generator.
                         zios = list(zios)
@@ -193,7 +198,7 @@ class Command(IndexCommand, BaseCommand):
 
                         if eios:
                             # Fetch documenten from DRC.
-                            documenten = self.get_documenten(client, eios)
+                            documenten = self.get_documenten(clients, eios)
 
                             # Log how many were retrieved.
                             self.stdout.write(
@@ -201,9 +206,10 @@ class Command(IndexCommand, BaseCommand):
                             )
                             perf_logger.info("Memory usage 3: %s.", get_memory_usage())
                             yield from self.documenten_generator(documenten)
-                except Exception:
-                    self.stdout.write(f"Failed at zaak: {i+1}/{total}")
-                    self.stdout.write(f"Continue reindexing last: {total-i}")
+                except Exception as exc:
+                    logger.warning("Problem", exc_info=1)
+                    self.stdout.write(f"Failed at zaak: {i+1}/{total}.")
+                    self.stdout.write(f"Continue reindexing last: {total-i}.")
 
         self.stdout.end_progress()
 
@@ -214,20 +220,20 @@ class Command(IndexCommand, BaseCommand):
 
     def resolve_audit_trail(self, documenten: List[Document]) -> List[Document]:
         # Bulk fetch_audittrail.
-        # with parallel(max_workers=self.max_workers) as executor:
-        #     audittrails = list(
-        #         executor.map(
-        #             fetch_latest_audit_trail_data_document,
-        #             [doc.url for doc in documenten],
-        #         )
-        #     )
-        #     last_edited_dates = {
-        #         at.resource_url: at.last_edited_date for at in audittrails if at
-        #     }
+        with parallel(max_workers=self.max_workers) as executor:
+            audittrails = list(
+                executor.map(
+                    fetch_latest_audit_trail_data_document,
+                    [doc.url for doc in documenten],
+                )
+            )
+            last_edited_dates = {
+                at.resource_url: at.last_edited_date for at in audittrails if at
+            }
 
         # Bulk resolve audittrails.
         for doc in documenten:
-            doc.last_edited_date = None  # last_edited_dates.get(doc.url, None)
+            doc.last_edited_date = last_edited_dates.get(doc.url, None)
 
         return documenten
 
@@ -294,10 +300,6 @@ class Command(IndexCommand, BaseCommand):
             eio_document.related_zaken = related_zaken.get(doc.url, [])
             eiod = eio_document.to_dict(True, skip_empty=False)
             yield eiod
-            if self.reindex_last:
-                self.reindexed += 1
-                if self.check_if_done_batching():
-                    return
 
     def create_eio_documenten(
         self, documenten: List[Document]

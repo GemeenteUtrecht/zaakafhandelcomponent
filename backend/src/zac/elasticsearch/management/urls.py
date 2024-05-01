@@ -1,5 +1,12 @@
 from django.urls import path
 
-from .views import IndexAllView
+from .views import IndexElasticsearchView, ReIndexZaakElasticsearchView
 
-urls = [path("index/all", view=IndexAllView.as_view(), name="index-all")]
+urls = [
+    path("index", view=IndexElasticsearchView.as_view(), name="index-elasticsearch"),
+    path(
+        "index/<str:bronorganisatie>/<str:identificatie>",
+        ReIndexZaakElasticsearchView.as_view(),
+        name="reindex-zaak-elasticsearch",
+    ),
+]

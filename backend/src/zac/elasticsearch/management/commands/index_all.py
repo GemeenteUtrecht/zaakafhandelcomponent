@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.core.management import BaseCommand, call_command
 from django.core.management.base import CommandParser
 
+from ..constants import IndexTypes
 from ..utils import ProgressOutputWrapper
 
 
@@ -9,16 +11,18 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         super().add_arguments(parser)
+
+        parser.add_argument(
+            "--chunk-size",
+            type=int,
+            help="Indicates the chunk size for number of ZIOs in a single iteration. Defaults to 100.",
+            default=settings.CHUNK_SIZE,
+        )
         parser.add_argument(
             "--max-workers",
             type=int,
             help="Indicates the max number of parallel workers (for memory management). Defaults to 4.",
-            default=4,
-        )
-        parser.add_argument(
-            "--reindex-last",
-            type=int,
-            help="Indicates the number of the most recent documents to be reindexed.",
+            default=settings.MAX_WORKERS,
         )
         parser.add_argument(
             "--progress",
@@ -30,10 +34,12 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
-            "--chunk-size",
+            "--reindex-last",
             type=int,
-            help="Indicates the chunk size for number of ZIOs in a single iteration. Defaults to 100.",
-            default=100,
+            help="Indicates the number of the most recent documents to be reindexed.",
+        )
+        parser.add_argument(
+            "--reindex-zaak", type=str, help="URL-reference of ZAAK to be reindexed."
         )
 
     def handle(self, **options):
@@ -57,12 +63,21 @@ class Command(BaseCommand):
         if chunk_size := options.get("chunk_size"):
             args.append(f"--chunk-size={chunk_size}")
 
+        if reindex_zaak := options.get("reindex_zaak"):
+            args.append(f"--reindex-zaak={reindex_zaak}")
+
+        # Validate to make sure it's either reindexing a specific zaak or the last <X:int> zaken
+        if reindex_zaak and reindex_last:
+            raise RuntimeError(
+                f"Select either ZAAK: {reindex_zaak} or last {reindex_last} ZAAKen to be reindexed."
+            )
+
         index_these = [
-            "index_zaken",
-            "index_zaakinformatieobjecten",
-            "index_zaakobjecten",
-            "index_documenten_verzaking",
-            "index_objecten",
+            IndexTypes.index_zaken,
+            IndexTypes.index_zaakobjecten,
+            IndexTypes.index_objecten,
+            IndexTypes.index_zaakinformatieobjecten,
+            IndexTypes.index_documenten,
         ]
 
         for index_this in index_these:

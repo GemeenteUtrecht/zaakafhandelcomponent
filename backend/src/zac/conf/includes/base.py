@@ -395,7 +395,8 @@ SITE_TITLE = "Zaakafhandeling"
 
 ENVIRONMENT = config("ENVIRONMENT", "")
 SHOW_ALERT = True
-MAX_WORKERS = config("MAX_WORKERS", default=4)
+MAX_WORKERS = config("MAX_WORKERS", default=2)
+CHUNK_SIZE = config("CHUNK_SIZE", default=100)
 
 ##############################
 #                            #
