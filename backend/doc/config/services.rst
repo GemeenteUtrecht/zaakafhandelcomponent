@@ -4,7 +4,7 @@ Services
 ========
 
 The ZAC reads data from the external APIs. These APIs need to be
-configured. Some of the data is for performance reasons copied into a read-only 
+configured. For performance some of the data is copied into a read-only 
 elasticsearch database.
 
 Most API's are added as services under **ZGW_Consumers > Services** in the admin

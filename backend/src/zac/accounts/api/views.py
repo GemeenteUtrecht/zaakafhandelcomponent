@@ -75,7 +75,7 @@ class LogoutView(views.APIView):
 
     def get_serializer(self, *args, **kwargs):
         # Shut up drf-spectacular - return empty serializer
-        return {}
+        return dict()
 
     def post(self, request):
         logout(request)

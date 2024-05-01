@@ -172,7 +172,7 @@ class SubmitUserTaskSerializer(BaseUserTaskSerializer):
             "get_process_variables",
         ):
             return mapped_serializer.get_process_variables()
-        return {}
+        return dict()
 
 
 class MessageSerializer(serializers.Serializer):
