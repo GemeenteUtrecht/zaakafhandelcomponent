@@ -55,6 +55,7 @@ class ReIndexZaakElasticsearchView(APIView):
     )
 
     @extend_schema(
+        "search_management_reindex_zaak_create",
         summary=_("Reindex ZAAK in Elasticsearch."),
         request=ReindexZaakSerializer,
         responses={204: None},

@@ -33,12 +33,16 @@ from zac.core.api.pagination import ProxyPagination
 from zac.core.api.permissions import CanHandleAccessRequests
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.drf_api.filters import ESOrderingFilter
-from zac.elasticsearch.drf_api.serializers import ZaakDocumentSerializer
+from zac.elasticsearch.drf_api.serializers import (
+    DEFAULT_ES_ZAAKDOCUMENT_FIELDS,
+    ZaakDocumentSerializer,
+)
 from zac.elasticsearch.drf_api.utils import es_document_to_ordering_parameters
+from zac.elasticsearch.drf_api.views import PaginatedSearchMixin
 from zac.elasticsearch.searches import count_by_behandelaar, search_zaken
 
 from .data import AccessRequestGroup, TaskAndCase
-from .pagination import WorkstackPagination
+from .pagination import ESWorkStackPagination, WorkstackPagination
 from .serializers import (
     WorkStackAccessRequestsSerializer,
     WorkStackAdhocActivitiesSerializer,
@@ -95,31 +99,36 @@ class WorkStackGroupAdhocActivitiesView(WorkStackAdhocActivitiesView):
         return Activity.objects.as_werkvoorraad(groups=self.request.user.groups.all())
 
 
-@extend_schema(
-    summary=_("List active ZAAKen for logged in user."),
-    parameters=[es_document_to_ordering_parameters(ZaakDocument)],
-    request=None,
-    responses={200: ZaakDocumentSerializer(many=True)},
-)
-class WorkStackAssigneeCasesView(ListAPIView):
+class WorkStackAssigneeCasesView(PaginatedSearchMixin, views.APIView):
     authentication_classes = (authentication.SessionAuthentication,)
+    ordering = ("-identificatie.keyword",)
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = ESWorkStackPagination
     serializer_class = ZaakDocumentSerializer
     search_document = ZaakDocument
-    pagination_class = WorkstackPagination
-    ordering = ("-identificatie.keyword",)
+    allowed_methods = ["get"]
 
-    def get_queryset(self):
-        if not hasattr(self, "_qs"):
-            ordering = ESOrderingFilter().get_ordering(self.request, self)
-            zaken = search_zaken(
-                request=self.request,
-                behandelaar=self.request.user.username,
-                ordering=ordering,
-                only_allowed=False,
-            )
-            self._qs = [zaak for zaak in zaken if not zaak.einddatum]
-        return self._qs
+    @extend_schema(
+        summary=_("List active ZAAKen for logged in user."),
+        parameters=[es_document_to_ordering_parameters(ZaakDocument)],
+        request=None,
+        responses={200: ZaakDocumentSerializer(many=True)},
+    )
+    def get(self, request, *args, **kwargs):
+        ordering = ESOrderingFilter().get_ordering(self.request, self)
+        zaken = search_zaken(
+            request=self.request,
+            behandelaar=self.request.user.username,
+            ordering=ordering,
+            only_allowed=False,
+            include_closed=False,
+            return_search=True,
+        )
+        page = self.paginate_results(zaken)
+        serializer = self.serializer_class(page, many=True)
+        return self.get_paginated_response(
+            serializer.data, DEFAULT_ES_ZAAKDOCUMENT_FIELDS
+        )
 
 
 @extend_schema(summary=_("List user tasks for logged in user."))

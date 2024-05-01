@@ -272,6 +272,7 @@ class ZaakReviewRequestDetailView(GetReviewRequestMixin, APIView):
 
     @extend_schema(
         summary=_("Retrieve review request."),
+        request=None,
         responses={
             200: ZaakRevReqDetailSerializer,
         },

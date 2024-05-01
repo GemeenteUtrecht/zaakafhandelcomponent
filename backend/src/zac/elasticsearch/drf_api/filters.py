@@ -122,7 +122,7 @@ class ESOrderingFilter:
                 )
             }
 
-        return {}
+        return dict()
 
     def get_ordering_fields(self, view: views.APIView) -> Dict[str, str]:
         ordering_fields = getattr(view, "ordering_fields", self.ordering_fields)

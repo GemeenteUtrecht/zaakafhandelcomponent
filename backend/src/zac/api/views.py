@@ -63,7 +63,7 @@ class HealthCheckView(APIView):
 
     def get_serializer(self, *args, **kwargs):
         # shut up drf-spectacular
-        return {}
+        return dict()
 
 
 class PingView(APIView):
@@ -71,11 +71,13 @@ class PingView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        "ping",
         summary=_("Ping a user session."),
         description=_("Extends user session on activity."),
+        request=None,
         responses={
             "200": inline_serializer(
-                "Serializer",
+                "PingSerializer",
                 fields={"pong": serializers.BooleanField(default=True)},
             )
         },
@@ -85,4 +87,4 @@ class PingView(APIView):
 
     def get_serializer(self, *args, **kwargs):
         # shut up drf-spectacular
-        return {}
+        return dict()
