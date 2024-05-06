@@ -292,7 +292,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "id": str(self.review_request.id),
                     "reviewType": KownslTypes.advice,
                     "completed": 0,
-                    "numAssignedUsers": 1,
+                    "numAssignedUsers": 2,
                     "canLock": False,
                     "locked": True,
                     "lockReason": "canceled by user",

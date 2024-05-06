@@ -451,7 +451,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
                 "user:some-author": "2022-04-14",
                 "user:some-other-author": "2022-04-15",
             },
-            zaakeigenschappen= [self.zaakeigenschap["url"]],
+            zaakeigenschappen=[self.zaakeigenschap["url"]],
             metadata={
                 "taskDefinitionId": "submitAdvice",
                 "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",

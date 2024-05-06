@@ -18,9 +18,9 @@ from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.kownsl.camunda import ConfigureReviewRequestSerializer
 from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.contrib.objects.kownsl.tests.factories import (
+    CATALOGI_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
-    CATALOGI_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
     AdviceFactory,

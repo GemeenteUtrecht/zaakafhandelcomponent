@@ -268,12 +268,6 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
                     "choices": [{"name": "Ja", "value": "Ja"}],
                     "is_multiple_choice": True,
                 },
-                {
-                    "question": "Nee?",
-                    "order": 2,
-                    "choices": [{"name": "Nee", "value": "Nee"}],
-                    "is_multiple_choice": True,
-                },
             ],
         )
         self.assertEqual(

@@ -243,7 +243,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 },
             ],
         }
-        created = ChecklistObjectFactory(record__data__answers=data['answers'])
+        created = ChecklistObjectFactory(record__data__answers=data["answers"])
 
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
@@ -300,7 +300,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 {"question": "Nee?", "answer": ""},
             ],
         }
-        json_response = ChecklistObjectFactory(record__data__answers=data['answers'])
+        json_response = ChecklistObjectFactory(record__data__answers=data["answers"])
         m.patch(
             f"{OBJECTS_ROOT}objects/{self.checklist_object['uuid']}",
             json=json_response,

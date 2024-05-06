@@ -1,13 +1,10 @@
+import factory
 import yaml
 from zgw_consumers.test import generate_oas_component, read_schema
 
-from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
-from zac.tests.utils import update_dictionary_from_kwargs
-
-import factory
-
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
+from zac.tests.utils import update_dictionary_from_kwargs
 
 
 class ChecklistLockFactory(factory.django.DjangoModelFactory):
@@ -22,6 +19,7 @@ class ChecklistLockFactory(factory.django.DjangoModelFactory):
             "url",
             "zaak",
         )
+
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
@@ -165,10 +163,18 @@ def ChecklistFactory(**kwargs):
     default_data = {
         "zaak": ZAAK_URL,
         "answers": [
-            {"answer": "Ja", "question": "Ja?"},
-            {"answer": "Nee", "question": "Nee?"},
+            {
+                "answer": "Ja",
+                "question": "Ja?",
+                "created": "1999-12-31T23:59:59Z",
+            },
+            {
+                "answer": "Nee",
+                "question": "Nee?",
+                "created": "1999-12-31T23:59:59Z",
+            },
         ],
-        "lockedBy": None,
+        "locked": None,
     }
     if kwargs:
         update_dictionary_from_kwargs(default_data, kwargs)

@@ -1,6 +1,6 @@
 components:
   schemas: 
-  Checklist:
+    Checklist:
         type: object
         title: Checklist
         required:

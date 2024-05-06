@@ -765,7 +765,6 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
         )
         zaak_url, zaak_uuid = zaak_uuid, None
 
-    print("?")
     if client is None and zaak_url is not None:
         client = client_from_url(zaak_url)
 

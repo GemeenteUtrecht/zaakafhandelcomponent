@@ -50,6 +50,7 @@ def OudbehandelarenObjectFactory(**kwargs):
                         "ended": "2023-01-01",
                         "started": "2023-01-02",
                         "identificatie": "some-username",
+                        "changedBy": "user:some-username",
                     }
                 ],
             },
