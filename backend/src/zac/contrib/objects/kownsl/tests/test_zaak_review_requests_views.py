@@ -30,18 +30,17 @@ from zac.elasticsearch.api import create_informatieobject_document
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
-from .utils import (
+from .factories import (
     CATALOGI_ROOT,
     DOCUMENT_URL,
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    AssignedUsersFactory,
-    KownslZaakEigenschapFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
-    UserAssigneeFactory,
+    advice_factory,
+    kownsl_zaak_eigenschap_factory,
+    review_document_factory,
+    review_request_factory,
+    reviews_factory,
 )
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -121,6 +120,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
             informatieobjecttype=cls.informatieobjecttype["url"],
             vertrouwelijkheidaanduiding=VertrouwelijkheidsAanduidingen.openbaar,
             bestandsomvang=10,
+            versie=1,
         )
 
         # Dict to models
@@ -140,35 +140,24 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         es_document = create_informatieobject_document(document)
 
         # Mock kownsl components
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        cls.review_request_dict = ReviewRequestFactory(
+        cls.review_request_dict = review_request_factory(
             documents=[deepcopy(DOCUMENT_URL)]
         )
-        cls.review_request_dict["assignedUsers"].append(assigned_users2)
         cls.review_request = factory(ReviewRequest, cls.review_request_dict)
-        zei = KownslZaakEigenschapFactory(
+        zei = kownsl_zaak_eigenschap_factory(
             url=zaakeigenschap.url,
             waarde=zaakeigenschap.waarde,
             naam=cls.eigenschap["naam"],
         )
-        advice = AdviceFactory(zaakeigenschappen=[zei])
-        cls.reviews = ReviewsFactory(reviews=[advice])
+        review_document = review_document_factory(
+            document=es_document.url,
+            sourceVersion=es_document.versie,
+            reviewVersion=es_document.versie,
+        )
+        advice = advice_factory(
+            zaakeigenschappen=[zei], reviewDocuments=[review_document]
+        )
+        cls.reviews = reviews_factory(reviews=[advice], reviewType=KownslTypes.advice)
         reviews = factory_reviews(cls.reviews)
 
         # Patchers
@@ -233,7 +222,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_zaak_review_requests_completed(self, m):
-        rr = ReviewRequestFactory()
+        rr = review_request_factory()
         rr.update(
             {
                 "locked": True,
@@ -287,7 +276,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         )
 
     def test_get_zaak_review_requests_status_canceled(self, m):
-        rr = ReviewRequestFactory()
+        rr = review_request_factory()
         rr.update({"locked": True, "lockReason": "canceled by user"})
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_all_review_requests_for_zaak",
@@ -303,7 +292,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                     "id": str(self.review_request.id),
                     "reviewType": KownslTypes.advice,
                     "completed": 0,
-                    "numAssignedUsers": 1,
+                    "numAssignedUsers": 2,
                     "canLock": False,
                     "locked": True,
                     "lockReason": "canceled by user",
@@ -365,10 +354,10 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                             {
                                 "bestandsnaam": self.document["bestandsnaam"],
                                 "document": self.document["url"],
-                                "downloadReviewUrl": f"/core/documenten/{self.document['bronorganisatie']}/{self.document['identificatie']}/?versie=2",
+                                "downloadReviewUrl": f"/core/documenten/{self.document['bronorganisatie']}/{self.document['identificatie']}/?versie=1",
                                 "downloadSourceUrl": f"/core/documenten/{self.document['bronorganisatie']}/{self.document['identificatie']}/?versie=1",
                                 "reviewUrl": "",
-                                "reviewVersion": 2,
+                                "reviewVersion": 1,
                                 "sourceUrl": "",
                                 "sourceVersion": 1,
                             }
@@ -418,7 +407,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                         "bronorganisatie": self.document["bronorganisatie"],
                         "currentUserIsEditing": False,
                         "deleteUrl": "",
-                        "downloadUrl": "/core/documenten/123456782/DOC-2020-007/",
+                        "downloadUrl": "/core/documenten/123456782/DOC-2020-007/?versie=1",
                         "identificatie": self.document["identificatie"],
                         "informatieobjecttype": {
                             "url": self.informatieobjecttype["url"],
@@ -431,7 +420,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                         "relatedZaken": [],
                         "titel": self.document["titel"],
                         "url": self.document["url"],
-                        "versie": None,
+                        "versie": 1,
                         "vertrouwelijkheidaanduiding": self.document[
                             "vertrouwelijkheidaanduiding"
                         ],
@@ -626,29 +615,10 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.permissions.get_zaak", return_value=zaak
         )
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        cls.review_request = ReviewRequestFactory(documents=[])
-        cls.review_request["assignedUsers"].append(assigned_users2)
+        cls.review_request = review_request_factory(documents=[])
         cls.review_request = factory(ReviewRequest, cls.review_request)
-        cls.advices = factory(Advice, [AdviceFactory()])
+        cls.advices = factory(Advice, [advice_factory()])
 
-        document = factory(Document, cls.document)
         cls.endpoint_summary = reverse(
             "kownsl:zaak-review-requests-summary",
             kwargs={
@@ -897,7 +867,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
-            return_value=factory(ReviewRequest, ReviewRequestFactory(locked=True)),
+            return_value=factory(ReviewRequest, review_request_factory(locked=True)),
         ):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -926,7 +896,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=factory(
                 ReviewRequest,
-                ReviewRequestFactory(is_being_reconfigured=True, locked=False),
+                review_request_factory(isBeingReconfigured=True, locked=False),
             ),
         ):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})

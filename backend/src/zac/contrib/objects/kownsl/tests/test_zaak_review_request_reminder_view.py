@@ -26,14 +26,12 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
-from .utils import (
+from .factories import (
     CATALOGI_ROOT,
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AssignedUsersFactory,
-    ReviewRequestFactory,
-    UserAssigneeFactory,
+    review_request_factory,
 )
 
 CAMUNDA_ROOT = "https://some.camunda.nl/"
@@ -73,26 +71,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=zaak
         )
-
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        cls.review_request = ReviewRequestFactory()
-        cls.review_request["assignedUsers"].append(assigned_users2)
+        cls.review_request = review_request_factory()
 
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
@@ -136,7 +115,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
     def test_get_zaak_review_request_is_locked(self, m):
         rr = factory(
             ReviewRequest,
-            ReviewRequestFactory(locked=True, lock_reason="just a reason"),
+            review_request_factory(locked=True, lockReason="just a reason"),
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
@@ -148,7 +127,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
     def test_get_zaak_review_request_not_found(self, m):
         rr = factory(
             ReviewRequest,
-            ReviewRequestFactory(locked=True, lock_reason="just a reason"),
+            review_request_factory(locked=True, lockReason="just a reason"),
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
@@ -206,25 +185,7 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.permissions.get_zaak", return_value=zaak
         )
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        cls.review_request = ReviewRequestFactory()
-        cls.review_request["assignedUsers"].append(assigned_users2)
+        cls.review_request = review_request_factory()
         cls.review_request = factory(ReviewRequest, cls.review_request)
         cls.patch_get_review_request = patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",

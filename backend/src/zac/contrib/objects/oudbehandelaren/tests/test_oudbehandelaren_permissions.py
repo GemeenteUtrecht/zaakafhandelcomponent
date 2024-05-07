@@ -23,17 +23,19 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models import Zaak
 
-from .utils import (
+from .factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
     IDENTIFICATIE,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
-    OUDBEHANDELAREN_OBJECT,
-    OUDBEHANDELAREN_OBJECTTYPE,
     ZAAK_URL,
     ZAKEN_ROOT,
+    OudbehandelarenObjectFactory,
+    OudbehandelarenObjectTypeFactory,
 )
+
+OUDBEHANDELAREN_OBJECTTYPE = OudbehandelarenObjectTypeFactory()
 
 
 @requests_mock.Mocker()
@@ -102,8 +104,9 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             bronorganisatie=BRONORGANISATIE,
             identificatie=IDENTIFICATIE,
         )
+        cls.oudbehandelaren_object = OudbehandelarenObjectFactory()
         cls.user = UserFactory.create(
-            username=OUDBEHANDELAREN_OBJECT["record"]["data"]["oudbehandelaren"][0][
+            username=cls.oudbehandelaren_object["record"]["data"]["oudbehandelaren"][0][
                 "identificatie"
             ],
         )
@@ -146,7 +149,7 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             with patch(
                 "zac.contrib.objects.oudbehandelaren.api.views.fetch_oudbehandelaren",
                 return_value=factory(
-                    Oudbehandelaren, OUDBEHANDELAREN_OBJECT["record"]["data"]
+                    Oudbehandelaren, self.oudbehandelaren_object["record"]["data"]
                 ),
             ):
                 response = self.client.get(self.endpoint)
@@ -181,7 +184,7 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             with patch(
                 "zac.contrib.objects.oudbehandelaren.api.views.fetch_oudbehandelaren",
                 return_value=factory(
-                    Oudbehandelaren, OUDBEHANDELAREN_OBJECT["record"]["data"]
+                    Oudbehandelaren, self.oudbehandelaren_object["record"]["data"]
                 ),
             ):
                 response = self.client.get(self.endpoint)
@@ -211,7 +214,7 @@ class OudbehandelarenApiPermissionsTests(ClearCachesMixin, APITestCase):
             with patch(
                 "zac.contrib.objects.oudbehandelaren.api.views.fetch_oudbehandelaren",
                 return_value=factory(
-                    Oudbehandelaren, OUDBEHANDELAREN_OBJECT["record"]["data"]
+                    Oudbehandelaren, self.oudbehandelaren_object["record"]["data"]
                 ),
             ):
                 response = self.client.get(self.endpoint)

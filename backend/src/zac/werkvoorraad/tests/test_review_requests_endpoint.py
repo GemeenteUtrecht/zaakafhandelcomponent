@@ -10,21 +10,19 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
-from zac.contrib.objects.kownsl.tests.utils import (
+from zac.contrib.objects.kownsl.tests.factories import (
     CATALOGI_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
-    REVIEW_OBJECT,
-    REVIEW_OBJECTTYPE,
-    REVIEW_REQUEST_OBJECT,
-    REVIEW_REQUEST_OBJECTTYPE,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    AssignedUsersFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
-    UserAssigneeFactory,
+    advice_factory,
+    review_object_factory,
+    review_object_type_version_factory,
+    review_request_factory,
+    review_request_object_factory,
+    review_request_object_type_version_factory,
+    reviews_factory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -32,6 +30,8 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+REVIEW_OBJECTTYPE = review_object_type_version_factory()
+REVIEW_REQUEST_OBJECTTYPE = review_request_object_type_version_factory()
 
 
 @requests_mock.Mocker()
@@ -91,25 +91,7 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
         cls.endpoint = reverse(
             "werkvoorraad:review-requests",
         )
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        cls.review_request = ReviewRequestFactory()
-        cls.review_request["assignedUsers"].append(assigned_users2)
+        cls.review_request = review_request_factory()
 
     @patch("zac.core.services.fetch_objecttypes", return_value=[])
     def test_workstack_review_requests_endpoint_no_zaak(self, m, *mocks):
@@ -118,8 +100,8 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         mock_resource_get(m, self.catalogus)
 
-        rr_object = deepcopy(REVIEW_REQUEST_OBJECT)
-        rr_object["record"]["data"] = self.review_request
+        rr_object = review_request_object_factory(record__data=self.review_request)
+
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=20&page=1",
             json=paginated_response([rr_object]),
@@ -186,8 +168,8 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
         zaak_document.save()
         self.refresh_index()
 
-        rr_object = deepcopy(REVIEW_REQUEST_OBJECT)
-        rr_object["record"]["data"] = self.review_request
+        rr_object = review_request_object_factory(record__data=self.review_request)
+
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=20&page=1",
             json=paginated_response([rr_object]),
@@ -195,12 +177,10 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
-        advice = AdviceFactory()
-        reviews_advice = ReviewsFactory()
-        reviews_advice["reviews"] = [advice]
+        advice = advice_factory()
+        reviews_advice = reviews_factory(reviews=[advice])
 
-        review_object = deepcopy(REVIEW_OBJECT)
-        review_object["record"]["data"] = reviews_advice
+        review_object = review_object_factory(record__data=reviews_advice)
 
         with patch(
             "zac.contrib.objects.services.fetch_reviews",

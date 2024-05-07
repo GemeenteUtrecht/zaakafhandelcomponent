@@ -17,22 +17,20 @@ from zac.accounts.models import User
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.kownsl.camunda import ConfigureReviewRequestSerializer
 from zac.contrib.objects.kownsl.constants import KownslTypes
-from zac.contrib.objects.kownsl.tests.utils import (
+from zac.contrib.objects.kownsl.tests.factories import (
     CATALOGI_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
-    REVIEW_OBJECT,
-    REVIEW_OBJECTTYPE,
-    REVIEW_REQUEST_OBJECT,
-    REVIEW_REQUEST_OBJECTTYPE,
-    REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    AssignedUsersFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
-    UserAssigneeFactory,
+    advice_factory,
+    review_object_factory,
+    review_object_type_factory,
+    review_request_factory,
+    review_request_object_factory,
+    review_request_object_type_factory,
+    review_request_object_type_version_factory,
+    reviews_factory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
@@ -50,6 +48,10 @@ from ...services import (
     lock_review_request,
     update_review_request,
 )
+
+REVIEW_REQUEST_OBJECTTYPE = review_request_object_type_factory()
+REVIEW_OBJECTTYPE = review_object_type_factory()
+REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION = review_request_object_type_version_factory()
 
 
 @freeze_time("2020-01-01")
@@ -79,32 +81,12 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         zaak_json = generate_oas_component("zrc", "schemas/Zaak", url=ZAAK_URL)
         cls.zaak = factory(Zaak, zaak_json)
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        cls.review_request = ReviewRequestFactory()
-        cls.review_request["assignedUsers"].append(assigned_users2)
-        cls.advice = AdviceFactory()
-        cls.reviews_advice = ReviewsFactory()
-        cls.reviews_advice["reviews"] = [cls.advice]
+        cls.review_request = review_request_factory()
+        cls.advice = advice_factory()
+        cls.reviews_advice = reviews_factory(reviews=[cls.advice])
 
-        cls.review_object = deepcopy(REVIEW_OBJECT)
-        cls.review_object["data"] = cls.reviews_advice
-
+        cls.review_object = review_object_factory(data=cls.reviews_advice)
+        cls.review_request_object = review_request_object_factory()
         # Make sure all users associated to the REVIEW REQUEST exist
         users = deepcopy(
             [
@@ -129,7 +111,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
-            json=paginated_response([REVIEW_REQUEST_OBJECT]),
+            json=paginated_response([self.review_request_object]),
         )
 
         review_request = get_review_request(self.review_request["id"])
@@ -158,7 +140,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         m.post(
             f"{OBJECTS_ROOT}objects",
-            json=REVIEW_REQUEST_OBJECT,
+            json=self.review_request_object,
             status_code=201,
         )
 
@@ -233,7 +215,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
-            json=paginated_response([REVIEW_REQUEST_OBJECT]),
+            json=paginated_response([self.review_request_object]),
         )
 
         review_requests = get_all_review_requests_for_zaak(self.zaak)
@@ -261,7 +243,7 @@ class KownslAPITests(ClearCachesMixin, TestCase):
 
         rr = factory_review_request(self.review_request)
         # Avoid patching fetch_reviews and everything
-        reviews_advice = ReviewsFactory()
+        reviews_advice = reviews_factory()
         rr.reviews = factory_reviews(reviews_advice).reviews
         rr.fetched_reviews = True
 
@@ -298,11 +280,11 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             json=REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION,
         )
 
-        m.patch(REVIEW_REQUEST_OBJECT["url"], json=REVIEW_REQUEST_OBJECT)
+        m.patch(self.review_request_object["url"], json=self.review_request_object)
 
         with patch(
             "zac.contrib.objects.services.fetch_review_request",
-            return_value=REVIEW_REQUEST_OBJECT,
+            return_value=self.review_request_object,
         ):
             review_request = update_review_request(
                 self.review_request["id"], requester=self.user, data=serializer.data
@@ -371,13 +353,15 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
-            json=paginated_response([REVIEW_REQUEST_OBJECT]),
+            json=paginated_response([self.review_request_object]),
         )
-        rr = deepcopy(REVIEW_REQUEST_OBJECT)
+        rr = review_request_object_factory(
+            record__data__locked=True, record__data__lockReason="some-reason"
+        )
         rr["record"]["data"]["locked"] = True
         rr["record"]["data"]["lockReason"] = "some-reason"
 
-        m.patch(REVIEW_REQUEST_OBJECT["url"], json=rr)
+        m.patch(rr["url"], json=rr)
 
         review_request = lock_review_request(
             self.review_request["id"], lock_reason="some-reason"
@@ -389,9 +373,9 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        rr1 = ReviewRequestFactory()
+        rr1 = review_request_factory()
         rr1["locked"] = True
-        rr2 = ReviewRequestFactory()
+        rr2 = review_request_factory()
         rr2["locked"] = False
         review_requests = [
             factory_review_request(rr1),

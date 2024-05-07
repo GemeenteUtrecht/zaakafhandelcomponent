@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from django.contrib.sites.models import Site
 from django.core import mail
+from django.core.management import call_command
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
 
@@ -14,18 +15,13 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.checklists.models import ChecklistLock
-from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.tests.utils import mock_resource_get
 
-from .utils import (
+from .factories import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
-    CHECKLIST_OBJECTTYPE,
-    CHECKLISTTYPE_OBJECTTYPE,
     IDENTIFICATIE,
-    OBJECTS_ROOT,
-    OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
     ChecklistLockFactory,
@@ -46,21 +42,6 @@ class UnlockChecklists(ClearCachesMixin, APITestCase):
         Service.objects.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
-        objects_service = Service.objects.create(
-            api_type=APITypes.orc, api_root=OBJECTS_ROOT
-        )
-        objecttypes_service = Service.objects.create(
-            api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
-        )
-        config = CoreConfig.get_solo()
-        config.primary_objects_api = objects_service
-        config.primary_objecttypes_api = objecttypes_service
-        config.save()
-
-        meta_config = MetaObjectTypesConfig.get_solo()
-        meta_config.checklisttype_objecttype = CHECKLISTTYPE_OBJECTTYPE["url"]
-        meta_config.checklist_objecttype = CHECKLIST_OBJECTTYPE["url"]
-        meta_config.save()
 
         cls.zaak = generate_oas_component(
             "zrc",
@@ -88,12 +69,43 @@ class UnlockChecklists(ClearCachesMixin, APITestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
 
+    def test_command_unlock_checklists(self, m):
+        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_resource_get(m, self.zaak)
+
+        self.client.force_authenticate(user=self.user)
+        ChecklistLockFactory.create(
+            user=self.user, url="https://someurl.com/", zaak=self.zaak["url"]
+        )
+
+        with patch(
+            "zac.contrib.objects.checklists.management.commands.unlock_checklists.logger"
+        ) as mock_logger:
+            call_command("unlock_checklists")
+
+        mock_logger.info.assert_called_once_with("1 checklists were unlocked.")
+
+        # test email
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        subject = _(
+            "Notification: Checklist of zaak %(zaak)s was automatically unlocked."
+        ) % {"zaak": IDENTIFICATIE}
+        self.assertEqual(email.subject, subject)
+        self.assertEqual(email.to, [self.user.email])
+
+        zaak_detail_path = f"/ui/zaken/{BRONORGANISATIE}/{IDENTIFICATIE}"
+        url = f"http://testserver{zaak_detail_path}"
+        self.assertIn(url, email.body)
+
     def test_endpoint_unlock_checklists(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_resource_get(m, self.zaak)
 
         self.client.force_authenticate(user=self.user)
-        lock = ChecklistLockFactory.create(user=self.user, zaak=self.zaak["url"])
+        ChecklistLockFactory.create(
+            user=self.user, url="https://someurl.com/", zaak=self.zaak["url"]
+        )
         response = self.client.post(self.endpoint)
         self.assertEqual(response.json(), {"count": 1})
 

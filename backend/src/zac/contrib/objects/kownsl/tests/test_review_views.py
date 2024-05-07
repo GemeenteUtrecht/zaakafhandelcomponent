@@ -24,23 +24,21 @@ from zac.accounts.tests.factories import UserFactory
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import Task
 from zac.contrib.objects.kownsl.constants import KownslTypes
-from zac.contrib.objects.kownsl.tests.utils import (
+from zac.contrib.objects.kownsl.tests.factories import (
     CATALOGI_ROOT,
     DOCUMENT_URL,
     DOCUMENTS_ROOT,
     OBJECTS_ROOT,
     OBJECTTYPES_ROOT,
-    REVIEW_OBJECT,
-    REVIEW_OBJECTTYPE,
-    REVIEW_REQUEST_OBJECTTYPE,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    ApprovalFactory,
-    AssignedUsersFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
-    UserAssigneeFactory,
+    advice_factory,
+    approval_factory,
+    review_object_factory,
+    review_object_type_factory,
+    review_request_factory,
+    review_request_object_type_factory,
+    reviews_factory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -54,6 +52,8 @@ CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b3
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
+REVIEW_REQUEST_OBJECTTYPE = review_request_object_type_factory()
+REVIEW_OBJECTTYPE = review_object_type_factory()
 
 
 def _get_camunda_client():
@@ -168,31 +168,11 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
 
         cls.zaak = factory(Zaak, cls.zaak_json)
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        cls.review_request = ReviewRequestFactory()
-        cls.review_request["assignedUsers"].append(assigned_users2)
-        cls.advice = AdviceFactory()
-        cls.reviews_advice = ReviewsFactory()
-        cls.reviews_advice["reviews"] = [cls.advice]
+        cls.review_request = review_request_factory()
+        cls.advice = advice_factory()
+        cls.reviews_advice = reviews_factory(reviews=[cls.advice])
 
-        cls.review_object = deepcopy(REVIEW_OBJECT)
-        cls.review_object["record"]["data"] = cls.reviews_advice
+        cls.review_object = review_object_factory(record__data=cls.reviews_advice)
 
         # Mock camunda task
         cls.task = {
@@ -465,10 +445,9 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                 }
             ],
         }
-        approval = ApprovalFactory()
-        reviews = ReviewsFactory(reviews=[approval], review_type=KownslTypes.approval)
-        reviews_object = deepcopy(REVIEW_OBJECT)
-        reviews_object["record"]["data"] = reviews
+        approval = approval_factory()
+        reviews = reviews_factory(reviews=[approval], reviewType=KownslTypes.approval)
+        reviews_object = review_object_factory(record__data=reviews)
 
         with self.search_informatieobjects_patcher:
             with patch(
@@ -572,8 +551,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                 }
             ],
         }
-        reviews_object = deepcopy(REVIEW_OBJECT)
-        reviews_object["record"]["data"] = self.reviews_advice
+        reviews_object = review_object_factory(record__data=self.reviews_advice)
 
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
@@ -677,8 +655,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
                 }
             ],
         }
-        reviews_object = deepcopy(REVIEW_OBJECT)
-        reviews_object["record"]["data"] = self.reviews_advice
+        reviews_object = review_object_factory(record__data=self.reviews_advice)
 
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",

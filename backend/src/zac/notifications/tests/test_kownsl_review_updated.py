@@ -12,15 +12,18 @@ from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
-from zac.contrib.objects.kownsl.tests.utils import (
-    REVIEW_REQUEST_OBJECT,
-    REVIEW_REQUEST_OBJECTTYPE,
+from zac.contrib.objects.kownsl.tests.factories import (
     ZAKEN_ROOT,
-    ReviewRequestFactory,
+    review_request_factory,
+    review_request_object_factory,
+    review_request_object_type_version_factory,
 )
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get
+
+REVIEW_REQUEST_OBJECTTYPE = review_request_object_type_version_factory()
+REVIEW_REQUEST_OBJECT = review_request_object_factory()
 
 NOTIFICATION = {
     "kanaal": "objecten",
@@ -74,7 +77,7 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         confg = MetaObjectTypesConfig.get_solo()
         confg.review_request_objecttype = REVIEW_REQUEST_OBJECTTYPE["url"]
         confg.save()
-        cls.review_request = ReviewRequestFactory()
+        cls.review_request = review_request_factory()
         cls.task_data = deepcopy(TASK_DATA)
         cls.task_data["processInstanceId"] = cls.review_request["metadata"][
             "processInstanceId"

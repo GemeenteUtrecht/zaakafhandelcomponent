@@ -18,11 +18,9 @@ from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.models import DowcConfig
 from zac.contrib.objects.kownsl.data import ReviewRequest, Reviews
-from zac.contrib.objects.kownsl.tests.utils import (
-    AssignedUsersFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
-    UserAssigneeFactory,
+from zac.contrib.objects.kownsl.tests.factories import (
+    review_request_factory,
+    reviews_factory,
 )
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -62,11 +60,13 @@ TASK_DATA = {
     "tenantId": "aTenantId",
 }
 
-from zac.contrib.objects.checklists.tests.utils import (
-    CHECKLIST_OBJECT,
-    CHECKLISTTYPE_OBJECT,
+from zac.contrib.objects.checklists.tests.factories import (
+    checklist_object_factory,
+    checklist_type_object_factory,
 )
 from zac.core.tests.utils import ClearCachesMixin
+
+CHECKLISTTYPE_OBJECT = checklist_type_object_factory()
 
 
 def _get_task(**overrides):
@@ -196,32 +196,14 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}resultaattypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.resultaattype]),
         )
-        checklist = deepcopy(CHECKLIST_OBJECT)
+        checklist = checklist_object_factory()
         checklist["record"]["data"]["answers"][0]["answer"] = ""
 
-        user_assignees = UserAssigneeFactory(
-            **{
-                "email": "some-other-author@email.zac",
-                "username": "some-other-author",
-                "first_name": "Some Other First",
-                "last_name": "Some Last",
-                "full_name": "Some Other First Some Last",
-            }
-        )
-        assigned_users2 = AssignedUsersFactory(
-            **{
-                "deadline": "2022-04-15",
-                "user_assignees": [user_assignees],
-                "group_assignees": [],
-                "email_notification": False,
-            }
-        )
-        review_request = ReviewRequestFactory()
-        review_request["assignedUsers"].append(assigned_users2)
+        review_request = review_request_factory()
         rr = factory(ReviewRequest, review_request)
 
         # Avoid patching fetch_reviews and everything
-        reviews = factory(Reviews, ReviewsFactory())
+        reviews = factory(Reviews, reviews_factory())
         rr.fetched_reviews = True
 
         with patch(
@@ -284,12 +266,6 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
                     "question": "Ja?",
                     "order": 1,
                     "choices": [{"name": "Ja", "value": "Ja"}],
-                    "is_multiple_choice": True,
-                },
-                {
-                    "question": "Nee?",
-                    "order": 2,
-                    "choices": [{"name": "Nee", "value": "Nee"}],
                     "is_multiple_choice": True,
                 },
             ],
