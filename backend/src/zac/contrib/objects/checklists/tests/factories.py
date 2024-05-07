@@ -28,7 +28,7 @@ IDENTIFICATIE = "ZAAK-0000001"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7"
 
 
-def ChecklistTypeObjectTypeVersionFactory(**kwargs):
+def checklist_type_object_type_version_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTTYPES_ROOT}objecttypes/b4ec3f47-bc20-4872-955c-cb5f67646eae/versions/4",
         "version": 4,
@@ -49,7 +49,7 @@ def ChecklistTypeObjectTypeVersionFactory(**kwargs):
     )
 
 
-def ChecklistTypeFactory(**kwargs):
+def checklist_type_factory(**kwargs):
     default_data = {
         "zaaktypeCatalogus": "UTRE",
         "zaaktypeIdentificaties": ["ZT1"],
@@ -74,7 +74,7 @@ def ChecklistTypeFactory(**kwargs):
     )
 
 
-def ChecklistTypeObjectFactory(**kwargs):
+def checklist_type_object_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTS_ROOT}objects/85e6c250-9f51-4286-8340-25109d0b96d1",
         "uuid": "85e6c250-9f51-4286-8340-25109d0b96d1",
@@ -82,7 +82,7 @@ def ChecklistTypeObjectFactory(**kwargs):
         "record": {
             "index": 1,
             "typeVersion": 4,
-            "data": ChecklistTypeFactory(),
+            "data": checklist_type_factory(),
             "geometry": "None",
             "startAt": "1999-12-31",
             "endAt": "None",
@@ -101,7 +101,7 @@ def ChecklistTypeObjectFactory(**kwargs):
     )
 
 
-def ChecklistObjectTypeFactory(**kwargs):
+def checklist_object_type_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTTYPES_ROOT}objecttypes/5d7182f4-dc2f-4aaa-b2a2-bdc72a2ce0b4",
         "uuid": "5d7182f4-dc2f-4aaa-b2a2-bdc72a2ce0b4",
@@ -136,7 +136,7 @@ def ChecklistObjectTypeFactory(**kwargs):
     )
 
 
-def ChecklistObjectTypeVersionFactory(**kwargs):
+def checklist_object_type_version_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTTYPES_ROOT}objecttypes/5d7182f4-dc2f-4aaa-b2a2-bdc72a2ce0b4/versions/3",
         "version": 3,
@@ -159,7 +159,7 @@ def ChecklistObjectTypeVersionFactory(**kwargs):
     )
 
 
-def ChecklistFactory(**kwargs):
+def checklist_factory(**kwargs):
     default_data = {
         "zaak": ZAAK_URL,
         "answers": [
@@ -186,7 +186,7 @@ def ChecklistFactory(**kwargs):
     )
 
 
-def ChecklistObjectFactory(**kwargs):
+def checklist_object_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTS_ROOT}objects/85e6c250-9f51-4286-8340-25109d0b96d1",
         "uuid": "85e6c250-9f51-4286-8340-25109d0b96d1",
@@ -194,7 +194,7 @@ def ChecklistObjectFactory(**kwargs):
         "record": {
             "index": 1,
             "typeVersion": 3,
-            "data": ChecklistFactory(),
+            "data": checklist_factory(),
             "geometry": "None",
             "startAt": "1999-12-31",
             "endAt": "None",

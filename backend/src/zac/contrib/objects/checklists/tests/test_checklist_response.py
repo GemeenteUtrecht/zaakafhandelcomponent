@@ -27,13 +27,13 @@ from .factories import (
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    ChecklistFactory,
     ChecklistLockFactory,
-    ChecklistObjectFactory,
-    ChecklistObjectTypeFactory,
-    ChecklistObjectTypeVersionFactory,
-    ChecklistTypeObjectFactory,
-    ChecklistTypeObjectTypeVersionFactory,
+    checklist_factory,
+    checklist_object_factory,
+    checklist_object_type_factory,
+    checklist_object_type_version_factory,
+    checklist_type_object_factory,
+    checklist_type_object_type_version_factory,
 )
 
 
@@ -70,8 +70,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         config.primary_objecttypes_api = objecttypes_service
         config.save()
 
-        cls.checklisttype_objecttype = ChecklistTypeObjectTypeVersionFactory()
-        cls.checklist_objecttype = ChecklistObjectTypeFactory()
+        cls.checklisttype_objecttype = checklist_type_object_type_version_factory()
+        cls.checklist_objecttype = checklist_object_type_factory()
 
         meta_config = MetaObjectTypesConfig.get_solo()
         meta_config.checklisttype_objecttype = cls.checklisttype_objecttype["url"]
@@ -101,8 +101,8 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             identificatie=IDENTIFICATIE,
         )
         cls.user = SuperUserFactory.create(is_staff=True)
-        cls.checklist_object = ChecklistObjectFactory()
-        cls.checklisttype_object = ChecklistTypeObjectFactory()
+        cls.checklist_object = checklist_object_factory()
+        cls.checklisttype_object = checklist_type_object_factory()
 
     def test_retrieve_checklist(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -162,7 +162,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.checklist_objecttype)
 
-        checklist_objecttype_version = ChecklistObjectTypeVersionFactory()
+        checklist_objecttype_version = checklist_object_type_version_factory()
         mock_resource_get(m, checklist_objecttype_version)
         m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.checklist_objecttype])
 
@@ -415,7 +415,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 {"question": "Nee?", "answer": "Nee"},
             ],
         }
-        json_response = ChecklistFactory(record__data__answers=data["answers"])
+        json_response = checklist_factory(record__data__answers=data["answers"])
         m.patch(
             f"{OBJECTS_ROOT}objects/{self.checklist_object['uuid']}",
             json=json_response,
@@ -528,7 +528,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
 
-        checklist_object = ChecklistObjectFactory()
+        checklist_object = checklist_object_factory()
         m.patch(
             f"{OBJECTS_ROOT}objects/{checklist_object['uuid']}",
             json=checklist_object,
@@ -641,7 +641,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             "lock-zaak-checklist",
             kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
         )
-        checklist_object = ChecklistObjectFactory()
+        checklist_object = checklist_object_factory()
         lock = ChecklistLockFactory.create(url=checklist_object["url"], user=self.user)
 
         with patch(
@@ -666,7 +666,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaaktype)
         mock_resource_get(m, self.catalogus)
 
-        checklist_object = ChecklistObjectFactory()
+        checklist_object = checklist_object_factory()
 
         m.patch(
             f"{OBJECTS_ROOT}objects/{checklist_object['uuid']}",
@@ -679,7 +679,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
         )
 
-        checklist_object = ChecklistObjectFactory()
+        checklist_object = checklist_object_factory()
         lock = ChecklistLockFactory.create(url=checklist_object["url"], user=self.user)
 
         with patch(
@@ -720,7 +720,7 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_lock_checklist_for_zaak(self, m):
-        checklist_object = ChecklistObjectFactory()
+        checklist_object = checklist_object_factory()
         answer = checklist_object["record"]["data"]["answers"][0]
         answer["userAssignee"] = "some-user"
         answer["answer"] = ""

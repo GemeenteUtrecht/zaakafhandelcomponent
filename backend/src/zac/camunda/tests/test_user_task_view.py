@@ -30,11 +30,11 @@ from zac.activities.tests.factories import ActivityFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.contrib.dowc.data import OpenDowc
-from zac.contrib.objects.checklists.tests.factories import ChecklistObjectFactory
+from zac.contrib.objects.checklists.tests.factories import checklist_object_factory
 from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.contrib.objects.kownsl.tests.factories import (
-    ReviewRequestFactory,
-    ReviewsFactory,
+    review_request_factory,
+    reviews_factory,
 )
 from zac.contrib.objects.services import factory_review_request, factory_reviews
 from zac.core.models import CoreConfig
@@ -429,7 +429,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
         )
 
         users = UserFactory.create_batch(3)
-        review_request_data = ReviewRequestFactory(
+        review_request_data = review_request_factory(
             assignedUsers=[
                 {
                     "deadline": "2020-01-01",
@@ -630,7 +630,7 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             json=paginated_response([self.zaaktype]),
         )
         tasks = [_get_task(**{"formKey": "zac:zetResultaat"})]
-        reviews = factory_reviews(ReviewsFactory())
+        reviews = factory_reviews(reviews_factory())
         mock_resource_get(m, self.zaaktype)
         resultaattype = generate_oas_component(
             "ztc",
@@ -895,8 +895,8 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             "toelichting": "some-toelichting",
             "id": None,
         }
-        rr = ReviewRequestFactory()
-        review_request_data = ReviewRequestFactory(
+        rr = review_request_factory()
+        review_request_data = review_request_factory(
             assignedUsers=[
                 {
                     "deadline": "2020-01-01",
@@ -967,8 +967,8 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     def test_put_reconfigure_advice_review_request_user_task(self, m, gt, ct):
         self._mock_permissions(m)
         users = UserFactory.create_batch(3)
-        rr = ReviewRequestFactory()
-        review_request_data = ReviewRequestFactory(
+        rr = review_request_factory()
+        review_request_data = review_request_factory(
             assignedUsers=[
                 {
                     "deadline": "2020-01-01",
@@ -1201,7 +1201,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
 
         rr = factory_review_request(
-            ReviewRequestFactory(
+            review_request_factory(
                 userDeadlines={
                     "user:some-author": "2022-04-14",
                 }
@@ -1209,7 +1209,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
 
         activity = ActivityFactory.create(zaak=self.zaak.url)
-        checklist_object = ChecklistObjectFactory()
+        checklist_object = checklist_object_factory()
         checklist_object["record"]["data"]["answers"][0] = {
             "answer": "",
             "question": "Ja?",

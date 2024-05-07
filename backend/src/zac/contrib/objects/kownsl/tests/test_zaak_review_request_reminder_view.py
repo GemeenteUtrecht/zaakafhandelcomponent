@@ -31,7 +31,7 @@ from .factories import (
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    ReviewRequestFactory,
+    review_request_factory,
 )
 
 CAMUNDA_ROOT = "https://some.camunda.nl/"
@@ -71,7 +71,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
         cls.get_zaak_patcher = patch(
             "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=zaak
         )
-        cls.review_request = ReviewRequestFactory()
+        cls.review_request = review_request_factory()
 
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
@@ -115,7 +115,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
     def test_get_zaak_review_request_is_locked(self, m):
         rr = factory(
             ReviewRequest,
-            ReviewRequestFactory(locked=True, lockReason="just a reason"),
+            review_request_factory(locked=True, lockReason="just a reason"),
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
@@ -127,7 +127,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
     def test_get_zaak_review_request_not_found(self, m):
         rr = factory(
             ReviewRequest,
-            ReviewRequestFactory(locked=True, lockReason="just a reason"),
+            review_request_factory(locked=True, lockReason="just a reason"),
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
@@ -185,7 +185,7 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.permissions.get_zaak", return_value=zaak
         )
 
-        cls.review_request = ReviewRequestFactory()
+        cls.review_request = review_request_factory()
         cls.review_request = factory(ReviewRequest, cls.review_request)
         cls.patch_get_review_request = patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",

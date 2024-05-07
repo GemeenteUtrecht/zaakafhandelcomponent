@@ -36,11 +36,11 @@ from .factories import (
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    KownslZaakEigenschapFactory,
-    ReviewDocumentFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
+    advice_factory,
+    kownsl_zaak_eigenschap_factory,
+    review_document_factory,
+    review_request_factory,
+    reviews_factory,
 )
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -140,24 +140,24 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         es_document = create_informatieobject_document(document)
 
         # Mock kownsl components
-        cls.review_request_dict = ReviewRequestFactory(
+        cls.review_request_dict = review_request_factory(
             documents=[deepcopy(DOCUMENT_URL)]
         )
         cls.review_request = factory(ReviewRequest, cls.review_request_dict)
-        zei = KownslZaakEigenschapFactory(
+        zei = kownsl_zaak_eigenschap_factory(
             url=zaakeigenschap.url,
             waarde=zaakeigenschap.waarde,
             naam=cls.eigenschap["naam"],
         )
-        review_document = ReviewDocumentFactory(
+        review_document = review_document_factory(
             document=es_document.url,
             sourceVersion=es_document.versie,
             reviewVersion=es_document.versie,
         )
-        advice = AdviceFactory(
+        advice = advice_factory(
             zaakeigenschappen=[zei], reviewDocuments=[review_document]
         )
-        cls.reviews = ReviewsFactory(reviews=[advice], reviewType=KownslTypes.advice)
+        cls.reviews = reviews_factory(reviews=[advice], reviewType=KownslTypes.advice)
         reviews = factory_reviews(cls.reviews)
 
         # Patchers
@@ -222,7 +222,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_zaak_review_requests_completed(self, m):
-        rr = ReviewRequestFactory()
+        rr = review_request_factory()
         rr.update(
             {
                 "locked": True,
@@ -276,7 +276,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
         )
 
     def test_get_zaak_review_requests_status_canceled(self, m):
-        rr = ReviewRequestFactory()
+        rr = review_request_factory()
         rr.update({"locked": True, "lockReason": "canceled by user"})
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_all_review_requests_for_zaak",
@@ -615,9 +615,9 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.permissions.get_zaak", return_value=zaak
         )
 
-        cls.review_request = ReviewRequestFactory(documents=[])
+        cls.review_request = review_request_factory(documents=[])
         cls.review_request = factory(ReviewRequest, cls.review_request)
-        cls.advices = factory(Advice, [AdviceFactory()])
+        cls.advices = factory(Advice, [advice_factory()])
 
         cls.endpoint_summary = reverse(
             "kownsl:zaak-review-requests-summary",
@@ -867,7 +867,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         )
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
-            return_value=factory(ReviewRequest, ReviewRequestFactory(locked=True)),
+            return_value=factory(ReviewRequest, review_request_factory(locked=True)),
         ):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -896,7 +896,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=factory(
                 ReviewRequest,
-                ReviewRequestFactory(isBeingReconfigured=True, locked=False),
+                review_request_factory(isBeingReconfigured=True, locked=False),
             ),
         ):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})

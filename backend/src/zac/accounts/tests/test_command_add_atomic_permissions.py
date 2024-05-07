@@ -9,7 +9,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
-from zac.contrib.objects.kownsl.tests.factories import ReviewRequestFactory
+from zac.contrib.objects.kownsl.tests.factories import review_request_factory
 from zac.contrib.objects.services import factory_review_request
 from zac.core.permissions import zaakproces_usertasks, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
@@ -162,7 +162,7 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
             vertrouwelijkheidaanduiding="zaakvertrouwelijk",
             eigenschappen=[],
         )
-        review_request = ReviewRequestFactory(
+        review_request = review_request_factory(
             zaak=zaak["url"], userDeadlines={f"user:{self.user.username}": "2099-01-01"}
         )
 

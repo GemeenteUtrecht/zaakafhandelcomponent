@@ -33,7 +33,7 @@ from .factories import (
     ZAAK_URL,
     ZAKEN_ROOT,
     ChecklistLockFactory,
-    ChecklistObjectFactory,
+    checklist_object_factory,
 )
 
 
@@ -177,7 +177,7 @@ class RetrieveChecklistsPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(self.user)
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
-            return_value=ChecklistObjectFactory(),
+            return_value=checklist_object_factory(),
         ):
             response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -249,7 +249,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 "version": 1,
             },
         )
-        cls.checklist_object = ChecklistObjectFactory()
+        cls.checklist_object = checklist_object_factory()
         cls.patch_fetch_checklist_object_views = patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
             side_effect=[None, cls.checklist_object],
@@ -630,7 +630,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 "version": 1,
             },
         )
-        cls.checklist_object = ChecklistObjectFactory(
+        cls.checklist_object = checklist_object_factory(
             record__data__zaak=cls.zaak["url"]
         )
         cls.patch_fetch_checklist_object_views = patch(
@@ -900,7 +900,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
             object_url=self.zaak["url"],
         )
         self.client.force_authenticate(user=self.user)
-        data = ChecklistObjectFactory()
+        data = checklist_object_factory()
 
         with patch(
             "zac.contrib.objects.checklists.api.views.fetch_checklist_object",
@@ -943,7 +943,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         # create some-other-user
         user = UserFactory.create(username="some-other-user")
-        checklist_object = ChecklistObjectFactory()
+        checklist_object = checklist_object_factory()
 
         checklist_lock = ChecklistLockFactory.create(
             zaak=self.zaak["url"], url=checklist_object["url"], user=user
@@ -999,7 +999,7 @@ class LockAndUnlockChecklistPermissionTests(
         bronorganisatie=BRONORGANISATIE,
         identificatie=IDENTIFICATIE,
     )
-    checklist_object = ChecklistObjectFactory(record__data__zaak=zaak["url"])
+    checklist_object = checklist_object_factory(record__data__zaak=zaak["url"])
 
     def setUp(self):
         super().setUp()

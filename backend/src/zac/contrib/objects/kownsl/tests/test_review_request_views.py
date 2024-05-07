@@ -19,9 +19,9 @@ from .factories import (
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
+    advice_factory,
+    review_request_factory,
+    reviews_factory,
 )
 
 
@@ -44,9 +44,9 @@ class ViewTests(ClearCachesMixin, APITestCase):
         cls.user = UserFactory.create(
             username="some-user", first_name="John", last_name="Doe"
         )
-        cls.review_request = ReviewRequestFactory()
-        cls.advice = AdviceFactory()
-        cls.reviews_advice = ReviewsFactory()
+        cls.review_request = review_request_factory()
+        cls.advice = advice_factory()
+        cls.reviews_advice = reviews_factory()
         cls.group = GroupFactory.create(name="some-group")
 
     def test_fail_create_review_query_param(self, m):

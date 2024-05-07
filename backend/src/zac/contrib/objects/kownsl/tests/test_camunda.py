@@ -41,9 +41,9 @@ from .factories import (
     DOCUMENTS_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    ReviewRequestFactory,
-    ReviewsFactory,
+    advice_factory,
+    review_request_factory,
+    reviews_factory,
 )
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
@@ -371,7 +371,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         )
         m.get(f"{self.zaak.url}/zaakeigenschappen", json=[])
 
-        review_request = ReviewRequestFactory()
+        review_request = review_request_factory()
 
         task = _get_task(**{"formKey": "zac:configureAdviceRequest"})
         m.get(
@@ -531,7 +531,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             return_value=[cls.document_es],
         )
 
-        rr = ReviewRequestFactory(documents=[cls.document.url])
+        rr = review_request_factory(documents=[cls.document.url])
 
         # Let resolve_assignee get the right users and groups
         UserFactory.create(
@@ -887,9 +887,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
     @freeze_time("1999-12-31T23:59:59Z")
     @requests_mock.Mocker()
     def test_reconfigure_review_request_serializer_user_already_reviewed(self, m):
-        advice = AdviceFactory()
-        review_request = ReviewRequestFactory(reviewType=KownslTypes.advice)
-        reviews_advice = ReviewsFactory(
+        advice = advice_factory()
+        review_request = review_request_factory(reviewType=KownslTypes.advice)
+        reviews_advice = reviews_factory(
             reviews=[advice], reviewType=review_request["reviewType"]
         )
         user = UserFactory.create(username=advice["author"]["username"])

@@ -26,7 +26,7 @@ from .factories import (
     IDENTIFICATIE,
     ZAAK_URL,
     ZAKEN_ROOT,
-    ChecklistTypeObjectFactory,
+    checklist_type_object_factory,
 )
 
 
@@ -57,7 +57,7 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
         cls.catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
-        cls.checklisttype_object = ChecklistTypeObjectFactory()
+        cls.checklisttype_object = checklist_type_object_factory()
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",

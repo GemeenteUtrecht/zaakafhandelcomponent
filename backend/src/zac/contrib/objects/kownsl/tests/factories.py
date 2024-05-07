@@ -31,7 +31,7 @@ ZAAK_DOCUMENT = {
 RR_ID = "14aec7a0-06de-4b55-b839-a1c9a0415b46"
 
 
-def UserAssigneeFactory(**kwargs):
+def user_assignee_factory(**kwargs):
     default_data = {
         "email": "some-author@email.zac",
         "username": "some-author",
@@ -49,11 +49,11 @@ def UserAssigneeFactory(**kwargs):
     )
 
 
-def AssignedUserFactory(**kwargs):
+def assigned_user_factory(**kwargs):
     default_data = {
         "deadline": "2022-04-14",
         "groupAssignees": [],
-        "userAssignees": [UserAssigneeFactory()],
+        "userAssignees": [user_assignee_factory()],
         "emailNotification": False,
     }
     if kwargs:
@@ -66,7 +66,7 @@ def AssignedUserFactory(**kwargs):
     )
 
 
-def MetaDataFactory(**kwargs):
+def meta_data_factory(**kwargs):
     default_data = {
         "taskDefinitionId": "submitAdvice",
         "processInstanceId": "6ebf534a-bc0a-11ec-a591-c69dd6a420a0",
@@ -81,14 +81,14 @@ def MetaDataFactory(**kwargs):
     )
 
 
-def ReviewRequestFactory(**kwargs):
-    assigned_users = [AssignedUserFactory()]
+def review_request_factory(**kwargs):
+    assigned_users = [assigned_user_factory()]
     assigned_users.append(
         {
             "deadline": "2022-04-15",
             "groupAssignees": [],
             "userAssignees": [
-                UserAssigneeFactory(
+                user_assignee_factory(
                     email="some-other-author@email.zac",
                     username="some-other-author",
                     firstName="Some Other First",
@@ -105,8 +105,8 @@ def ReviewRequestFactory(**kwargs):
         "id": "14aec7a0-06de-4b55-b839-a1c9a0415b46",
         "locked": False,
         "lockReason": "",
-        "metadata": MetaDataFactory(),
-        "requester": UserAssigneeFactory(),
+        "metadata": meta_data_factory(),
+        "requester": user_assignee_factory(),
         "toelichting": "some-toelichting",
         "zaak": ZAAK_URL,
         "zaakeigenschappen": [],
@@ -133,7 +133,7 @@ def ReviewRequestFactory(**kwargs):
     )
 
 
-def ReviewDocumentFactory(**kwargs):
+def review_document_factory(**kwargs):
     default_data = {
         "document": deepcopy(DOCUMENT_URL) + "?versie=1",
         "sourceVersion": 1,
@@ -149,7 +149,7 @@ def ReviewDocumentFactory(**kwargs):
     )
 
 
-def KownslZaakEigenschapFactory(**kwargs):
+def kownsl_zaak_eigenschap_factory(**kwargs):
     default_data = {
         "url": f"{ZAAK_URL}zaakeigenschappen/c0524527-3539-4313-8c00-41358069e65b",
         "naam": "SomeEigenschap",
@@ -161,14 +161,14 @@ def KownslZaakEigenschapFactory(**kwargs):
     return deepcopy(default_data)
 
 
-def AdviceFactory(**kwargs):
+def advice_factory(**kwargs):
     default_data = {
-        "author": UserAssigneeFactory(),
+        "author": user_assignee_factory(),
         "advice": "some-advice",
         "created": "2022-04-14T15:50:09.830235Z",
         "group": dict(),
-        "reviewDocuments": [ReviewDocumentFactory()],
-        "zaakeigenschappen": [KownslZaakEigenschapFactory()],
+        "reviewDocuments": [review_document_factory()],
+        "zaakeigenschappen": [kownsl_zaak_eigenschap_factory()],
     }
     if kwargs:
         update_dictionary_from_kwargs(default_data, kwargs)
@@ -180,15 +180,15 @@ def AdviceFactory(**kwargs):
     )
 
 
-def ApprovalFactory(**kwargs):
+def approval_factory(**kwargs):
     default_data = {
-        "author": UserAssigneeFactory(),
+        "author": user_assignee_factory(),
         "approved": True,
         "created": "2022-04-14T15:51:09.830235Z",
         "group": dict(),
-        "reviewDocuments": [ReviewDocumentFactory()],
+        "reviewDocuments": [review_document_factory()],
         "toelichting": "some-toelichting",
-        "zaakeigenschappen": [KownslZaakEigenschapFactory()],
+        "zaakeigenschappen": [kownsl_zaak_eigenschap_factory()],
     }
     if kwargs:
         update_dictionary_from_kwargs(default_data, kwargs)
@@ -200,11 +200,11 @@ def ApprovalFactory(**kwargs):
     )
 
 
-def ReviewsFactory(**kwargs):
+def reviews_factory(**kwargs):
     default_data = {
         "id": "6a9a169e-aa6f-4dd7-bbea-6bedea74c456",
-        "requester": UserAssigneeFactory(),
-        "reviews": [AdviceFactory()],
+        "requester": user_assignee_factory(),
+        "reviews": [advice_factory()],
         "reviewRequest": deepcopy(RR_ID),
         "reviewType": KownslTypes.advice,
         "zaak": deepcopy(ZAAK_URL),
@@ -219,7 +219,7 @@ def ReviewsFactory(**kwargs):
     )
 
 
-def ReviewRequestObjectTypeFactory(**kwargs):
+def review_request_object_type_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTTYPES_ROOT}objecttypes/b4ec3f47-bc20-4872-955c-cb5f67646eae",
         "uuid": "b4ec3f47-bc20-4872-955c-cb5f67646eae",
@@ -251,7 +251,7 @@ def ReviewRequestObjectTypeFactory(**kwargs):
     return generate_oas_component("objecttypes", "schemas/ObjectType", **default_data)
 
 
-def ReviewRequestObjectTypeVersionFactory(**kwargs):
+def review_request_object_type_version_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTTYPES_ROOT}objecttypes/b4ec3f47-bc20-4872-955c-cb5f67646eae/versions/4",
         "version": 4,
@@ -272,7 +272,7 @@ def ReviewRequestObjectTypeVersionFactory(**kwargs):
     )
 
 
-def ReviewRequestObjectFactory(**kwargs):
+def review_request_object_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTS_ROOT}objects/85e6c250-9f51-4286-8340-25109d0b96d1",
         "uuid": "85e6c250-9f51-4286-8340-25109d0b96d1",
@@ -280,7 +280,7 @@ def ReviewRequestObjectFactory(**kwargs):
         "record": {
             "index": 1,
             "typeVersion": 4,
-            "data": ReviewRequestFactory(),
+            "data": review_request_factory(),
             "geometry": "None",
             "startAt": "1999-12-31",
             "endAt": "None",
@@ -299,7 +299,7 @@ def ReviewRequestObjectFactory(**kwargs):
     )
 
 
-def ReviewObjectTypeFactory(**kwargs):
+def review_object_type_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTTYPES_ROOT}objecttypes/b4ec3f47-bc20-4872-955c-cb5f67646ead",
         "uuid": "b4ec3f47-bc20-4872-955c-cb5f67646ead",
@@ -335,7 +335,7 @@ def ReviewObjectTypeFactory(**kwargs):
     )
 
 
-def ReviewObjectTypeVersionFactory(**kwargs):
+def review_object_type_version_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTTYPES_ROOT}objecttypes/b3ec3f47-bc20-4872-955c-cb5f67646ead/versions/4",
         "version": 4,
@@ -358,7 +358,7 @@ def ReviewObjectTypeVersionFactory(**kwargs):
     )
 
 
-def ReviewObjectFactory(**kwargs):
+def review_object_factory(**kwargs):
     default_data = {
         "url": f"{OBJECTS_ROOT}objects/85e6c250-9f51-4286-8340-25109d0b96d1",
         "uuid": "85e6c250-9f51-4286-8340-25109d0b96d1",
@@ -366,7 +366,7 @@ def ReviewObjectFactory(**kwargs):
         "record": {
             "index": 1,
             "typeVersion": 4,
-            "data": ReviewsFactory(),
+            "data": reviews_factory(),
             "geometry": "None",
             "startAt": "1999-12-31",
             "endAt": "None",

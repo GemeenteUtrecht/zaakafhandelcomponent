@@ -27,11 +27,11 @@ from .factories import (
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    ChecklistObjectFactory,
-    ChecklistObjectTypeFactory,
-    ChecklistObjectTypeVersionFactory,
-    ChecklistTypeObjectFactory,
-    ChecklistTypeObjectTypeVersionFactory,
+    checklist_object_factory,
+    checklist_object_type_factory,
+    checklist_object_type_version_factory,
+    checklist_type_object_factory,
+    checklist_type_object_type_version_factory,
 )
 
 
@@ -64,8 +64,8 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         config.primary_objecttypes_api = objecttypes_service
         config.save()
 
-        cls.checklisttype_objecttype = ChecklistTypeObjectTypeVersionFactory()
-        cls.checklist_objecttype = ChecklistObjectTypeFactory()
+        cls.checklisttype_objecttype = checklist_type_object_type_version_factory()
+        cls.checklist_objecttype = checklist_object_type_factory()
 
         meta_config = MetaObjectTypesConfig.get_solo()
         meta_config.checklisttype_objecttype = cls.checklisttype_objecttype["url"]
@@ -98,10 +98,10 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.assignee = UserFactory.create()
         cls.group = GroupFactory.create()
         cls.assignee.groups.add(cls.group)
-        cls.checklist_objecttype = ChecklistObjectTypeFactory()
-        cls.checklist_objecttype_version = ChecklistObjectTypeVersionFactory()
-        cls.checklist_object = ChecklistObjectFactory()
-        cls.checklisttype_object = ChecklistTypeObjectFactory()
+        cls.checklist_objecttype = checklist_object_type_factory()
+        cls.checklist_objecttype_version = checklist_object_type_version_factory()
+        cls.checklist_object = checklist_object_factory()
+        cls.checklisttype_object = checklist_type_object_factory()
 
     def setUp(self):
         super().setUp()
@@ -243,7 +243,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 },
             ],
         }
-        created = ChecklistObjectFactory(record__data__answers=data["answers"])
+        created = checklist_object_factory(record__data__answers=data["answers"])
 
         self.assertEqual(AtomicPermission.objects.for_user(self.assignee).count(), 0)
 
@@ -300,7 +300,7 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
                 {"question": "Nee?", "answer": ""},
             ],
         }
-        json_response = ChecklistObjectFactory(record__data__answers=data["answers"])
+        json_response = checklist_object_factory(record__data__answers=data["answers"])
         m.patch(
             f"{OBJECTS_ROOT}objects/{self.checklist_object['uuid']}",
             json=json_response,

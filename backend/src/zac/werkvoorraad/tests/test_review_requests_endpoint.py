@@ -16,13 +16,13 @@ from zac.contrib.objects.kownsl.tests.factories import (
     OBJECTTYPES_ROOT,
     ZAAK_URL,
     ZAKEN_ROOT,
-    AdviceFactory,
-    ReviewObjectFactory,
-    ReviewObjectTypeVersionFactory,
-    ReviewRequestFactory,
-    ReviewRequestObjectFactory,
-    ReviewRequestObjectTypeVersionFactory,
-    ReviewsFactory,
+    advice_factory,
+    review_object_factory,
+    review_object_type_version_factory,
+    review_request_factory,
+    review_request_object_factory,
+    review_request_object_type_version_factory,
+    reviews_factory,
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
@@ -30,8 +30,8 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
-REVIEW_OBJECTTYPE = ReviewObjectTypeVersionFactory()
-REVIEW_REQUEST_OBJECTTYPE = ReviewRequestObjectTypeVersionFactory()
+REVIEW_OBJECTTYPE = review_object_type_version_factory()
+REVIEW_REQUEST_OBJECTTYPE = review_request_object_type_version_factory()
 
 
 @requests_mock.Mocker()
@@ -91,7 +91,7 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
         cls.endpoint = reverse(
             "werkvoorraad:review-requests",
         )
-        cls.review_request = ReviewRequestFactory()
+        cls.review_request = review_request_factory()
 
     @patch("zac.core.services.fetch_objecttypes", return_value=[])
     def test_workstack_review_requests_endpoint_no_zaak(self, m, *mocks):
@@ -100,7 +100,7 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         mock_resource_get(m, self.catalogus)
 
-        rr_object = ReviewRequestObjectFactory(record__data=self.review_request)
+        rr_object = review_request_object_factory(record__data=self.review_request)
 
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=20&page=1",
@@ -168,7 +168,7 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
         zaak_document.save()
         self.refresh_index()
 
-        rr_object = ReviewRequestObjectFactory(record__data=self.review_request)
+        rr_object = review_request_object_factory(record__data=self.review_request)
 
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=20&page=1",
@@ -177,10 +177,10 @@ class ReviewRequestsTests(ClearCachesMixin, ESMixin, APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
-        advice = AdviceFactory()
-        reviews_advice = ReviewsFactory(reviews=[advice])
+        advice = advice_factory()
+        reviews_advice = reviews_factory(reviews=[advice])
 
-        review_object = ReviewObjectFactory(record__data=reviews_advice)
+        review_object = review_object_factory(record__data=reviews_advice)
 
         with patch(
             "zac.contrib.objects.services.fetch_reviews",

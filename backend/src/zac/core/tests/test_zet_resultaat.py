@@ -19,8 +19,8 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.dowc.models import DowcConfig
 from zac.contrib.objects.kownsl.data import ReviewRequest, Reviews
 from zac.contrib.objects.kownsl.tests.factories import (
-    ReviewRequestFactory,
-    ReviewsFactory,
+    review_request_factory,
+    reviews_factory,
 )
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -61,12 +61,12 @@ TASK_DATA = {
 }
 
 from zac.contrib.objects.checklists.tests.factories import (
-    ChecklistObjectFactory,
-    ChecklistTypeObjectFactory,
+    checklist_object_factory,
+    checklist_type_object_factory,
 )
 from zac.core.tests.utils import ClearCachesMixin
 
-CHECKLISTTYPE_OBJECT = ChecklistTypeObjectFactory()
+CHECKLISTTYPE_OBJECT = checklist_type_object_factory()
 
 
 def _get_task(**overrides):
@@ -196,14 +196,14 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             f"{CATALOGI_ROOT}resultaattypen?zaaktype={self.zaaktype['url']}",
             json=paginated_response([self.resultaattype]),
         )
-        checklist = ChecklistObjectFactory()
+        checklist = checklist_object_factory()
         checklist["record"]["data"]["answers"][0]["answer"] = ""
 
-        review_request = ReviewRequestFactory()
+        review_request = review_request_factory()
         rr = factory(ReviewRequest, review_request)
 
         # Avoid patching fetch_reviews and everything
-        reviews = factory(Reviews, ReviewsFactory())
+        reviews = factory(Reviews, reviews_factory())
         rr.fetched_reviews = True
 
         with patch(
