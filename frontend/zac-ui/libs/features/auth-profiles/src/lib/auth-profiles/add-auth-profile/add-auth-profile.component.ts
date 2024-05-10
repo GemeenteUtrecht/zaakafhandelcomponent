@@ -374,7 +374,6 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     }
 
     if (this.modeControl.value === "deleteUser") {
-      // this.removedUsersAuthProfiles
       this.fService.deleteUserAuthProfile(this.removedUsers).subscribe(
         () => {
           this.closeModal('edit-auth-profile-modal');
