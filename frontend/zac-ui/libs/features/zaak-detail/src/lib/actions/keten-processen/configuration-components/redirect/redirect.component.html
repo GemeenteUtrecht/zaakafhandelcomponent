@@ -6,14 +6,6 @@
       <p class="p--marginsmall"><strong>Rond het routingsproces af voor je verder kan in het hoofdproces.</strong></p>
       <p> Klik op de knop hieronder om door te gaan in het proces.</p>
     </gu-message>
-    <div class="d-flex justify-content-start">
-      <button gu-button
-              (click)="submitForm()"
-              [disabled]="isSubmitting"
-              [loading]="isSubmitting">
-        Routingsproces is afgerond
-      </button>
-    </div>
   </ng-container>
   <ng-template #default>
     <ng-container *ngIf="target === '_blank'">
