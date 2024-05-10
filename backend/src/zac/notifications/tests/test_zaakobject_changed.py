@@ -165,6 +165,30 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             ],
         )
 
+    def test_zaakobject_destroyed_in_es_if_not_found_regression_test(self, rm):
+        self._setup_mocks(rm)
+        rm.get(
+            f"{ZAKEN_ROOT}zaakobjecten?zaak={ZAAK}",
+            json=paginated_response([]),
+        )
+        rm.get(
+            f"{ZAKEN_ROOT}zaakobjecten?object={OBJECT}",
+            json=paginated_response([]),
+        )
+
+        path = reverse("notifications:callback")
+        response = self.client.post(path, NOTIFICATION_DESTROY)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.refresh_index()
+
+        # Assert no zaakobject document is found with the zo uuid
+        with self.assertRaises(NotFoundError):
+            ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
+
+        with self.assertRaises(NotFoundError):
+            ObjectDocument.get(id=OBJECT_RESPONSE["uuid"])
+
     def test_zaakobject_destroyed_in_es(self, rm):
         self._setup_mocks(rm)
         rm.get(

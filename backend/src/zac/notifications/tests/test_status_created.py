@@ -175,7 +175,7 @@ class StatusCreatedTests(ESMixin, APITestCase):
                 "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME + zaak["identificatie"]
             }
         )
-        mock_complete_task.assert_called_once_with("some-id")
+        mock_complete_task.assert_called_once_with("some-id", variables=dict())
 
         activity.refresh_from_db()
         self.assertEqual(activity.status, ActivityStatuses.finished)

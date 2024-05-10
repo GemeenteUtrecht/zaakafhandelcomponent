@@ -233,7 +233,7 @@ class ZakenHandler:
             )
             if tasks:
                 for task in tasks:
-                    complete_task(task.id)
+                    complete_task(task.id, variables=dict())
 
         # index in ES
         update_status_in_zaak_document(zaak)
@@ -288,11 +288,10 @@ class ZakenHandler:
         # Get zaakobjectdocument
         zaakobjectdocument = get_zaakobject_document(zaakobject_url)
 
-        # update related_zaken in objecten index
-        update_related_zaken_in_object_document(zaakobjectdocument.object)
-
-        # delete from zaakobject index
-        zaakobjectdocument.delete()
+        if zaakobjectdocument:  # update related_zaken in objecten index
+            update_related_zaken_in_object_document(zaakobjectdocument.object)
+            # delete from zaakobject index
+            zaakobjectdocument.delete()
 
     def _handle_zaakinformatieobject_create(
         self, zaak_url: str, zaakinformatieobject_url: str
