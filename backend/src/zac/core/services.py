@@ -1046,8 +1046,8 @@ def _fetch_document(url: str) -> Response:
     Retrieve document by URL from DRC or cache.
     """
     cache_key = f"document:{url}"
-    if cache_key in cache:
-        return cache.get(cache_key)
+    if cache_key in cache and (response := cache.get(cache_key)):
+        return response
     client = client_from_url(url)
     headers = client.auth.credentials()
     response = requests.get(url, headers=headers)
