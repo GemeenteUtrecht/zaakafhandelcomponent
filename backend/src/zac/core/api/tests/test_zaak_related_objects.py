@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -133,11 +134,15 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         )
 
         cls.user = SuperUserFactory.create()
+        cls.fetch_object_patcher = patch(
+            "zac.core.api.views.fetch_object", return_value=OBJECT_1
+        )
 
     def setUp(self):
         super().setUp()
-
         self.client.force_authenticate(self.user)
+        self.fetch_object_patcher.start()
+        self.addCleanup(self.fetch_object_patcher.stop)
 
     def test_create_object_relation(self, m):
         mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
@@ -181,10 +186,6 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
         m.get(
             f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
-            json=paginated_response([]),
-        )
-        m.get(
-            f"{ZRC_ROOT}zaakobjecten",
             json=paginated_response(
                 [
                     {
@@ -215,6 +216,30 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
+    def test_create_object_relation_fail_afgestoten(self, m):
+        mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
+        mock_resource_get(m, self.zaak)
+        m.get(
+            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
+            json=paginated_response([]),
+        )
+        obj = deepcopy(OBJECT_1)
+        obj["record"]["data"]["afgestoten"] = True
+
+        with patch("zac.core.api.views.fetch_object", return_value=obj):
+            response = self.client.post(
+                reverse(
+                    "zaakobject-create",
+                ),
+                data={
+                    "object": OBJECT_1["url"],
+                    "zaak": self.zaak["url"],
+                },
+            )
+
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response.json(), ["Object is `afgestoten`."])
+
     def test_create_object_relation_cache_invalidation(self, m):
         mock_service_oas_get(m, url=self.zrc_service.api_root, service="zrc")
         mock_resource_get(m, self.zaak)
@@ -235,11 +260,6 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
                 "relatieomschrijving": "",
                 "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
             },
-        )
-
-        m.get(
-            f"{ZRC_ROOT}zaakobjecten?zaak={self.zaak['url']}",
-            json=paginated_response([]),
         )
         self.assertEqual(m.call_count, 0)
 
@@ -456,7 +476,8 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_create_has_perm(self, m):
+    @patch("zac.core.api.views.fetch_object", return_value=OBJECT_1)
+    def test_create_has_perm(self, m, *mocks):
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
@@ -516,7 +537,8 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    def test_create_has_perm_also_for_closed_zaak(self, m):
+    @patch("zac.core.api.views.fetch_object", return_value=OBJECT_1)
+    def test_create_has_perm_also_for_closed_zaak(self, m, *mocks):
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, {**self.zaak, "einddatum": "2020-01-01"})

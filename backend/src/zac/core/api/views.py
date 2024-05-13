@@ -73,6 +73,7 @@ from ..services import (
     delete_zaak_eigenschap,
     delete_zaakobject,
     fetch_latest_audit_trail_data_document,
+    fetch_object,
     fetch_zaak_eigenschap,
     fetch_zaakobject,
     fetch_zaaktype,
@@ -1436,6 +1437,19 @@ class ZaakObjectChangeView(views.APIView):
         zaak_url = serializer.validated_data["zaak"]
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(self.request, zaak)
+
+        try:
+            object = fetch_object(serializer.data["object"])
+        except ClientError as exc:
+            raise serializers.ValidationError(
+                _(
+                    "Fetching OBJECT with URL: `{object}` raised a Client Error with detail: `{detail}`.".format(
+                        object=self.initial_data["object"], detail=exc.args[0]["detail"]
+                    )
+                )
+            )
+        if object["record"]["data"].get("afgestoten", False):
+            raise serializers.ValidationError(_("Object is `afgestoten`."))
 
         try:
             created_zaakobject = relate_object_to_zaak(serializer.validated_data)
