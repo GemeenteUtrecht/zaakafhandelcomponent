@@ -9,6 +9,9 @@ from django.utils import timezone
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
+from zgw_consumers.api_models.catalogi import StatusType, ZaakType
+from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import mock_service_oas_get
@@ -18,6 +21,7 @@ from zac.activities.tests.factories import ActivityFactory, ActivityStatuses
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get
+from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
@@ -163,9 +167,13 @@ class StatusCreatedTests(ESMixin, APITestCase):
                         return_value=[task],
                     ) as mock_get_camunda_user_tasks:
                         with patch(
-                            "zac.notifications.handlers.complete_task"
-                        ) as mock_complete_task:
-                            response = self.client.post(path, NOTIFICATION)
+                            "zac.notifications.handlers.get_camunda_user_tasks_for_zaak",
+                            return_value=[task],
+                        ) as mock_get_camunda_user_tasks_for_zaak:
+                            with patch(
+                                "zac.notifications.handlers.complete_task"
+                            ) as mock_complete_task:
+                                response = self.client.post(path, NOTIFICATION)
 
         mock_bulk_lock_rr_for_zaak.assert_called_once()
         mock_bulk_close_all_documents_for_zaak.assert_called_once()
@@ -175,7 +183,19 @@ class StatusCreatedTests(ESMixin, APITestCase):
                 "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME + zaak["identificatie"]
             }
         )
-        mock_complete_task.assert_called_once_with("some-id", variables=dict())
+        mock_get_camunda_user_tasks.assert_called_once_with(
+            payload={
+                "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME + zaak["identificatie"]
+            }
+        )
+        z = factory(Zaak, zaak)
+        zt = factory(ZaakType, ZAAKTYPE_RESPONSE)
+        s = factory(Status, STATUS_RESPONSE)
+        s.statustype = factory(StatusType, statustype)
+        z.status = s
+        z.zaaktype = zt
+        mock_get_camunda_user_tasks_for_zaak.assert_called_once_with(z)
+        mock_complete_task.assert_called_with("some-id", variables=dict())
 
         activity.refresh_from_db()
         self.assertEqual(activity.status, ActivityStatuses.finished)

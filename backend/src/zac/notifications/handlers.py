@@ -14,7 +14,10 @@ from zac.accounts.models import AccessRequest
 from zac.accounts.permission_loaders import add_permission_for_behandelaar
 from zac.activities.constants import ActivityStatuses
 from zac.activities.models import Activity
-from zac.camunda.user_tasks.api import get_camunda_user_tasks
+from zac.camunda.user_tasks.api import (
+    get_camunda_user_tasks,
+    get_camunda_user_tasks_for_zaak,
+)
 from zac.contrib.board.models import BoardItem
 from zac.contrib.dowc.api import bulk_close_all_documents_for_zaak
 from zac.contrib.objects.kownsl.cache import invalidate_review_requests_cache
@@ -224,13 +227,17 @@ class ZakenHandler:
             # Lock checklist
             lock_checklist_for_zaak(zaak)
 
-            # Remove bijdragezaak tasks if they exist - should be handled by
-            tasks = get_camunda_user_tasks(
-                payload={
-                    "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME
-                    + zaak.identificatie
-                }
+            # Remove bijdragezaak tasks if they exist
+            tasks = (
+                get_camunda_user_tasks(
+                    payload={
+                        "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME
+                        + zaak.identificatie
+                    }
+                )
+                or []
             )
+            tasks += get_camunda_user_tasks_for_zaak(zaak)
             if tasks:
                 for task in tasks:
                     complete_task(task.id, variables=dict())
