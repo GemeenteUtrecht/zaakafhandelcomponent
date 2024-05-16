@@ -237,7 +237,7 @@ class ZakenHandler:
                 )
                 or []
             )
-            tasks += get_camunda_user_tasks_for_zaak(zaak)
+            tasks += get_camunda_user_tasks_for_zaak(zaak, exclude_zaak_creation=True)
             if tasks:
                 for task in tasks:
                     complete_task(task.id, variables=dict())

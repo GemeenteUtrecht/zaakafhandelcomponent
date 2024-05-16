@@ -194,7 +194,9 @@ class StatusCreatedTests(ESMixin, APITestCase):
         s.statustype = factory(StatusType, statustype)
         z.status = s
         z.zaaktype = zt
-        mock_get_camunda_user_tasks_for_zaak.assert_called_once_with(z)
+        mock_get_camunda_user_tasks_for_zaak.assert_called_once_with(
+            z, exclude_zaak_creation=True
+        )
         mock_complete_task.assert_called_with("some-id", variables=dict())
 
         activity.refresh_from_db()
