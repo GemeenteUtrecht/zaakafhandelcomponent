@@ -167,13 +167,9 @@ class StatusCreatedTests(ESMixin, APITestCase):
                         return_value=[task],
                     ) as mock_get_camunda_user_tasks:
                         with patch(
-                            "zac.notifications.handlers.get_camunda_user_tasks_for_zaak",
-                            return_value=[task],
-                        ) as mock_get_camunda_user_tasks_for_zaak:
-                            with patch(
-                                "zac.notifications.handlers.complete_task"
-                            ) as mock_complete_task:
-                                response = self.client.post(path, NOTIFICATION)
+                            "zac.notifications.handlers.complete_task"
+                        ) as mock_complete_task:
+                            response = self.client.post(path, NOTIFICATION)
 
         mock_bulk_lock_rr_for_zaak.assert_called_once()
         mock_bulk_close_all_documents_for_zaak.assert_called_once()
@@ -182,14 +178,6 @@ class StatusCreatedTests(ESMixin, APITestCase):
             payload={
                 "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME + zaak["identificatie"]
             }
-        )
-        mock_get_camunda_user_tasks.assert_called_once_with(
-            payload={
-                "name": settings.CAMUNDA_OPEN_BIJDRAGE_TASK_NAME + zaak["identificatie"]
-            }
-        )
-        mock_get_camunda_user_tasks_for_zaak.assert_called_once_with(
-            ZAAK, exclude_zaak_creation=True
         )
         mock_complete_task.assert_called_with("some-id", variables=dict())
 

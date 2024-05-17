@@ -237,12 +237,8 @@ class ZakenHandler:
                 )
                 or []
             )
-            tasks += get_camunda_user_tasks_for_zaak(
-                zaak.url, exclude_zaak_creation=True
-            )
-            if tasks:
-                for task in tasks:
-                    complete_task(task.id, variables=dict())
+            for task in tasks:
+                complete_task(task.id, variables=dict())
 
         # index in ES
         update_status_in_zaak_document(zaak)
