@@ -1,7 +1,7 @@
-import { FormArray, FormControl, ValidatorFn } from '@angular/forms';
+import { UntypedFormArray, FormControl, ValidatorFn } from '@angular/forms';
 
 export function atleastOneValidator(): ValidatorFn {
-  return (control: FormArray) => {
+  return (control: UntypedFormArray) => {
     if (control.value.find(x => x))
       return null
     return { "error": "Minimaal één selectie benodigd." }
@@ -9,7 +9,7 @@ export function atleastOneValidator(): ValidatorFn {
 }
 
 export function childValidator(): ValidatorFn {
-  return (control: FormArray) => {
+  return (control: UntypedFormArray) => {
     console.log(control);
     if (control.value.status === "VALID")
       return null

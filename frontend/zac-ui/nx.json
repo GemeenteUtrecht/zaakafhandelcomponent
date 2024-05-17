@@ -16,14 +16,17 @@
   },
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"]
+        "cacheableOperations": [
+          "build",
+          "lint",
+          "test",
+          "e2e"
+        ],
+        "parallel": 1
       }
     }
-  },
-  "cli": {
-    "defaultCollection": "@nrwl/angular"
   },
   "generators": {
     "@nrwl/workspace": {
@@ -71,5 +74,6 @@
     },
     "@nrwl/angular:component": {}
   },
-  "defaultProject": "zac-ui"
+  "defaultProject": "zac-ui",
+  "$schema": "./node_modules/nx/schemas/nx-schema.json"
 }

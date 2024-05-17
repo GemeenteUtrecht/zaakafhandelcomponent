@@ -1,5 +1,5 @@
 import {Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild} from '@angular/core';
-import {FormControl} from '@angular/forms';
+import {UntypedFormControl} from '@angular/forms';
 import {MatFormField} from '@angular/material/form-field';
 
 /**
@@ -23,7 +23,7 @@ import {MatFormField} from '@angular/material/form-field';
   styleUrls: ['./input.component.scss']
 })
 export class InputComponent implements OnChanges {
-  @Input() control: FormControl;
+  @Input() control: UntypedFormControl;
   @Input() datalist: string[] = [];
   @Input() type: string;
   @Input() label: string;

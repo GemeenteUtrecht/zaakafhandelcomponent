@@ -1,5 +1,6 @@
-module.exports = {
-  displayName: 'features-search',
+/* eslint-disable */
+export default {
+  displayName: 'features-dashboard',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../../coverage/libs/features/search',
+  coverageDirectory: '../../../coverage/libs/features/dashboard',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

@@ -3,7 +3,7 @@ import { AccessRequests, Request } from '../models/access-request';
 import { Permission } from '@gu/models';
 import { FeaturesWorkstackService } from '../features-workstack.service';
 import { ModalService, SnackbarService } from '@gu/components';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { AccountsService, ZaakService } from '@gu/services';
 
@@ -22,7 +22,7 @@ export class AccessRequestComponent implements OnInit {
 
   openedAccessRequest: AccessRequests;
   openedRequest: Request;
-  accessRequestForm: FormGroup;
+  accessRequestForm: UntypedFormGroup;
   result: 'approve' | 'reject';
   permissions: Permission[];
   selectedPermissions: string[];
@@ -34,7 +34,7 @@ export class AccessRequestComponent implements OnInit {
 
   constructor(
     private cdRef: ChangeDetectorRef,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private featuresWorkstackService: FeaturesWorkstackService,
     private accountsService: AccountsService,
     private modalService: ModalService,
@@ -51,12 +51,12 @@ export class AccessRequestComponent implements OnInit {
   // Getters / setters.
   //
 
-  get handlerCommentControl(): FormControl {
-    return this.accessRequestForm.get('handlerComment') as FormControl;
+  get handlerCommentControl(): UntypedFormControl {
+    return this.accessRequestForm.get('handlerComment') as UntypedFormControl;
   };
 
-  get endDateControl(): FormControl {
-    return this.accessRequestForm.get('endDate') as FormControl;
+  get endDateControl(): UntypedFormControl {
+    return this.accessRequestForm.get('endDate') as UntypedFormControl;
   };
 
   //

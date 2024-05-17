@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {ZaakSearchService} from "./zaak-search.service";
-import {FormControl} from "@angular/forms";
+import {UntypedFormControl} from "@angular/forms";
 
 @Component({
   providers: [ZaakSearchService],
@@ -9,7 +9,7 @@ import {FormControl} from "@angular/forms";
   templateUrl: './zaak-select.component.html',
 })
 export class ZaakSelectComponent {
-  @Input() control?: FormControl;
+  @Input() control?: UntypedFormControl;
   @Input() label = 'Zaaknummer';
   @Input() placeholder? = '';
   @Input() appendTo? = 'body';

@@ -14,7 +14,7 @@ import {
 } from '@gu/models';
 import {ChecklistService, DocumentenService, UserService, ZaakService} from '@gu/services';
 import {KetenProcessenService} from '../keten-processen/keten-processen.service';
-import {FormGroup} from '@angular/forms';
+import {UntypedFormGroup} from '@angular/forms';
 import {HttpErrorResponse} from '@angular/common/http';
 import {FormComponent} from '@gu/components';
 
@@ -254,7 +254,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
           value: this.documents[question.question],
           readonly: !this.canForceEdit
         }, {
-          activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__groupAssignee_${question.question}`],
+          activeWhen: (formGroup: UntypedFormGroup) => !formGroup.getRawValue()[`__groupAssignee_${question.question}`],
           label: `Toegewezen gebruiker`,
           name: `__userAssignee_${question.question}`,
           required: false,
@@ -263,7 +263,7 @@ export class ChecklistComponent implements OnInit, OnChanges {
           readonly: !this.canForceEdit
         },
           {
-            activeWhen: (formGroup: FormGroup) => !formGroup.getRawValue()[`__userAssignee_${question.question}`],
+            activeWhen: (formGroup: UntypedFormGroup) => !formGroup.getRawValue()[`__userAssignee_${question.question}`],
             label: `Toegewezen groep`,
             name: `__groupAssignee_${question.question}`,
             required: false,

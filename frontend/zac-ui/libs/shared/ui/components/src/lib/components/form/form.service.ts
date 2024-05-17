@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {FormControl, FormGroup, Validators} from '@angular/forms';
+import {UntypedFormControl, UntypedFormGroup, Validators} from '@angular/forms';
 import {Field, FieldConfiguration} from './field';
 import {Document} from '@gu/models';
 
@@ -12,7 +12,7 @@ export class FormService {
    * @param {Field|FieldConfiguration} field
    * @return {boolean}
    */
-  isFieldActive(formGroup: FormGroup, field: Field | FieldConfiguration): boolean {
+  isFieldActive(formGroup: UntypedFormGroup, field: Field | FieldConfiguration): boolean {
     return !field.activeWhen || field.activeWhen(formGroup)
   }
 
@@ -58,7 +58,7 @@ export class FormService {
    * @param {FormGroup} formGroup
    * @param {Field|FieldConfiguration} field
    */
-  setValidators(formGroup: FormGroup, field: Field | FieldConfiguration): void {
+  setValidators(formGroup: UntypedFormGroup, field: Field | FieldConfiguration): void {
     const isActive = this.isFieldActive(formGroup, field)
     const isRequired = typeof field.required === "boolean" ? field.required : true;
     const key = this.getKeyFromFieldConfiguration(field);
@@ -82,7 +82,7 @@ export class FormService {
    * @param {string[]} [keys]
    * @return {FormGroup}
    */
-  formToFormGroup(form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form)): FormGroup {
+  formToFormGroup(form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form)): UntypedFormGroup {
     const formControls = form
 
       // Filter FieldConfigurations on keys.
@@ -92,12 +92,12 @@ export class FormService {
       .reduce((acc, fieldConfiguration: FieldConfiguration) => {
         const key = this.getKeyFromFieldConfiguration(fieldConfiguration);
         const required = typeof fieldConfiguration.required === "boolean" ? fieldConfiguration.required : true;
-        acc[key] = new FormControl(fieldConfiguration.value);
+        acc[key] = new UntypedFormControl(fieldConfiguration.value);
         return acc;
       }, {})
 
     // @ts-ignore
-    const formGroup = new FormGroup(formControls);
+    const formGroup = new UntypedFormGroup(formControls);
     this.getKeysFromForm(form)
       .forEach((key) => {
         const fieldConfiguration = form[key];
@@ -120,7 +120,7 @@ export class FormService {
    * @param {boolean} [isInEditMode] Whether the form is editable.
    * @return {Field[]}
    */
-  formGroupToFields(formGroup: FormGroup, form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form), fieldsets = [], isInEditMode: boolean = true, editable?: boolean | string): Field[] {
+  formGroupToFields(formGroup: UntypedFormGroup, form: FieldConfiguration[], keys: string[] = this.getKeysFromForm(form), fieldsets = [], isInEditMode: boolean = true, editable?: boolean | string): Field[] {
     return keys
       .map(key => {
         const fieldConfiguration = this.getFieldConfigurationByKey(form, key);

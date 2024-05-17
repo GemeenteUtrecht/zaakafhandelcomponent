@@ -2,6 +2,7 @@
   "version": 1,
   "projects": {
     "features-auth-profiles": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/auth-profiles",
       "sourceRoot": "libs/features/auth-profiles/src",
@@ -19,23 +20,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/auth-profiles/tsconfig.lib.json",
-              "libs/features/auth-profiles/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**",
-              "!libs/features/auth-profiles/**/*"
-            ]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/auth-profiles/jest.config.js",
+            "jestConfig": "libs/features/auth-profiles/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -48,6 +36,7 @@
       "tags": []
     },
     "features-contezza-document-search": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/contezza-document-search",
       "sourceRoot": "libs/features/contezza-document-search/src",
@@ -65,23 +54,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/contezza-document-search/tsconfig.lib.json",
-              "libs/features/contezza-document-search/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**",
-              "!libs/features/contezza-document-search/**/*"
-            ]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/contezza-document-search/jest.config.js",
+            "jestConfig": "libs/features/contezza-document-search/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -94,6 +70,7 @@
       "tags": []
     },
     "features-dashboard": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/dashboard",
       "sourceRoot": "libs/features/dashboard/src",
@@ -111,20 +88,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/dashboard/tsconfig.lib.json",
-              "libs/features/dashboard/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/features/dashboard/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/dashboard/jest.config.js",
+            "jestConfig": "libs/features/dashboard/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -137,6 +104,7 @@
       "tags": []
     },
     "features-forms": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/forms",
       "sourceRoot": "libs/features/forms/src",
@@ -152,16 +120,6 @@
             "production": {
               "tsConfig": "libs/features/forms/tsconfig.lib.prod.json"
             }
-          }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/forms/tsconfig.lib.json",
-              "libs/features/forms/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/features/forms/**/*"]
           }
         },
         "test": {
@@ -180,6 +138,7 @@
       "tags": []
     },
     "features-kownsl": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/kownsl",
       "sourceRoot": "libs/features/kownsl/src",
@@ -197,20 +156,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/kownsl/tsconfig.lib.json",
-              "libs/features/kownsl/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/features/kownsl/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/kownsl/jest.config.js",
+            "jestConfig": "libs/features/kownsl/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -223,6 +172,7 @@
       "tags": []
     },
     "features-landing": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/landing",
       "sourceRoot": "libs/features/landing/src",
@@ -230,9 +180,11 @@
       "architect": {
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/features/landing"],
+          "outputs": [
+            "coverage/libs/features/landing"
+          ],
           "options": {
-            "jestConfig": "libs/features/landing/jest.config.js",
+            "jestConfig": "libs/features/landing/jest.config.ts",
             "passWithNoTests": true
           }
         },
@@ -249,6 +201,7 @@
       "tags": []
     },
     "features-reports": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/reports",
       "sourceRoot": "libs/features/reports/src",
@@ -266,20 +219,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/reports/tsconfig.lib.json",
-              "libs/features/reports/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/features/reports/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/reports/jest.config.js",
+            "jestConfig": "libs/features/reports/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -292,6 +235,7 @@
       "tags": []
     },
     "features-search": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/search",
       "sourceRoot": "libs/features/search/src",
@@ -309,20 +253,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/search/tsconfig.lib.json",
-              "libs/features/search/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/features/search/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/search/jest.config.js",
+            "jestConfig": "libs/features/search/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -335,6 +269,7 @@
       "tags": []
     },
     "features-workstack": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/workstack",
       "sourceRoot": "libs/features/workstack/src",
@@ -352,20 +287,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/workstack/tsconfig.lib.json",
-              "libs/features/workstack/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/features/workstack/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/workstack/jest.config.js",
+            "jestConfig": "libs/features/workstack/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -378,6 +303,7 @@
       "tags": []
     },
     "features-zaak-detail": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/features/zaak-detail",
       "sourceRoot": "libs/features/zaak-detail/src",
@@ -395,20 +321,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/features/zaak-detail/tsconfig.lib.json",
-              "libs/features/zaak-detail/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/features/zaak-detail/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/features/zaak-detail/jest.config.js",
+            "jestConfig": "libs/features/zaak-detail/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -421,28 +337,16 @@
       "tags": []
     },
     "shared-data-access-services": {
+      "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/shared/data-access/services",
       "sourceRoot": "libs/shared/data-access/services/src",
       "prefix": "gu",
       "architect": {
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/shared/data-access/services/tsconfig.lib.json",
-              "libs/shared/data-access/services/tsconfig.spec.json"
-            ],
-            "exclude": [
-              "**/node_modules/**",
-              "!libs/shared/data-access/services/**/*"
-            ]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/shared/data-access/services/jest.config.js",
+            "jestConfig": "libs/shared/data-access/services/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -455,6 +359,7 @@
       "tags": []
     },
     "shared-ui-components": {
+      "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/shared/ui/components",
       "sourceRoot": "libs/shared/ui/components/src",
@@ -472,20 +377,10 @@
             }
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/shared/ui/components/tsconfig.lib.json",
-              "libs/shared/ui/components/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/shared/ui/components/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/shared/ui/components/jest.config.js",
+            "jestConfig": "libs/shared/ui/components/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -498,25 +393,16 @@
       "tags": []
     },
     "shared-ui-styling": {
+      "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/shared/ui/styling",
       "sourceRoot": "libs/shared/ui/styling/src",
       "prefix": "gu",
       "architect": {
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/shared/ui/styling/tsconfig.lib.json",
-              "libs/shared/ui/styling/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/shared/ui/styling/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/shared/ui/styling/jest.config.js",
+            "jestConfig": "libs/shared/ui/styling/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -529,25 +415,16 @@
       "tags": []
     },
     "shared-utils": {
+      "$schema": "../../../node_modules/nx/schemas/project-schema.json",
       "projectType": "library",
       "root": "libs/shared/utils",
       "sourceRoot": "libs/shared/utils/src",
       "prefix": "gu",
       "architect": {
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "libs/shared/utils/tsconfig.lib.json",
-              "libs/shared/utils/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!libs/shared/utils/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "libs/shared/utils/jest.config.js",
+            "jestConfig": "libs/shared/utils/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -560,6 +437,7 @@
       "tags": []
     },
     "zac-ui": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -622,7 +500,9 @@
               "apps/zac-ui/src/theme.scss"
             ],
             "stylePreprocessorOptions": {
-              "includePaths": ["libs/shared/ui/styling/src/lib"]
+              "includePaths": [
+                "libs/shared/ui/styling/src/lib"
+              ]
             },
             "baseHref": "/ui/",
             "scripts": [],
@@ -643,7 +523,7 @@
               ],
               "optimization": true,
               "outputHashing": "all",
-              "sourceMap": false,
+              "sourceMap": true,
               "namedChunks": false,
               "extractLicenses": true,
               "vendorChunk": false,
@@ -685,21 +565,10 @@
             "browserTarget": "zac-ui:build"
           }
         },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "apps/zac-ui/tsconfig.app.json",
-              "apps/zac-ui/tsconfig.spec.json",
-              "apps/zac-ui/tsconfig.editor.json"
-            ],
-            "exclude": ["**/node_modules/**", "!apps/zac-ui/**/*"]
-          }
-        },
         "test": {
           "builder": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "apps/zac-ui/jest.config.js",
+            "jestConfig": "apps/zac-ui/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -707,6 +576,7 @@
       "tags": []
     },
     "zac-ui-e2e": {
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
       "root": "apps/zac-ui-e2e",
       "sourceRoot": "apps/zac-ui-e2e/src",
       "projectType": "application",
@@ -723,17 +593,12 @@
               "devServerTarget": "zac-ui:serve:production"
             }
           }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": ["apps/zac-ui-e2e/tsconfig.e2e.json"],
-            "exclude": ["**/node_modules/**", "!apps/zac-ui-e2e/**/*"]
-          }
         }
       },
       "tags": [],
-      "implicitDependencies": ["zac-ui"]
+      "implicitDependencies": [
+        "zac-ui"
+      ]
     }
   }
 }

@@ -10,7 +10,7 @@ import {
   SimpleChanges
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   Zaak,
@@ -48,7 +48,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   @Output() showResults: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() isLoadingResult: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  searchForm: FormGroup
+  searchForm: UntypedFormGroup
   search: Search;
 
   users: UserSearchResult[] = [];
@@ -72,7 +72,7 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
   page = 1;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private accountsService: AccountsService,
     private searchService: SearchService,
     private metaService: MetaService,
@@ -318,39 +318,39 @@ export class PropertySearchFormComponent implements OnInit, OnChanges {
     )
   }
 
-  get domain(): FormControl {
-    return this.searchForm.get('domain') as FormControl;
+  get domain(): UntypedFormControl {
+    return this.searchForm.get('domain') as UntypedFormControl;
   };
 
-  get zaaktype(): FormControl {
-    return this.searchForm.get('zaaktype') as FormControl;
+  get zaaktype(): UntypedFormControl {
+    return this.searchForm.get('zaaktype') as UntypedFormControl;
   };
 
-  get behandelaar(): FormControl {
-    return this.searchForm.get('behandelaar') as FormControl;
+  get behandelaar(): UntypedFormControl {
+    return this.searchForm.get('behandelaar') as UntypedFormControl;
   };
 
-  get omschrijving(): FormControl {
-    return this.searchForm.get('omschrijving') as FormControl;
+  get omschrijving(): UntypedFormControl {
+    return this.searchForm.get('omschrijving') as UntypedFormControl;
   };
 
-  get eigenschapnaam(): FormControl {
-    return this.searchForm.get('eigenschapnaam') as FormControl;
+  get eigenschapnaam(): UntypedFormControl {
+    return this.searchForm.get('eigenschapnaam') as UntypedFormControl;
   };
 
-  get eigenschapwaarde(): FormControl {
-    return this.searchForm.get('eigenschapwaarde') as FormControl;
+  get eigenschapwaarde(): UntypedFormControl {
+    return this.searchForm.get('eigenschapwaarde') as UntypedFormControl;
   };
 
-  get saveReportControl(): FormControl {
-    return this.searchForm.get('saveReport') as FormControl;
+  get saveReportControl(): UntypedFormControl {
+    return this.searchForm.get('saveReport') as UntypedFormControl;
   };
 
-  get queryNameControl(): FormControl {
-    return this.searchForm.get('queryName') as FormControl;
+  get queryNameControl(): UntypedFormControl {
+    return this.searchForm.get('queryName') as UntypedFormControl;
   };
 
-  get includeClosedControl(): FormControl {
-    return this.searchForm.get('includeClosed') as FormControl;
+  get includeClosedControl(): UntypedFormControl {
+    return this.searchForm.get('includeClosed') as UntypedFormControl;
   };
 }

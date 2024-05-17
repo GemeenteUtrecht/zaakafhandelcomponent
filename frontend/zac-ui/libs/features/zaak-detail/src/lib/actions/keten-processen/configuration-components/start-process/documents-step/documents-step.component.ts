@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Zaak } from '@gu/models';
 import { BenodigdeBijlage, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 import { SubmittedFields } from '../models/submitted-fields';
@@ -18,7 +18,7 @@ import { SubmittedFields } from '../models/submitted-fields';
 export class DocumentsStepComponent implements OnChanges {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
-  @Input() startProcessDocumentForm: FormGroup;
+  @Input() startProcessDocumentForm: UntypedFormGroup;
 
   @Output() submittedFields: EventEmitter<SubmittedFields> = new EventEmitter<SubmittedFields>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -31,7 +31,7 @@ export class DocumentsStepComponent implements OnChanges {
   selectedFiles: File[] = [];
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private zaakService: ZaakService,
     private accountsService: AccountsService,
     private snackbarService: SnackbarService,
@@ -55,12 +55,12 @@ export class DocumentsStepComponent implements OnChanges {
     return this.submittedDocuments.length <= this.documentsControl.length && this.documentsControl.length > 0;
   }
 
-  get documentsControl(): FormArray {
-    return this.startProcessDocumentForm.get('documents') as FormArray;
+  get documentsControl(): UntypedFormArray {
+    return this.startProcessDocumentForm.get('documents') as UntypedFormArray;
   };
 
-  documentControl(i): FormControl {
-    return this.documentsControl.at(i) as FormControl;
+  documentControl(i): UntypedFormControl {
+    return this.documentsControl.at(i) as UntypedFormControl;
   }
 
   //
@@ -104,7 +104,7 @@ export class DocumentsStepComponent implements OnChanges {
    * Creates form controls.
    * @returns {FormArray}
    */
-  addDocumentControls(): FormArray {
+  addDocumentControls(): UntypedFormArray {
     const arr = this.taskContextData.context.benodigdeBijlagen.map(doc => {
       if (doc.required) {
         return this.fb.control('', Validators.required);

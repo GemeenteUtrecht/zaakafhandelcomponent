@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 
 @Component({
   selector: 'gu-input-field',
@@ -8,7 +8,7 @@ import { FormControl } from '@angular/forms';
 })
 export class InputFieldComponent {
   @Input() autocomplete: 'off';
-  @Input() control: FormControl;
+  @Input() control: UntypedFormControl;
   @Input() id: string;
   @Input() label: string;
   @Input() pattern: null;

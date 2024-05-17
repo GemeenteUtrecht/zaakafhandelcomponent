@@ -11,7 +11,7 @@ import {LandingService} from './landing.service';
 import {LandingPage} from '../models/landing-page';
 import {SnackbarService} from '@gu/components';
 import { TitleCasePipe } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { RecentlyViewed } from '../models/recently-viewed';
 import { FeaturesWorkstackService } from '../../../workstack/src/lib/features-workstack.service';
 
@@ -42,7 +42,7 @@ export class FeaturesLandingComponent implements OnInit {
   filteredResults: any = [];
   selectedFilter: 'Zaken' | 'Documenten' | 'Objecten' | 'all' = 'all';
 
-  searchForm: FormGroup =  this.fb.group({
+  searchForm: UntypedFormGroup =  this.fb.group({
     query: this.fb.control(null),
   })
 
@@ -57,7 +57,7 @@ export class FeaturesLandingComponent implements OnInit {
    */
   constructor(
     private cdRef: ChangeDetectorRef,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private landingService: LandingService,
     private workstackService: FeaturesWorkstackService,
     private snackbarService: SnackbarService,
@@ -66,8 +66,8 @@ export class FeaturesLandingComponent implements OnInit {
   ) {
   }
 
-  get queryControl(): FormControl {
-    return this.searchForm.get('query') as FormControl;
+  get queryControl(): UntypedFormControl {
+    return this.searchForm.get('query') as UntypedFormControl;
   };
 
   //

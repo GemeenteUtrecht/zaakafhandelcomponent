@@ -1,6 +1,6 @@
 import {HttpResponse} from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { FileUploadComponent, ModalService, SnackbarService } from '@gu/components';
 import { Document, InformatieObjectType, Zaak } from '@gu/models';
@@ -52,13 +52,13 @@ export class DocumentToevoegenComponent implements OnInit {
   readonly errorMessage = 'Er is een fout opgetreden bij het ophalen van documenten.';
 
   documentTypes: InformatieObjectType[];
-  addDocumentForm: FormGroup;
+  addDocumentForm: UntypedFormGroup;
   isLoading: boolean;
   isSubmitting: boolean;
 
   constructor(
     private documentService: DocumentenService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private http: ApplicationHttpClient,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
@@ -82,12 +82,12 @@ export class DocumentToevoegenComponent implements OnInit {
     this.fetchDocumentTypes()
   }
 
-  get documentTypeControl(): FormControl {
-    return this.addDocumentForm.controls['documentType'] as FormControl;
+  get documentTypeControl(): UntypedFormControl {
+    return this.addDocumentForm.controls['documentType'] as UntypedFormControl;
   }
 
-  get reasonControl(): FormControl {
-    return this.addDocumentForm.controls['reason'] as FormControl;
+  get reasonControl(): UntypedFormControl {
+    return this.addDocumentForm.controls['reason'] as UntypedFormControl;
   }
 
   fetchDocumentTypes() {

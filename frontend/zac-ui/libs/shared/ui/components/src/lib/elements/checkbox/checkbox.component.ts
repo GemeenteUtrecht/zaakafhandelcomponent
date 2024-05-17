@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, Output, OnInit, OnChanges} from '@angular/core';
-import {AbstractControl, FormControl} from '@angular/forms';
+import {AbstractControl, UntypedFormControl} from '@angular/forms';
 
 /**
  * <gu-checkbox [control]="formControl">I'm a checkbox</gu-checkbox>
@@ -19,7 +19,7 @@ import {AbstractControl, FormControl} from '@angular/forms';
   styleUrls: ['./checkbox.component.scss']
 })
 export class CheckboxComponent implements OnInit, OnChanges {
-  @Input() control: AbstractControl = new FormControl('');
+  @Input() control: AbstractControl = new UntypedFormControl('');
   @Input() color: 'primary' | 'accent' | 'warn' = 'primary'
   @Input() value: any;
   @Input() disabled: 'disabled';

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient } from '@gu/services';
-import { FormBuilder } from '@angular/forms';
+import { UntypedFormBuilder } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { ModalService } from '@gu/components';
 
@@ -28,7 +28,7 @@ export class RedirectComponent {
 
   constructor(
     private http: ApplicationHttpClient,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private modalService: ModalService
   ) { }

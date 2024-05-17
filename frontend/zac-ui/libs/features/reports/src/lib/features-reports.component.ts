@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FeaturesReportsService } from './features-reports.service';
 import { ReportCase, ReportCases, ReportType } from './models/report';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { RowData, Table } from '@gu/models';
 import { tableHead } from './constants/table';
 
@@ -16,7 +16,7 @@ export class FeaturesReportsComponent implements OnInit {
   reportTypes: ReportType[];
   reportCases: ReportCases;
 
-  reportForm: FormGroup;
+  reportForm: UntypedFormGroup;
 
   reportCasesTableData: Table = new Table(tableHead, [])
 
@@ -28,7 +28,7 @@ export class FeaturesReportsComponent implements OnInit {
 
   constructor(
     private reportsService: FeaturesReportsService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
   ) {
     this.reportForm = this.fb.group({
       reportType: this.fb.control(""),
@@ -114,8 +114,8 @@ export class FeaturesReportsComponent implements OnInit {
     this.isLoading = false;
   }
 
-  get reportType(): FormControl {
-    return this.reportForm.get('reportType') as FormControl;
+  get reportType(): UntypedFormControl {
+    return this.reportForm.get('reportType') as UntypedFormControl;
   };
 
 }

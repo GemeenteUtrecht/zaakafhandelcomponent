@@ -9,7 +9,7 @@ import {
   UserGroupDetail,
   UserSearchResult, Zaak
 } from '@gu/models';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { SnackbarService } from '@gu/components';
 import {UserService} from '@gu/services';
 
@@ -30,9 +30,9 @@ export class ActiviteitenComponent implements OnInit {
   @Input() currentUser: User;
   @Input() activityData: Activity[];
 
-  activityForm: FormGroup;
-  addActivityForm: FormGroup;
-  assignUserForm: FormGroup;
+  activityForm: UntypedFormGroup;
+  addActivityForm: UntypedFormGroup;
+  assignUserForm: UntypedFormGroup;
 
   users: UserSearchResult[] = [];
   userGroups: UserGroupDetail[] = [];
@@ -59,30 +59,30 @@ export class ActiviteitenComponent implements OnInit {
   finishedActivityDocs: ShortDocument[] = [];
   isFetchingDocuments: boolean;
 
-  constructor(private actvititeitenService: ActiviteitenService, private fb: FormBuilder, private snackbarService: SnackbarService, private userService: UserService) { }
+  constructor(private actvititeitenService: ActiviteitenService, private fb: UntypedFormBuilder, private snackbarService: SnackbarService, private userService: UserService) { }
 
   //
   // Getters / setters.
   //
 
-  get addActivityName(): FormControl {
-    return this.addActivityForm.get('name') as FormControl;
+  get addActivityName(): UntypedFormControl {
+    return this.addActivityForm.get('name') as UntypedFormControl;
   };
 
-  get addActivityRemarks(): FormControl {
-    return this.addActivityForm.get('remarks') as FormControl;
+  get addActivityRemarks(): UntypedFormControl {
+    return this.addActivityForm.get('remarks') as UntypedFormControl;
   };
 
-  get notesControl(): FormArray {
-    return this.activityForm.get('notes') as FormArray;
+  get notesControl(): UntypedFormArray {
+    return this.activityForm.get('notes') as UntypedFormArray;
   };
 
-  get assignUserControl(): FormArray {
-    return this.assignUserForm.get('user') as FormArray;
+  get assignUserControl(): UntypedFormArray {
+    return this.assignUserForm.get('user') as UntypedFormArray;
   };
 
-  get assignUserGroupControl(): FormArray {
-    return this.assignUserForm.get('group') as FormArray;
+  get assignUserGroupControl(): UntypedFormArray {
+    return this.assignUserForm.get('group') as UntypedFormArray;
   };
 
   get canForceEdit(): boolean {
@@ -171,8 +171,8 @@ export class ActiviteitenComponent implements OnInit {
    * @param {number} index
    * @returns {FormControl}
    */
-  notes(index: number): FormControl {
-    return this.notesControl.at(index) as FormControl;
+  notes(index: number): UntypedFormControl {
+    return this.notesControl.at(index) as UntypedFormControl;
   }
 
   /**
@@ -180,8 +180,8 @@ export class ActiviteitenComponent implements OnInit {
    * @param {number} index
    * @returns {FormControl}
    */
-  assignedUserControlIndex(index: number): FormControl {
-    return this.assignUserControl.at(index) as FormControl;
+  assignedUserControlIndex(index: number): UntypedFormControl {
+    return this.assignUserControl.at(index) as UntypedFormControl;
   }
 
   /**
@@ -189,8 +189,8 @@ export class ActiviteitenComponent implements OnInit {
    * @param {number} index
    * @returns {FormControl}
    */
-  assignedUserGroupControlIndex(index: number): FormControl {
-    return this.assignUserGroupControl.at(index) as FormControl;
+  assignedUserGroupControlIndex(index: number): UntypedFormControl {
+    return this.assignUserGroupControl.at(index) as UntypedFormControl;
   }
 
   /**

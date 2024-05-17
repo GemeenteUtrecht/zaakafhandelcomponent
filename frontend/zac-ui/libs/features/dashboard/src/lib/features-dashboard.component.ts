@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FeaturesDashboardService } from './features-dashboard.service';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { SnackbarService } from '@gu/components';
 import { BoardItem, Dashboard, DashboardColumn, Zaak } from '@gu/models';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -22,7 +22,7 @@ export class FeaturesDashboardComponent implements OnInit {
   nPollingFails: number;
   errorMessage: string;
 
-  dashboardForm: FormGroup
+  dashboardForm: UntypedFormGroup
 
   dashboards: Dashboard[];
   columns: DashboardColumn[];
@@ -33,7 +33,7 @@ export class FeaturesDashboardComponent implements OnInit {
   constructor(
     private dashboardService: FeaturesDashboardService,
     private snackbarService: SnackbarService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private activatedRoute: ActivatedRoute,
     private router: Router
   ) {
@@ -47,12 +47,12 @@ export class FeaturesDashboardComponent implements OnInit {
   // Getters / setters.
   //
 
-  get selectedBoardControl(): FormControl {
-    return this.dashboardForm.get('selectedBoard') as FormControl;
+  get selectedBoardControl(): UntypedFormControl {
+    return this.dashboardForm.get('selectedBoard') as UntypedFormControl;
   };
 
-  get selectedCaseControl(): FormControl {
-    return this.dashboardForm.get('selectedCase') as FormControl;
+  get selectedCaseControl(): UntypedFormControl {
+    return this.dashboardForm.get('selectedCase') as UntypedFormControl;
   };
 
   //

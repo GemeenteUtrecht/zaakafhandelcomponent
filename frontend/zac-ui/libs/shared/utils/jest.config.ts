@@ -1,5 +1,6 @@
-module.exports = {
-  displayName: 'features-contezza-document-search',
+/* eslint-disable */
+export default {
+  displayName: 'shared-utils',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../../coverage/libs/features/contezza-document-search',
+  coverageDirectory: '../../../coverage/libs/shared/utils',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

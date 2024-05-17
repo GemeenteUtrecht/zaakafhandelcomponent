@@ -1,5 +1,6 @@
-module.exports = {
-  displayName: 'shared-ui-styling',
+/* eslint-disable */
+export default {
+  displayName: 'shared-ui-components',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../../coverage/libs/shared/ui/styling',
+  coverageDirectory: '../../../coverage/libs/shared/ui/components',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

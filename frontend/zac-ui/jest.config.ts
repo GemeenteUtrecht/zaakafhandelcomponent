@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   projects: [
     '<rootDir>/apps/zac-ui',
     '<rootDir>/libs/features/kownsl',

@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {Requester, ReviewRequest} from '../../models/review-request';
 import {ApprovalService} from './approval.service';
 import {RowData, Table, User, Zaak} from '@gu/models';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import {ApprovalForm} from '../../models/approval-form';
 import {ActivatedRoute} from '@angular/router';
 import {catchError, switchMap, tap} from 'rxjs/operators';
@@ -35,10 +35,10 @@ export class ApprovalComponent implements OnInit {
 
   tableData: Table = new Table([], []);
 
-  approvalForm: FormGroup;
+  approvalForm: UntypedFormGroup;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private approvalService: ApprovalService,
     private accountsService: AccountsService,
     private route: ActivatedRoute,
@@ -191,7 +191,7 @@ export class ApprovalComponent implements OnInit {
     console.error(error);
   }
 
-  get toelichtingControl(): FormControl {
-    return this.approvalForm.get('toelichting') as FormControl;
+  get toelichtingControl(): UntypedFormControl {
+    return this.approvalForm.get('toelichting') as UntypedFormControl;
   };
 }

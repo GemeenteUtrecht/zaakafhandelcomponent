@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { FeaturesAuthProfilesService } from '../../features-auth-profiles.service';
 import { ModalService, SnackbarService } from '@gu/components';
@@ -21,7 +21,7 @@ export class CreateGroupComponent implements OnChanges {
   isSubmitting: boolean;
   errorMessage: string;
 
-  newUserGroupForm: FormGroup;
+  newUserGroupForm: UntypedFormGroup;
   currentSearchValue: string;
 
   searchResultUsers: UserSearchResult[];
@@ -37,7 +37,7 @@ export class CreateGroupComponent implements OnChanges {
     private fService: FeaturesAuthProfilesService,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
   ) {
     this.newUserGroupForm = this.fb.group({
       name: this.fb.control("", Validators.required),
@@ -50,17 +50,17 @@ export class CreateGroupComponent implements OnChanges {
   // Getters / setters.
   //
 
-  get userGroupNameControl(): FormControl {
-    return this.newUserGroupForm.get('name') as FormControl;
+  get userGroupNameControl(): UntypedFormControl {
+    return this.newUserGroupForm.get('name') as UntypedFormControl;
   };
 
-  get checkboxControl(): FormControl {
-    return this.newUserGroupForm.get('checkboxControl') as FormControl;
+  get checkboxControl(): UntypedFormControl {
+    return this.newUserGroupForm.get('checkboxControl') as UntypedFormControl;
   };
 
 
-  get searchValueControl(): FormControl {
-    return this.newUserGroupForm.get('searchValue') as FormControl;
+  get searchValueControl(): UntypedFormControl {
+    return this.newUserGroupForm.get('searchValue') as UntypedFormControl;
   }
 
   //

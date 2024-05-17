@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormField, TaskContextData } from '../../../../../models/task-context';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { Choice, FieldConfiguration, ModalService } from '@gu/components';
 
@@ -14,7 +14,7 @@ export class SetResultComponent implements OnChanges {
 
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  setResultForm: FormGroup;
+  setResultForm: UntypedFormGroup;
   formItems: Choice[];
   formData: any;
 
@@ -26,7 +26,7 @@ export class SetResultComponent implements OnChanges {
   showCloseCaseConfirmation = false;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private modalService: ModalService,
   ) { }
@@ -35,8 +35,8 @@ export class SetResultComponent implements OnChanges {
   // Getters / setters.
   //
 
-  get resultControl(): FormControl {
-    return this.setResultForm.get('resultaat') as FormControl;
+  get resultControl(): UntypedFormControl {
+    return this.setResultForm.get('resultaat') as UntypedFormControl;
   };
 
 

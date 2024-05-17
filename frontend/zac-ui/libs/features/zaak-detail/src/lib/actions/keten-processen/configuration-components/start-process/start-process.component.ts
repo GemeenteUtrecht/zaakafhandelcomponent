@@ -5,7 +5,7 @@ import {
   Output
 } from '@angular/core';
 import { TaskContextData } from '../../../../../models/task-context';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { Zaak } from '@gu/models';
 import { AccountsService, CamundaService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
@@ -39,10 +39,10 @@ export class StartProcessComponent implements OnInit {
   propertiesFields: SubmittedFields;
   documentsFields: SubmittedFields;
 
-  startProcessRoleForm: FormGroup;
+  startProcessRoleForm: UntypedFormGroup;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private zaakService: ZaakService,
     private accountsService: AccountsService,
     private snackbarService: SnackbarService,

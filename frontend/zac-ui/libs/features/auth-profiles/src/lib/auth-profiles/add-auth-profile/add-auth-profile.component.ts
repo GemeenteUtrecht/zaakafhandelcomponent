@@ -19,7 +19,7 @@ import {
   UserSearchResult,
   ZaakPolicy
 } from '@gu/models';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import {MetaService} from "@gu/services";
 import { atleastOneValidator } from '@gu/utils';
 
@@ -50,7 +50,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   readonly updateAuthProfileSuccessMessage = "Het profiel is bijgewerkt."
 
   readonly getAuthProfilesErrorMessage = "Er is een fout opgetreden bij het ophalen van de autorisatieprofielen.";
-  authProfileForm: FormGroup;
+  authProfileForm: UntypedFormGroup;
   currentAuthProfileUuid: string;
 
   caseTypes: MetaZaaktypeResult[];
@@ -83,7 +83,7 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
     private modalService: ModalService,
     private snackbarService: SnackbarService,
     private cdRef: ChangeDetectorRef,
-    private fb: FormBuilder) {
+    private fb: UntypedFormBuilder) {
     this.authProfileForm = this.fb.group({
       name: this.fb.control("", Validators.required),
       searchValue: this.fb.control(""),
@@ -97,31 +97,31 @@ export class AddAuthProfileComponent implements OnInit, OnChanges {
   //
 
   get modeControl() {
-    return this.authProfileForm.get('mode') as FormControl;
+    return this.authProfileForm.get('mode') as UntypedFormControl;
   }
 
   get authProfileNameControl() {
-    return this.authProfileForm.get('name') as FormControl;
+    return this.authProfileForm.get('name') as UntypedFormControl;
   }
 
   get searchValueControl() {
-    return this.authProfileForm.get('searchValue') as FormControl;
+    return this.authProfileForm.get('searchValue') as UntypedFormControl;
   }
 
   get blueprintPermissionControl() {
-    return this.authProfileForm.get('bluePrintPermissions') as FormArray;
+    return this.authProfileForm.get('bluePrintPermissions') as UntypedFormArray;
   }
 
   roleControl(i) {
-    return this.blueprintPermissionControl.at(i).get('role') as FormControl;
+    return this.blueprintPermissionControl.at(i).get('role') as UntypedFormControl;
   }
 
   zaaktypeControl(i) {
-    return this.blueprintPermissionControl.at(i).get('policies') as FormControl;
+    return this.blueprintPermissionControl.at(i).get('policies') as UntypedFormControl;
   }
 
   confidentialityControl(i) {
-    return this.blueprintPermissionControl.at(i).get('confidentiality') as FormControl;
+    return this.blueprintPermissionControl.at(i).get('confidentiality') as UntypedFormControl;
   }
 
   //
