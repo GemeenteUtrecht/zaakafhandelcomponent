@@ -1,6 +1,7 @@
-module.exports = {
-  displayName: 'shared-data-access-services',
-  preset: '../../../../jest.preset.js',
+/* eslint-disable */
+export default {
+  displayName: 'features-reports',
+  preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../../../coverage/libs/shared/data-access/services',
+  coverageDirectory: '../../../coverage/libs/features/reports',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

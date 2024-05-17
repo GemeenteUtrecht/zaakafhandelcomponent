@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ControlContainer, FormControl, FormGroup, FormGroupDirective } from '@angular/forms';
+import { ControlContainer, UntypedFormControl, UntypedFormGroup, FormGroupDirective } from '@angular/forms';
 
 @Component({
   selector: 'gu-radio',
@@ -14,14 +14,14 @@ export class RadioComponent implements OnInit {
   @Input() radioFormControl: string;
   @Input() value: string;
 
-  childForm: FormGroup;
+  childForm: UntypedFormGroup;
 
   constructor(private parentForm: FormGroupDirective) {}
 
   ngOnInit(): void {
     if (this.radioFormControl) {
       this.childForm = this.parentForm.form;
-      this.childForm.addControl(this.radioFormControl, new FormControl(''))
+      this.childForm.addControl(this.radioFormControl, new UntypedFormControl(''))
     }
   }
 

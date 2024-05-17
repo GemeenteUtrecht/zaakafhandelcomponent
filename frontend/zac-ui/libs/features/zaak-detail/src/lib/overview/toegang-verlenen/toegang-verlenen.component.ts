@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { UserSearchResult, Zaak, UserPermission, User, Role } from '@gu/models';
 import { AccountsService, ApplicationHttpClient } from '@gu/services';
 import {ModalService, SnackbarService} from '@gu/components';
@@ -26,14 +26,14 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   selectedPermissions: any;
   filteredUserPermissions: any;
 
-  grantAccessForm: FormGroup;
+  grantAccessForm: UntypedFormGroup;
   isSubmitting: boolean;
   submitErrorMessage: string;
 
   errorMessage: string;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private http: ApplicationHttpClient,
     private accountsService: AccountsService,
     private cdRef: ChangeDetectorRef,
@@ -51,16 +51,16 @@ export class ToegangVerlenenComponent implements OnInit, OnChanges {
   // Getters / setters.
   //
 
-  get permissionsControl(): FormControl {
-    return this.grantAccessForm.get('permissions') as FormControl;
+  get permissionsControl(): UntypedFormControl {
+    return this.grantAccessForm.get('permissions') as UntypedFormControl;
   };
 
-  get requesterControl(): FormControl {
-    return this.grantAccessForm.get('requester') as FormControl;
+  get requesterControl(): UntypedFormControl {
+    return this.grantAccessForm.get('requester') as UntypedFormControl;
   };
 
-  get endDateControl(): FormControl {
-    return this.grantAccessForm.get('endDate') as FormControl;
+  get endDateControl(): UntypedFormControl {
+    return this.grantAccessForm.get('endDate') as UntypedFormControl;
   };
 
   //

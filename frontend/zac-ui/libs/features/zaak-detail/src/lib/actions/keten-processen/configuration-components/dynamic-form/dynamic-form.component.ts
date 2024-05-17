@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { FormField, TaskContextData } from '../../../../../models/task-context';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { DatePipe } from '@angular/common';
@@ -31,7 +31,7 @@ export class DynamicFormComponent implements OnChanges {
   formattedEnumItems = {};
   formattedBooleanItems = {};
 
-  dynamicForm: FormGroup;
+  dynamicForm: UntypedFormGroup;
 
   isSubmitting: boolean;
   submitSuccess: boolean;
@@ -40,7 +40,7 @@ export class DynamicFormComponent implements OnChanges {
   showCloseCaseConfirmation = false;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private modalService: ModalService,
     private datePipe: DatePipe
@@ -144,7 +144,7 @@ export class DynamicFormComponent implements OnChanges {
    * @param {string} name
    * @returns {FormControl}
    */
-  dynamicFormField(name: string): FormControl {
-    return this.dynamicForm.get(name) as FormControl;
+  dynamicFormField(name: string): UntypedFormControl {
+    return this.dynamicForm.get(name) as UntypedFormControl;
   }
 }

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewC
 import { DatePipe } from '@angular/common';
 import { TaskContextData } from '../../../../../models/task-context';
 import { ApplicationHttpClient, ZaakService } from '@gu/services';
-import { FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { KetenProcessenService } from '../../keten-processen.service';
 import {
   Document,
@@ -62,7 +62,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
   searchResultUsers: UserSearchResult[];
   searchResultUserGroups: UserGroupDetail[];
 
-  assignUsersForm: FormGroup;
+  assignUsersForm: UntypedFormGroup;
 
   isSubmitting: boolean;
   submitSuccess: boolean;
@@ -72,7 +72,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
 
   constructor(
     private datePipe: DatePipe,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private http: ApplicationHttpClient,
     private modalService: ModalService,
     private ketenProcessenService: KetenProcessenService,
@@ -84,32 +84,32 @@ export class AdviserenAccorderenComponent implements OnChanges {
   // Getters / setters.
   //
 
-  get assignedUsers(): FormArray {
-    return this.assignUsersForm.get('assignedUsers') as FormArray;
+  get assignedUsers(): UntypedFormArray {
+    return this.assignUsersForm.get('assignedUsers') as UntypedFormArray;
   };
 
-  get toelichting(): FormControl {
-    return this.assignUsersForm.get('toelichting') as FormControl;
+  get toelichting(): UntypedFormControl {
+    return this.assignUsersForm.get('toelichting') as UntypedFormControl;
   };
 
-  assignedUsersControl(index: number): FormControl {
-    return this.assignedUsers.at(index).get('assignees').get('users') as FormControl;
+  assignedUsersControl(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('assignees').get('users') as UntypedFormControl;
   }
 
-  assignedUserGroupControl(index: number): FormControl {
-    return this.assignedUsers.at(index).get('assignees').get('userGroups') as FormControl;
+  assignedUserGroupControl(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('assignees').get('userGroups') as UntypedFormControl;
   }
 
-  assignedEmailNotificationControl(index: number): FormControl {
-    return this.assignedUsers.at(index).get('emailNotification') as FormControl;
+  assignedEmailNotificationControl(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('emailNotification') as UntypedFormControl;
   }
 
-  assignedDeadlineControl(index: number): FormControl {
-    return this.assignedUsers.at(index).get('deadline') as FormControl;
+  assignedDeadlineControl(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('deadline') as UntypedFormControl;
   }
 
-  extraStepControl(index: number): FormControl {
-    return this.assignedUsers.at(index)?.get('extraStep') as FormControl;
+  extraStepControl(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index)?.get('extraStep') as UntypedFormControl;
   }
 
   //
@@ -297,7 +297,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
    * @param {FormGroup} form
    * @returns {ValidationErrors}
    */
-  atLeastOneAssignee(form: FormGroup): ValidationErrors {
+  atLeastOneAssignee(form: UntypedFormGroup): ValidationErrors {
     if (form.value["users"]?.length > 0 || form.value["userGroups"]?.length > 0) {
       return null
     }

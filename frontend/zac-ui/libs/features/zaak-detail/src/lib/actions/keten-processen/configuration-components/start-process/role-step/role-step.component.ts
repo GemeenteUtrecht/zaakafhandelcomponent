@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { CreateBetrokkene, UserSearchResult, Zaak } from '@gu/models';
 import { BenodigdeRol, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 import { SubmittedFields } from '../models/submitted-fields';
@@ -14,7 +14,7 @@ import { SubmittedFields } from '../models/submitted-fields';
 export class RoleStepComponent implements OnChanges {
   @Input() zaak: Zaak;
   @Input() taskContextData: TaskContextData;
-  @Input() startProcessRoleForm: FormGroup;
+  @Input() startProcessRoleForm: UntypedFormGroup;
 
   @Output() submittedFields: EventEmitter<SubmittedFields> = new EventEmitter<SubmittedFields>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -27,7 +27,7 @@ export class RoleStepComponent implements OnChanges {
   submittingRoles: number[] = [];
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private zaakService: ZaakService,
     private accountsService: AccountsService,
     private snackbarService: SnackbarService,
@@ -51,12 +51,12 @@ export class RoleStepComponent implements OnChanges {
     return this.submittedRoles.length <= this.rolesControl.length && this.rolesControl.length > 0;
   }
 
-  get rolesControl(): FormArray {
-    return this.startProcessRoleForm.get('roles') as FormArray;
+  get rolesControl(): UntypedFormArray {
+    return this.startProcessRoleForm.get('roles') as UntypedFormArray;
   };
 
-  roleControl(i): FormControl {
-    return this.rolesControl.at(i) as FormControl;
+  roleControl(i): UntypedFormControl {
+    return this.rolesControl.at(i) as UntypedFormControl;
   }
 
   //
@@ -100,7 +100,7 @@ export class RoleStepComponent implements OnChanges {
    * Creates form controls.
    * @returns {FormArray}
    */
-  addRoleControls(): FormArray {
+  addRoleControls(): UntypedFormArray {
     const arr = this.taskContextData.context.benodigdeRollen.map(role => {
       if (role.required) {
         return this.fb.control('', Validators.required);

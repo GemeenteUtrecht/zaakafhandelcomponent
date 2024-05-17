@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
-import { ControlContainer, FormControl, NgForm } from '@angular/forms';
+import { ControlContainer, UntypedFormControl, NgForm } from '@angular/forms';
 import { MAT_DATE_FORMATS } from '@angular/material/core';
 
 export const APP_DATE_FORMATS =
@@ -33,7 +33,7 @@ export const APP_DATE_FORMATS =
   viewProviders: [ { provide: ControlContainer, useExisting: NgForm } ]
 })
 export class DatepickerComponent implements OnInit, OnChanges {
-  @Input() control: FormControl;
+  @Input() control: UntypedFormControl;
   @Input() label: string;
   @Input() id: string;
   @Input() minDate: Date;

@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild} from '@angular/core';
-import {FormGroup} from '@angular/forms';
+import {UntypedFormGroup} from '@angular/forms';
 import {Choice, Field, FieldConfiguration, Fieldset, FieldsetConfiguration} from './field';
 import {FormService} from './form.service';
 import {Document, ReadWriteDocument, Zaak} from '@gu/models';
@@ -87,7 +87,7 @@ export class FormComponent implements OnInit, OnChanges {
   /**
    * @type {FormGroup} The FormGroup used by this form.
    */
-  formGroup!: FormGroup;
+  formGroup!: UntypedFormGroup;
 
   /**
    * @type {string[]} Keys resolved either from keys or form.

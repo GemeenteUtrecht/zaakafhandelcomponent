@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AbstractControl, FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { AbstractControl, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { AdviceService } from './advice.service';
 import { AdviceForm } from '../../models/advice-form';
 import {Requester, ReviewRequest} from '../../models/review-request';
@@ -41,7 +41,7 @@ export class AdviceComponent implements OnInit {
 
   documentTableData: Table = new Table(['Bestandsnaam', 'Acties', ''], []);
 
-  adviceForm: FormGroup;
+  adviceForm: UntypedFormGroup;
   adviceFormData: AdviceForm = {
     advice: "",
     reviewDocuments: [],
@@ -55,7 +55,7 @@ export class AdviceComponent implements OnInit {
   get documents(): AbstractControl { return this.adviceForm.get('documents'); }
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private adviceService: AdviceService,
     private accountsService: AccountsService,
     private route: ActivatedRoute,
@@ -296,7 +296,7 @@ export class AdviceComponent implements OnInit {
     console.error(error);
   }
 
-  get adviceControl(): FormControl {
-    return this.adviceForm.get('advice') as FormControl;
+  get adviceControl(): UntypedFormControl {
+    return this.adviceForm.get('advice') as UntypedFormControl;
   };
 }

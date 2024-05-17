@@ -17,7 +17,7 @@ eigen backend.
 
 ## Documentatie
 
-Voor configuratie, instellingen en algemene beheerdocumentatie: [![Documentation status](https://readthedocs.org/projects/zac-gu/badge/?version=latest)](https://zac-gu.readthedocs.io/nl/latest/?badge=latest)  
+Voor configuratie, instellingen en algemene beheerdocumentatie: [![Documentation status](https://readthedocs.org/projects/zac-gu/badge/?version=latest)](https://zac-gu.readthedocs.io/nl/latest/?badge=latest)
 Voor [API documentatie](https://zac.cg-intern.utrecht.nl/api/docs/).
 
 ## Projectstructuur
@@ -55,7 +55,7 @@ Er zijn meerdere manieren waarop frontend developers kunnen ontwikkelen.
 Run het volgende commando van binnen de `zaakafhandelcomponent/` om de development server te starten:
 
 ```bash
-docker-compose up -d ingress-dev
+docker compose up -d --force-recreate --build ingress-dev
 ```
 
 Dit zal zowel de backend (inclusief elasticsearch) en de frontend services starten.
@@ -63,7 +63,7 @@ Enige verandering aan de frontend source code zal de frontend herbouwen.
 
 De gehele app is beschikbaar op `http://localhost:8080/` (en de UI is beschikbaar op `http://localhost:8080/ui`).
 
-Om ervoor te zorgen dat alles werkt, zal de backend moeten worden geconfigureerd. Voor meer informatie hiervoor 
+Om ervoor te zorgen dat alles werkt, zal de backend moeten worden geconfigureerd. Voor meer informatie hiervoor
 kan worden verwezen naar de [backend readme](backend/readme.rst) of in the [readthedocs](https://zaakafhandelcomponent.readthedocs.io/en/latest/). In het kort:
 - Een superuser moet aangemaakt worden.
 - De services moeten worden toegevoegd: OpenZaak (Catalogi, Zaken, Besluiten, Documenten API), Kadaster, Kownsl, BPTL, DoWC, Object/Objecttypes API and notificaties API.

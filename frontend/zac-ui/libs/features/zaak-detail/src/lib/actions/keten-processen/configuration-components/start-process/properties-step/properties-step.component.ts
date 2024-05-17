@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { NieuweEigenschap, Zaak } from '@gu/models';
 import { BenodigdeZaakeigenschap, TaskContextData } from '../../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { AccountsService, ZaakService } from '@gu/services';
 import { SnackbarService } from '@gu/components';
 import { DatePipe } from '@angular/common';
@@ -23,7 +23,7 @@ export class PropertiesStepComponent implements OnChanges {
   @Output() submittedFields: EventEmitter<SubmittedFields> = new EventEmitter<SubmittedFields>();
   @Output() updateComponents: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  @Input() startProcessPropertyForm: FormGroup;
+  @Input() startProcessPropertyForm: UntypedFormGroup;
 
   errorMessage: string;
 
@@ -32,7 +32,7 @@ export class PropertiesStepComponent implements OnChanges {
 
   constructor(
     private datePipe: DatePipe,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private zaakService: ZaakService,
     private accountsService: AccountsService,
     private snackbarService: SnackbarService,
@@ -56,12 +56,12 @@ export class PropertiesStepComponent implements OnChanges {
     return this.submittedProperties.length <= this.propertiesControl.length && this.propertiesControl.length > 0;
   }
 
-  get propertiesControl(): FormArray {
-    return this.startProcessPropertyForm.get('properties') as FormArray;
+  get propertiesControl(): UntypedFormArray {
+    return this.startProcessPropertyForm.get('properties') as UntypedFormArray;
   };
 
-  propertyControl(i): FormControl {
-    return this.propertiesControl.at(i) as FormControl;
+  propertyControl(i): UntypedFormControl {
+    return this.propertiesControl.at(i) as UntypedFormControl;
   }
 
   //
@@ -105,7 +105,7 @@ export class PropertiesStepComponent implements OnChanges {
    * Creates form controls.
    * @returns {FormArray}
    */
-  addPropertyControls(): FormArray {
+  addPropertyControls(): UntypedFormArray {
     const arr = this.taskContextData.context.benodigdeZaakeigenschappen.map(prop => {
       if (prop.required) {
         return this.fb.control('', Validators.required);

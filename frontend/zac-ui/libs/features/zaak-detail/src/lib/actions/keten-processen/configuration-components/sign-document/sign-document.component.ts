@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { TaskContextData } from '../../../../../models/task-context';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormArray, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ApplicationHttpClient, ZaakService } from '@gu/services';
 import { KetenProcessenService } from '../../keten-processen.service';
 import { Document, ListDocuments, RowData, Table, UserSearchResult, Zaak } from '@gu/models';
@@ -22,7 +22,7 @@ export class SignDocumentComponent implements OnChanges {
   steps = 1;
   items: UserSearchResult[] = [];
 
-  signDocumentForm: FormGroup;
+  signDocumentForm: UntypedFormGroup;
 
   tableHead = [
     '',
@@ -48,7 +48,7 @@ export class SignDocumentComponent implements OnChanges {
 
   constructor(
     private http: ApplicationHttpClient,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private ketenProcessenService: KetenProcessenService,
     private modalService: ModalService,
     private zaakService: ZaakService,
@@ -196,23 +196,23 @@ export class SignDocumentComponent implements OnChanges {
     })
   }
 
-  get assignedUsers(): FormArray {
-    return this.signDocumentForm.get('assignedUsers')  as FormArray;
+  get assignedUsers(): UntypedFormArray {
+    return this.signDocumentForm.get('assignedUsers')  as UntypedFormArray;
   };
 
-  assignedUsersUsername(index: number): FormControl {
-    return this.assignedUsers.at(index).get('username') as FormControl;
+  assignedUsersUsername(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('username') as UntypedFormControl;
   }
 
-  assignedUsersFirstname(index: number): FormControl {
-    return this.assignedUsers.at(index).get('firstName') as FormControl;
+  assignedUsersFirstname(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('firstName') as UntypedFormControl;
   }
 
-  assignedUsersLastname(index: number): FormControl {
-    return this.assignedUsers.at(index).get('lastName') as FormControl;
+  assignedUsersLastname(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('lastName') as UntypedFormControl;
   }
 
-  assignedUsersEmail(index: number): FormControl {
-    return this.assignedUsers.at(index).get('email') as FormControl;
+  assignedUsersEmail(index: number): UntypedFormControl {
+    return this.assignedUsers.at(index).get('email') as UntypedFormControl;
   }
 }

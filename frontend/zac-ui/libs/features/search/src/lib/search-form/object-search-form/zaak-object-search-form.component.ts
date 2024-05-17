@@ -13,7 +13,7 @@ import {
 import {ObjectsService, ZaakObjectService} from '@gu/services';
 import {SearchService} from '../../search.service';
 import {MapGeometry, MapMarker} from "../../../../../../shared/ui/components/src/lib/components/map/map";
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 
 
 /** @type {string} The name of utrecht in the provinces object. */
@@ -70,7 +70,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
 
   readonly errorMessage = 'Er is een fout opgetreden bij het zoeken naar objecten.';
 
-  searchForm: FormGroup
+  searchForm: UntypedFormGroup
 
   /** @type {boolean}} Whether the component is loading. */
   isLoading = true;
@@ -138,7 +138,7 @@ export class ZaakObjectSearchFormComponent implements OnInit {
    * @param {ChangeDetectorRef} cdRef
    */
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private objectsService: ObjectsService,
     private searchService: SearchService,
     private zaakObjectService: ZaakObjectService,
@@ -151,8 +151,8 @@ export class ZaakObjectSearchFormComponent implements OnInit {
   // Getters / setters.
   //
 
-  get showAllObjectTypesControl(): FormControl {
-    return this.searchForm.get('showAllObjectTypes') as FormControl;
+  get showAllObjectTypesControl(): UntypedFormControl {
+    return this.searchForm.get('showAllObjectTypes') as UntypedFormControl;
   };
 
   /**

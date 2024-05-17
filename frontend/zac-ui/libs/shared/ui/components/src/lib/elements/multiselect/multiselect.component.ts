@@ -9,7 +9,7 @@ import {
   Output,
   ViewChild
 } from '@angular/core';
-import {FormBuilder, FormControl} from '@angular/forms';
+import {UntypedFormBuilder, UntypedFormControl} from '@angular/forms';
 import { NgSelectComponent } from '@ng-select/ng-select';
 
 /**
@@ -43,7 +43,7 @@ import { NgSelectComponent } from '@ng-select/ng-select';
 export class MultiselectComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('multiselect') select: NgSelectComponent;
 
-  @Input() control: FormControl;
+  @Input() control: UntypedFormControl;
   @Input() items = [];
 
   @Input() bindLabel = 'name';
@@ -69,7 +69,7 @@ export class MultiselectComponent implements OnInit, OnChanges, OnDestroy {
    * Constructor method.
    * @param {FormBuilder} fb
    */
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: UntypedFormBuilder) {
   }
 
 

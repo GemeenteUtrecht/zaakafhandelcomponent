@@ -1,6 +1,7 @@
-module.exports = {
-  displayName: 'features-zaak-detail',
-  preset: '../../../jest.preset.js',
+/* eslint-disable */
+export default {
+  displayName: 'shared-data-access-services',
+  preset: '../../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../../coverage/libs/features/zaak-detail',
+  coverageDirectory: '../../../../coverage/libs/shared/data-access/services',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

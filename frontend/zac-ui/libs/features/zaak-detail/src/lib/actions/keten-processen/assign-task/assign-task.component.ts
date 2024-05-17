@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { SnackbarService } from '@gu/components';
 import {Task, User, UserGroupDetail, UserSearchResult} from '@gu/models';
 import { KetenProcessenService } from '../keten-processen.service';
@@ -22,8 +22,8 @@ export class AssignTaskComponent implements OnChanges {
   @Input() currentUser: User;
   @Output() successReload: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  assignUserForm: FormGroup;
-  assignUserGroupForm: FormGroup;
+  assignUserForm: UntypedFormGroup;
+  assignUserGroupForm: UntypedFormGroup;
 
   users: UserSearchResult[] = [];
   userGroups: UserGroupDetail[] = [];
@@ -36,7 +36,7 @@ export class AssignTaskComponent implements OnChanges {
 
   constructor(
     private kService: KetenProcessenService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private snackbarService: SnackbarService
   ) { }
 
@@ -44,12 +44,12 @@ export class AssignTaskComponent implements OnChanges {
   // Getters / setters.
   //
 
-  get assigneeUserControl(): FormControl {
-    return this.assignUserForm.get('assignee') as FormControl;
+  get assigneeUserControl(): UntypedFormControl {
+    return this.assignUserForm.get('assignee') as UntypedFormControl;
   };
 
-  get assigneeUserGroupControl(): FormControl {
-    return this.assignUserGroupForm.get('assignee') as FormControl;
+  get assigneeUserGroupControl(): UntypedFormControl {
+    return this.assignUserGroupForm.get('assignee') as UntypedFormControl;
   };
 
   //

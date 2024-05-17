@@ -5,7 +5,7 @@ import {ActivitiesService, UserService, ZaakService} from '@gu/services';
 import {Observable} from 'rxjs';
 import {Activity, User, Zaak} from '@gu/models';
 import {ModalService, SnackbarService} from '@gu/components';
-import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import {UntypedFormBuilder, UntypedFormControl, UntypedFormGroup} from '@angular/forms';
 import {KownslSummaryComponent} from "./actions/adviseren-accorderen/kownsl-summary.component";
 import {StatusComponent} from './actions/status/status.component';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -74,7 +74,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
   originalTitle: string;
 
   /** @type {FormGroup} Form use to request acces to this case (zaak). */
-  zaakAccessRequestForm: FormGroup;
+  zaakAccessRequestForm: UntypedFormGroup;
 
   /** @type {User} The current logged in/hijacked user. */
   currentUser: User;
@@ -133,7 +133,7 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
 
   constructor(
     private activitiesService: ActivitiesService,
-    private formBuilder: FormBuilder,
+    private formBuilder: UntypedFormBuilder,
     private modalService: ModalService,
     private snackbarService: SnackbarService,
     private title: Title,
@@ -162,8 +162,8 @@ export class FeaturesZaakDetailComponent implements OnInit, OnChanges, OnDestroy
    * Returns the comment FormControl.
    * @return {FormControl}
    */
-  get commentControl(): FormControl {
-    return this.zaakAccessRequestForm.get('comment') as FormControl;
+  get commentControl(): UntypedFormControl {
+    return this.zaakAccessRequestForm.get('comment') as UntypedFormControl;
   };
 
 

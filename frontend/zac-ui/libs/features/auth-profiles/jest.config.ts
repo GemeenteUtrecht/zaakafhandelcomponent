@@ -1,6 +1,7 @@
-module.exports = {
-  displayName: 'zac-ui',
-  preset: '../../jest.preset.js',
+/* eslint-disable */
+export default {
+  displayName: 'features-auth-profiles',
+  preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../coverage/apps/zac-ui',
+  coverageDirectory: '../../../coverage/libs/features/auth-profiles',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

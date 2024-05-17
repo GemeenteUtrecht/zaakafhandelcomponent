@@ -11,7 +11,7 @@ import {
   UserSearchResult,
   Zaak
 } from '@gu/models';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'gu-betrokkenen',
@@ -36,7 +36,7 @@ export class BetrokkenenComponent implements OnChanges {
   roleTypes: MetaRoltype[];
   hoofdBehandelaarType: MetaRoltype;
 
-  roleForm: FormGroup;
+  roleForm: UntypedFormGroup;
   isSubmitting: boolean;
   oudbehandelaren: Oudbehandelaren;
   oudbehandelarenTable: Table = new Table(['Naam', 'E-mail', 'Start', 'Eind'], []);
@@ -48,21 +48,21 @@ export class BetrokkenenComponent implements OnChanges {
     private accountsService: AccountsService,
     private snackbarService: SnackbarService,
     private modalService: ModalService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
   ) { }
 
   // Getters / setters
 
   get medewerkerControl() {
-    return this.roleForm.get('medewerker') as FormControl;
+    return this.roleForm.get('medewerker') as UntypedFormControl;
   }
 
   get roltypeControl() {
-    return this.roleForm.get('roltype') as FormControl;
+    return this.roleForm.get('roltype') as UntypedFormControl;
   }
 
-  get changeBehandelaarControl(): FormControl {
-    return this.roleForm.get('changeBehandelaar') as FormControl;
+  get changeBehandelaarControl(): UntypedFormControl {
+    return this.roleForm.get('changeBehandelaar') as UntypedFormControl;
   };
 
   /**

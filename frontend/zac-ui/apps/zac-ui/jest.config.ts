@@ -1,6 +1,7 @@
-module.exports = {
-  displayName: 'shared-ui-components',
-  preset: '../../../jest.preset.js',
+/* eslint-disable */
+export default {
+  displayName: 'zac-ui',
+  preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../../coverage/libs/shared/ui/components',
+  coverageDirectory: '../../coverage/apps/zac-ui',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

@@ -1,5 +1,6 @@
-module.exports = {
-  displayName: 'shared-utils',
+/* eslint-disable */
+export default {
+  displayName: 'features-kownsl',
   preset: '../../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
@@ -14,7 +15,7 @@ module.exports = {
       },
     },
   },
-  coverageDirectory: '../../../coverage/libs/shared/utils',
+  coverageDirectory: '../../../coverage/libs/features/kownsl',
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
     'jest-preset-angular/build/AngularSnapshotSerializer.js',

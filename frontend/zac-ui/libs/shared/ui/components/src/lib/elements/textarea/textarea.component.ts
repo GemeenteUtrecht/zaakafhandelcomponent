@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 
 /**
  * <gu-textarea [control]="formControl" label="Textarea">I'm a textarea</gu-textarea>
@@ -22,7 +22,7 @@ import { FormControl } from '@angular/forms';
   styleUrls: ['../../elements/input/input.component.scss']
 })
 export class TextareaComponent {
-  @Input() control: FormControl;
+  @Input() control: UntypedFormControl;
   @Input() label: string;
   @Input() required: boolean;
   @Input() disabled: boolean;
