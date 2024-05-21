@@ -37,7 +37,7 @@ export class RemindReviewComponent implements OnChanges {
     this.reviewRequestsService.remindReviewRequest(this.reviewRequestSummary.id)
       .subscribe(() => {
         this.snackbarService.openSnackBar('Verzonden', 'Sluiten', 'primary');
-        this.isSubmitting = true;
+        this.isSubmitting = false;
         this.successReload.emit(true);
       }, error => {
         this.reportError(error)
