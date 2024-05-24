@@ -1,12 +1,25 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import check_password
 
+from mozilla_django_oidc_db.backends import OIDCAuthenticationBackend
 from zgw_consumers.api_models.documenten import Document
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zgw.models.zrc import Zaak
+
+logger = logging.getLogger(__name__)
+
+
+class LoggingBackendMozilla(OIDCAuthenticationBackend):
+    def verify_claims(self, claims) -> bool:
+        logger.info(claims)
+        self.stdout.write(claims)
+        print(claims)
+        return super().verify_claims(claims)
 
 
 class UserModelEmailBackend(ModelBackend):
