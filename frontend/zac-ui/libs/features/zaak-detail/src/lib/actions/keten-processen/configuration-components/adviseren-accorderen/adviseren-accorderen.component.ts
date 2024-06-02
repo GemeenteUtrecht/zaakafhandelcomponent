@@ -311,7 +311,7 @@ export class AdviserenAccorderenComponent implements OnChanges {
    */
   assignedMinDateControl(index: number): Date {
     const today = new Date();
-    if (this.assignedUsers.at(index - 1)) {
+    if (index > 0 && this.assignedUsers.at(index - 1)) {
       const previousDeadline = this.assignedUsers.at(index - 1).get('deadline').value ? this.assignedUsers.at(index - 1).get('deadline').value : today;
       const dayAfterDeadline = new Date(previousDeadline);
       dayAfterDeadline.setDate(new Date(previousDeadline).getDate() + 1);
