@@ -14,7 +14,13 @@ Acties
 
 This part displays the current tasks of a :class:`.Zaak`. It is divided into two sections: tasks assigned to the user and tasks assigned to other colleagues.
 
-The tasks are forms and the UI of a task is configurable.
+**What are tasks?**
+Each task is part of a Camunda process (for more information about Camunda please refer to the backend documentation). When opening a task, a pop-up with a form will show up. The user can fill in the form to finish the task. The layout of the form is configured in Camunda.
+
+**Triggering tasks**
+Tasks can show up in two ways:
+- Trigger from "Optionele acties" in the section below.
+- By finishing a previous task that progresses the camunda process. The new step in the camunda process will create a new task.
 
 A user with the proper rights is allowed to re-assign a task to another user.
 - To re-assign your own tasks to other users, click on the "Behandelen" and go to the "Toewijzen" tab.
@@ -43,7 +49,7 @@ The user is also allowed to change the recipients of a request. By clicking on "
 Takenlijst
 --------------
 
-This is task list of non-process-coupled tasks. Users can give answers or assign other users to a predefined task. Assigned users will find the task on their "Werkvoorraad" page.
+This is task list of non-process-coupled tasks. Users can give answers or assign other users to a predefined task. Assigned users will find the task on their "Werkvoorraad" page. The task list can be configured on the
 
 .. figure:: ../../_assets/ui/zaken/acties/acties_takenlijst.png
 
