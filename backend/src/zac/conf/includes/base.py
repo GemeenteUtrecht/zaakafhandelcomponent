@@ -524,7 +524,7 @@ EXTERNAL_API_SCHEMAS = {
     ),
     "ZRC_API_SCHEMA": config(
         "ZRC_API_SCHEMA",
-        "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/schema/openapi.json",
+        "https://open-zaak.cg-intern.ont.utrecht.nl/zaken/api/v1/schema/openapi.yaml",
     ),
 }
 
