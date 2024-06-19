@@ -1,9 +1,32 @@
+import logging
+import os
+from typing import List, Union
+
 from django.forms.utils import ErrorList
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.exceptions import APIException, PermissionDenied
-from rest_framework.views import exception_handler as drf_exception_handler
+from rest_framework.exceptions import (
+    APIException,
+    PermissionDenied,
+    ReturnList,
+    _get_error_details,
+)
+from rest_framework.response import Response
+from vng_api_common.compat import sentry_client
+from vng_api_common.exception_handling import (
+    HandledException as VNGHandledException,
+    get_validation_errors,
+)
+from vng_api_common.views import (
+    ERROR_CONTENT_TYPE,
+    OrderedDict,
+    drf_exception_handler,
+    drf_exceptions,
+    status,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceConfigError(APIException):
@@ -13,6 +36,7 @@ class ServiceConfigError(APIException):
 def get_error_list(errors):
     """
     Given a DRF Serializer.errors, return a Django ErrorList
+
     """
     return ErrorList(
         [
@@ -23,11 +47,66 @@ def get_error_list(errors):
     )
 
 
+class HandledException(VNGHandledException):
+    """
+    Overwrite _error_detail "property".
+    """
+
+    @property
+    def _error_detail(self) -> str:
+        if isinstance(self.exc, drf_exceptions.ValidationError):
+            # ErrorDetail from DRF is a str subclass
+            data = getattr(self.response, "data", {})
+            return _get_error_details(data)
+        # any other exception -> return the raw ErrorDetails object so we get
+        # access to the code later
+        return self.exc.detail
+
+    @property
+    def invalid_params(self) -> Union[None, List]:
+        if isinstance(self.exc.detail, ReturnList) or isinstance(self.exc.detail, list):
+            return [
+                error for exc in self.exc.detail for error in get_validation_errors(exc)
+            ]
+        else:
+            return super().invalid_params
+
+
+def vng_exception_handler(exc, context):
+    """
+    Taken from vng_api_common module and adapted.
+
+    Transform 4xx and 5xx errors into DSO-compliant shape.
+    """
+    response = drf_exception_handler(exc, context)
+    if response is None:
+        if os.getenv("DEBUG", "").lower() in ["yes", "1", "true"]:
+            return None
+
+        logger.exception(exc.args[0], exc_info=1)
+        # make sure the exception still ends up in Sentry
+        sentry_client.captureException()
+
+        # unkown type, so we use the generic Internal Server Error
+        exc = drf_exceptions.APIException("Internal Server Error")
+        response = Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    request = context.get("request")
+    serializer = HandledException.as_serializer(
+        exc, response, request
+    )  # <- changed line
+    response.data = OrderedDict(serializer.data.items())
+    # custom content type
+    response["Content-Type"] = ERROR_CONTENT_TYPE
+    return response
+
+
 def exception_handler(exc, context):
     """
     Update the default DRF exception handler with data when user can request permissions
+
     """
-    response = drf_exception_handler(exc, context)
+    response = vng_exception_handler(exc, context)
 
     from zac.core.api.views import ZaakDetailView
 

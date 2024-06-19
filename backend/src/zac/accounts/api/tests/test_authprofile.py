@@ -513,12 +513,14 @@ class AuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "blueprintPermissions": [
-                    {"policies": [{"maxVa": ["Dit veld is vereist."]}]}
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "required",
+                    "name": "blueprintPermissions.0.policies.0.maxVa",
+                    "reason": "Dit veld is vereist.",
+                }
+            ],
         )
 
     @requests_mock.Mocker()

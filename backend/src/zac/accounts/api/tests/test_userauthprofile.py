@@ -194,16 +194,26 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(
                 [
-                    "Please include one of the following query parameters: ['username', 'auth_profile', 'is_active']"
+                    {
+                        "name": "__all__",
+                        "code": "query-param-not-set",
+                        "reason": "Please include one of the following query parameters: ['username', 'auth_profile', 'is_active']",
+                    }
                 ],
-                response.json(),
+                response.json()["invalidParams"],
             )
         with self.subTest("Empty filters"):
             response = self.client.get(url + f"?username=")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(
-                ["Please include a valid non-empty string for username."],
-                response.json(),
+                [
+                    {
+                        "name": "__all__",
+                        "code": "query-param-non-empty",
+                        "reason": "Please include a valid non-empty string for username.",
+                    }
+                ],
+                response.json()["invalidParams"],
             )
         with self.subTest("Valid filter no user"):
             response = self.client.get(url + f"?username=this-user-does-not-exist")
