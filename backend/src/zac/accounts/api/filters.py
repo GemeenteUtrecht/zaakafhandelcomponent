@@ -38,15 +38,35 @@ class UserAtomicPermissionFilterSet(filters.FilterSet):
     username = filters.CharFilter(
         field_name="user__username",
         help_text=_("Username of user that is filtered on."),
+        required=True,
     )
     object_url = filters.CharFilter(
         field_name="atomic_permission__object_url",
         help_text=_("Object URL of object that is filtered on."),
+        required=True,
     )
 
     class Meta:
         model = UserAtomicPermission
         fields = ("username", "object_url")
+
+    def is_valid(self):
+        valid_fields = list(self.get_fields().keys())
+        any_valid_fields = {
+            param: val for param, val in self.data.items() if param in valid_fields
+        }
+        for field, val in any_valid_fields.items():
+            if not val or not all(val):
+                self.form.add_error(
+                    None,
+                    ValidationError(
+                        _(
+                            "Please include a valid non-empty string for {field}."
+                        ).format(field=field),
+                        code="query-param-non-empty",
+                    ),
+                )
+        return super().is_valid()
 
 
 class UserAuthorizationProfileFilterSet(filters.FilterSet):

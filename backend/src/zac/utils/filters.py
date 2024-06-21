@@ -2,7 +2,7 @@ import copy
 from collections import OrderedDict
 
 from django_filters.rest_framework.backends import DjangoFilterBackend
-from rest_framework import fields
+from rest_framework import exceptions, fields
 from rest_framework.serializers import Serializer
 
 
@@ -103,4 +103,7 @@ class ApiFilterSet(BaseApiFilterSet, metaclass=ApiFilterSetMetaclass):
     * for each filter 'filter_<name>' method of the FilterSet should be defined
     """
 
-    pass
+    def is_valid(self, raise_exception: bool = True):
+        if not super().is_valid() and raise_exception:
+            raise exceptions.ValidationError(self.errors)
+        return super().is_valid()

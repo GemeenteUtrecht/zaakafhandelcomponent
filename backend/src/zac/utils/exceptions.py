@@ -5,7 +5,7 @@ from typing import List, Union
 from django.forms.utils import ErrorList
 from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 from rest_framework.exceptions import (
     APIException,
     PermissionDenied,
@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from vng_api_common.compat import sentry_client
 from vng_api_common.exception_handling import (
     HandledException as VNGHandledException,
-    get_validation_errors,
+    underscore_to_camel,
 )
 from vng_api_common.views import (
     ERROR_CONTENT_TYPE,
@@ -47,9 +47,60 @@ def get_error_list(errors):
     )
 
 
+def get_validation_errors(validation_errors: dict):
+    """
+    Adapted from vng_api_common.exceptions.get_validation_errors.
+
+    """
+    for field_name, error_list in validation_errors.items():
+        # nested validation for fields where many=True
+        if isinstance(error_list, list):
+            for i, nested_error_dict in enumerate(error_list):
+                if isinstance(nested_error_dict, dict):
+                    for err in get_validation_errors(nested_error_dict):
+                        err[
+                            "name"
+                        ] = f"{underscore_to_camel(field_name)}.{i}.{err['name']}"
+                        yield err
+                elif isinstance(nested_error_dict, list):
+                    for j, err in enumerate(nested_error_dict):
+                        for _err in get_validation_errors(
+                            {f"{underscore_to_camel(field_name)}.{j}": err}
+                        ):
+                            yield _err
+
+        # nested validation - recursively call the function
+        if isinstance(error_list, dict):
+            for err in get_validation_errors(error_list):
+                err["name"] = f"{underscore_to_camel(field_name)}.{err['name']}"
+                yield err
+            continue
+
+        if isinstance(error_list, exceptions.ErrorDetail):
+            error_list = [error_list]
+
+        for error in error_list:
+            if isinstance(error, dict):
+                continue
+            elif isinstance(error, list):
+                continue
+
+            else:
+                yield OrderedDict(
+                    [
+                        # see https://tools.ietf.org/html/rfc7807#section-3.1
+                        # ('type', 'about:blank'),
+                        ("name", underscore_to_camel(field_name)),
+                        ("code", error.code),
+                        ("reason", str(error)),
+                    ]
+                )
+
+
 class HandledException(VNGHandledException):
     """
-    Overwrite _error_detail "property".
+    Adapted from vng_api_common.exceptions.HandledException
+
     """
 
     @property
@@ -69,7 +120,7 @@ class HandledException(VNGHandledException):
                 error for exc in self.exc.detail for error in get_validation_errors(exc)
             ]
         else:
-            return super().invalid_params
+            return [error for error in get_validation_errors(self.exc.detail)]
 
 
 def vng_exception_handler(exc, context):
