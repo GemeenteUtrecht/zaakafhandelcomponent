@@ -135,12 +135,24 @@ class BrpApiViewTests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "burgerservicenummer": ["Dit veld is vereist."],
-                "doelbinding": ["Dit veld is vereist."],
-                "fields": ["Dit veld is vereist."],
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "burgerservicenummer",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                },
+                {
+                    "name": "doelbinding",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                },
+                {
+                    "name": "fields",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                },
+            ],
         )
 
     def test_betrokkene_api_invalid_burgerservicenummer(self):
@@ -155,12 +167,24 @@ class BrpApiViewTests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "burgerservicenummer": ["Een BSN heeft 9 cijfers."],
-                "doelbinding": ["Dit veld is vereist."],
-                "fields": ["Dit veld is vereist."],
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "burgerservicenummer",
+                    "code": "invalid",
+                    "reason": "Een BSN heeft 9 cijfers.",
+                },
+                {
+                    "name": "doelbinding",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                },
+                {
+                    "name": "fields",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                },
+            ],
         )
 
     def test_betrokkene_api_no_valid_doelbinding(self):
@@ -177,11 +201,19 @@ class BrpApiViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "doelbinding": ["Dit veld mag niet leeg zijn."],
-                "fields": ["Dit veld is vereist."],
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "doelbinding",
+                    "code": "blank",
+                    "reason": "Dit veld mag niet leeg zijn.",
+                },
+                {
+                    "name": "fields",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                },
+            ],
         )
 
     def test_betrokkene_api_no_fields(self):
@@ -197,8 +229,8 @@ class BrpApiViewTests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {"fields": ["Dit veld is vereist."]},
+            response.json()["invalidParams"],
+            [{"code": "required", "name": "fields", "reason": "Dit veld is vereist."}],
         )
 
     def test_betrokkene_api_no_valid_fields(self):
@@ -215,12 +247,14 @@ class BrpApiViewTests(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "fields": [
-                    "Error: dit veld bevatte: test,hello,geboorte, maar mag alleen een (sub)set zijn van: geboorte.datum, geboorte.land, kinderen, partners, verblijfplaats."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "fields",
+                    "code": "invalid",
+                    "reason": "Error: dit veld bevatte: test,hello,geboorte, maar mag alleen een (sub)set zijn van: geboorte.datum, geboorte.land, kinderen, partners, verblijfplaats.",
+                }
+            ],
         )
 
     @requests_mock.Mocker()
