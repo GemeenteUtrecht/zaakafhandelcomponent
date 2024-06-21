@@ -104,10 +104,22 @@ class HandledException(VNGHandledException):
     """
 
     @property
+    def code(self) -> str:
+        if isinstance(self.exc, exceptions.ValidationError) or isinstance(
+            self.exc, drf_exceptions.PermissionDenied
+        ):
+            return self.exc.default_code
+        return self._error_detail.code if self._error_detail else ""
+
+    @property
     def _error_detail(self) -> str:
-        if isinstance(self.exc, drf_exceptions.ValidationError):
+        if isinstance(self.exc, drf_exceptions.ValidationError) or isinstance(
+            self.exc, drf_exceptions.PermissionDenied
+        ):
             # ErrorDetail from DRF is a str subclass
             data = getattr(self.response, "data", {})
+            if isinstance(data, dict) and (detail := data.get("detail")):
+                return detail
             return _get_error_details(data)
         # any other exception -> return the raw ErrorDetails object so we get
         # access to the code later

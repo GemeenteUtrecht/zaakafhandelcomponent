@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
+from djangorestframework_camel_case.settings import api_settings
 from rest_framework import parsers
 
 from ..data import Task
@@ -19,7 +20,7 @@ class DynamicFormRenderer(CamelCaseJSONRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         renderer_context = renderer_context or {}
         response = renderer_context.get("response")
-        if response and response.status_code == 400:
+        if response and divmod(response.status_code, 100)[0] == 4:
             # On validation errors, do not camelize the keys (as they are the form field names)
             return super(CamelCaseJSONRenderer, self).render(
                 data,
