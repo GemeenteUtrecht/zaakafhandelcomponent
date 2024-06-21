@@ -200,9 +200,13 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json()["nonFieldErrors"],
+            response.json()["invalidParams"],
             [
-                f"Gebruiker `{self.requester.username}` heeft al toegang tot ZAAK `{ZAAK_URL}`."
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": f"Gebruiker `{self.requester.username}` heeft al toegang tot ZAAK `{ZAAK_URL}`.",
+                }
             ],
         )
 
@@ -260,8 +264,12 @@ class CreateAccessRequestAPITests(APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json()["nonFieldErrors"],
+            response.json()["invalidParams"],
             [
-                f"Er is al een toegangsverzoek tot ZAAK `{ZAAK_URL}` voor gebruiker `{self.requester.username}` in behandeling."
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": f"Er is al een toegangsverzoek tot ZAAK `{ZAAK_URL}` voor gebruiker `{self.requester.username}` in behandeling.",
+                }
             ],
         )

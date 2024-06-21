@@ -406,7 +406,16 @@ class GrantAccessAPITests(APITransactionTestCase):
         response = self.client.post(self.endpoint, data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("requester" in response.json()[0])
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "requester",
+                    "code": "does_not_exist",
+                    "reason": "Object met username=some user bestaat niet.",
+                }
+            ],
+        )
 
     def test_grant_access_with_existing_permission(self):
         AtomicPermissionFactory.create(
@@ -427,11 +436,15 @@ class GrantAccessAPITests(APITransactionTestCase):
         response = self.client.post(self.endpoint, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json()[0]["nonFieldErrors"],
+            response.json()["invalidParams"],
             [
-                "`{user}` heeft al het recht `zaken:inzien`.".format(
-                    user=self.requester.username
-                )
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "`{user}` heeft al het recht `zaken:inzien`.".format(
+                        user=self.requester.username
+                    ),
+                }
             ],
         )
 
@@ -593,7 +606,16 @@ class GrantAccessAPITests(APITransactionTestCase):
         endpoint.add({"object_url": ZAAK_URL})
         response = self.client.get(endpoint.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), ["`username` is a required query parameter."])
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "required",
+                    "name": "username",
+                    "reason": "Dit veld is vereist.",
+                }
+            ],
+        )
 
     @requests_mock.Mocker()
     def test_list_user_atomic_permissions_no_object_url_query_parameter(self, m):
@@ -606,7 +628,14 @@ class GrantAccessAPITests(APITransactionTestCase):
         response = self.client.get(endpoint.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(), ["`object_url` is a required query parameter."]
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "required",
+                    "name": "objectUrl",
+                    "reason": "Dit veld is vereist.",
+                }
+            ],
         )
 
     @requests_mock.Mocker()
