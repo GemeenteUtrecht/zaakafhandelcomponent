@@ -252,8 +252,14 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.endpoint, data={"answers": []})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {"nonFieldErrors": ["Checklisttype kan niet gevonden worden."]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "nonFieldErrors",
+                    "reason": "Checklisttype kan niet gevonden worden.",
+                }
+            ],
         )
 
     def test_create_checklist_fail_two_assignees_to_answer(self, m):
@@ -295,12 +301,14 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "Een antwoord op een checklistvraag kan niet toegewezen worden aan zowel een gebruiker als een groep."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "nonFieldErrors",
+                    "reason": "Een antwoord op een checklistvraag kan niet toegewezen worden aan zowel een gebruiker als een groep.",
+                }
+            ],
         )
 
     def test_create_checklist_answer_not_found_in_mc(self, m):
@@ -338,12 +346,15 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
                 response = self.client.post(self.endpoint, data=data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "Antwoord `some-wrong-answer` werd niet teruggevonden in de opties: ['Ja']."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "nonFieldErrors",
+                    "reason": "Antwoord `some-wrong-answer` werd niet "
+                    "teruggevonden in de opties: ['Ja'].",
+                }
+            ],
         )
 
     def test_create_checklist_answer_answers_wrong_question(self, m):
@@ -388,12 +399,16 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "Antwoord met vraag: `some-non-existent-question` beantwoordt niet een vraag van het gerelateerde checklisttype."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "nonFieldErrors",
+                    "reason": "Antwoord met vraag: "
+                    "`some-non-existent-question` beantwoordt niet "
+                    "een vraag van het gerelateerde checklisttype.",
+                }
+            ],
         )
 
     def test_update_checklist(self, m):

@@ -22,7 +22,7 @@ from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
-from ..data import ChecklistType
+from ..data import Checklist, ChecklistType
 from ..models import ChecklistLock
 from ..permissions import checklists_inzien, checklists_schrijven
 from .factories import (
@@ -33,6 +33,7 @@ from .factories import (
     ZAAK_URL,
     ZAKEN_ROOT,
     ChecklistLockFactory,
+    checklist_factory,
     checklist_object_factory,
 )
 
@@ -549,10 +550,10 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         ):
             with patch(
                 "zac.contrib.objects.checklists.api.serializers.fetch_checklist",
-                return_value=True,
+                return_value=factory(Checklist, checklist_factory()),
             ):
                 response = self.client.post(self.endpoint, data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 @requests_mock.Mocker()
@@ -956,10 +957,8 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(
-            response.json(),
-            {
-                "detail": f"Checklist for ZAAK: `{checklist_lock.zaak_identificatie}` is locked by: `{user.get_full_name()}`."
-            },
+            response.json()["detail"],
+            f"Checklist for ZAAK: `{checklist_lock.zaak_identificatie}` is locked by: `{user.get_full_name()}`.",
         )
         checklist_lock.delete()
 
@@ -1371,11 +1370,10 @@ class LockAndUnlockChecklistPermissionTests(
                 response = self.client.post(self.lock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
                 self.assertEqual(
-                    response.json(),
-                    {
-                        "detail": f"Checklist for ZAAK: `{lock.zaak_identificatie}` is locked by: `some-other-user`."
-                    },
+                    response.json()["detail"],
+                    f"Checklist for ZAAK: `{lock.zaak_identificatie}` is locked by: `some-other-user`.",
                 )
+
                 self.assertTrue(
                     ChecklistLock.objects.filter(zaak=self.zaak["url"]).exists()
                 )
@@ -1388,9 +1386,7 @@ class LockAndUnlockChecklistPermissionTests(
                 response = self.client.post(self.unlock_endpoint)
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
                 self.assertEqual(
-                    response.json(),
-                    {
-                        "detail": f"Checklist for ZAAK: `{lock.zaak_identificatie}` is locked by: `some-other-user`."
-                    },
+                    response.json()["detail"],
+                    f"Checklist for ZAAK: `{lock.zaak_identificatie}` is locked by: `some-other-user`.",
                 )
         lock.delete()
