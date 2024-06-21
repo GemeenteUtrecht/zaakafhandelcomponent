@@ -82,9 +82,17 @@ class GetBPMNViewTests(ClearCachesMixin, APITestCase):
         response = self.client.get(endpoint)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "type": "InvalidRequestException",
-                "message": "No matching definition with id Adhoc_vergaderen:1:2ee97bc4-a370-11eb-970c-6a0042b17f4b",
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "type",
+                    "code": "invalid",
+                    "reason": "InvalidRequestException",
+                },
+                {
+                    "name": "message",
+                    "code": "invalid",
+                    "reason": "No matching definition with id Adhoc_vergaderen:1:2ee97bc4-a370-11eb-970c-6a0042b17f4b",
+                },
+            ],
         )

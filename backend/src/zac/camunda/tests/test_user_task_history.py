@@ -224,7 +224,10 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
         url = furl(reverse("user-task-history"))
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["Mist de `zaakUrl` query parameter."])
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [{"name": "zaakUrl", "code": "required", "reason": "Dit veld is vereist."}],
+        )
 
     def test_success_get_user_task_history_and_exclude_bptlAppId(self, m):
         # Mock completed tasks from historic process instances

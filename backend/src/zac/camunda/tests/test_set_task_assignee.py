@@ -246,8 +246,14 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {"task": ["De taak met de gegeven `id` bestaat niet (meer)."]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "not_found",
+                    "name": "task",
+                    "reason": "De taak met de gegeven `id` bestaat niet " "(meer).",
+                }
+            ],
         )
 
     @requests_mock.Mocker()
