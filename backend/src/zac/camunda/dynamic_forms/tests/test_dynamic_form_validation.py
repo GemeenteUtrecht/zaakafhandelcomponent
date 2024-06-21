@@ -477,8 +477,14 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                 },
             )
             self.assertEqual(
-                response.json(),
-                {"formfield-02": ['"some-other-value" is een ongeldige keuze.']},
+                response.json()["invalid_params"],
+                [
+                    {
+                        "code": "invalid_choice",
+                        "name": "formfield-02",
+                        "reason": '"some-other-value" is een ongeldige keuze.',
+                    }
+                ],
             )
 
         with self.subTest("Success validation on enum"):
@@ -550,8 +556,14 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                     },
                 )
                 self.assertEqual(
-                    response.json(),
-                    {"formfield-01": ['"some-value-01" is een ongeldige keuze.']},
+                    response.json()["invalid_params"],
+                    [
+                        {
+                            "code": "invalid_choice",
+                            "name": "formfield-01",
+                            "reason": '"some-value-01" is een ongeldige keuze.',
+                        }
+                    ],
                 )
 
             with self.subTest("Success validation on enum"):
@@ -636,8 +648,14 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                     },
                 )
                 self.assertEqual(
-                    response.json(),
-                    {"formfield-01": ['"some-value-01" is een ongeldige keuze.']},
+                    response.json()["invalid_params"],
+                    [
+                        {
+                            "code": "invalid_choice",
+                            "name": "formfield-01",
+                            "reason": '"some-value-01" is een ongeldige keuze.',
+                        }
+                    ],
                 )
 
         with self.subTest("Fail validation on enum - too long"):
@@ -667,12 +685,15 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                         },
                     )
                     self.assertEqual(
-                        response.json(),
-                        {
-                            "formfield-01": [
-                                "A ZAAKEIGENSCHAP with `name`: EIGENSCHAP requires a maximum length of 7."
-                            ]
-                        },
+                        response.json()["invalid_params"],
+                        [
+                            {
+                                "code": "invalid",
+                                "name": "formfield-01",
+                                "reason": "A ZAAKEIGENSCHAP with `name`: EIGENSCHAP "
+                                "requires a maximum length of 7.",
+                            }
+                        ],
                     )
 
         with self.subTest("Success validation on enum - just right"):
