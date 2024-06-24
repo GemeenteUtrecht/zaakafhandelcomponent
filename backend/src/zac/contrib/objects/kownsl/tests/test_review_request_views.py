@@ -59,7 +59,16 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["`assignee` query parameter is required."])
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "assignee",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                }
+            ],
+        )
 
     def test_fail_get_review_request_query_param(self, m):
         self.client.force_authenticate(user=self.user)
@@ -70,7 +79,16 @@ class ViewTests(ClearCachesMixin, APITestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["`assignee` query parameter is required."])
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "assignee",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                }
+            ],
+        )
 
     def test_success_get_review_request(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -118,10 +136,8 @@ class ViewTests(ClearCachesMixin, APITestCase):
             response = self.client.get(url.url)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(
-            response.json(),
-            {
-                "detail": f"Dit verzoek is al afgehandeld door `{user.get_full_name()}` vanuit {self.zaak['identificatie']}."
-            },
+            response.json()["detail"],
+            f"Dit verzoek is al afgehandeld door `{user.get_full_name()}` vanuit {self.zaak['identificatie']}.",
         )
 
     def test_success_get_review_already_exists_for_group_but_not_user(self, m):

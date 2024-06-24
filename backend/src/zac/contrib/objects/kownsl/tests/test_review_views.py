@@ -255,7 +255,16 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.approval_url)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), ["`assignee` query parameter is required."])
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "assignee",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                }
+            ],
+        )
 
     def test_fail_get_approval_review_request_not_found(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")

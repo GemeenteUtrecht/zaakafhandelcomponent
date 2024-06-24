@@ -42,6 +42,7 @@ from ..permissions import (
     ReviewIsNotBeingReconfigured,
     ReviewIsUnlocked,
 )
+from .filters import reviewFilterSet
 from .serializers import (
     SubmitAdviceSerializer,
     SubmitApprovalSerializer,
@@ -83,11 +84,14 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
         ReviewIsUnlocked,
     )
     serializer_class = None
+    filterset_class = reviewFilterSet
 
     def get_assignee_from_query_param(self) -> Optional[str]:
-        if not (assignee := self.request.query_params.get("assignee", None)):
-            raise exceptions.ValidationError("`assignee` query parameter is required.")
-        return assignee
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        filterset.is_valid(raise_exception=True)
+        return filterset.data["assignee"]
 
     @extend_schema(
         summary=_("Retrieve review request."),
@@ -96,7 +100,7 @@ class SubmitReviewView(GetReviewRequestMixin, APIView):
                 name="assignee",
                 required=True,
                 type=OpenApiTypes.STR,
-                description=_("Assignee of the user task in camunda."),
+                description=_("Assignee of the review."),
                 location=OpenApiParameter.QUERY,
             )
         ],
@@ -196,7 +200,7 @@ class SubmitAdviceView(SubmitReviewView):
                 name="assignee",
                 required=True,
                 type=OpenApiTypes.STR,
-                description=_("Assignee of the user task in camunda."),
+                description=_("Assignee of the review."),
                 location=OpenApiParameter.QUERY,
             )
         ],
@@ -217,7 +221,7 @@ class SubmitApprovalView(SubmitReviewView):
                 name="assignee",
                 required=True,
                 type=OpenApiTypes.STR,
-                description=_("Assignee of the user task in camunda."),
+                description=_("Assignee of the review."),
                 location=OpenApiParameter.QUERY,
             )
         ],
