@@ -1,5 +1,7 @@
 from functools import wraps
 
+from django.utils.encoding import force_str
+
 import requests
 from rest_framework import status
 from zds_client.client import ClientError
@@ -35,12 +37,14 @@ def catch_bag_zdserror(func: callable):
         try:
             return func(*args, **kwargs)
         except ClientError as exc:
-            status_code = exc.args[0].get(
-                "status", status.HTTP_500_INTERNAL_SERVER_ERROR
+            status_code = int(
+                exc.args[0].get("status", status.HTTP_500_INTERNAL_SERVER_ERROR)
             )
             code = exc.args[0].get("code", "error")
-            raise KadasterAPIException(
-                detail=exc.args[0], code=code, status_code=status_code
+            detail = exc.args[0].get("title", force_str(exc.args[0]))
+            exc = KadasterAPIException(
+                detail=detail, code=code, status_code=status_code
             )
+            raise exc
 
     return wrapped

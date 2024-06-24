@@ -153,12 +153,10 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         url.args["q"] = "some-street"
 
         response = self.client.get(url.url)
-        results = response.json()
+        detail = response.json()["detail"]
         self.assertEqual(
-            results,
-            {
-                "detail": "400 Client Error: None for url: https://location-server-kadaster.nl/suggest?q=some-street&fq=bron%3Abag+AND+type%3Aadres"
-            },
+            detail,
+            "400 Client Error: None for url: https://location-server-kadaster.nl/suggest?q=some-street&fq=bron%3Abag+AND+type%3Aadres",
         )
         self.assertEqual(response.status_code, 400)
 
@@ -170,12 +168,10 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         url.args["id"] = address_id
 
         response = self.client.get(url.url)
-        results = response.json()
+        detail = response.json()["detail"]
         self.assertEqual(
-            results,
-            {
-                "detail": "404 Client Error: None for url: https://location-server-kadaster.nl/lookup?id=adr-09asnd9as0ndas09dnas09ndsa"
-            },
+            detail,
+            "404 Client Error: None for url: https://location-server-kadaster.nl/lookup?id=adr-09asnd9as0ndas09dnas09ndsa",
         )
         self.assertEqual(response.status_code, 404)
 
@@ -188,10 +184,10 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         url.args["id"] = address_id
 
         response = self.client.get(url.url)
-        results = response.json()
+        detail = response.json()["detail"]
         self.assertEqual(
-            results,
-            {"detail": "Invalid ID provided."},
+            detail,
+            "Invalid ID provided.",
         )
         self.assertEqual(response.status_code, 400)
 
@@ -473,14 +469,15 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 404)
-        results = response.json()
+        detail = response.json()["detail"]
         self.assertEqual(
-            results,
-            {
-                "status": "404",
-                "title": "Opgevraagde resource bestaat niet.",
-                "code": "notFound",
-            },
+            detail,
+            "Opgevraagde resource bestaat niet.",
+        )
+        title = response.json()["title"]
+        self.assertEqual(
+            title,
+            "Kadaster API error.",
         )
 
     def test_fail_get_verblijfsobject(self, m):
@@ -551,10 +548,8 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
         response = self.client.get(url.url)
         self.assertEqual(response.status_code, 404)
-        results = response.json()
+        detail = response.json()["detail"]
         self.assertEqual(
-            results,
-            {
-                "detail": "verblijfsobject not found for adresseerbaarobject_id 9999999999999991"
-            },
+            detail,
+            "verblijfsobject not found for adresseerbaarobject_id 9999999999999991",
         )

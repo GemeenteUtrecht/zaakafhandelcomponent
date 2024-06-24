@@ -5,6 +5,8 @@ from rest_framework.exceptions import APIException
 
 
 class KadasterAPIException(APIException):
+    default_detail = _("Kadaster API error.")
+
     def __init__(
         self,
         detail=None,

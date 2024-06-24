@@ -73,7 +73,11 @@ def _do_request(
     headers: Optional[dict] = None,
 ) -> dict:
     results = client.request(
-        url, operation_id, method="GET", expected_status=200, headers=headers
+        url,
+        operation_id,
+        method=method,
+        expected_status=expected_status,
+        headers=headers,
     )
     return results
 
