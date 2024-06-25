@@ -1,3 +1,6 @@
+import os
+from unittest.mock import patch
+
 from django.urls import reverse
 
 import requests_mock
@@ -16,6 +19,7 @@ KADASTER_API_ROOT = "https://some-kadaster.nl/lvbag/individuelebevragingen/v2/"
 LOCATION_SERVER_ROOT = "https://location-server-kadaster.nl/"
 
 
+@patch.dict(os.environ, {"DEBUG": "False"})
 @requests_mock.Mocker()
 class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
@@ -177,7 +181,8 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
     def test_fail_get_address_lookup_too_many_found(self, m):
         address_id = "adr-09asnd9as0ndas09dnas09ndsa"
-        response = {"response": {"numFound": 2}}
+        num_found = 2
+        response = {"response": {"numFound": num_found}}
         m.get(f"{LOCATION_SERVER_ROOT}lookup?id={address_id}", json=response)
 
         url = furl(reverse("kadaster:adres-pand"))
@@ -187,9 +192,9 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         detail = response.json()["detail"]
         self.assertEqual(
             detail,
-            "Invalid ID provided.",
+            "Found %s addresses. Invalid ID provided." % num_found,
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 500)
 
     def test_find_pand(self, m):
         # Mock locatie server lookup response
@@ -477,7 +482,7 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         title = response.json()["title"]
         self.assertEqual(
             title,
-            "Kadaster API error.",
+            "An error occurred in an external API.",
         )
 
     def test_fail_get_verblijfsobject(self, m):

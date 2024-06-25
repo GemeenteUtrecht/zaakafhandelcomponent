@@ -1,10 +1,12 @@
 import logging
 import os
-from typing import List, Union
+from typing import List, Optional, Union
 
 from django.forms.utils import ErrorList
+from django.utils.encoding import force_str
 from django.utils.translation import ugettext_lazy as _
 
+from requests import HTTPError
 from rest_framework import exceptions, serializers
 from rest_framework.exceptions import (
     APIException,
@@ -25,8 +27,26 @@ from vng_api_common.views import (
     drf_exceptions,
     status,
 )
+from zds_client.client import ClientError
 
 logger = logging.getLogger(__name__)
+
+
+class ExternalAPIException(APIException):
+    default_detail = _("An error occurred in an external API.")
+
+    def __init__(
+        self,
+        default_detail: Optional[str] = None,
+        detail: Optional[str] = None,
+        code: str = "error",
+        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
+    ):
+        if default_detail:
+            self.default_detail = default_detail
+
+        super().__init__(detail=detail, code=code)
+        self.status_code = status_code
 
 
 class ServiceConfigError(APIException):
@@ -150,9 +170,31 @@ def vng_exception_handler(exc, context):
         # make sure the exception still ends up in Sentry
         sentry_client.captureException()
 
-        # unkown type, so we use the generic Internal Server Error
-        exc = drf_exceptions.APIException("Internal Server Error")
-        response = Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if isinstance(exc, HTTPError):
+            status_code = getattr(
+                exc.response, "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            exc = ExternalAPIException(
+                detail=exc.args[0],
+                status_code=status_code,
+            )
+            response = Response(status=status_code)
+        elif isinstance(exc, ClientError):
+            status_code = int(
+                exc.args[0].get("status", status.HTTP_500_INTERNAL_SERVER_ERROR)
+            )
+            code = exc.args[0].get("code", "error")
+            detail = exc.args[0].get("title", force_str(exc.args[0]))
+            exc = ExternalAPIException(
+                detail=detail,
+                code=code,
+                status_code=status_code,
+            )
+            response = Response(status=status_code)
+        else:
+            # unkown type, so we use the generic Internal Server Error
+            exc = drf_exceptions.APIException("Internal Server Error")
+            response = Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     request = context.get("request")
     serializer = HandledException.as_serializer(
