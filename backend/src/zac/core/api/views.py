@@ -72,7 +72,6 @@ from ..services import (
     delete_zaak_eigenschap,
     delete_zaakobject,
     fetch_latest_audit_trail_data_document,
-    fetch_object,
     fetch_zaak_eigenschap,
     fetch_zaakobject,
     fetch_zaaktype,

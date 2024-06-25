@@ -1,8 +1,9 @@
+import os
 from copy import deepcopy
 from unittest.mock import patch
 
 from django.urls import reverse
-import os
+
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
