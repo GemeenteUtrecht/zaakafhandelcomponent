@@ -54,7 +54,6 @@ from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
     fetch_objecttype_version,
     fetch_objecttypes,
-    relate_object_to_zaak,
     search_objects,
     update_document,
     update_zaak_eigenschap,
@@ -1438,24 +1437,7 @@ class ZaakObjectChangeView(views.APIView):
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(self.request, zaak)
 
-        try:
-            object = fetch_object(serializer.data["object"])
-        except ClientError as exc:
-            raise serializers.ValidationError(
-                _(
-                    "Fetching OBJECT with URL: `{object}` raised a Client Error with detail: `{detail}`.".format(
-                        object=self.initial_data["object"], detail=exc.args[0]["detail"]
-                    )
-                )
-            )
-        if object["record"]["data"].get("afgestoten", False):
-            raise serializers.ValidationError(_("Object is `afgestoten`."))
-
-        try:
-            created_zaakobject = relate_object_to_zaak(serializer.validated_data)
-        except ClientError as exc:
-            raise ValidationError(detail=exc.args)
-
+        created_zaakobject = serializer.save()
         invalidate_zaakobjecten_cache(zaak)
         return Response(status=201, data=created_zaakobject)
 
