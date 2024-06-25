@@ -19,6 +19,17 @@ class ZaaktypenFilterSet(ApiFilterSet):
         help_text=_("If `True` only show the active versions of ZAAKTYPEs."),
     )
 
+    def validate_domein(self, domein):
+        catalogi = get_catalogi()
+        catalogus = [cat for cat in catalogi if cat.domein.lower() == domein.lower()]
+        if not catalogus:
+            raise serializers.ValidationError(
+                _("Could not find a CATALOGUS with `domein`: `{val}`.").format(
+                    val=domein
+                )
+            )
+        return domein
+
     def filter_q(self, results, value) -> list:
         return [
             zaaktype
@@ -29,12 +40,6 @@ class ZaaktypenFilterSet(ApiFilterSet):
     def filter_domein(self, results, value) -> list:
         catalogi = get_catalogi()
         catalogus = [cat for cat in catalogi if cat.domein.lower() == value.lower()]
-        if not catalogus:
-            raise serializers.ValidationError(
-                _("Could not find a CATALOGUS with `domein`: `{val}`.").format(
-                    val=value
-                )
-            )
         return [
             zaaktype
             for zaaktype in results

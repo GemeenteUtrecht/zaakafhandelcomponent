@@ -52,18 +52,26 @@ class BaseApiFilterSet:
                 self._serializer = Serializer(data=self.data)
             else:
                 self._serializer = Serializer()
+
+        for field in self._serializer._writable_fields:
+            if validate_field := getattr(self, "validate_" + field.field_name, None):
+                setattr(
+                    self._serializer, "validate_" + field.field_name, validate_field
+                )
+
         return self._serializer
 
     def is_valid(self):
         """
         Return True if the underlying serializer has no errors, or False otherwise.
         """
-        return self.is_bound and self.serializer.is_valid()
+        return self.is_bound and self.serializer.is_valid(raise_exception=True)
 
     @property
     def errors(self):
         """
         Return an ErrorDict for the data provided for the underlying form.
+
         """
         return self.serializer.errors
 
