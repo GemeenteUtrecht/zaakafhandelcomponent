@@ -505,7 +505,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(
-            response.json()['invalidParams'],
+            response.json()["invalidParams"],
             [
                 {
                     "name": "type",

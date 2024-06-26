@@ -190,14 +190,16 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "waarde": [
-                    "EIGENSCHAP met `naam`: `some-other-property` bestaat niet voor ZAAKTYPE met `omschrijving`: `{omschrijving}` van ZAAK met `identificatie`: `ZAAK-2020-0010`.".format(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "waarde",
+                    "code": "invalid",
+                    "reason": "EIGENSCHAP met `naam`: `some-other-property` bestaat niet voor ZAAKTYPE met `omschrijving`: `{omschrijving}` van ZAAK met `identificatie`: `ZAAK-2020-0010`.".format(
                         omschrijving=self.zaaktype["omschrijving"]
-                    )
-                ]
-            },
+                    ),
+                }
+            ],
         )
 
     def test_delete_zaak_eigenschap(self, m):
@@ -254,7 +256,10 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.delete(endpoint)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("url" in response.json())
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [{"name": "url", "code": "required", "reason": "Dit veld is vereist."}],
+        )
 
     def test_patch_zaak_eigenschap_tekst(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -559,7 +564,16 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.patch(self.endpoint, data={"waarde": "new"})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("waarde" in response.json())
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "waarde",
+                    "code": "invalid",
+                    "reason": "Een geldig nummer is vereist.",
+                }
+            ],
+        )
 
     def test_patch_zaak_eigenschap_waarde_not_found_in_waardenverzameling(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
@@ -602,12 +616,14 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.patch(self.endpoint, data={"waarde": 4})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "waarde": [
-                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` krijgen uit: `[1, 2, 3]`. Gegeven `waarde`: `4.00`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "waarde",
+                    "code": "invalid",
+                    "reason": "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` krijgen uit: `[1, 2, 3]`. Gegeven `waarde`: `4.00`.",
+                }
+            ],
         )
 
     def test_patch_zaak_eigenschap_waarde_not_found_in_camundastartforms(self, m):
@@ -726,12 +742,14 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.patch(self.endpoint, data={"waarde": 4})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "waarde": [
-                    "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` krijgen uit: `['1', '2']`. Gegeven `waarde`: `4.00`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "waarde",
+                    "code": "invalid",
+                    "reason": "ZAAKEIGENSCHAP met `naam`: `some-property` moet een `waarde` krijgen uit: `['1', '2']`. Gegeven `waarde`: `4.00`.",
+                }
+            ],
         )
 
     def test_patch_without_url(self, m):
@@ -740,7 +758,10 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.patch(endpoint, data={"waarde": "new"})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("url" in response.json())
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [{"name": "url", "code": "required", "reason": "Dit veld is vereist."}],
+        )
 
 
 class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
