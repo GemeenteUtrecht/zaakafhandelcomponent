@@ -505,12 +505,14 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(
-            response.json(),
-            {
-                "type": [
-                    "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/2 not found."
-                ]
-            },
+            response.json()['invalidParams'],
+            [
+                {
+                    "name": "type",
+                    "code": "invalid",
+                    "reason": "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/2 not found.",
+                }
+            ],
         )
 
     def test_filter_objecttype_is_meta(self, m):
@@ -578,10 +580,12 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(
-            response.json(),
-            {
-                "type": [
-                    "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/12345 is a `meta`-objecttype."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "type",
+                    "code": "invalid",
+                    "reason": "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/12345 is a `meta`-objecttype.",
+                }
+            ],
         )
