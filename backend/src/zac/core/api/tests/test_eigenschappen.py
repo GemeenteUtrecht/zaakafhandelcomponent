@@ -384,9 +384,18 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
+            response.json()["invalidParams"],
             [
-                "ZAAKTYPE en (`zaaktype_identificatie` en CATALOGUS) zijn elkaar uitsluitend."
+                {
+                    "name": "zaaktype",
+                    "code": "invalid",
+                    "reason": "Voer een geldige URL in.",
+                },
+                {
+                    "name": "catalogus",
+                    "code": "invalid",
+                    "reason": "Voer een geldige URL in.",
+                },
             ],
         )
 
@@ -399,9 +408,13 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
+            response.json()["invalidParams"],
             [
-                "De CATALOGUS en `zaaktype_identificatie` zijn beide vereist als 1 is opgegeven."
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "De CATALOGUS en `zaaktype_identificatie` zijn beide vereist als 1 is opgegeven.",
+                }
             ],
         )
 
@@ -414,11 +427,30 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             self.endpoint, {"catalogus": "some-url", "zaaktype_identificatie": "ZT1"}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"catalogus": ["Voer een geldige URL in."]})
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "catalogus",
+                    "code": "invalid",
+                    "reason": "Voer een geldige URL in.",
+                }
+            ],
+        )
 
         response = self.client.get(self.endpoint, {"zaaktype": "some-url"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"zaaktype": ["Voer een geldige URL in."]})
+
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "zaaktype",
+                    "reason": "Voer een geldige URL in.",
+                }
+            ],
+        )
 
     @patch(
         "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
