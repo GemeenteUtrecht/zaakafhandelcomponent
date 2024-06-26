@@ -1,3 +1,4 @@
+import os
 from datetime import date
 from io import BytesIO
 from os import path
@@ -542,6 +543,7 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
         mock_search_informatieobjects.assert_called()
 
 
+@patch.dict(os.environ, {"DEBUG": "False"})
 @requests_mock.Mocker()
 class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
     endpoint = reverse_lazy("zaak-document")
@@ -814,8 +816,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json()["nonFieldErrors"],
-            ["'informatieobjecttype' is required when 'file' is provided"],
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "'informatieobjecttype' is required when 'file' is provided",
+                }
+            ],
         )
 
     def test_add_document_with_url(self, m):
@@ -949,7 +957,16 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         }
         response = self.client.post(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("url" in response.json())
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "url",
+                    "code": "invalid",
+                    "reason": "404 Client Error: None for url: %s" % DOCUMENT_URL,
+                }
+            ],
+        )
 
     def test_add_document_with_file_and_url(self, m):
         user = SuperUserFactory.create()
@@ -968,8 +985,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         response = self.client.post(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json()["nonFieldErrors"],
-            ["'url' and 'file' are mutually exclusive and can't be provided together."],
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "'url' and 'file' are mutually exclusive and can't be provided together.",
+                }
+            ],
         )
 
     def test_add_document_no_file_no_url(self, m):
@@ -986,8 +1009,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json()["nonFieldErrors"],
-            ["Either 'url' or 'file' should be provided."],
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "Either 'url' or 'file' should be provided.",
+                }
+            ],
         )
 
     def test_add_document_with_file_filename_already_exists(self, m):
@@ -1032,12 +1061,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         mock_search_informatieobjects.assert_called()
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "`bestandsnaam`: `some-name.txt` already exists. Please choose a unique `bestandsnaam`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "`bestandsnaam`: `some-name.txt` already exists. Please choose a unique `bestandsnaam`.",
+                }
+            ],
         )
 
     def test_patch_document_no_url_no_reden(self, m):
@@ -1049,13 +1080,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         response = self.client.patch(self.endpoint, post_data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        data = response.json()
-        expected_data = {
-            "reden": ["Dit veld is vereist."],
-            "url": ["Dit veld is vereist."],
-            "zaak": ["Dit veld is vereist."],
-        }
-        self.assertEqual(data, expected_data)
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {"name": "reden", "code": "required", "reason": "Dit veld is vereist."},
+                {"name": "url", "code": "required", "reason": "Dit veld is vereist."},
+                {"name": "zaak", "code": "required", "reason": "Dit veld is vereist."},
+            ],
+        )
 
     def test_patch_document_wrong_document(self, m):
         user = SuperUserFactory.create()
@@ -1081,11 +1113,16 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         mock_search_informatieobjects.assert_called()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        data = response.json()
-        expected_data = {
-            "nonFieldErrors": [f"Het document is ongerelateerd aan ZAAK-2020-0010."]
-        }
-        self.assertEqual(data, expected_data)
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "Het document is ongerelateerd aan ZAAK-2020-0010.",
+                }
+            ],
+        )
 
     def test_patch_document_already_locked(self, m):
         user = SuperUserFactory.create()
@@ -1124,7 +1161,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         mock_search_informatieobjects.assert_called()
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.json(), {"error": "dit is foute boel"})
+        self.assertEqual(response.json()["detail"], "{'error': 'dit is foute boel'}")
 
     def test_patch_document(self, m):
         user = SuperUserFactory.create()
@@ -1304,12 +1341,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
         mock_search_informatieobjects.assert_called()
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    f'INFORMATIEOBJECTTYPE `https://open-zaak.nl/catalogi/api/v1/informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1d` is not related to ZAAKTYPE `{self.zaaktype["omschrijving"]}`.'
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "INFORMATIEOBJECTTYPE `https://open-zaak.nl/catalogi/api/v1/informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1d` is not related to ZAAKTYPE `ZT1`.",
+                }
+            ],
         )
 
     def test_patch_document_filename_already_exists(self, m):
@@ -1353,13 +1392,16 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             return_value=search_informatieobjects,
         ) as mock_search_informatieobjects:
             response = self.client.patch(self.endpoint, post_data, format="multipart")
+
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "`bestandsnaam`: `some-bestandsnaam-2` already exists. Please choose a unique `bestandsnaam`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "`bestandsnaam`: `some-bestandsnaam-2` already exists. Please choose a unique `bestandsnaam`.",
+                }
+            ],
         )
 
     def test_add_document_with_unallowed_file_extension(self, m):
@@ -1420,12 +1462,14 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "file": [
-                    "File format not allowed. Please use one of the following file formats: CSV, DOC, DOCX, EML, JPEG, MBOX, MSG, ODP, ODS, ODT, PDF, PNG, PPT, PPTX, TXT, TIFF, XLS, XLSX."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "file",
+                    "code": "invalid",
+                    "reason": "File format not allowed. Please use one of the following file formats: CSV, DOC, DOCX, EML, JPEG, MBOX, MSG, ODP, ODS, ODT, PDF, PNG, PPT, PPTX, TXT, TIFF, XLS, XLSX.",
+                }
+            ],
         )
 
     def test_add_document_with_unallowed_filename(self, m):
@@ -1486,10 +1530,12 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "file": [
-                    "Only alphanumerical characters, whitespaces, -_() and 1 file extension are allowed."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "file",
+                    "code": "invalid",
+                    "reason": "Only alphanumerical characters, whitespaces, -_() and 1 file extension are allowed.",
+                }
+            ],
         )

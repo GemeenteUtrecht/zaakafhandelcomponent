@@ -119,7 +119,6 @@ from .permissions import (
     CanForceEditClosedZaak,
     CanForceEditClosedZaken,
     CanHandleAccessRequests,
-    CanListZaakDocuments,
     CanReadOrUpdateZaken,
     CanReadZaken,
     CanUpdateZaken,
@@ -945,10 +944,7 @@ class ZaakDocumentView(views.APIView):
 
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         document_data = self.get_document_data(serializer.validated_data, zaak)
-        try:
-            document = update_document(document_url, document_data, audit_line)
-        except ClientError as err:
-            raise APIException(err.args[0])
+        document = update_document(document_url, document_data, audit_line)
 
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype
