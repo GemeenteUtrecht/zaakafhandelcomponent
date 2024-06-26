@@ -54,12 +54,14 @@ class CacheResetAPITests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "Pattern is not allowed for non-redis caches. Please provide a key."
-                ]
-            },
+            response.json()['invalidParams'],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "Pattern is not allowed for non-redis caches. Please provide a key.",
+                }
+            ],
         )
 
     @patch("zac.core.management.serializers.is_redis_cache", return_value=True)
