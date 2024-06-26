@@ -54,7 +54,7 @@ class CacheResetAPITests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json()['invalidParams'],
+            response.json()["invalidParams"],
             [
                 {
                     "name": "nonFieldErrors",

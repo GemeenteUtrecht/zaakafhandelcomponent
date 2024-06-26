@@ -17,7 +17,6 @@ from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import paginated_response
 
-from ..api import create_zaakobject_document
 from ..documents import ObjectDocument, ZaakDocument, ZaakObjectDocument
 from .utils import ESMixin
 
@@ -195,7 +194,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "bronorganisatie": "some-bronorganisatie",
                     "omschrijving": "some-omschrijving",
                     "identificatie": "some-identificatie",
-                    "va_order": 27,
+                    "va_order": 114,
                 }
             ],
         )
