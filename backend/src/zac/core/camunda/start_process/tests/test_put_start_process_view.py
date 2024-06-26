@@ -321,12 +321,14 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "bijlagen": [
-                    "Een INFORMATIEOBJECT met INFORMATIEOBJECTTYPE `omschrijving`: `SomeDocument` is vereist."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "bijlagen",
+                    "code": "invalid",
+                    "reason": "Een INFORMATIEOBJECT met INFORMATIEOBJECTTYPE `omschrijving`: `SomeDocument` is vereist.",
+                }
+            ],
         )
 
     @patch(
@@ -379,12 +381,14 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "rollen": [
-                    "Vereiste ROLTYPE `omschrijving`: `Some Rol` is niet gevonden in ROLlen toebehorend aan ZAAK."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "rollen",
+                    "code": "invalid",
+                    "reason": "Vereiste ROLTYPE `omschrijving`: `Some Rol` is niet gevonden in ROLlen toebehorend aan ZAAK.",
+                }
+            ],
         )
 
     @patch(
@@ -439,12 +443,14 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "rollen": [
-                    "`betrokkene_type` van ROL met ROLTYPE `omschrijving`: `Some Rol` komt niet overeen met vereist `betrokkene_type`: `medewerker`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "rollen",
+                    "code": "invalid",
+                    "reason": "`betrokkene_type` van ROL met ROLTYPE `omschrijving`: `Some Rol` komt niet overeen met vereist `betrokkene_type`: `medewerker`.",
+                }
+            ],
         )
 
     @patch(
@@ -496,10 +502,12 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "zaakeigenschappen": [
-                    "Een ZAAKEIGENSCHAP met `naam`: `Some Eigenschap 1` is vereist."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "zaakeigenschappen",
+                    "code": "invalid",
+                    "reason": "Een ZAAKEIGENSCHAP met `naam`: `Some Eigenschap 1` is vereist.",
+                }
+            ],
         )
