@@ -579,14 +579,16 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "ROLTYPE {rt} is niet onderdeel van de ROLTYPEs van ZAAKTYPE {zt}.".format(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "ROLTYPE {rt} is niet onderdeel van de ROLTYPEs van ZAAKTYPE {zt}.".format(
                         rt=self.roltype["url"], zt=self.zaaktype["url"]
-                    )
-                ]
-            },
+                    ),
+                }
+            ],
         )
 
     def test_create_rol_mutually_exclusive_fields(self, m):
@@ -617,12 +619,14 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "`betrokkene` en `betrokkene_type` zijn elkaar uitsluitend."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "`betrokkene` en `betrokkene_type` zijn elkaar uitsluitend.",
+                }
+            ],
         )
 
         with patch("zac.core.api.views.create_rol", return_value=[]):
@@ -638,12 +642,14 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "`betrokkene` en `betrokkene_identificatie` zijn elkaar uitsluitend."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "`betrokkene` en `betrokkene_identificatie` zijn elkaar uitsluitend.",
+                }
+            ],
         )
 
     def test_create_rol_dependent_fields(self, m):
@@ -672,8 +678,14 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {"betrokkeneIdentificatie": ["Dit veld is vereist."]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "betrokkeneIdentificatie",
+                    "code": "required",
+                    "reason": "Dit veld is vereist.",
+                }
+            ],
         )
 
     def test_destroy_rol(self, m):
@@ -723,12 +735,14 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "url": [
-                    "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "url",
+                    "code": "invalid",
+                    "reason": "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`.",
+                }
+            ],
         )
 
     def test_fail_destroy_rol_only_one_initiator(self, m):
@@ -754,12 +768,14 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "url": [
-                    "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "url",
+                    "code": "invalid",
+                    "reason": "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`.",
+                }
+            ],
         )
 
     @patch("zac.contrib.objects.oudbehandelaren.utils.register_old_behandelaar")
@@ -901,7 +917,16 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             self.endpoint + "?url=" + rol["url"],
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"url": ["ROL behoort niet toe aan ZAAK."]})
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "url",
+                    "code": "invalid",
+                    "reason": "ROL behoort niet toe aan ZAAK.",
+                }
+            ],
+        )
 
 
 class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
