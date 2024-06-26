@@ -53,11 +53,15 @@ class BaseApiFilterSet:
             else:
                 self._serializer = Serializer()
 
+        # Add proper validation
         for field in self._serializer._writable_fields:
             if validate_field := getattr(self, "validate_" + field.field_name, None):
                 setattr(
                     self._serializer, "validate_" + field.field_name, validate_field
                 )
+
+        if validate := getattr(self, "validate", None):
+            setattr(self._serializer, "validate", validate)
 
         return self._serializer
 

@@ -68,7 +68,7 @@ class EigenschappenFilterSet(ApiFilterSet):
         required=False, help_text=_("URL-reference of related CATALOGUS.")
     )
 
-    def is_valid(self):
+    def validate(self, data):
         zt = self.data.get("zaaktype")
         zti = self.data.get("zaaktype_identificatie")
         cat = self.data.get("catalogus")
@@ -86,7 +86,7 @@ class EigenschappenFilterSet(ApiFilterSet):
                     "The CATALOGUS and `zaaktype_identificatie` are both required if one is given."
                 )
             )
-        return super().is_valid()
+        return data
 
 
 class ZaakEigenschappenFilterSet(ApiFilterSet):
