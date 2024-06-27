@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from django.test import override_settings
@@ -315,6 +316,7 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
             ],
         )
 
+    @patch.dict(os.environ, {"DEBUG": "False"})
     @override_settings(
         CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-model-that-does-not-exist"
     )
@@ -338,8 +340,11 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "message": "No matching definition with id some-model-that-does-not-exist",
             },
         )
-        with self.assertRaises(HTTPError):
-            response = self.client.post(self.url, self.data)
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(
+            response.json()["detail"],
+            "404 Client Error: None for url: https://camunda.example.com/engine-rest/process-definition/key/some-model-that-does-not-exist/start",
+        )
 
     @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-model")
     def test_create_zaak(self, m):
