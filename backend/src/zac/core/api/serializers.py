@@ -76,6 +76,7 @@ from zac.core.services import (
     get_zaak,
     get_zaakobjecten,
     get_zaaktypen,
+    relate_object_to_zaak,
 )
 from zac.core.utils import build_absolute_url
 from zac.elasticsearch.searches import search_informatieobjects
@@ -1580,7 +1581,15 @@ class ZaakObjectProxySerializer(ProxySerializer):
                 raise serializers.ValidationError(
                     _("OBJECT is already related to ZAAK.")
                 )
+        object = fetch_object(self.initial_data["object"])
+        if object["record"]["data"].get("afgestoten", False):
+            raise serializers.ValidationError(_("Object is `afgestoten`."))
+
         return self.initial_data
+
+    def create(self, validated_data):
+        related_object = relate_object_to_zaak(validated_data)
+        return related_object
 
 
 class RecentlyViewedSerializer(serializers.Serializer):

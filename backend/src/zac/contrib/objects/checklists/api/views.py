@@ -163,7 +163,7 @@ class ZaakChecklistView(BaseZaakChecklistView):
             },
         )
         serializer.is_valid(raise_exception=True)
-        checklist = serializer.create()
+        checklist, created = serializer.create()
         invalidate_cache_fetch_checklist_object(zaak)
 
         # Add permissions:
@@ -172,7 +172,8 @@ class ZaakChecklistView(BaseZaakChecklistView):
         )
 
         return Response(
-            self.get_serializer(checklist).data, status=status.HTTP_201_CREATED
+            self.get_serializer(checklist).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
     @extend_schema(

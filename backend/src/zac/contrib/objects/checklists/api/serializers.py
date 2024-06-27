@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 from django.contrib.auth.models import Group
 from django.utils import timezone
@@ -219,20 +219,23 @@ class ChecklistSerializer(APIModelSerializer):
 
         return answers
 
-    def create(self) -> Checklist:
+    def create(self) -> Tuple[Checklist, bool]:
         # Final check before creation
         checklist = fetch_checklist(self.context["zaak"])
         if checklist:
-            raise serializers.ValidationError(_("Checklist already exists."))
+            return checklist, False
 
         data = {**self.data, "zaak": self.context["zaak"].url, "locked": False}
         create_meta_object_and_relate_to_zaak(
             "checklist", data, self.context["zaak"].url
         )
 
-        return factory(
-            Checklist,
-            data,
+        return (
+            factory(
+                Checklist,
+                data,
+            ),
+            True,
         )
 
     def update(self) -> bool:

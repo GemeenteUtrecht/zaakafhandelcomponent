@@ -60,7 +60,10 @@ class FetchMessagesTests(ClearCachesMixin, APITestCase):
     def test_fail_fetch_process_instances_no_zaak_url(self, m_request):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"zaakUrl": ["Dit veld is vereist."]})
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [{"code": "required", "name": "zaakUrl", "reason": "Dit veld is vereist."}],
+        )
 
     def test_fetch_messages(self, m_request):
         process_definition = {

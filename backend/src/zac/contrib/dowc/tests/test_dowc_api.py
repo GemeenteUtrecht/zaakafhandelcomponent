@@ -388,7 +388,10 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
             )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {"errors": "this is already locked"})
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [{"code": "invalid", "name": "errors", "reason": "this is already locked"}],
+        )
 
     def test_check_document_status_documenten(self, m):
         mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)

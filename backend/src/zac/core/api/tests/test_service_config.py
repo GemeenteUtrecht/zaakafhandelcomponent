@@ -54,8 +54,6 @@ class NoServiceConfigTests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(
-            response.json(),
-            {
-                "detail": f"De service voor de url {zaak['zaaktype']} is niet geconfigureerd in de admin."
-            },
+            response.json()["detail"],
+            f"De service voor de url {zaak['zaaktype']} is niet geconfigureerd in de admin.",
         )

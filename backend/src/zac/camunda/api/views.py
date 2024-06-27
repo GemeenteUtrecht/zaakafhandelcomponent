@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
 from django_camunda.utils import deserialize_variable, serialize_variable
+from django_filters.utils import translate_validation
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import HTTPError
@@ -45,7 +46,7 @@ from zac.core.services import client_from_url, fetch_zaaktype, get_roltypen, get
 from zgw.models import Zaak
 
 from ..user_tasks.history import get_camunda_history_for_zaak
-from .filters import CamundaFilterSet
+from .filters import CamundaFilterSet, zaakUrlFilterSet
 from .permissions import CanPerformTasks, CanSendMessages
 from .serializers import (
     BPMNSerializer,
@@ -114,8 +115,7 @@ class ProcessInstanceFetchView(APIView):
         filterset = self.filterset_class(
             data=self.request.query_params, request=self.request
         )
-        if not filterset.is_valid():
-            raise exceptions.ValidationError(filterset.errors)
+        filterset.is_valid(raise_exception=True)
 
         process_instances = get_top_level_process_instances(
             filterset.serializer.validated_data["zaakUrl"],
@@ -174,10 +174,10 @@ class FetchTaskView(APIView):
         filterset = self.filterset_class(
             data=self.request.query_params, request=self.request
         )
-        if not filterset.is_valid():
-            raise exceptions.ValidationError(filterset.errors)
+        filterset.is_valid(raise_exception=True)
+
         tasks = get_camunda_user_tasks_for_zaak(
-            zaak_url=filterset.serializer.validated_data["zaakUrl"],
+            zaak_url=filterset.data["zaakUrl"],
             exclude_zaak_creation=True,
         )
         serializer = self.serializer_class(tasks, many=True)
@@ -622,6 +622,7 @@ class GetBPMNView(APIView):
 
 class UserTaskHistoryView(APIView):
     permission_classes = (permissions.IsAuthenticated & CanReadZaken,)
+    filterset_class = zaakUrlFilterSet
 
     def get_serializer(self, **kwargs):
         return HistoricUserTaskSerializer(**kwargs)
@@ -641,12 +642,11 @@ class UserTaskHistoryView(APIView):
         ],
     )
     def get(self, request, *args, **kwargs):
-        zaak_url = request.GET.get("zaakUrl")
-        if not zaak_url:
-            raise exceptions.ValidationError(
-                _("Missing the `zaakUrl` query parameter.")
-            )
-
+        filterset = self.filterset_class(
+            data=self.request.query_params, request=self.request
+        )
+        filterset.is_valid(raise_exception=True)
+        zaak_url = filterset.data["zaakUrl"]
         user_task_history = get_camunda_history_for_zaak(zaak_url)
         user_task_history.sort(key=lambda obj: obj.task.created, reverse=True)
         serializer = self.get_serializer(instance=user_task_history, many=True)

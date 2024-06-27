@@ -54,7 +54,6 @@ from zac.core.models import MetaObjectTypesConfig
 from zac.core.services import (
     fetch_objecttype_version,
     fetch_objecttypes,
-    relate_object_to_zaak,
     search_objects,
     update_document,
     update_zaak_eigenschap,
@@ -73,7 +72,6 @@ from ..services import (
     delete_zaak_eigenschap,
     delete_zaakobject,
     fetch_latest_audit_trail_data_document,
-    fetch_object,
     fetch_zaak_eigenschap,
     fetch_zaakobject,
     fetch_zaaktype,
@@ -121,7 +119,6 @@ from .permissions import (
     CanForceEditClosedZaak,
     CanForceEditClosedZaken,
     CanHandleAccessRequests,
-    CanListZaakDocuments,
     CanReadOrUpdateZaken,
     CanReadZaken,
     CanUpdateZaken,
@@ -947,10 +944,7 @@ class ZaakDocumentView(views.APIView):
 
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         document_data = self.get_document_data(serializer.validated_data, zaak)
-        try:
-            document = update_document(document_url, document_data, audit_line)
-        except ClientError as err:
-            raise APIException(err.args[0])
+        document = update_document(document_url, document_data, audit_line)
 
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype
@@ -1438,24 +1432,7 @@ class ZaakObjectChangeView(views.APIView):
         zaak = get_zaak(zaak_url=zaak_url)
         self.check_object_permissions(self.request, zaak)
 
-        try:
-            object = fetch_object(serializer.data["object"])
-        except ClientError as exc:
-            raise serializers.ValidationError(
-                _(
-                    "Fetching OBJECT with URL: `{object}` raised a Client Error with detail: `{detail}`.".format(
-                        object=self.initial_data["object"], detail=exc.args[0]["detail"]
-                    )
-                )
-            )
-        if object["record"]["data"].get("afgestoten", False):
-            raise serializers.ValidationError(_("Object is `afgestoten`."))
-
-        try:
-            created_zaakobject = relate_object_to_zaak(serializer.validated_data)
-        except ClientError as exc:
-            raise ValidationError(detail=exc.args)
-
+        created_zaakobject = serializer.save()
         invalidate_zaakobjecten_cache(zaak)
         return Response(status=201, data=created_zaakobject)
 

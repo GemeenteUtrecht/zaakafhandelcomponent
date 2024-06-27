@@ -108,8 +108,14 @@ class RoleAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {"permissions": [['"some permission" is een ongeldige keuze.']]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid_choice",
+                    "name": "permissions.0",
+                    "reason": '"some permission" is een ongeldige keuze.',
+                }
+            ],
         )
 
     def test_update_role(self):
@@ -135,8 +141,14 @@ class RoleAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {"permissions": [['"some permission" is een ongeldige keuze.']]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid_choice",
+                    "name": "permissions.0",
+                    "reason": '"some permission" is een ongeldige keuze.',
+                }
+            ],
         )
 
     def test_destroy_role(self):

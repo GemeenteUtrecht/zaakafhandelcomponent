@@ -17,6 +17,7 @@ psutil
 # zgw-integration
 gemma-zds-client>=1.0.1
 zgw-consumers[drf]<=0.23.2
+vng-api-common
 
 # Framework libraries
 Django

@@ -628,12 +628,22 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
     def test_create_item_column_not_exist(self, m):
         self._setUpMock(m)
         url = reverse("boarditem-list")
-        data = {"object": ZAAK_URL, "column_uuid": str(uuid.uuid4())}
+        col_uuid = str(uuid.uuid4())
+        data = {"object": ZAAK_URL, "column_uuid": col_uuid}
 
         response = self.client.post(url, data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("columnUuid" in response.json())
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "columnUuid",
+                    "code": "does_not_exist",
+                    "reason": f"Object met uuid={col_uuid} bestaat niet.",
+                }
+            ],
+        )
 
     def test_create_item_duplicate_object_in_the_board(self, m):
         self._setUpMock(m)
@@ -647,7 +657,14 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(), {"nonFieldErrors": ["Dit OBJECT staat al op het bord"]}
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "nonFieldErrors",
+                    "reason": "Dit OBJECT staat al op het bord",
+                }
+            ],
         )
 
     def test_update_item_column_success(self, m):
@@ -679,8 +696,14 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {"columnUuid": ["De bord van het item kan niet worden veranderd"]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "columnUuid",
+                    "reason": "De bord van het item kan niet worden veranderd",
+                }
+            ],
         )
 
     def test_update_item_change_object(self, m):
@@ -693,7 +716,14 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
         response = self.client.patch(url, {"object": f"{ZAKEN_ROOT}/zaak/some-zaak"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(), {"object": ["Dit veld kan niet veranderd worden."]}
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "object",
+                    "reason": "Dit veld kan niet veranderd worden.",
+                }
+            ],
         )
 
     def test_delete_item_success(self, m):

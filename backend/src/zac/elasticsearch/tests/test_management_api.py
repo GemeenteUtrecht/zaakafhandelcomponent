@@ -51,12 +51,14 @@ class IndexElasticsearchAPITests(APITestCase):
         response = self.client.post(self.endpoint, HTTP_AUTHORIZATION=f"Token {token}")
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "Set one of `reindex_last`, `reindex_zaak` or `reset_indices`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "Set one of `reindex_last`, `reindex_zaak` or `reset_indices`.",
+                }
+            ],
         )
 
     def test_invalid_reindex_both_last_and_zaak(self):
@@ -70,12 +72,14 @@ class IndexElasticsearchAPITests(APITestCase):
             )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    "Set one of `reindex_last`, `reindex_zaak` or `reset_indices`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": "Set one of `reindex_last`, `reindex_zaak` or `reset_indices`.",
+                }
+            ],
         )
 
     @patch("zac.elasticsearch.management.views.call_command")
@@ -116,12 +120,14 @@ class IndexElasticsearchAPITests(APITestCase):
             )
             self.assertEqual(response.status_code, 400)
             self.assertEqual(
-                response.json(),
-                {
-                    "reindexZaak": [
-                        "De service voor de url https://some-zaak.nl/ is niet geconfigureerd in de admin."
-                    ]
-                },
+                response.json()["invalidParams"],
+                [
+                    {
+                        "name": "reindexZaak",
+                        "code": "invalid",
+                        "reason": "De service voor de url https://some-zaak.nl/ is niet geconfigureerd in de admin.",
+                    }
+                ],
             )
         with self.subTest("Success"):
             zaak = MagicMock()

@@ -2,7 +2,7 @@ import copy
 from collections import OrderedDict
 
 from django_filters.rest_framework.backends import DjangoFilterBackend
-from rest_framework import fields
+from rest_framework import exceptions, fields
 from rest_framework.serializers import Serializer
 
 
@@ -52,18 +52,30 @@ class BaseApiFilterSet:
                 self._serializer = Serializer(data=self.data)
             else:
                 self._serializer = Serializer()
+
+        # Add proper validation
+        for field in self._serializer._writable_fields:
+            if validate_field := getattr(self, "validate_" + field.field_name, None):
+                setattr(
+                    self._serializer, "validate_" + field.field_name, validate_field
+                )
+
+        if validate := getattr(self, "validate", None):
+            setattr(self._serializer, "validate", validate)
+
         return self._serializer
 
     def is_valid(self):
         """
         Return True if the underlying serializer has no errors, or False otherwise.
         """
-        return self.is_bound and self.serializer.is_valid()
+        return self.is_bound and self.serializer.is_valid(raise_exception=True)
 
     @property
     def errors(self):
         """
         Return an ErrorDict for the data provided for the underlying form.
+
         """
         return self.serializer.errors
 
@@ -103,4 +115,7 @@ class ApiFilterSet(BaseApiFilterSet, metaclass=ApiFilterSetMetaclass):
     * for each filter 'filter_<name>' method of the FilterSet should be defined
     """
 
-    pass
+    def is_valid(self, raise_exception: bool = True):
+        if not super().is_valid() and raise_exception:
+            raise exceptions.ValidationError(self.errors)
+        return super().is_valid()

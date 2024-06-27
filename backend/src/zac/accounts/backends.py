@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 class LoggingBackendMozilla(OIDCAuthenticationBackend):
     def verify_claims(self, claims) -> bool:
         logger.info(claims)
-        print(claims)
         return super().verify_claims(claims)
 
 

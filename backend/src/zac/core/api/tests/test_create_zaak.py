@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from django.test import override_settings
@@ -231,14 +232,14 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "object": [
-                    "Fetching OBJECT with URL: "
-                    "`https://objects.nl/api/v2/objects/85e6c250-9f51-4286-8340-25109d0b96d1` "
-                    "raised a Client Error with detail: `Not found.`."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "object",
+                    "code": "invalid",
+                    "reason": "Fetching OBJECT with URL: `https://objects.nl/api/v2/objects/85e6c250-9f51-4286-8340-25109d0b96d1` raised a Client Error with detail: `Not found.`.",
+                }
+            ],
         )
 
     def test_create_zaak_wrong_organisatie_rsin(self, m):
@@ -252,13 +253,19 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "organisatieRsin": [
-                    "A RSIN has 9 digits.",
-                    "Zorg ervoor dat dit veld niet meer dan 9 karakters bevat.",
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "organisatieRsin",
+                    "code": "invalid",
+                    "reason": "A RSIN has 9 digits.",
+                },
+                {
+                    "name": "organisatieRsin",
+                    "code": "max_length",
+                    "reason": "Zorg ervoor dat dit veld niet meer dan 9 karakters bevat.",
+                },
+            ],
         )
 
     def test_create_zaak_zaak_omschrijving_too_long(self, m):
@@ -280,14 +287,14 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "zaakDetails": {
-                    "omschrijving": [
-                        "Zorg ervoor dat dit veld niet meer dan 80 karakters bevat.",
-                    ]
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "zaakDetails.omschrijving",
+                    "code": "max_length",
+                    "reason": "Zorg ervoor dat dit veld niet meer dan 80 karakters bevat.",
                 }
-            },
+            ],
         )
 
     def test_create_zaak_zaaktype_not_found(self, m):
@@ -299,14 +306,17 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.post(self.url, self.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {
-                "nonFieldErrors": [
-                    f"ZAAKTYPE met `identificatie`: `{self.zaaktype['identificatie']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}` of de gebruiker heeft de benodigde rechten niet."
-                ]
-            },
+            response.json()["invalidParams"],
+            [
+                {
+                    "name": "nonFieldErrors",
+                    "code": "invalid",
+                    "reason": f"ZAAKTYPE met `identificatie`: `{self.zaaktype['identificatie']}` kan niet worden gevonden in `{self.zaaktype['catalogus']}` of de gebruiker heeft de benodigde rechten niet.",
+                }
+            ],
         )
 
+    @patch.dict(os.environ, {"DEBUG": "False"})
     @override_settings(
         CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-model-that-does-not-exist"
     )
@@ -330,8 +340,11 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
                 "message": "No matching definition with id some-model-that-does-not-exist",
             },
         )
-        with self.assertRaises(HTTPError):
-            response = self.client.post(self.url, self.data)
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(
+            response.json()["detail"],
+            "404 Client Error: None for url: https://camunda.example.com/engine-rest/process-definition/key/some-model-that-does-not-exist/start",
+        )
 
     @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-model")
     def test_create_zaak(self, m):

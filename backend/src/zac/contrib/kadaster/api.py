@@ -1,11 +1,10 @@
-import copy
 from typing import List, Optional
 
 from django.utils.translation import gettext_lazy as _
 
 from furl import furl
 from rest_framework import status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import APIException, NotFound
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.client import ZGWClient
@@ -13,8 +12,6 @@ from zgw_consumers.client import ZGWClient
 from zac.contrib.kadaster.bag import A_DAY, LocationServer
 from zac.contrib.kadaster.client import override_zds_client
 from zac.contrib.kadaster.data import AddressSearchResponse, Pand, Verblijfsobject
-from zac.contrib.kadaster.decorators import catch_bag_zdserror
-from zac.contrib.kadaster.exceptions import KadasterAPIException
 from zac.contrib.kadaster.models import KadasterConfig
 from zac.utils.decorators import cache, optional_service
 
@@ -54,15 +51,13 @@ def _get_address_lookup(address_id: str) -> dict:
     client = get_location_server_client()
     results = client.lookup(address_id)
     if not results["numFound"] == 1:
-        raise KadasterAPIException(
-            detail="Invalid ID provided.",
+        raise APIException(
+            detail="Found %s addresses. Invalid ID provided." % results["numFound"],
             code="invalid",
-            status_code=status.HTTP_400_BAD_REQUEST,
         )
     return results["docs"][0]
 
 
-@catch_bag_zdserror
 @cache("kadaster:{url}", timeout=A_DAY)
 def _do_request(
     client,
@@ -73,7 +68,11 @@ def _do_request(
     headers: Optional[dict] = None,
 ) -> dict:
     results = client.request(
-        url, operation_id, method="GET", expected_status=200, headers=headers
+        url,
+        operation_id,
+        method=method,
+        expected_status=expected_status,
+        headers=headers,
     )
     return results
 

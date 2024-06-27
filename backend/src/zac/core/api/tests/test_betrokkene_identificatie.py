@@ -77,7 +77,7 @@ class RolBetrokkeneIdentificatiePermissionsTests(ClearCachesMixin, APITestCase):
         response = self.client.post(self.endpoint, self.payload)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
-            response.json(), {"detail": "Authenticatiegegevens zijn niet opgegeven."}
+            response.json()["detail"], "Authenticatiegegevens zijn niet opgegeven."
         )
 
     def test_wrong_http_authorization_format_in_header(self):
@@ -86,7 +86,7 @@ class RolBetrokkeneIdentificatiePermissionsTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
-            response.json(), {"detail": "Authenticatiegegevens zijn niet opgegeven."}
+            response.json()["detail"], "Authenticatiegegevens zijn niet opgegeven."
         )
 
     def test_correct_token_but_with_error_in_header(self):
@@ -94,7 +94,7 @@ class RolBetrokkeneIdentificatiePermissionsTests(ClearCachesMixin, APITestCase):
             self.endpoint, self.payload, HTTP_AUTHORIZATION="ApplicationToken 12341212"
         )
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json(), {"detail": "Ongeldige token."})
+        self.assertEqual(response.json()["detail"], "Ongeldige token.")
 
     def test_correct_token(self):
         response = self.client.post(self.endpoint, self.payload, **self.headers)

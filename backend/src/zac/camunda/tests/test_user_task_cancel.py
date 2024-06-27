@@ -112,10 +112,17 @@ class CancelTaskViewTests(ClearCachesMixin, APITestCase):
             self.url, data={"task": "fc9c465d-b0d7-11ec-a5f0-32fe9303dc32"}
         )
         self.assertEqual(response.status_code, 400)
-        expected_response = {
-            "task": ["No task found for id `fc9c465d-b0d7-11ec-a5f0-32fe9303dc32`"]
-        }
-        self.assertEqual(expected_response, response.json())
+        self.assertEqual(
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "task",
+                    "reason": "No task found for id "
+                    "`fc9c465d-b0d7-11ec-a5f0-32fe9303dc32`",
+                }
+            ],
+        )
 
     def test_user_task_is_not_killable(self, m):
         m.get(
@@ -148,8 +155,15 @@ class CancelTaskViewTests(ClearCachesMixin, APITestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json(),
-            {"task": ["Taak `Adviesvraag configureren` kan niet worden geannuleerd."]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "task",
+                    "reason": "Taak `Adviesvraag configureren` kan niet worden "
+                    "geannuleerd.",
+                }
+            ],
         )
 
     def test_cancel_user_task(self, m):

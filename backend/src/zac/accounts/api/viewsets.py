@@ -216,6 +216,15 @@ class AtomicPermissionViewSet(
             kwargs.update({"many": True})
         return mapping[self.request.method](*args, **kwargs)
 
+    def filter_queryset(self, queryset):
+        """
+        Only filter on list action
+
+        """
+        if self.action != "list":
+            self.filterset_class = None
+        return super().filter_queryset(queryset)
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -238,15 +247,6 @@ class AtomicPermissionViewSet(
         )
 
     def list(self, request, *args, **kwargs):
-        if not self.request.query_params.get("username"):
-            raise serializers.ValidationError(
-                "`username` is a required query parameter."
-            )
-        if not self.request.query_params.get("object_url"):
-            raise serializers.ValidationError(
-                "`object_url` is a required query parameter."
-            )
-
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)

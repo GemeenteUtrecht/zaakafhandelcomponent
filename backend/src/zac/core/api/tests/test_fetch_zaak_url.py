@@ -61,8 +61,8 @@ class ZaakDetailURLResponseTests(ClearCachesMixin, ESMixin, APITestCase):
         response = self.client.get(endpoint, **self.headers)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(
-            response.json(),
-            {"detail": "Niet gevonden."},
+            response.json()["detail"],
+            "Niet gevonden.",
         )
 
     def test_zaak_does_not_exist(self, m):
@@ -74,8 +74,8 @@ class ZaakDetailURLResponseTests(ClearCachesMixin, ESMixin, APITestCase):
         response = self.client.get(self.endpoint, **self.headers)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(
-            response.json(),
-            {"detail": "Niet gevonden."},
+            response.json()["detail"],
+            "Niet gevonden.",
         )
 
     def test_zaak_exists(self, m):
@@ -131,14 +131,14 @@ class ZaakDetailURLPermissionsTests(ClearCachesMixin, ESMixin, APITestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
-            response.json(), {"detail": "Authenticatiegegevens zijn niet opgegeven."}
+            response.json()["detail"], "Authenticatiegegevens zijn niet opgegeven."
         )
 
     def test_wrong_http_authorization_format_in_header(self, m):
         response = self.client.get(self.endpoint, HTTP_AUTHORIZATION="Token something")
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
-            response.json(), {"detail": "Authenticatiegegevens zijn niet opgegeven."}
+            response.json()["detail"], "Authenticatiegegevens zijn niet opgegeven."
         )
 
     def test_correct_token_but_with_error_in_header(self, m):
@@ -146,7 +146,7 @@ class ZaakDetailURLPermissionsTests(ClearCachesMixin, ESMixin, APITestCase):
             self.endpoint, HTTP_AUTHORIZATION="ApplicationToken 12341212"
         )
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json(), {"detail": "Ongeldige token."})
+        self.assertEqual(response.json()["detail"], "Ongeldige token.")
 
     def test_correct_token(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

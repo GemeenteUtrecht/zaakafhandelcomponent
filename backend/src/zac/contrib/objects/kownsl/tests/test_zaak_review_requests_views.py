@@ -549,8 +549,14 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                             response = self.client.patch(url, body)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {"nonFieldErrors": ["A locked review request can not be updated."]},
+            response.json()["invalidParams"],
+            [
+                {
+                    "code": "invalid",
+                    "name": "nonFieldErrors",
+                    "reason": "A locked review request can not be updated.",
+                }
+            ],
         )
 
 
@@ -872,8 +878,8 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(
-            response.json(),
-            {"detail": "Verzoek is op slot gezet door `Some First Some Last`."},
+            response.json()["detail"],
+            "Verzoek is op slot gezet door `Some First Some Last`.",
         )
 
     @requests_mock.Mocker()
@@ -902,7 +908,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(
-            response.json(), {"detail": "This review request is being reconfigured."}
+            response.json()["detail"], "This review request is being reconfigured."
         )
 
     @requests_mock.Mocker()
