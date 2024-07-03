@@ -690,8 +690,8 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
                             {
                                 "code": "invalid",
                                 "name": "formfield-01",
-                                "reason": "A ZAAKEIGENSCHAP with `name`: EIGENSCHAP "
-                                "requires a maximum length of 7.",
+                                "reason": "Een ZAAKEIGENSCHAP met `naam`: `EIGENSCHAP` mag een maximale "
+                                "lengte hebben van `7`.",
                             }
                         ],
                     )

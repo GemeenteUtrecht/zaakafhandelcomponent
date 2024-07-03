@@ -1346,7 +1346,7 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
                 {
                     "name": "nonFieldErrors",
                     "code": "invalid",
-                    "reason": "INFORMATIEOBJECTTYPE `https://open-zaak.nl/catalogi/api/v1/informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1d` is not related to ZAAKTYPE `ZT1`.",
+                    "reason": "De INFORMATIEOBJECTTYPE `https://open-zaak.nl/catalogi/api/v1/informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1d` is niet gerelateerd aan het ZAAKTYPE: `ZT1`.",
                 }
             ],
         )

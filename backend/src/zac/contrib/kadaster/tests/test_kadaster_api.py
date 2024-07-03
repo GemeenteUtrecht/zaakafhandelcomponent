@@ -482,7 +482,7 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
         title = response.json()["title"]
         self.assertEqual(
             title,
-            "An error occurred in an external API.",
+            "Een error heeft plaatsgevonden in een externe API.",
         )
 
     def test_fail_get_verblijfsobject(self, m):

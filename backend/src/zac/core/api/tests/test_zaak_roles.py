@@ -740,7 +740,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 {
                     "name": "url",
                     "code": "invalid",
-                    "reason": "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`.",
+                    "reason": "Een ZAAK heeft altijd tenminste een ROL met `omschrijving_generiek` dat een `behandelaar` of `initiator` is.",
                 }
             ],
         )
@@ -773,7 +773,7 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 {
                     "name": "url",
                     "code": "invalid",
-                    "reason": "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that is a `behandelaar` or `initiator`.",
+                    "reason": "Een ZAAK heeft altijd tenminste een ROL met `omschrijving_generiek` dat een `behandelaar` of `initiator` is.",
                 }
             ],
         )
