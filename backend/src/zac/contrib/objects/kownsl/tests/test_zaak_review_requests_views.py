@@ -554,7 +554,7 @@ class ZaakReviewRequestsResponseTests(ClearCachesMixin, APITestCase):
                 {
                     "code": "invalid",
                     "name": "nonFieldErrors",
-                    "reason": "A locked review request can not be updated.",
+                    "reason": "Een verzoek die op slot staat kan niet worden bijgewerkt.",
                 }
             ],
         )
@@ -907,9 +907,7 @@ class ZaakReviewRequestsPermissionTests(ClearCachesMixin, APITestCase):
         ):
             response = self.client.patch(self.endpoint_detail, {"update_users": True})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(
-            response.json()["detail"], "This review request is being reconfigured."
-        )
+        self.assertEqual(response.json()["detail"], "Dit verzoek wordt bijgewerkt.")
 
     @requests_mock.Mocker()
     def test_review_request_locked_get_regression(self, m):

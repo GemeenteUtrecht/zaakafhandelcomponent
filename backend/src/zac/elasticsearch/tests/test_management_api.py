@@ -56,7 +56,7 @@ class IndexElasticsearchAPITests(APITestCase):
                 {
                     "name": "nonFieldErrors",
                     "code": "invalid",
-                    "reason": "Set one of `reindex_last`, `reindex_zaak` or `reset_indices`.",
+                    "reason": "Geef 1 van `reindex_last`, `reindex_zaak` of `reset_indices` op.",
                 }
             ],
         )
@@ -77,7 +77,7 @@ class IndexElasticsearchAPITests(APITestCase):
                 {
                     "name": "nonFieldErrors",
                     "code": "invalid",
-                    "reason": "Set one of `reindex_last`, `reindex_zaak` or `reset_indices`.",
+                    "reason": "Geef 1 van `reindex_last`, `reindex_zaak` of `reset_indices` op.",
                 }
             ],
         )

@@ -937,5 +937,5 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
 
         self.assertEqual(
             exc.exception.detail["non_field_errors"][0],
-            "User or group already reviewed.",
+            "Gebruiker of groep heeft al geantwoord.",
         )

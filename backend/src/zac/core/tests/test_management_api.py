@@ -59,7 +59,7 @@ class CacheResetAPITests(ClearCachesMixin, APITestCase):
                 {
                     "name": "nonFieldErrors",
                     "code": "invalid",
-                    "reason": "Pattern is not allowed for non-redis caches. Please provide a key.",
+                    "reason": "Pattern is niet toegestaan voor non-redis caches. Geef een key op.",
                 }
             ],
         )
