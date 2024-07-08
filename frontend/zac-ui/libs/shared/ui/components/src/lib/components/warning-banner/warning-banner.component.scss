@@ -1,0 +1,10 @@
+.warning-banner {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: red;
+    color: white;
+    text-align: center;
+    padding: 1em;
+    z-index: 10000; /* High z-index to ensure it is on top */
+  }

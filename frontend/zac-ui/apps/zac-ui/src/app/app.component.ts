@@ -45,6 +45,9 @@ export class AppComponent implements OnInit {
   maxUserInactivityTime = 60 * 1000; // 60 seconds
   isUserInactive = false;
 
+  /** @type {string} Warning message to be displayed */
+  warningMessage: string;
+
   /**
    * Constructor method.
    * @param {Router} router
@@ -93,7 +96,11 @@ export class AppComponent implements OnInit {
    * ping server for activity
    */
   pingServer() {
-    this.pingService.pingServer().subscribe();
+    this.pingService.pingServer().subscribe(
+      data => {
+        this.warningMessage = data.warning || null
+      }
+    );
 
     // check health every 60s if the user is active
     setTimeout(() => {

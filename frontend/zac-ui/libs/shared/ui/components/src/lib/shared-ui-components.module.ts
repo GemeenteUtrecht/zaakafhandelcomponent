@@ -52,6 +52,7 @@ import {PaginatorComponent} from './components/paginator/paginator.component';
 import {CustomPaginatorLabels} from './components/paginator/custom-paginator-labels';
 import {SharedUtilsModule} from '@gu/utils';
 import {MatExpansionModule} from '@angular/material/expansion';
+import { WarningBannerComponent } from './components/warning-banner/warning-banner.component';
 
 // Customise Material Form Fields
 patchMatFormField();
@@ -105,6 +106,7 @@ patchMatFormField();
     InputComponent,
     TextareaComponent,
     PaginatorComponent,
+    WarningBannerComponent,
   ],
   exports: [
     ButtonComponent,
