@@ -46,7 +46,8 @@ export class AppComponent implements OnInit {
   isUserInactive = false;
 
   /** @type {string} Warning message to be displayed */
-  warningMessage: string;
+  warning: string;
+  minimizedBanner = false;
 
   /**
    * Constructor method.
@@ -98,7 +99,7 @@ export class AppComponent implements OnInit {
   pingServer() {
     this.pingService.pingServer().subscribe(
       data => {
-        this.warningMessage = data.warning || null
+        this.warning = data.warning || null
       }
     );
 

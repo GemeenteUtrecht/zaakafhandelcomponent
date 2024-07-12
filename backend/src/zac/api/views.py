@@ -11,6 +11,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from zac.core.models import WarningBanner
+
 HEADERS_TO_KEEP = (
     "api-version",
     "content-type",
@@ -78,12 +80,22 @@ class PingView(APIView):
         responses={
             "200": inline_serializer(
                 "PingSerializer",
-                fields={"pong": serializers.BooleanField(default=True)},
+                fields={
+                    "pong": serializers.BooleanField(default=True),
+                    "warning": serializers.CharField(
+                        default=None, allow_null=True, allow_blank=True
+                    ),
+                },
             )
         },
     )
     def get(self, request: Request, *args, **kwargs):
-        return Response({"pong": True})
+        response = {"pong": True}
+        warning = WarningBanner.get_solo()
+        if warning.warning:
+            response["warning"] = warning.warning
+
+        return Response(response)
 
     def get_serializer(self, *args, **kwargs):
         # shut up drf-spectacular

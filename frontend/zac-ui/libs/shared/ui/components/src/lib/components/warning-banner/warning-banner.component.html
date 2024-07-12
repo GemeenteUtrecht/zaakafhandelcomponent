@@ -1,4 +1,7 @@
-<div *ngIf="warningMessage" class="warning-banner">
-    {{ warningMessage }}
+<div *ngIf="warning" [class.minimized]="minimized" class="warning-banner">
+  <div class="banner-content">
+    <span class="banner-title">Waarschuwing</span>
+    <span *ngIf="!minimized" class="warning-text">{{ warning }}</span>
   </div>
-  
+  <button (click)="toggleBanner()" class="toggle-button">{{ minimized ? 'Open' : 'Verberg' }}</button>
+</div>
