@@ -6,18 +6,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='WarningBanner',
+            name="WarningBanner",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('warning', models.TextField(blank=True, default=None, help_text='Warning to be displayed in UI to users. Max 1000 characters.', max_length=1000, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "warning",
+                    models.TextField(
+                        blank=True,
+                        default=None,
+                        help_text="Warning to be displayed in UI to users. Max 1000 characters.",
+                        max_length=1000,
+                        null=True,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]
