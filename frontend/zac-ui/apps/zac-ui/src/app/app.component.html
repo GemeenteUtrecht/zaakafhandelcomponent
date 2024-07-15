@@ -15,6 +15,9 @@
     ></gu-zaak-select>
   </gu-sidenav>
   <div class="main-content-outer-wrapper">
+    <app-warning-banner [warning]="warning"
+                        [minimized]="minimizedBanner"
+    ></app-warning-banner>
     <router-outlet></router-outlet>
   </div>
 </div>

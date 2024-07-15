@@ -1,0 +1,50 @@
+@import './base/colors/colors';
+
+.warning-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: calc(100% - 16px); /* Adjust width to account for scrollbar width */
+  background-color: $color-primary;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.warning-text {
+  font-size: 14px;
+}
+
+.warning-banner.minimized {
+  height: 40px;
+  overflow: hidden;
+}
+
+.toggle-button {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}

@@ -3,7 +3,7 @@ from django.forms import fields
 
 from solo.admin import SingletonModelAdmin
 
-from .models import CoreConfig, MetaObjectTypesConfig
+from .models import CoreConfig, MetaObjectTypesConfig, WarningBanner
 
 
 def get_objecttypes_choices():
@@ -40,3 +40,8 @@ class MetaObjectTypesConfigAdmin(SingletonModelAdmin):
                 choices=get_objecttypes_choices(), required=False, initial=""
             )
         return form
+
+
+@admin.register(WarningBanner)
+class WarningLabelAdmin(SingletonModelAdmin):
+    pass

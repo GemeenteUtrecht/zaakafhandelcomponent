@@ -72,6 +72,16 @@ class CoreConfig(SingletonModel):
         return force_str(self._meta.verbose_name)
 
 
+class WarningBanner(SingletonModel):
+    warning = models.TextField(
+        max_length=1000,
+        blank=True,
+        default=None,
+        null=True,
+        help_text=_("Warning to be displayed in UI to users. Max 1000 characters."),
+    )
+
+
 class MetaObjectTypesConfig(SingletonModel):
     """
     A singleton model that holds the URL-references of the meta objecttypes.
