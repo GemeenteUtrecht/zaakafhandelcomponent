@@ -145,6 +145,7 @@ INSTALLED_APPS = [
     "hijack",
     "hijack.contrib.admin",
     "nested_admin",
+    "reversion",
     # Project applications.
     "zac.elasticsearch",
     "zac.accounts",

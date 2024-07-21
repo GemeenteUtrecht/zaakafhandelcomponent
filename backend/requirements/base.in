@@ -38,6 +38,7 @@ django-redis
 django-sniplates
 django-scim2
 mozilla-django-oidc-db
+django-reversion
 
 # Restful API
 djangorestframework

@@ -107,6 +107,7 @@ django==3.2.12
     #   django-redis
     #   django-relativedelta
     #   django-rest-framework-condition
+    #   django-reversion
     #   django-scim2
     #   django-sendfile2
     #   django-simple-certmanager
@@ -173,6 +174,8 @@ django-rest-framework-condition==0.1.1
     # via
     #   -r requirements/base.txt
     #   vng-api-common
+django-reversion==5.0.12
+    # via -r requirements/base.txt
 django-scim2==0.17.0
     # via -r requirements/base.txt
 django-sendfile2==0.7.1
