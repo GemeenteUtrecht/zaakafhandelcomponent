@@ -124,6 +124,7 @@ django==3.2.12
     #   django-redis
     #   django-relativedelta
     #   django-rest-framework-condition
+    #   django-reversion
     #   django-scim2
     #   django-sendfile2
     #   django-simple-certmanager
@@ -196,6 +197,8 @@ django-rest-framework-condition==0.1.1
     # via
     #   -r requirements/ci.txt
     #   vng-api-common
+django-reversion==5.0.12
+    # via -r requirements/ci.txt
 django-scim2==0.17.0
     # via -r requirements/ci.txt
 django-sendfile2==0.7.1
@@ -284,8 +287,6 @@ idna==2.8
     #   requests
 imagesize==1.2.0
     # via sphinx
-importlib-metadata==7.0.2
-    # via build
 inflection==0.3.1
     # via
     #   -r requirements/ci.txt
@@ -597,8 +598,6 @@ zgw-consumers[drf]==0.23.2
     # via
     #   -r requirements/ci.txt
     #   notifications-api-common
-zipp==3.17.0
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

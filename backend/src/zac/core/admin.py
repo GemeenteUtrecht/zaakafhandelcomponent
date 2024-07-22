@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.forms import fields
 
+from reversion.admin import VersionAdmin
 from solo.admin import SingletonModelAdmin
 
 from .models import CoreConfig, MetaObjectTypesConfig, WarningBanner
@@ -43,5 +44,5 @@ class MetaObjectTypesConfigAdmin(SingletonModelAdmin):
 
 
 @admin.register(WarningBanner)
-class WarningLabelAdmin(SingletonModelAdmin):
+class WarningBannerAdmin(VersionAdmin, SingletonModelAdmin):
     pass
