@@ -773,14 +773,16 @@ class ZaakDetailSerializer(APIModelSerializer):
 
     def get_is_configured(self, obj) -> bool:
         process_instances = self.context["process_instances"]
-        return bool(
-            get_camunda_variable_instances(
-                {
-                    "processInstanceIdIn": list(process_instances.keys()),
-                    "variableName": "isConfigured",
-                }
+        if process_instances:
+            return bool(
+                get_camunda_variable_instances(
+                    {
+                        "processInstanceIdIn": list(process_instances.keys()),
+                        "variableName": "isConfigured",
+                    }
+                )
             )
-        )
+        return False
 
 
 class UpdateZaakDetailSerializer(APIModelSerializer):
