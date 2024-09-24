@@ -43,7 +43,7 @@ class IndexElasticsearchView(APIView):
         if reindex_zaak := serializer.validated_data.get("reindex_zaak"):
             args.append(f"--reindex-zaak={reindex_zaak.url}")
 
-        call_command(" ".join(args))
+        call_command(*args)
         return Response(status=HTTP_204_NO_CONTENT)
 
 

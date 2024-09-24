@@ -42,7 +42,7 @@ class IndexElasticsearchAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 204)
         mock_call_command.assert_called_once_with(
-            "index_all --chunk-size=100 --max-workers=2"
+            "index_all", "--chunk-size=100", "--max-workers=2"
         )
 
     def test_invalid(self):
@@ -91,7 +91,7 @@ class IndexElasticsearchAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 204)
         mock_call_command.assert_called_once_with(
-            "index_all --chunk-size=100 --max-workers=2 --reindex-last=100"
+            "index_all", "--chunk-size=100", "--max-workers=2", "--reindex-last=100"
         )
 
     @patch("zac.elasticsearch.management.views.call_command")
@@ -105,7 +105,7 @@ class IndexElasticsearchAPITests(APITestCase):
         )
         self.assertEqual(response.status_code, 204)
         mock_call_command.assert_called_once_with(
-            "index_documenten --chunk-size=100 --max-workers=2 --reindex-last=100"
+            "index_documenten", "--chunk-size=100", "--max-workers=2", "--reindex-last=100"
         )
 
     @patch("zac.elasticsearch.management.views.call_command")
@@ -142,7 +142,7 @@ class IndexElasticsearchAPITests(APITestCase):
                 )
                 self.assertEqual(response.status_code, 204)
                 mock_call_command.assert_called_once_with(
-                    "index_all --chunk-size=100 --max-workers=2 --reindex-zaak=https://some-zaak.nl/"
+                    "index_all", "--chunk-size=100", "--max-workers=2", "--reindex-zaak=https://some-zaak.nl/"
                 )
                 mock_zaak.assert_called_once()
 
@@ -211,5 +211,5 @@ class ReIndexZaakElasticsearchAPITests(
         response = self.client.post(self.endpoint, HTTP_AUTHORIZATION=f"Token {token}")
         self.assertEqual(response.status_code, 204)
         mock_call_command.assert_called_once_with(
-            f"index_all --chunk-size=100 --max-workers=2 --reindex-zaak={self.zaak['url']}"
+            f"index_all", "--chunk-size=100", "--max-workers=2", "--reindex-zaak={self.zaak['url']}"
         )
