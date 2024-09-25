@@ -17,7 +17,7 @@ export class CamundaService {
    * @returns {Observable<ProcessInstanceCase>}
    */
   getCaseUrlForProcessInstance(instanceId): Observable<ProcessInstanceCase> {
-    const endpoint = encodeURI(`/api/camunda/fetch-process-instances/${instanceId}/zaak`);
+    const endpoint = encodeURI(`/api/camunda/process-instances/${instanceId}/zaak`);
     return this.http.Get<ProcessInstanceCase>(endpoint);
   }
 

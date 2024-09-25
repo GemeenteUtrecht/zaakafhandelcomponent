@@ -3,11 +3,11 @@ from django.urls import path
 from .views import (
     CancelTaskView,
     ChangeBehandelaarTasksView,
+    CreateZaakRedirectCheckView,
     FetchTaskView,
     GetBPMNView,
     ProcessInstanceFetchView,
     ProcessInstanceMessagesView,
-    ProcessInstanceZaakURLView,
     SendMessageView,
     SetTaskAssigneeView,
     UserTaskCountView,
@@ -17,7 +17,7 @@ from .views import (
 
 urlpatterns = [
     path(
-        "fetch-process-instances",
+        "process-instances",
         ProcessInstanceFetchView.as_view(),
         name="fetch-process-instances",
     ),
@@ -26,9 +26,9 @@ urlpatterns = [
         "fetch-messages", ProcessInstanceMessagesView.as_view(), name="fetch-messages"
     ),
     path(
-        "fetch-process-instances/<uuid:id>/zaak",
-        ProcessInstanceZaakURLView.as_view(),
-        name="fetch-process-instance-zaak",
+        "process-instances/<uuid:id>/zaak",
+        CreateZaakRedirectCheckView.as_view(),
+        name="create-zaak-redirect-check",
     ),
     path(
         "task-data/<uuid:task_id>",

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
+from requests.exceptions import HTTPError
 from rest_framework import serializers
 from zds_client.client import ClientError
 from zgw_consumers.api_models.constants import RolOmschrijving
@@ -19,6 +20,7 @@ from zac.camunda.api.validators import GroupValidator, OrValidator, UserValidato
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.data import BPMN, Task
 from zac.camunda.process_instances import (
+    get_process_instance,
     get_top_level_process_instances,
     update_process_instance_variable,
 )
@@ -85,6 +87,24 @@ class ProcessInstanceSerializer(serializers.Serializer):
         child=serializers.CharField(max_length=100), allow_empty=True
     )
     tasks = TaskSerializer(many=True)
+
+
+class CreateZaakRedirectCheckSerializer(serializers.Serializer):
+    id = serializers.UUIDField(help_text=_("Process instance `id`."))
+    zaak = serializers.URLField(help_text=_("Reference to ZAAK."), required=False)
+
+    def validate(self, attrs):
+        process_instance = get_process_instance(attrs["id"])
+        try:
+            process_instance.get_variable("zaakDetailUrl")
+            zaak_url = process_instance.get_variable("zaakUrl")
+            attrs["zaak"] = zaak_url
+        except HTTPError as exc:
+            if exc.response.status_code == 404:
+                raise serializers.ValidationError(exc.response.json()["message"])
+            else:
+                raise exc
+        return attrs
 
 
 class ProcessInstanceMessageSerializer(serializers.Serializer):

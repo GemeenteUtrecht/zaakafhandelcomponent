@@ -67,24 +67,3 @@ def start_process(
     logger.info("Started process instance %s", response["id"])
 
     return {"instance_id": response["id"], "instance_url": instance_url}
-
-
-def delete_zaak_creation_process(zaak: Zaak) -> None:
-    # First check if there is still a CREATE_ZAAK_PROCESS_DEFINITION_KEY process that needs to be cleaned up.
-    process_instances = get_process_instances(zaak.url)
-    if process_instances:
-        pi_def_ids = list(
-            {pi.definition_id for pi in process_instances.values() if pi.definition_id}
-        )
-        cache_key = hash(pi_def_ids)
-        process_definitions = {
-            pdef.id: pdef for pdef in get_process_definitions(pi_def_ids, cache_key)
-        }
-        for pi in process_instances.values():
-            process_definition = process_definitions.get(pi.definition_id, None)
-            if (
-                process_definition
-                and process_definition.key
-                == settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
-            ):
-                delete_process_instance(pi.id)
