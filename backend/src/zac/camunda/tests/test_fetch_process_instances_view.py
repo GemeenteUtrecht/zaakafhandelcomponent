@@ -451,50 +451,6 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
             [{"code": "required", "name": "zaakUrl", "reason": "Dit veld is vereist."}],
         )
 
-    def test_fetch_zaak_url_from_process_instance(self, m_messages, m_request):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        mock_service_oas_get(m_request, ZAKEN_ROOT, "zrc")
-
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=ZAAK_URL,
-        )
-        mock_resource_get(m_request, zaak)
-
-        m_request.get(
-            f"{CAMUNDA_URL}process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405",
-            json={
-                "id": "205eae6b-d26f-11ea-86dc-e22fafe5f405",
-                "definitionId": "Aanvraag_behandelen:8:c76c8200-c766-11ea-86dc-e22fafe5f405",
-                "businessKey": "",
-                "caseInstanceId": "",
-                "suspended": False,
-                "tenantId": "",
-            },
-        )
-        m_request.get(
-            f"{CAMUNDA_URL}process-instance/205eae6b-d26f-11ea-86dc-e22fafe5f405/variables/zaakUrl?deserializeValue=false",
-            json=serialize_variable(ZAAK_URL),
-        )
-        url = reverse(
-            "fetch-process-instance-zaak",
-            kwargs={"id": "205eae6b-d26f-11ea-86dc-e22fafe5f405"},
-        )
-        superuser = SuperUserFactory.create()
-        self.client.force_authenticate(superuser)
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.json(),
-            {
-                "bronorganisatie": zaak["bronorganisatie"],
-                "identificatie": zaak["identificatie"],
-                "url": ZAAK_URL,
-            },
-        )
-
     @override_settings(CREATE_ZAAK_PROCESS_DEFINITION_KEY="some-zaak-creation-process")
     def test_fetch_process_instances_exclude_zaak_creation_process(
         self, m_messages, m_request

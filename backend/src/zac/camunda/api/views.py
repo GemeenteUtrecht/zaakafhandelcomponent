@@ -53,6 +53,7 @@ from .serializers import (
     CancelTaskSerializer,
     ChangeBehandelaarTasksSerializer,
     CountCamundaUserTasks,
+    CreateZaakRedirectCheckSerializer,
     ErrorSerializer,
     HistoricUserTaskSerializer,
     MessageSerializer,
@@ -227,12 +228,12 @@ class ProcessInstanceMessagesView(APIView):
         return Response(serializer.data)
 
 
-class ProcessInstanceZaakURLView(APIView):
+class CreateZaakRedirectCheckView(APIView):
     permission_classes = (permissions.IsAuthenticated, CanCreateZaken)
-    serializer_class = ProcessInstanceSerializer
+    serializer_class = CreateZaakRedirectCheckSerializer
 
     @extend_schema(
-        summary=_("Retrieve ZAAK URL for process instance."),
+        summary=_("Retrieve camunda variable for process instance."),
         parameters=[
             OpenApiParameter(
                 name="id",
@@ -245,9 +246,10 @@ class ProcessInstanceZaakURLView(APIView):
         responses={200: ZaakSerializer},
     )
     def get(self, request: Request, id: uuid.UUID):
-        process_instance = get_process_instance(id)
-        zaak_url = process_instance.get_variable("zaakUrl")
-        zaak = get_zaak(zaak_url=zaak_url)
+        serializer = self.serializer_class(data={"id": id})
+        serializer.is_valid(raise_exception=True)
+
+        zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         serializer = ZaakSerializer(instance=zaak)
         return Response(serializer.data)
 
