@@ -13,6 +13,7 @@ from zgw_consumers.api_models.constants import RolOmschrijving
 
 from zac.accounts.api.permissions import HasTokenAuth
 from zac.accounts.authentication import ApplicationTokenAuthentication
+from zac.camunda.api.utils import get_bptl_app_id_variable
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.process_instances import get_process_instances
 from zac.camunda.processes import start_process
@@ -83,6 +84,7 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
             }
         else:
             variables = {
+                **get_bptl_app_id_variable(),
                 "zaakUrl": zaak.url,
                 "zaakIdentificatie": zaak.identificatie,
                 "zaakDetails": {

@@ -250,6 +250,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
                         "businessKey": "",
                         "withVariablesInReturn": False,
                         "variables": {
+                            "bptlAppId": serialize_variable(""),
                             "zaakUrl": serialize_variable(self.zaak["url"]),
                             "zaakIdentificatie": serialize_variable(
                                 self.zaak["identificatie"]
@@ -438,6 +439,7 @@ class StartCamundaProcessViewTests(ClearCachesMixin, APITestCase):
                 "businessKey": "",
                 "withVariablesInReturn": False,
                 "variables": {
+                    "bptlAppId": {"type": "String", "value": ""},
                     "zaakUrl": {
                         "type": "String",
                         "value": zaak_obj.url,
