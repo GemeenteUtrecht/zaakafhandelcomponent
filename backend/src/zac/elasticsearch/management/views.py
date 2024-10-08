@@ -78,5 +78,5 @@ class ReIndexZaakElasticsearchView(APIView):
 
         args.append(f"--reindex-zaak={zaak.url}")
 
-        call_command(" ".join(args))
+        call_command(*args)
         return Response(status=HTTP_204_NO_CONTENT)

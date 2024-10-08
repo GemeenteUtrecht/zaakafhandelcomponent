@@ -220,5 +220,5 @@ class ReIndexZaakElasticsearchAPITests(
             f"index_all",
             "--chunk-size=100",
             "--max-workers=2",
-            "--reindex-zaak={self.zaak['url']}",
+            f"--reindex-zaak={self.zaak['url']}",
         )
