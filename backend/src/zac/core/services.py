@@ -518,7 +518,7 @@ def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
         client, zaak_url = args
         return get_zaak(zaak_uuid=None, zaak_url=zaak_url, client=client)
 
-    with parallel(max_workers=10) as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         results = executor.map(_get_related_objects, clients)
 
         job_args = []
@@ -532,7 +532,7 @@ def search_zaak_for_related_object(queries: List[dict], resource) -> List[Zaak]:
     def _resolve_zaaktype(zaak):
         zaak.zaaktype = fetch_zaaktype(zaak.zaaktype)
 
-    with parallel(max_workers=10) as executor:
+    with parallel(max_workers=settings.MAX_WORKERS) as executor:
         for zaak in zaken:
             executor.submit(_resolve_zaaktype, zaak)
 
