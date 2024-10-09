@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.client import get_client
@@ -57,8 +58,6 @@ from .utils import (
     get_activity_groups,
     get_checklist_answers_groups,
 )
-
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
