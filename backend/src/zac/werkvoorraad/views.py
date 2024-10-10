@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from django_camunda.client import get_client
@@ -408,7 +409,7 @@ class WorkStackSummaryView(views.APIView):
             _count_group_activities,
             _count_access_requests,
         ]
-        with parallel(max_workers=10) as executor:
+        with parallel(max_workers=settings.MAX_WORKERS) as executor:
             data = list(executor.map(lambda fn: fn(), fetch_these))
 
         serializer = self.serializer_class({d["key"]: d["val"] for d in data})

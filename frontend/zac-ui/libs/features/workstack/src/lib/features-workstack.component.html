@@ -11,7 +11,7 @@
                    type="badge"
                    color="primary"
                    class="ml-1">
-            {{summaryData?.zaken}}
+            <!-- {{summaryData?.zaken}} -->
           </gu-chip>
         </ng-template>
         <!-- Content -->
@@ -30,7 +30,7 @@
                    type="badge"
                    color="primary"
                    class="ml-1">
-            {{summaryData?.userTasks}}
+            <!-- {{summaryData?.userTasks}} -->
           </gu-chip>
         </ng-template>
 
@@ -50,7 +50,7 @@
                    type="badge"
                    color="primary"
                    class="ml-1">
-            {{summaryData?.groupTasks}}
+            <!-- {{summaryData?.groupTasks}} -->
           </gu-chip>
         </ng-template>
 
@@ -67,11 +67,11 @@
         <!-- Label -->
         <ng-template mat-tab-label>
           Advies/akkoord
-          <gu-chip *ngIf="summaryData?.reviews"
+          <gu-chip *ngIf="summaryData?.reviews > 0"
                    type="badge"
                    color="primary"
                    class="ml-1">
-            {{summaryData?.reviews}}
+            <!-- {{summaryData?.reviews}} -->
           </gu-chip>
         </ng-template>
 
@@ -88,11 +88,11 @@
         <!-- Label -->
         <ng-template mat-tab-label>
           Activiteiten
-          <gu-chip *ngIf="summaryData?.userActivities"
+          <gu-chip *ngIf="summaryData?.userActivities > 0"
                    type="badge"
                    color="primary"
                    class="ml-1">
-            {{summaryData?.userActivities}}
+            <!-- {{summaryData?.userActivities}} -->
           </gu-chip>
         </ng-template>
 
@@ -112,11 +112,11 @@
         <!-- Label -->
         <ng-template mat-tab-label>
           Groepsactiviteiten
-          <gu-chip *ngIf="summaryData?.groupActivities"
+          <gu-chip *ngIf="summaryData?.groupActivities > 0"
                    type="badge"
                    color="primary"
                    class="ml-1">
-            {{summaryData?.groupActivities}}
+            <!-- {{summaryData?.groupActivities}} -->
           </gu-chip>
         </ng-template>
 
@@ -136,11 +136,11 @@
         <!-- Label -->
         <ng-template mat-tab-label>
           Toegangsverzoeken
-          <gu-chip *ngIf="summaryData?.accessRequests"
+          <gu-chip *ngIf="summaryData?.accessRequests > 0"
                    type="badge"
                    color="primary"
                    class="ml-1">
-            {{summaryData?.accessRequests}}
+            <!-- {{summaryData?.accessRequests}} -->
           </gu-chip>
         </ng-template>
 
