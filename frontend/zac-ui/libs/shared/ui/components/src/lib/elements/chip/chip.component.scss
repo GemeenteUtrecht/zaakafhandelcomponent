@@ -9,17 +9,17 @@
   padding: 0.45rem 0.75rem;
   border-radius: 8px;
   align-items: center;
-  min-height: 22px;
+  min-height: 5px;
   height: 1px;
   width: fit-content;
-  min-width: 22px;
+  min-width: 5px;
   font-size: 0.625rem;
   font-weight: 500;
   color: white;
   white-space: nowrap;
   justify-content: center;
   &--badge {
-    padding: 0.45rem;
+    padding: 0.3rem;
     border-radius: 50%;
     top: -10px;
   }
