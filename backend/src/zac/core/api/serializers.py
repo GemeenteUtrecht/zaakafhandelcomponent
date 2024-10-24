@@ -64,6 +64,7 @@ from zac.core.models import MetaObjectTypesConfig
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_object,
+    fetch_objecttype,
     fetch_objecttypes,
     fetch_rol,
     fetch_zaaktype,
@@ -1590,6 +1591,21 @@ class ZaakObjectProxySerializer(ProxySerializer):
         return self.initial_data
 
     def create(self, validated_data):
+        if validated_data.get("object_type", "") == "overige":
+            obj = fetch_object(self.initial_data["object"])
+            if not validated_data.get("object_type_overige"):
+                validated_data["object_type_overige"] = obj["type"]["name"]
+            if not validated_data.get("object_type_overige_definitie"):
+                latest_version = max(obj["type"]["versions"])
+                validated_data["object_type_overige_definitie"] = {
+                    "url": latest_version,
+                    "schema": ".jsonSchema",
+                    "objectData": ".record.data",
+                }
+            if not validated_data.get("relatieomschrijving"):
+                validated_data[
+                    "relatieomschrijving"
+                ] = f"{obj['type']['name']} van de ZAAK."
         related_object = relate_object_to_zaak(validated_data)
         return related_object
 

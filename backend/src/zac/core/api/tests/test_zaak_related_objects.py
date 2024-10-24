@@ -135,8 +135,10 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         )
 
         cls.user = SuperUserFactory.create()
+        cls.obj = deepcopy(OBJECT_1)
+        cls.obj["type"] = OBJECTTYPE_1
         cls.fetch_object_patcher = patch(
-            "zac.core.api.serializers.fetch_object", return_value=OBJECT_1
+            "zac.core.api.serializers.fetch_object", return_value=cls.obj
         )
 
     def setUp(self):
@@ -439,6 +441,8 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
             "objectTypeOverige": "Laadpaal uitbreiding",
             "objectIdentificatie": {"overigeData": OBJECT_1["record"]["data"]},
         }
+        cls.obj = deepcopy(OBJECT_1)
+        cls.obj["type"] = OBJECTTYPE_1
 
     def test_not_authenticated(self):
         url = reverse("zaakobject-create")
@@ -456,7 +460,6 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    @patch("zac.core.api.serializers.fetch_object", return_value=OBJECT_1)
     def test_create_other_permission(self, m, *mocks):
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -481,12 +484,12 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
         url = reverse("zaakobject-create")
 
-        response = self.client.post(url, self.data)
+        with patch("zac.core.api.serializers.fetch_object", return_value=self.obj):
+            response = self.client.post(url, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    @patch("zac.core.api.serializers.fetch_object", return_value=OBJECT_1)
     def test_create_has_perm(self, m, *mocks):
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -512,12 +515,12 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
         url = reverse("zaakobject-create")
 
-        response = self.client.post(url, self.data)
+        with patch("zac.core.api.serializers.fetch_object", return_value=self.obj):
+            response = self.client.post(url, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @requests_mock.Mocker()
-    @patch("zac.core.api.serializers.fetch_object", return_value=OBJECT_1)
     def test_create_has_perm_but_zaak_is_closed(self, m, *mocks):
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -543,12 +546,12 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
         url = reverse("zaakobject-create")
 
-        response = self.client.post(url, self.data)
+        with patch("zac.core.api.serializers.fetch_object", return_value=self.obj):
+            response = self.client.post(url, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @requests_mock.Mocker()
-    @patch("zac.core.api.serializers.fetch_object", return_value=OBJECT_1)
     def test_create_has_perm_also_for_closed_zaak(self, m, *mocks):
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
@@ -583,7 +586,8 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=user)
         url = reverse("zaakobject-create")
 
-        response = self.client.post(url, self.data)
+        with patch("zac.core.api.serializers.fetch_object", return_value=self.obj):
+            response = self.client.post(url, self.data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 

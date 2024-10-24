@@ -54,7 +54,7 @@ class IndexZaakObjectenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         "schemas/ZaakObject",
         url=f"{ZAKEN_ROOT}zaakobjecten/f79989d3-9ac4-4c2b-a94e-13191b333444",
         zaak=zaak["url"],
-        informatieobject=f"{OBJECT_ROOT}objecten/d859f08e-6957-44f8-9efb-502d18c28f8f",
+        object=f"{OBJECT_ROOT}objecten/d859f08e-6957-44f8-9efb-502d18c28f8f",
         object_identificatie=dict(),
     )
 
