@@ -228,6 +228,7 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         )
         obj = deepcopy(OBJECT_1)
         obj["record"]["data"]["afgestoten"] = True
+        obj["type"] = OBJECTTYPE_1
 
         with patch("zac.core.api.serializers.fetch_object", return_value=obj):
             response = self.client.post(
@@ -247,7 +248,7 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
                 {
                     "name": "nonFieldErrors",
                     "code": "invalid",
-                    "reason": "Object is `afgestoten`.",
+                    "reason": "`{ot}` is `afgestoten`.".format(ot=OBJECTTYPE_1["name"]),
                 }
             ],
         )

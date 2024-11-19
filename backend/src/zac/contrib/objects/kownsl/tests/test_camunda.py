@@ -741,7 +741,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         with self.assertRaises(exceptions.ValidationError) as err:
             serializer.is_valid(raise_exception=True)
         self.assertEqual(
-            err.exception.detail["non_field_errors"][0],
+            err.exception.detail["nonFieldErrors"][0],
             _("Select either documents or ZAAKEIGENSCHAPs."),
         )
 
@@ -936,6 +936,6 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
                 serializer.is_valid(raise_exception=True)
 
         self.assertEqual(
-            exc.exception.detail["non_field_errors"][0],
+            exc.exception.detail["nonFieldErrors"][0],
             "Gebruiker of groep heeft al geantwoord.",
         )

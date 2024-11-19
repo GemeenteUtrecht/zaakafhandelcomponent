@@ -455,6 +455,7 @@ REST_FRAMEWORK = {
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_SCHEMA_CLASS": "zac.api.schema.AutoSchema",
     "EXCEPTION_HANDLER": "zac.utils.exceptions.exception_handler",
+    "NON_FIELD_ERRORS_KEY": "nonFieldErrors",
 }
 
 #

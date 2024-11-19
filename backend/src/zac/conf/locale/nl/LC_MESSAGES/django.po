@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-05 14:58+0000\n"
+"POT-Creation-Date: 2024-11-19 09:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Ammeraal <danielammeraal@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -589,7 +589,7 @@ msgid "user who has handled the request"
 msgstr "gebruiker die het verzoek beoordeelde"
 
 #: zac/accounts/models.py:226 zac/activities/models.py:21
-#: zac/camunda/api/serializers.py:327
+#: zac/camunda/api/serializers.py:347
 msgid "URL-reference to the ZAAK in its API"
 msgstr "URL-referentie naar de ZAAK in zijn API"
 
@@ -910,19 +910,19 @@ msgstr "gebeurtenissen"
 msgid "Header displays if the user is hijacked."
 msgstr "Header displays als de gebruiker is gehijackt."
 
-#: zac/api/views.py:52
+#: zac/api/views.py:54
 msgid "Retrieve health check."
 msgstr "Gezondheidscheck opvragen."
 
-#: zac/api/views.py:53
+#: zac/api/views.py:55
 msgid "Returns the health check status."
 msgstr "Geeft de gezondsheidscheckstatus terug."
 
-#: zac/api/views.py:75
+#: zac/api/views.py:77
 msgid "Ping a user session."
 msgstr ""
 
-#: zac/api/views.py:76
+#: zac/api/views.py:78
 msgid "Extends user session on activity."
 msgstr "Verleng gebruikerssessie als er activiteit is."
 
@@ -950,23 +950,29 @@ msgstr ""
 "Een booleaan die een gebruiker toestaat om expliciet process instances weg "
 "te filteren die gerelateerd zijn aan de ZAAK creatie."
 
-#: zac/camunda/api/serializers.py:70
+#: zac/camunda/api/serializers.py:72
 msgid "The `assigneeType` of the user task."
 msgstr "De `assigneeType` van de gebruikerstaak."
 
-#: zac/camunda/api/serializers.py:80
+#: zac/camunda/api/serializers.py:82 zac/camunda/api/serializers.py:93
 msgid "Process instance `id`."
 msgstr "Process instance `id`."
 
-#: zac/camunda/api/serializers.py:92
+#: zac/camunda/api/serializers.py:94
+#, fuzzy
+#| msgid "URL-reference to ZAAK."
+msgid "Reference to ZAAK."
+msgstr "URL-referentie naar de ZAAK."
+
+#: zac/camunda/api/serializers.py:112
 msgid "Process instance `id`. Used to correlate message to."
 msgstr ""
 
-#: zac/camunda/api/serializers.py:118
+#: zac/camunda/api/serializers.py:138
 msgid "Form to render"
 msgstr "Te vertonen formulier"
 
-#: zac/camunda/api/serializers.py:121
+#: zac/camunda/api/serializers.py:141
 msgid ""
 "The `formKey` of the form to render. Note that unknown `formKeys` (= not "
 "present in the enum) will be returned as is."
@@ -975,132 +981,132 @@ msgstr ""
 "onbekende `formKeys` (= niet onderdeel van de enum) onveranderd worden "
 "teruggegeven."
 
-#: zac/camunda/api/serializers.py:130
+#: zac/camunda/api/serializers.py:150
 msgid "(camunda form)"
 msgstr "(camunda formulier)"
 
-#: zac/camunda/api/serializers.py:135
+#: zac/camunda/api/serializers.py:155
 msgid "User task summary"
 msgstr "Gebruikerstaakoverzicht"
 
-#: zac/camunda/api/serializers.py:180
+#: zac/camunda/api/serializers.py:200
 msgid "Process instance `id`"
 msgstr "Process instance `id`"
 
-#: zac/camunda/api/serializers.py:181
+#: zac/camunda/api/serializers.py:201
 msgid "The `id` of the process instance where the message is sent to."
 msgstr ""
 "De `id` van het process instance waar het bericht naar verstuurd wordt."
 
-#: zac/camunda/api/serializers.py:185 zac/camunda/forms.py:86
+#: zac/camunda/api/serializers.py:205 zac/camunda/forms.py:86
 msgid "Message"
 msgstr "Bericht"
 
-#: zac/camunda/api/serializers.py:186
+#: zac/camunda/api/serializers.py:206
 msgid "The message that is sent to the process instance."
 msgstr "Het bericht dat verstuurd is naar het process instance."
 
-#: zac/camunda/api/serializers.py:195
+#: zac/camunda/api/serializers.py:215
 msgid "Wait for it"
 msgstr "Wacht"
 
-#: zac/camunda/api/serializers.py:196
+#: zac/camunda/api/serializers.py:216
 msgid "Wait for a change in fetch-process-instances if this is True."
 msgstr "Wacht voor een verandering in fetch-process-instance als dit True is."
 
-#: zac/camunda/api/serializers.py:203
+#: zac/camunda/api/serializers.py:223
 msgid "Task `id`"
 msgstr "Taak `id`"
 
-#: zac/camunda/api/serializers.py:205
+#: zac/camunda/api/serializers.py:225
 msgid "The `id` of the task to which the assignee/delegate is to be set."
 msgstr ""
 "De `id` van de taak waar de begunstigde/gedelegeerde op wordt ingesteld."
 
-#: zac/camunda/api/serializers.py:209
+#: zac/camunda/api/serializers.py:229
 msgid "assignee"
 msgstr "begunstigde"
 
-#: zac/camunda/api/serializers.py:210
+#: zac/camunda/api/serializers.py:230
 msgid "Assignee of the task."
 msgstr "Begunstigde van de taak."
 
-#: zac/camunda/api/serializers.py:215
+#: zac/camunda/api/serializers.py:235
 msgid "delegate"
 msgstr "gedelegeerde"
 
-#: zac/camunda/api/serializers.py:216
+#: zac/camunda/api/serializers.py:236
 msgid "Delegate of the task."
 msgstr "Gedelegeerde van de taak."
 
-#: zac/camunda/api/serializers.py:247
+#: zac/camunda/api/serializers.py:267
 msgid "The process definition `id`."
 msgstr "De process definition `id`."
 
-#: zac/camunda/api/serializers.py:251
+#: zac/camunda/api/serializers.py:271
 msgid ""
 "The XML of the process definition. To be used for visualization of the BPMN."
 msgstr ""
 "De XML van de process definition. Wordt gebruikt voor de visualisatie van "
 "het BPMN."
 
-#: zac/camunda/api/serializers.py:259
+#: zac/camunda/api/serializers.py:279
 msgid "Name of user task variable."
 msgstr "Naam van de variabele in de gebruikerstaak"
 
-#: zac/camunda/api/serializers.py:262
+#: zac/camunda/api/serializers.py:282
 msgid "Value of user task variable."
 msgstr "Waarde van de variabele in de gebruikerstaak"
 
-#: zac/camunda/api/serializers.py:266
+#: zac/camunda/api/serializers.py:286
 msgid "Label of user task variable in the Camunda user task form."
 msgstr ""
 "Label van de gebruikerstaakvariabele in de Camunda gebruikerstaakformulier."
 
-#: zac/camunda/api/serializers.py:275
+#: zac/camunda/api/serializers.py:295
 msgid "Full name of user or group assigned to user task."
 msgstr ""
 "Volledige naam van de gebruiker of groep die toegewezen is om te antwoorden."
 
-#: zac/camunda/api/serializers.py:278
+#: zac/camunda/api/serializers.py:298
 msgid "Datetime user task was completed."
 msgstr "Datumtijd waarop de gebruikerstaak is afgerond."
 
-#: zac/camunda/api/serializers.py:281
+#: zac/camunda/api/serializers.py:301
 msgid "Datetime user task was created."
 msgstr "Datumtijd waarop de gebruikerstaak werd aangemaakt."
 
-#: zac/camunda/api/serializers.py:283
+#: zac/camunda/api/serializers.py:303
 msgid "Name of user task."
 msgstr "Naam van de gebruikerstaak."
 
-#: zac/camunda/api/serializers.py:285
+#: zac/camunda/api/serializers.py:305
 msgid "List of variables set by the user task."
 msgstr "Variabelen die door gebruikerstaak zijn ingesteld."
 
-#: zac/camunda/api/serializers.py:308
+#: zac/camunda/api/serializers.py:328
 msgid "The UUID of the task that is to be canceled."
 msgstr "De UUID van de taak die geannuleerd wordt."
 
-#: zac/camunda/api/serializers.py:315
+#: zac/camunda/api/serializers.py:335
 #, python-brace-format
 msgid "No task found for id `{task_id}`"
 msgstr ""
 
-#: zac/camunda/api/serializers.py:320
+#: zac/camunda/api/serializers.py:340
 #, python-brace-format
 msgid "Task `{name}` can not be canceled."
 msgstr "Taak `{name}` kan niet worden geannuleerd."
 
-#: zac/camunda/api/serializers.py:329
+#: zac/camunda/api/serializers.py:349
 msgid "URL-reference to the ROL in its API"
 msgstr "URL-referentie naar de ROL in zijn API"
 
-#: zac/camunda/api/serializers.py:335
+#: zac/camunda/api/serializers.py:355
 msgid "ZAAK was not found."
 msgstr ""
 
-#: zac/camunda/api/serializers.py:440
+#: zac/camunda/api/serializers.py:460
 msgid "Count of open camunda user tasks for user."
 msgstr "Aantal open camundataken voor de gebruiker."
 
@@ -1114,61 +1120,62 @@ msgstr "Een gebruiker met `username` {username} bestaat niet."
 msgid "A group with `name` {name} does not exist."
 msgstr "Een groep met `name` {name} bestaat niet."
 
-#: zac/camunda/api/views.py:76
+#: zac/camunda/api/views.py:77
 msgid "List process instances for a ZAAK."
 msgstr "Alle process instances voor een ZAAK opvragen."
 
-#: zac/camunda/api/views.py:145
+#: zac/camunda/api/views.py:146
 msgid "List tasks for a ZAAK."
 msgstr "Alle taken voor een ZAAK opvragen."
 
-#: zac/camunda/api/views.py:194
+#: zac/camunda/api/views.py:195
 msgid "List messages for a ZAAK."
 msgstr "Alle messages voor een ZAAK opvragen."
 
-#: zac/camunda/api/views.py:235
-msgid "Retrieve ZAAK URL for process instance."
-msgstr "Een ZAAK URL voor een process instance opvragen."
+#: zac/camunda/api/views.py:236
+#| msgid "Retrieve ZAAK URL for process instance."
+msgid "Retrieve camunda variable for process instance."
+msgstr "Haal een camunda variabele op voor process instance."
 
-#: zac/camunda/api/views.py:270
+#: zac/camunda/api/views.py:272
 msgid "The task with given task `id` does not exist (anymore)."
 msgstr "De taak met de gegeven task `id` bestaat niet (meer)."
 
-#: zac/camunda/api/views.py:309
+#: zac/camunda/api/views.py:311
 msgid "Retrieve user task data and context."
 msgstr "Een specifieke gebruikerstaak data en context opvragen."
 
-#: zac/camunda/api/views.py:330
+#: zac/camunda/api/views.py:332
 msgid "Submit user task data."
 msgstr "Werk een gebruikerstaak data in zijn geheel bij."
 
-#: zac/camunda/api/views.py:399
+#: zac/camunda/api/views.py:401
 msgid "Send BPMN message."
 msgstr "Verstuur een BPMN bericht."
 
-#: zac/camunda/api/views.py:401
+#: zac/camunda/api/views.py:403
 msgid ""
 "Sets the messageAssignee to the user making the request and the bptlAppId "
 "variable."
 msgstr ""
 
-#: zac/camunda/api/views.py:494
+#: zac/camunda/api/views.py:496
 msgid "Change camunda behandelaar."
 msgstr "Verander camunda behandelaar."
 
-#: zac/camunda/api/views.py:565
+#: zac/camunda/api/views.py:567
 msgid "Set task assignee or delegate."
 msgstr "Stel de begunstigde of gedelegeerde in voor de taak."
 
-#: zac/camunda/api/views.py:604
+#: zac/camunda/api/views.py:606
 msgid "Retrieve the XML of the BPMN."
 msgstr "De XML van een specifieke BPMN opvragen."
 
-#: zac/camunda/api/views.py:631
+#: zac/camunda/api/views.py:633
 msgid "Retrieve the historical user task data of the ZAAK."
 msgstr "Een specifieke historische gebruikerstaak data van de ZAAK opvragen."
 
-#: zac/camunda/api/views.py:633
+#: zac/camunda/api/views.py:635
 msgid ""
 "User tasks are reverse sorted on the `created` key. The history array is "
 "sorted alphabetically on the `variable_name` key."
@@ -1177,11 +1184,11 @@ msgstr ""
 "historische array wordt op alfabetische volgorde gesorteerd op de "
 "`variable_name` sleutel."
 
-#: zac/camunda/api/views.py:666
+#: zac/camunda/api/views.py:668
 msgid "Cancel a camunda user task of the ZAAK."
 msgstr "Annuleer een camunda gebruikerstaak van de ZAAK."
 
-#: zac/camunda/api/views.py:668
+#: zac/camunda/api/views.py:670
 msgid ""
 "Allows a user to cancel the camunda task after it has been (accidentally) "
 "created."
@@ -1189,7 +1196,7 @@ msgstr ""
 "Laat een gebruiker toe een camundataak te annuleren nadat het (per ongeluk) "
 "aangemaakt is."
 
-#: zac/camunda/api/views.py:690
+#: zac/camunda/api/views.py:692
 msgid "Retrieve number of open camunda user tasks for user."
 msgstr ""
 
@@ -1290,7 +1297,7 @@ msgstr "UUID van het bord"
 msgid "Slug of the board"
 msgstr "Slug van het bord"
 
-#: zac/contrib/board/api/filters.py:16 zac/core/api/serializers.py:1616
+#: zac/contrib/board/api/filters.py:16 zac/core/api/serializers.py:1636
 msgid "URL-reference of the ZAAK"
 msgstr "URL-referentie naar de ZAAK"
 
@@ -1550,7 +1557,7 @@ msgstr "UUID van DoWC object."
 
 #: zac/contrib/dowc/serializers.py:54 zac/contrib/objects/kownsl/camunda.py:236
 #: zac/contrib/objects/oudbehandelaren/api/serializers.py:42
-#: zac/core/api/serializers.py:1026
+#: zac/core/api/serializers.py:1029
 msgid "URL-reference to ZAAK."
 msgstr "URL-referentie naar de ZAAK."
 
@@ -2543,7 +2550,7 @@ msgstr "URL-referentie naar ROL in de ZAKEN API."
 msgid "URL-reference to ZAAKTYPE in CATALOGI API."
 msgstr "URL-referentie naar ZAAKTYPE in de CATALOGI API."
 
-#: zac/core/api/serializers.py:112 zac/elasticsearch/drf_api/serializers.py:415
+#: zac/core/api/serializers.py:113 zac/elasticsearch/drf_api/serializers.py:415
 msgid ""
 "The URL required to save edits and delete the DOWC object related to the "
 "INFORMATIEOBJECT."
@@ -2551,30 +2558,30 @@ msgstr ""
 "De vereiste URL om bewerkingen op te slaan en het gerelateerde DOWC object "
 "te verwijderen."
 
-#: zac/core/api/serializers.py:117 zac/elasticsearch/drf_api/serializers.py:410
+#: zac/core/api/serializers.py:118 zac/elasticsearch/drf_api/serializers.py:410
 msgid ""
 "Boolean flag to indicate if requesting user is editing current "
 "INFORMATIEOBJECT."
 msgstr ""
 "Een booleaan die laat zien of de gebruiker het DOCUMENT aan het bewerken is."
 
-#: zac/core/api/serializers.py:122
+#: zac/core/api/serializers.py:123
 #: zac/core/camunda/start_process/serializers.py:77
 #: zac/elasticsearch/drf_api/serializers.py:421
 msgid "The INFORMATIEOBJECTTYPE related to the ZAAKINFORMATIEOBJECT."
 msgstr "De INFORMATIEOBJECTTYPE toebehorend aan het ZAAKINFORMATIEOBJECT."
 
-#: zac/core/api/serializers.py:125 zac/elasticsearch/drf_api/serializers.py:424
+#: zac/core/api/serializers.py:126 zac/elasticsearch/drf_api/serializers.py:424
 msgid "Shows last edited datetime."
 msgstr "Laatste bewerkingsdatum."
 
-#: zac/core/api/serializers.py:128
+#: zac/core/api/serializers.py:129
 #: zac/core/camunda/zet_resultaat/serializers.py:43
 #: zac/elasticsearch/drf_api/serializers.py:428
 msgid "Email of user that locked document."
 msgstr "Email van de gebruiker die het document op slot heeft gezet."
 
-#: zac/core/api/serializers.py:133 zac/core/api/serializers.py:384
+#: zac/core/api/serializers.py:134 zac/core/api/serializers.py:385
 #: zac/elasticsearch/drf_api/serializers.py:433
 msgid ""
 "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office "
@@ -2583,30 +2590,30 @@ msgstr ""
 "URL om het INFORMATIEOBJECT te lezen. Opent de daarvoor geschikt Microsoft "
 "Office applicatie."
 
-#: zac/core/api/serializers.py:138 zac/elasticsearch/drf_api/serializers.py:441
+#: zac/core/api/serializers.py:139 zac/elasticsearch/drf_api/serializers.py:441
 msgid "Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."
 msgstr "Vertrouwelijkheidaanduiding van INFORMATIEOBJECT"
 
-#: zac/core/api/serializers.py:144 zac/elasticsearch/drf_api/serializers.py:447
+#: zac/core/api/serializers.py:145 zac/elasticsearch/drf_api/serializers.py:447
 msgid ""
 "URL to write INFORMATIEOBJECT. Opens the appropriate Microsoft Office "
 "application."
 msgstr ""
 
-#: zac/core/api/serializers.py:172
+#: zac/core/api/serializers.py:173
 msgid "File size in bytes of INFORMATIEOBJECT."
 msgstr "Bestandsgrootte in bytes van het INFORMATIEOBJECT."
 
-#: zac/core/api/serializers.py:203
+#: zac/core/api/serializers.py:204
 msgid "Description of the DOCUMENT"
 msgstr "Beschrijving van het INFORMATIEOBJECT."
 
-#: zac/core/api/serializers.py:208
+#: zac/core/api/serializers.py:209
 msgid "Content of the DOCUMENT. Mutually exclusive with `url` attribute"
 msgstr ""
 "Inhoud van het INFORMATIEOBJECT. Elkaar uitsluitend met `url` attribuut"
 
-#: zac/core/api/serializers.py:214
+#: zac/core/api/serializers.py:215
 msgid ""
 "URL-reference of INFORMATIEOBJECTTYPE in CATALOGI API. Required if `file` is "
 "provided"
@@ -2614,7 +2621,7 @@ msgstr ""
 "URL-referentie naar het INFORMATIEOBJECTTYPE in de CATALOGI API. Vereist als "
 "`file` niet leeg is"
 
-#: zac/core/api/serializers.py:220
+#: zac/core/api/serializers.py:221
 msgid ""
 "URL-reference of DOCUMENT in DOCUMENTEN API. Mutually exclusive with `file` "
 "attribute"
@@ -2622,94 +2629,94 @@ msgstr ""
 "URL-referentie naar DOCUMENT in DOCUMENTEN API. Elkaar uitsluitend met "
 "`file` attribuut"
 
-#: zac/core/api/serializers.py:225
+#: zac/core/api/serializers.py:226
 msgid "URL-reference of the ZAAK in ZAKEN API"
 msgstr "URL-referentie naar de ZAAK in de ZAKEN API"
 
-#: zac/core/api/serializers.py:262
+#: zac/core/api/serializers.py:263
 msgid "A `file` or `document` needs a `bestandsnaam`."
 msgstr ""
 
-#: zac/core/api/serializers.py:273 zac/core/api/serializers.py:354
+#: zac/core/api/serializers.py:274 zac/core/api/serializers.py:355
 #, python-brace-format
 msgid ""
 "`bestandsnaam`: `{bestandsnaam}` already exists. Please choose a unique "
 "`bestandsnaam`."
 msgstr ""
 
-#: zac/core/api/serializers.py:294
+#: zac/core/api/serializers.py:295
 msgid "Reason for the edit, used in audit trail."
 msgstr "Reden voor de wijziging, wordt gebruikt in audit trail."
 
-#: zac/core/api/serializers.py:299
+#: zac/core/api/serializers.py:300
 msgid "URL-reference of DOCUMENT"
 msgstr "URL-referentie naar DOCUMENT"
 
-#: zac/core/api/serializers.py:303
+#: zac/core/api/serializers.py:304
 msgid "Vertrouwelijkheidaanduiding of DOCUMENT."
 msgstr "Vertrouwelijkheidaanduiding van DOCUMENT."
 
-#: zac/core/api/serializers.py:308
+#: zac/core/api/serializers.py:309
 msgid "URL-reference of the ZAAK."
 msgstr "URL-referentie naar de ZAAK"
 
-#: zac/core/api/serializers.py:312
+#: zac/core/api/serializers.py:313
 msgid "Filename without extension."
 msgstr "Bestandsnaam zonder extensie."
 
-#: zac/core/api/serializers.py:316 zac/elasticsearch/drf_api/serializers.py:396
+#: zac/core/api/serializers.py:317 zac/elasticsearch/drf_api/serializers.py:396
 msgid "URL-reference to INFORMATIEOBJECTTYPE."
 msgstr "URL-referentie naar het INFORMATIEOBJECT in de DRC API."
 
-#: zac/core/api/serializers.py:340
+#: zac/core/api/serializers.py:341
 #, python-brace-format
 msgid "The document is unrelated to {zaak}."
 msgstr "Het document is ongerelateerd aan {zaak}."
 
-#: zac/core/api/serializers.py:364
+#: zac/core/api/serializers.py:365
 #, python-brace-format
 msgid "INFORMATIEOBJECTTYPE `{iot}` is not related to ZAAKTYPE `{zt}`."
 msgstr ""
 "De INFORMATIEOBJECTTYPE `{iot}` is niet gerelateerd aan het ZAAKTYPE: `{zt}`."
 
-#: zac/core/api/serializers.py:374 zac/elasticsearch/drf_api/serializers.py:337
+#: zac/core/api/serializers.py:375 zac/elasticsearch/drf_api/serializers.py:337
 msgid "Title of the INFORMATIEOBJECT. Includes the file extension."
 msgstr "Titel van het INFORMATIEOBJECT. Bevat de bestandsextensie."
 
-#: zac/core/api/serializers.py:437 zac/core/api/serializers.py:475
+#: zac/core/api/serializers.py:438 zac/core/api/serializers.py:476
 msgid "URL-reference to the ZAAK that is to the main ZAAK."
 msgstr "URL-referentie naar de ZAAK die aan de HOOFDZAAK toebehoort."
 
-#: zac/core/api/serializers.py:443
+#: zac/core/api/serializers.py:444
 msgid ""
 "The nature of the relationship between the main ZAAK and the related ZAAK."
 msgstr "De aard van relatie tussen de hoofdZAAK en de gerelateerde ZAAK."
 
-#: zac/core/api/serializers.py:448 zac/core/api/serializers.py:479
+#: zac/core/api/serializers.py:449 zac/core/api/serializers.py:480
 msgid "URL-reference to the main ZAAK in the ZAKEN API."
 msgstr "URL-referentie naar de hoofdZAAK in de ZAKEN API"
 
-#: zac/core/api/serializers.py:453
+#: zac/core/api/serializers.py:454
 msgid "The nature of the reverse relationship."
 msgstr "De aard van de omgekeerde relatie"
 
-#: zac/core/api/serializers.py:463
+#: zac/core/api/serializers.py:464
 msgid "ZAAKen cannot be related to themselves."
 msgstr "ZAAKen kunnen niet met zichzelf gerelateerd worden."
 
-#: zac/core/api/serializers.py:467
+#: zac/core/api/serializers.py:468
 msgid "The nature of the ZAAK-relations cannot be the same."
 msgstr "De aard van de ZAAKrelaties kunnen niet hetzelfde zijn."
 
-#: zac/core/api/serializers.py:485
+#: zac/core/api/serializers.py:486
 msgid "A short summary of the ZAAK."
 msgstr "Korte samenvatting van de ZAAK."
 
-#: zac/core/api/serializers.py:488
+#: zac/core/api/serializers.py:489
 msgid "A comment on the ZAAK."
 msgstr "Toelichting op de ZAAK."
 
-#: zac/core/api/serializers.py:495
+#: zac/core/api/serializers.py:496
 msgid ""
 "The RSIN of the organization that created the ZAAK. This has to be a valid "
 "`RSIN` of 9 digits and comply to https://nl.wikipedia.org/wiki/"
@@ -2719,24 +2726,24 @@ msgstr ""
 "`RSIN` van 9 nummers zijn en voldoen aan https://nl.wikipedia.org/wiki/"
 "Burgerservicenummer#11-proef."
 
-#: zac/core/api/serializers.py:509
+#: zac/core/api/serializers.py:510
 msgid "`identificatie` of ZAAKTYPE."
 msgstr "`identificatie` van het ZAAKTYPE."
 
-#: zac/core/api/serializers.py:513
+#: zac/core/api/serializers.py:514
 msgid "URL-reference to the CATALOGUS of ZAAKTYPE."
 msgstr "URL-referentie naar de CATALOGUS van het ZAAKTYPE."
 
-#: zac/core/api/serializers.py:517
+#: zac/core/api/serializers.py:518
 msgid "Relevant details pertaining to the ZAAK."
 msgstr "Relevante details over de ZAAK."
 
-#: zac/core/api/serializers.py:520
+#: zac/core/api/serializers.py:521
 msgid "URL-reference to OBJECT which is to be related to ZAAK."
 msgstr ""
 "URL-referentie naar het OBJECT dat gerelateerd moeten worden aan de ZAAK."
 
-#: zac/core/api/serializers.py:526
+#: zac/core/api/serializers.py:527
 msgid ""
 "Type of OBJECT as required by Open Zaak. Defaults to `overige`. Don't change "
 "unless you know what you are doing. Only inserted into BPMN if OBJECT URL is "
@@ -2746,7 +2753,7 @@ msgstr ""
 "niet tenzij je weet wat je doet. Wordt alleen in de BPMN gezet als de "
 "OBJECTURL ook gegeven is."
 
-#: zac/core/api/serializers.py:532
+#: zac/core/api/serializers.py:533
 msgid ""
 "Description of OBJECT as required by Open Zaak. Defaults to `name` of OBJECT "
 "TYPE related to OBJECT. Only inserted into BPMN if OBJECT URL is also given."
@@ -2755,7 +2762,7 @@ msgstr ""
 "van het OBJECT TYPE gerelateerd aan het OBJECT. Wordt alleen in de BPMN "
 "gezet als de OBJECTURL ook gegeven is."
 
-#: zac/core/api/serializers.py:538
+#: zac/core/api/serializers.py:539
 msgid ""
 "Automagically start related business process if it exists once ZAAK is "
 "created."
@@ -2763,14 +2770,14 @@ msgstr ""
 "Start het gerelateerde business process automagisch op, als het bestaat, als "
 "de ZAAK eenmaal is gemaakt."
 
-#: zac/core/api/serializers.py:549
+#: zac/core/api/serializers.py:550
 #, python-brace-format
 msgid ""
 "Fetching OBJECT with URL: `{object}` raised a Client Error with detail: "
 "`{detail}`."
 msgstr ""
 
-#: zac/core/api/serializers.py:583
+#: zac/core/api/serializers.py:584
 #, python-brace-format
 msgid ""
 "ZAAKTYPE with `identificatie`: `{zt_identificatie}` can not be found in "
@@ -2779,20 +2786,20 @@ msgstr ""
 "ZAAKTYPE met `identificatie`: `{zt_identificatie}` kan niet worden gevonden "
 "in `{zt_catalogus}` of de gebruiker heeft de benodigde rechten niet."
 
-#: zac/core/api/serializers.py:647 zac/core/api/serializers.py:1598
-#: zac/core/api/serializers.py:1621
+#: zac/core/api/serializers.py:648 zac/core/api/serializers.py:1618
+#: zac/core/api/serializers.py:1641
 msgid "URL of the ZAAK detail page in the zaakafhandelcomponent."
 msgstr "URL van de ZAAK detail pagina in de zaakafhandelcomponent."
 
-#: zac/core/api/serializers.py:661 zac/core/api/serializers.py:1058
+#: zac/core/api/serializers.py:662 zac/core/api/serializers.py:1061
 msgid "Expanded ZAAKTYPE of ZAAK."
 msgstr "Uitgeklapte ZAAKTYPE van de ZAAK."
 
-#: zac/core/api/serializers.py:664
+#: zac/core/api/serializers.py:665
 msgid "Progress towards deadline"
 msgstr "Vordering naar deadline"
 
-#: zac/core/api/serializers.py:667
+#: zac/core/api/serializers.py:668
 msgid ""
 "Value between 0-100, representing a percentage. 100 means the deadline has "
 "been reached or exceeded."
@@ -2800,34 +2807,34 @@ msgstr ""
 "Waarde tussen 0-100, als percentage uitgedrukt. 100 betekent dat de deadline "
 "is bereikt of overschreden."
 
-#: zac/core/api/serializers.py:674 zac/core/api/serializers.py:801
+#: zac/core/api/serializers.py:675 zac/core/api/serializers.py:804
 msgid "GeoJSON which represents the coordinates of the ZAAK"
 msgstr "GeoJSON die de coordinaten van de ZAAK representeert"
 
-#: zac/core/api/serializers.py:677
+#: zac/core/api/serializers.py:678
 msgid "A boolean flag whether a user can force edit the ZAAK or not."
 msgstr ""
 "Een booleaan die laat zien of een gebruiker de ZAAK geforceerd kan bewerken."
 
-#: zac/core/api/serializers.py:680
+#: zac/core/api/serializers.py:681
 msgid "A boolean flag whether the ZAAK has a process or not."
 msgstr "Een booleaan die laat zien of de ZAAK een proces heeft of niet."
 
-#: zac/core/api/serializers.py:683
+#: zac/core/api/serializers.py:684
 msgid "A boolean flag whether the ZAAK is stationary or not."
 msgstr "Een booleaan die laat zien of een ZAAK stationair is of niet."
 
-#: zac/core/api/serializers.py:687
+#: zac/core/api/serializers.py:688
 msgid "A boolean flag whether the ZAAK has already been configured or not."
 msgstr "Een booleaan die laat zien of een ZAAK al geconfigureerd is of niet."
 
-#: zac/core/api/serializers.py:746
+#: zac/core/api/serializers.py:747
 msgid ""
 "Something went wrong. A ZAAK shouldn't be spawned by more than 1 parent."
 msgstr ""
 "Er ging iets mis. Een ZAAK mag niet gemaakt worden door meer dan 1 proces."
 
-#: zac/core/api/serializers.py:790
+#: zac/core/api/serializers.py:793
 msgid ""
 "Reason for the edit, used in audit trail. Required when "
 "`vertrouwelijkheidaanduiding` is changed"
@@ -2835,42 +2842,42 @@ msgstr ""
 "Reden voor de wijziging, gebruikt in de audit trail. Vereist wanneer "
 "`vertrouwelijkheidaanduiding` wordt veranderd."
 
-#: zac/core/api/serializers.py:796
+#: zac/core/api/serializers.py:799
 msgid "The confidentiality level of the ZAAK."
 msgstr "De vertrouwelijkheidaanduiding van de ZAAK."
 
-#: zac/core/api/serializers.py:902
+#: zac/core/api/serializers.py:905
 msgid "data type"
 msgstr "datatype"
 
-#: zac/core/api/serializers.py:917
+#: zac/core/api/serializers.py:920
 msgid "EIGENSCHAP definition"
 msgstr "definitie van EIGENSCHAP"
 
-#: zac/core/api/serializers.py:931 zac/core/api/serializers.py:944
-#: zac/core/api/serializers.py:959 zac/core/api/serializers.py:971
+#: zac/core/api/serializers.py:934 zac/core/api/serializers.py:947
+#: zac/core/api/serializers.py:962 zac/core/api/serializers.py:974
 msgid "EIGENSCHAP value"
 msgstr "waarde van eigenschap"
 
-#: zac/core/api/serializers.py:991
+#: zac/core/api/serializers.py:994
 msgid "Data type of the value"
 msgstr "Dataype van de waarde"
 
-#: zac/core/api/serializers.py:996
+#: zac/core/api/serializers.py:999
 msgid ""
 "Matches `eigenschap.specificatie.formaat` - used as API schema discriminator."
 msgstr ""
 "Komt overeen met `eigenschap.specificatie.formaat` - wordt gebruikt als API "
 "schema discriminator."
 
-#: zac/core/api/serializers.py:1017
+#: zac/core/api/serializers.py:1020
 msgid ""
 "Name of EIGENSCHAP. Must match EIGENSCHAP name as defined in CATALOGI API."
 msgstr ""
 "Naam van de EIGENSCHAP. Moet overeenkomen met EIGENSCHAPnaam zoals "
 "gedefinieerd in de CATALOGI API."
 
-#: zac/core/api/serializers.py:1022
+#: zac/core/api/serializers.py:1025
 msgid ""
 "Value of ZAAKEIGENSCHAP. Must be able to be formatted as defined by the "
 "EIGENSCHAP spec."
@@ -2878,14 +2885,14 @@ msgstr ""
 "Waarde van ZAAKEIGENSCHAP. Moet in staat zijn te worden geformatteerd zoals "
 "gedefinieerd in de EIGENSCHAP spec."
 
-#: zac/core/api/serializers.py:1032
+#: zac/core/api/serializers.py:1035
 msgid ""
 "Value of ZAAKEIGENSCHAP. Must be formatted as defined by the EIGENSCHAP spec."
 msgstr ""
 "Waarde van ZAAKEIGENSCHAP. Moet in staat zijn te worden geformatteerd zoals "
 "gedefinieerd in de EIGENSCHAP spec."
 
-#: zac/core/api/serializers.py:1048
+#: zac/core/api/serializers.py:1051
 #, python-brace-format
 msgid ""
 "Invalid `waarde`: `{waarde}`. Zaakeigenschap with `naam`: `{naam}` must take "
@@ -2894,31 +2901,31 @@ msgstr ""
 "Ongeldige `waarde`: `{waarde}`. Zaakeigenschap with `naam`: `{naam}` moet "
 "een waarde krijgen uit: `{choices}`."
 
-#: zac/core/api/serializers.py:1057
+#: zac/core/api/serializers.py:1060
 msgid "Expanded STATUS of ZAAK."
 msgstr "Uitgeklapte STATUS van de ZAAK."
 
-#: zac/core/api/serializers.py:1059
+#: zac/core/api/serializers.py:1062
 msgid "Expanded RESULTAAT of ZAAK."
 msgstr "Uitgeklapte RESULTAAT van de ZAAK."
 
-#: zac/core/api/serializers.py:1076
+#: zac/core/api/serializers.py:1079
 msgid "Short description of the nature of the relationship."
 msgstr "Korte beschrijving van de aard van de relatie."
 
-#: zac/core/api/serializers.py:1092 zac/core/api/serializers.py:1262
+#: zac/core/api/serializers.py:1095 zac/core/api/serializers.py:1265
 msgid "Betrokkene type of ROL. Mutually exclusive with `betrokkene`."
 msgstr "Betrokkene type van ROL. Elkaar uitsluitend met `betrokkene`."
 
-#: zac/core/api/serializers.py:1099 zac/core/api/serializers.py:1284
+#: zac/core/api/serializers.py:1102 zac/core/api/serializers.py:1287
 msgid "Description of ROLTYPE related to ROL."
 msgstr "Beschrijving van ROLTYPE gerelateerd aan ROL."
 
-#: zac/core/api/serializers.py:1131
+#: zac/core/api/serializers.py:1134
 msgid "Betrokkene identificatie"
 msgstr "Betrokkene identificatie"
 
-#: zac/core/api/serializers.py:1133
+#: zac/core/api/serializers.py:1136
 msgid ""
 "The `betrokkene_identificatie` of the ROL. \n"
 "                The shape of the `betrokkene_identificatie` depends on the "
@@ -2936,23 +2943,23 @@ msgstr ""
 "dit geval Open Zaak).\n"
 "                "
 
-#: zac/core/api/serializers.py:1195
+#: zac/core/api/serializers.py:1198
 msgid "Initials of medewerker."
 msgstr "Initialen van medewerker."
 
-#: zac/core/api/serializers.py:1198
+#: zac/core/api/serializers.py:1201
 msgid "`last_name` of medewerker."
 msgstr "`last_name` van de gebruiker."
 
-#: zac/core/api/serializers.py:1202
+#: zac/core/api/serializers.py:1205
 msgid "`username` of medewerker."
 msgstr "`username` van de gebruiker."
 
-#: zac/core/api/serializers.py:1205
+#: zac/core/api/serializers.py:1208
 msgid "Last name prefix of medewerker."
 msgstr "Voorzetsel van achternaam van medewerker."
 
-#: zac/core/api/serializers.py:1256
+#: zac/core/api/serializers.py:1259
 msgid ""
 "URL-reference to betrokkene of ROL. Mutually exclusive with "
 "`betrokkene_type`."
@@ -2960,50 +2967,50 @@ msgstr ""
 "URL-referentie naar betrokkene van ROL. Elkaar uitsluitend met "
 "`betrokkene_type`."
 
-#: zac/core/api/serializers.py:1269
+#: zac/core/api/serializers.py:1272
 msgid "Comment related to the ROL."
 msgstr "Toelichting gerelateerd aan de ROL."
 
-#: zac/core/api/serializers.py:1274
+#: zac/core/api/serializers.py:1277
 msgid "URL-reference to ROLTYPE of ROL."
 msgstr "URL-referentie naar ROLTYPE van ROL."
 
-#: zac/core/api/serializers.py:1277 zac/core/api/serializers.py:1322
+#: zac/core/api/serializers.py:1280 zac/core/api/serializers.py:1325
 msgid "URL-reference to ROL itself."
 msgstr "URL-referentie naar de ROL zelf."
 
-#: zac/core/api/serializers.py:1280
+#: zac/core/api/serializers.py:1283
 msgid "URL-reference to ZAAK of ROL."
 msgstr "URL-referentie naar ZAAK van ROL."
 
-#: zac/core/api/serializers.py:1295
+#: zac/core/api/serializers.py:1298
 #, python-brace-format
 msgid "ROLTYPE {rt} is not part of ROLTYPEs for ZAAKTYPE {zt}."
 msgstr "ROLTYPE {rt} is niet onderdeel van de ROLTYPEs van ZAAKTYPE {zt}."
 
-#: zac/core/api/serializers.py:1302
+#: zac/core/api/serializers.py:1305
 #, python-brace-format
 msgid "ROLTYPE {rt} is an initiator and cannot be changed."
-msgstr ""
+msgstr "ROLTYPE {rt} is een initiator en mag niet gewijzigd worden."
 
-#: zac/core/api/serializers.py:1307
+#: zac/core/api/serializers.py:1310
 msgid "`betrokkene` and `betrokkene_type` are mutually exclusive."
 msgstr "`betrokkene` en `betrokkene_type` zijn elkaar uitsluitend."
 
-#: zac/core/api/serializers.py:1311
+#: zac/core/api/serializers.py:1314
 msgid "`betrokkene` and `betrokkene_identificatie` are mutually exclusive."
 msgstr "`betrokkene` en `betrokkene_identificatie` zijn elkaar uitsluitend."
 
-#: zac/core/api/serializers.py:1332
+#: zac/core/api/serializers.py:1335
 #, python-brace-format
 msgid "Serializer {name} needs ZAAK in context."
 msgstr "Serializer {name} heeft ZAAK nodig in context."
 
-#: zac/core/api/serializers.py:1337
+#: zac/core/api/serializers.py:1340
 msgid "ROL does not belong to ZAAK."
 msgstr "ROL behoort niet toe aan ZAAK."
 
-#: zac/core/api/serializers.py:1356
+#: zac/core/api/serializers.py:1359
 #, python-brace-format
 msgid ""
 "A ZAAK always requires at least one ROL with an `omschrijving_generiek` that "
@@ -3012,7 +3019,7 @@ msgstr ""
 "Een ZAAK heeft altijd tenminste een ROL met `omschrijving_generiek` dat een "
 "`{behandelaar}` of `{initiator}` is."
 
-#: zac/core/api/serializers.py:1370
+#: zac/core/api/serializers.py:1373
 msgid ""
 "Collection of OBJECTTYPE specific items. The schema is determined by the "
 "upstream API(s). Each item has `zaakobjectUrl` attribute which is the url of "
@@ -3025,16 +3032,16 @@ msgstr ""
 "relatie te veranderen of te wijzigen. Zie `zac.core.zaakobjecten` voor de "
 "beschikbare implementaties."
 
-#: zac/core/api/serializers.py:1390
+#: zac/core/api/serializers.py:1393
 msgid "CATALOGUS that ZAAKTYPE belongs to."
 msgstr "CATALOGUS waar ZAAKTYPE toebehoort."
 
-#: zac/core/api/serializers.py:1397
+#: zac/core/api/serializers.py:1400
 #: zac/elasticsearch/drf_api/serializers.py:170
 msgid "URL-reference of the ZAAKTYPE in the CATALOGI API."
 msgstr "URL-referentie naar de ZAAKTYPE in de CATALOGI API."
 
-#: zac/core/api/serializers.py:1401 zac/elasticsearch/drf_api/serializers.py:47
+#: zac/core/api/serializers.py:1404 zac/elasticsearch/drf_api/serializers.py:47
 msgid ""
 "Description of ZAAKTYPE, used as an aggregator of different versions of "
 "ZAAKTYPE."
@@ -3042,88 +3049,90 @@ msgstr ""
 "Beschrijving van ZAAKTYPE, wordt gebruikt als een aggregator voor de "
 "verschillende versies van ZAAKTYPE."
 
-#: zac/core/api/serializers.py:1404
+#: zac/core/api/serializers.py:1407
 msgid "Unique identificatie in CATALOGI API."
 msgstr "Unieke identificatie in de CATALOGI API."
 
-#: zac/core/api/serializers.py:1409
+#: zac/core/api/serializers.py:1412
 msgid "The label of the enum choice."
 msgstr "De label van de enum keuze."
 
-#: zac/core/api/serializers.py:1414
+#: zac/core/api/serializers.py:1417
 msgid "The value of the enum choice as a `string`."
 msgstr "De waarde van de enum keuze als een `string`."
 
-#: zac/core/api/serializers.py:1420
+#: zac/core/api/serializers.py:1423
 msgid "The value of the enum choice as an `integer` or a `float`."
 msgstr "De waarde van de enum keuze als een `integer` of een `float`."
 
-#: zac/core/api/serializers.py:1442
+#: zac/core/api/serializers.py:1445
 msgid "An array of possible values."
 msgstr "Een array van verschillende waardes."
 
-#: zac/core/api/serializers.py:1449
+#: zac/core/api/serializers.py:1452
 msgid "According to JSON schema date values have `string` type."
 msgstr "Volgens het JSON schema hebben datumwaarde een `string` type."
 
-#: zac/core/api/serializers.py:1454
+#: zac/core/api/serializers.py:1457
 msgid "Used to differentiate `date` and `date-time` values from other strings."
 msgstr ""
 "Wordt gebruikt om de `datum` en `datumtijd` waardes te onderscheiden van "
 "andere `strings`."
 
-#: zac/core/api/serializers.py:1458 zac/core/api/serializers.py:1461
+#: zac/core/api/serializers.py:1461 zac/core/api/serializers.py:1464
 msgid "Only for strings."
 msgstr "Alleen voor strings."
 
-#: zac/core/api/serializers.py:1466
+#: zac/core/api/serializers.py:1469
 msgid "Name of EIGENSCHAP"
 msgstr "Naam van EIGENSCHAP"
 
-#: zac/core/api/serializers.py:1468
+#: zac/core/api/serializers.py:1471
 msgid "property definition"
 msgstr "eigenschapsdefinitie"
 
-#: zac/core/api/serializers.py:1469
+#: zac/core/api/serializers.py:1472
 msgid "JSON schema-ish specification of related ZAAK-EIGENSCHAP values."
 msgstr ""
 "JSON schema-achtige specificatie van gerelateerde ZAAK-EIGENSCHAP waardes."
 
-#: zac/core/api/serializers.py:1474
+#: zac/core/api/serializers.py:1477
 msgid "Human readable label of classication."
 msgstr "Leesbare classificatielabel."
 
-#: zac/core/api/serializers.py:1475
+#: zac/core/api/serializers.py:1478
 msgid "Value of classication."
 msgstr "Waarde van classificatie."
 
-#: zac/core/api/serializers.py:1486
+#: zac/core/api/serializers.py:1489
 msgid "Atomic permissions for the ZAAK."
 msgstr "Atomische rechten voor de ZAAK."
 
-#: zac/core/api/serializers.py:1524
+#: zac/core/api/serializers.py:1527
 msgid ""
 "Returns a string representation based on `stringRepresentatie` in objecttype "
 "labels."
 msgstr ""
 
-#: zac/core/api/serializers.py:1549
+#: zac/core/api/serializers.py:1552
 msgid "OBJECTTYPE of OBJECT. Must be provided."
 msgstr ""
 
-#: zac/core/api/serializers.py:1582
+#: zac/core/api/serializers.py:1585
 msgid "OBJECT is already related to ZAAK."
 msgstr "Dit OBJECT is al gerelateerd aan de ZAAK."
 
-#: zac/core/api/serializers.py:1586
-msgid "Object is `afgestoten`."
-msgstr ""
+#: zac/core/api/serializers.py:1590
+#, python-brace-format
+#| msgid "Object is `afgestoten`."
+msgid "`{ot}` is `afgestoten`."
+msgstr "`{ot}` is `afgestoten`."
 
-#: zac/core/api/serializers.py:1596
+#: zac/core/api/serializers.py:1616
 msgid "Datetime of last visit"
 msgstr "Datumtijd van laatste bezoek."
 
-#: zac/core/api/serializers.py:1601 zac/elasticsearch/drf_api/serializers.py:73
+#: zac/core/api/serializers.py:1621 zac/elasticsearch/drf_api/serializers.py:73
 #: zac/elasticsearch/drf_api/serializers.py:245
 #: zac/elasticsearch/drf_api/serializers.py:306
 #: zac/werkvoorraad/serializers.py:29
@@ -3394,12 +3403,12 @@ msgstr "Zoek naar een OBJECT in de OBJECTS API."
 msgid "Search for OBJECTs in the OBJECTS API."
 msgstr "Zoek naar OBJECTen in OBJECTS API."
 
-#: zac/core/api/views.py:1347 zac/werkvoorraad/views.py:269
+#: zac/core/api/views.py:1347 zac/werkvoorraad/views.py:270
 msgid "Number of results to return per paginated response."
 msgstr ""
 "Aantal resultaten die moeten worden teruggeven per gepagineerde response."
 
-#: zac/core/api/views.py:1353 zac/werkvoorraad/views.py:276
+#: zac/core/api/views.py:1353 zac/werkvoorraad/views.py:277
 msgid "Page number of paginated response."
 msgstr "Pagina van gepagineerde response."
 
@@ -3564,7 +3573,7 @@ msgstr "ZAAKEIGENSCHAPpen met `namen`: `{namen}` zijn vereist."
 msgid "A ZAAKEIGENSCHAP with `naam`: `{naam}` is required."
 msgstr "Een ZAAKEIGENSCHAP met `naam`: `{naam}` is vereist."
 
-#: zac/core/camunda/start_process/views.py:59
+#: zac/core/camunda/start_process/views.py:60
 msgid "Start camunda process for ZAAK."
 msgstr "Start camunda proces voor ZAAK."
 
@@ -3720,18 +3729,22 @@ msgstr "Een flag die non-SSO inloggen toestaat (True) of niet (False)."
 msgid "global configuration"
 msgstr "globale configuratie"
 
-#: zac/core/models.py:87
+#: zac/core/models.py:81
+msgid "Warning to be displayed in UI to users. Max 1000 characters."
+msgstr "Getoonde waarschuwing voor gebruikers in UI. Max 1000 karakters."
+
+#: zac/core/models.py:97
 msgid ""
 "Setting to False will allow the user to define custom objecttypes instead of "
 "the URL-references retrieved from the list of meta objecttypes from the "
 "OBJECTS API."
 msgstr ""
 
-#: zac/core/models.py:92
+#: zac/core/models.py:102
 msgid "URL-reference to MetaListObjectType in OBJECTTYPES API."
 msgstr "URL-referentie naar MetaListObjectType in de OBJECTTYPES API."
 
-#: zac/core/models.py:94
+#: zac/core/models.py:104
 msgid ""
 "A URL-reference to the Meta List OBJECTTYPE. This is used to fetch the meta "
 "list objecttype for managing meta objects and objecttypes."
@@ -3739,11 +3752,11 @@ msgstr ""
 "Een URL-referentie naar het Meta List OBJECTTYPE. Dit wordt gebruikt om de "
 "meta list objecttype voor het beheren van meta objecten en objecttypes."
 
-#: zac/core/models.py:100
+#: zac/core/models.py:110
 msgid "URL-reference to Checklist in OBJECTTYPES API."
 msgstr "URL-referentie naar Checklist in de OBJECTTYPES API."
 
-#: zac/core/models.py:102
+#: zac/core/models.py:112
 msgid ""
 "A URL-reference to the Checklist OBJECTTYPE. This is used to fetch the "
 "checklist objecttype for a ZAAK."
@@ -3751,11 +3764,11 @@ msgstr ""
 "Een URL-referentie naar het Checklist OBJECTTYPE. Dit wordt gebruikt om de "
 "checklist objecttype op te halen voor een ZAAK."
 
-#: zac/core/models.py:107
+#: zac/core/models.py:117
 msgid "URL-reference to ChecklistType in OBJECTTYPES API."
 msgstr "URL-referentie naar ChecklistType in de OBJECTTYPES API."
 
-#: zac/core/models.py:109
+#: zac/core/models.py:119
 msgid ""
 "A URL-reference to the ChecklistType OBJECTTYPE. This is used to get the "
 "questions for a checklist for a ZAAKTYPE."
@@ -3763,11 +3776,11 @@ msgstr ""
 "Een URL-referentie naar het ChecklistType OBJECTTYPE. Dit wordt gebruikt om "
 "de vragen op te halen voor de checklist van het ZAAKTYPE."
 
-#: zac/core/models.py:114
+#: zac/core/models.py:124
 msgid "URL-reference to Oudbehandelaren in OBJECTTYPES API."
 msgstr "URL-referentie naar Oudbehandelaren in de OBJECTTYPES API."
 
-#: zac/core/models.py:116
+#: zac/core/models.py:126
 msgid ""
 "A URL-reference to the Oudbehandelaren OBJECTTYPE. This is used to register "
 "the old ROL when the ROL was of ROLTYPE `behandelaar`."
@@ -3775,11 +3788,11 @@ msgstr ""
 "Een URL-referentie naar het Oudbehandelaren OBJECTTYPE. Dit wordt gebruikt "
 "om de oude ROL te registreren als de ROL ROLTYPE `behandelaar` had."
 
-#: zac/core/models.py:121
+#: zac/core/models.py:131
 msgid "URL-reference to review in OBJECTTYPES API."
 msgstr "URL-referentie naar verzoek in de OBJECTTYPES API."
 
-#: zac/core/models.py:123
+#: zac/core/models.py:133
 msgid ""
 "URL-reference to the review OBJECTTYPE. This is used to register an advice/"
 "approval to a review request."
@@ -3787,11 +3800,11 @@ msgstr ""
 "Een URL-referentie naar het advies/accordering OBJECTTYPE. Dit wordt "
 "gebruikt om een advies/accordering te registeren voor het verzoek."
 
-#: zac/core/models.py:128
+#: zac/core/models.py:138
 msgid "URL-reference to review request in OBJECTTYPES API."
 msgstr "URL-referentie naar verzoek in de OBJECTTYPES API."
 
-#: zac/core/models.py:130
+#: zac/core/models.py:140
 msgid ""
 "URL-reference to the review request OBJECTTYPE. This is used to register a "
 "review request."
@@ -3799,11 +3812,11 @@ msgstr ""
 "Een URL-referentie naar het verzoek OBJECTTYPE. Dit wordt gebruikt om een "
 "verzoek te registreren."
 
-#: zac/core/models.py:135
+#: zac/core/models.py:145
 msgid "URL-reference to StartCamundaForms in OBJECTTYPES API."
 msgstr "URL-referentie naar StartCamundaForms in de OBJECTTYPES API."
 
-#: zac/core/models.py:137
+#: zac/core/models.py:147
 msgid ""
 "A URL-reference to the StartCamundaForms OBJECTTYPE. This is used to set the "
 "right variables for the camunda process related to the ZAAKTYPE."
@@ -3811,11 +3824,11 @@ msgstr ""
 "Een URL-referentie naar het StartCamundaForms OBJECTTYPE. Dit wordt gebruikt "
 "om de juiste variabelen voor het camunda proces te zetten per ZAAKTYPE."
 
-#: zac/core/models.py:142
+#: zac/core/models.py:152
 msgid "URL-reference to ZaaktypeAttributes in OBJECTTYPES API."
 msgstr "URL-referentie naar ZaaktypeAttributes in de OBJECTTYPES API."
 
-#: zac/core/models.py:144
+#: zac/core/models.py:154
 msgid ""
 "A URL-reference to the ZaaktypeAttributes OBJECTTYPE. This is used to get "
 "extra data for EIGENSCHAPs."
@@ -3823,7 +3836,7 @@ msgstr ""
 "Een URL-referentie naar het ZaaktypeAttributes OBJECTTYPE. Dit wordt "
 "gebruikt om extra data op te halen voor EIGENSCHAPpen."
 
-#: zac/core/models.py:150
+#: zac/core/models.py:160
 msgid "meta objecttype configuration"
 msgstr "meta objecttype configuratie"
 
@@ -4603,40 +4616,40 @@ msgstr "Groep die advies gaf."
 msgid "ZAAK that review request belongs to."
 msgstr "ZAAK waar verzoek aan toebehoort."
 
-#: zac/werkvoorraad/views.py:64
+#: zac/werkvoorraad/views.py:65
 msgid "List access requests for logged in user."
 msgstr "Alle toegangsverzoeken voor ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:77
+#: zac/werkvoorraad/views.py:78
 msgid "List activities for logged in user."
 msgstr "Alle activiteiten voor ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:95
+#: zac/werkvoorraad/views.py:96
 msgid "List activities for groups of logged in user."
 msgstr "Alle activiteiten voor groepen van ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:112
+#: zac/werkvoorraad/views.py:113
 msgid "List active ZAAKen for logged in user."
 msgstr "Alle openstaande ZAAKen voor ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:134
+#: zac/werkvoorraad/views.py:135
 msgid "List user tasks for logged in user."
 msgstr "Alle gebruikerstaken voor ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:200
+#: zac/werkvoorraad/views.py:201
 msgid "List user tasks assigned to groups related to logged in user."
 msgstr ""
 "Alle gebruikerstaken van gebruikersgroepen van ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:209
+#: zac/werkvoorraad/views.py:210
 msgid "List checklist questions for logged in user."
 msgstr "Alle checklistvragen voor ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:242
+#: zac/werkvoorraad/views.py:243
 msgid "List checklist questions for groups of logged in user."
 msgstr "Alle checklistvragen voor groepen van ingelogde gebruiker opvragen."
 
-#: zac/werkvoorraad/views.py:263
+#: zac/werkvoorraad/views.py:264
 msgid "List review requests initiated by user that are not locked."
 msgstr ""
 "Alle verzoeken die door de gebruiker zijn ingediend en niet op slot staan."
