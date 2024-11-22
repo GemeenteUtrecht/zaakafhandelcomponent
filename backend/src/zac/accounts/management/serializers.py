@@ -1,6 +1,15 @@
+from datetime import date
+
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework.serializers import EmailField, IntegerField, ListField, Serializer
+from rest_framework.serializers import (
+    DateField,
+    EmailField,
+    IntegerField,
+    ListField,
+    Serializer,
+    ValidationError,
+)
 
 
 class AxesResetSerializer(Serializer):
@@ -20,3 +29,13 @@ class UserLogSerializer(Serializer):
         child=EmailField(help_text=_("Email of recipient."), required=True),
         required=True,
     )
+    start_date = DateField(
+        default=date.today(), help_text=_("Start date of logs."), required=False
+    )
+    end_date = DateField(required=False)
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        if (end_date := data.get("end_date")) and (end_date <= data["start_date"]):
+            raise ValidationError(_("Start date needs to be earlier than end date."))
+        return data
