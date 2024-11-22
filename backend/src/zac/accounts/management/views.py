@@ -133,5 +133,5 @@ class UserLogView(APIView):
     def post(self, request):
         serializer = UserLogSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        send_access_log_email(recipient_list=serializer.data["recipient_list"])
+        send_access_log_email(**serializer.validated_data)
         return Response(status=HTTP_204_NO_CONTENT)

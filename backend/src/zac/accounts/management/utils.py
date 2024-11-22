@@ -1,7 +1,7 @@
 import csv
 from datetime import date, datetime
 from io import StringIO
-from typing import List
+from typing import List, Optional
 
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -15,12 +15,19 @@ from zac.accounts.models import User
 TZ = timezone("Europe/Amsterdam")
 
 
-def send_access_log_email(recipient_list: List[str]) -> None:
+def send_access_log_email(
+    recipient_list: List[str], start_date: date, end_date: Optional[date] = None
+) -> None:
     logs = AccessLog.objects.filter(
-        attempt_time__gte=make_aware(
-            datetime.combine(datetime.today(), datetime.min.time())
-        )
+        attempt_time__gte=make_aware(datetime.combine(start_date, datetime.min.time()))
     )
+    if end_date:
+        logs.filter(
+            attempt_time__lte=make_aware(
+                datetime.combine(end_date, datetime.max.time())
+            )
+        )
+
     user_logs = {}
     for log in logs:
         if log.username in user_logs:
