@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-19 09:56+0000\n"
+"POT-Creation-Date: 2024-11-25 14:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Ammeraal <danielammeraal@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -428,17 +428,27 @@ msgstr "accordeur"
 msgid "checklist"
 msgstr "checklist"
 
-#: zac/accounts/management/serializers.py:8
+#: zac/accounts/management/serializers.py:17
 msgid "Number of cleared access attempts."
 msgstr ""
 
-#: zac/accounts/management/serializers.py:14
+#: zac/accounts/management/serializers.py:23
 msgid "Number of blueprint permissions added."
 msgstr "Aantal blueprintrechten toegevoegd."
 
-#: zac/accounts/management/serializers.py:20
+#: zac/accounts/management/serializers.py:29
 msgid "Email of recipient."
 msgstr "Email van ontvanger."
+
+#: zac/accounts/management/serializers.py:33
+#, fuzzy
+#| msgid "Start date of the access"
+msgid "Start date of logs."
+msgstr "Startdatum van de toegang"
+
+#: zac/accounts/management/serializers.py:40
+msgid "Start date needs to be earlier than end date."
+msgstr "Startdatum moet eerder zijn dan einddatum."
 
 #: zac/accounts/management/views.py:35
 msgid "Clear all access attempts."
@@ -1133,7 +1143,6 @@ msgid "List messages for a ZAAK."
 msgstr "Alle messages voor een ZAAK opvragen."
 
 #: zac/camunda/api/views.py:236
-#| msgid "Retrieve ZAAK URL for process instance."
 msgid "Retrieve camunda variable for process instance."
 msgstr "Haal een camunda variabele op voor process instance."
 
@@ -3124,7 +3133,6 @@ msgstr "Dit OBJECT is al gerelateerd aan de ZAAK."
 
 #: zac/core/api/serializers.py:1590
 #, python-brace-format
-#| msgid "Object is `afgestoten`."
 msgid "`{ot}` is `afgestoten`."
 msgstr "`{ot}` is `afgestoten`."
 
@@ -4519,28 +4527,28 @@ msgstr ""
 msgid "Submit"
 msgstr "Indienen"
 
-#: zac/utils/exceptions.py:36
+#: zac/utils/exceptions.py:38
 msgid "An error occurred in an external API."
 msgstr "Een error heeft plaatsgevonden in een externe API."
 
-#: zac/utils/exceptions.py:53
+#: zac/utils/exceptions.py:55
 msgid "A service is not configured"
 msgstr "Een service is niet geconfigureerd"
 
-#: zac/utils/exceptions.py:236
+#: zac/utils/exceptions.py:245
 msgid "User has pending access request for this ZAAK"
 msgstr "Je hebt al een toegangsverzoek voor deze ZAAK"
 
-#: zac/utils/exceptions.py:238
+#: zac/utils/exceptions.py:247
 msgid "User does not have required permissions."
 msgstr "De gebruiker heeft niet de vereiste rechten."
 
-#: zac/utils/exceptions.py:250
+#: zac/utils/exceptions.py:259
 msgid "Boolean indicating if the user can request access for the ZAAK"
 msgstr ""
 "Booleaan die laat zien of de gebruiker toegang kan aanvragen voor de ZAAK"
 
-#: zac/utils/exceptions.py:255
+#: zac/utils/exceptions.py:264
 msgid "Reason why the user can't request access for the ZAAK"
 msgstr "Reden waarom de gebruiker geen toegang kan aanvragen voor de ZAAK"
 

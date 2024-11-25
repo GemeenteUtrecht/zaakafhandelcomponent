@@ -1302,7 +1302,9 @@ class RolSerializer(PolymorphicSerializer):
         else:
             if rt.omschrijving_generiek == RolOmschrijving.initiator:
                 raise serializers.ValidationError(
-                    _("ROLTYPE {rt} is an initiator and cannot be changed.")
+                    _("ROLTYPE {rt} is an initiator and cannot be changed.").format(
+                        rt=data["roltype_omschrijving"]
+                    )
                 )
 
         if data.get("betrokkene") and data["betrokkene_type"]:
