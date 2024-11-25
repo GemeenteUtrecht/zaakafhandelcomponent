@@ -1586,7 +1586,9 @@ class ZaakObjectProxySerializer(ProxySerializer):
                 )
         object = fetch_object(self.initial_data["object"])
         if object["record"]["data"].get("afgestoten", False):
-            raise serializers.ValidationError(_("Object is `afgestoten`."))
+            raise serializers.ValidationError(
+                _("`{ot}` is `afgestoten`.").format(ot=object["type"]["name"])
+            )
 
         return self.initial_data
 

@@ -15,11 +15,13 @@ from rest_framework.exceptions import (
     _get_error_details,
 )
 from rest_framework.response import Response
+from rest_framework.settings import api_settings as drf_settings
 from vng_api_common.compat import sentry_client
 from vng_api_common.exception_handling import (
     HandledException as VNGHandledException,
     underscore_to_camel,
 )
+from vng_api_common.serializers import FoutSerializer, ValidatieFoutSerializer
 from vng_api_common.views import (
     ERROR_CONTENT_TYPE,
     OrderedDict,
@@ -138,8 +140,15 @@ class HandledException(VNGHandledException):
         ):
             # ErrorDetail from DRF is a str subclass
             data = getattr(self.response, "data", {})
-            if isinstance(data, dict) and (detail := data.get("detail")):
-                return detail
+            if isinstance(data, dict):
+                if detail := data.get("detail"):
+                    return detail
+                elif detail := data.get(drf_settings.NON_FIELD_ERRORS_KEY):
+                    if isinstance(detail, list):
+                        return " ".join([str(det) for det in detail])
+                    elif isinstance(detail, str):
+                        return detail
+
             return _get_error_details(data)
         # any other exception -> return the raw ErrorDetails object so we get
         # access to the code later

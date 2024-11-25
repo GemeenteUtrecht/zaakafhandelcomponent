@@ -9,6 +9,7 @@ import { LOCALE_ID } from '@angular/core';
 import localeNL from '@angular/common/locales/nl';
 
 import { AuthInterceptor } from './helpers/auth.interceptor';
+import { LocaleInterceptor } from './helpers/locale.interceptor';
 
 import { SharedUiComponentsModule } from '@gu/components';
 
@@ -50,6 +51,7 @@ registerLocaleData(localeNL);
   providers: [
     Title,
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: LocaleInterceptor, multi: true },
     { provide: LOCALE_ID, useValue: "nl-NL" }
   ],
   bootstrap: [AppComponent],
