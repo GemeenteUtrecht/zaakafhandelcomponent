@@ -9,13 +9,28 @@
     <div>
       <div class="mb-2">
         <h3>Recent bezochte zaken</h3>
-        <ul>
-          <li *ngFor="let recentlyViewed of recentlyViewedCases">
-            <p>
-              <a class="mr-2" href="{{recentlyViewed.url}}">{{recentlyViewed.identificatie}}</a><small>{{recentlyViewed.visited | niceDateFormatPipe}}</small>
-            </p>
-          </li>
-        </ul>
+        <table>
+          <tr>
+            <th class="px-2">Identificatie</th>
+            <th class="px-2">Omschrijving</th>
+            <th class="px-2">Zaaktype</th>
+            <th class="px-2">Laatst bezocht</th>
+          </tr>
+          <tr *ngFor="let recentlyViewed of recentlyViewedCases">
+            <td class="px-2">
+              <a href="{{recentlyViewed.url}}">{{recentlyViewed.identificatie}}</a>
+            </td>
+            <td class="px-2">
+              {{recentlyViewed.omschrijving}}
+            </td>
+            <td class="px-2">
+              {{recentlyViewed.zaaktypeOmschrijving}}
+            </td>
+            <td class="px-2">
+              <small>{{recentlyViewed.visited | niceDateFormatPipe}}</small>
+            </td>
+          </tr>
+        </table>
       </div>
       <hr class="mb-4">
       <div>
