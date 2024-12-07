@@ -6,7 +6,6 @@ from django.urls import reverse
 
 import requests_mock
 from django_camunda.models import CamundaConfig
-from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory

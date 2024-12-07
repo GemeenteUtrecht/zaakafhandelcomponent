@@ -68,6 +68,7 @@ from zac.core.services import (
     fetch_objecttypes,
     fetch_rol,
     fetch_zaaktype,
+    find_zaak,
     get_document,
     get_informatieobjecttypen_for_zaak,
     get_informatieobjecttypen_for_zaaktype,
@@ -1622,6 +1623,22 @@ class RecentlyViewedSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
         help_text=_("Unique identifier of ZAAK within `bronorganisatie`."),
     )
+    omschrijving = serializers.SerializerMethodField(
+        help_text=_("A short summary of the ZAAK.")
+    )
+    zaaktype_omschrijving = serializers.SerializerMethodField(
+        help_text=_("Description of ZAAKTYPE.")
+    )
+
+    def get_omschrijving(self, obj) -> str:
+        return find_zaak(
+            bronorganisatie=obj["bronorganisatie"], identificatie=obj["identificatie"]
+        ).omschrijving
+
+    def get_zaaktype_omschrijving(self, obj) -> str:
+        return find_zaak(
+            bronorganisatie=obj["bronorganisatie"], identificatie=obj["identificatie"]
+        ).zaaktype.omschrijving
 
     def get_url(self, obj: Dict) -> str:
         path = furl(settings.UI_ROOT_URL).path.segments + [
