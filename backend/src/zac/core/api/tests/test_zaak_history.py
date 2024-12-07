@@ -18,11 +18,12 @@ from zac.accounts.tests.factories import (
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
-from zac.tests.utils import mock_resource_get
+from zac.tests.utils import mock_resource_get, paginated_response
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 BRONORGANISATIE = "123456782"
 IDENTIFICATIE = "ZAAK-2020-0010"
+CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 
 
 @requests_mock.Mocker()
@@ -34,6 +35,24 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
 
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
+
+        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/e3f5c6d2-0e49-4293-8428-26139f630969",
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie=IDENTIFICATIE,
+            bronorganisatie=BRONORGANISATIE,
+            zaaktype=cls.zaaktype["url"],
+        )
         cls.user = SuperUserFactory.create(
             recently_viewed=[
                 {
@@ -43,7 +62,6 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
                 }
             ]
         )
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         cls.url = reverse(
             "recently-viewed",
         )
@@ -56,14 +74,14 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
     @freeze_time("2020-12-26T12:00:00+00:00")
     def test_get_recently_viewed(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630952",
-            identificatie=IDENTIFICATIE,
-            bronorganisatie=BRONORGANISATIE,
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
         )
-        mock_resource_get(m, zaak)
+
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -74,6 +92,8 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
                         "visited": "2020-12-26T12:00:00+00:00",
                         "url": "http://testserver/ui/zaken/123456782/ZAAK-2020-0010",
                         "identificatie": "ZAAK-2020-0010",
+                        "omschrijving": self.zaak["omschrijving"],
+                        "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
                     }
                 ]
             },
@@ -82,12 +102,24 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
     @freeze_time("2020-12-26T13:00:00+00:00")
     def test_set_recently_viewed(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
+        )
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
             url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630953",
             identificatie="ZAAK-1234",
             bronorganisatie="1234",
+            zaaktype=self.zaaktype["url"],
+        )
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={zaak['bronorganisatie']}&identificatie={zaak['identificatie']}",
+            json=paginated_response([zaak]),
         )
         mock_resource_get(m, zaak)
         response = self.client.patch(self.url, {"zaak": zaak["url"]})
@@ -100,11 +132,15 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
                         "visited": "2020-12-26T13:00:00+00:00",
                         "url": "http://testserver/ui/zaken/1234/ZAAK-1234",
                         "identificatie": "ZAAK-1234",
+                        "omschrijving": zaak["omschrijving"],
+                        "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
                     },
                     {
                         "visited": "2020-12-26T12:00:00+00:00",
                         "url": "http://testserver/ui/zaken/123456782/ZAAK-2020-0010",
                         "identificatie": "ZAAK-2020-0010",
+                        "omschrijving": self.zaak["omschrijving"],
+                        "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
                     },
                 ]
             },
@@ -113,15 +149,14 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
     @freeze_time("2020-12-26T13:00:00+00:00")
     def test_set_recently_viewed_make_sure_its_unique(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630952",
-            identificatie=IDENTIFICATIE,
-            bronorganisatie=BRONORGANISATIE,
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
         )
-        mock_resource_get(m, zaak)
-        response = self.client.patch(self.url, {"zaak": zaak["url"]})
+        response = self.client.patch(self.url, {"zaak": self.zaak["url"]})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json(),
@@ -131,7 +166,9 @@ class RecentlyViewedZakenTests(ESMixin, ClearCachesMixin, APITestCase):
                         "visited": "2020-12-26T13:00:00+00:00",
                         "url": "http://testserver/ui/zaken/123456782/ZAAK-2020-0010",
                         "identificatie": "ZAAK-2020-0010",
-                    },
+                        "omschrijving": self.zaak["omschrijving"],
+                        "zaaktypeOmschrijving": self.zaaktype["omschrijving"],
+                    }
                 ]
             },
         )
@@ -168,6 +205,21 @@ class RecentlyViewedZakenPermissionTests(ESMixin, ClearCachesMixin, APITestCase)
             ]
         )
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+
+        cls.zaaktype = generate_oas_component(
+            "ztc",
+            "schemas/ZaakType",
+            url=f"{CATALOGI_ROOT}zaaktypen/e3f5c6d2-0e49-4293-8428-26139f630969",
+        )
+        cls.zaak = generate_oas_component(
+            "zrc",
+            "schemas/Zaak",
+            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
+            identificatie=IDENTIFICATIE,
+            bronorganisatie=BRONORGANISATIE,
+            zaaktype=cls.zaaktype["url"],
+        )
         cls.url = reverse(
             "recently-viewed",
         )
@@ -185,14 +237,13 @@ class RecentlyViewedZakenPermissionTests(ESMixin, ClearCachesMixin, APITestCase)
     @freeze_time("2020-12-26T12:00:00+00:00")
     def test_get_patch_recently_viewed_blueprint_permissions(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie=IDENTIFICATIE,
-            bronorganisatie=BRONORGANISATIE,
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
         )
-        mock_resource_get(m, zaak)
 
         BlueprintPermissionFactory.create(
             role__permissions=[zaken_inzien.name],
@@ -209,23 +260,22 @@ class RecentlyViewedZakenPermissionTests(ESMixin, ClearCachesMixin, APITestCase)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        response = self.client.patch(self.url, {"zaak": zaak["url"]})
+        response = self.client.patch(self.url, {"zaak": self.zaak["url"]})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @freeze_time("2020-12-26T12:00:00+00:00")
     def test_get_patch_recently_viewed_atomic_permissions(self, m, *mocks):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        zaak = generate_oas_component(
-            "zrc",
-            "schemas/Zaak",
-            url=f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950",
-            identificatie=IDENTIFICATIE,
-            bronorganisatie=BRONORGANISATIE,
+        mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
+        mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        m.get(
+            f"{ZAKEN_ROOT}zaken?bronorganisatie={BRONORGANISATIE}&identificatie={IDENTIFICATIE}",
+            json=paginated_response([self.zaak]),
         )
-        mock_resource_get(m, zaak)
 
         AtomicPermissionFactory.create(
-            object_url=zaak["url"],
+            object_url=self.zaak["url"],
             permission=zaken_inzien.name,
             for_user=self.user,
         )
@@ -235,5 +285,5 @@ class RecentlyViewedZakenPermissionTests(ESMixin, ClearCachesMixin, APITestCase)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        response = self.client.patch(self.url, {"zaak": zaak["url"]})
+        response = self.client.patch(self.url, {"zaak": self.zaak["url"]})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
