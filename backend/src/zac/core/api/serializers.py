@@ -135,8 +135,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
             "URL to read INFORMATIEOBJECT. Opens the appropriate Microsoft Office application."
         ),
     )
-    vertrouwelijkheidaanduiding = serializers.CharField(
-        source="get_vertrouwelijkheidaanduiding_display",
+    vertrouwelijkheidaanduiding = serializers.SerializerMethodField(
         help_text=_("Vertrouwelijkheidaanduiding of INFORMATIEOBJECT."),
     )
     write_url = DowcUrlField(
@@ -198,6 +197,13 @@ class GetZaakDocumentSerializer(APIModelSerializer):
 
     def get_last_edited_date(self, obj) -> Optional[datetime]:
         return self.context.get("editing_history", {}).get(obj.url)
+
+    def get_vertrouwelijkheidaanduiding(self, obj) -> Optional[str]:
+        if va := getattr(
+            VertrouwelijkheidsAanduidingen, obj.vertrouwelijkheidaanduiding, None
+        ):
+            return va.label
+        return None
 
 
 class AddZaakDocumentSerializer(serializers.Serializer):
@@ -375,9 +381,7 @@ class DocumentInfoSerializer(serializers.Serializer):
     titel = serializers.CharField(
         help_text=_("Title of the INFORMATIEOBJECT. Includes the file extension.")
     )
-    vertrouwelijkheidaanduiding = serializers.CharField(
-        source="get_vertrouwelijkheidaanduiding_display"
-    )
+    vertrouwelijkheidaanduiding = serializers.SerializerMethodField()
     bestandsgrootte = serializers.SerializerMethodField()
 
     read_url = DowcUrlField(
@@ -390,6 +394,13 @@ class DocumentInfoSerializer(serializers.Serializer):
 
     def get_bestandsgrootte(self, obj):
         return filesizeformat(obj.bestandsomvang)
+
+    def get_vertrouwelijkheidaanduiding(self, obj) -> Optional[str]:
+        if va := getattr(
+            VertrouwelijkheidsAanduidingen, obj.vertrouwelijkheidaanduiding, None
+        ):
+            return va.value
+        return None
 
 
 class ExpandParamSerializer(serializers.Serializer):
@@ -1095,9 +1106,7 @@ class ReadRolSerializer(APIModelSerializer):
         choices=RolTypes,
         help_text=_("Betrokkene type of ROL. Mutually exclusive with `betrokkene`."),
     )
-    betrokkene_type_display = serializers.CharField(
-        source="get_betrokkene_type_display"
-    )
+    betrokkene_type_display = serializers.SerializerMethodField()
     roltype_omschrijving = serializers.CharField(
         source="get_roltype_omschrijving",
         help_text=_("Description of ROLTYPE related to ROL."),
@@ -1117,6 +1126,11 @@ class ReadRolSerializer(APIModelSerializer):
             "identificatie",
             "roltype_omschrijving",
         )
+
+    def get_betrokkene_type_display(self, obj) -> Optional[str]:
+        if btd := getattr(RolTypes, obj.betrokkene_type, None):
+            return btd.label
+        return None
 
 
 def betrokkene_identificatie_serializer(serializer_cls: SerializerCls) -> SerializerCls:
