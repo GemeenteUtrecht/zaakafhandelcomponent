@@ -7,7 +7,7 @@ pytz
 uwsgi
 Pillow
 python-dateutil
-pyyaml
+pyyaml==5.3.1
 isodate
 requests_mock
 elasticsearch-dsl
@@ -16,7 +16,7 @@ psutil
 
 # zgw-integration
 gemma-zds-client>=1.0.1
-zgw-consumers[drf]<=0.23.2
+zgw-consumers[drf]==0.26.2
 vng-api-common
 
 # Framework libraries
