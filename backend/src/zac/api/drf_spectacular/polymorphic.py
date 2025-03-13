@@ -71,6 +71,20 @@ class PolymorphicSerializerExtension(OpenApiSerializerExtension):
 
         unique_refs = {tuple(ref.items()) for _, ref in sub_components}
 
+        # print("DRF SPECTACULAR EXTENSION " * 10)
+        # print(
+        #     {
+        #         "oneOf": [dict(ref) for ref in unique_refs],
+        #         "discriminator": {
+        #             "propertyName": serializer.discriminator_field,
+        #             "mapping": {
+        #                 resource_type: ref["$ref"]
+        #                 for resource_type, ref in sub_components
+        #             },
+        #         },
+        #     }
+        # )
+
         return {
             "oneOf": [dict(ref) for ref in unique_refs],
             "discriminator": {
