@@ -5818,7 +5818,7 @@ paths:
           format: uuid
   /zaaktype-informatieobjecttypen:
     get:
-      operationId: zaakinformatieobjecttype_list
+      operationId: zaaktypeinformatieobjecttype_list
       summary: Alle ZAAKTYPE-INFORMATIEOBJECTTYPE relaties opvragen.
       description: Deze lijst kan gefilterd wordt met query-string parameters.
       parameters:
@@ -6007,7 +6007,7 @@ paths:
         - JWT-Claims:
             - catalogi.lezen
     post:
-      operationId: zaakinformatieobjecttype_create
+      operationId: zaaktypeinformatieobjecttype_create
       summary: Maak een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie aan.
       description: "Maak een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie aan. Dit kan alleen\
         \ als het\nbijbehorende ZAAKTYPE een concept betreft.\n\nEr wordt gevalideerd\
@@ -6148,7 +6148,7 @@ paths:
     parameters: []
   /zaaktype-informatieobjecttypen/{uuid}:
     get:
-      operationId: zaakinformatieobjecttype_read
+      operationId: zaaktypeinformatieobjecttype_read
       summary: Een specifieke ZAAKTYPE-INFORMATIEOBJECTTYPE relatie opvragen.
       description: Een specifieke ZAAKTYPE-INFORMATIEOBJECTTYPE relatie opvragen.
       responses:
@@ -6278,7 +6278,7 @@ paths:
         - JWT-Claims:
             - catalogi.lezen
     put:
-      operationId: zaakinformatieobjecttype_update
+      operationId: zaaktypeinformatieobjecttype_update
       summary: Werk een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie in zijn geheel bij.
       description: "Werk een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie in zijn geheel\
         \ bij. Dit kan\nalleen als het bijbehorende ZAAKTYPE een concept betreft.\n\
@@ -6425,7 +6425,7 @@ paths:
         - JWT-Claims:
             - catalogi.schrijven
     patch:
-      operationId: zaakinformatieobjecttype_partial_update
+      operationId: zaaktypeinformatieobjecttype_partial_update
       summary: Werk een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie deels bij.
       description: "Werk een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie deels bij. Dit\
         \ kan alleen\nals het bijbehorende ZAAKTYPE een concept betreft.\n\nEr wordt\
@@ -6572,7 +6572,7 @@ paths:
         - JWT-Claims:
             - catalogi.schrijven
     delete:
-      operationId: zaakinformatieobjecttype_delete
+      operationId: zaaktypeinformatieobjecttype_delete
       summary: Verwijder een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie.
       description: "Verwijder een ZAAKTYPE-INFORMATIEOBJECTTYPE relatie. Dit kan alleen\
         \ als\nhet bijbehorende ZAAKTYPE een concept betreft.\n\nEr wordt gevalideerd\

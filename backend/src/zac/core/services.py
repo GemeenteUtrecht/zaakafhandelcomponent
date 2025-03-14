@@ -368,7 +368,7 @@ def get_informatieobjecttypen_for_zaaktype(
     client = _client_from_object(zaaktype)
     results = get_paginated_results(
         client,
-        "zaakinformatieobjecttype",
+        "zaaktypeinformatieobjecttype",
         request_kwargs={"params": {"zaaktype": zaaktype.url}},
     )
     urls = [
