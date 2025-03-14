@@ -8,10 +8,10 @@
 ZAC Documentation
 =================
 
-:Version: 1.0.52
+:Version: 1.0.16
 :Source: https://github.com/GemeenteUtrecht/zaakafhandelcomponent
 :Keywords: zac, zaakafhandelcomponent, VNG, Common Ground
-:PythonVersion: 3.10
+:PythonVersion: 3.9
 
 |black|
 

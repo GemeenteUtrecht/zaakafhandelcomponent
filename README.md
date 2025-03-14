@@ -5,7 +5,7 @@
 |   Versie | https://github.com/gemeenteutrecht/zaakafhandelcomponent/releases/latest|
 |   Source | https://github.com/GemeenteUtrecht/zaakafhandelcomponent |
 | Keywords | zaken, zaakgericht werken, GEMMA, Utrecht, Common Ground |
-|   Python | 3.10                                                     |
+|   Python | 3.9                                                      |
 
 
 Het zaakafhandelcomponent (ook wel: keteninzagecomponent) orchestreert het zaakgericht
@@ -36,7 +36,7 @@ Je hebt de volgende dependencies nodig op je development machine:
 
 * PostgreSQL 10+
 * Redis 5+ als je de aanbevolen cache engine gebruikt
-* Python 3.10, met _virtualenv_ o.i.d.
+* Python 3.9, met _virtualenv_ o.i.d.
 
 Je hebt ook Elasticsearch nodig. Die kan worden gerund in Docker:
 

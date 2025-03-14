@@ -1,5 +1,5 @@
 # Stage 1 - Compile needed python dependencies
-FROM python:3.10-slim-bookworm AS build
+FROM python:3.9-slim-bookworm AS build
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ COPY src/zac/js/ /app/src/zac/js/
 RUN npm run build --production
 
 # Stage 3 - Build docker image suitable for production
-FROM python:3.10-slim-bookworm AS production
+FROM python:3.9-slim-bookworm AS production
 
 # Stage 3.1 - Set up the needed production dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -43,7 +43,7 @@ COPY ./bin/docker_start.sh /start.sh
 RUN mkdir /app/log /app/media
 
 # copy backend build deps
-COPY --from=build /usr/local/lib/python3.10 /usr/local/lib/python3.10
+COPY --from=build /usr/local/lib/python3.9 /usr/local/lib/python3.9
 COPY --from=build /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 
 # required for fonts,styles etc.

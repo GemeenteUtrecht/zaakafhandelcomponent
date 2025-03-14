@@ -18,7 +18,7 @@ from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
 
-ALL_VAS_SORTED = VertrouwelijkheidsAanduidingen.values
+ALL_VAS_SORTED = list(VertrouwelijkheidsAanduidingen.values.keys())
 AN_HOUR = 60 * 60
 
 
