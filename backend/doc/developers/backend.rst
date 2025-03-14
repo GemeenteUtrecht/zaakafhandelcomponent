@@ -10,7 +10,7 @@ To run the backend, create a Python virtual environment and install the dependen
 
 .. code-block:: bash
 
-    $ virtualenv env -p /usr/bin/python3.9  # create the virtualenv if it doesn't exist
+    $ virtualenv env -p /usr/bin/python3.10  # create the virtualenv if it doesn't exist
     $ source env/bin/activate  # activate the virtualenv
     (env)$ pip install -r requirements/dev.txt  # install the dependencies
 
