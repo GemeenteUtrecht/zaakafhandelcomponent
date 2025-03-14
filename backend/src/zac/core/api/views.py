@@ -367,10 +367,7 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         # If no errors are raised - data is valid too.
         data = deepcopy(serializer.data)
         reden = data.pop("reden", None)
-        headers = {"Accept-Crs": "EPSG:4326", "Content-Crs": "EPSG:4326"}
-        if reden:
-            headers["X-Audit-Toelichting"] = reden
-        request_kwargs = {"headers": headers}
+        request_kwargs = {"headers": {"X-Audit-Toelichting": reden}} if reden else {}
 
         client.partial_update(
             "zaak",
