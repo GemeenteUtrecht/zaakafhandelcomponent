@@ -442,7 +442,7 @@ def _find_zaken(
     _zaken = get_paginated_results(
         client,
         "zaak",
-        request_kwargs={"params": query},
+        request_kwargs={"params": query, "headers": {"Accept-Crs": "EPSG:4326"}},
         minimum=minimum,
     )
     return _zaken
@@ -457,7 +457,11 @@ def get_zaken_all_paginated(
     Used to index Zaken in ES.
     Should not be used for searches with user permissions
     """
-    response = client.list("zaak", query_params=query_params)
+    response = client.list(
+        "zaak",
+        query_params=query_params,
+        request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
+    )
     zaken = factory(Zaak, response["results"])
     query_params = fetch_next_url_pagination(response, query_params=query_params)
     return zaken, query_params
@@ -479,7 +483,12 @@ def get_zaken_all(
 
     def _get_paginated_results(client):
         return get_paginated_results(
-            client, "zaak", request_kwargs={"params": query_params}
+            client,
+            "zaak",
+            request_kwargs={
+                "params": query_params,
+                "headers": {"Accept-Crs": "EPSG:4326"},
+            },
         )
 
     with parallel(max_workers=settings.MAX_WORKERS) as executor:
@@ -588,7 +597,12 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
         for zrc in zrcs:
             client = zrc.build_client()
             results = get_paginated_results(
-                client, "zaak", request_kwargs={"params": query}
+                client,
+                "zaak",
+                request_kwargs={
+                    "params": query,
+                    "headers": {"Accept-Crs": "EPSG:4326"},
+                },
             )
 
             if not results:
@@ -774,12 +788,22 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
 
         for zrc in zrcs:
             client = zrc.build_client()
-            result = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
+            result = client.retrieve(
+                "zaak",
+                url=zaak_url,
+                uuid=zaak_uuid,
+                request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
+            )
 
             if not result:
                 continue
     else:
-        result = client.retrieve("zaak", url=zaak_url, uuid=zaak_uuid)
+        result = client.retrieve(
+            "zaak",
+            url=zaak_url,
+            uuid=zaak_uuid,
+            request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
+        )
 
     result = factory(Zaak, result)
 
