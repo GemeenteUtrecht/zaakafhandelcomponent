@@ -134,7 +134,11 @@ class ZakenHandler:
     @staticmethod
     def _retrieve_zaak(zaak_url) -> Zaak:
         zrc_client = client_from_url(zaak_url)
-        zaak = zrc_client.retrieve("zaak", url=zaak_url)
+        zaak = zrc_client.retrieve(
+            "zaak",
+            url=zaak_url,
+            request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
+        )
         zaak = factory(Zaak, zaak)
 
         if isinstance(zaak.zaaktype, str):
