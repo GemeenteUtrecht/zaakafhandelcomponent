@@ -591,11 +591,13 @@ class ZaakRelationView(views.APIView):
             "zaak",
             {"relevanteAndereZaken": hoofdzaak.relevante_andere_zaken},
             url=hoofdzaak.url,
+            request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
         )
         client.partial_update(
             "zaak",
             {"relevanteAndereZaken": bijdragezaak.relevante_andere_zaken},
             url=bijdragezaak.url,
+            request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
         )
         # Invalidate cache immediately
         invalidate_zaak_cache(hoofdzaak)
