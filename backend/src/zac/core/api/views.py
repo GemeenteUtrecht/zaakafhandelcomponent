@@ -912,10 +912,12 @@ class ZaakDocumentView(views.APIView):
 
     def get_document_audit_trail(self, document: Document) -> Dict[str, datetime]:
         latest_audittrail = fetch_latest_audit_trail_data_document(document.url)
-        editing_history = {
-            latest_audittrail.resource_url: latest_audittrail.last_edited_date
-        }
-        return editing_history
+        if latest_audittrail:
+            editing_history = {
+                latest_audittrail.resource_url: latest_audittrail.last_edited_date
+            }
+            return editing_history
+        return dict()
 
     def get_response_serializer(self, instance: Document) -> GetZaakDocumentSerializer:
         open_documenten = check_document_status(documents=[instance.url])
