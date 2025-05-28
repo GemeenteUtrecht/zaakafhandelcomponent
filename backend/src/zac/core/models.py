@@ -188,3 +188,14 @@ class MetaObjectTypesConfig(SingletonModel):
             for field in self._meta.get_fields()
             if isinstance(field, models.URLField)
         }
+
+
+class ApiSchemaConfig(SingletonModel):
+    client_ztiot_operation_id = models.CharField(
+        max_length=100,
+        default="zaaktypeinformatieobjecttype",
+        help_text=_(
+            "The operation ID to use for the client API schema. "
+            "This is used to generate the client code for the API schema."
+        ),
+    )

@@ -46,6 +46,7 @@ from zac.contrib.brp.models import BRPConfig
 from zac.contrib.objects.oudbehandelaren.cache import (
     invalidate_cache_fetch_oudbehandelaren,
 )
+from zac.core.models import ApiSchemaConfig
 from zac.elasticsearch.searches import search_informatieobjects, search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
@@ -365,10 +366,11 @@ def get_informatieobjecttypen_for_zaaktype(
     """
     Retrieve all informatieobjecttypen relevant for a given zaaktype.
     """
+    oz_ztiot_schema_key = ApiSchemaConfig.get_solo().client_ztiot_operation_id
     client = _client_from_object(zaaktype)
     results = get_paginated_results(
         client,
-        settings.OZ_ZTIOT_SCHEMA_KEY,  # TODO: replace with the correct schema key
+        oz_ztiot_schema_key,  # TODO: replace with the correct schema key after OZ deploy
         request_kwargs={"params": {"zaaktype": zaaktype.url}},
     )
     urls = [

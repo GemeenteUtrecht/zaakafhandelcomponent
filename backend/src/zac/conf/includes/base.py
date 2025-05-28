@@ -619,4 +619,4 @@ HIJACK_LOGIN_REDIRECT_URL = UI_ROOT_URL
 HIJACK_HEADER = "X-Is-Hijacked"
 
 # Temp setting for testing
-OZ_ZTIOT_SCHEMA_KEY = config("OZ_ZTIOT_KEY", default="zaakinformatieobjecttype")
+# OZ_ZTIOT_SCHEMA_KEY = config("OZ_ZTIOT_KEY", default="zaaktypeinformatieobjecttype")
