@@ -4,7 +4,7 @@ from django.forms import fields
 from reversion.admin import VersionAdmin
 from solo.admin import SingletonModelAdmin
 
-from .models import CoreConfig, MetaObjectTypesConfig, WarningBanner
+from .models import ApiSchemaConfig, CoreConfig, MetaObjectTypesConfig, WarningBanner
 
 
 def get_objecttypes_choices():
@@ -45,4 +45,9 @@ class MetaObjectTypesConfigAdmin(SingletonModelAdmin):
 
 @admin.register(WarningBanner)
 class WarningBannerAdmin(VersionAdmin, SingletonModelAdmin):
+    pass
+
+
+@admin.register(ApiSchemaConfig)
+class ApiSchemaConfigAdmin(SingletonModelAdmin):
     pass
