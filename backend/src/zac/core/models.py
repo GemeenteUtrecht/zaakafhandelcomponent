@@ -167,14 +167,13 @@ class MetaObjectTypesConfig(SingletonModel):
             from zac.core.services import search_objects
 
             response, qp = search_objects({"type": self.meta_list_objecttype})
-            if response["count"] == 1:
-                urls = response["results"][0]["record"]["data"].get(
-                    "metalistobjecttypes", dict()
-                )
-            else:
+            if not response["count"] == 1:
                 logger.warning(
                     "meta_list_object should be unique. Grabbing the first one."
                 )
+            urls = response["results"][0]["record"]["data"].get(
+                "metalistobjecttypes", dict()
+            )
 
             for objecttype_name, url in urls.items():
                 if url:

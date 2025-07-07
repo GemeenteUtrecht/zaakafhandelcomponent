@@ -82,7 +82,11 @@ class Command(IndexCommand, BaseCommand):
         self.stdout.write(f"Number of EIOs left: {total_expected-done}.")
 
         # Calculate time remaining.
-        total_time = ((total_expected - done) / done) * (time.time() - time_at_start)
+        total_time = (
+            ((total_expected - done) / done) * (time.time() - time_at_start)
+            if done
+            else 0
+        )
         days, left_over_seconds = divmod(total_time, 24 * 3600)
         hours, left_over = divmod(left_over_seconds, 3600)
         minutes, seconds = divmod(left_over, 60)
