@@ -10,8 +10,8 @@ os.environ.setdefault("ENVIRONMENT", "production")
 
 from .includes.base import *  # noqa isort:skip
 
-os.environ.setdefault("DEBUG", True)
-os.environ.setdefault("LOG_STDOUT", True)
+os.environ.setdefault("DEBUG", "yes")
+os.environ.setdefault("LOG_STDOUT", "yes")
 
 conn_max_age = config("DB_CONN_MAX_AGE", cast=float, default=None)
 for db_config in DATABASES.values():
