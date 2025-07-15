@@ -10,6 +10,9 @@ os.environ.setdefault("ENVIRONMENT", "production")
 
 from .includes.base import *  # noqa isort:skip
 
+os.environ.setdefault("DEBUG", True)
+os.environ.setdefault("LOG_STDOUT", True)
+
 conn_max_age = config("DB_CONN_MAX_AGE", cast=float, default=None)
 for db_config in DATABASES.values():
     db_config["CONN_MAX_AGE"] = conn_max_age
@@ -28,19 +31,19 @@ TEMPLATES[0]["OPTIONS"]["loaders"] = [
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 # Production logging facility.
-handlers = ["console"] if LOG_STDOUT else ["django"]
+# handlers = ["console"] if LOG_STDOUT else ["django"]
 
-LOGGING["loggers"].update(
-    {
-        "": {"handlers": handlers, "level": "ERROR", "propagate": False},
-        "django": {"handlers": handlers, "level": "INFO", "propagate": True},
-        "django.security.DisallowedHost": {
-            "handlers": handlers,
-            "level": "CRITICAL",
-            "propagate": False,
-        },
-    }
-)
+# LOGGING["loggers"].update(
+#     {
+#         "": {"handlers": handlers, "level": "ERROR", "propagate": False},
+#         "django": {"handlers": handlers, "level": "INFO", "propagate": True},
+#         "django.security.DisallowedHost": {
+#             "handlers": handlers,
+#             "level": "CRITICAL",
+#             "propagate": False,
+#         },
+#     }
+# )
 
 # Only set this when we're behind a reverse proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

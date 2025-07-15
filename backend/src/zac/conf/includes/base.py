@@ -261,9 +261,9 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="zac@example.com")
 #
 # LOGGING
 #
-LOG_STDOUT = config("LOG_STDOUT", default=False)
-LOG_LEVEL = config("LOG_LEVEL", default="INFO")
-LOG_PERFORMANCE = config("LOG_PERFORMANCE", default=False)
+LOG_STDOUT = config("LOG_STDOUT", default=True)
+LOG_LEVEL = config("LOG_LEVEL", default="DEBUG")
+LOG_PERFORMANCE = config("LOG_PERFORMANCE", default=True)
 
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
 
@@ -332,7 +332,7 @@ LOGGING = {
         "performance": {
             "handlers": ["performance"] if LOG_PERFORMANCE else [],
             "level": "INFO",
-            "propagate": False,
+            "propagate": True,
         },
         "mozilla_django_oidc": {
             "handlers": ["console"],
