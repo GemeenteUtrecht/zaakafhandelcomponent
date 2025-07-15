@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY ./requirements /app/requirements
 RUN pip install pip 'setuptools' -U
-RUN pip install -r requirements/production.txt
+RUN pip install -r requirements/dev.txt
 
 # Stage 2 - build frontend
 FROM node:10-buster AS frontend-build
