@@ -261,9 +261,9 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="zac@example.com")
 #
 # LOGGING
 #
-LOG_STDOUT = config("LOG_STDOUT", default=True)
+LOG_STDOUT = config("LOG_STDOUT", default="yes")
 LOG_LEVEL = config("LOG_LEVEL", default="DEBUG")
-LOG_PERFORMANCE = config("LOG_PERFORMANCE", default=True)
+LOG_PERFORMANCE = config("LOG_PERFORMANCE", default="yes")
 
 LOGGING_DIR = os.path.join(BASE_DIR, "log")
 
