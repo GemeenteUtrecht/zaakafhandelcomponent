@@ -7,6 +7,10 @@ set -e
 export PGHOST=${DB_HOST:-db}
 export PGPORT=${DB_PORT:-5432}
 
+uwsgi_port=${UWSGI_PORT:-8000}
+uwsgi_processes=${UWSGI_PROCESSES:-8}
+uwsgi_threads=${UWSGI_THREADS:-4}
+
 until pg_isready; do
   >&2 echo "Waiting for database connection..."
   sleep 1
@@ -20,13 +24,13 @@ python src/manage.py migrate
 
 >&2 echo "Starting server"
 cmd="uwsgi \
-    --http :8000 \
+    --http :$uwsgi_port \
     --module zac.wsgi \
     --static-map /static=/app/static \
     --static-map /media=/app/media  \
     --chdir src \
-    --processes 4 \
-    --threads 1 \
+    --processes $uwsgi_processes \
+    --threads $uwsgi_threads \
     --buffer-size 32768 \
 "
 
