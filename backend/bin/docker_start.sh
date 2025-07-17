@@ -8,8 +8,11 @@ export PGHOST=${DB_HOST:-db}
 export PGPORT=${DB_PORT:-5432}
 
 uwsgi_port=${UWSGI_PORT:-8000}
-uwsgi_processes=${UWSGI_PROCESSES:-8}
-uwsgi_threads=${UWSGI_THREADS:-4}
+uwsgi_processes=${UWSGI_PROCESSES:-16}
+uwsgi_threads=${UWSGI_THREADS:-8}
+uwsgi_buffer_size=${UWSGI_BUFFER_SIZE:-65536}
+uwsgi_max_requests=${UWSGI_MAX_REQUESTS:-5000}
+uwsgi_harakiri=${UWSGI_HARAKIRI:-30}
 
 until pg_isready; do
   >&2 echo "Waiting for database connection..."
@@ -31,7 +34,10 @@ cmd="uwsgi \
     --chdir src \
     --processes $uwsgi_processes \
     --threads $uwsgi_threads \
-    --buffer-size 32768 \
+    --buffer-size $uwsgi_buffer_size \
+    --enable-threads \
+    --max-requests $uwsgi_max_requests \
+    --harakiri $uwsgi_harakiri \
 "
 
 PY_AUTORELOAD=${AUTORELOAD:-false}
