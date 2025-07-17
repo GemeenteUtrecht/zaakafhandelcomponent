@@ -38,7 +38,7 @@ jobs:
           while IFS= read -r file
           do
             echo $file
-            if [[ $file != backend/bin/* ]]; then
+            if [[ $file != backend/build/* ]]; then
               echo "run_job=false" >> "$GITHUB_OUTPUT"
             else
               echo "run_job=true" >> "$GITHUB_OUTPUT"
