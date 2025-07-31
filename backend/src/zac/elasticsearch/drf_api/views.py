@@ -40,6 +40,8 @@ from .serializers import (
     SearchInformatieObjectSerializer,
     SearchReportSerializer,
     SearchSerializer,
+    VGUReportInputSerializer,
+    VGUReportOutputSerializer,
     ZaakDocumentSerializer,
     ZaakIdentificatieSerializer,
 )
