@@ -25,7 +25,6 @@ from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.permissions import zaken_inzien
-from zac.core.services import fetch_objecttypes
 
 from .data import ParentAggregation
 from .documents import (

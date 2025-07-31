@@ -9,6 +9,7 @@ from .views import (
     QuickSearchView,
     SearchReportViewSet,
     SearchView,
+    VGUReportView,
 )
 
 router = SimpleRouter()
@@ -24,5 +25,10 @@ urlpatterns = [
         "cases/<str:bronorganisatie>/<str:identificatie>/documents",
         ListZaakDocumentsESView.as_view(),
         name="zaak-documents-es",
+    ),
+    path(
+        "vgu-reports",
+        VGUReportView.as_view(),
+        name="vgu-reports",
     ),
 ]
