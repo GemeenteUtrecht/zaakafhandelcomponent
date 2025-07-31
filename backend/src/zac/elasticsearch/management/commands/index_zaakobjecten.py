@@ -43,7 +43,7 @@ class Command(IndexCommand, BaseCommand):
             total_expected_zaken = 0
             for client in clients:
                 # fetch the first page so we get the total count from the backend
-                response = client.list("zaak")
+                response = client.list("zaak", headers={"Accept-Crs": "EPSG:4326"})
                 client_num_zaken = response["count"]
                 total_expected_zaken += client_num_zaken
                 self.stdout.write(

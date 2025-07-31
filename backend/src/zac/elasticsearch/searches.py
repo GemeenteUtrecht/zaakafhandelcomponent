@@ -31,6 +31,7 @@ from .documents import (
     InformatieObjectDocument,
     ObjectDocument,
     ZaakDocument,
+    ZaakInformatieObjectDocument,
     ZaakObjectDocument,
 )
 
@@ -136,19 +137,14 @@ def search_zaken(
     end_period=None,
     return_search=False,
 ) -> Union[List[ZaakDocument], Search]:
-
     s = ZaakDocument.search()
-
-    period_filter = {}
+    range_kwargs = {}
     if start_period:
-        period_filter["startdatum"] = {
-            "gte": start_period.strftime("%Y-%m-%dT%H:%M:%S")
-        }
+        range_kwargs["gte"] = start_period.strftime("%Y-%m-%dT%H:%M:%S")
     if end_period:
-        period_filter["einddatum"] = {"lte": end_period.strftime("%Y-%m-%dT%H:%M:%S")}
-    if period_filter:
-        s = s.filter("range", registratiedatum=period_filter)
-
+        range_kwargs["lte"] = end_period.strftime("%Y-%m-%dT%H:%M:%S")
+    if range_kwargs:
+        s = s.filter("range", **{"registratiedatum": range_kwargs})
     if identificatie:
         s = s.query(Match(identificatie={"query": identificatie}))
     if identificatie_keyword:
@@ -189,7 +185,6 @@ def search_zaken(
                     query=f"*{eigenschap_value}*",
                 ),
             )
-
     if object:
         zon = search_zaakobjecten(zaken=urls, objecten=[object])
         zaakobject_zaakurls = [zo.zaak for zo in zon]
@@ -197,30 +192,22 @@ def search_zaken(
             urls += zaakobject_zaakurls
         else:
             urls = zaakobject_zaakurls
-
     if urls:
         s = s.filter(Terms(url=list(set(urls))))
     elif type(urls) == list:  # apparently we've gotten an empty list -> show nothing.
         s = s.filter(MatchNone())
-
     if not include_closed:
         s = s.filter(~Exists(field="einddatum"))
-
     # display only allowed zaken
     if only_allowed:
         s = s.filter(query_allowed_for_requester(request))
-
     if ordering:
         s = s.sort(*ordering)
-
     if fields:
         s = s.source(fields)
-
     s = s.extra(size=size)
-
     if return_search:
         return s
-
     response = s.execute()
     return response.hits
 
@@ -348,30 +335,23 @@ def search_informatieobjects(
                 query=Bool(filter=Term(related_zaken__url=zaak)),
             )
         )
-
     if bestandsnaam:
         s = s.filter(Term(bestandsnaam=bestandsnaam))
-
     if bronorganisatie:
         s = s.filter(Term(bronorganisatie=bronorganisatie))
-
     if identificatie:
         s = s.filter(Term(identificatie=identificatie))
-
     if iots_omschrijvingen:
         s = s.filter(
             Terms(informatieobjecttype__omschrijving__keyword=iots_omschrijvingen)
         )
-
     if urls:
         s = s.filter(Terms(url=urls))
-
     if ordering:
         s = s.sort(*ordering)
     if fields:
         s = s.source(fields)
     s = s.extra(size=size)
-
     if return_search:
         return s
     response = s.execute()
@@ -414,7 +394,6 @@ def count_by_iot_in_zaak(zaak: str) -> Dict[str, int]:
     s.aggs["parent"].bucket(
         "child", "terms", field="informatieobjecttype.omschrijving.keyword"
     )
-
     results = [bucket.to_dict() for bucket in s.execute().aggregations.parent.buckets]
     results = factory(ParentAggregation, results)
     iots_found = {}
@@ -424,18 +403,21 @@ def count_by_iot_in_zaak(zaak: str) -> Dict[str, int]:
     return iots_found
 
 
-def count_by_zio_in_zaken(zaken: List[str]) -> Dict[str, int]:
-    s = search_zaakinformatieobjects(zaak=zaken, size=0, return_search=True)
-    s.aggs.bucket("zaken", "terms", field="zaak.keyword")
-    s.aggs["zaken"].bucket("zios", "terms", field="url.keyword")
-
-    aggregation = s.execute().aggregations
-    zios_found = {}
-    for zaak_bucket in getattr(aggregation, "zaken", {}).buckets:
-        zios_found[zaak_bucket.key] = sum(
-            zio_bucket.doc_count for zio_bucket in zaak_bucket.zios.buckets
-        )
-    return zios_found
+def count_zio_per_given_zaken(zaken: List[str]) -> dict:
+    """
+    Returns a dictionary mapping each given zaak to the count of ZaakInformatieObjectDocuments.
+    """
+    s = ZaakInformatieObjectDocument.search()
+    s = s.filter(Terms(zaak=zaken))
+    s.aggs.bucket("zaken", "terms", field="zaak.keyword", size=len(zaken))
+    response = s.execute()
+    counts = {
+        bucket.key: bucket.doc_count for bucket in response.aggregations.zaken.buckets
+    }
+    # Ensure all input zaken are present in the result, even if count is 0
+    for zaak in zaken:
+        counts.setdefault(zaak, 0)
+    return counts
 
 
 def usage_report_zaken(
@@ -445,18 +427,18 @@ def usage_report_zaken(
     Returns a list of ZaakDocuments and a dictionary with counts of ZIOs per zaak
     within the specified period.
     """
-
     # Fetch zaken within the specified period
     s_zaken = search_zaken(
         only_allowed=False,
         start_period=start_period,
         end_period=end_period,
         fields=[
-            "identificatie.keyword",
+            "identificatie",
             "zaaktype.omschrijving",
-            "omschrijving.keyword",
+            "omschrijving",
             "registratiedatum",
             "rollen",
+            "url",
         ],
         return_search=True,
     ).filter(
@@ -487,26 +469,21 @@ def usage_report_zaken(
             "registratiedatum": zaak.registratiedatum,
             "initiator_rol": initiator_rol,
         }
-
     # Fetch zio counts for the fetched zaken
     zaak_urls = list(zaken.keys())
-    zios = count_by_zio_in_zaken(zaken=zaak_urls)
-
+    zios = count_zio_per_given_zaken(zaken=zaak_urls)
     # Fetch zaakobjecten
     zon = search_zaakobjecten(zaken=zaak_urls)
-
     # Get objecten without meta objects
     objects = search_objects(
         urls=[zo.object for zo in zon],
         exclude_meta=True,
         return_search=False,
     )
-
     # Map object URLs to string representations
     objects_to_string_representation = {
         obj.url: obj.string_representation for obj in objects
     }
-
     # Map zaak URLs to object string representations
     zaak_to_object_string_representations: Dict[str, List[str]] = {}
     for zo in zon:
@@ -517,18 +494,15 @@ def usage_report_zaken(
             zaak_to_object_string_representations[zo.zaak].append(
                 objects_to_string_representation[object_url]
             )
-
     # Join object string representations
     for z in zaak_to_object_string_representations:
         zaak_to_object_string_representations[z] = ", ".join(
             zaak_to_object_string_representations[z]
         )
-
     # Combine all data into a single dictionary for each zaak
     for zaak_url in zaken.keys():
         zaken[zaak_url]["objecten"] = zaak_to_object_string_representations.get(
             zaak_url, ""
         )
         zaken[zaak_url]["zios_count"] = zios.get(zaak_url, 0)
-
     return zaken
