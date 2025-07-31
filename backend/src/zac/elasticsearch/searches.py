@@ -1,4 +1,5 @@
 import operator
+from datetime import datetime
 from functools import reduce
 from typing import Dict, List, Optional, Union
 from urllib.request import Request
@@ -24,6 +25,7 @@ from zac.accounts.models import BlueprintPermission, UserAtomicPermission
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.permissions import zaken_inzien
+from zac.core.services import fetch_objecttypes
 
 from .data import ParentAggregation
 from .documents import (
@@ -131,10 +133,22 @@ def search_zaken(
     ordering=("-identificatie.keyword", "-startdatum", "-registratiedatum"),
     fields=None,
     object=None,
+    start_period=None,
+    end_period=None,
     return_search=False,
 ) -> Union[List[ZaakDocument], Search]:
 
     s = ZaakDocument.search()
+
+    period_filter = {}
+    if start_period:
+        period_filter["startdatum"] = {
+            "gte": start_period.strftime("%Y-%m-%dT%H:%M:%S")
+        }
+    if end_period:
+        period_filter["einddatum"] = {"lte": end_period.strftime("%Y-%m-%dT%H:%M:%S")}
+    if period_filter:
+        s = s.filter("range", registratiedatum=period_filter)
 
     if identificatie:
         s = s.query(Match(identificatie={"query": identificatie}))
@@ -365,6 +379,34 @@ def search_informatieobjects(
     return response.hits
 
 
+def search_objects(
+    size: int = 10000,
+    urls: Optional[List[str]] = None,
+    fields: Optional[List[str]] = None,
+    return_search: bool = False,
+    exclude_meta: bool = True,
+) -> List[InformatieObjectDocument]:
+    s = ObjectDocument.search()
+
+    if urls:
+        s = s.filter(Terms(url=urls))
+
+    if exclude_meta:
+        meta_config = MetaObjectTypesConfig.get_solo()
+        meta_ots = [url for url in meta_config.meta_objecttype_urls.values() if url]
+        s = s.filter(~Terms(type__url=meta_ots))
+
+    if fields:
+        s = s.source(fields)
+
+    s = s.extra(size=size)
+    if return_search:
+        return s
+
+    response = s.execute()
+    return response.hits
+
+
 def count_by_iot_in_zaak(zaak: str) -> Dict[str, int]:
     s = search_informatieobjects(zaak=zaak, size=0, return_search=True)
 
@@ -381,3 +423,113 @@ def count_by_iot_in_zaak(zaak: str) -> Dict[str, int]:
         for bucket in results[0].child.buckets:
             iots_found[bucket.key] = bucket.doc_count
     return iots_found
+
+
+def count_by_zio_in_zaken(zaken: List[str]) -> Dict[str, int]:
+    s = search_zaakinformatieobjects(zaak=zaken, size=0, return_search=True)
+    s.aggs.bucket("zaken", "terms", field="zaak.keyword")
+    s.aggs["zaken"].bucket("zios", "terms", field="url.keyword")
+
+    aggregation = s.execute().aggregations
+    zios_found = {}
+    for zaak_bucket in getattr(aggregation, "zaken", {}).buckets:
+        zios_found[zaak_bucket.key] = sum(
+            zio_bucket.doc_count for zio_bucket in zaak_bucket.zios.buckets
+        )
+    return zios_found
+
+
+def usage_report_zaken(
+    start_period: datetime, end_period: datetime
+) -> Dict[str, Dict[str, str]]:
+    """
+    Returns a list of ZaakDocuments and a dictionary with counts of ZIOs per zaak
+    within the specified period.
+    """
+
+    # Fetch zaken within the specified period
+    s_zaken = search_zaken(
+        only_allowed=False,
+        start_period=start_period,
+        end_period=end_period,
+        fields=[
+            "identificatie.keyword",
+            "zaaktype.omschrijving",
+            "omschrijving.keyword",
+            "registratiedatum",
+            "rollen",
+        ],
+        return_search=True,
+    ).filter(
+        Nested(
+            path="rollen",
+            query=Bool(
+                filter=[Term(rollen__omschrijving_generiek=RolOmschrijving.initiator)]
+            ),
+            inner_hits={  # This will return only matching rollen in the results
+                "name": "initiator_rol",
+                "size": 1,  # adjust as needed
+            },
+        )
+    )
+    zaken = {}
+    for zaak in zaken_search.execute().hits:
+        # Get only the matching initiator rollen from inner_hits
+        initiator_rol = None
+        inner_hits = getattr(
+            getattr(zaak.meta, "inner_hits", None), "initiator_rol", None
+        )
+        if inner_hits and inner_hits.hits:
+            initiator_rol = inner_hits.hits[0].betrokkene_identificatie
+        zaken[zaak.url] = {
+            "identificatie": zaak.identificatie,
+            "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
+            "omschrijving": zaak.omschrijving,
+            "registratiedatum": zaak.registratiedatum,
+            "initiator_rol": initiator_rol,
+        }
+
+    # Fetch zio counts for the fetched zaken
+    zaak_urls = list(zaken.keys())
+    zios = count_by_zio_in_zaken(zaken=zaak_urls)
+
+    # Fetch zaakobjecten
+    zon = search_zaakobjecten(zaken=zaak_urls)
+
+    # Get objecten without meta objects
+    objects = search_objects(
+        urls=[zo.object for zo in zon],
+        exclude_meta=True,
+        return_search=False,
+    )
+
+    # Map object URLs to string representations
+    objects_to_string_representation = {
+        obj.url: obj.string_representation for obj in objects
+    }
+
+    # Map zaak URLs to object string representations
+    zaak_to_object_string_representations: Dict[str, List[str]] = {}
+    for zo in zon:
+        if zo.zaak not in zaak_to_object_string_representations:
+            zaak_to_object_string_representations[zo.zaak] = []
+        object_url = next((obj.url for obj in objects if obj.url == zo.object), None)
+        if object_url:
+            zaak_to_object_string_representations[zo.zaak].append(
+                objects_to_string_representation[object_url]
+            )
+
+    # Join object string representations
+    for z in zaak_to_object_string_representations:
+        zaak_to_object_string_representations[z] = ", ".join(
+            zaak_to_object_string_representations[z]
+        )
+
+    # Combine all data into a single dictionary for each zaak
+    for zaak_url in zaken.keys():
+        zaken[zaak_url]["objecten"] = zaak_to_object_string_representations.get(
+            zaak_url, ""
+        )
+        zaken[zaak_url]["zios_count"] = zios.get(zaak_url, 0)
+
+    return zaken
