@@ -468,3 +468,54 @@ class ESListZaakDocumentSerializer(serializers.Serializer):
         ):
             return open_dowc.locked_by
         return ""
+
+
+class VGUReportInputSerializer(serializers.Serializer):
+    start_period = serializers.DateTimeField(
+        required=True,
+        help_text=_("Start date of the period for which the report is generated."),
+    )
+    end_period = serializers.DateTimeField(
+        required=True,
+        help_text=_("End date of the period for which the report is generated."),
+    )
+
+
+class VGUReportOutputSerializer(serializers.Serializer):
+    identificatie = serializers.CharField(
+        required=True,
+        help_text=_("Unique identifier of the ZAAK within `bronorganisatie`."),
+    )
+    omschrijving = serializers.CharField(
+        required=True, help_text=_("`omschrijving` of the ZAAK.")
+    )
+    zaaktype = serializers.CharField(
+        required=True,
+        help_text=_("`omschrijving` of the ZAAKTYPE."),
+    )
+    registratiedatum = serializers.DateTimeField(
+        required=True,
+        help_text=_("Date at which the ZAAK was registered."),
+    )
+    initiator = serializers.SerializerMethodField(
+        help_text=_("The initiator of the ZAAK, if available.")
+    )
+    objecten = serializers.CharField(
+        required=False,
+        help_text=_(
+            "A comma-separated list of OBJECTs related to ZAAK. If no OBJECTs are related, this field will be empty."
+        ),
+    )
+    aantal_informatieobjecten = serializers.IntegerField(
+        required=False,
+        help_text=_("The number of INFORMATIEOBJECTs related to the ZAAK."),
+    )
+
+    def get_initiator(self, obj) -> str:
+        """
+        Returns the initiator of the ZAAK if available.
+        """
+        if obj.initiator_rol:
+            obj.initiator = resolve_assignee(obj.initiator_rol)
+
+        return str(obj.initiator.email) if obj.initiator else ""

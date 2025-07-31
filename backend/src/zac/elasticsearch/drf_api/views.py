@@ -28,6 +28,7 @@ from ..searches import (
     quick_search,
     search_informatieobjects,
     search_zaken,
+    usage_report_zaken,
 )
 from .filters import ESOrderingFilter
 from .pagination import ESPagination
@@ -351,3 +352,28 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
         return self.get_paginated_response(
             serializer.data, input_serializer.validated_data["fields"]
         )
+
+
+class VGUReportView(views.APIView):
+    authentication_classes = [ApplicationTokenAuthentication]
+    permission_classes = (HasTokenAuth,)
+    serializer_class = VGUReportInputSerializer
+
+    @extend_schema(
+        summary=_("Create a custom VGU report based on input period."),
+        responses=VGUReportOutputSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Retrieve a custom VGU report based on input period.
+
+        """
+        input_serializer = self.serializer_class(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+
+        results = usage_report_zaken(
+            start_period=input_serializer.validated_data["start_period"],
+            end_period=input_serializer.validated_data["end_period"],
+        )
+        serializer = VGUReportOutputSerializer(results)
+        return Response(serializer.data)
