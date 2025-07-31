@@ -472,7 +472,7 @@ def usage_report_zaken(
         )
     )
     zaken = {}
-    for zaak in zaken_search.execute().hits:
+    for zaak in s_zaken.execute().hits:
         # Get only the matching initiator rollen from inner_hits
         initiator_rol = None
         inner_hits = getattr(
