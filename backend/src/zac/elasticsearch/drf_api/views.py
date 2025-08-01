@@ -377,5 +377,5 @@ class VGUReportView(views.APIView):
             start_period=input_serializer.validated_data["start_period"],
             end_period=input_serializer.validated_data["end_period"],
         )
-        serializer = VGUReportOutputSerializer(results)
+        serializer = VGUReportOutputSerializer(results.values(), many=True)
         return Response(serializer.data)

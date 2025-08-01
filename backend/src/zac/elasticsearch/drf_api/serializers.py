@@ -2,12 +2,15 @@ import re
 from typing import Dict
 
 from django.urls import reverse
+from django.utils.timezone import is_naive, localtime, make_aware
 from django.utils.translation import gettext_lazy as _
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlField
+from zac.core.camunda.utils import resolve_assignee
 from zac.core.fields import DownloadDocumentURLField
 
 from ..documents import InformatieObjectDocument, ZaakDocument
@@ -483,39 +486,46 @@ class VGUReportInputSerializer(serializers.Serializer):
 
 class VGUReportOutputSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
-        required=True,
         help_text=_("Unique identifier of the ZAAK within `bronorganisatie`."),
     )
-    omschrijving = serializers.CharField(
-        required=True, help_text=_("`omschrijving` of the ZAAK.")
-    )
+    omschrijving = serializers.CharField(help_text=_("`omschrijving` of the ZAAK."))
     zaaktype = serializers.CharField(
-        required=True,
         help_text=_("`omschrijving` of the ZAAKTYPE."),
+        source="zaaktype_omschrijving",
     )
-    registratiedatum = serializers.DateTimeField(
-        required=True,
+    registratiedatum = serializers.SerializerMethodField(
         help_text=_("Date at which the ZAAK was registered."),
     )
     initiator = serializers.SerializerMethodField(
         help_text=_("The initiator of the ZAAK, if available.")
     )
     objecten = serializers.CharField(
-        required=False,
         help_text=_(
             "A comma-separated list of OBJECTs related to ZAAK. If no OBJECTs are related, this field will be empty."
         ),
     )
     aantal_informatieobjecten = serializers.IntegerField(
-        required=False,
         help_text=_("The number of INFORMATIEOBJECTs related to the ZAAK."),
+        source="zios_count",
     )
 
     def get_initiator(self, obj) -> str:
         """
         Returns the initiator of the ZAAK if available.
         """
-        if obj.initiator_rol:
-            obj.initiator = resolve_assignee(obj.initiator_rol)
+        if obj.get("initiator_rol", None):
+            obj["initiator"] = resolve_assignee(obj["initiator_rol"])
+        return str(obj["initiator"].email) if obj["initiator"] else ""
 
-        return str(obj.initiator.email) if obj.initiator else ""
+    @extend_schema_field(serializers.DateField())
+    def get_registratiedatum(self, obj) -> str:
+        dt = obj.get("registratiedatum")
+        if dt:
+            if is_naive(dt):
+                from django.conf import settings
+
+                import pytz
+
+                dt = make_aware(dt, timezone=pytz.timezone(settings.TIME_ZONE))
+            return localtime(dt).date().isoformat()
+        return ""

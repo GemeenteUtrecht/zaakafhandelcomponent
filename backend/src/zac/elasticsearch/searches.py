@@ -467,7 +467,9 @@ def usage_report_zaken(
             "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
             "omschrijving": zaak.omschrijving,
             "registratiedatum": zaak.registratiedatum,
-            "initiator_rol": initiator_rol,
+            "initiator_rol": getattr(initiator_rol, "identificatie", "")
+            if initiator_rol
+            else "",
         }
     # Fetch zio counts for the fetched zaken
     zaak_urls = list(zaken.keys())
