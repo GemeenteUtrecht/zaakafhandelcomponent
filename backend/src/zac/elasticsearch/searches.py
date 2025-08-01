@@ -409,10 +409,10 @@ def count_zio_per_given_zaken(zaken: List[str]) -> dict:
     """
     s = ZaakInformatieObjectDocument.search()
     s = s.filter(Terms(zaak=zaken))
-    s.aggs.bucket("zaken", "terms", field="zaak.keyword", size=len(zaken))
+    s.aggs.bucket("parent", "terms", field="zaak", size=len(zaken))
     response = s.execute()
     counts = {
-        bucket.key: bucket.doc_count for bucket in response.aggregations.zaken.buckets
+        bucket.key: bucket.doc_count for bucket in response.aggregations.parent.buckets
     }
     # Ensure all input zaken are present in the result, even if count is 0
     for zaak in zaken:
