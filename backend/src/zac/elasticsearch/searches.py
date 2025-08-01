@@ -471,6 +471,10 @@ def usage_report_zaken(
             if initiator_rol
             else "",
         }
+
+    if not zaken:
+        return zaken
+
     # Fetch zio counts for the fetched zaken
     zaak_urls = list(zaken.keys())
     zios = count_zio_per_given_zaken(zaken=zaak_urls)
