@@ -1,10 +1,12 @@
 import re
 from typing import Dict
 
+from django.conf import settings
 from django.urls import reverse
 from django.utils.timezone import is_naive, localtime, make_aware
 from django.utils.translation import gettext_lazy as _
 
+import pytz
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -522,10 +524,6 @@ class VGUReportOutputSerializer(serializers.Serializer):
         dt = obj.get("registratiedatum")
         if dt:
             if is_naive(dt):
-                from django.conf import settings
-
-                import pytz
-
                 dt = make_aware(dt, timezone=pytz.timezone(settings.TIME_ZONE))
             return localtime(dt).date().isoformat()
         return ""
