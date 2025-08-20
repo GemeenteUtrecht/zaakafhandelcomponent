@@ -17,6 +17,7 @@ from .commands.add_blueprint_permissions_for_zaaktypen import (
     add_blueprint_permissions_for_zaaktypen_and_iots,
 )
 from .serializers import (
+    AccessLogUserReportSerializer,
     AddBlueprintPermissionsSerializer,
     AxesResetSerializer,
     UserLogSerializer,
