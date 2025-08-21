@@ -9,7 +9,8 @@ from .views import (
     QuickSearchView,
     SearchReportViewSet,
     SearchView,
-    VGUReportView,
+    VGUReportInformatieObjectenView,
+    VGUReportZakenView,
 )
 
 router = SimpleRouter()
@@ -27,8 +28,13 @@ urlpatterns = [
         name="zaak-documents-es",
     ),
     path(
-        "vgu-reports",
-        VGUReportView.as_view(),
-        name="vgu-reports",
+        "vgu-reports/zaken",
+        VGUReportZakenView.as_view(),
+        name="vgu-reports-zaken",
+    ),
+    path(
+        "vgu-reports/informatieobjecten",
+        VGUReportInformatieObjectenView.as_view(),
+        name="vgu-reports-informatieobjecten",
     ),
 ]

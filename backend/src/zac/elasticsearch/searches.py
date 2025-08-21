@@ -1,7 +1,7 @@
 import operator
 from datetime import datetime
 from functools import reduce
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.request import Request
 
 from elasticsearch_dsl import Q, Search
@@ -325,6 +325,8 @@ def search_informatieobjects(
     ],
     fields: Optional[List[str]] = None,
     return_search: bool = False,
+    start_period=None,
+    end_period=None,
 ) -> List[InformatieObjectDocument]:
     s = InformatieObjectDocument.search()
 
@@ -351,6 +353,14 @@ def search_informatieobjects(
         s = s.sort(*ordering)
     if fields:
         s = s.source(fields)
+    range_kwargs = {}
+    if start_period:
+        range_kwargs["gte"] = start_period.strftime("%Y-%m-%dT%H:%M:%S")
+    if end_period:
+        range_kwargs["lte"] = end_period.strftime("%Y-%m-%dT%H:%M:%S")
+    if range_kwargs:
+        s = s.filter("range", **{"creatiedatum": range_kwargs})
+
     s = s.extra(size=size)
     if return_search:
         return s
@@ -512,3 +522,71 @@ def usage_report_zaken(
         )
         zaken[zaak_url]["zios_count"] = zios.get(zaak_url, 0)
     return zaken
+
+
+def usage_report_informatieobjecten(
+    start_period: datetime, end_period: datetime
+) -> List[Dict[str, Any]]:
+    """
+    Return a list of dicts for InformatieObjectDocuments within [start_period, end_period],
+    mapping:
+      auteur                           -> "auteur"
+      bestandsnaam                     -> "bestandsnaam"
+      informatieobjecttype.omschrijving-> "informatieobjecttype"
+      creatiedatum                     -> "creatiedatum"
+      related_zaken.(identificatie + zaaktype.omschrijving)
+                                       -> "gerelateerde zaken" (list of "<identificatie>: <zaaktype>")
+    """
+    gte = start_period.strftime("%Y-%m-%dT%H:%M:%S")
+    lte = end_period.strftime("%Y-%m-%dT%H:%M:%S")
+
+    source_fields = [
+        "auteur",
+        "bestandsnaam",
+        "informatieobjecttype.omschrijving",
+        "creatiedatum",
+        "related_zaken.identificatie",
+        "related_zaken.zaaktype.omschrijving",
+    ]
+
+    s = (
+        InformatieObjectDocument.search()
+        .source(source_fields)
+        .filter("range", **{"creatiedatum": {"gte": gte, "lte": lte}})
+        .params(size=1000)
+    )
+
+    results: List[Dict[str, Any]] = []
+    for doc in s.scan():
+        auteur = getattr(doc, "auteur", "") or ""
+        bestandsnaam = getattr(doc, "bestandsnaam", "") or ""
+        creatiedatum = getattr(doc, "creatiedatum", None)
+
+        iot = getattr(doc, "informatieobjecttype", None)
+        iot_omschrijving = getattr(iot, "omschrijving", "") if iot else ""
+
+        related = getattr(doc, "related_zaken", []) or []
+        gerelateerde_zaken_list: List[str] = []
+
+        for rz in related:
+            ident = (getattr(rz, "identificatie", None) or "").strip()
+            zt = getattr(rz, "zaaktype", None)
+            zt_oms = (getattr(zt, "omschrijving", None) or "").strip() if zt else ""
+
+            # Skip completely empty pairs
+            if not ident and not zt_oms:
+                continue
+
+            gerelateerde_zaken_list.append(f"{ident}: {zt_oms}".strip(": ").strip())
+
+        results.append(
+            {
+                "auteur": auteur,
+                "bestandsnaam": bestandsnaam,
+                "informatieobjecttype": iot_omschrijving,
+                "creatiedatum": creatiedatum,
+                "gerelateerde_zaken": gerelateerde_zaken_list,
+            }
+        )
+
+    return results
