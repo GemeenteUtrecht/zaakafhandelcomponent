@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Callable, Dict, Iterable
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
@@ -28,6 +28,7 @@ from ..searches import (
     quick_search,
     search_informatieobjects,
     search_zaken,
+    usage_report_informatieobjecten,
     usage_report_zaken,
 )
 from .filters import ESOrderingFilter
@@ -41,11 +42,110 @@ from .serializers import (
     SearchReportSerializer,
     SearchSerializer,
     VGUReportInputSerializer,
-    VGUReportOutputSerializer,
+    VGUReportIOSerializer,
+    VGUReportZakenSerializer,
     ZaakDocumentSerializer,
     ZaakIdentificatieSerializer,
 )
 from .utils import es_document_to_ordering_parameters
+
+# ---------- Helpers / Mixins ----------
+
+
+class PerformSearchMixin:
+    """
+    Provides a single entrypoint to perform a zaken search with optional zaaktype resolution.
+    """
+
+    def _resolve_zaaktypen(self, catalogus: str, omschrijving: str) -> List[str]:
+        """
+        Resolve zaaktypen by omschrijving, then include all zaaktypen
+        that share the same identificatie(s) to guard against renamed omschrijvingen.
+        """
+        matched = get_zaaktypen(
+            self.request, catalogus=catalogus, omschrijving=omschrijving
+        )
+        identificaties = {zt.identificatie for zt in matched}
+
+        urls = []
+        for ident in identificaties:
+            urls.extend(
+                zt.url
+                for zt in get_zaaktypen(
+                    self.request, catalogus=catalogus, identificatie=ident
+                )
+            )
+        # unique while preserving no particular order (set -> list)
+        return list(set(urls))
+
+    def perform_search(self, search_query: dict):
+        search_query = dict(search_query)  # shallow copy
+
+        if zaaktype := search_query.get("zaaktype"):
+            search_query.pop("zaaktype")
+            search_query["zaaktypen"] = self._resolve_zaaktypen(
+                catalogus=zaaktype["catalogus"],
+                omschrijving=zaaktype["omschrijving"],
+            )
+
+        return search_zaken(
+            **search_query,
+            request=self.request,
+            only_allowed=True,
+            return_search=True,
+        )
+
+
+class PaginatedSearchMixin:
+    """
+    Adds ES pagination helpers for APIViews and ViewSets.
+    Subclasses must define `search_document_class` and `pagination_class`.
+    """
+
+    search_document_class = None  # e.g. ZaakDocument / InformatieObjectDocument
+    pagination_class = ESPagination
+
+    @property
+    def search_document(self):
+        """
+        Return the configured ES document class.
+        """
+        if self.search_document_class is None:
+            raise ImproperlyConfigured(
+                "PaginatedSearchMixin requires `search_document_class` to be set."
+            )
+        return self.search_document_class
+
+    @property
+    def paginator(self):
+        """
+        Lazily construct the paginator instance, or return None if pagination disabled.
+        """
+        if not hasattr(self, "_paginator"):
+            self._paginator = (
+                None
+                if self.pagination_class is None
+                else self.pagination_class(view=self)
+            )
+        return self._paginator
+
+    def paginate_results(self, results) -> List:
+        if self.paginator is None:
+            return results
+        return self.paginator.paginate_queryset(results, self.request, view=self)
+
+    def get_paginated_response(self, data, fields: List[str]):
+        """
+        Return a paginated Response for the given data.
+        """
+        if not isinstance(self.paginator, ESPagination):
+            raise ImproperlyConfigured(
+                "Expected paginator to be an instance of ESPagination."
+            )
+        return self.paginator.get_paginated_response(data, fields)
+
+
+# ---------- Views ----------
 
 
 class GetZakenView(views.APIView):
@@ -71,96 +171,18 @@ class GetZakenView(views.APIView):
             request=request,
             identificatie=serializer.validated_data["identificatie"],
         )
-        zaak_serializer = ZaakSerializer(instance=zaken, many=True)
-        return Response(data=zaak_serializer.data)
-
-
-class PerformSearchMixin:
-    def perform_search(self, search_query):
-        if search_query.get("zaaktype"):
-            zaaktype_data = search_query.pop("zaaktype")
-
-            # First get zaaktypen based on omschrijving...
-            zaaktypen = get_zaaktypen(
-                self.request,
-                catalogus=zaaktype_data["catalogus"],
-                omschrijving=zaaktype_data["omschrijving"],
-            )
-
-            # ...because omschrijving can change, we will then also
-            # fetch all the zaaktypen with the same identificatie(s) as the
-            # zaaktypen which matched the omschrijving.
-            urls = []
-            identificaties = {zt.identificatie for zt in zaaktypen}
-            for identificatie in identificaties:
-                urls += [
-                    zt.url
-                    for zt in get_zaaktypen(
-                        self.request,
-                        catalogus=zaaktype_data["catalogus"],
-                        identificatie=identificatie,
-                    )
-                ]
-            zaaktypen = [url for url in set(urls)]
-
-            # In case someone does not have the right blueprint permissions
-            # let search_zaken filter out what is allowed and what is not.
-            search_query["zaaktypen"] = zaaktypen
-
-        results = search_zaken(
-            **search_query, request=self.request, only_allowed=True, return_search=True
-        )
-        return results
-
-
-class PaginatedSearchMixin:
-    search_document = None
-
-    @property
-    def search_document(self):
-        """
-        The paginator instance associated with the view, or `None`.
-        """
-        if not hasattr(self, "_search_document"):
-            if not self.search_document:
-                raise ImproperlyConfigured(
-                    "PaginatedSearchMixin needs a search_document attribute."
-                )
-            else:
-                self._search_document = self.search_document
-        return self._search_document
-
-    @property
-    def paginator(self):
-        """
-        The paginator instance associated with the view, or `None`.
-        """
-        if not hasattr(self, "_paginator"):
-            if self.pagination_class is None:
-                self._paginator = None
-            else:
-                self._paginator = self.pagination_class(view=self)
-        return self._paginator
-
-    def paginate_results(self, results) -> List:
-        return self.paginator.paginate_queryset(results, self.request, view=self)
-
-    def get_paginated_response(self, data, fields: List[str]):
-        """
-        Return a paginated style `Response` object for the given output data.
-        """
-        assert isinstance(self.pagination_class(view=self), ESPagination)
-        return self.paginator.get_paginated_response(data, fields)
+        return Response(ZaakSerializer(instance=zaken, many=True).data)
 
 
 class SearchView(PerformSearchMixin, PaginatedSearchMixin, views.APIView):
     authentication_classes = [
         ApplicationTokenAuthentication
     ] + api_settings.DEFAULT_AUTHENTICATION_CLASSES
-    ordering = ("-identificatie.keyword",)
-    parser_classes = (IgnoreCamelCaseJSONParser,)
     permission_classes = (HasTokenAuth | IsAuthenticated,)
-    search_document = ZaakDocument
+    parser_classes = (IgnoreCamelCaseJSONParser,)
+
+    ordering = ("-identificatie.keyword",)
+    search_document_class = ZaakDocument
     serializer_class = SearchSerializer
     pagination_class = ESPagination
 
@@ -182,7 +204,6 @@ class SearchView(PerformSearchMixin, PaginatedSearchMixin, views.APIView):
         """
         Retrieve a list of zaken based on input data.
         The response contains only zaken the user has permissions to see.
-
         """
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
@@ -190,12 +211,12 @@ class SearchView(PerformSearchMixin, PaginatedSearchMixin, views.APIView):
         # Get ordering
         ordering = ESOrderingFilter().get_ordering(request, self)
 
-        search_query = {
-            **input_serializer.validated_data,
-            "ordering": ordering,
-        }
-
-        search = self.perform_search(search_query)
+        search = self.perform_search(
+            {
+                **input_serializer.validated_data,
+                "ordering": ordering,
+            }
+        )
         page = self.paginate_results(search)
         serializer = ZaakDocumentSerializer(page, many=True)
         return self.get_paginated_response(
@@ -216,9 +237,8 @@ class QuickSearchView(views.APIView):
     def post(self, request, *args, **kwargs):
         """
         Retrieve a list of zaken, objecten and documenten based on input data.
-        The response contains only data the user has permissions to see.
-        Results size is capped to 15 results per type.
-
+        Only returns data the user is allowed to see.
+        Results are capped to 15 per type.
         """
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
@@ -228,16 +248,13 @@ class QuickSearchView(views.APIView):
             only_allowed=True,
             request=request,
         )
-        serializer = QuickSearchResultSerializer(results)
-        return Response(serializer.data)
+        return Response(QuickSearchResultSerializer(results).data)
 
 
 @extend_schema_view(
     create=extend_schema(summary=_("Create search report.")),
     destroy=extend_schema(summary=_("Destroy search report.")),
-    list=extend_schema(
-        summary=_("List search reports."),
-    ),
+    list=extend_schema(summary=_("List search reports.")),
     partial_update=extend_schema(summary=_("Partially update search report.")),
     retrieve=extend_schema(summary=_("Retrieve search report.")),
     update=extend_schema(summary=_("Update search report.")),
@@ -258,16 +275,15 @@ class QuickSearchView(views.APIView):
     ),
 )
 class SearchReportViewSet(PerformSearchMixin, PaginatedSearchMixin, ModelViewSet):
-    ordering = ("-identificatie.keyword",)
     permission_classes = (IsAuthenticated,)
     queryset = SearchReport.objects.all()
-    search_document = ZaakDocument
     serializer_class = SearchReportSerializer
 
-    @action(
-        detail=True,
-        pagination_class=ESPagination,
-    )
+    ordering = ("-identificatie.keyword",)
+    search_document_class = ZaakDocument
+    pagination_class = ESPagination
+
+    @action(detail=True, pagination_class=ESPagination)
     def results(self, request, *args, **kwargs):
         search_report = self.get_object()
         ordering = ESOrderingFilter().get_ordering(self.request, self)
@@ -283,19 +299,16 @@ class SearchReportViewSet(PerformSearchMixin, PaginatedSearchMixin, ModelViewSet
 
 
 class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView):
-    permission_classes = (
-        IsAuthenticated,
-        CanReadZaken,
-        CanListZaakDocuments,
-    )
+    permission_classes = (IsAuthenticated, CanReadZaken, CanListZaakDocuments)
+
     ordering = ("titel.keyword",)
     serializer_class = SearchInformatieObjectSerializer
     pagination_class = ESPagination
     page_size = 10
-    search_document = InformatieObjectDocument
+    search_document_class = InformatieObjectDocument
 
     def get_object(self):
-        # Avoid multiple calls to permission checks etc.
+        # Avoid multiple permission checks etc.
         if not hasattr(self, "_object"):
             self._object = super().get_object()
         return self._object
@@ -325,19 +338,18 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
     def post(self, request, *args, **kwargs):
         """
         Retrieve a list of INFORMATIEOBJECTs voor ZAAK based on input data.
-
         """
         zaak = self.get_object()
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
 
-        # Get ordering
         ordering = ESOrderingFilter().get_ordering(request, self)
+
         search = search_informatieobjects(
             **input_serializer.validated_data,
             ordering=ordering,
             zaak=zaak.url,
-            return_search=True
+            return_search=True,
         )
         page = list(self.paginate_results(search))
 
@@ -347,7 +359,7 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
             many=True,
             context={
                 "open_documenten": {dowc.document: dowc for dowc in open_documenten},
-                "zaak_is_closed": True if zaak.einddatum else False,
+                "zaak_is_closed": bool(zaak.einddatum),
                 "request": request,
             },
         )
@@ -356,26 +368,61 @@ class ListZaakDocumentsESView(GetZaakMixin, PaginatedSearchMixin, views.APIView)
         )
 
 
-class VGUReportView(views.APIView):
+# ---------- VGU Reports ----------
+
+
+class VGUBaseView(views.APIView):
     authentication_classes = [ApplicationTokenAuthentication]
     permission_classes = (HasTokenAuth,)
     serializer_class = VGUReportInputSerializer
+    report_fn: Callable[..., Iterable[Dict[str, Any]]] = None
+    response_serializer_class = None
 
-    @extend_schema(
-        summary=_("Create a custom VGU report based on input period."),
-        responses=VGUReportOutputSerializer,
-    )
-    def post(self, request, *args, **kwargs):
-        """
-        Retrieve a custom VGU report based on input period.
+    def run_report(self, start_period, end_period):
+        if self.report_fn is None:
+            raise NotImplementedError("Subclasses must set `report_fn`.")
+        return self.report_fn(start_period=start_period, end_period=end_period)
 
-        """
+    def serialize_response(self, results_iterable):
+        if self.response_serializer_class is None:
+            raise NotImplementedError(
+                "Subclasses must set `response_serializer_class`."
+            )
+        return self.response_serializer_class(results_iterable.values(), many=True)
+
+    def post(self, request: Request, *args, **kwargs):
         input_serializer = self.serializer_class(data=request.data)
         input_serializer.is_valid(raise_exception=True)
 
-        results = usage_report_zaken(
-            start_period=input_serializer.validated_data["start_period"],
-            end_period=input_serializer.validated_data["end_period"],
-        )
-        serializer = VGUReportOutputSerializer(results.values(), many=True)
+        start_period = input_serializer.validated_data["start_period"]
+        end_period = input_serializer.validated_data["end_period"]
+
+        results = self.run_report(start_period, end_period)
+        serializer = self.serialize_response(results)
         return Response(serializer.data)
+
+
+class VGUReportZakenView(VGUBaseView):
+    report_fn = staticmethod(usage_report_zaken)
+    response_serializer_class = VGUReportZakenSerializer
+
+    @extend_schema(
+        summary=_("Retrieve a custom VGU zaak report based on input period."),
+        responses=VGUReportZakenSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+
+class VGUReportInformatieObjectenView(VGUBaseView):
+    report_fn = staticmethod(usage_report_informatieobjecten)
+    response_serializer_class = VGUReportIOSerializer
+
+    @extend_schema(
+        summary=_(
+            "Retrieve a custom VGU informatieobjecten report based on input period."
+        ),
+        responses=VGUReportIOSerializer,
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

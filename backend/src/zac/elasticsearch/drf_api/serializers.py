@@ -486,7 +486,7 @@ class VGUReportInputSerializer(serializers.Serializer):
     )
 
 
-class VGUReportOutputSerializer(serializers.Serializer):
+class VGUReportZakenSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
         help_text=_("Unique identifier of the ZAAK within `bronorganisatie`."),
     )
@@ -527,3 +527,27 @@ class VGUReportOutputSerializer(serializers.Serializer):
                 dt = make_aware(dt, timezone=pytz.timezone(settings.TIME_ZONE))
             return localtime(dt).date().isoformat()
         return ""
+
+
+class InformatieObjectUsageReportSerializer(serializers.Serializer):
+    """
+    Serializer for usage_report_informatieobjecten() results.
+
+    Expected input per item:
+      {
+        "auteur": str,
+        "bestandsnaam": str,
+        "informatieobjecttype": str,
+        "creatiedatum": datetime|None,
+        "gerelateerde_zaken": List[str],  # e.g. ["ABC123: Zaken algemeen", ...]
+      }
+    """
+
+    auteur = serializers.CharField(allow_blank=True, required=False)
+    bestandsnaam = serializers.CharField(allow_blank=True, required=False)
+    informatieobjecttype = serializers.CharField(allow_blank=True, required=False)
+    creatiedatum = serializers.DateTimeField(allow_null=True, required=False)
+    gerelateerde_zaken = serializers.ListField(
+        child=serializers.CharField(allow_blank=True),
+        required=False,
+    )
