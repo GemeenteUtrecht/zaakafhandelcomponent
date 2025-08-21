@@ -1,77 +1,89 @@
-import csv
-from datetime import date, datetime
-from io import StringIO
-from typing import List, Optional
+from datetime import date, datetime, time, timedelta
+from typing import Dict, Iterable, List, Optional
 
-from django.conf import settings
-from django.core.mail import EmailMessage
-from django.utils.timezone import make_aware
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from django.utils.timezone import get_default_timezone, make_aware
 
 from axes.models import AccessLog
-from pytz import timezone
 
 from zac.accounts.models import User
 
-TZ = timezone("Europe/Amsterdam")
+
+def _daterange(start: date, end: date) -> Iterable[date]:
+    """Yield each date from start to end inclusive."""
+    days = (end - start).days
+    for n in range(days + 1):
+        yield start + timedelta(days=n)
 
 
-def send_access_log_email(
-    recipient_list: List[str], start_date: date, end_date: Optional[date] = None
-) -> None:
-    logs = AccessLog.objects.filter(
-        attempt_time__gte=make_aware(datetime.combine(start_date, datetime.min.time()))
-    )
-    if end_date:
-        logs.filter(
-            attempt_time__lte=make_aware(
-                datetime.combine(end_date, datetime.max.time())
-            )
-        )
+def get_access_log_report(
+    start_date: date,
+    end_date: Optional[date] = None,
+) -> List[Dict]:
+    """
+    Build an access-log report between start_date and end_date (inclusive).
+    Returns a list of dicts with:
+      - naam
+      - email
+      - gebruikersnaam
+      - total_logins
+      - logins_per_day (per-day counts across the range, zero-filled)
+    """
+    end_date = end_date or start_date
 
-    user_logs = {}
-    for log in logs:
-        if log.username in user_logs:
-            if log.attempt_time:
-                user_logs[log.username]["login"].append(log.attempt_time.astimezone(TZ))
-            if log.logout_time:
-                user_logs[log.username]["logout"].append(log.logout_time.astimezone(TZ))
-        else:
-            user_logs[log.username] = {"login": [], "logout": []}
-            if log.attempt_time:
-                user_logs[log.username]["login"].append(log.attempt_time.astimezone(TZ))
-            if log.logout_time:
-                user_logs[log.username]["logout"].append(log.logout_time.astimezone(TZ))
+    tz = get_default_timezone()
+    start_dt = make_aware(datetime.combine(start_date, time.min), timezone=tz)
+    end_dt = make_aware(datetime.combine(end_date, time.max), timezone=tz)
 
-    message = [["naam", "email", "gebruikersnaam", "login", "logout"]]
-    for user, log in user_logs.items():
-        user = User.objects.get(username=user)
-        log["login"] = min(log["login"]) if log["login"] else "N/A"
-        log["logout"] = max(log["logout"]) if log["logout"] else "N/A"
-        line = [
-            user.get_full_name(),
-            user.email,
-            user.username,
-            log["login"],
-            log["logout"],
-        ]
-        message.append(line)
-
-    body = f"Er waren vandaag: {len(user_logs)} unieke gebruikers ingelogd. Zie bijlage voor een csv met details."
-    email = EmailMessage(
-        subject=f"{date.today().isoformat()} - gebruikerlogs zaakafhandelcomponent GU",
-        body=body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=recipient_list,
+    # Aggregate login counts per username per day
+    login_counts = (
+        AccessLog.objects.filter(attempt_time__gte=start_dt, attempt_time__lte=end_dt)
+        .values("username", day=TruncDate("attempt_time"))
+        .annotate(logins=Count("id"))
+        .order_by("username", "day")
     )
 
-    with StringIO() as csv_file:
-        csv_writer = csv.writer(csv_file)
-        for line in message:
-            csv_writer.writerow(line)
-        email.attach(
-            f"{date.today().isoformat()}-zac-gu-gebruikerlogs.csv",
-            csv_file.getvalue(),
-            "text/csv",
+    all_dates_iso = [d.isoformat() for d in _daterange(start_date, end_date)]
+
+    # Build: username -> { "YYYY-MM-DD": count, ... } and total counts
+    user_day_logins: Dict[str, Dict[str, int]] = {}
+    total_logins: Dict[str, int] = {}
+
+    for entry in login_counts:
+        username = entry["username"]
+        day_iso = entry["day"].isoformat()
+        count = entry["logins"]
+        per_day = user_day_logins.setdefault(username, {})
+        per_day[day_iso] = count
+        total_logins[username] = total_logins.get(username, 0) + count
+
+    usernames = sorted(user_day_logins.keys())
+    if not usernames:
+        return []  # No logins in the range
+
+    # Single batch fetch of user metadata (avoids N+1)
+    user_qs = User.objects.filter(username__in=usernames).only(
+        "username", "first_name", "last_name", "email"
+    )
+    user_map = {u.username: (u.get_full_name() or "", u.email or "") for u in user_qs}
+
+    result = []
+    for username in usernames:
+        full_name, email_addr = user_map.get(username, ("", ""))
+        per_day = user_day_logins.get(username, {})
+
+        # Fill missing days with 0
+        logins_per_day = {d: per_day.get(d, 0) for d in all_dates_iso}
+
+        result.append(
+            {
+                "naam": full_name,
+                "email": email_addr,
+                "gebruikersnaam": username,
+                "total_logins": total_logins.get(username, 0),
+                "logins_per_day": logins_per_day,
+            }
         )
-        email.send(fail_silently=False)
-    return None
+
+    return result

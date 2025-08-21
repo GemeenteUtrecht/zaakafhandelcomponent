@@ -17,11 +17,12 @@ from .commands.add_blueprint_permissions_for_zaaktypen import (
     add_blueprint_permissions_for_zaaktypen_and_iots,
 )
 from .serializers import (
+    AccessLogUserReportSerializer,
     AddBlueprintPermissionsSerializer,
     AxesResetSerializer,
     UserLogSerializer,
 )
-from .utils import send_access_log_email
+from .utils import get_access_log_report
 
 
 class AxesResetView(APIView):
@@ -122,16 +123,16 @@ class UserLogView(APIView):
     permission_classes = (HasTokenAuth | IsAdminUser,)
 
     @extend_schema(
-        summary=_("Email user logs"),
-        description=_("Send daily user logs to recipient list."),
+        summary=_("Fetch user logs"),
+        description=_("Fetch user logins per day between start and end dates."),
         request=UserLogSerializer,
-        responses={
-            "204": None,
-        },
+        responses={200: AccessLogUserReportSerializer},
         tags=["management"],
     )
     def post(self, request):
         serializer = UserLogSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        send_access_log_email(**serializer.validated_data)
-        return Response(status=HTTP_204_NO_CONTENT)
+        results = get_access_log_report(**serializer.validated_data)
+        # Serialize and return
+        serializer = AccessLogUserReportSerializer(results, many=True)
+        return Response(data=serializer.data)
