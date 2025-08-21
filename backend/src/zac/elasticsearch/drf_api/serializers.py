@@ -529,7 +529,7 @@ class VGUReportZakenSerializer(serializers.Serializer):
         return ""
 
 
-class InformatieObjectUsageReportSerializer(serializers.Serializer):
+class VGUReportIOSerializer(serializers.Serializer):
     """
     Serializer for usage_report_informatieobjecten() results.
 
