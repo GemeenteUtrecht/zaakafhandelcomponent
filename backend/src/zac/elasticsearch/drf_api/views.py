@@ -163,6 +163,7 @@ class SearchView(PerformSearchMixin, PaginatedSearchMixin, views.APIView):
     ordering = ("-identificatie.keyword",)
     search_document = ZaakDocument
     serializer_class = SearchSerializer
+    pagination_class = ESPagination
 
     @extend_schema(
         summary=_("Search for ZAAKen in elasticsearch."),
