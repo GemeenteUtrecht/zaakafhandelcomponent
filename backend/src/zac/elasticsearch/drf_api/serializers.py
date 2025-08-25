@@ -485,6 +485,18 @@ class VGUReportInputSerializer(serializers.Serializer):
         help_text=_("End date of the period for which the report is generated."),
     )
 
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # If start_period wasn't provided, use today's date
+        start_period = data.get("start_period") or date.today()
+        end_period = data.get("end_period")
+
+        if end_period and end_period <= start_period:
+            raise serializers.ValidationError(
+                _("Start date needs to be earlier than end date.")
+            )
+        return data
+
 
 class VGUReportZakenSerializer(serializers.Serializer):
     identificatie = serializers.CharField(

@@ -38,24 +38,22 @@ class AddBlueprintPermissionsSerializer(BaseCountSerializer):
 
 
 class UserLogSerializer(serializers.Serializer):
-    recipient_list = serializers.ListField(
-        child=serializers.EmailField(help_text=_("Email of recipient."), required=True),
+    start_period = serializers.DateTimeField(
         required=True,
+        help_text=_("Start date of the period for which the report is generated."),
     )
-    start_date = serializers.DateField(
-        default=date.today,
-        help_text=_("Start date of logs."),
-        required=False,
+    end_period = serializers.DateTimeField(
+        required=True,
+        help_text=_("End date of the period for which the report is generated."),
     )
-    end_date = serializers.DateField(required=False)
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        # If start_date wasn't provided, use today's date
-        start_date = data.get("start_date") or date.today()
-        end_date = data.get("end_date")
+        # If start_period wasn't provided, use today's date
+        start_period = data.get("start_period") or date.today()
+        end_period = data.get("end_period")
 
-        if end_date and end_date <= start_date:
+        if end_period and end_period <= start_period:
             raise serializers.ValidationError(
                 _("Start date needs to be earlier than end date.")
             )
