@@ -18,11 +18,11 @@ def _daterange(start: date, end: date) -> Iterable[date]:
 
 
 def get_access_log_report(
-    start_date: date,
-    end_date: Optional[date] = None,
+    start_period: date,
+    end_period: Optional[date] = None,
 ) -> List[Dict]:
     """
-    Build an access-log report between start_date and end_date (inclusive).
+    Build an access-log report between start_period and end_period (inclusive).
     Returns a list of dicts with:
       - naam
       - email
@@ -30,11 +30,11 @@ def get_access_log_report(
       - total_logins
       - logins_per_day (per-day counts across the range, zero-filled)
     """
-    end_date = end_date or start_date
+    end_period = end_period or start_period
 
     tz = get_default_timezone()
-    start_dt = make_aware(datetime.combine(start_date, time.min), timezone=tz)
-    end_dt = make_aware(datetime.combine(end_date, time.max), timezone=tz)
+    start_dt = make_aware(datetime.combine(start_period, time.min), timezone=tz)
+    end_dt = make_aware(datetime.combine(end_period, time.max), timezone=tz)
 
     # Aggregate login counts per username per day
     login_counts = (
@@ -44,7 +44,7 @@ def get_access_log_report(
         .order_by("username", "day")
     )
 
-    all_dates_iso = [d.isoformat() for d in _daterange(start_date, end_date)]
+    all_dates_iso = [d.isoformat() for d in _daterange(start_period, end_period)]
 
     # Build: username -> { "YYYY-MM-DD": count, ... } and total counts
     user_day_logins: Dict[str, Dict[str, int]] = {}
