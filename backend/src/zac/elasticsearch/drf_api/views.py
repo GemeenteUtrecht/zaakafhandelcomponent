@@ -364,7 +364,7 @@ class VGUBaseView(views.APIView):
             raise NotImplementedError(
                 "Subclasses must set `response_serializer_class`."
             )
-        return self.response_serializer_class(results_iterable.values(), many=True)
+        return self.response_serializer_class(results_iterable, many=True)
 
     def post(self, request: Request, *args, **kwargs):
         input_serializer = self.serializer_class(data=request.data)
