@@ -521,7 +521,7 @@ def usage_report_zaken(
             zaak_url, ""
         )
         zaken[zaak_url]["zios_count"] = zios.get(zaak_url, 0)
-    return zaken
+    return zaken.values()
 
 
 def usage_report_informatieobjecten(
