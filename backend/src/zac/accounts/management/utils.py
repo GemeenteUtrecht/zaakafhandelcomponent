@@ -17,22 +17,6 @@ def _daterange(start: date, end: date) -> Iterable[date]:
         yield start + timedelta(days=n)
 
 
-def _to_date_key(v) -> str:
-    """Normalize a value (date/datetime/iso string) to 'YYYY-MM-DD'."""
-    if isinstance(v, datetime):
-        return v.date().isoformat()
-    if isinstance(v, date):
-        return v.isoformat()
-    s = str(v)
-    try:
-        # handle possible trailing 'Z'
-        s2 = s.replace("Z", "+00:00")
-        return datetime.fromisoformat(s2).date().isoformat()
-    except Exception:
-        # crude fallback: split at 'T'
-        return s.split("T", 1)[0]
-
-
 def get_access_log_report(
     start_period: date,
     end_period: Optional[date] = None,
@@ -52,26 +36,42 @@ def get_access_log_report(
     start_dt = make_aware(datetime.combine(start_period, time.min), timezone=tz)
     end_dt = make_aware(datetime.combine(end_period, time.max), timezone=tz)
 
-    # Aggregate login counts per username per local *date*
+    # 1) Aggregate login counts per username per *local calendar day*
+    #    Use annotate(...) first, then values(...) for best cross-DB behavior.
     login_counts = (
         AccessLog.objects.filter(attempt_time__gte=start_dt, attempt_time__lte=end_dt)
-        .values(
-            "username", day=TruncDate("attempt_time", tzinfo=tz)
-        )  # ensure local day
+        .annotate(day=TruncDate("attempt_time", tzinfo=tz))
+        .values("username", "day")
         .annotate(logins=Count("id"))
         .order_by("username", "day")
     )
 
-    # Build the full date range keys as 'YYYY-MM-DD'
-    all_dates_iso = [d.isoformat() for d in _daterange(start_period, end_period)]
+    # 2) Build the full date range as *date objects*
+    all_days: List[date] = list(_daterange(start_period, end_period))
 
-    # username -> { 'YYYY-MM-DD': count }
-    user_day_logins: Dict[str, Dict[str, int]] = {}
+    # username -> { date: count }
+    user_day_logins: Dict[str, Dict[date, int]] = {}
     total_logins: Dict[str, int] = {}
 
     for entry in login_counts:
         username = entry["username"]
-        day_key = _to_date_key(entry["day"])  # normalize to 'YYYY-MM-DD'
+        day_val = entry["day"]
+
+        # Normalize DB value to a Python date
+        if isinstance(day_val, datetime):
+            day_key = day_val.date()
+        elif isinstance(day_val, date):
+            day_key = day_val
+        else:
+            # Fallback parse (rare)
+            s = str(day_val).replace("Z", "+00:00")
+            try:
+                day_key = datetime.fromisoformat(s).date()
+            except Exception:
+                day_key = datetime.strptime(
+                    str(day_val).split("T", 1)[0], "%Y-%m-%d"
+                ).date()
+
         count = int(entry["logins"])
         per_day = user_day_logins.setdefault(username, {})
         per_day[day_key] = count
@@ -81,19 +81,19 @@ def get_access_log_report(
     if not usernames:
         return []  # No logins in the range
 
-    # Single batch fetch of user metadata (avoids N+1)
+    # 3) Single batch fetch of user metadata (avoids N+1)
     user_qs = User.objects.filter(username__in=usernames).only(
         "username", "first_name", "last_name", "email"
     )
     user_map = {u.username: (u.get_full_name() or "", u.email or "") for u in user_qs}
 
+    # 4) Build result, converting date keys to 'YYYY-MM-DD' at the last moment
     result: List[Dict] = []
     for username in usernames:
         full_name, email_addr = user_map.get(username, ("", ""))
         per_day = user_day_logins.get(username, {})
 
-        # Fill missing days with 0, keys are 'YYYY-MM-DD'
-        logins_per_day = {d: per_day.get(d, 0) for d in all_dates_iso}
+        logins_per_day = {d.isoformat(): per_day.get(d, 0) for d in all_days}
 
         result.append(
             {
