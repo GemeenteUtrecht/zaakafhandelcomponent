@@ -13,7 +13,6 @@ class AccessLogUserReportSerializer(serializers.Serializer):
     loginsPerDay = serializers.DictField(
         source="logins_per_day",
         child=serializers.IntegerField(min_value=0),
-        key_field=serializers.CharField(),
     )
 
 
