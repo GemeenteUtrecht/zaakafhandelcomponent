@@ -9,8 +9,12 @@ class AccessLogUserReportSerializer(serializers.Serializer):
     naam = serializers.CharField()
     email = serializers.EmailField()
     gebruikersnaam = serializers.CharField()
-    total_logins = serializers.IntegerField()
-    logins_per_day = serializers.DictField(child=serializers.IntegerField())
+    totalLogins = serializers.IntegerField(source="total_logins")
+    loginsPerDay = serializers.DictField(
+        source="logins_per_day",
+        child=serializers.IntegerField(min_value=0),
+        key_field=serializers.CharField(),
+    )
 
 
 class BaseCountSerializer(serializers.Serializer):
