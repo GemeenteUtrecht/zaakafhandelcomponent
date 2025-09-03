@@ -1,4 +1,5 @@
 import operator
+from collections import defaultdict
 from datetime import datetime
 from functools import reduce
 from typing import Any, Dict, List, Optional, Union
@@ -431,13 +432,23 @@ def count_zio_per_given_zaken(zaken: List[str]) -> dict:
 
 
 def usage_report_zaken(
-    start_period: datetime, end_period: datetime
-) -> Dict[str, Dict[str, str]]:
+    start_period: datetime,
+    end_period: datetime,
+) -> List[Dict[str, Any]]:
     """
-    Returns a list of ZaakDocuments and a dictionary with counts of ZIOs per zaak
-    within the specified period.
+    Build a usage report for zaken in a period.
+
+    Returns a list of dicts with fields:
+      - identificatie: str
+      - zaaktype_omschrijving: str
+      - omschrijving: str
+      - registratiedatum: datetime | str | None (as provided by ES)
+      - initiator_rol: str (identifier if present, else "")
+      - objecten: List[{"object": <string_representation>, "objecttype": <object.type.name>}]
+      - zios_count: int
     """
-    # Fetch zaken within the specified period
+
+    # 1) Fetch zaken within the specified period, with inner_hits for initiator role
     s_zaken = search_zaken(
         only_allowed=False,
         start_period=start_period,
@@ -457,71 +468,100 @@ def usage_report_zaken(
             query=Bool(
                 filter=[Term(rollen__omschrijving_generiek=RolOmschrijving.initiator)]
             ),
-            inner_hits={  # This will return only matching rollen in the results
+            inner_hits={
                 "name": "initiator_rol",
-                "size": 1,  # adjust as needed
+                "size": 1,
             },
         )
     )
-    zaken = {}
-    for zaak in s_zaken.execute().hits:
-        # Get only the matching initiator rollen from inner_hits
-        initiator_rol = None
-        inner_hits = getattr(
-            getattr(zaak.meta, "inner_hits", None), "initiator_rol", None
-        )
-        if inner_hits and inner_hits.hits:
-            initiator_rol = inner_hits.hits[0].betrokkene_identificatie
-        zaken[zaak.url] = {
-            "identificatie": zaak.identificatie,
-            "zaaktype_omschrijving": zaak.zaaktype.omschrijving,
-            "omschrijving": zaak.omschrijving,
-            "registratiedatum": zaak.registratiedatum,
-            "initiator_rol": getattr(initiator_rol, "identificatie", "")
-            if initiator_rol
+
+    zaken_map: Dict[str, Dict[str, Any]] = {}
+    es_hits = s_zaken.execute().hits
+    for hit in es_hits:
+        # Extract the initiator role identificatie from inner hits (defensive)
+        initiator_ident = ""
+        ih = getattr(getattr(hit.meta, "inner_hits", None), "initiator_rol", None)
+        if ih and getattr(ih, "hits", None):
+            ident_obj = getattr(ih.hits[0], "betrokkene_identificatie", None)
+            if ident_obj is not None:
+                initiator_ident = getattr(ident_obj, "identificatie", "") or ""
+
+        zaken_map[hit.url] = {
+            "identificatie": hit.identificatie,
+            "zaaktype_omschrijving": hit.zaaktype.omschrijving
+            if getattr(hit, "zaaktype", None)
             else "",
+            "omschrijving": hit.omschrijving or "",
+            "registratiedatum": getattr(hit, "registratiedatum", None),
+            "initiator_rol": initiator_ident,
+            # to be filled below
+            "objecten": [],
+            "zios_count": 0,
         }
 
-    if not zaken:
-        return zaken
+    if not zaken_map:
+        return []
 
-    # Fetch zio counts for the fetched zaken
-    zaak_urls = list(zaken.keys())
-    zios = count_zio_per_given_zaken(zaken=zaak_urls)
-    # Fetch zaakobjecten
+    zaak_urls: List[str] = list(zaken_map.keys())
+
+    # 2) Fetch ZIO counts for these zaken
+    zios_counts: Dict[str, int] = count_zio_per_given_zaken(zaken=zaak_urls)
+
+    # 3) Fetch zaakobjecten for these zaken
     zon = search_zaakobjecten(zaken=zaak_urls)
-    # Get objecten without meta objects
+
+    # 4) Collect unique object URLs and fetch objects (excluding meta), only needed fields
+    object_urls = {zo.object for zo in zon}
     objects = search_objects(
-        urls=[zo.object for zo in zon],
+        urls=list(object_urls),
+        fields=["url", "string_representation", "type.name"],
         exclude_meta=True,
         return_search=False,
     )
-    # Map object URLs to string representations
-    objects_to_string_representation = {
-        obj.url: obj.string_representation for obj in objects
-    }
-    # Map zaak URLs to object string representations
-    zaak_to_object_string_representations: Dict[str, List[str]] = {}
+    # Index by URL for O(1) lookup
+    objects_by_url: Dict[str, Any] = {obj.url: obj for obj in objects}
+
+    # 5) Build zaak -> list of {"object": <string_representation>, "objecttype": <type.name>}
+    zaak_to_objects: Dict[str, List[Dict[str, str]]] = defaultdict(list)
     for zo in zon:
-        if zo.zaak not in zaak_to_object_string_representations:
-            zaak_to_object_string_representations[zo.zaak] = []
-        object_url = next((obj.url for obj in objects if obj.url == zo.object), None)
-        if object_url:
-            zaak_to_object_string_representations[zo.zaak].append(
-                objects_to_string_representation[object_url]
-            )
-    # Join object string representations
-    for z in zaak_to_object_string_representations:
-        zaak_to_object_string_representations[z] = ", ".join(
-            zaak_to_object_string_representations[z]
+        obj = objects_by_url.get(zo.object)
+        if not obj:
+            continue
+        string_repr = getattr(obj, "string_representation", "") or ""
+        # obj.type is an InnerDoc; be defensive:
+        objtype_name = ""
+        obj_type = getattr(obj, "type", None)
+        if obj_type is not None:
+            objtype_name = getattr(obj_type, "name", "") or ""
+        zaak_to_objects[zo.zaak].append(
+            {"object": string_repr, "objecttype": objtype_name}
         )
-    # Combine all data into a single dictionary for each zaak
-    for zaak_url in zaken.keys():
-        zaken[zaak_url]["objecten"] = zaak_to_object_string_representations.get(
-            zaak_url, ""
+
+    # 6) Attach object lists and counts to zaken
+    for zurl, row in zaken_map.items():
+        row["objecten"] = zaak_to_objects.get(zurl, [])
+        row["zios_count"] = int(zios_counts.get(zurl, 0) or 0)
+
+    # 7) Optional: make output deterministic — sort by registratiedatum (oldest first, None last)
+    def _parse_sort_dt(val: Any) -> Optional[datetime]:
+        if isinstance(val, datetime):
+            return val
+        if isinstance(val, str) and val:
+            try:
+                return datetime.fromisoformat(val.replace("Z", "+00:00"))
+            except Exception:
+                return None
+        return None
+
+    rows: List[Dict[str, Any]] = list(zaken_map.values())
+    rows.sort(
+        key=lambda r: (
+            (_parse_sort_dt(r.get("registratiedatum")) is None),
+            _parse_sort_dt(r.get("registratiedatum")) or datetime.max,
         )
-        zaken[zaak_url]["zios_count"] = zios.get(zaak_url, 0)
-    return zaken.values()
+    )
+
+    return rows
 
 
 def usage_report_informatieobjecten(
@@ -531,6 +571,7 @@ def usage_report_informatieobjecten(
     Return a list of dicts for InformatieObjectDocuments within [start_period, end_period],
     mapping:
       auteur                           -> "auteur"
+      beschrijving                     -> "beschrijving"
       bestandsnaam                     -> "bestandsnaam"
       informatieobjecttype.omschrijving-> "informatieobjecttype"
       creatiedatum                     -> "creatiedatum"
@@ -542,6 +583,7 @@ def usage_report_informatieobjecten(
 
     source_fields = [
         "auteur",
+        "beschrijving",
         "bestandsnaam",
         "informatieobjecttype.omschrijving",
         "creatiedatum",
@@ -560,6 +602,7 @@ def usage_report_informatieobjecten(
     for doc in s.scan():
         auteur = getattr(doc, "auteur", "") or ""
         bestandsnaam = getattr(doc, "bestandsnaam", "") or ""
+        beschrijving = getattr(doc, "beschrijving", "") or ""
         creatiedatum = getattr(doc, "creatiedatum", None)
 
         iot = getattr(doc, "informatieobjecttype", None)
@@ -582,6 +625,7 @@ def usage_report_informatieobjecten(
         results.append(
             {
                 "auteur": auteur,
+                "beschrijving": beschrijving,
                 "bestandsnaam": bestandsnaam,
                 "informatieobjecttype": iot_omschrijving,
                 "creatiedatum": creatiedatum,

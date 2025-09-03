@@ -498,6 +498,17 @@ class VGUReportInputSerializer(serializers.Serializer):
         return data
 
 
+class ObjectRefSerializer(serializers.Serializer):
+    object = serializers.CharField(
+        help_text="Human-readable string representation of the object."
+    )
+    objecttype = serializers.CharField(
+        help_text="Name (omschrijving) of the object type.",
+        allow_blank=True,
+        required=False,
+    )
+
+
 class VGUReportZakenSerializer(serializers.Serializer):
     identificatie = serializers.CharField(
         help_text=_("Unique identifier of the ZAAK within `bronorganisatie`."),
@@ -513,11 +524,16 @@ class VGUReportZakenSerializer(serializers.Serializer):
     initiator = serializers.SerializerMethodField(
         help_text=_("The initiator of the ZAAK, if available.")
     )
-    objecten = serializers.CharField(
+
+    objecten = ObjectRefSerializer(
+        many=True,
         help_text=_(
-            "A comma-separated list of OBJECTs related to ZAAK. If no OBJECTs are related, this field will be empty."
+            "List of related objects. Each item holds "
+            "`object` (display string) and `objecttype` (type description). "
+            "Empty when there are no related objects."
         ),
     )
+
     aantal_informatieobjecten = serializers.IntegerField(
         help_text=_("The number of INFORMATIEOBJECTs related to the ZAAK."),
         source="zios_count",
@@ -529,7 +545,7 @@ class VGUReportZakenSerializer(serializers.Serializer):
         """
         if obj.get("initiator_rol", None):
             obj["initiator"] = resolve_assignee(obj["initiator_rol"])
-        return str(obj["initiator"].email) if obj["initiator"] else ""
+        return str(obj["initiator"].email) if obj.get("initiator") else ""
 
     @extend_schema_field(serializers.DateField())
     def get_registratiedatum(self, obj) -> str:
@@ -548,6 +564,7 @@ class VGUReportIOSerializer(serializers.Serializer):
     Expected input per item:
       {
         "auteur": str,
+        "beschrijving": str,
         "bestandsnaam": str,
         "informatieobjecttype": str,
         "creatiedatum": datetime|None,
@@ -556,6 +573,7 @@ class VGUReportIOSerializer(serializers.Serializer):
     """
 
     auteur = serializers.CharField(allow_blank=True, required=False)
+    beschrijving = serializers.CharField(allow_blank=True, required=False)
     bestandsnaam = serializers.CharField(allow_blank=True, required=False)
     informatieobjecttype = serializers.CharField(allow_blank=True, required=False)
     creatiedatum = serializers.DateTimeField(allow_null=True, required=False)
