@@ -270,7 +270,10 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_REQUEST_OBJECTTYPE]),
+        )
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([]),
@@ -288,7 +291,10 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
 
         m.get(self.zaak.url, status_code=404)
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_REQUEST_OBJECTTYPE]),
+        )
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([]),

@@ -21,7 +21,7 @@ from ..documents import ObjectDocument, ZaakDocument, ZaakObjectDocument
 from .utils import ESMixin
 
 OBJECTS_ROOT = "https://api.objects.nl/api/v1/"
-OBJECTTYPES_ROOT = "https://api.objecttypes.nl/api/v1/"
+OBJECTTYPES_ROOT = "https://api.objecttypes.nl/api/v2/"
 
 
 @requests_mock.Mocker()
@@ -103,7 +103,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "correctedBy": None,
             },
         }
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[objecttype])
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=paginated_response([objecttype]))
         m.get(f"{OBJECTS_ROOT}objects", json=paginated_response([obj]))
         index = Index(settings.ES_INDEX_OBJECTEN)
         self.refresh_index()
@@ -158,7 +158,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "correctedBy": None,
             },
         }
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[objecttype])
+        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=paginated_response([objecttype]))
         m.get(f"{OBJECTS_ROOT}objects", json=paginated_response([object]))
         zaakobject = ZaakObjectDocument(
             url="http://zaken.nl/api/v1/zaakobjecten/f79989d3-9ac4-4c2b-a94e-13191b333444",

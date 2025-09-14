@@ -1,4 +1,4 @@
-OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
+OBJECTTYPES_ROOT = "http://objecttype.nl/api/v2/"
 OBJECTS_ROOT = "http://object.nl/api/v2/"
 
 METALIST_OBJECTTYPE = {

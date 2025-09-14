@@ -1500,7 +1500,7 @@ class UserAtomicPermissionSerializer(serializers.ModelSerializer):
 
 class ObjecttypeProxySerializer(ProxySerializer):
     PROXY_SCHEMA_BASE = settings.EXTERNAL_API_SCHEMAS["OBJECTTYPES_API_SCHEMA"]
-    PROXY_SCHEMA = ("/api/v1/objecttypes/", "get")
+    PROXY_SCHEMA = ("/api/v2/objecttypes/", "get")
     PROXY_SCHEMA_PATH = ["components", "schemas", "ObjectType"]
 
 

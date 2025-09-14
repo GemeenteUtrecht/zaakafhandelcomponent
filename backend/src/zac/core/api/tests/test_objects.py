@@ -13,7 +13,7 @@ from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
-OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
+OBJECTTYPES_ROOT = "http://objecttype.nl/api/v2/"
 OBJECTS_ROOT = "http://object.nl/api/v1/"
 CATALOGI_ROOT = "https://api.catalogi.nl/api/v1/"
 
@@ -77,7 +77,7 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{OBJECTTYPES_ROOT}objecttypes",
-            json=[self.objecttype_1, self.objecttype_2],
+            json=paginated_response([self.objecttype_1, self.objecttype_2]),
         )
 
         config = CoreConfig.get_solo()
@@ -97,7 +97,7 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         m.get(
             f"{OBJECTTYPES_ROOT}objecttypes",
-            json=[self.objecttype_1, self.objecttype_2],
+            json=paginated_response([self.objecttype_1, self.objecttype_2]),
         )
 
         config = CoreConfig.get_solo()
@@ -118,7 +118,7 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
             response.json(),
             [
                 {
-                    "url": "http://objecttype.nl/api/v1/objecttypes/2",
+                    "url": "http://objecttype.nl/api/v2/objecttypes/2",
                     "name": "bin",
                     "namePlural": "bins",
                     "description": "",
@@ -153,13 +153,17 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, zaaktype)
         m.get(
             f"{OBJECTTYPES_ROOT}objecttypes",
-            json=[
-                {
-                    **self.objecttype_1,
-                    "labels": {"zaaktypeIdentificaties": [zaaktype["identificatie"]]},
-                },
-                self.objecttype_2,
-            ],
+            json=paginated_response(
+                [
+                    {
+                        **self.objecttype_1,
+                        "labels": {
+                            "zaaktypeIdentificaties": [zaaktype["identificatie"]]
+                        },
+                    },
+                    self.objecttype_2,
+                ],
+            ),
         )
 
         config = CoreConfig.get_solo()
@@ -179,7 +183,7 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
             response.json(),
             [
                 {
-                    "url": "http://objecttype.nl/api/v1/objecttypes/1",
+                    "url": "http://objecttype.nl/api/v2/objecttypes/1",
                     "name": "tree",
                     "namePlural": "trees",
                     "description": "",
@@ -379,7 +383,9 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
     def test_invalid_filter(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes", json=paginated_response([self.objecttype])
+        )
         m.post(f"{OBJECTS_ROOT}objects/search", status_code=400)
 
         config = CoreConfig.get_solo()
@@ -399,7 +405,9 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
     def test_filter(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes", json=paginated_response([self.objecttype])
+        )
         m.post(f"{OBJECTS_ROOT}objects/search", json=paginated_response([self.object]))
 
         config = CoreConfig.get_solo()
@@ -442,7 +450,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
             [
                 {
                     "url": "http://object.nl/api/v1/objects/e0346ea0-75aa-47e0-9283-cfb35963b725",
-                    "type": "http://objecttype.nl/api/v1/objecttypes/1",
+                    "type": f"{OBJECTTYPES_ROOT}objecttypes/1",
                     "record": {
                         "index": 1,
                         "typeVersion": 1,
@@ -470,7 +478,9 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
     def test_filter_objecttype_not_found(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes", json=paginated_response([self.objecttype])
+        )
 
         config = CoreConfig.get_solo()
         config.primary_objects_api = self.objects_service
@@ -510,7 +520,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                 {
                     "name": "type",
                     "code": "invalid",
-                    "reason": "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/2 not found.",
+                    "reason": "OBJECTTYPE http://objecttype.nl/api/v2/objecttypes/2 not found.",
                 }
             ],
         )
@@ -545,7 +555,10 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
             "modified_at": "2019-08-24",
             "versions": [],
         }
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype, ot2])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([self.objecttype, ot2]),
+        )
 
         config = CoreConfig.get_solo()
         config.primary_objects_api = self.objects_service
@@ -585,7 +598,7 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
                 {
                     "name": "type",
                     "code": "invalid",
-                    "reason": "OBJECTTYPE http://objecttype.nl/api/v1/objecttypes/12345 is a `meta`-objecttype.",
+                    "reason": "OBJECTTYPE http://objecttype.nl/api/v2/objecttypes/12345 is a `meta`-objecttype.",
                 }
             ],
         )

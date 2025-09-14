@@ -32,7 +32,7 @@ OBJECTS_ROOT = "http://object.nl/api/v1/"
 ZAAKTYPE_ATTRIBUTE_OBJECTTYPE = (
     "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
 )
-OBJECTTYPES_ROOT = "http://objecttypes.nl/api/v1/"
+OBJECTTYPES_ROOT = "http://objecttypes.nl/api/v2/"
 
 
 @requests_mock.Mocker()
@@ -668,27 +668,29 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{OBJECTTYPES_ROOT}objecttypes",
-            json=[
-                {
-                    "url": "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69",
-                    "name": "zaaktypeAttribute",
-                    "namePlural": "zaaktypeAttributen",
-                    "description": "",
-                    "data_classification": "",
-                    "maintainer_organization": "",
-                    "maintainer_department": "",
-                    "contact_person": "",
-                    "contact_email": "",
-                    "source": "",
-                    "update_frequency": "",
-                    "provider_organization": "",
-                    "documentation_url": "",
-                    "labels": {},
-                    "created_at": "2019-08-24",
-                    "modified_at": "2019-08-24",
-                    "versions": [],
-                },
-            ],
+            json=paginated_response(
+                [
+                    {
+                        "url": "http://objecttype.nl/api/v2/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69",
+                        "name": "zaaktypeAttribute",
+                        "namePlural": "zaaktypeAttributen",
+                        "description": "",
+                        "data_classification": "",
+                        "maintainer_organization": "",
+                        "maintainer_department": "",
+                        "contact_person": "",
+                        "contact_email": "",
+                        "source": "",
+                        "update_frequency": "",
+                        "provider_organization": "",
+                        "documentation_url": "",
+                        "labels": {},
+                        "created_at": "2019-08-24",
+                        "modified_at": "2019-08-24",
+                        "versions": [],
+                    },
+                ],
+            ),
         )
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",

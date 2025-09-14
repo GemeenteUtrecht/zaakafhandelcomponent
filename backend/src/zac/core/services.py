@@ -1550,7 +1550,7 @@ def fetch_objecttype(url: str, client: Optional[Client] = None) -> dict:
 @cache_result("objecttype:all", timeout=AN_HOUR)
 def fetch_objecttypes() -> List[dict]:
     client = get_objecttypes_client()
-    objecttypes_data = client.list("objecttype")
+    objecttypes_data = get_paginated_results(client, "objecttype")
 
     return objecttypes_data
 

@@ -108,7 +108,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_REQUEST_OBJECTTYPE]),
+        )
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([self.review_request_object]),
@@ -121,7 +124,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_OBJECTTYPE]),
+        )
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([self.review_object]),
@@ -186,7 +192,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
             REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION["url"],
             json=REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION,
         )
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_REQUEST_OBJECTTYPE]),
+        )
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         with patch(
             "zac.contrib.objects.services._create_unique_uuid_for_object",
@@ -212,7 +221,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
     def test_get_all_review_requests_for_zaak(self, m):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_REQUEST_OBJECTTYPE]),
+        )
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([self.review_request_object]),
@@ -227,7 +239,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_REQUEST_OBJECTTYPE]),
+        )
 
         user = UserFactory(username="some-user")
 
@@ -350,7 +365,10 @@ class KownslAPITests(ClearCachesMixin, TestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[REVIEW_REQUEST_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([REVIEW_REQUEST_OBJECTTYPE]),
+        )
         m.post(
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([self.review_request_object]),

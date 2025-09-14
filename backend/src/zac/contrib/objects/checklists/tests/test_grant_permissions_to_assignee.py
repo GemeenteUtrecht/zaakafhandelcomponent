@@ -122,7 +122,10 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.checklist_objecttype)
         mock_resource_get(m, self.checklist_objecttype_version)
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.checklist_objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([self.checklist_objecttype]),
+        )
         m.post(f"{OBJECTS_ROOT}objects", json=self.checklist_object, status_code=201)
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {
@@ -168,7 +171,10 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.checklist_objecttype)
         mock_resource_get(m, self.checklist_objecttype_version)
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.checklist_objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([self.checklist_objecttype]),
+        )
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {
             "answers": [
@@ -230,7 +236,10 @@ class GrantChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.checklist_objecttype)
         mock_resource_get(m, self.checklist_objecttype_version)
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.checklist_objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([self.checklist_objecttype]),
+        )
         m.post(f"{OBJECTS_ROOT}objects", json=self.checklist_object, status_code=201)
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)
         data = {

@@ -1,6 +1,6 @@
 # Stage 1 -- install dev tools and build bundle
 ARG NODE_VERSION
-FROM node:$NODE_VERSION-buster-slim
+FROM node:$NODE_VERSION-bookworm
 
 WORKDIR /app
 

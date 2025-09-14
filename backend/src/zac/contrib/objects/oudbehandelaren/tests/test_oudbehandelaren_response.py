@@ -81,7 +81,10 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([self.oudbehandelaren_object]),
         )
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[OUDBEHANDELAREN_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([OUDBEHANDELAREN_OBJECTTYPE]),
+        )
         self.client.force_authenticate(user=self.user)
         with patch(
             "zac.contrib.objects.oudbehandelaren.api.views.find_zaak",
@@ -132,7 +135,10 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             f"{OBJECTS_ROOT}objects/search?pageSize=100",
             json=paginated_response([]),
         )
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[OUDBEHANDELAREN_OBJECTTYPE])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([OUDBEHANDELAREN_OBJECTTYPE]),
+        )
         self.client.force_authenticate(user=self.user)
         with patch(
             "zac.contrib.objects.oudbehandelaren.api.views.find_zaak",
