@@ -27,14 +27,14 @@ from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 OBJECTS_ROOT = "https://objects.nl/api/v1/"
-OBJECTTYPES_ROOT = "https://objecttypes.nl/api/v1/"
+OBJECTTYPES_ROOT = "https://objecttypes.nl/api/v2/"
 ZRC_ROOT = "https://zaken.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 
 OBJECT_1 = {
     "url": "https://objects.nl/api/v1/objects/aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
     "uuid": "aa44d251-0ddc-4bf2-b114-00a5ce1925d1",
-    "type": "https://objecttypes.nl/api/v1/objecttypes/4424fcca-e80b-462e-98ec-3bbd40748b44",
+    "type": "https://objecttypes.nl/api/v2/objecttypes/4424fcca-e80b-462e-98ec-3bbd40748b44",
     "record": {
         "index": 1,
         "typeVersion": 9,
@@ -76,7 +76,7 @@ OBJECTTYPE_1 = {
 OBJECT_2 = {
     "url": "https://objects.nl/api/v1/objects/a1bc0873-4337-432b-a0a1-a3436e05dc93",
     "uuid": "a1bc0873-4337-432b-a0a1-a3436e05dc93",
-    "type": "https://objecttypes.nl/api/v1/objecttypes/ded177f2-f54f-4ec8-aa4c-22b571e002f1",
+    "type": "https://objecttypes.nl/api/v2/objecttypes/ded177f2-f54f-4ec8-aa4c-22b571e002f1",
     "record": {
         "index": 1,
         "typeVersion": 1,
@@ -782,7 +782,10 @@ class ZaakObjectTests(APITransactionTestCase):
                 {"$id": "http://mock.example.com/mocked3"},
             ],
         )
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[OBJECTTYPE_1, OBJECTTYPE_2])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([OBJECTTYPE_1, OBJECTTYPE_2]),
+        )
 
         self.client.force_authenticate(user)
 

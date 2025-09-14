@@ -518,7 +518,7 @@ EXTERNAL_API_SCHEMAS = {
     ),
     "OBJECTTYPES_API_SCHEMA": config(
         "OBJECTTYPES_API_SCHEMA",
-        "https://objecttypes.cg-intern.ont.utrecht.nl/api/v1",
+        "https://objecttypes.cg-intern.ont.utrecht.nl/api/v2",
     ),
     "ZRC_API_SCHEMA": config(
         "ZRC_API_SCHEMA",

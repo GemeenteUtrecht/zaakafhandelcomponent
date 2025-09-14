@@ -195,7 +195,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OT]),
+        )
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}informatieobjecttypen",
@@ -290,7 +293,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OT]),
+        )
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}informatieobjecttypen",
@@ -357,7 +363,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OT]),
+        )
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
@@ -417,7 +426,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OT]),
+        )
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{ZAKEN_ROOT}rollen?zaak={self.zaak['url']}",
@@ -479,7 +491,10 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         mock_service_oas_get(m, OBJECTS_ROOT, "objects")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
 
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[START_CAMUNDA_PROCESS_FORM_OT])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([START_CAMUNDA_PROCESS_FORM_OT]),
+        )
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",

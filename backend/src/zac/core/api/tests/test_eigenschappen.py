@@ -659,7 +659,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         )
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, "http://object.nl/api/v1/", "objects")
-        mock_service_oas_get(m, "http://objecttypes.nl/api/v1/", "objecttypes")
+        mock_service_oas_get(m, "http://objecttypes.nl/api/v2/", "objecttypes")
         mock_resource_get(m, zaaktype)
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={CATALOGUS_URL}",
@@ -676,37 +676,39 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
             api_type=APITypes.orc, api_root="http://object.nl/api/v1/"
         )
         objecttypes_service = Service.objects.create(
-            api_type=APITypes.orc, api_root="http://objecttypes.nl/api/v1/"
+            api_type=APITypes.orc, api_root="http://objecttypes.nl/api/v2/"
         )
         core_config.primary_objects_api = objects_service
         core_config.primary_objecttypes_api = objecttypes_service
         core_config.save()
         meta_config = MetaObjectTypesConfig.get_solo()
-        meta_config.zaaktype_attribute_objecttype = "http://objecttype.nl/api/v1/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
+        meta_config.zaaktype_attribute_objecttype = "http://objecttype.nl/api/v2/objecttypes/5c3b34d1-e856-4c41-8d7e-fb03133f3a69"
         meta_config.save()
         m.get(
-            "http://objecttypes.nl/api/v1/objecttypes",
-            json=[
-                {
-                    "url": "http://objecttypes.nl/api/v1/objecttypes/1",
-                    "name": "zaaktypeAttribute",
-                    "namePlural": "zaaktypeAttributes",
-                    "description": "",
-                    "data_classification": "",
-                    "maintainer_organization": "",
-                    "maintainer_department": "",
-                    "contact_person": "",
-                    "contact_email": "",
-                    "source": "",
-                    "update_frequency": "",
-                    "provider_organization": "",
-                    "documentation_url": "",
-                    "labels": {},
-                    "created_at": "2019-08-24",
-                    "modified_at": "2019-08-24",
-                    "versions": [],
-                },
-            ],
+            "http://objecttypes.nl/api/v2/objecttypes",
+            json=paginated_response(
+                [
+                    {
+                        "url": "http://objecttypes.nl/api/v2/objecttypes/1",
+                        "name": "zaaktypeAttribute",
+                        "namePlural": "zaaktypeAttributes",
+                        "description": "",
+                        "data_classification": "",
+                        "maintainer_organization": "",
+                        "maintainer_department": "",
+                        "contact_person": "",
+                        "contact_email": "",
+                        "source": "",
+                        "update_frequency": "",
+                        "provider_organization": "",
+                        "documentation_url": "",
+                        "labels": {},
+                        "created_at": "2019-08-24",
+                        "modified_at": "2019-08-24",
+                        "versions": [],
+                    },
+                ]
+            ),
         )
         enum_obj = {
             "url": f"{objects_service.api_root}objects/0196252f-32de-4edb-90e8-10669b5dbf50",

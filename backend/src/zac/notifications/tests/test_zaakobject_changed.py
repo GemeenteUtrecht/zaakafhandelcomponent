@@ -110,7 +110,10 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(rm, CATALOGUS_RESPONSE)
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, OBJECT_RESPONSE)
-        rm.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[OBJECTTYPE_RESPONSE])
+        rm.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([OBJECTTYPE_RESPONSE]),
+        )
         mock_resource_get(rm, OBJECTTYPE_RESPONSE)
         mock_resource_get(rm, OBJECTTYPE_VERSION_RESPONSE)
         rm.get(

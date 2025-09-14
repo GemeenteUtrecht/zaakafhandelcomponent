@@ -1,5 +1,5 @@
 # Stage 1 -- install dev tools and build bundle
-FROM node:16-buster AS build
+FROM node:20-bookworm AS build
 
 WORKDIR /app
 

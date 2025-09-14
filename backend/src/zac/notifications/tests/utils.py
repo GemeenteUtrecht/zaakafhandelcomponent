@@ -22,7 +22,7 @@ def mock_service_oas_get(m: Mocker, url: str, service: str) -> None:
 ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 CATALOGI_ROOT = "https://some.ztc.nl/api/v1/"
 OBJECTS_ROOT = "https://some.objects.nl/api/v1/"
-OBJECTTYPES_ROOT = "https://some.objecttypes.nl/api/v1/"
+OBJECTTYPES_ROOT = "https://some.objecttypes.nl/api/v2/"
 DRC_ROOT = "https://some.drc.nl/api/v1/"
 ZAAK = f"{ZAKEN_ROOT}zaken/f3ff2713-2f53-42ff-a154-16842309ad60"
 ZAAKTYPE = f"{CATALOGI_ROOT}zaaktypen/ad4573d0-4d99-4e90-a05c-e08911e8673d"

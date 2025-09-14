@@ -8,7 +8,7 @@ ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 BRONORGANISATIE = "123456789"
 IDENTIFICATIE = "ZAAK-0000001"
-OBJECTTYPES_ROOT = "http://objecttype.nl/api/v1/"
+OBJECTTYPES_ROOT = "http://objecttype.nl/api/v2/"
 OBJECTS_ROOT = "http://object.nl/api/v2/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7"
 

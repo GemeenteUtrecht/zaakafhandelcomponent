@@ -164,7 +164,10 @@ class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         checklist_objecttype_version = checklist_object_type_version_factory()
         mock_resource_get(m, checklist_objecttype_version)
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.checklist_objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes",
+            json=paginated_response([self.checklist_objecttype]),
+        )
 
         m.post(f"{OBJECTS_ROOT}objects", json=self.checklist_object, status_code=201)
         m.post(f"{ZAKEN_ROOT}zaakobjecten", json=[], status_code=201)

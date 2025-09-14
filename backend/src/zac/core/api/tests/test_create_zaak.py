@@ -353,7 +353,9 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
 
         m.get(self.object["url"], json=self.object)
         m.get(self.objecttype["url"], json=self.objecttype)
-        m.get(f"{OBJECTTYPES_ROOT}objecttypes", json=[self.objecttype])
+        m.get(
+            f"{OBJECTTYPES_ROOT}objecttypes", json=paginated_response([self.objecttype])
+        )
         m.get(
             f"{CATALOGI_ROOT}zaaktypen?catalogus={self.zaaktype['catalogus']}",
             json=paginated_response([self.zaaktype]),
