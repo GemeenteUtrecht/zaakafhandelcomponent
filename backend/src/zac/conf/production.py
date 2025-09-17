@@ -71,6 +71,8 @@ ELASTIC_APM = {
     "SERVICE_NAME": f"Zaakafhandelcomponent - {ENVIRONMENT}",
     "SECRET_TOKEN": config("ELASTIC_APM_SECRET_TOKEN", "default"),
     "SERVER_URL": ELASTIC_APM_SERVER_URL,
+    "SERVER_TIMEOUT": "30s",
+    "TRANSACTIONS_SAMPLE_RATE": 0.1,  # 10% of transactions
 }
 if not ELASTIC_APM_SERVER_URL:
     ELASTIC_APM["ENABLED"] = False
