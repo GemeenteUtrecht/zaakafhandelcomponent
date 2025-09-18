@@ -523,16 +523,24 @@ def usage_report_zaken(
 
     # 5) Build zaak -> list of {"object": <string_representation>, "objecttype": <type.name>}
     zaak_to_objects: Dict[str, List[Dict[str, str]]] = defaultdict(list)
+    obj_default_string = "Geen objectnaam gevonden"
+    object_type_default_string = "Geen objecttypenaam gevonden"
     for zo in zon:
         obj = objects_by_url.get(zo.object)
         if not obj:
             continue
-        string_repr = getattr(obj, "string_representation", "") or ""
+        string_repr = (
+            getattr(obj, "string_representation", obj_default_string)
+            or obj_default_string
+        )
         # obj.type is an InnerDoc; be defensive:
         objtype_name = ""
         obj_type = getattr(obj, "type", None)
         if obj_type is not None:
-            objtype_name = getattr(obj_type, "name", "") or ""
+            objtype_name = (
+                getattr(obj_type, "name", object_type_default_string)
+                or object_type_default_string
+            )
         zaak_to_objects[zo.zaak].append(
             {"object": string_repr, "objecttype": objtype_name}
         )
