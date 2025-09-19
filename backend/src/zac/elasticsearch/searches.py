@@ -137,7 +137,7 @@ def search_zaken(
     include_closed=True,
     ordering=("-identificatie.keyword", "-startdatum", "-registratiedatum"),
     fields=None,
-    obj=None,
+    object=None,
     start_period=None,
     end_period=None,
     return_search=False,
@@ -190,7 +190,7 @@ def search_zaken(
                     query=f"*{eigenschap_value}*",
                 ),
             )
-    if obj:
+    if object:
         zon = search_zaakobjecten(zaken=urls, objecten=[obj])
         zaakobject_zaakurls = [zo.zaak for zo in zon]
         if urls:
