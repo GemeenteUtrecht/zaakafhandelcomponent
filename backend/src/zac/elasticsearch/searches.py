@@ -191,7 +191,7 @@ def search_zaken(
                 ),
             )
     if object:
-        zon = search_zaakobjecten(zaken=urls, objecten=[obj])
+        zon = search_zaakobjecten(zaken=urls, objecten=[object])
         zaakobject_zaakurls = [zo.zaak for zo in zon]
         if urls:
             urls += zaakobject_zaakurls
