@@ -5,6 +5,8 @@ from functools import reduce
 from typing import Any, Dict, List, Optional, Union
 from urllib.request import Request
 
+from django.conf import settings
+
 from elasticsearch_dsl import Q, Search
 from elasticsearch_dsl.query import (
     Bool,
@@ -101,6 +103,7 @@ def search_zaakobjecten(
     zaken: Optional[List[str]] = None,
     objecten: Optional[List[str]] = None,
     urls: Optional[List[str]] = None,
+    size: int = settings.ES_SIZE,
 ) -> List[ZaakObjectDocument]:
     s = ZaakObjectDocument.search()
 
@@ -114,13 +117,14 @@ def search_zaakobjecten(
     if urls:
         s = s.filter(Terms(url=urls))
 
+    s = s.extra(size=size)
     results = s.execute()
     return results.hits
 
 
 def search_zaken(
     request=None,
-    size=10000,
+    size=settings.ES_SIZE,
     identificatie=None,
     identificatie_keyword=None,
     bronorganisatie=None,
@@ -133,7 +137,7 @@ def search_zaken(
     include_closed=True,
     ordering=("-identificatie.keyword", "-startdatum", "-registratiedatum"),
     fields=None,
-    object=None,
+    obj=None,
     start_period=None,
     end_period=None,
     return_search=False,
@@ -186,8 +190,8 @@ def search_zaken(
                     query=f"*{eigenschap_value}*",
                 ),
             )
-    if object:
-        zon = search_zaakobjecten(zaken=urls, objecten=[object])
+    if obj:
+        zon = search_zaakobjecten(zaken=urls, objecten=[obj])
         zaakobject_zaakurls = [zo.zaak for zo in zon]
         if urls:
             urls += zaakobject_zaakurls
@@ -227,7 +231,7 @@ def autocomplete_zaak_search(
     )
     if only_allowed:
         search = search.filter(query_allowed_for_requester(request))
-
+    search = search.extra(size=settings.ES_SIZE)
     response = search.execute()
     return response.hits
 
@@ -314,7 +318,7 @@ def count_by_behandelaar(request: Request) -> int:
 
 
 def search_informatieobjects(
-    size: int = 10000,
+    size: int = settings.ES_SIZE,
     zaak: str = "",
     bestandsnaam: str = "",
     bronorganisatie: str = "",
@@ -370,7 +374,7 @@ def search_informatieobjects(
 
 
 def search_objects(
-    size: int = 10000,
+    size: int = settings.ES_SIZE,
     urls: Optional[List[str]] = None,
     fields: Optional[List[str]] = None,
     return_search: bool = False,
@@ -603,7 +607,7 @@ def usage_report_informatieobjecten(
         InformatieObjectDocument.search()
         .source(source_fields)
         .filter("range", **{"creatiedatum": {"gte": gte, "lte": lte}})
-        .params(size=1000)
+        .params(size=settings.ES_SIZE)
     )
 
     results: List[Dict[str, Any]] = []
