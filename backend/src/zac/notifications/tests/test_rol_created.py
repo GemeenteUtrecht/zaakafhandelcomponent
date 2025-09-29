@@ -68,12 +68,12 @@ ROL_RESPONSE = generate_oas_component(
     },
 )
 
-
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "rol",
-    "resourceUrl": ROL,
+    "resource_url": ROL,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -117,7 +117,7 @@ def _get_task(**overrides):
 @requests_mock.Mocker()
 class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     """
-    Test that the appropriate actions happen on zaak-creation notifications.
+    Test that the appropriate actions happen on rol-creation notifications.
     """
 
     path = reverse_lazy("notifications:callback")
@@ -484,7 +484,7 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_es_get_rollen.assert_called_once_with(self.zaak)
 
         # 2. receive notification for the same rol with other uuid and name updated by other app
-        # check that rol is not updated
+        # UPDATED: snake_case keys for the second payload too
         with patch(
             "zac.core.services.update_rol", return_value=rol_self_updated
         ) as mock_update_rol2:
@@ -493,9 +493,9 @@ class RolCreatedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             ) as mock_es_get_rollen2:
                 other_notification = {
                     "kanaal": "zaken",
-                    "hoofdObject": ZAAK,
+                    "hoofd_object": ZAAK,
                     "resource": "rol",
-                    "resourceUrl": rol_other_updated.url,
+                    "resource_url": rol_other_updated.url,
                     "actie": "create",
                     "aanmaakdatum": timezone.now().isoformat(),
                     "kenmerken": {

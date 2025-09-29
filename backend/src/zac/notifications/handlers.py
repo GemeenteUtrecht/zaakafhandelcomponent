@@ -189,12 +189,14 @@ class ZakenHandler:
         BoardItem.objects.filter(object=zaak_url).delete()
         AccessRequest.objects.filter(zaak=zaak_url).delete()
 
-        # index in ES
+        # update index in ES
         delete_zaak_document(zaak_url)
 
-    def _handle_related_create(self, zaak_url: str):
+    def _handle_resultaat_create(self, zaak_url: str):
         zaak = self._retrieve_zaak(zaak_url)
         invalidate_zaak_cache(zaak)
+        # update index in ES
+        update_zaak_document(zaak)
 
     def _handle_status_create(self, data: Dict):
         zaak = self._retrieve_zaak(data["hoofd_object"])

@@ -37,29 +37,30 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# Updated to snake_case keys expected by the refactored handlers
 NOTIFICATION_CREATE = {
     "kanaal": "documenten",
-    "hoofdObject": INFORMATIEOBJECT,
+    "hoofd_object": INFORMATIEOBJECT,
     "resource": "enkelvoudiginformatieobject",
-    "resourceUrl": INFORMATIEOBJECT,
+    "resource_url": INFORMATIEOBJECT,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {},
 }
 NOTIFICATION_UPDATE = {
     "kanaal": "documenten",
-    "hoofdObject": INFORMATIEOBJECT,
+    "hoofd_object": INFORMATIEOBJECT,
     "resource": "enkelvoudiginformatieobject",
-    "resourceUrl": INFORMATIEOBJECT,
+    "resource_url": INFORMATIEOBJECT,
     "actie": "update",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {},
 }
 NOTIFICATION_DESTROY = {
     "kanaal": "documenten",
-    "hoofdObject": INFORMATIEOBJECT,
+    "hoofd_object": INFORMATIEOBJECT,
     "resource": "enkelvoudiginformatieobject",
-    "resourceUrl": INFORMATIEOBJECT,
+    "resource_url": INFORMATIEOBJECT,
     "actie": "destroy",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {},
@@ -69,7 +70,7 @@ NOTIFICATION_DESTROY = {
 @requests_mock.Mocker()
 class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @staticmethod
-    def clear_index(init=False):
+    def clear_index(init: bool = False):
         ESMixin.clear_index(init=init)
         Index(settings.ES_INDEX_DOCUMENTEN).delete(ignore=404)
 
@@ -116,9 +117,9 @@ class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTest
                 id=INFORMATIEOBJECT_RESPONSE["url"].split("/")[-1]
             )
 
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
         with patch("zac.elasticsearch.api.parallel", return_value=mock_parallel()):
-            response = self.client.post(path, NOTIFICATION_CREATE)
+            response = self.client.post(url, NOTIFICATION_CREATE)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.refresh_index()
@@ -165,8 +166,8 @@ class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTest
         )
         rm.get(f"{INFORMATIEOBJECT_RESPONSE['url']}/audittrail", json=[audit_trail])
 
-        path = reverse("notifications:callback")
-        response = self.client.post(path, NOTIFICATION_UPDATE)
+        url = reverse("notifications:callback")
+        response = self.client.post(url, NOTIFICATION_UPDATE)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.refresh_index()
@@ -189,12 +190,12 @@ class InformatieObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTest
         self.refresh_index()
 
         # Assert exists
-        io_document = InformatieObjectDocument.get(
+        _ = InformatieObjectDocument.get(
             id=INFORMATIEOBJECT_RESPONSE["url"].split("/")[-1]
         )
 
-        path = reverse("notifications:callback")
-        response = self.client.post(path, NOTIFICATION_DESTROY)
+        url = reverse("notifications:callback")
+        response = self.client.post(url, NOTIFICATION_DESTROY)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.refresh_index()

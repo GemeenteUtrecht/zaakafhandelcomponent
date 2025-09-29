@@ -28,11 +28,12 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "resultaat",
-    "resourceUrl": f"{ZAKEN_ROOT}resultaten/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resource_url": f"{ZAKEN_ROOT}resultaten/f3ff2713-2f53-42ff-a154-16842309ad60",
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -46,7 +47,7 @@ NOTIFICATION = {
 @requests_mock.Mocker()
 class ResultaatCreatedTests(ESMixin, APITestCase):
     """
-    Test that the appropriate actions happen on zaak-creation notifications.
+    Test that the appropriate actions happen on resultaat-creation notifications.
     """
 
     @classmethod
@@ -57,7 +58,6 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         cache.clear()
         self.client.force_authenticate(user=self.user)
 
@@ -68,7 +68,7 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, CATALOGUS_RESPONSE)
 
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         with patch(
             "zac.core.services.get_paginated_results", return_value=[ZAAK_RESPONSE]
@@ -76,10 +76,10 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
             # call to populate cache
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
 
-            response = self.client.post(path, NOTIFICATION)
+            response = self.client.post(url, NOTIFICATION)
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-            # second call should not hit the cache
+            # second call should not hit the cache (because it was invalidated)
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
             self.assertEqual(m.call_count, 2)
 
@@ -90,7 +90,7 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, CATALOGUS_RESPONSE)
 
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         matrix = [
             {"zaak_uuid": "f3ff2713-2f53-42ff-a154-16842309ad60"},
@@ -105,12 +105,12 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
                 self.assertEqual(rm.last_request.url, ZAAK)
                 first_retrieve = rm.last_request
 
-                response = self.client.post(path, NOTIFICATION)
+                response = self.client.post(url, NOTIFICATION)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
                 num_calls_before = len(rm.request_history)
 
-                # second call should not hit the cache
+                # second call should re-fetch (cache was invalidated)
                 get_zaak(**kwargs)
 
                 self.assertEqual(rm.last_request.url, ZAAK)

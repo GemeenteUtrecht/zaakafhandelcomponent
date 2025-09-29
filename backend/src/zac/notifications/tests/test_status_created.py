@@ -38,11 +38,12 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "status",
-    "resourceUrl": STATUS,
+    "resource_url": STATUS,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -54,7 +55,7 @@ NOTIFICATION = {
 
 
 @requests_mock.Mocker()
-class StatusCreatedTests(ESMixin, APITestCase):
+class StatusCreatedTests(ESMixin, APITestCAse):
     """
     Test that the appropriate actions happen on status creation notifications.
     """
@@ -67,7 +68,6 @@ class StatusCreatedTests(ESMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         cache.clear()
         self.client.force_authenticate(user=self.user)
 
@@ -80,18 +80,18 @@ class StatusCreatedTests(ESMixin, APITestCase):
         mock_resource_get(rm, ZAAKTYPE_RESPONSE)
         mock_resource_get(rm, STATUS_RESPONSE)
         mock_resource_get(rm, STATUSTYPE_RESPONSE)
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         with patch(
             "zac.core.services.get_paginated_results", return_value=[ZAAK_RESPONSE]
         ) as m:
-            # call to populate cache
+            # populate cache
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
 
-            response = self.client.post(path, NOTIFICATION)
+            response = self.client.post(url, NOTIFICATION)
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-            # second call should not hit the cache
+            # second call should not hit the cache (because it was invalidated)
             find_zaak(BRONORGANISATIE, IDENTIFICATIE)
             self.assertEqual(m.call_count, 1)
 
@@ -104,7 +104,7 @@ class StatusCreatedTests(ESMixin, APITestCase):
         mock_resource_get(rm, STATUS_RESPONSE)
         mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         matrix = [
             {"zaak_uuid": "f3ff2713-2f53-42ff-a154-16842309ad60"},
@@ -114,17 +114,17 @@ class StatusCreatedTests(ESMixin, APITestCase):
 
         for kwargs in matrix:
             with self.subTest(**kwargs):
-                # call to populate cache
+                # populate cache
                 get_zaak(**kwargs)
                 self.assertEqual(rm.last_request.url, ZAAK)
                 first_retrieve = rm.last_request
 
-                response = self.client.post(path, NOTIFICATION)
+                response = self.client.post(url, NOTIFICATION)
                 self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
                 num_calls_before = len(rm.request_history)
 
-                # second call should not hit the cache
+                # second call should re-fetch after invalidation
                 get_zaak(**kwargs)
 
                 self.assertEqual(rm.last_request.url, ZAAK)
@@ -146,30 +146,30 @@ class StatusCreatedTests(ESMixin, APITestCase):
         statustype["is_eindstatus"] = True
         mock_resource_get(rm, statustype)
 
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         activity = ActivityFactory.create(
             zaak=zaak["url"], status=ActivityStatuses.on_going
         )
         task = MagicMock()
         task.id = "some-id"
+
+        # UPDATED: patch where these functions are imported & used now
         with patch(
-            "zac.notifications.handlers.bulk_lock_review_requests_for_zaak"
-        ) as mock_bulk_lock_rr_for_zaak:
-            with patch(
-                "zac.notifications.handlers.bulk_close_all_documents_for_zaak"
-            ) as mock_bulk_close_all_documents_for_zaak:
-                with patch(
-                    "zac.notifications.handlers.lock_checklist_for_zaak"
-                ) as mock_lock_checklist_for_zaak:
-                    with patch(
-                        "zac.notifications.handlers.get_camunda_user_tasks",
-                        return_value=[task],
-                    ) as mock_get_camunda_user_tasks:
-                        with patch(
-                            "zac.notifications.handlers.complete_task"
-                        ) as mock_complete_task:
-                            response = self.client.post(path, NOTIFICATION)
+            "zac.notifications.handlers.zaken.bulk_lock_review_requests_for_zaak"
+        ) as mock_bulk_lock_rr_for_zaak, patch(
+            "zac.notifications.handlers.zaken.bulk_close_all_documents_for_zaak"
+        ) as mock_bulk_close_all_documents_for_zaak, patch(
+            "zac.notifications.handlers.zaken.lock_checklist_for_zaak"
+        ) as mock_lock_checklist_for_zaak, patch(
+            "zac.notifications.handlers.zaken.get_camunda_user_tasks",
+            return_value=[task],
+        ) as mock_get_camunda_user_tasks, patch(
+            "zac.notifications.handlers.zaken.complete_task"
+        ) as mock_complete_task:
+            response = self.client.post(url, NOTIFICATION)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         mock_bulk_lock_rr_for_zaak.assert_called_once()
         mock_bulk_close_all_documents_for_zaak.assert_called_once()
@@ -183,5 +183,5 @@ class StatusCreatedTests(ESMixin, APITestCase):
 
         activity.refresh_from_db()
         self.assertEqual(activity.status, ActivityStatuses.finished)
-        self.assertEqual(activity.user_assignee, None)
-        self.assertEqual(activity.group_assignee, None)
+        self.assertIsNone(activity.user_assignee)
+        self.assertIsNone(activity.group_assignee)

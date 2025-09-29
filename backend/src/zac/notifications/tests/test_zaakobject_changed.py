@@ -45,27 +45,24 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# UPDATED: snake_case keys
 NOTIFICATION_CREATE = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaakobject",
-    "resourceUrl": ZAAKOBJECT,
+    "resource_url": ZAAKOBJECT,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
-    "kenmerken": {
-        "object": OBJECT,
-    },
+    "kenmerken": {"object": OBJECT},
 }
 NOTIFICATION_DESTROY = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaakobject",
-    "resourceUrl": ZAAKOBJECT,
+    "resource_url": ZAAKOBJECT,
     "actie": "destroy",
     "aanmaakdatum": timezone.now().isoformat(),
-    "kenmerken": {
-        "object": OBJECT,
-    },
+    "kenmerken": {"object": OBJECT},
 }
 
 
@@ -117,7 +114,8 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         mock_resource_get(rm, OBJECTTYPE_RESPONSE)
         mock_resource_get(rm, OBJECTTYPE_VERSION_RESPONSE)
         rm.get(
-            f"{CATALOGI_ROOT}zaaktypen", json=paginated_response([ZAAKTYPE_RESPONSE])
+            f"{CATALOGI_ROOT}zaaktypen",
+            json=paginated_response([ZAAKTYPE_RESPONSE]),
         )
 
     def test_zaakobject_created_indexed_in_es(self, rm):
@@ -132,21 +130,17 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             json=paginated_response([ZAAKOBJECT_RESPONSE]),
         )
 
-        # Assert no zaakinformatieobject is connected to it
+        # Assert not present yet
         with self.assertRaises(NotFoundError):
             ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
-
-        # Assert no object document is found with the object uuid
         with self.assertRaises(NotFoundError):
             ObjectDocument.get(id=OBJECT_RESPONSE["uuid"])
 
         path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_CREATE)
-
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
-
         object_document = ObjectDocument.get(id=OBJECT_RESPONSE["uuid"])
         self.assertEqual(
             object_document.related_zaken,
@@ -170,40 +164,25 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def test_zaakobject_destroyed_in_es_if_not_found_regression_test(self, rm):
         self._setup_mocks(rm)
-        rm.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={ZAAK}",
-            json=paginated_response([]),
-        )
-        rm.get(
-            f"{ZAKEN_ROOT}zaakobjecten?object={OBJECT}",
-            json=paginated_response([]),
-        )
+        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={ZAAK}", json=paginated_response([]))
+        rm.get(f"{ZAKEN_ROOT}zaakobjecten?object={OBJECT}", json=paginated_response([]))
 
         path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_DESTROY)
-
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.refresh_index()
 
-        # Assert no zaakobject document is found with the zo uuid
         with self.assertRaises(NotFoundError):
             ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
-
         with self.assertRaises(NotFoundError):
             ObjectDocument.get(id=OBJECT_RESPONSE["uuid"])
 
     def test_zaakobject_destroyed_in_es(self, rm):
         self._setup_mocks(rm)
-        rm.get(
-            f"{ZAKEN_ROOT}zaakobjecten?zaak={ZAAK}",
-            json=paginated_response([]),
-        )
-        rm.get(
-            f"{ZAKEN_ROOT}zaakobjecten?object={OBJECT}",
-            json=paginated_response([]),
-        )
+        rm.get(f"{ZAKEN_ROOT}zaakobjecten?zaak={ZAAK}", json=paginated_response([]))
+        rm.get(f"{ZAKEN_ROOT}zaakobjecten?object={OBJECT}", json=paginated_response([]))
 
-        # create zaak
+        # create zaakobject + object doc
         zaak = factory(Zaak, ZAAK_RESPONSE)
         zo_document = create_zaakobject_document(
             factory(ZaakObject, ZAAKOBJECT_RESPONSE)
@@ -211,21 +190,17 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         zo_document.save()
         self.refresh_index()
 
-        # create object document
         object_document = create_object_document(OBJECT_RESPONSE)
         object_document.related_zaken = [create_related_zaak_document(zaak)]
         object_document.save()
 
         path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_DESTROY)
-
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.refresh_index()
 
-        # Assert no zaakobject document is found with the zo uuid
         with self.assertRaises(NotFoundError):
             ZaakObjectDocument.get(id=_get_uuid_from_url(ZAAKOBJECT))
 
-        # Assert related_zaken of object document is empty.
         object_document = ObjectDocument.get(id=OBJECT_RESPONSE["uuid"])
         self.assertEqual(object_document.related_zaken, [])

@@ -25,15 +25,17 @@ from zac.tests.utils import mock_resource_get
 REVIEW_REQUEST_OBJECTTYPE = review_request_object_type_version_factory()
 REVIEW_REQUEST_OBJECT = review_request_object_factory()
 
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "objecten",
-    "hoofdObject": REVIEW_REQUEST_OBJECT["url"],
+    "hoofd_object": REVIEW_REQUEST_OBJECT["url"],
     "resource": "object",
-    "resourceUrl": REVIEW_REQUEST_OBJECT["url"],
+    "resource_url": REVIEW_REQUEST_OBJECT["url"],
     "actie": "update",
     "aanmaakdatum": "2020-11-04T15:24:00+00:00",
     "kenmerken": {"object_type": REVIEW_REQUEST_OBJECTTYPE["url"]},
 }
+
 TASK_DATA = {
     "id": "598347ee-62fc-46a2-913a-6e0788bc1b8c",
     "name": "aName",
@@ -63,7 +65,6 @@ TASK_DATA = {
 class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
     """
     Test the correct behaviour when reviews are updated.
-
     """
 
     endpoint = reverse_lazy("notifications:callback")
@@ -92,26 +93,31 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         super().setUp()
         self.client.force_authenticate(user=self.user)
 
+    # UPDATED: patch path for invalidate_review_requests_cache
     @patch(
-        "zac.contrib.objects.kownsl.api.views.invalidate_review_requests_cache",
+        "zac.contrib.objects.kownsl.cache.invalidate_review_requests_cache",
         return_value=None,
     )
     def test_user_task_send_message_locked(self, m, mock_invalidate_cache):
         mock_service_oas_get(m, ZAKEN_ROOT, "ztc")
         mock_resource_get(m, self.zaak)
         m.get(
-            f"https://camunda.example.com/engine-rest/task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee=user%3Abob",
-            json=[{**self.task_data, "assignee": f"user:bob"}],
+            f"https://camunda.example.com/engine-rest/task"
+            f"?processInstanceId={self.review_request['metadata']['processInstanceId']}"
+            f"&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}"
+            f"&assignee=user%3Abob",
+            json=[{**self.task_data, "assignee": "user:bob"}],
         )
-        m.post(
-            "https://camunda.example.com/engine-rest/message",
-        )
+        m.post("https://camunda.example.com/engine-rest/message")
+
         rr = deepcopy(REVIEW_REQUEST_OBJECT)
         rr["record"]["data"]["locked"] = True
         rr["type"] = REVIEW_REQUEST_OBJECTTYPE
         rr["stringRepresentation"] = ""
+
+        # UPDATED: patch path for fetch_object inside the new handler module
         with patch(
-            "zac.notifications.handlers.fetch_object",
+            "zac.notifications.handlers.objecten.fetch_object",
             return_value=rr,
         ):
             response = self.client.post(self.endpoint, NOTIFICATION)
@@ -128,23 +134,27 @@ class ReviewUpdatedTests(ClearCachesMixin, APITestCase):
         mock_resource_get(m, self.zaak)
 
         m.get(
-            f"https://camunda.example.com/engine-rest/task?processInstanceId={self.review_request['metadata']['processInstanceId']}&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}&assignee=user%3Abob",
-            json=[{**self.task_data, "assignee": f"user:bob"}],
+            f"https://camunda.example.com/engine-rest/task"
+            f"?processInstanceId={self.review_request['metadata']['processInstanceId']}"
+            f"&taskDefinitionKey={self.review_request['metadata']['taskDefinitionId']}"
+            f"&assignee=user%3Abob",
+            json=[{**self.task_data, "assignee": "user:bob"}],
         )
-        m.post(
-            "https://camunda.example.com/engine-rest/message",
-        )
+        m.post("https://camunda.example.com/engine-rest/message")
 
         # Fill cache
         cache.set(f"review_request:detail:{self.review_request['id']}", "hello")
         self.assertTrue(
             cache.has_key(f"review_request:detail:{self.review_request['id']}")
         )
+
         rr = deepcopy(REVIEW_REQUEST_OBJECT)
         rr["type"] = REVIEW_REQUEST_OBJECTTYPE
         rr["stringRepresentation"] = ""
+
+        # UPDATED: patch path for fetch_object inside the new handler module
         with patch(
-            "zac.notifications.handlers.fetch_object",
+            "zac.notifications.handlers.objecten.fetch_object",
             return_value=rr,
         ):
             response = self.client.post(self.endpoint, NOTIFICATION)

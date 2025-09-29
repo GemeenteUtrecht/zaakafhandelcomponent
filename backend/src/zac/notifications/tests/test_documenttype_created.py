@@ -17,9 +17,9 @@ from .utils import CATALOGI_ROOT, CATALOGUS
 
 NOTIFICATION = {
     "kanaal": "informatieobjecttypen",
-    "hoofdObject": f"{CATALOGI_ROOT}informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "hoofd_object": f"{CATALOGI_ROOT}informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
     "resource": "informatieobjecttype",
-    "resourceUrl": f"{CATALOGI_ROOT}informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
+    "resource_url": f"{CATALOGI_ROOT}informatieobjecttypen/f3ff2713-2f53-42ff-a154-16842309ad60",
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {"catalogus": CATALOGUS},
@@ -29,7 +29,7 @@ NOTIFICATION = {
 @requests_mock.Mocker()
 class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
     """
-    Test that the appropriate actions happen on zaak-creation notifications.
+    Test that the appropriate actions happen on informatieobjecttype-creation notifications.
     """
 
     @classmethod
@@ -39,7 +39,6 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         self.client.force_authenticate(user=self.user)
 
     def test_informatieobjecttype_created_invalidate_list_cache(self, m):
@@ -56,9 +55,11 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
         response = self.client.post(reverse("notifications:callback"), NOTIFICATION)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        # second call should not hit the cache
+        # second call should re-fetch (cache invalidated)
         get_informatieobjecttypen(catalogus=CATALOGUS)
-        self.assertEqual(m.call_count, 3)  # 1 call for API spec
+
+        # 1 call for API spec + 2 identical list calls (before and after invalidation)
+        self.assertEqual(m.call_count, 3)
         self.assertEqual(
             m.request_history[1].url,
             m.request_history[2].url,
