@@ -7,9 +7,9 @@ from zgw_consumers.api_models.base import factory
 
 from zac.contrib.objects.kownsl.cache import invalidate_review_requests_cache
 from zac.contrib.objects.kownsl.data import ReviewRequest
-from zac.contrib.objects.services import delete_zaakobjecten_of_object, fetch_object
 from zac.core.cache import invalidate_fetch_object_cache
 from zac.core.models import MetaObjectTypesConfig
+from zac.core.services import delete_zaakobjecten_of_object, fetch_object
 from zac.elasticsearch.api import delete_object_document, update_object_document
 
 logger = logging.getLogger(__name__)
