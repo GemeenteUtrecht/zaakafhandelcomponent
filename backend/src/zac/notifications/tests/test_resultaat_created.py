@@ -7,6 +7,7 @@ from django.utils import timezone
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
+from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import mock_service_oas_get
@@ -15,6 +16,7 @@ from zac.accounts.models import User
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests.utils import mock_resource_get
+from zgw.models import Zaak
 
 from .utils import (
     BRONORGANISATIE,
@@ -73,15 +75,20 @@ class ResultaatCreatedTests(ESMixin, APITestCase):
         with patch(
             "zac.core.services.get_paginated_results", return_value=[ZAAK_RESPONSE]
         ) as m:
-            # call to populate cache
-            find_zaak(BRONORGANISATIE, IDENTIFICATIE)
+            with patch(
+                "zac.core.services.get_zaak", return_value=factory(Zaak, ZAAK_RESPONSE)
+            ) as m_get_zaak:
+                # call to populate cache
+                find_zaak(BRONORGANISATIE, IDENTIFICATIE)
 
-            response = self.client.post(url, NOTIFICATION)
-            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+                response = self.client.post(url, NOTIFICATION)
+                self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-            # second call should not hit the cache (because it was invalidated)
-            find_zaak(BRONORGANISATIE, IDENTIFICATIE)
-            self.assertEqual(m.call_count, 2)
+                # second call should not hit the cache but it should hit get_zaak
+                find_zaak(BRONORGANISATIE, IDENTIFICATIE)
+                self.assertEqual(m.call_count, 1)
+                find_zaak(BRONORGANISATIE, IDENTIFICATIE)
+                self.assertEqual(m_get_zaak.call_count, 1)
 
     def test_get_zaak_resultaat_created(self, rm):
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")

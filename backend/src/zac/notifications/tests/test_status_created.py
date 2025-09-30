@@ -55,7 +55,7 @@ NOTIFICATION = {
 
 
 @requests_mock.Mocker()
-class StatusCreatedTests(ESMixin, APITestCAse):
+class StatusCreatedTests(ESMixin, APITestCase):
     """
     Test that the appropriate actions happen on status creation notifications.
     """

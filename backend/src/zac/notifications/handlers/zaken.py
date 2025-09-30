@@ -40,6 +40,7 @@ from zac.elasticsearch.api import (
     create_zaak_document,
     create_zaakinformatieobject_document,
     create_zaakobject_document,
+    create_zaaktype_document,
     delete_zaak_document,
     get_zaakinformatieobject_document,
     get_zaakobject_document,
@@ -74,6 +75,7 @@ class ZakenHandler:
             ("zaakeigenschap", "create"): self._on_zaakeigenschap_change,
             ("zaakeigenschap", "update"): self._on_zaakeigenschap_change,
             ("zaakeigenschap", "partial_update"): self._on_zaakeigenschap_change,
+            ("zaakeigenschap", "destroy"): self._on_zaakeigenschap_change,
             ("status", "create"): self._on_status_create,
             ("resultaat", "create"): self._on_resultaat_create,
             ("rol", "create"): self._on_rol_create,
@@ -110,9 +112,7 @@ class ZakenHandler:
         invalidate_zaak_list_cache(client, zaak)
 
         zaak_doc = create_zaak_document(zaak)
-        zaak_doc.zaaktype = (
-            zaak_doc.zaaktype or create_zaak_document(zaak).zaaktype
-        )  # safe-guard
+        zaak_doc.zaaktype = create_zaaktype_document(zaak.zaaktype)
         if zaak.status:
             zaak_doc.status = create_status_document(zaak.status)
         zaak_doc.save(refresh=True)

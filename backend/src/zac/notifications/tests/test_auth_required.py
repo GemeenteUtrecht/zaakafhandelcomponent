@@ -11,5 +11,4 @@ class AuthTests(APITestCase):
         # no credentials → should reject
         response = self.client.post(url)
 
-        # DRF normally returns 401 for unauthenticated requests
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

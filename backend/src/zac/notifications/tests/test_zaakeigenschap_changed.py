@@ -102,6 +102,8 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITestCase):
                 "kardinaliteit": "",
                 "waardenverzameling": [],
             },
+            "naam": "propname",
+            "definitie": "some-definition",
         }
         zaakeigenschap = {
             "url": ZAAKEIGENSCHAP,

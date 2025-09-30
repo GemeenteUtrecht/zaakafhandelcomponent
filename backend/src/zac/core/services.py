@@ -280,7 +280,6 @@ def get_eigenschappen(zaaktype: ZaakType) -> List[Eigenschap]:
         "eigenschap",
         request_kwargs={"params": {"zaaktype": zaaktype.url}},
     )
-
     eigenschappen = factory(Eigenschap, eigenschappen)
 
     # resolve relations
