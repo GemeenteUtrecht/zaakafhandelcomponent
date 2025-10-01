@@ -253,6 +253,10 @@ class ZaakDocumentSerializer(serializers.Serializer):
         required=True,
         help_text=_("The RSIN of the organisation that created the ZAAK."),
     )
+    # has_eindstatus = serializers.BooleanField(
+    #     required=False,
+    #     help_text=_("Indicates whether the ZAAK has a final status."),
+    # )
     omschrijving = serializers.CharField(
         required=False, help_text=_("Brief description of the ZAAK.")
     )
