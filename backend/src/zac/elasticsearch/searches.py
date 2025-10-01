@@ -202,7 +202,22 @@ def search_zaken(
     elif type(urls) == list:  # apparently we've gotten an empty list -> show nothing.
         s = s.filter(MatchNone())
     if not include_closed:
-        s = s.filter(~Exists(field="einddatum"))
+        s = s.filter(
+            Bool(
+                filter=[
+                    # must NOT have einddatum
+                    ~Exists(field="einddatum"),
+                    # AND (has_eindstatus == false OR has_eindstatus is missing)
+                    Bool(
+                        should=[
+                            Term(has_eindstatus=False),
+                            ~Exists(field="has_eindstatus"),
+                        ],
+                        minimum_should_match=1,
+                    ),
+                ]
+            )
+        )
     # display only allowed zaken
     if only_allowed:
         s = s.filter(query_allowed_for_requester(request))

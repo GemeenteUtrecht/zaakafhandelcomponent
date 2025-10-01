@@ -41,6 +41,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         url=CATALOGUS_URL,
         domein="DOME",
     )
+    maxDiff = None
 
     def setUp(self) -> None:
         super().setUp()
@@ -337,6 +338,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "status.statustoelichting",
                     "toelichting",
                     "zaakgeometrie",
+                    "has_eindstatus",
                 ],
                 "next": None,
                 "previous": None,
@@ -488,6 +490,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "status.statustoelichting",
                     "toelichting",
                     "zaakgeometrie",
+                    "has_eindstatus",
                 ],
                 "next": None,
                 "previous": None,
@@ -645,6 +648,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 "bronorganisatie",
                 "deadline",
                 "einddatum",
+                "has_eindstatus",
                 "identificatie",
                 "omschrijving",
                 "registratiedatum",

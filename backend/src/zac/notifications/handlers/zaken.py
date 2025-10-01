@@ -142,6 +142,7 @@ class ZakenHandler:
         zaak.status = status
 
         if zaak.status.statustype.is_eindstatus:
+            update_status_in_zaak_document(zaak)
             bulk_lock_review_requests_for_zaak(
                 zaak, reason=f"Zaak is {zaak.status.statustype.omschrijving.lower()}."
             )
@@ -162,8 +163,8 @@ class ZakenHandler:
             tasks = get_camunda_user_tasks(payload={"name": task_name}) or []
             for t in tasks:
                 complete_task(t.id, variables={})
-
-        update_status_in_zaak_document(zaak)
+        else:
+            update_status_in_zaak_document(zaak)
 
     # ---- Rol ----
     def _on_rol_create(self, data: Notification) -> None:
