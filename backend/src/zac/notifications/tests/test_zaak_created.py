@@ -31,11 +31,12 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaak",
-    "resourceUrl": ZAAK,
+    "resource_url": ZAAK,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -60,7 +61,6 @@ class ZaakCreatedTests(ESMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         cache.clear()
         self.client.force_authenticate(user=self.user)
 
@@ -74,8 +74,7 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
         zrc_client = self.zrc.build_client()
-
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         matrix = [
             {},
@@ -97,13 +96,13 @@ class ZaakCreatedTests(ESMixin, APITestCase):
                 with patch(
                     "zac.core.services.get_paginated_results", return_value=[]
                 ) as m:
-                    # call to populate cache
+                    # populate cache
                     _find_zaken(zrc_client, **kwargs)
 
-                    response = self.client.post(path, NOTIFICATION)
+                    response = self.client.post(url, NOTIFICATION)
                     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-                    # second call should not hit the cache
+                    # second call should re-fetch (cache invalidated)
                     _find_zaken(zrc_client, **kwargs)
                     self.assertEqual(m.call_count, 2)
 
@@ -117,8 +116,7 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
         zrc_client = self.zrc.build_client()
-
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         matrix = [
             {"zaaktype": ZAAKTYPE, "max_va": "geheim"},
@@ -130,13 +128,13 @@ class ZaakCreatedTests(ESMixin, APITestCase):
                 with patch(
                     "zac.core.services.get_paginated_results", return_value=[]
                 ) as m:
-                    # call to populate cache
+                    # populate cache
                     _find_zaken(zrc_client, **kwargs)
 
-                    response = self.client.post(path, NOTIFICATION)
+                    response = self.client.post(url, NOTIFICATION)
                     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-                    # second call should not hit the cache
+                    # second call should re-fetch (cache invalidated)
                     _find_zaken(zrc_client, **kwargs)
                     self.assertEqual(m.call_count, 2)
 
@@ -149,14 +147,14 @@ class ZaakCreatedTests(ESMixin, APITestCase):
         mock_resource_get(rm, STATUS_RESPONSE)
         mock_resource_get(rm, STATUSTYPE_RESPONSE)
 
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
         zaak_document = ZaakDocument.get(
             id="f3ff2713-2f53-42ff-a154-16842309ad60", ignore=404
         )
         self.assertIsNone(zaak_document)
 
-        response = self.client.post(path, NOTIFICATION)
+        response = self.client.post(url, NOTIFICATION)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         zaak_document = ZaakDocument.get(id="f3ff2713-2f53-42ff-a154-16842309ad60")

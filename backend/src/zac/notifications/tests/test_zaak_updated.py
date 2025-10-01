@@ -45,11 +45,12 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaak",
-    "resourceUrl": ZAAK,
+    "resource_url": ZAAK,
     "actie": "update",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -268,10 +269,7 @@ class ZaakUpdateTests(ClearCachesMixin, ESMixin, APITestCase):
         self.assertEqual(object_document.meta.version, 1)
 
         # Update zaak api response
-        new_response = {
-            **ZAAK_RESPONSE,
-            "omschrijving": "some updated omschrijving",
-        }
+        new_response = {**ZAAK_RESPONSE, "omschrijving": "some updated omschrijving"}
         mock_resource_get(rm, new_response)
 
         response = self.client.post(path, NOTIFICATION)
@@ -279,15 +277,11 @@ class ZaakUpdateTests(ClearCachesMixin, ESMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         zaak_document = ZaakDocument.get(id=zaak_document.meta.id)
-        self.assertEqual(
-            zaak_document.omschrijving,
-            "some updated omschrijving",
-        )
+        self.assertEqual(zaak_document.omschrijving, "some updated omschrijving")
         self.assertEqual(zaak_document.meta.version, 2)
 
         object_document = ObjectDocument.get(id=object_document.meta.id)
         self.assertEqual(
-            object_document.related_zaken[0].omschrijving,
-            "some updated omschrijving",
+            object_document.related_zaken[0].omschrijving, "some updated omschrijving"
         )
         self.assertEqual(object_document.meta.version, 2)

@@ -37,11 +37,12 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaak",
-    "resourceUrl": ZAAK,
+    "resource_url": ZAAK,
     "actie": "destroy",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {
@@ -65,7 +66,6 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         self.client.force_authenticate(user=self.user)
 
     def test_ad_hoc_activities_deleted(self):
@@ -106,7 +106,6 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
         )
 
         response = self.client.post(path, NOTIFICATION)
-
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         zaak_document = ZaakDocument.get(id=zaak_document.meta.id, ignore=404)

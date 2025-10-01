@@ -6,8 +6,9 @@ from rest_framework.test import APITestCase
 
 class AuthTests(APITestCase):
     def test_auth_required_callback(self):
-        path = reverse("notifications:callback")
+        url = reverse("notifications:callback")
 
-        response = self.client.post(path)
+        # no credentials → should reject
+        response = self.client.post(url)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

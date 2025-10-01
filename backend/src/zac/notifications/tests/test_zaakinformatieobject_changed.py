@@ -49,29 +49,30 @@ from .utils import (
     ZAKEN_ROOT,
 )
 
+# UPDATED: snake_case keys
 NOTIFICATION_CREATE = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaakinformatieobject",
-    "resourceUrl": ZAAKINFORMATIEOBJECT,
+    "resource_url": ZAAKINFORMATIEOBJECT,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {},
 }
 NOTIFICATION_UPDATE = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaakinformatieobject",
-    "resourceUrl": ZAAKINFORMATIEOBJECT,
+    "resource_url": ZAAKINFORMATIEOBJECT,
     "actie": "update",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {},
 }
 NOTIFICATION_DESTROY = {
     "kanaal": "zaken",
-    "hoofdObject": ZAAK,
+    "hoofd_object": ZAAK,
     "resource": "zaakinformatieobject",
-    "resourceUrl": ZAAKINFORMATIEOBJECT,
+    "resource_url": ZAAKINFORMATIEOBJECT,
     "actie": "destroy",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {},
@@ -103,9 +104,6 @@ class ZaakInformatieObjectChangedTests(
         Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
         Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
         Service.objects.create(api_root=DRC_ROOT, api_type=APITypes.drc)
-
-        # config = CoreConfig.get_solo()
-        # config.save()
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 
@@ -135,13 +133,11 @@ class ZaakInformatieObjectChangedTests(
         )
         rm.get(f"{INFORMATIEOBJECT_RESPONSE['url']}/audittrail", status_code=404)
 
-        # Assert no zaakinformatieobject is connected to it
+        # Assert not present
         with self.assertRaises(NotFoundError):
             ZaakInformatieObjectDocument.get(
                 id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT)
             )
-
-        # Assert no object document is found with the object uuid
         with self.assertRaises(NotFoundError):
             InformatieObjectDocument.get(id=_get_uuid_from_url(INFORMATIEOBJECT))
 
@@ -189,7 +185,7 @@ class ZaakInformatieObjectChangedTests(
         )
         self.refresh_index()
 
-        # Assert zaakinformatieobject exists
+        # Assert exists
         ZaakInformatieObjectDocument.get(id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT))
 
         document = factory(Document, INFORMATIEOBJECT_RESPONSE)
@@ -204,25 +200,19 @@ class ZaakInformatieObjectChangedTests(
         informatieobject_document.save()
 
         # mock new situation where zio is updated
-        rm.get(
-            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
-            json=[],
-        )
+        rm.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}", json=[])
 
         path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_DESTROY)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        # Assert zaakinformatieobjecten is empty
+        # Assert emptied
         self.refresh_index()
-
-        # Assert no zaakinformatieobject document is found with the zio uuid
         with self.assertRaises(NotFoundError):
             ZaakInformatieObjectDocument.get(
                 id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT)
             )
 
-        # Assert related_zaken of informatieobject document is empty.
         informatieobject_document = InformatieObjectDocument.get(
             id=_get_uuid_from_url(INFORMATIEOBJECT)
         )
@@ -244,7 +234,7 @@ class ZaakInformatieObjectChangedTests(
         )
         self.refresh_index()
 
-        # Assert zaakinformatieobject exists
+        # Assert exists
         ZaakInformatieObjectDocument.get(id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT))
 
         # create informatieobject document
@@ -258,25 +248,19 @@ class ZaakInformatieObjectChangedTests(
         informatieobject_document.save()
 
         # mock new situation where zio is deleted
-        rm.get(
-            f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}",
-            json=[],
-        )
+        rm.get(f"{ZAKEN_ROOT}zaakinformatieobjecten?zaak={ZAAK}", json=[])
 
         path = reverse("notifications:callback")
         response = self.client.post(path, NOTIFICATION_DESTROY)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        # Assert zaakinformatieobjecten is empty
+        # Assert emptied
         self.refresh_index()
-
-        # Assert no zaakinformatieobject document is found with the zio uuid
         with self.assertRaises(NotFoundError):
             ZaakInformatieObjectDocument.get(
                 id=_get_uuid_from_url(ZAAKINFORMATIEOBJECT)
             )
 
-        # Assert related_zaken of informatieobject document is empty.
         informatieobject_document = InformatieObjectDocument.get(
             id=_get_uuid_from_url(INFORMATIEOBJECT)
         )

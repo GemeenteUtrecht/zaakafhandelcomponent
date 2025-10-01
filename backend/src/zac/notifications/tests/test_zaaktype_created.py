@@ -15,11 +15,12 @@ from zac.tests.utils import paginated_response
 
 from .utils import CATALOGI_ROOT, CATALOGUS, ZAAKTYPE
 
+# UPDATED: snake_case keys
 NOTIFICATION = {
     "kanaal": "zaaktypen",
-    "hoofdObject": ZAAKTYPE,
+    "hoofd_object": ZAAKTYPE,
     "resource": "zaaktype",
-    "resourceUrl": ZAAKTYPE,
+    "resource_url": ZAAKTYPE,
     "actie": "create",
     "aanmaakdatum": timezone.now().isoformat(),
     "kenmerken": {"catalogus": CATALOGUS},
@@ -39,7 +40,6 @@ class ZaakTypeCreatedTests(ClearCachesMixin, APITestCase):
 
     def setUp(self):
         super().setUp()
-
         self.client.force_authenticate(user=self.user)
 
     def test_zaaktype_created_invalidate_list_cache(self, m, *mocks):

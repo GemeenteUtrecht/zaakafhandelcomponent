@@ -66,6 +66,7 @@ def invalidate_zaak_cache(zaak: Zaak):
     ]
 
     cache.delete_many(keys)
+    cache.has_key(keys)
 
 
 def invalidate_zaak_list_cache(client: Client, zaak: Zaak):
