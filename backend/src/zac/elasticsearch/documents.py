@@ -126,6 +126,7 @@ class ZaakDocument(Document):
     status = field.Object(StatusDocument)
     toelichting = field.Text(fields={"keyword": field.Keyword()})
     zaakgeometrie = field.GeoShape()
+    has_eindstatus = field.Boolean()
 
     class Index:
         name = settings.ES_INDEX_ZAKEN

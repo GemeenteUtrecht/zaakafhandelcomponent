@@ -176,6 +176,10 @@ def update_status_in_zaak_document(zaak: Zaak) -> None:
         status_document = create_status_document(zaak.status)
         zaak_document = _get_zaak_document(zaak.uuid, zaak.url, create_zaak=zaak)
         zaak_document.status = status_document
+        if zaak.status.statustype.is_eindstatus:
+            zaak_document.has_eindstatus = True
+        else:
+            zaak_document.has_eindstatus = False
         zaak_document.save(refresh="wait_for")
 
     return
