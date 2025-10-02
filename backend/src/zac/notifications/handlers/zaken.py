@@ -166,6 +166,8 @@ class ZakenHandler:
         else:
             update_status_in_zaak_document(zaak)
 
+        update_zaak_document(zaak)
+
     # ---- Rol ----
     def _on_rol_create(self, data: Notification) -> None:
         zaak = retrieve_zaak(data["hoofd_object"])
