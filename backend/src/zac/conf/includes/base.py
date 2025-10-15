@@ -136,6 +136,7 @@ INSTALLED_APPS = [
     "import_export",
     "mozilla_django_oidc",
     "mozilla_django_oidc_db",
+    "django_better_admin_arrayfield",
     "django_filters",
     "vng_api_common",
     "drf_spectacular",
