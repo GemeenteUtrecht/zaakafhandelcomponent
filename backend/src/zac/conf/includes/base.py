@@ -138,7 +138,7 @@ INSTALLED_APPS = [
     "mozilla_django_oidc_db",
     "django_better_admin_arrayfield",
     "django_filters",
-    "vng_api_common",
+    # "vng_api_common",
     "drf_spectacular",
     "rest_framework",
     "rest_framework.authtoken",
@@ -178,8 +178,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "zac.accounts.middleware.HijackUserMiddleware",
     "zac.accounts.middleware.HijackSessionRefresh",
-    # "zac.accounts.scim.middleware.SCIMAuthMiddleware",
-    # "django_scim.middleware.SCIMAuthCheckMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "zac.utils.middleware.ReleaseHeaderMiddleware",
@@ -421,8 +419,8 @@ AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 CORS_ALLOW_ALL_ORIGINS = config("CORS_HEADERS_ENABLED", default=DEBUG)
 _angular_dev_server_port = config("ANGULAR_DEV_SERVER_PORT", default=4200)
 CSRF_TRUSTED_ORIGINS = [
-    f"localhost:{_angular_dev_server_port}",
-    f"127.0.0.1:{_angular_dev_server_port}",
+    f"http://localhost:{_angular_dev_server_port}",
+    f"http://127.0.0.1:{_angular_dev_server_port}",
 ]
 
 #
@@ -561,7 +559,10 @@ ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
 # ELASTICSEARCH CONFIG
 ES_TIMEOUT = 60
 ELASTICSEARCH_DSL = {
-    "default": {"hosts": config("ES_HOST", "localhost:9200"), "timeout": ES_TIMEOUT},
+    "default": {
+        "hosts": config("ES_HOST", "http://localhost:9200"),
+        "timeout": ES_TIMEOUT,
+    },
 }
 ES_INDEX_ZAKEN = "zaken"
 ES_INDEX_DOCUMENTEN = "documenten"
@@ -579,24 +580,24 @@ ES_CHUNK_SIZE = 100
 ES_SIZE = 1000  # default page size for searches
 
 # SCIM
-SCIM_SERVICE_PROVIDER = {
-    "NETLOC": config(
-        "SCIM_NETLOC", default=ALLOWED_HOSTS[0] if ALLOWED_HOSTS else "localhost"
-    ),
-    "AUTHENTICATION_SCHEMES": [
-        {
-            "name": "API Key",
-            "type": "apiKey",
-            "description": "Authorization header with token",
-            "documentationUrl": "https://zaakafhandelcomponent.readthedocs.io/en/latest/config.html",
-        }
-    ],
-    "GROUP_ADAPTER": "zac.accounts.scim.adapters.AuthorizationProfileAdapter",
-    "GROUP_MODEL": "zac.accounts.models.AuthorizationProfile",
-    "USER_ADAPTER": "zac.accounts.scim.adapters.UserAdapter",
-    "GROUP_FILTER_PARSER": "zac.accounts.scim.filters.AuthorizationProfileFilterQuery",
-    "WWW_AUTHENTICATE_HEADER": "Token",
-}
+# SCIM_SERVICE_PROVIDER = {
+#     "NETLOC": config(
+#         "SCIM_NETLOC", default=ALLOWED_HOSTS[0] if ALLOWED_HOSTS else "localhost"
+#     ),
+#     "AUTHENTICATION_SCHEMES": [
+#         {
+#             "name": "API Key",
+#             "type": "apiKey",
+#             "description": "Authorization header with token",
+#             "documentationUrl": "https://zaakafhandelcomponent.readthedocs.io/en/latest/config.html",
+#         }
+#     ],
+#     "GROUP_ADAPTER": "zac.accounts.scim.adapters.AuthorizationProfileAdapter",
+#     "GROUP_MODEL": "zac.accounts.models.AuthorizationProfile",
+#     "USER_ADAPTER": "zac.accounts.scim.adapters.UserAdapter",
+#     "GROUP_FILTER_PARSER": "zac.accounts.scim.filters.AuthorizationProfileFilterQuery",
+#     "WWW_AUTHENTICATE_HEADER": "Token",
+# }
 
 # Custom settings
 UI_ROOT_URL = config("UI_ROOT_URL", default="/ui")

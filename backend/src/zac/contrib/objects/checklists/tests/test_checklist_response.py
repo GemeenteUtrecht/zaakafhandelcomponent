@@ -3,7 +3,6 @@ from unittest.mock import patch
 from django.urls import reverse_lazy
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
@@ -15,6 +14,7 @@ from zac.contrib.objects.services import lock_checklist_for_zaak
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
@@ -38,13 +38,12 @@ from .factories import (
 
 
 @requests_mock.Mocker()
-@freeze_time("1999-12-31T23:59:59Z")
-class ApiResponseTests(ESMixin, ClearCachesMixin, APITestCase):
+class ApiResponseTests(FreezeTimeMixin, ESMixin, ClearCachesMixin, APITestCase):
     endpoint = reverse_lazy(
         "zaak-checklist",
         kwargs={"bronorganisatie": BRONORGANISATIE, "identificatie": IDENTIFICATIE},
     )
-    maxDiff = None
+    frozen_time = "1999-12-31T23:59:59Z"
 
     @classmethod
     def setUpTestData(cls):

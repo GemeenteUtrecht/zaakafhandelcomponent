@@ -1,27 +1,32 @@
 # Core python libraries
 furl
-psycopg2
+psycopg2 >= 2.9 # database driver
 python-dotenv
 python-decouple  # processing of envvar configs
 pytz
 uwsgi
+pip==21.3.1
 Pillow
 python-dateutil
 pyyaml
 isodate
 requests_mock
-elasticsearch-dsl
+elasticsearch<8
+elasticsearch-dsl<8
 click
 psutil
+pyopenssl <= 23.1.0
+cryptography < 41
+redis>=5.0,<6.0
+defusedxml
 
 # zgw-integration
-gemma-zds-client>=1.0.1
+gemma-zds-client<2.0
 zgw-consumers[drf]<=0.23.2
-vng-api-common
 
 # Framework libraries
-Django
-django-admin-index
+Django>=4.2,<4.3
+django-admin-index < 4.0.0
 django-axes[ipware]
 django-better-admin-arrayfield
 django-camunda
@@ -36,14 +41,14 @@ django-ordered-model
 django-nested-admin
 django-redis
 django-sniplates
-django-scim2
-mozilla-django-oidc-db
+mozilla-django-oidc
+mozilla-django-oidc-db<0.25
 django-reversion
 
 # Restful API
-djangorestframework
-djangorestframework-camel-case
-drf-spectacular
+djangorestframework>=3.14,<3.15
+djangorestframework-camel-case>=1.4.2
+drf-spectacular>=0.28,<0.29
 
 # monitoring
 elastic-apm

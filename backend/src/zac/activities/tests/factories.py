@@ -1,11 +1,14 @@
 import factory
+from faker import Faker
 
 from ..constants import ActivityStatuses
 
+fake = Faker()
+
 
 class ActivityFactory(factory.django.DjangoModelFactory):
-    zaak = factory.Faker("url")
-    name = factory.Faker("bs")
+    zaak = factory.LazyAttribute(lambda x: fake.url())
+    name = factory.LazyAttribute(lambda x: fake.bs())
     status = ActivityStatuses.on_going
 
     class Meta:
@@ -19,7 +22,7 @@ class ActivityFactory(factory.django.DjangoModelFactory):
 
 class EventFactory(factory.django.DjangoModelFactory):
     activity = factory.SubFactory(ActivityFactory)
-    notes = factory.Faker("bs")
+    notes = factory.LazyAttribute(lambda x: fake.bs())
 
     class Meta:
         model = "activities.Event"

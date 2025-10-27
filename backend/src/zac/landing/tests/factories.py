@@ -1,10 +1,13 @@
 import factory
+from faker import Faker
 
 from ..models import LandingPageConfiguration, LandingPageLink, LandingPageSection
 
+fake = Faker()
+
 
 class LandingPageConfigurationFactory(factory.django.DjangoModelFactory):
-    title = factory.Faker("sentence")
+    title = factory.LazyAttribute(lambda x: fake.sentence())
     image = factory.django.ImageField(filename="example.jpg")
 
     class Meta:
@@ -12,8 +15,8 @@ class LandingPageConfigurationFactory(factory.django.DjangoModelFactory):
 
 
 class LandingPageSectionFactory(factory.django.DjangoModelFactory):
-    name = factory.Faker("word")
-    icon = factory.Faker("word")
+    name = factory.LazyAttribute(lambda x: fake.word())
+    icon = factory.LazyAttribute(lambda x: fake.word())
     landing_page_configuration = factory.SubFactory(LandingPageConfigurationFactory)
 
     class Meta:
@@ -22,14 +25,14 @@ class LandingPageSectionFactory(factory.django.DjangoModelFactory):
 
 
 class LandingPageLinkFactory(factory.django.DjangoModelFactory):
-    label = factory.Faker("word")
-    href = factory.Faker("url")
+    label = factory.LazyAttribute(lambda x: fake.word())
+    href = factory.LazyAttribute(lambda x: fake.url())
 
     class Meta:
         model = LandingPageLink
 
     class Params:
-        with_icon = factory.Trait(icon=factory.Faker("word"))
+        with_icon = factory.Trait(icon=factory.LazyAttribute(lambda x: fake.word()))
         with_configuration = factory.Trait(
             landing_page_configuration=factory.SubFactory(
                 LandingPageConfigurationFactory

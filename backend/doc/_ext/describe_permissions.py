@@ -15,9 +15,9 @@ def process_docstring(app, what, name, obj, options, lines):
 
         perms = sorted(perms, key=lambda perm: perm.name)
         for perm in perms:
-            lines.append(u".. py:data:: %s" % perm.name)
-            lines.append(u"%s" % perm.description)
-            lines.append(u"")
+            lines.append(".. py:data:: %s" % perm.name)
+            lines.append("%s" % perm.description)
+            lines.append("")
 
         # Return the extended docstring
     return lines

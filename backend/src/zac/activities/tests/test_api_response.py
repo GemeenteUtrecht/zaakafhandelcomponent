@@ -19,8 +19,8 @@ CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
 
 
 @requests_mock.Mocker()
-@freeze_time("1999-12-31T23:59:59Z")
 class ApiResponseTests(ClearCachesMixin, APITestCase):
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -51,7 +51,8 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
             url=f"{ZAKEN_ROOT}zaken/30a98ef3-bf35-4287-ac9c-fed048619dd7",
             zaaktype=cls.zaaktype["url"],
         )
-        cls.activity = ActivityFactory.create(zaak=cls.zaak["url"])
+        with freeze_time("1999-12-31 23:59:59"):
+            cls.activity = ActivityFactory.create(zaak=cls.zaak["url"])
 
         cls.user = SuperUserFactory.create()
 
@@ -105,90 +106,92 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         self.assertEqual(Activity.objects.count(), 1)
 
     def test_partial_update_assignee_activity(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        self.client.force_authenticate(user=self.user)
-        data = {
-            "zaak": self.zaak["url"],
-            "user_assignee": self.user.username,
-        }
-        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        with freeze_time("1999-12-31 23:59:59"):
+            mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+            self.client.force_authenticate(user=self.user)
+            data = {
+                "zaak": self.zaak["url"],
+                "user_assignee": self.user.username,
+            }
+            endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
-        # Get old assignee value for assertion purposes
-        old_assignee = self.activity.user_assignee
+            # Get old assignee value for assertion purposes
+            old_assignee = self.activity.user_assignee
 
-        # Mock zaak
-        mock_resource_get(m, self.zaak)
+            # Mock zaak
+            mock_resource_get(m, self.zaak)
 
-        # Patch activity
-        response = self.client.patch(endpoint, data=data)
+            # Patch activity
+            response = self.client.patch(endpoint, data=data)
 
-        # Assert response code is 200
-        self.assertEqual(response.status_code, 200)
+            # Assert response code is 200
+            self.assertEqual(response.status_code, 200)
 
-        # Assert activity has been updated
-        activity = Activity.objects.get(pk=self.activity.pk)
-        self.assertTrue(old_assignee != activity.user_assignee)
+            # Assert activity has been updated
+            activity = Activity.objects.get(pk=self.activity.pk)
+            self.assertTrue(old_assignee != activity.user_assignee)
 
-        # Assert response data is as expected (different serializer than request)
-        expected_data = {
-            "id": self.activity.id,
-            "url": f"http://testserver/api/activities/activities/{self.activity.id}",
-            "zaak": self.zaak["url"],
-            "name": self.activity.name,
-            "remarks": "",
-            "status": self.activity.status,
-            "userAssignee": self.user.username,
-            "groupAssignee": None,
-            "document": self.activity.document,
-            "created": "1999-12-31T23:59:59Z",
-            "createdBy": None,
-            "events": [],
-        }
-        data = response.json()
-        self.assertEqual(expected_data, data)
+            # Assert response data is as expected (different serializer than request)
+            expected_data = {
+                "id": self.activity.id,
+                "url": f"http://testserver/api/activities/activities/{self.activity.id}",
+                "zaak": self.zaak["url"],
+                "name": self.activity.name,
+                "remarks": "",
+                "status": self.activity.status,
+                "userAssignee": self.user.username,
+                "groupAssignee": None,
+                "document": self.activity.document,
+                "created": "1999-12-31T23:59:59Z",
+                "createdBy": None,
+                "events": [],
+            }
+            data = response.json()
+            self.assertEqual(expected_data, data)
 
     def test_partial_update_assignee_from_user_to_group_activity(self, m):
-        mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
-        self.client.force_authenticate(user=self.user)
-        group = GroupFactory.create()
-        self.user.groups.add(group)
-        data = {
-            "zaak": self.zaak["url"],
-            "group_assignee": group.name,
-        }
-        endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
+        with freeze_time("1999-12-31 23:59:59"):
+            mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
+            self.client.force_authenticate(user=self.user)
+            group = GroupFactory.create()
+            self.user.groups.add(group)
+            data = {
+                "zaak": self.zaak["url"],
+                "group_assignee": group.name,
+            }
+            endpoint = reverse("activity-detail", kwargs={"pk": self.activity.pk})
 
-        # Mock zaak
-        mock_resource_get(m, self.zaak)
+            # Mock zaak
+            mock_resource_get(m, self.zaak)
 
-        # Patch activity
-        response = self.client.patch(endpoint, data=data)
+            # Patch activity
+            response = self.client.patch(endpoint, data=data)
 
-        # Assert response code is 200
-        self.assertEqual(response.status_code, 200)
+            # Assert response code is 200
+            self.assertEqual(response.status_code, 200)
 
-        # Assert activity has been updated
-        activity = Activity.objects.get(pk=self.activity.pk)
-        self.assertEqual(activity.user_assignee, None)
-        self.assertEqual(activity.group_assignee, group)
+            # Assert activity has been updated
+            activity = Activity.objects.get(pk=self.activity.pk)
+            self.assertEqual(activity.user_assignee, None)
+            self.assertEqual(activity.group_assignee, group)
 
-        # Assert response data is as expected (different serializer than request)
-        expected_data = {
-            "id": self.activity.id,
-            "url": f"http://testserver/api/activities/activities/{self.activity.id}",
-            "zaak": self.zaak["url"],
-            "name": self.activity.name,
-            "remarks": "",
-            "status": self.activity.status,
-            "userAssignee": None,
-            "groupAssignee": group.name,
-            "document": self.activity.document,
-            "created": "1999-12-31T23:59:59Z",
-            "createdBy": None,
-            "events": [],
-        }
-        data = response.json()
-        self.assertEqual(expected_data, data)
+            # Assert response data is as expected (different serializer than request)
+            expected_data = {
+                "id": self.activity.id,
+                "url": f"http://testserver/api/activities/activities/{self.activity.id}",
+                "zaak": self.zaak["url"],
+                "name": self.activity.name,
+                "remarks": "",
+                "status": self.activity.status,
+                "userAssignee": None,
+                "groupAssignee": group.name,
+                "document": self.activity.document,
+                "created": "1999-12-31T23:59:59Z",
+                "createdBy": None,
+                "events": [],
+            }
+            data = response.json()
+            self.assertEqual(expected_data, data)
 
     def test_fail_partial_update_activity_invalid_assignee(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

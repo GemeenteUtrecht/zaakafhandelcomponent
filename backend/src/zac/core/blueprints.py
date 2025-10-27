@@ -2,7 +2,7 @@ import operator
 from functools import reduce
 from typing import Optional
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from elasticsearch_dsl.query import Query, Range, Term
 from rest_framework import serializers

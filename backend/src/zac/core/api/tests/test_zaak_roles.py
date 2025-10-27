@@ -315,8 +315,9 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 "betrokkene_type": "medewerker",
                 "betrokkene_identificatie": {"identificatie": self.user.username},
                 "roltype": self.roltype["url"],
-                "indicatie_machtiging": "gemachtigde",
+                "indicatieMachtiging": "gemachtigde",
             },
+            format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
@@ -430,10 +431,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.post(
             self.endpoint,
             {
-                "betrokkene_type": "medewerker",
-                "betrokkene_identificatie": {"identificatie": self.user.username},
+                "betrokkeneType": "medewerker",
+                "betrokkeneIdentificatie": {"identificatie": self.user.username},
                 "roltype": roltype["url"],
-                "indicatie_machtiging": "gemachtigde",
+                "indicatieMachtiging": "gemachtigde",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -518,10 +519,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
         response = self.client.post(
             self.endpoint,
             {
-                "betrokkene_type": "organisatorische_eenheid",
-                "betrokkene_identificatie": {},
+                "betrokkeneType": "organisatorische_eenheid",
+                "betrokkeneIdentificatie": {},
                 "roltype": self.roltype["url"],
-                "indicatie_machtiging": "gemachtigde",
+                "indicatieMachtiging": "gemachtigde",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -571,10 +572,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             response = self.client.post(
                 self.endpoint,
                 {
-                    "betrokkene_type": "medewerker",
-                    "betrokkene_identificatie": {"identificatie": self.user.username},
+                    "betrokkeneType": "medewerker",
+                    "betrokkeneIdentificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "gemachtigde",
+                    "indicatieMachtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -611,10 +612,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 self.endpoint,
                 {
                     "betrokkene": "http://some-betrokkene.com/",
-                    "betrokkene_type": "medewerker",
-                    "betrokkene_identificatie": {"identificatie": self.user.username},
+                    "betrokkeneType": "medewerker",
+                    "betrokkeneIdentificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "gemachtigde",
+                    "indicatieMachtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -634,10 +635,10 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
                 self.endpoint,
                 {
                     "betrokkene": "http://some-url.com",
-                    "betrokkene_type": "",
-                    "betrokkene_identificatie": {"identificatie": self.user.username},
+                    "betrokkeneType": "",
+                    "betrokkeneIdentificatie": {"identificatie": self.user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "gemachtigde",
+                    "indicatieMachtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -671,9 +672,9 @@ class ZaakRolesResponseTests(ClearCachesMixin, APITestCase):
             response = self.client.post(
                 self.endpoint,
                 {
-                    "betrokkene_type": "medewerker",
+                    "betrokkeneType": "medewerker",
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "gemachtigde",
+                    "indicatieMachtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, 400)
@@ -1144,10 +1145,10 @@ class ZaakRolesPermissionTests(ClearCachesMixin, APITestCase):
             response = self.client.post(
                 self.endpoint,
                 {
-                    "betrokkene_type": "medewerker",
-                    "betrokkene_identificatie": {"identificatie": user.username},
+                    "betrokkeneType": "medewerker",
+                    "betrokkeneIdentificatie": {"identificatie": user.username},
                     "roltype": self.roltype["url"],
-                    "indicatie_machtiging": "gemachtigde",
+                    "indicatieMachtiging": "gemachtigde",
                 },
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

@@ -1,6 +1,7 @@
 """
 User tasks of the type zac:doRedirect.
 """
+
 from dataclasses import dataclass
 
 from furl import furl

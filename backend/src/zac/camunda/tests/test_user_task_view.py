@@ -1,7 +1,7 @@
 import uuid
 from copy import deepcopy
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from django.urls import reverse
 
@@ -24,6 +24,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
+import zac.core.camunda.start_process.serializers as start_serializers
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
@@ -185,42 +186,31 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
             ),
         )
 
-        cls.patch_get_process_zaak_url = patch(
-            "zac.core.camunda.select_documents.context.get_process_zaak_url",
-            return_value=cls.zaak.url,
-        )
-
-        cls.patch_get_zaaktype = patch(
-            "zac.core.camunda.select_documents.context.get_zaaktype_from_identificatie",
-            return_value=cls.zaaktype_obj,
-        )
-
-        cls.patch_get_informatieobjecttypen_for_zaaktype = patch(
-            "zac.core.camunda.select_documents.context.get_informatieobjecttypen_for_zaaktype",
-            return_value=[factory(InformatieObjectType, cls.documenttype)],
-        )
-
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
-        cls.patch_get_camunda_client = [
-            patch("django_camunda.api.get_client", return_value=_get_camunda_client())
-        ]
 
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(self.user)
 
-        self.patch_get_process_zaak_url.start()
-        self.addCleanup(self.patch_get_process_zaak_url.stop)
+        patchers = [
+            patch(
+                "zac.core.camunda.select_documents.context.get_process_zaak_url",
+                return_value=self.zaak.url,
+            ),
+            patch(
+                "zac.core.camunda.select_documents.context.get_zaaktype_from_identificatie",
+                return_value=self.zaaktype_obj,
+            ),
+            patch(
+                "zac.core.camunda.select_documents.context.get_informatieobjecttypen_for_zaaktype",
+                return_value=[factory(InformatieObjectType, self.documenttype)],
+            ),
+            patch("django_camunda.api.get_client", return_value=_get_camunda_client()),
+        ]
 
-        self.patch_get_zaaktype.start()
-        self.addCleanup(self.patch_get_zaaktype.stop)
-
-        self.patch_get_informatieobjecttypen_for_zaaktype.start()
-        self.addCleanup(self.patch_get_informatieobjecttypen_for_zaaktype.stop)
-
-        for patcher in self.patch_get_camunda_client:
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 
@@ -755,39 +745,29 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
 
         cls.document.last_edited_date = None  # avoid patching fetching audit trail
         cls.document_es = create_informatieobject_document(cls.document)
-
-        cls.patch_get_documenten_validator = patch(
-            "zac.core.api.validators.search_informatieobjects",
-            return_value=[cls.document_es],
-        )
-
         cls.zaak_context = ZaakContext(
             zaak=cls.zaak,
             zaaktype=cls.zaaktype_obj,
         )
-
-        cls.patch_fetch_zaaktype = patch(
-            "zac.core.camunda.select_documents.serializers.get_zaaktype_from_identificatie",
-            return_value=cls.zaaktype_obj,
-        )
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
-        cls.patch_get_camunda_client = [
-            patch("django_camunda.api.get_client", return_value=_get_camunda_client())
-        ]
 
     def setUp(self):
         super().setUp()
         self.client.force_authenticate(self.user)
-
-        self.patch_get_documenten_validator.start()
-        self.addCleanup(self.patch_get_documenten_validator.stop)
-
-        self.patch_fetch_zaaktype.start()
-        self.addCleanup(self.patch_fetch_zaaktype.stop)
-
-        for patcher in self.patch_get_camunda_client:
+        patchers = [
+            patch(
+                "zac.core.camunda.select_documents.serializers.get_zaaktype_from_identificatie",
+                return_value=self.zaaktype_obj,
+            ),
+            patch("django_camunda.api.get_client", return_value=_get_camunda_client()),
+            patch(
+                "zac.core.api.validators.search_informatieobjects",
+                return_value=[self.document_es],
+            ),
+        ]
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 
@@ -1148,11 +1128,11 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
     )
     @patch("zac.camunda.api.views.set_assignee_and_complete_task", return_value=None)
     @patch(
-        "zac.core.camunda.start_process.serializers.get_rollen",
+        "zac.core.services.get_rollen",
         return_value=[],
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
+        "zac.core.services.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(
@@ -1171,13 +1151,15 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CAMUNDA_URL}task/{TASK_DATA['id']}/assignee",
             status_code=201,
         )
-        with patch(
-            "zac.core.camunda.start_process.serializers.get_zaak_context",
-            return_value=self.zaak_context,
-        ):
+        with patch.object(
+            start_serializers.ConfigureZaakProcessSerializer,
+            "zaakcontext",
+            new_callable=PropertyMock,
+        ) as zaak_context_mock:
+            zaak_context_mock.return_value = self.zaak_context
             with patch(
-                "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
-                return_value=[self.document.informatieobjecttype.omschrijving],
+                "zac.elasticsearch.searches.count_by_iot_in_zaak",
+                return_value={self.document.informatieobjecttype.omschrijving: 1},
             ):
                 with patch(
                     "zac.core.camunda.start_process.serializers.ConfigureZaakProcessSerializer.validate_bijlagen",

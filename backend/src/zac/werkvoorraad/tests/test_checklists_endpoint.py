@@ -4,7 +4,6 @@ from unittest.mock import patch
 from django.urls import reverse
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
@@ -28,17 +27,19 @@ from zac.contrib.objects.checklists.tests.factories import (
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get
 
 CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
-@freeze_time("2021-12-16T12:00:00Z")
-class ChecklistAnswersTests(ClearCachesMixin, ESMixin, APITestCase):
+class ChecklistAnswersTests(FreezeTimeMixin, ClearCachesMixin, ESMixin, APITestCase):
     """
     Test the checklists questions API endpoint.
     """
+
+    frozen_time = "2021-12-16T12:00:00Z"
 
     @classmethod
     def setUpTestData(cls):

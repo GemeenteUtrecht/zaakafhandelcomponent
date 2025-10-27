@@ -11,4 +11,5 @@ going to be the (generic) objects API.
 User story: https://github.com/GemeenteUtrecht/ZGW/issues/498
 Technical issue: https://github.com/GemeenteUtrecht/zaakafhandelcomponent/issues/58
 """
+
 default_app_config = "zac.activities.apps.ActivitiesConfig"

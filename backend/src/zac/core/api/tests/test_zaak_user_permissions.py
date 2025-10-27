@@ -5,7 +5,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
@@ -23,6 +22,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_handle_access
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
@@ -262,8 +262,11 @@ class ZaakAtomicPermissionsAuthTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-@freeze_time("2020-01-01")
-class ZaakAtomicPermissionsResponseTests(ClearCachesMixin, APITestCase):
+class ZaakAtomicPermissionsResponseTests(
+    FreezeTimeMixin, ClearCachesMixin, APITestCase
+):
+    frozen_time = "2020-01-01"
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()

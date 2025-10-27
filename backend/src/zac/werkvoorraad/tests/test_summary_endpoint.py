@@ -48,7 +48,7 @@ class SummaryTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def setUp(self):
         super().setUp()
-        self.patchers = [
+        patchers = [
             patch("zac.werkvoorraad.views.parallel", return_value=mock_parallel()),
             patch(
                 "zac.werkvoorraad.views.get_camunda_user_task_count",
@@ -59,7 +59,7 @@ class SummaryTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                 return_value=4,
             ),
         ]
-        for patcher in self.patchers:
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 

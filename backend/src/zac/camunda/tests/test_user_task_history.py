@@ -100,7 +100,10 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = SuperUserFactory.create(username="some-user")
-        cls.patchers = [
+
+    def setUp(self) -> None:
+        super().setUp()
+        patchers = [
             patch(
                 "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
             ),
@@ -115,11 +118,7 @@ class UserTaskHistoryTests(ClearCachesMixin, APITestCase):
                 "zac.camunda.user_tasks.history.parallel", return_value=mock_parallel()
             ),
         ]
-
-    def setUp(self) -> None:
-        super().setUp()
-
-        for patcher in self.patchers:
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 

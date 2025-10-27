@@ -52,10 +52,12 @@
 {% endif %}
 </div>
 
-{% get_solo 'mozilla_django_oidc_db.OpenIDConnectConfig' as oidc_config %}
-{% if oidc_config.enabled %}
 <div class="submit-row">
-  <a href="{% url 'oidc_authentication_init' %}">{% trans "Login with OIDC" %}</a>
+    <div class="form form--centered form--centered-content">
+        <a href="{% url 'oidc_authentication_init' %}" class="btn btn--primary">
+            {% trans "Login with OIDC" %}
+        </a>
+    </div>
+    <div class="divider divider--short"></div>
 </div>
-{% endif %}
 {% endblock %}

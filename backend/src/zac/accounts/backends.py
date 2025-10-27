@@ -40,6 +40,7 @@ MAPPING = {
     Document: PermissionObjectTypeChoices.document,
 }
 
+
 # Deprecated
 # this class is used only to support legacy SSR views
 # All DRF views should use zac.api.permissions.DefinitionBasePermission and its subclasses

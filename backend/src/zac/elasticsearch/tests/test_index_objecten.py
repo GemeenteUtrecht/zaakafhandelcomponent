@@ -194,7 +194,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "bronorganisatie": "some-bronorganisatie",
                     "omschrijving": "some-omschrijving",
                     "identificatie": "some-identificatie",
-                    "va_order": 114,
+                    "va_order": 27,
                 }
             ],
         )

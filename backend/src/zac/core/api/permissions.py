@@ -80,7 +80,9 @@ class CanForceEditClosedZaak(ZaakDefinitionPermission):
         try:
             object_url = self.get_object_url(serializer)
             obj = self.get_object(request, object_url)
-        except KeyError:  # could be that a permission check is done on one of the /<bronorganisatie>/<identificatie>/-urls. in that case, try to fetch object from view directly
+        except (
+            KeyError
+        ):  # could be that a permission check is done on one of the /<bronorganisatie>/<identificatie>/-urls. in that case, try to fetch object from view directly
             obj = view.get_object()
             if not isinstance(obj, Zaak):
                 return False

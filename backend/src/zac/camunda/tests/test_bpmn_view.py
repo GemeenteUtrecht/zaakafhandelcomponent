@@ -33,15 +33,16 @@ class GetBPMNViewTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory.create()
-        cls.patch_get_client_bpmn = patch(
-            "django_camunda.bpmn.get_client", return_value=_get_camunda_client()
-        )
 
     def setUp(self) -> None:
         super().setUp()
         self.client.force_authenticate(self.user)
-        self.patch_get_client_bpmn.start()
-        self.addCleanup(self.patch_get_client_bpmn.stop)
+        patchers = [
+            patch("django_camunda.bpmn.get_client", return_value=_get_camunda_client())
+        ]
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def test_get_bpmn_success(self, m):
         user = UserFactory.create()

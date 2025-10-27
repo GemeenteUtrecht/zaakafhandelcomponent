@@ -38,17 +38,17 @@ class FetchMessagesTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory.create()
-        cls.patch_get_camunda_client = [
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.client.force_authenticate(self.user)
+        patchers = [
             patch(
                 "zac.camunda.messages.get_client", return_value=_get_camunda_client()
             ),
             patch("django_camunda.bpmn.get_client", return_value=_get_camunda_client()),
         ]
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.client.force_authenticate(self.user)
-        for patcher in self.patch_get_camunda_client:
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 

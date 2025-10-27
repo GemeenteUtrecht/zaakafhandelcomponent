@@ -8,7 +8,6 @@ import requests_mock
 from django_camunda.client import get_client
 from django_camunda.models import CamundaConfig
 from django_camunda.utils import underscoreize
-from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import Eigenschap, InformatieObjectType, ZaakType
@@ -43,6 +42,7 @@ from zac.contrib.objects.kownsl.tests.factories import (
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
@@ -64,9 +64,10 @@ def _get_camunda_client():
     return get_client()
 
 
-@freeze_time("2022-04-14T15:51:09.830235")
 @requests_mock.Mocker()
-class KownslReviewsTests(ClearCachesMixin, APITestCase):
+class KownslReviewsTests(FreezeTimeMixin, ClearCachesMixin, APITestCase):
+    frozen_time = "2022-04-14T15:51:09.830235"
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -199,32 +200,6 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
             "tenant_id": None,
         }
 
-        cls.get_zaakeigenschappen_patcher = patch(
-            "zac.contrib.objects.kownsl.data.get_zaakeigenschappen",
-            return_value=[cls.zaakeigenschap],
-        )
-        cls.get_zaak_patcher = patch(
-            "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=cls.zaak
-        )
-        cls.search_informatieobjects_patcher = patch(
-            "zac.contrib.objects.kownsl.data.search_informatieobjects",
-            return_value=[cls.es_document],
-        )
-        cls.get_supported_extensions_patcher = patch(
-            "zac.contrib.dowc.utils.get_supported_extensions",
-            return_value=[path.splitext(cls.es_document.bestandsnaam)],
-        )
-        cls.fetch_reviews_patcher = patch(
-            "zac.contrib.objects.services.fetch_reviews",
-            return_value=cls.review_object,
-        )
-        cls.patch_get_camunda_client = patch(
-            "django_camunda.api.get_client", return_value=_get_camunda_client()
-        )
-        cls.patch_set_assignee_and_complete_task = patch(
-            "zac.contrib.objects.kownsl.api.views.set_assignee_and_complete_task"
-        )
-
         # Make sure all users associated to the REVIEW REQUEST exist
         users = deepcopy(
             [
@@ -250,6 +225,35 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
             "kownsl:reviewrequest-advice",
             kwargs={"request_uuid": cls.review_request["id"]},
         )
+
+    def setUp(self):
+        patchers = [
+            patch(
+                "zac.contrib.objects.kownsl.data.get_zaakeigenschappen",
+                return_value=[self.zaakeigenschap],
+            ),
+            patch(
+                "zac.contrib.objects.kownsl.api.views.get_zaak", return_value=self.zaak
+            ),
+            patch(
+                "zac.contrib.objects.kownsl.data.search_informatieobjects",
+                return_value=[self.es_document],
+            ),
+            patch(
+                "zac.contrib.dowc.utils.get_supported_extensions",
+                return_value=[path.splitext(self.es_document.bestandsnaam)],
+            ),
+            patch(
+                "zac.contrib.objects.services.fetch_reviews",
+                return_value=self.review_object,
+            ),
+            patch("django_camunda.api.get_client", return_value=_get_camunda_client()),
+        ]
+        for p in patchers:
+            p.start()
+            self.addCleanup(p.stop)
+
+        super().setUp()
 
     def test_fail_get_approval_view_no_assignee(self, m):
         self.client.force_authenticate(user=self.user)
@@ -322,12 +326,7 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=rr,
         ):
-            with self.fetch_reviews_patcher:
-                with self.get_zaak_patcher:
-                    with self.search_informatieobjects_patcher:
-                        with self.get_supported_extensions_patcher:
-                            with self.get_zaakeigenschappen_patcher:
-                                response = self.client.get(url)
+            response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -463,26 +462,24 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
         approval = approval_factory()
         reviews = reviews_factory(reviews=[approval], reviewType=KownslTypes.approval)
         reviews_object = review_object_factory(record__data=reviews)
-
-        with self.search_informatieobjects_patcher:
-            with patch(
-                "zac.contrib.objects.kownsl.api.views.get_review_request",
-                return_value=rr,
-            ):
-                with patch(
-                    "zac.contrib.objects.services.fetch_reviews", return_value=None
-                ):
-                    with patch(
-                        "zac.contrib.objects.services._create_unique_uuid_for_object",
-                        return_value=reviews["id"],
-                    ):
-                        with patch(
-                            "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
-                            return_value=reviews_object,
-                        ) as mock_create_object:
-                            with self.patch_get_camunda_client:
-                                with self.patch_set_assignee_and_complete_task as mock_set_assignee_and_complete_task:
-                                    response = self.client.post(url, payload)
+        with patch(
+            "zac.contrib.objects.kownsl.api.views.get_review_request",
+            return_value=rr,
+        ), patch(
+            "zac.contrib.objects.services.fetch_reviews", return_value=None
+        ), patch(
+            "zac.contrib.objects.services._create_unique_uuid_for_object",
+            return_value=reviews["id"],
+        ), patch(
+            "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
+            return_value=reviews_object,
+        ), patch(
+            "zac.contrib.objects.kownsl.api.views.set_assignee_and_complete_task"
+        ) as mock_set_assignee_and_complete_task, patch(
+            "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
+            return_value=reviews_object,
+        ) as mock_create_object:
+            response = self.client.post(url, payload)
 
         self.assertEqual(response.status_code, 204)
         mock_set_assignee_and_complete_task.assert_called_once_with(
@@ -567,23 +564,24 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
             ],
         }
         reviews_object = review_object_factory(record__data=self.reviews_advice)
-
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=rr,
-        ):
-            with patch("zac.contrib.objects.services.fetch_reviews", return_value=None):
-                with patch(
-                    "zac.contrib.objects.services._create_unique_uuid_for_object",
-                    return_value=self.reviews_advice["id"],
-                ):
-                    with patch(
-                        "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
-                        return_value=reviews_object,
-                    ) as mock_create_object:
-                        with self.patch_get_camunda_client:
-                            with self.patch_set_assignee_and_complete_task as mock_set_assignee_and_complete_task:
-                                response = self.client.post(url, payload)
+        ), patch(
+            "zac.contrib.objects.services.fetch_reviews", return_value=None
+        ), patch(
+            "zac.contrib.objects.services._create_unique_uuid_for_object",
+            return_value=self.reviews_advice["id"],
+        ), patch(
+            "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
+            return_value=reviews_object,
+        ), patch(
+            "zac.contrib.objects.kownsl.api.views.set_assignee_and_complete_task"
+        ) as mock_set_assignee_and_complete_task, patch(
+            "zac.contrib.objects.services.create_meta_object_and_relate_to_zaak",
+            return_value=reviews_object,
+        ) as mock_create_object:
+            response = self.client.post(url, payload)
 
         mock_set_assignee_and_complete_task.assert_called_once_with(
             factory(Task, self.task),
@@ -671,26 +669,25 @@ class KownslReviewsTests(ClearCachesMixin, APITestCase):
             ],
         }
         reviews_object = review_object_factory(record__data=self.reviews_advice)
-
         with patch(
             "zac.contrib.objects.kownsl.api.views.get_review_request",
             return_value=rr,
-        ):
-            with patch(
-                "zac.contrib.objects.services.fetch_reviews",
-                return_value=[reviews_object],
-            ):
-                with patch(
-                    "zac.contrib.objects.services._create_unique_uuid_for_object",
-                    return_value="8fc50840-3450-4497-9d29-791113417023",
-                ):
-                    with patch(
-                        "zac.contrib.objects.services.update_object_record_data",
-                        return_value=reviews_object,
-                    ) as mock_update_object:
-                        with self.patch_get_camunda_client:
-                            with self.patch_set_assignee_and_complete_task as mock_set_assignee_and_complete_task:
-                                response = self.client.post(url, payload)
+        ), patch(
+            "zac.contrib.objects.services.fetch_reviews",
+            return_value=[reviews_object],
+        ), patch(
+            "zac.contrib.objects.services._create_unique_uuid_for_object",
+            return_value="8fc50840-3450-4497-9d29-791113417023",
+        ), patch(
+            "zac.contrib.objects.services.update_object_record_data",
+            return_value=reviews_object,
+        ), patch(
+            "zac.contrib.objects.kownsl.api.views.set_assignee_and_complete_task"
+        ) as mock_set_assignee_and_complete_task, patch(
+            "zac.contrib.objects.services.update_object_record_data",
+            return_value=reviews_object,
+        ) as mock_update_object:
+            response = self.client.post(url, payload)
 
         mock_set_assignee_and_complete_task.assert_called_once_with(
             factory(Task, self.task),

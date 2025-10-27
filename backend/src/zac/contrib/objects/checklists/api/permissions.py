@@ -43,7 +43,9 @@ class ChecklistIsLockedByCurrentUser(BasePermission):
             return True
         try:
             checklist_object = view.get_checklist_object()
-        except Http404:  # Allow user to create a checklist or return a 404 message instead of 403.
+        except (
+            Http404
+        ):  # Allow user to create a checklist or return a 404 message instead of 403.
             return True
         return self.has_object_permission(request, view, checklist_object)
 
@@ -56,7 +58,9 @@ class ChecklistIsLockedByCurrentUser(BasePermission):
         if isinstance(obj, Zaak):
             try:
                 obj = view.get_checklist_object()
-            except Http404:  # Allow user to create a checklist or return a 404 message instead of 403.
+            except (
+                Http404
+            ):  # Allow user to create a checklist or return a 404 message instead of 403.
                 return True
 
         if request.method in [

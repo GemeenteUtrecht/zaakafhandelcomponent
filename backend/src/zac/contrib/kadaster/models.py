@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from solo.models import SingletonModel
@@ -30,7 +30,7 @@ class KadasterConfig(SingletonModel):
         verbose_name = _("kadasterconfiguratie")
 
     def __str__(self):
-        return force_text(self._meta.verbose_name)
+        return force_str(self._meta.verbose_name)
 
     def save(self, *args, **kwargs):
         if not self.locatieserver.endswith("/"):

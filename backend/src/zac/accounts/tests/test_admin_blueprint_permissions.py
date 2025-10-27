@@ -66,8 +66,7 @@ class BlueprintPermissionAdminTests(WebTest):
 
     def test_add_perm_definition_with_policy(self):
         get_response = self.app.get(self.url)
-
-        form = get_response.form
+        form = get_response.forms["blueprintpermission_form"]
         form["object_type"] = PermissionObjectTypeChoices.zaak
         form["role"] = self.role.id
         form["policy"] = json.dumps({"some_type": "new type"})
@@ -85,7 +84,7 @@ class BlueprintPermissionAdminTests(WebTest):
     def test_add_perm_definition_with_policy_not_valid_for_blueprint(self):
         get_response = self.app.get(self.url)
 
-        form = get_response.form
+        form = get_response.forms["blueprintpermission_form"]
         form["object_type"] = PermissionObjectTypeChoices.zaak
         form["role"] = self.role.id
         form["policy"] = json.dumps({"some_type": "new type", "type_version": "v1"})

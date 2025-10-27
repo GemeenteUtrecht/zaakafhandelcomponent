@@ -1,13 +1,19 @@
 import logging
 import os
+import re
+import uuid
+from collections import OrderedDict
 from typing import List, Optional, Union
 
 from django.forms.utils import ErrorList
+from django.http import Http404
+from django.urls import reverse
 from django.utils.encoding import force_str
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
+from djangorestframework_camel_case.util import camelize_re, underscore_to_camel
 from requests import HTTPError
-from rest_framework import exceptions, serializers
+from rest_framework import exceptions, exceptions as drf_exceptions, serializers, status
 from rest_framework.exceptions import (
     APIException,
     PermissionDenied,
@@ -16,22 +22,83 @@ from rest_framework.exceptions import (
 )
 from rest_framework.response import Response
 from rest_framework.settings import api_settings as drf_settings
-from vng_api_common.compat import sentry_client
-from vng_api_common.exception_handling import (
-    HandledException as VNGHandledException,
-    underscore_to_camel,
-)
-from vng_api_common.serializers import FoutSerializer, ValidatieFoutSerializer
-from vng_api_common.views import (
-    ERROR_CONTENT_TYPE,
-    OrderedDict,
-    drf_exception_handler,
-    drf_exceptions,
-    status,
-)
+from rest_framework.views import exception_handler as drf_exception_handler
 from zds_client.client import ClientError
 
+try:
+    from raven.contrib.django.raven_compat.models import client as sentry_client
+except ImportError:
+
+    class Client:
+        def captureException(self):
+            pass
+
+    sentry_client = Client()
+
+ERROR_CONTENT_TYPE = "application/problem+json"
 logger = logging.getLogger(__name__)
+
+
+def _underscore_to_camel(to_camelize: str) -> str:
+    return re.sub(
+        camelize_re,
+        underscore_to_camel,
+        to_camelize,
+    )
+
+
+def _translate_exceptions(exc):
+    # Taken from DRF default exc handler
+    if isinstance(exc, Http404):
+        exc = exceptions.NotFound()
+    elif isinstance(exc, PermissionDenied):
+        exc = exceptions.PermissionDenied()
+    return exc
+
+
+class FoutSerializer(serializers.Serializer):
+    """
+    Adapted from vng_api_common.exceptions.FoutSerializer
+    Formaat van HTTP 4xx en 5xx fouten.
+    """
+
+    type = serializers.CharField(
+        help_text="URI referentie naar het type fout, bedoeld voor developers",
+        required=False,
+        allow_blank=True,
+    )
+    # not according to DSO, but possible for programmatic checking
+    code = serializers.CharField(help_text="Systeemcode die het type fout aangeeft")
+    title = serializers.CharField(help_text="Generieke titel voor het type fout")
+    status = serializers.IntegerField(help_text="De HTTP status code")
+    detail = serializers.CharField(
+        help_text="Extra informatie bij de fout, indien beschikbaar"
+    )
+    instance = serializers.CharField(
+        help_text="URI met referentie naar dit specifiek voorkomen van de fout. Deze kan "
+        "gebruikt worden in combinatie met server logs, bijvoorbeeld."
+    )
+
+
+class FieldValidationErrorSerializer(serializers.Serializer):
+    """
+    Formaat van validatiefouten.
+    Adapted from vng_api_common.exceptions.FieldValidationErrorSerializer
+    """
+
+    name = serializers.CharField(help_text="Naam van het veld met ongeldige gegevens")
+    code = serializers.CharField(help_text="Systeemcode die het type fout aangeeft")
+    reason = serializers.CharField(
+        help_text="Uitleg wat er precies fout is met de gegevens"
+    )
+
+
+class ValidatieFoutSerializer(FoutSerializer):
+    """
+    Adapted from vng_api_common.exceptions.ValidatieFoutSerializer
+    """
+
+    invalid_params = FieldValidationErrorSerializer(many=True)
 
 
 class ExternalAPIException(APIException):
@@ -80,21 +147,21 @@ def get_validation_errors(validation_errors: dict):
             for i, nested_error_dict in enumerate(error_list):
                 if isinstance(nested_error_dict, dict):
                     for err in get_validation_errors(nested_error_dict):
-                        err[
-                            "name"
-                        ] = f"{underscore_to_camel(field_name)}.{i}.{err['name']}"
+                        err["name"] = (
+                            f"{_underscore_to_camel(field_name)}.{i}.{err['name']}"
+                        )
                         yield err
                 elif isinstance(nested_error_dict, list):
                     for j, err in enumerate(nested_error_dict):
                         for _err in get_validation_errors(
-                            {f"{underscore_to_camel(field_name)}.{j}": err}
+                            {f"{_underscore_to_camel(field_name)}.{j}": err}
                         ):
                             yield _err
 
         # nested validation - recursively call the function
         if isinstance(error_list, dict):
             for err in get_validation_errors(error_list):
-                err["name"] = f"{underscore_to_camel(field_name)}.{err['name']}"
+                err["name"] = f"{_underscore_to_camel(field_name)}.{err['name']}"
                 yield err
             continue
 
@@ -112,26 +179,29 @@ def get_validation_errors(validation_errors: dict):
                     [
                         # see https://tools.ietf.org/html/rfc7807#section-3.1
                         # ('type', 'about:blank'),
-                        ("name", underscore_to_camel(field_name)),
+                        ("name", _underscore_to_camel(field_name)),
                         ("code", error.code),
                         ("reason", str(error)),
                     ]
                 )
 
 
-class HandledException(VNGHandledException):
+ErrorSerializer = Union[FoutSerializer, ValidatieFoutSerializer]
+
+
+class HandledException:
     """
     Adapted from vng_api_common.exceptions.HandledException
 
     """
 
-    @property
-    def code(self) -> str:
-        if isinstance(self.exc, exceptions.ValidationError) or isinstance(
-            self.exc, drf_exceptions.PermissionDenied
-        ):
-            return self.exc.default_code
-        return self._error_detail.code if self._error_detail else ""
+    def __init__(self, exc: exceptions.APIException, response, request=None):
+        self.exc = exc
+        assert 400 <= response.status_code < 600, "Unsupported status code"
+        self.response = response
+        self.request = request
+
+        self._exc_id = str(uuid.uuid4())
 
     @property
     def _error_detail(self) -> str:
@@ -153,6 +223,62 @@ class HandledException(VNGHandledException):
         # any other exception -> return the raw ErrorDetails object so we get
         # access to the code later
         return self.exc.detail
+
+    @classmethod
+    def as_serializer(
+        cls, exc: exceptions.APIException, response, request=None
+    ) -> ErrorSerializer:
+        """
+        Return the appropriate serializer class instance.
+        """
+        exc = _translate_exceptions(exc)
+        self = cls(exc, response, request)
+        self.log()
+
+        if isinstance(exc, exceptions.ValidationError):
+            serializer_class = ValidatieFoutSerializer
+        else:
+            serializer_class = FoutSerializer
+
+        return serializer_class(instance=self)
+
+    def log(self):
+        logger.exception("Exception %s ocurred", self._exc_id)
+
+    @property
+    def type(self) -> str:
+        exc_detail_url = ""
+        if self.request is not None:
+            exc_detail_url = self.request.build_absolute_uri(exc_detail_url)
+        return exc_detail_url
+
+    @property
+    def code(self) -> str:
+        if isinstance(self.exc, exceptions.ValidationError) or isinstance(
+            self.exc, drf_exceptions.PermissionDenied
+        ):
+            return self.exc.default_code
+        return self._error_detail.code if self._error_detail else ""
+
+    @property
+    def title(self) -> str:
+        """
+        Return the generic message for this type of exception.
+        """
+        default_title = getattr(self.exc, "default_detail", str(self._error_detail))
+        return default_title
+
+    @property
+    def status(self) -> int:
+        return self.response.status_code
+
+    @property
+    def detail(self) -> str:
+        return str(self._error_detail)
+
+    @property
+    def instance(self) -> str:
+        return f"urn:uuid:{self._exc_id}"
 
     @property
     def invalid_params(self) -> Union[None, List]:

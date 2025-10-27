@@ -1,6 +1,7 @@
 """
 Continuous integration settings module.
 """
+
 import logging
 import os
 
@@ -24,7 +25,6 @@ CACHES = {
 
 LOGGING = None  # Quiet is nice
 logging.disable(logging.CRITICAL)
-
 
 #
 # Django-axes

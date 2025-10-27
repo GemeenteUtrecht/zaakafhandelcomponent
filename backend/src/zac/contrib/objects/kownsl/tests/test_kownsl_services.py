@@ -5,7 +5,6 @@ from django.test import TestCase
 
 import requests_mock
 from django_camunda.utils import underscoreize
-from freezegun import freeze_time
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import StatusType
 from zgw_consumers.api_models.zaken import Status
@@ -34,6 +33,7 @@ from zac.contrib.objects.kownsl.tests.factories import (
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
@@ -54,9 +54,10 @@ REVIEW_OBJECTTYPE = review_object_type_factory()
 REVIEW_REQUEST_OBJECTTYPE_LATEST_VERSION = review_request_object_type_version_factory()
 
 
-@freeze_time("2020-01-01")
 @requests_mock.Mocker()
-class KownslAPITests(ClearCachesMixin, TestCase):
+class KownslAPITests(FreezeTimeMixin, ClearCachesMixin, TestCase):
+    frozen_time = "2020-01-01"
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()

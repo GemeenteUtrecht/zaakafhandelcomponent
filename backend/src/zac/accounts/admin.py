@@ -248,6 +248,7 @@ class RoleAdmin(ImportMixin, ExportActionMixin, RelatedLinksMixin, admin.ModelAd
 # Unregister old GroupAdmin
 admin.site.unregister(Group)
 
+
 # Register new GroupAdmin
 @admin.register(Group)
 class GroupAdmin(_GroupAdmin):

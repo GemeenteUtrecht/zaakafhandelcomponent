@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import JSONField, Q
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from elasticsearch_dsl.query import Query
 
@@ -105,9 +105,6 @@ class User(AbstractBaseUser, PermissionsMixin):
                 fields=["email"], condition=~Q(email=""), name="filled_email_unique"
             )
         ]
-        permissions = [
-            ("use_scim", _("Can use the SCIM endpoints")),
-        ]
 
     def get_full_name(self):
         """
@@ -130,8 +127,7 @@ class AuthorizationProfile(models.Model):
     Model a set of permission groups that can be assigned to a user.
 
     "Autorisatieprofiel" in Dutch. This is the finest-grained object that is exposed
-    to external systems (via SCIM eventually). Towards IAM/SCIM, this maps to the
-    Entitlement concept.
+    to external systems.
     """
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

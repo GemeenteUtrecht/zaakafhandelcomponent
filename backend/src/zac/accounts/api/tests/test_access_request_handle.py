@@ -3,10 +3,9 @@ from datetime import date
 from django.contrib.sites.models import Site
 from django.core import mail
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -20,6 +19,7 @@ from zac.core.permissions import (
     zaken_inzien,
 )
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ...constants import (
@@ -241,8 +241,9 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-@freeze_time("2020-01-01")
-class HandleAccessRequestAPITests(APITransactionTestCase):
+class HandleAccessRequestAPITests(FreezeTimeMixin, APITransactionTestCase):
+    frozen_time = "2020-01-01"
+
     def setUp(self) -> None:
         super().setUp()
 

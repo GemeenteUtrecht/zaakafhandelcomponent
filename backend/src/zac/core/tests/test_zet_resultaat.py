@@ -22,6 +22,7 @@ from zac.contrib.objects.kownsl.tests.factories import (
     review_request_factory,
     reviews_factory,
 )
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..camunda.zet_resultaat.serializers import ZetResultaatContextSerializer
@@ -74,8 +75,11 @@ def _get_task(**overrides):
     return factory(Task, data)
 
 
-@freeze_time("2013-01-23T11:42:42Z")
-class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
+class GetZetResultaatContextSerializersTests(
+    FreezeTimeMixin, ClearCachesMixin, APITestCase
+):
+    frozen_time = "2013-01-23T11:42:42Z"
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -160,9 +164,10 @@ class GetZetResultaatContextSerializersTests(ClearCachesMixin, APITestCase):
             "ztc", "schemas/ResultaatType", zaaktype=cls.zaaktype["url"]
         )
 
-        cls.activity = ActivityFactory.create(
-            zaak=cls.zaak["url"], status=ActivityStatuses.on_going
-        )
+        with freeze_time("2013-01-23T11:42:42Z"):
+            cls.activity = ActivityFactory.create(
+                zaak=cls.zaak["url"], status=ActivityStatuses.on_going
+            )
 
     def setUp(self):
         super().setUp()

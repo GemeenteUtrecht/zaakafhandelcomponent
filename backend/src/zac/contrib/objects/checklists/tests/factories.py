@@ -1,17 +1,20 @@
 import factory
 import yaml
+from faker import Faker
 from zgw_consumers.test import generate_oas_component, read_schema
 
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
 from zac.tests.utils import update_dictionary_from_kwargs
 
+fake = Faker()
+
 
 class ChecklistLockFactory(factory.django.DjangoModelFactory):
-    url = factory.Faker("url")
+    url = factory.LazyAttribute(lambda x: fake.url())
     user = factory.SubFactory(UserFactory)
-    zaak = factory.Faker("url")
-    zaak_identificatie = factory.Faker("word")
+    zaak = factory.LazyAttribute(lambda x: fake.url())
+    zaak_identificatie = factory.LazyAttribute(lambda x: fake.word())
 
     class Meta:
         model = "checklists.ChecklistLock"

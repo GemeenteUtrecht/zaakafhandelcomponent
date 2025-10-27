@@ -37,17 +37,17 @@ class CountTasksTests(APITestCase):
         super().setUpTestData()
         cls.user = UserFactory.create()
         cls.group = GroupFactory.create()
-        cls.patchers = [
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.client.force_authenticate(self.user)
+        patchers = [
             patch(
                 "zac.camunda.user_tasks.api.get_client",
                 return_value=_get_camunda_client(),
             ),
         ]
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.client.force_authenticate(self.user)
-        for patcher in self.patchers:
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 

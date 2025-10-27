@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 from django.urls import reverse
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
@@ -20,6 +19,7 @@ from zac.activities.tests.factories import ActivityFactory, EventFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get
 
 from ..data import ActivityGroup
@@ -31,11 +31,12 @@ CATALOGI_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30
 
 
 @requests_mock.Mocker()
-@freeze_time("2021-12-16T12:00:00Z")
-class AdhocActivitiesTests(ClearCachesMixin, ESMixin, APITestCase):
+class AdhocActivitiesTests(FreezeTimeMixin, ClearCachesMixin, ESMixin, APITestCase):
     """
     Test the adhoc activities API endpoint.
     """
+
+    frozen_time = "2021-12-16T12:00:00Z"
 
     @classmethod
     def setUpTestData(cls):

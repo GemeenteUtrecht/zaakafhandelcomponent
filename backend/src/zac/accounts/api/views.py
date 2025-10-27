@@ -1,6 +1,6 @@
 from django.contrib.auth import logout
 from django.http import JsonResponse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, views

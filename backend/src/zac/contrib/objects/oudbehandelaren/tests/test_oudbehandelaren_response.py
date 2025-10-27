@@ -3,7 +3,6 @@ from unittest.mock import patch
 from django.urls import reverse_lazy
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
