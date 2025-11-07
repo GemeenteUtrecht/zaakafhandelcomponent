@@ -6,7 +6,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.base import factory
@@ -16,6 +15,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
@@ -91,8 +91,8 @@ class CreateAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
-@freeze_time("2020-01-01")
-class CreateAccessRequestAPITests(APITransactionTestCase):
+class CreateAccessRequestAPITests(FreezeTimeMixin, APITransactionTestCase):
+    frozen_time = "2020-01-01"
     zaaktype = generate_oas_component(
         "ztc",
         "schemas/ZaakType",

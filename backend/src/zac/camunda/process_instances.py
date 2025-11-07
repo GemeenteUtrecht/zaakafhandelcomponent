@@ -136,9 +136,9 @@ def get_process_instances(
 
     query_params = {"variables": f"zaakUrl_eq_{zaak_url}"}
     if exclude_zaak_creation:
-        query_params[
-            "processDefinitionKeyNotIn"
-        ] = settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        query_params["processDefinitionKeyNotIn"] = (
+            settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        )
 
     if process_definition_key:
         query_params["processDefinitionKey"] = process_definition_key

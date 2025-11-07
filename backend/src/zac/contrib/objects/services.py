@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.http import Http404
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize, underscoreize

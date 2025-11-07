@@ -72,7 +72,6 @@ DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
     "ddt_api_calls.panels.APICallsPanel",
-    "elastic_panel.panel.ElasticDebugPanel",
 ]
 
 AXES_BEHIND_REVERSE_PROXY = (

@@ -77,14 +77,7 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.maxDiff = None
         cls.user = SuperUserFactory.create()
-        cls.patch_get_client_bpmn = patch(
-            "django_camunda.bpmn.get_client", return_value=_get_camunda_client()
-        )
-        cls.mock_parallel = patch(
-            "zac.core.services.parallel", return_value=mock_parallel()
-        )
 
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
@@ -110,10 +103,13 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
     def setUp(self) -> None:
         super().setUp()
         self.client.force_authenticate(self.user)
-        self.patch_get_client_bpmn.start()
-        self.addCleanup(self.patch_get_client_bpmn.stop)
-        self.mock_parallel.start()
-        self.addCleanup(self.mock_parallel.stop)
+        patchers = [
+            patch("django_camunda.bpmn.get_client", return_value=_get_camunda_client()),
+            patch("zac.core.services.parallel", return_value=mock_parallel()),
+        ]
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     @patch(
         "zac.camunda.api.views.get_task",
@@ -410,14 +406,7 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.maxDiff = None
         cls.user = SuperUserFactory.create()
-        cls.patch_get_client_bpmn = patch(
-            "django_camunda.bpmn.get_client", return_value=_get_camunda_client()
-        )
-        cls.mock_parallel = patch(
-            "zac.core.services.parallel", return_value=mock_parallel()
-        )
 
         cls.task_endpoint = reverse(
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
@@ -443,10 +432,13 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
     def setUp(self) -> None:
         super().setUp()
         self.client.force_authenticate(self.user)
-        self.patch_get_client_bpmn.start()
-        self.addCleanup(self.patch_get_client_bpmn.stop)
-        self.mock_parallel.start()
-        self.addCleanup(self.mock_parallel.stop)
+        patchers = [
+            patch("django_camunda.bpmn.get_client", return_value=_get_camunda_client()),
+            patch("zac.core.services.parallel", return_value=mock_parallel()),
+        ]
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     @patch(
         "zac.camunda.api.views.get_task",

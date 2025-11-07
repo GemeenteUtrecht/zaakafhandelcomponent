@@ -50,7 +50,11 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         cls.user = UserFactory.create()
         cls.group = GroupFactory.create()
-        cls.patchers = [
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.client.force_authenticate(self.user)
+        patchers = [
             patch(
                 "zac.camunda.messages.get_client", return_value=_get_camunda_client()
             ),
@@ -67,11 +71,7 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
                 "zac.camunda.process_instances.parallel", return_value=mock_parallel()
             ),
         ]
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.client.force_authenticate(self.user)
-        for patcher in self.patchers:
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 

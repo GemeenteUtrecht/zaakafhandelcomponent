@@ -118,18 +118,6 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.task = factory(Task, TASK_DATA)
-        cls.patch_get_task = patch(
-            "zac.camunda.api.fields.get_task",
-            return_value=cls.task,
-        )
-        cls.patch_get_process_instance = patch(
-            "zac.camunda.api.views.get_process_instance",
-            return_value=None,
-        )
-        cls.patch_get_process_zaak_url = patch(
-            "zac.camunda.api.views.get_process_zaak_url",
-            return_value=None,
-        )
 
         Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
@@ -166,14 +154,6 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
             startdatum="2020-12-25",
             uiterlijkeEinddatumAfdoening="2021-01-04",
         )
-        cls.patch_get_zaak = patch(
-            "zac.camunda.api.views.get_zaak",
-            return_value=factory(Zaak, cls.zaak),
-        )
-        cls.patch_fetch_zaaktype = patch(
-            "zac.camunda.api.views.fetch_zaaktype",
-            return_value=factory(ZaakType, cls.zaaktype),
-        )
 
         cls.endpoint = reverse("claim-task")
 
@@ -181,27 +161,36 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
         cls.core_config.app_id = "http://some-open-zaak-url.nl/with/uuid/"
         cls.core_config.save()
 
-        cls.patch_get_camunda_client = patch(
-            "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
-        )
-
     def setUp(self):
         super().setUp()
-
-        self.patch_get_process_instance.start()
-        self.addCleanup(self.patch_get_process_instance.stop)
-
-        self.patch_get_process_zaak_url.start()
-        self.addCleanup(self.patch_get_process_zaak_url.stop)
-
-        self.patch_get_zaak.start()
-        self.addCleanup(self.patch_get_zaak.stop)
-
-        self.patch_fetch_zaaktype.start()
-        self.addCleanup(self.patch_fetch_zaaktype.stop)
-
-        self.patch_get_camunda_client.start()
-        self.addCleanup(self.patch_get_camunda_client.stop)
+        patchers = [
+            patch(
+                "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
+            ),
+            patch(
+                "zac.camunda.api.views.fetch_zaaktype",
+                return_value=factory(ZaakType, self.zaaktype),
+            ),
+            patch(
+                "zac.camunda.api.views.get_zaak",
+                return_value=factory(Zaak, self.zaak),
+            ),
+            patch(
+                "zac.camunda.api.fields.get_task",
+                return_value=self.task,
+            ),
+            patch(
+                "zac.camunda.api.views.get_process_instance",
+                return_value=None,
+            ),
+            patch(
+                "zac.camunda.api.views.get_process_zaak_url",
+                return_value=None,
+            ),
+        ]
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def test_not_authenticated(self):
         response = self.client.post(self.endpoint)
@@ -258,9 +247,6 @@ class SetTaskAssigneePermissionAndResponseTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_has_perm_set_assignee_and_delegate(self, m):
-        self.patch_get_task.start()
-        self.addCleanup(self.patch_get_task.stop)
-
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)

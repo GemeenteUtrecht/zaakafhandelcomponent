@@ -13,8 +13,7 @@ Notification = Dict[str, Any]
 
 
 class HandlesMessages(Protocol):
-    def handle(self, message: Notification) -> None:
-        ...
+    def handle(self, message: Notification) -> None: ...
 
 
 class RoutingHandler:

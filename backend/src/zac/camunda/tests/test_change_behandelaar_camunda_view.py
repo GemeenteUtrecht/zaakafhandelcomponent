@@ -134,7 +134,11 @@ class UpdateCamundaBehandelaarViewTests(ClearCachesMixin, APITestCase):
                 "voorvoegsel_achternaam": "",
             },
         )
-        cls.patchers = [
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_authenticate(user=self.user)
+        patchers = [
             patch(
                 "zac.camunda.process_instances.get_client",
                 return_value=_get_camunda_client(),
@@ -148,11 +152,7 @@ class UpdateCamundaBehandelaarViewTests(ClearCachesMixin, APITestCase):
             ),
             patch("zac.camunda.api.serializers.parallel", return_value=mock_parallel()),
         ]
-
-    def setUp(self):
-        super().setUp()
-        self.client.force_authenticate(user=self.user)
-        for patcher in self.patchers:
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 

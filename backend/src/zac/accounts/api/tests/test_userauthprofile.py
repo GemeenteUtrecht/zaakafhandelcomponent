@@ -3,7 +3,6 @@ from datetime import datetime
 from django.urls import reverse_lazy
 from django.utils.timezone import make_aware
 
-from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
@@ -11,6 +10,7 @@ from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.mixins import FreezeTimeMixin
 
 from ...constants import PermissionObjectTypeChoices
 from ...models import UserAuthorizationProfile
@@ -56,8 +56,11 @@ class UserAuthProfilePermissionsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-@freeze_time("1999-12-31T23:59:59Z")
-class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
+class UserAuthProfileAPITests(
+    FreezeTimeMixin, ClearCachesMixin, APITransactionTestCase
+):
+    frozen_time = "1999-12-31T23:59:59Z"
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -195,7 +198,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             self.assertEqual(
                 [
                     {
-                        "name": "__all__",
+                        "name": "_All__",
                         "code": "query-param-not-set",
                         "reason": "Please include one of the following query parameters: ['username', 'auth_profile', 'is_active']",
                     }
@@ -208,7 +211,7 @@ class UserAuthProfileAPITests(ClearCachesMixin, APITransactionTestCase):
             self.assertEqual(
                 [
                     {
-                        "name": "__all__",
+                        "name": "_All__",
                         "code": "query-param-non-empty",
                         "reason": "Please include a valid non-empty string for username.",
                     }

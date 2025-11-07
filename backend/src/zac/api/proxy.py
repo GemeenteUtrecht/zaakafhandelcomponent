@@ -1,6 +1,7 @@
 """
 Serializer class proxying another API, which *may* add additional data.
 """
+
 from rest_framework import serializers
 
 

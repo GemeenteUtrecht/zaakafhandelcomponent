@@ -1,6 +1,7 @@
 """
 Replace the OAS schema cache with django's cache mechanism.
 """
+
 from django.core.cache import caches
 
 from zds_client.oas import schema_fetcher

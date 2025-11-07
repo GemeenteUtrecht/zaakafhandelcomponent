@@ -11,7 +11,25 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+import inspect
+import logging
+import pickle
+from functools import wraps
+
+from django.core.cache import caches
+
+logger = logging.getLogger(__name__)
+
+
 def cache(key: str, alias: str = "default", **set_options):
+    """
+    Cache decorator that safely caches function results using a formatted key.
+
+    - Keeps your dynamic key templating logic intact.
+    - Adds graceful handling for unpicklable objects (e.g. lxml.etree._Element).
+    - Supports skip_cache=True kwarg to bypass caching.
+    """
+
     def decorator(func: callable):
         argspec = inspect.getfullargspec(func)
 
@@ -40,15 +58,31 @@ def cache(key: str, alias: str = "default", **set_options):
                 key_kwargs[argspec.varkw] = var_kwargs
 
             cache_key = key.format(**key_kwargs)
-
             _cache = caches[alias]
+
+            # Try to fetch from cache
             result = _cache.get(cache_key)
             if result is not None:
                 logger.debug("Cache key '%s' hit", cache_key)
                 return result
 
+            # Compute the function result
             result = func(*args, **kwargs)
-            _cache.set(cache_key, result, **set_options)
+
+            # Attempt to cache it safely
+            try:
+                # Ensure picklable before caching
+                pickle.dumps(result)
+                _cache.set(cache_key, result, **set_options)
+                logger.debug("Cache key '%s' stored successfully", cache_key)
+            except Exception as e:
+                logger.debug(
+                    "Skipping cache for key '%s': object of type %s is unpicklable (%s)",
+                    cache_key,
+                    type(result).__name__,
+                    e,
+                )
+
             return result
 
         return wrapped

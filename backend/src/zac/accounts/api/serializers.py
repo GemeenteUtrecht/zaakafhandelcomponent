@@ -8,7 +8,7 @@ from django.core.exceptions import (
 )
 from django.db import transaction
 from django.utils.timezone import make_aware, now
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from zgw_consumers.drf.serializers import APIModelSerializer
@@ -461,11 +461,11 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
                         start_date=make_aware(
                             datetime.combine(start_date, datetime.min.time())
                         ),
-                        end_date=make_aware(
-                            datetime.combine(end_date, datetime.min.time())
-                        )
-                        if end_date
-                        else None,
+                        end_date=(
+                            make_aware(datetime.combine(end_date, datetime.min.time()))
+                            if end_date
+                            else None
+                        ),
                     )
                 )
             UserAtomicPermission.objects.bulk_create(user_atomic_permissions)

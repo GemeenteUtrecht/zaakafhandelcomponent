@@ -3,9 +3,12 @@ from django.contrib.auth.models import Group
 
 import factory
 import factory.fuzzy
+from faker import Faker
 
 from ..constants import PermissionObjectTypeChoices, PermissionReason
 from ..models import ApplicationTokenAuthorizationProfile, UserAuthorizationProfile
+
+fake = Faker()
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -33,7 +36,7 @@ class SuperUserFactory(StaffUserFactory):
 
 
 class AuthorizationProfileFactory(factory.django.DjangoModelFactory):
-    name = factory.Faker("bs")
+    name = factory.LazyAttribute(lambda x: fake.bs())
 
     class Meta:
         model = "accounts.AuthorizationProfile"
@@ -41,7 +44,7 @@ class AuthorizationProfileFactory(factory.django.DjangoModelFactory):
 
 class AccessRequestFactory(factory.django.DjangoModelFactory):
     requester = factory.SubFactory(UserFactory)
-    zaak = factory.Faker("url")
+    zaak = factory.LazyAttribute(lambda x: fake.url())
 
     class Meta:
         model = "accounts.AccessRequest"
@@ -49,8 +52,8 @@ class AccessRequestFactory(factory.django.DjangoModelFactory):
 
 class AtomicPermissionFactory(factory.django.DjangoModelFactory):
     object_type = PermissionObjectTypeChoices.zaak
-    permission = factory.Faker("word")
-    object_url = factory.Faker("url")
+    permission = factory.LazyAttribute(lambda x: fake.word())
+    object_url = factory.LazyAttribute(lambda x: fake.url())
 
     class Meta:
         model = "accounts.AtomicPermission"
@@ -64,8 +67,8 @@ class AtomicPermissionFactory(factory.django.DjangoModelFactory):
 
 
 class RoleFactory(factory.django.DjangoModelFactory):
-    name = factory.Faker("word")
-    permissions = factory.List([factory.Faker("word")])
+    name = factory.LazyAttribute(lambda x: fake.word())
+    permissions = factory.List([factory.LazyAttribute(lambda x: fake.word())])
 
     class Meta:
         model = "accounts.Role"
@@ -121,8 +124,8 @@ class UserAuthProfileFactory(factory.django.DjangoModelFactory):
 
 
 class ApplicationTokenFactory(factory.django.DjangoModelFactory):
-    contact_person = factory.Faker("name")
-    email = factory.Faker("email")
+    contact_person = factory.LazyAttribute(lambda x: fake.name())
+    email = factory.LazyAttribute(lambda x: fake.email())
 
     class Meta:
         model = "accounts.ApplicationToken"

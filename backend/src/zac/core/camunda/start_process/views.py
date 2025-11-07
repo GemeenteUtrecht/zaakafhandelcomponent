@@ -106,9 +106,11 @@ class StartCamundaProcessView(GetZaakMixin, APIView):
                 variables["initiator"] = f"{AssigneeTypeChoices.user}:{request.user}"
 
             results = start_process(
-                process_key=form.camunda_process_definition_key
-                if not zaak.einddatum
-                else settings.RESTART_ZAAK_PROCESS_DEFINITION_KEY,
+                process_key=(
+                    form.camunda_process_definition_key
+                    if not zaak.einddatum
+                    else settings.RESTART_ZAAK_PROCESS_DEFINITION_KEY
+                ),
                 variables=variables,
             )
 

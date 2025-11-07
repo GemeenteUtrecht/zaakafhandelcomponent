@@ -218,9 +218,9 @@ class ZaakUpdateTests(ClearCachesMixin, ESMixin, APITestCase):
 
         # set up mock
         new_response = old_response.copy()
-        new_response[
-            "vertrouwelijkheidaanduiding"
-        ] = VertrouwelijkheidsAanduidingen.confidentieel
+        new_response["vertrouwelijkheidaanduiding"] = (
+            VertrouwelijkheidsAanduidingen.confidentieel
+        )
         mock_service_oas_get(rm, "https://some.zrc.nl/", "zrc")
         rm.get(ZAAK, json=new_response)
 

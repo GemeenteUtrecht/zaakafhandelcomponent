@@ -113,29 +113,10 @@ class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
             "definition_id": definition_id,
         }
 
-        process_instance = factory(ProcessInstance, cls.process_instance)
+        cls.process_instance = factory(ProcessInstance, cls.process_instance)
 
-        cls.patch_get_process_instance = patch(
-            "zac.camunda.api.views.get_process_instance",
-            return_value=process_instance,
-        )
-        cls.patch_get_messages = patch(
-            "zac.camunda.api.views.get_messages",
-            return_value=["some-message", "some-other-message"],
-        )
-
-        cls.patch_get_process_zaak_url = patch(
-            "zac.camunda.api.views.get_process_zaak_url",
-            return_value=None,
-        )
-
-        zaak = factory(Zaak, cls.zaak)
-        zaak.zaaktype = factory(ZaakType, cls.zaaktype)
-
-        cls.patch_get_zaak = patch(
-            "zac.camunda.api.views.get_zaak",
-            return_value=zaak,
-        )
+        cls.zaak = factory(Zaak, cls.zaak)
+        cls.zaak.zaaktype = factory(ZaakType, cls.zaaktype)
 
         cls.endpoint = reverse("send-message")
 
@@ -143,27 +124,34 @@ class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
         cls.core_config.app_id = "http://some-open-zaak-url.nl/with/uuid/"
         cls.core_config.save()
 
-        cls.patch_get_camunda_client = patch(
-            "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
-        )
-
     def setUp(self):
         super().setUp()
 
-        self.patch_get_process_instance.start()
-        self.addCleanup(self.patch_get_process_instance.stop)
+        patchers = [
+            patch(
+                "zac.camunda.api.views.get_process_instance",
+                return_value=self.process_instance,
+            ),
+            patch(
+                "zac.camunda.api.views.get_messages",
+                return_value=["some-message", "some-other-message"],
+            ),
+            patch(
+                "zac.camunda.api.views.get_process_zaak_url",
+                return_value=None,
+            ),
+            patch(
+                "zac.camunda.api.views.get_zaak",
+                return_value=self.zaak,
+            ),
+            patch(
+                "zac.camunda.api.views.get_client", return_value=_get_camunda_client()
+            ),
+        ]
 
-        self.patch_get_messages.start()
-        self.addCleanup(self.patch_get_messages.stop)
-
-        self.patch_get_process_zaak_url.start()
-        self.addCleanup(self.patch_get_process_zaak_url.stop)
-
-        self.patch_get_zaak.start()
-        self.addCleanup(self.patch_get_zaak.stop)
-
-        self.patch_get_camunda_client.start()
-        self.addCleanup(self.patch_get_camunda_client.stop)
+        for patcher in patchers:
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def test_not_authenticated(self):
         response = self.client.post(self.endpoint)
@@ -211,7 +199,7 @@ class SendMessagePermissionAndResponseTests(ClearCachesMixin, APITestCase):
 
         data = {
             "message": "some-message",
-            "process_instance_id": self.process_instance["id"],
+            "process_instance_id": self.process_instance.id,
         }
         response = self.client.post(
             self.endpoint,

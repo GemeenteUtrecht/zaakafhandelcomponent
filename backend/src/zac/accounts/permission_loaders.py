@@ -49,7 +49,7 @@ def add_atomic_permission_to_user(
 
 
 def add_permission_for_behandelaar(
-    rol: Union[str, Rol]
+    rol: Union[str, Rol],
 ) -> Optional[UserAtomicPermission]:
     if not isinstance(rol, Rol):
         rol = fetch_rol(rol)

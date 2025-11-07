@@ -1,5 +1,5 @@
 # Helpers
-pip-tools>=0.7.0
+pip-tools<=7.4.1
 bumpversion
 
 # Debug tooling
@@ -10,4 +10,4 @@ django-elasticsearch-debug-toolbar
 
 # Documentation
 sphinx
-sphinx_rtd_theme
+sphinx_rtd_theme >= 2.0

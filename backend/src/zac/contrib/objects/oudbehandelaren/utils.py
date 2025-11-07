@@ -45,9 +45,9 @@ def register_old_behandelaar(
             "ended": datetime.datetime.now().isoformat(),
             "started": rol.registratiedatum.isoformat(),
             "identificatie": identificatie,
-            "changed_by": f"{AssigneeTypeChoices.user}:{user}"
-            if user
-            else "service-account",
+            "changed_by": (
+                f"{AssigneeTypeChoices.user}:{user}" if user else "service-account"
+            ),
         }
     )
 

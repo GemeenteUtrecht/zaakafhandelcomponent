@@ -507,9 +507,9 @@ def usage_report_zaken(
 
         zaken_map[hit.url] = {
             "identificatie": hit.identificatie,
-            "zaaktype_omschrijving": hit.zaaktype.omschrijving
-            if getattr(hit, "zaaktype", None)
-            else "",
+            "zaaktype_omschrijving": (
+                hit.zaaktype.omschrijving if getattr(hit, "zaaktype", None) else ""
+            ),
             "omschrijving": hit.omschrijving or "",
             "registratiedatum": getattr(hit, "registratiedatum", None),
             "initiator_rol": initiator_ident,

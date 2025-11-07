@@ -597,9 +597,9 @@ class CreateZaakSerializer(serializers.Serializer):
             if rt.omschrijving_generiek == RolOmschrijving.initiator
         ]
         if roltypen:
-            validated_data[
-                "initiator"
-            ] = f"{AssigneeTypeChoices.user}:{self.context['request'].user}"
+            validated_data["initiator"] = (
+                f"{AssigneeTypeChoices.user}:{self.context['request'].user}"
+            )
 
         return validated_data
 
@@ -1608,9 +1608,9 @@ class ZaakObjectProxySerializer(ProxySerializer):
                     "objectData": ".record.data",
                 }
             if not validated_data.get("relatieomschrijving"):
-                validated_data[
-                    "relatieomschrijving"
-                ] = f"{obj['type']['name']} van de ZAAK."
+                validated_data["relatieomschrijving"] = (
+                    f"{obj['type']['name']} van de ZAAK."
+                )
         related_object = relate_object_to_zaak(validated_data)
         return related_object
 

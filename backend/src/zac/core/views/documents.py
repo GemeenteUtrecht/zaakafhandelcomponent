@@ -47,7 +47,7 @@ class DownloadDocumentView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
         document, content = download_document(self.document)
         response = HttpResponse(content, content_type=content_type)
-        response[
-            "Content-Disposition"
-        ] = f'attachment; filename="{document.bestandsnaam}"'
+        response["Content-Disposition"] = (
+            f'attachment; filename="{document.bestandsnaam}"'
+        )
         return response

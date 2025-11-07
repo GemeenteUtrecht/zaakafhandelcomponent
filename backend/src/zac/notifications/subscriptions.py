@@ -1,6 +1,7 @@
 """
 Implement setting up the subscriptions.
 """
+
 from typing import List
 from urllib.parse import urljoin
 

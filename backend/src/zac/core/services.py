@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import requests
 from furl import furl
@@ -1427,9 +1427,11 @@ def add_string_representation(func):
         ):
             # get the values of the original fields from the object
             values = [
-                obj["record"]["data"].get(label[7:], "")
-                if "field__" in label
-                else label
+                (
+                    obj["record"]["data"].get(label[7:], "")
+                    if "field__" in label
+                    else label
+                )
                 for label in labels
                 if label
             ]

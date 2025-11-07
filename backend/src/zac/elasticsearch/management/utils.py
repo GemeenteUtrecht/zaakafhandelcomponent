@@ -9,7 +9,7 @@ import psutil
 def get_memory_usage():
     process = psutil.Process(os.getpid())
     mem_bytes = process.memory_info().rss  # in bytes
-    mem_mbytes = mem_bytes / 1024 ** 2
+    mem_mbytes = mem_bytes / 1024**2
     return f"{mem_mbytes} MB"
 
 

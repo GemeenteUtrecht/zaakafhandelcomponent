@@ -4,7 +4,6 @@ from django.core.management import call_command
 import requests_mock
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Index
-from freezegun import freeze_time
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
@@ -15,6 +14,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak, ZaakInformatieObject
 
@@ -32,9 +32,11 @@ ZTC_ROOT = "https://api.ztc.nl/api/v1/"
 ZRC_ROOT = "https://api.zrc.nl/api/v1/"
 
 
-@freeze_time("2020-01-01")
 @requests_mock.Mocker()
-class IndexDocumentsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
+class IndexDocumentsTests(
+    FreezeTimeMixin, ClearCachesMixin, ESMixin, APITransactionTestCase
+):
+    frozen_time = "2020-01-01"
     catalogus = generate_oas_component(
         "ztc",
         "schemas/Catalogus",

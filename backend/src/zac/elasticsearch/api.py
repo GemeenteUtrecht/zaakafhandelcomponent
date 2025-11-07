@@ -387,7 +387,7 @@ def delete_object_document(object_url: str) -> None:
 
 
 def create_related_zaak_document(
-    related_zaak: Union[ZaakDocument, Zaak]
+    related_zaak: Union[ZaakDocument, Zaak],
 ) -> RelatedZaakDocument:
     if isinstance(related_zaak.zaaktype, str):
         related_zaak.zaaktype = fetch_zaaktype(related_zaak.zaaktype)

@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Union
 
 from django.contrib.auth.models import Group
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from zgw_consumers.api_models.zaken import ZaakEigenschap
@@ -367,8 +367,8 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             )
 
         # Make sure new assignees haven't already reviewed
-        if (
-            review_request := self._get_review_request(validated_data)
+        if review_request := (
+            self._get_review_request(validated_data)
             if validated_data.get("id")
             else None
         ):

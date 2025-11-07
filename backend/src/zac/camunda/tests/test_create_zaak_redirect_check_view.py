@@ -50,14 +50,14 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         cls.user = UserFactory.create()
         cls.group = GroupFactory.create()
-        cls.patchers = [
-            patch("django_camunda.api.get_client", return_value=_get_camunda_client()),
-        ]
 
     def setUp(self) -> None:
         super().setUp()
         self.client.force_authenticate(self.user)
-        for patcher in self.patchers:
+        patchers = [
+            patch("django_camunda.api.get_client", return_value=_get_camunda_client()),
+        ]
+        for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
 

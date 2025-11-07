@@ -4,10 +4,9 @@ from django.contrib.sites.models import Site
 from django.core import mail
 from django.core.management import call_command
 from django.urls import reverse_lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 import requests_mock
-from freezegun import freeze_time
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
@@ -16,6 +15,7 @@ from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.checklists.models import ChecklistLock
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get
 
 from .factories import (
@@ -29,8 +29,8 @@ from .factories import (
 
 
 @requests_mock.Mocker()
-@freeze_time("1999-12-31T23:59:59Z")
-class UnlockChecklists(ClearCachesMixin, APITestCase):
+class UnlockChecklists(FreezeTimeMixin, ClearCachesMixin, APITestCase):
+    frozen_time = "1999-12-31T23:59:59Z"
     endpoint = reverse_lazy(
         "unlock-checklists",
     )
@@ -56,18 +56,15 @@ class UnlockChecklists(ClearCachesMixin, APITestCase):
         site = Site.objects.get_current()
         site.domain = "testserver"
         site.save()
-        cls.patchers = [
-            patch(
-                "zac.contrib.objects.checklists.management.commands.unlock_checklists.parallel",
-                return_value=mock_parallel(),
-            )
-        ]
 
     def setUp(self):
         super().setUp()
-        for patcher in self.patchers:
-            patcher.start()
-            self.addCleanup(patcher.stop)
+        patcher = patch(
+            "zac.contrib.objects.checklists.management.commands.unlock_checklists.parallel",
+            return_value=mock_parallel(),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_command_unlock_checklists(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")

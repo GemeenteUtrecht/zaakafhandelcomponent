@@ -28,6 +28,7 @@ without explicitly wrapping this in a parent serializer, i.e. - ``polymorphic_co
 can not be a PolymorphicSerializer itself, as it requires access to the ``object_type``
 in the parent scope.
 """
+
 import warnings
 from typing import Dict, Optional, Type, Union
 

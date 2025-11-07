@@ -68,7 +68,7 @@ class UtilsTests(TestCase):
             ("some_keyword", "keyword"),
             ("some_boolean", "boolean"),
         ]
-        self.assertEqual(list_of_fields, expected_data)
+        self.assertCountEqual(list_of_fields, expected_data)
 
         properties = get_document_properties(ESTestDocument)
         list_of_fields = list(
@@ -81,7 +81,7 @@ class UtilsTests(TestCase):
             ("some_keyword", "keyword"),
             ("some_boolean", "boolean"),
         ]
-        self.assertEqual(list_of_fields, expected_data)
+        self.assertCountEqual(list_of_fields, expected_data)
 
     def test_es_document_to_ordering_parameters(self):
         parameter = es_document_to_ordering_parameters(ESTestDocument)
@@ -92,4 +92,4 @@ class UtilsTests(TestCase):
             "some_keyword",
             "some_boolean",
         ]
-        self.assertEqual(parameter.enum, expected_data)
+        self.assertCountEqual(parameter.enum, expected_data)

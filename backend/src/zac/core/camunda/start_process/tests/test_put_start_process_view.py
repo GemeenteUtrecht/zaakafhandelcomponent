@@ -7,8 +7,9 @@ from django_camunda.utils import underscoreize
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import ZaakType
+from zgw_consumers.api_models.catalogi import Eigenschap, RolType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
 from zgw_consumers.test import generate_oas_component, mock_service_oas_get
@@ -17,6 +18,7 @@ from zac.accounts.tests.factories import SuperUserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
+from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -164,9 +166,8 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             betrokkeneType=PROCESS_ROL["betrokkeneType"],
             roltype=cls.roltype["url"],
             betrokkene_identificatie=cls.medewerker,
-            omschrijving="some-rol-omschrijving",
-            registratiedatum="2004-06-23T01:52:50Z",
-            roltoelichting=cls.roltype["omschrijving"],
+            omschrijving=PROCESS_ROL["roltypeOmschrijving"],
+            roltoelichting=PROCESS_ROL["roltypeOmschrijving"],
             omschrijving_generiek=cls.roltype["omschrijvingGeneriek"],
         )
 
@@ -237,17 +238,25 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             f"{OBJECTS_ROOT}objects/search",
             json=paginated_response([START_CAMUNDA_PROCESS_FORM_OBJ]),
         )
-
+        ze = factory(ZaakEigenschap, self.zaakeigenschap)
+        ze.eigenschap = factory(Eigenschap, self.eigenschap)
         with patch(
-            "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+            "zac.core.services.get_rollen",
+            return_value=[factory(Rol, self.rol)],
+        ), patch(
+            "zac.core.services.get_roltypen",
+            return_value=[factory(RolType, self.roltype)],
+        ), patch(
+            "zac.core.services.get_zaakeigenschappen",
+            return_value=[ze],
+        ), patch(
+            "zac.elasticsearch.searches.count_by_iot_in_zaak",
             return_value={self.informatieobjecttype["omschrijving"]: 1},
+        ), patch(
+            "zac.core.camunda.start_process.serializers.get_zaak_context",
+            return_value=self.zaak_context,
         ):
-            with patch(
-                "zac.core.camunda.start_process.serializers.get_zaak_context",
-                return_value=self.zaak_context,
-            ):
-                response = self.client.put(self.task_endpoint)
-
+            response = self.client.put(self.task_endpoint)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(
             m.last_request.json(),
@@ -272,11 +281,11 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_rollen",
+        "zac.core.services.get_rollen",
         return_value=[],
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
+        "zac.core.services.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(
@@ -316,7 +325,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             zaaktype=self.zaak_context.zaaktype,
         )
         with patch(
-            "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+            "zac.elasticsearch.searches.count_by_iot_in_zaak",
             return_value=dict(),
         ):
             with patch(
@@ -330,7 +339,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json()["invalidParams"],
             [
                 {
-                    "name": "bijlagen",
+                    "name": "nonFieldErrors",
                     "code": "invalid",
                     "reason": "Een INFORMATIEOBJECT met INFORMATIEOBJECTTYPE `omschrijving`: `SomeDocument` is vereist.",
                 }
@@ -342,11 +351,11 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+        "zac.elasticsearch.searches.count_by_iot_in_zaak",
         return_value=dict(),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
+        "zac.core.services.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(
@@ -393,7 +402,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json()["invalidParams"],
             [
                 {
-                    "name": "rollen",
+                    "name": "nonFieldErrors",
                     "code": "invalid",
                     "reason": "Vereiste ROLTYPE `omschrijving`: `Some Rol` is niet gevonden in ROLlen toebehorend aan ZAAK.",
                 }
@@ -405,11 +414,11 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+        "zac.elasticsearch.searches.count_by_iot_in_zaak",
         return_value=dict(),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_zaakeigenschappen",
+        "zac.core.services.get_zaakeigenschappen",
         return_value=[],
     )
     @patch(
@@ -458,7 +467,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json()["invalidParams"],
             [
                 {
-                    "name": "rollen",
+                    "name": "nonFieldErrors",
                     "code": "invalid",
                     "reason": "`betrokkene_type` van ROL met ROLTYPE `omschrijving`: `Some Rol` komt niet overeen met vereist `betrokkene_type`: `medewerker`.",
                 }
@@ -470,11 +479,11 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         return_value=_get_task(**{"formKey": "zac:startProcessForm"}),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.count_by_iot_in_zaak",
+        "zac.elasticsearch.searches.count_by_iot_in_zaak",
         return_value=dict(),
     )
     @patch(
-        "zac.core.camunda.start_process.serializers.get_rollen",
+        "zac.core.services.get_rollen",
         return_value=[],
     )
     @patch(
@@ -520,7 +529,7 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
             response.json()["invalidParams"],
             [
                 {
-                    "name": "zaakeigenschappen",
+                    "name": "nonFieldErrors",
                     "code": "invalid",
                     "reason": "Een ZAAKEIGENSCHAP met `naam`: `Some Eigenschap 1` is vereist.",
                 }

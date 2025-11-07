@@ -142,9 +142,9 @@ def get_camunda_user_tasks_for_zaak(
         "processVariables": [{"name": "zaakUrl", "operator": "eq", "value": zaak_url}]
     }
     if exclude_zaak_creation:
-        payload[
-            "processDefinitionKeyNotIn"
-        ] = settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        payload["processDefinitionKeyNotIn"] = (
+            settings.CREATE_ZAAK_PROCESS_DEFINITION_KEY
+        )
     return get_camunda_user_tasks(payload=payload)
 
 
