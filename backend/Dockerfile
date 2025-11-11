@@ -40,6 +40,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 COPY ./bin/docker_start.sh /start.sh
+# Add OIDC migration consistency fixer
+COPY ./backend/bin/fix_oidc_db_migrations.sh /fix_oidc_db_migrations.sh
+RUN chmod +x /fix_oidc_db_migrations.sh
 RUN mkdir /app/log /app/media
 
 # copy backend build deps
