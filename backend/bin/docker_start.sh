@@ -21,7 +21,11 @@ done
 
 >&2 echo "Database is up."
 
-# Apply database migrations
+# Run OIDC migration consistency fixer before global migrations
+>&2 echo "Running mozilla_django_oidc_db migration consistency check..."
+/app/src/zac/backend/bin/fix_oidc_db_migrations.sh || true
+
+# Apply all migrations
 >&2 echo "Apply database migrations"
 python src/manage.py migrate
 
