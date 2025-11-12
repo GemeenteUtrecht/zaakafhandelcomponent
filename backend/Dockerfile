@@ -67,6 +67,8 @@ USER appuser
 ARG COMMIT_HASH RELEASE
 
 ENV PYTHONUNBUFFERED=1 DJANGO_SETTINGS_MODULE=zac.conf.docker GIT_SHA=${COMMIT_HASH} VERSION_TAG=${RELEASE}
+ARG SECRET_KEY=dummy
+ENV SECRET_KEY=${SECRET_KEY}
 
 # Run collectstatic, so the result is already included in the image
 RUN python src/manage.py collectstatic --noinput
