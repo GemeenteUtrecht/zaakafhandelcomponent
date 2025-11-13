@@ -1,8 +1,11 @@
-# Stage 1 - Compile needed python dependencies
+#############################
+# Stage 1 — Build Python deps
+#############################
 FROM python:3.10-slim-bookworm AS build
 
 WORKDIR /app
 
+# Required build tools for Python packages (psycopg2, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         libpq-dev \
@@ -10,68 +13,100 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements /app/requirements
-RUN pip install pip 'setuptools' -U
+
+RUN pip install -U pip setuptools wheel
 RUN pip install -r requirements/production.txt
 
-# Stage 2 - build frontend
+
+###################################
+# Stage 2 — Build Frontend (Node 10)
+###################################
 FROM node:10-buster AS frontend-build
 
 WORKDIR /app
 
+# Install JS dependencies
 COPY ./*.json ./*.js ./.babelrc /app/
 RUN npm ci
 
+# Copy sources used in build
 COPY ./build /app/build/
-
 COPY src/zac/sass/ /app/src/zac/sass/
-COPY src/zac/js/ /app/src/zac/js/
+COPY src/zac/js/   /app/src/zac/js/
+
 RUN npm run build --production
 
-# Stage 3 - Build docker image suitable for production
+
+#########################################
+# Stage 3 — Final Production Image
+#########################################
 FROM python:3.10-slim-bookworm AS production
 
-# Stage 3.1 - Set up the needed production dependencies
+# Runtime packages only
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        postgresql-client \
+        mime-support \
         procps \
         vim \
-        mime-support \
-        postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY ./bin/docker_start.sh /start.sh
-# Add OIDC migration consistency fixer
-COPY ./bin/fix_oidc_db_migrations.sh /fix_oidc_db_migrations.sh
-RUN chmod +x /fix_oidc_db_migrations.sh
-RUN mkdir /app/log /app/media
 
-# copy backend build deps
+###############################
+# Copy docker_start.sh and fixer
+###############################
+COPY ./bin/docker_start.sh /start.sh
+COPY ./src/zac/backend/bin/fix_oidc_db_migrations.sh /fix_oidc_db_migrations.sh
+RUN chmod +x /start.sh /fix_oidc_db_migrations.sh
+
+###########################
+# Copy Python build results
+###########################
 COPY --from=build /usr/local/lib/python3.10 /usr/local/lib/python3.10
 COPY --from=build /usr/local/bin/uwsgi /usr/local/bin/uwsgi
 
-# required for fonts,styles etc.
+####################################
+# Copy frontend-built static assets
+####################################
 COPY --from=frontend-build /app/node_modules/font-awesome /app/node_modules/font-awesome
 
-# Stage 3.2 - Copy source code
+############################
+# Copy backend source code
+############################
 COPY ./src /app/src
 COPY --from=frontend-build /app/src/zac/static/fonts /app/src/zac/static/fonts
-COPY --from=frontend-build /app/src/zac/static/css /app/src/zac/static/css
-COPY --from=frontend-build /app/src/zac/static/js /app/src/zac/static/js
+COPY --from=frontend-build /app/src/zac/static/css   /app/src/zac/static/css
+COPY --from=frontend-build /app/src/zac/static/js    /app/src/zac/static/js
 
+############################
+# Create runtime directories
+############################
+RUN mkdir /app/log /app/media
+
+###################
+# Create app user
+###################
 RUN useradd -M -u 1000 appuser
 RUN chown -R appuser:appuser /app
-
-# drop privileges
 USER appuser
 
+##########################################
+# Environment (dummy SECRET_KEY is fine)
+##########################################
 ARG COMMIT_HASH RELEASE
+ENV PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=zac.conf.docker \
+    GIT_SHA=${COMMIT_HASH} \
+    VERSION_TAG=${RELEASE} \
+    SECRET_KEY=dummy
 
-ENV PYTHONUNBUFFERED=1 DJANGO_SETTINGS_MODULE=zac.conf.docker GIT_SHA=${COMMIT_HASH} VERSION_TAG=${RELEASE}
-ARG SECRET_KEY=dummy
-ENV SECRET_KEY=${SECRET_KEY}
-
-# Run collectstatic, so the result is already included in the image
+#####################################
+# Collect static files (safe at build)
+#####################################
 RUN python src/manage.py collectstatic --noinput
 
+##########################
+# Final container startup
+##########################
 EXPOSE 8000
 CMD ["/start.sh"]
