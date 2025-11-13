@@ -56,7 +56,7 @@ WORKDIR /app
 # Copy docker_start.sh and fixer
 ###############################
 COPY ./bin/docker_start.sh /start.sh
-COPY ./src/zac/backend/bin/fix_oidc_db_migrations.sh /fix_oidc_db_migrations.sh
+COPY ./bin/fix_oidc_db_migrations.sh /fix_oidc_db_migrations.sh
 RUN chmod +x /start.sh /fix_oidc_db_migrations.sh
 
 ###########################
