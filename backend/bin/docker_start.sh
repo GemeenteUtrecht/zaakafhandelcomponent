@@ -2,57 +2,68 @@
 
 set -e
 
-# Wait for the database container
-# See: https://docs.docker.com/compose/startup-order/
-export PGHOST=${DB_HOST:-db}
-export PGPORT=${DB_PORT:-5432}
+###############################################################################
+# Environment setup
+###############################################################################
+export PGHOST="${DB_HOST:-db}"
+export PGPORT="${DB_PORT:-5432}"
 
-uwsgi_port=${UWSGI_PORT:-8000}
-uwsgi_processes=${UWSGI_PROCESSES:-16}
-uwsgi_threads=${UWSGI_THREADS:-8}
-uwsgi_buffer_size=${UWSGI_BUFFER_SIZE:-65536}
-uwsgi_max_requests=${UWSGI_MAX_REQUESTS:-5000}
-uwsgi_harakiri=${UWSGI_HARAKIRI:-30}
+UWSGI_PORT="${UWSGI_PORT:-8000}"
+UWSGI_PROCESSES="${UWSGI_PROCESSES:-16}"
+UWSGI_THREADS="${UWSGI_THREADS:-8}"
+UWSGI_BUFFER_SIZE="${UWSGI_BUFFER_SIZE:-65536}"
+UWSGI_MAX_REQUESTS="${UWSGI_MAX_REQUESTS:-5000}"
+UWSGI_HARAKIRI="${UWSGI_HARAKIRI:-30}"
 
-until pg_isready; do
-  >&2 echo "Waiting for database connection..."
+###############################################################################
+# Wait for database availability
+###############################################################################
+echo "⏳ Waiting for PostgreSQL at ${PGHOST}:${PGPORT} ..."
+until pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1; do
   sleep 1
 done
+echo "✔ Database is reachable."
 
->&2 echo "Database is up."
+###############################################################################
+# Fix OIDC migration inconsistencies BEFORE applying Django migrations
+###############################################################################
+echo "🔧 Running OIDC migration consistency fix..."
+/fix_oidc_db_migrations.sh || echo "⚠️  OIDC fixer exited, continuing..."
 
-# Run OIDC migration consistency fixer before global migrations
->&2 echo "Running mozilla_django_oidc_db migration consistency check..."
-/app/src/zac/backend/bin/fix_oidc_db_migrations.sh || true
+###############################################################################
+# Apply Django migrations
+###############################################################################
+echo "🛠  Applying Django migrations..."
+python src/manage.py migrate --noinput
 
-# Apply all migrations
->&2 echo "Apply database migrations"
-python src/manage.py migrate
-
->&2 echo "Starting server"
-cmd="uwsgi \
-    --http :$uwsgi_port \
-    --module zac.wsgi \
-    --static-map /static=/app/static \
-    --static-map /media=/app/media  \
-    --chdir src \
-    --processes $uwsgi_processes \
-    --threads $uwsgi_threads \
-    --buffer-size $uwsgi_buffer_size \
-    --enable-threads \
-    --max-requests $uwsgi_max_requests \
-    --harakiri $uwsgi_harakiri \
-"
-
-PY_AUTORELOAD=${AUTORELOAD:-false}
-if [ $PY_AUTORELOAD = "true" ]
-then
-        >&2 echo "WARNING: Starting uwsgi with py-autoreload enabled is unsafe and should not be used outside development environments!"
-        cmd="${cmd} --py-autoreload 1"
-fi
-
-# build openapi schema
+###############################################################################
+# Generate OpenAPI schema
+###############################################################################
+echo "📄 Generating OpenAPI schema..."
 python src/manage.py spectacular --file src/openapi.yaml
 
-# Start server
-exec $cmd
+###############################################################################
+# Start uWSGI
+###############################################################################
+echo "🚀 Starting uWSGI application server..."
+
+CMD="uwsgi \
+    --http :${UWSGI_PORT} \
+    --module zac.wsgi \
+    --static-map /static=/app/static \
+    --static-map /media=/app/media \
+    --chdir src \
+    --processes ${UWSGI_PROCESSES} \
+    --threads ${UWSGI_THREADS} \
+    --buffer-size ${UWSGI_BUFFER_SIZE} \
+    --enable-threads \
+    --max-requests ${UWSGI_MAX_REQUESTS} \
+    --harakiri ${UWSGI_HARAKIRI}
+"
+
+if [ "${AUTORELOAD:-false}" = "true" ]; then
+    echo "⚠️  Autoreload ENABLED (not recommended for production)"
+    CMD="${CMD} --py-autoreload 1"
+fi
+
+exec $CMD
