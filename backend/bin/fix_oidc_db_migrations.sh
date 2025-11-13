@@ -3,82 +3,72 @@ set -e
 
 echo "🔧 [OIDC FIX] Checking mozilla_django_oidc_db migrations..."
 
-DB_URI="sslmode=require host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} password=${DB_PASSWORD}"
+# Basic sanity: require DB connection env
+: "${DB_HOST:?DB_HOST not set}"
+: "${DB_PORT:?DB_PORT not set}"
+: "${DB_NAME:?DB_NAME not set}"
+: "${DB_USER:?DB_USER not set}"
+: "${DB_PASSWORD:?DB_PASSWORD not set}"
 
-psql_cmd="psql \"$DB_URI\" -qtAX"
+export PGPASSWORD="${DB_PASSWORD}"
 
-###############################################
-# 1. Check if the OIDC config table exists
-###############################################
-TABLE_EXISTS=$($psql_cmd <<'SQL'
-SELECT CASE WHEN to_regclass('public.mozilla_django_oidc_db_openidconnectconfig') IS NULL
-            THEN 0 ELSE 1 END;
-SQL
-)
-
-###############################################
-# 2. Check how many migration rows exist
-###############################################
-ROW_COUNT=$($psql_cmd <<'SQL'
-SELECT COUNT(*) FROM django_migrations WHERE app='mozilla_django_oidc_db';
-SQL
-)
+psql_cmd() {
+    psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -qtAX -c "$1"
+}
 
 ###############################################
-# 3. Read actual migration names (if any)
+# 1. Ensure django_migrations table itself exists
 ###############################################
-MIG_NAMES=$($psql_cmd <<'SQL'
-SELECT name FROM django_migrations WHERE app='mozilla_django_oidc_db' ORDER BY name;
-SQL
-)
+HAS_DJANGO_MIGRATIONS="$(psql_cmd "SELECT CASE WHEN to_regclass('public.django_migrations') IS NULL THEN 0 ELSE 1 END;")"
 
-echo "🧩 Table exists: $TABLE_EXISTS | Migration rows: $ROW_COUNT"
-echo "🧩 Migration names: ${MIG_NAMES:-<none>}"
+if [ "$HAS_DJANGO_MIGRATIONS" -ne 1 ] 2>/dev/null; then
+    echo "ℹ️  django_migrations table does not exist yet – fresh DB, skipping OIDC fix."
+    exit 0
+fi
 
 ###############################################
-# Helper function: reset migration rows
+# 2. Check if the OIDC config table exists
 ###############################################
-reset_rows() {
-    echo "⚠️ Resetting OIDC migration history → applying squashed state"
+TABLE_EXISTS="$(psql_cmd "SELECT CASE WHEN to_regclass('public.mozilla_django_oidc_db_openidconnectconfig') IS NULL THEN 0 ELSE 1 END;")"
 
-    $psql_cmd <<'SQL'
-DELETE FROM django_migrations WHERE app='mozilla_django_oidc_db';
+if [ "$TABLE_EXISTS" -ne 1 ] 2>/dev/null; then
+    echo "ℹ️  OIDC config table does not exist – nothing to repair."
+    exit 0
+fi
+
+###############################################
+# 3. Inspect current migration rows for this app
+###############################################
+ROW_COUNT="$(psql_cmd "SELECT COUNT(*) FROM django_migrations WHERE app='mozilla_django_oidc_db';")"
+
+echo "🧩 OIDC table exists. Current migration row count: ${ROW_COUNT}"
+
+# If we already have exactly the squashed migration, we still normalize but it's a no-op
+MIG_NAMES="$(psql_cmd "SELECT name FROM django_migrations WHERE app='mozilla_django_oidc_db' ORDER BY name;")"
+echo "🧩 Existing migration names (before fix):"
+[ -n "$MIG_NAMES" ] && echo "$MIG_NAMES" || echo "<none>"
+
+###############################################
+# 4. ALWAYS enforce the squashed state when table exists
+###############################################
+echo "⚠️  Enforcing squashed migration state for mozilla_django_oidc_db..."
+
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -qtAX <<'SQL'
+DELETE FROM django_migrations
+WHERE app = 'mozilla_django_oidc_db';
 
 INSERT INTO django_migrations (app, name, applied)
 VALUES ('mozilla_django_oidc_db', '0001_initial_to_v023', NOW());
 SQL
 
-    echo "✅ Squashed migration recorded."
-}
+echo "✅ Squashed migration recorded as the only OIDC migration row."
 
 ###############################################
-# 4. Decision logic
+# 5. Show final state for logging
 ###############################################
+FINAL_NAMES="$(psql_cmd "SELECT name FROM django_migrations WHERE app='mozilla_django_oidc_db' ORDER BY name;")"
+echo "🧩 Final mozilla_django_oidc_db migrations:"
+echo "$FINAL_NAMES"
 
-# Case A: Table exists but no migrations → broken state
-if [ "$TABLE_EXISTS" -eq 1 ] && [ "$ROW_COUNT" -eq 0 ]; then
-    echo "⚠️ Table exists but migration rows missing → repairing"
-    reset_rows
-    python src/manage.py migrate mozilla_django_oidc_db --fake
-    echo "✅ Repaired state (A)."
-    exit 0
-fi
-
-# Case B: Table exists + rows exist BUT not the squashed one
-if [ "$TABLE_EXISTS" -eq 1 ] && ! printf "%s" "$MIG_NAMES" | grep -q "0001_initial_to_v023"; then
-    echo "⚠️ Outdated / unsquashed migration history detected → replacing"
-    reset_rows
-    python src/manage.py migrate mozilla_django_oidc_db --fake
-    echo "✅ Repaired state (B)."
-    exit 0
-fi
-
-# Case C: Squashed migration present already → OK
-if printf "%s" "$MIG_NAMES" | grep -q "0001_initial_to_v023"; then
-    echo "✅ OIDC migration history already correct."
-    exit 0
-fi
-
-# Fallback (should never trigger)
-echo "⚠️ Unexpected OIDC migration state → no automatic fix applied."
+echo "✅ [OIDC FIX] Completed."
 exit 0

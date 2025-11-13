@@ -20,25 +20,21 @@ until pg_isready -h "$PGHOST" -p "$PGPORT" >/dev/null 2>&1; do
     echo "   …still waiting"
     sleep 1
 done
-
 echo "✅ Database connection established."
 
-
 ###############################################
-# 1. OIDC migration consistency fixer
+# 1. OIDC migration consistency fixer (SQL-only)
 ###############################################
 echo "🔧 Running mozilla_django_oidc_db migration consistency repair..."
 /fix_oidc_db_migrations.sh
 echo "✅ OIDC migration consistency check completed."
 
-
 ###############################################
-# 2. Run Django migrations
+# 2. Run Django migrations (all apps)
 ###############################################
 echo "🔧 Applying Django migrations..."
 python src/manage.py migrate
 echo "✅ All migrations applied."
-
 
 ###############################################
 # 3. Build OpenAPI schema
@@ -46,7 +42,6 @@ echo "✅ All migrations applied."
 echo "📄 Generating OpenAPI schema..."
 python src/manage.py spectacular --file src/openapi.yaml
 echo "✅ OpenAPI schema generated."
-
 
 ###############################################
 # 4. Start uWSGI

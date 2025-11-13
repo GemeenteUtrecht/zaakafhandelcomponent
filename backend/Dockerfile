@@ -53,7 +53,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 ###############################
-# Copy docker_start.sh and fixer
+# Copy start script and fixer
 ###############################
 COPY ./bin/docker_start.sh /start.sh
 COPY ./bin/fix_oidc_db_migrations.sh /fix_oidc_db_migrations.sh
