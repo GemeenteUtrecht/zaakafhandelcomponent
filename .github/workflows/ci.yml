@@ -184,8 +184,7 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
           build-args: | 
             COMMIT_HASH=${{ steps.vars.outputs.git_hash }}
             RELEASE=${{ steps.vars.outputs.tag }}
@@ -248,8 +247,7 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
           tags: |
             scrumteamzgw/zac-ui:${{ steps.vars.outputs.tag }}
   
