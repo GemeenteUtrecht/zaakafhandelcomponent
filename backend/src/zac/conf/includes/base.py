@@ -359,8 +359,8 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
     # authentication
-    "zac.accounts.backends.LoggingBackendMozilla",
-    # "mozilla_django_oidc_db.backends.OIDCAuthenticationBackend",
+    # "zac.accounts.backends.LoggingBackendMozilla",
+    "mozilla_django_oidc_db.backends.OIDCAuthenticationBackend",
     "zac.accounts.backends.UserModelEmailBackend",
     "django.contrib.auth.backends.ModelBackend",
     # authorization
