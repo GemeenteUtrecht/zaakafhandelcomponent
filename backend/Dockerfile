@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
+ARG CACHE_BREAKER=1
+
 COPY ./requirements /app/requirements
 RUN pip install pip 'setuptools' -U
 RUN pip install -r requirements/production.txt
