@@ -67,7 +67,7 @@ ENV PYTHONUNBUFFERED=1 DJANGO_SETTINGS_MODULE=zac.conf.docker GIT_SHA=${COMMIT_H
 
 ARG SECRET_KEY=dummy
 
-# Run collectstatic, so the result is already included in the image
+# Run collectstatic, so the result is already included in the image.
 RUN python src/manage.py collectstatic --noinput
 
 EXPOSE 8000
