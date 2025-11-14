@@ -26,7 +26,8 @@ echo "✅ Database connection established."
 # 1. OIDC migration consistency fixer (SQL-only)
 ###############################################
 echo "🔧 Running mozilla_django_oidc_db migration consistency repair..."
-/fix_oidc_db_migrations.sh
+# /fix_oidc_db_migrations.sh
+echo "🔧 [OIDC FIX] Skipping mozilla_django_oidc_db migrations fix for now..."
 echo "✅ OIDC migration consistency check completed."
 
 ###############################################
