@@ -95,7 +95,9 @@ django-import-export==4.3.12
 django-ipware==7.0.1
     # via django-axes
 django-jsonform==2.23.2
-    # via mozilla-django-oidc-db
+    # via
+    #   -r requirements/base.in
+    #   mozilla-django-oidc-db
 django-nested-admin==4.1.6
     # via -r requirements/base.in
 django-ordered-model==3.7.4

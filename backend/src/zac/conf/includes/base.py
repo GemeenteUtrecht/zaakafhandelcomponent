@@ -134,6 +134,7 @@ INSTALLED_APPS = [
     "zgw_consumers",
     "django_camunda",
     "import_export",
+    "django_jsonform",
     "mozilla_django_oidc",
     "mozilla_django_oidc_db",
     "django_better_admin_arrayfield",
