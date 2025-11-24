@@ -1,6 +1,5 @@
 {% extends "admin/login.html" %}
-{% load solo_tags i18n mozilla_django_oidc_db %}
-{% get_oidc_admin_client as admin_oidc_client %}
+{% load solo_tags i18n %}
 
 {% block content %}
 {% if form.errors and not form.non_field_errors %}
@@ -52,7 +51,6 @@
 {% endif %}
 </div>
 
-{% if admin_oidc_client.enabled %}
 <div class="submit-row">
     <div class="form form--centered form--centered-content">
         <a href="{% url 'oidc_authentication_init' %}" class="btn btn--primary">
@@ -61,5 +59,4 @@
     </div>
     <div class="divider divider--short"></div>
 </div>
-{% endif %}
 {% endblock %}
