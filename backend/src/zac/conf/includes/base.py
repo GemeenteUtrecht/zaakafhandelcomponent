@@ -177,6 +177,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "mozilla_django_oidc_db.middleware.SessionRefresh",
     "zac.accounts.middleware.HijackUserMiddleware",
     "zac.accounts.middleware.HijackSessionRefresh",
     "django.contrib.messages.middleware.MessageMiddleware",
