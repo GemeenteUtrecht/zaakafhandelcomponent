@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from zgw_consumers.api_models.zaken import ZaakEigenschap
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
@@ -19,6 +18,7 @@ from zac.core.api.fields import SelectDocumentsCamundaField
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import get_zaakeigenschappen
 from zac.elasticsearch.searches import search_informatieobjects
+from zac.tests.compat import APIModelSerializer
 from zgw.models.zrc import Zaak
 
 from ..serializers import (

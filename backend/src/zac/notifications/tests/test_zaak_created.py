@@ -9,12 +9,12 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import _find_zaken
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
 from .utils import (

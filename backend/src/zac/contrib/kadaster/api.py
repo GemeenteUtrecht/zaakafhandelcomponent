@@ -7,13 +7,13 @@ from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.client import ZGWClient
 
 from zac.contrib.kadaster.bag import A_DAY, LocationServer
 from zac.contrib.kadaster.client import override_zds_client
 from zac.contrib.kadaster.data import AddressSearchResponse, Pand, Verblijfsobject
 from zac.contrib.kadaster.models import KadasterConfig
 from zac.utils.decorators import cache, optional_service
+from zac.zgw_client import ZGWClient
 
 
 def get_location_server_client() -> LocationServer:

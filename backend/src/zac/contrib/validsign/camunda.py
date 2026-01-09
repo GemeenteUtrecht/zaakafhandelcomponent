@@ -4,13 +4,13 @@ from typing import Dict, Optional
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import Context, register, usertask_context_serializer
 from zac.core.api.fields import SelectDocumentsCamundaField
+from zac.tests.compat import APIModelSerializer
 
 
 @dataclass

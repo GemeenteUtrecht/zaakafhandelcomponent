@@ -36,7 +36,6 @@ from zgw_consumers.api_models.constants import (
 )
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import AtomicPermissionSerializer
 from zac.accounts.models import User
@@ -82,6 +81,7 @@ from zac.core.services import (
 )
 from zac.core.utils import build_absolute_url
 from zac.elasticsearch.searches import search_informatieobjects
+from zac.tests.compat import APIModelSerializer
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup

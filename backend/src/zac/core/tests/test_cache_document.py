@@ -9,7 +9,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.cache import (
     invalidate_document_other_cache,
@@ -17,6 +16,7 @@ from zac.core.cache import (
 )
 from zac.core.services import _fetch_document, find_document, get_document
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"

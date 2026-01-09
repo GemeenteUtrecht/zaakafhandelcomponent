@@ -10,7 +10,6 @@ from rest_framework.test import APIRequestFactory, APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
@@ -22,6 +21,7 @@ from zac.contrib.objects.kownsl.tests.factories import (
     review_request_factory,
     reviews_factory,
 )
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 

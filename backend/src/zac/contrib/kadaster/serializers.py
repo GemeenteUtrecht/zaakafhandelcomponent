@@ -2,9 +2,9 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.proxy import ProxySerializer
+from zac.tests.compat import APIModelSerializer
 
 from .data import (
     Address,

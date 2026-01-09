@@ -9,7 +9,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.kownsl.tests.factories import (
@@ -20,6 +19,7 @@ from zac.contrib.objects.kownsl.tests.factories import (
 )
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
 REVIEW_REQUEST_OBJECTTYPE = review_request_object_type_version_factory()

@@ -10,13 +10,13 @@ from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
 from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.core.api.serializers import InformatieObjectTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
 from zac.core.services import create_document, download_document, get_document
+from zac.tests.compat import APIModelSerializer
 from zgw.models import Zaak
 
 from .utils import get_zaaktype_from_identificatie

@@ -14,12 +14,12 @@ from zgw_consumers.api_models.catalogi import StatusType, ZaakType
 from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.activities.tests.factories import ActivityFactory, ActivityStatuses
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 

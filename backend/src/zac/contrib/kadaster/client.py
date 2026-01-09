@@ -9,7 +9,8 @@ import requests
 from requests.structures import CaseInsensitiveDict
 from zds_client.client import ClientError
 from zds_client.schema import get_headers
-from zgw_consumers.client import ZGWClient
+
+from zac.zgw_client import ZGWClient
 
 Object = Dict[str, Any]
 

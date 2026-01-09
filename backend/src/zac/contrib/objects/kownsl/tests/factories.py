@@ -3,9 +3,9 @@ from typing import Dict, Optional
 
 import factory
 import yaml
-from zgw_consumers.test import generate_oas_component, read_schema
 
 from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
+from zac.tests.compat import generate_oas_component, read_schema
 from zac.tests.utils import update_dictionary_from_kwargs
 
 from ..constants import KownslTypes

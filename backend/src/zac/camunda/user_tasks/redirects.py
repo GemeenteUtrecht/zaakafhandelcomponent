@@ -5,7 +5,8 @@ User tasks of the type zac:doRedirect.
 from dataclasses import dataclass
 
 from furl import furl
-from zgw_consumers.drf.serializers import APIModelSerializer
+
+from zac.tests.compat import APIModelSerializer
 
 from ..data import Task
 from . import Context, register, usertask_context_serializer

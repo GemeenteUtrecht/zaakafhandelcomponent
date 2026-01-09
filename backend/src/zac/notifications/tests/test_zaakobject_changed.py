@@ -11,7 +11,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
@@ -25,6 +24,7 @@ from zac.elasticsearch.api import (
 )
 from zac.elasticsearch.documents import ObjectDocument, ZaakObjectDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 

@@ -10,7 +10,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import AccessRequest
 from zac.accounts.tests.factories import AccessRequestFactory, UserFactory
@@ -21,6 +20,7 @@ from zac.contrib.board.tests.factories import BoardItemFactory
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 

@@ -8,11 +8,11 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.cache import invalidate_rollen_cache
 from zac.core.services import fetch_rol
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/482de5b2-4779-4b29-b84f-add888352182"

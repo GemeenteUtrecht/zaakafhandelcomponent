@@ -1,9 +1,9 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.utils import formatting
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.polymorphism import SerializerCls
+from zac.tests.compat import APIModelSerializer
 
 
 def usertask_context_serializer(serializer_cls: SerializerCls) -> SerializerCls:

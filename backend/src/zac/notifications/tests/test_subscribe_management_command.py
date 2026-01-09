@@ -7,9 +7,9 @@ import requests_mock
 from rest_framework.authtoken.models import Token
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.compat import mock_service_oas_get
 
 from ..models import Subscription
 from ..subscriptions import subscribe_all

@@ -7,7 +7,6 @@ from django.utils.translation import gettext as _
 
 from furl import furl
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import Group, User
@@ -17,6 +16,7 @@ from zac.contrib.dowc.utils import get_dowc_url_from_obj
 from zac.core.api.fields import SerializerSlugRelatedField
 from zac.core.api.serializers import ZaakEigenschapSerializer, ZaakSerializer
 from zac.elasticsearch.drf_api.serializers import ESListZaakDocumentSerializer
+from zac.tests.compat import APIModelSerializer
 
 from ...serializers import (
     MetaObjectGroupSerializerSlugRelatedField,

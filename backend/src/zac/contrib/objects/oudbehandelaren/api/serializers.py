@@ -1,9 +1,9 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import UserSerializer
+from zac.tests.compat import APIModelSerializer
 
 from ..data import Oudbehandelaar, Oudbehandelaren
 

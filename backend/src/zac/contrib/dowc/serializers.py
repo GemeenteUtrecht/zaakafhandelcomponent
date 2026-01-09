@@ -2,7 +2,8 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
+
+from zac.tests.compat import APIModelSerializer
 
 from .constants import DocFileTypes
 from .data import DowcResponse

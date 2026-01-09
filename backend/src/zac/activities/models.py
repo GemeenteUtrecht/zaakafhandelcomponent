@@ -66,7 +66,12 @@ class Activity(models.Model):
     class Meta:
         verbose_name = _("activity")
         verbose_name_plural = _("activities")
-        unique_together = (("zaak", "name"),)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["zaak", "name"],
+                name="unique_zaak_name",
+            ),
+        ]
 
     def __str__(self):
         return self.name

@@ -11,7 +11,6 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import get_zaak
@@ -28,6 +27,7 @@ from zac.elasticsearch.documents import (
     ZaakDocument,
 )
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 

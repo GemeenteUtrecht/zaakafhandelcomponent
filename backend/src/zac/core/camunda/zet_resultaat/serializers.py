@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from zgw_consumers.api_models.catalogi import ResultaatType
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.activities.api.serializers import ReadActivitySerializer
 from zac.activities.models import Activity
@@ -22,6 +21,7 @@ from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.core.api.serializers import ResultaatTypeSerializer
 from zac.core.cache import invalidate_zaak_cache
 from zac.core.services import get_resultaattypen
+from zac.tests.compat import APIModelSerializer
 
 
 @dataclass

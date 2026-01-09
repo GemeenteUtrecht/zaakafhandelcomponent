@@ -1,7 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.elasticsearch.data import FlattenedNestedAggregation, ParentAggregation
 from zac.elasticsearch.drf_api.fields import OrderedMultipleChoiceField
@@ -10,6 +9,7 @@ from zac.elasticsearch.drf_api.serializers import (
     SearchZaaktypeSerializer,
     ZaakDocumentSerializer,
 )
+from zac.tests.compat import APIModelSerializer
 from zac.utils.validators import ImmutableFieldValidator
 
 from ..models import Board, BoardColumn, BoardItem

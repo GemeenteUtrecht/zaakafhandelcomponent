@@ -8,10 +8,10 @@ from furl import furl
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.constants import APITypes, AuthTypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 
 from ..models import KadasterConfig
 

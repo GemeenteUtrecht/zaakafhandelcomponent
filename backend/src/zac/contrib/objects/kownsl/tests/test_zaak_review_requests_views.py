@@ -15,7 +15,6 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -27,6 +26,7 @@ from zac.contrib.objects.services import factory_reviews
 from zac.core.permissions import zaken_inzien, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 

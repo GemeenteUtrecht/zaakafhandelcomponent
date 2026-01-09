@@ -5,13 +5,13 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import PermissionReason
 from zac.accounts.models import AtomicPermission
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
 from ..permissions import activiteiten_inzien, activiteiten_schrijven

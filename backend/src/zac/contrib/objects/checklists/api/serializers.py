@@ -8,7 +8,6 @@ from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize
 from rest_framework import serializers
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.fields import UserSlugRelatedField
 from zac.accounts.api.serializers import UserSerializer
@@ -19,6 +18,7 @@ from zac.contrib.objects.services import (
     fetch_checklisttype,
 )
 from zac.core.services import update_object_record_data
+from zac.tests.compat import APIModelSerializer
 
 from ...serializers import (
     MetaObjectGroupSerializerSlugRelatedField,

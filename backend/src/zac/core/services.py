@@ -32,11 +32,9 @@ from zgw_consumers.api_models.catalogi import (
 from zgw_consumers.api_models.constants import RolTypes
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
-from zgw_consumers.client import ZGWClient
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
@@ -50,6 +48,7 @@ from zac.core.models import ApiSchemaConfig
 from zac.elasticsearch.searches import search_informatieobjects, search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
+from zac.zgw_client import ZGWClient, get_paginated_results
 from zgw.models import Zaak
 from zgw.models.zrc import ZaakInformatieObject
 

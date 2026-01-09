@@ -1,7 +1,6 @@
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
@@ -17,6 +16,7 @@ from zac.elasticsearch.drf_api.serializers import (
     StatusDocumentSerializer,
     ZaakTypeDocumentSerializer,
 )
+from zac.tests.compat import APIModelSerializer
 
 from .data import AccessRequestGroup, ActivityGroup, ChecklistAnswerGroup, TaskAndCase
 

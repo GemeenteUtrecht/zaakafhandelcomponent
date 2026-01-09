@@ -9,7 +9,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Rol, ZaakEigenschap
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
@@ -23,6 +22,7 @@ from zac.core.api.serializers import (
 )
 from zac.core.services import get_rollen, get_roltypen, get_zaakeigenschappen
 from zac.elasticsearch.searches import count_by_iot_in_zaak
+from zac.tests.compat import APIModelSerializer
 
 from .data import (
     ProcessEigenschap,

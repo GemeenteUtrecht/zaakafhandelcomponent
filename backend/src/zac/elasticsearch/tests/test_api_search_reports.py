@@ -11,7 +11,6 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import (
@@ -22,6 +21,7 @@ from zac.accounts.tests.factories import (
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 
 from ..documents import ZaakDocument, ZaakTypeDocument
 from ..drf_api.serializers import DEFAULT_ES_ZAAKDOCUMENT_FIELDS

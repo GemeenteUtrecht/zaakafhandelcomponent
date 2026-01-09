@@ -9,12 +9,12 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
+from zac.tests.compat import generate_oas_component
 from zgw.models.zrc import Zaak
 
 from ..camunda import (

@@ -9,7 +9,6 @@ from rest_framework import serializers
 from zds_client.client import ClientError
 from zgw_consumers.api_models.constants import RolOmschrijving
 from zgw_consumers.concurrent import parallel
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
@@ -29,6 +28,7 @@ from zac.camunda.user_tasks.context import REGISTRY
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol, get_zaak
+from zac.tests.compat import APIModelSerializer
 from zgw.models.zrc import Zaak
 
 

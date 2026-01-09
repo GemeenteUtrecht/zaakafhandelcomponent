@@ -11,7 +11,6 @@ from django.utils.timezone import make_aware, now
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.utils import permissions_related_to_user
 from zac.api.polymorphism import GroupPolymorphicSerializer
@@ -23,6 +22,7 @@ from zac.core.services import (
     get_zaak,
     get_zaaktypen,
 )
+from zac.tests.compat import APIModelSerializer
 from zgw.models.zrc import Zaak
 
 from ..constants import (

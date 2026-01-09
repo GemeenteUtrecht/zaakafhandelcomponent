@@ -11,14 +11,15 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.client import Client
 
 from zac.accounts.models import User
+from zac.client import Client
 from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
 
-ALL_VAS_SORTED = list(VertrouwelijkheidsAanduidingen.values.keys())
+# All VA values sorted by order (from least to most confidential)
+ALL_VAS_SORTED = [choice[0] for choice in VertrouwelijkheidsAanduidingen.choices]
 AN_HOUR = 60 * 60
 
 

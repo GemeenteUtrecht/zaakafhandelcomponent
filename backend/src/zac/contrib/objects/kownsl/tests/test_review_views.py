@@ -16,7 +16,6 @@ from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.accounts.tests.factories import UserFactory
@@ -42,6 +41,7 @@ from zac.contrib.objects.kownsl.tests.factories import (
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
