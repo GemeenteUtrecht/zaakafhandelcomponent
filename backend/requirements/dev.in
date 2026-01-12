@@ -1,4 +1,5 @@
 -r base.txt
+-r test-tools.txt
 
 # Helpers
 pip-tools<=7.4.1
