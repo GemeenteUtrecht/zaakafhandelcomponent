@@ -103,6 +103,8 @@ jobs:
         run: |
           npm ci
           npm run build --production
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Wait for ES to become available
         run: |
