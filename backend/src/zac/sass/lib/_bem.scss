@@ -85,7 +85,7 @@
   }
 }
 
-@mixin --m($m) {
+@mixin _m($m) {
   @include modifier($m) {
     @content;
   }
