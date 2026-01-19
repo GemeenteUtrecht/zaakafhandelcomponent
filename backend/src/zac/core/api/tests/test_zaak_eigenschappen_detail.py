@@ -8,7 +8,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -18,11 +17,12 @@ from zac.accounts.tests.factories import (
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/e3f5c6d2-0e49-4293-8428-26139f630950"
 ZAAK_EIGENSCHAP_URL = (
@@ -47,8 +47,8 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
 
         cls.user = SuperUserFactory.create()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -558,8 +558,14 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         )
 
         mock_resource_get(m, self.zaak)
+        mock_resource_get(m, self.zaaktype)
+        mock_resource_get(m, self.catalogus)
         mock_resource_get(m, zaak_eigenschap)
         mock_resource_get(m, eigenschap)
+        m.get(
+            f"{CATALOGI_ROOT}eigenschappen?zaaktype={self.zaaktype['url']}",
+            json=paginated_response([eigenschap]),
+        )
 
         response = self.client.patch(self.endpoint, data={"waarde": "new"})
 
@@ -699,10 +705,10 @@ class ZaakEigenschappenDetailResponseTests(ClearCachesMixin, APITestCase):
         m.get(catalogus["url"], json=catalogus)
 
         core_config = CoreConfig.get_solo()
-        objects_service = Service.objects.create(
+        objects_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        objecttypes_service = Service.objects.create(
+        objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
         core_config.primary_objects_api = objects_service
@@ -771,8 +777,8 @@ class ZaakPropertiesDetailPermissionTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc", "schemas/Catalogus", url=CATALOGUS_URL

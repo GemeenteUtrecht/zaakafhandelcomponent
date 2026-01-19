@@ -44,7 +44,7 @@ class OpenDocumentSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = OpenDowc
+        dataclass = OpenDowc
         fields = ("url", "locked_by")
 
 
@@ -86,7 +86,7 @@ class ZetResultaatContextSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ZetResultaatContext
+        dataclass = ZetResultaatContext
         fields = (
             "activiteiten",
             "checklist_vragen",

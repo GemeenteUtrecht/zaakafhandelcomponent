@@ -36,7 +36,7 @@ from ..models import ChecklistLock
 
 class QuestionChoiceSerializer(APIModelSerializer):
     class Meta:
-        model = QuestionChoice
+        dataclass = QuestionChoice
         fields = ("name", "value")
         extra_kwargs = {
             "name": {
@@ -57,7 +57,7 @@ class ChecklistQuestionSerializer(APIModelSerializer):
     is_multiple_choice = serializers.SerializerMethodField(source="choices")
 
     class Meta:
-        model = ChecklistQuestion
+        dataclass = ChecklistQuestion
         fields = ("question", "order", "choices", "is_multiple_choice")
         extra_kwargs = {
             "question": {
@@ -79,7 +79,7 @@ class ChecklistTypeSerializer(APIModelSerializer):
     questions = ChecklistQuestionSerializer(many=True, required=True)
 
     class Meta:
-        model = ChecklistType
+        dataclass = ChecklistType
         fields = ("questions",)
 
 
@@ -104,7 +104,7 @@ class ChecklistAnswerSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ChecklistAnswer
+        dataclass = ChecklistAnswer
         fields = (
             "question",
             "answer",
@@ -154,7 +154,7 @@ class ChecklistSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = Checklist
+        dataclass = Checklist
         fields = ("answers", "locked_by", "zaak", "locked")
         extra_kwargs = {"locked": {"read_only": True}}
 

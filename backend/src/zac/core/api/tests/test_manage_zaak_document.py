@@ -16,7 +16,6 @@ from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import (
@@ -28,6 +27,7 @@ from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.data import DowcResponse, OpenDowc
 from zac.core.api.data import AuditTrailData
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
@@ -121,13 +121,13 @@ class ZaakDocumentPermissionTests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(
+        ServiceFactory.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
-        drc = Service.objects.create(
+        drc = ServiceFactory.create(
             label="Documents API", api_type=APITypes.drc, api_root=DOCUMENTS_ROOT
         )
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
@@ -583,13 +583,13 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(
+        ServiceFactory.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
-        drc = Service.objects.create(
+        drc = ServiceFactory.create(
             label="Documents API", api_type=APITypes.drc, api_root=DOCUMENTS_ROOT
         )
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,

@@ -20,7 +20,7 @@ class OudbehandelaarSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = Oudbehandelaar
+        dataclass = Oudbehandelaar
         fields = ("email", "ended", "started", "user", "changer")
         extra_kwargs = {
             "ended": {"help_text": _("Datetime at which ROL ended.")},
@@ -36,7 +36,7 @@ class OudbehandelarenSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = Oudbehandelaren
+        dataclass = Oudbehandelaren
         fields = ("zaak", "oudbehandelaren")
         extra_kwargs = {
             "zaak": {"help_text": _("URL-reference to ZAAK.")},

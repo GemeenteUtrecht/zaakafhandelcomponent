@@ -25,7 +25,7 @@ class ValidSignContextSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ValidSignContext
+        dataclass = ValidSignContext
         fields = ("documents_link",)
 
 

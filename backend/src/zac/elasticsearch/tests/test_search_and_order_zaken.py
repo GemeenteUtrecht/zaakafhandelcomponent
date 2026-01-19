@@ -7,7 +7,6 @@ import requests_mock
 from elasticsearch_dsl import Index
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     AtomicPermissionFactory,
@@ -17,6 +16,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component
 
 from ..documents import ZaakDocument, ZaakTypeDocument
@@ -130,7 +130,7 @@ class SearchZakenTests(ESMixin, TestCase):
 
     @requests_mock.Mocker()
     def test_search_only_allowed_blueprint(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",

@@ -101,7 +101,7 @@ logger = logging.getLogger(__name__)
 
 class InformatieObjectTypeSerializer(APIModelSerializer):
     class Meta:
-        model = InformatieObjectType
+        dataclass = InformatieObjectType
         fields = (
             "url",
             "omschrijving",
@@ -148,7 +148,7 @@ class GetZaakDocumentSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = Document
+        dataclass = Document
         fields = (
             "auteur",
             "beschrijving",
@@ -543,13 +543,23 @@ class CreateZaakSerializer(serializers.Serializer):
     )
 
     def validate_object(self, object: str) -> Dict:
+        import requests
+
         try:
             object = fetch_object(object)
-        except ClientError as exc:
+        except (ClientError, requests.HTTPError) as exc:
+            if isinstance(exc, requests.HTTPError):
+                # Try to extract detail from JSON response
+                try:
+                    detail = exc.response.json().get("detail", str(exc))
+                except (ValueError, AttributeError):
+                    detail = str(exc)
+            else:
+                detail = exc.args[0]["detail"]
             raise serializers.ValidationError(
                 _(
                     "Fetching OBJECT with URL: `{object}` raised a Client Error with detail: `{detail}`.".format(
-                        object=object, detail=exc.args[0]["detail"]
+                        object=object, detail=detail
                     )
                 )
             )
@@ -621,7 +631,7 @@ class ZaakSerializer(serializers.Serializer):
 
 class ZaakTypeSerializer(APIModelSerializer):
     class Meta:
-        model = ZaakType
+        dataclass = ZaakType
         fields = (
             "url",
             "catalogus",
@@ -632,7 +642,7 @@ class ZaakTypeSerializer(APIModelSerializer):
 
 class ResultaatTypeSerializer(APIModelSerializer):
     class Meta:
-        model = ResultaatType
+        dataclass = ResultaatType
         fields = ("url", "omschrijving")
 
 
@@ -640,7 +650,7 @@ class ResultaatSerializer(APIModelSerializer):
     resultaattype = ResultaatTypeSerializer()
 
     class Meta:
-        model = Resultaat
+        dataclass = Resultaat
         fields = ("url", "resultaattype", "toelichting")
 
 
@@ -691,7 +701,7 @@ class ZaakDetailSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = Zaak
+        dataclass = Zaak
         fields = (
             "url",
             "identificatie",
@@ -787,12 +797,40 @@ class ZaakDetailSerializer(APIModelSerializer):
         return False
 
 
-class UpdateZaakDetailSerializer(APIModelSerializer):
+class UpdateZaakDetailSerializer(serializers.Serializer):
+    """
+    Serializer for updating ZAAK details.
+
+    This is a plain Serializer (not APIModelSerializer/DataclassSerializer) because:
+    1. It's only used for input validation, not for serializing Zaak instances
+    2. It only handles a subset of Zaak fields (partial update)
+    3. It includes 'reden' which isn't part of the Zaak dataclass
+    """
+
+    einddatum = serializers.DateField(
+        required=False, allow_null=True, help_text=_("End date of the ZAAK.")
+    )
+    einddatum_gepland = serializers.DateField(
+        required=False,
+        allow_null=True,
+        help_text=_("Planned end date of the ZAAK."),
+    )
+    omschrijving = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text=_("Description of the ZAAK."),
+    )
     reden = serializers.CharField(
         required=False,
+        write_only=True,
         help_text=_(
             "Reason for the edit, used in audit trail. Required when `vertrouwelijkheidaanduiding` is changed"
         ),
+    )
+    toelichting = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text=_("Additional explanation for the ZAAK."),
     )
     vertrouwelijkheidaanduiding = serializers.ChoiceField(
         VertrouwelijkheidsAanduidingen.choices,
@@ -805,40 +843,41 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
         help_text=_("GeoJSON which represents the coordinates of the ZAAK"),
     )
 
-    class Meta:
-        model = Zaak
-        fields = (
-            "einddatum",
-            "einddatum_gepland",
-            "omschrijving",
-            "reden",
-            "toelichting",
-            "vertrouwelijkheidaanduiding",
-            "zaakgeometrie",
-        )
-        extra_kwargs = {
-            "einddatum": {
-                "required": False,
-            },
-            "einddatum_gepland": {
-                "required": False,
-            },
-            "omschrijving": {
-                "required": False,
-                "allow_blank": True,
-            },
-            "toelichting": {
-                "required": False,
-                "allow_blank": True,
-            },
-        }
+    def to_representation(self, instance):
+        """
+        Convert validated data to output representation.
+
+        Only includes fields that were actually provided in the input data.
+        Ensures TextChoices enums are converted to their string values.
+        """
+        # For a plain Serializer, instance is the validated_data dict
+        ret = {}
+
+        # Only include fields that were actually in the validated data
+        for field_name, field in self.fields.items():
+            if field_name in instance:
+                value = instance[field_name]
+
+                # Use the field's to_representation to properly serialize the value
+                # This handles dates, enums, and other complex types
+                value = field.to_representation(value)
+
+                ret[field_name] = value
+
+        # Add einddatum_gepland: None if einddatum was provided but einddatum_gepland wasn't
+        if (
+            "einddatum" in ret
+            and ret["einddatum"] is not None
+            and "einddatum_gepland" not in ret
+        ):
+            ret["einddatum_gepland"] = None
+
+        return ret
 
     def validate(self, attrs):
-        validated_data = super().validate(attrs)
-
         zaak = self.context["zaak"]
-        vertrouwelijkheidaanduiding = validated_data.get("vertrouwelijkheidaanduiding")
-        reden = validated_data.get("reden")
+        vertrouwelijkheidaanduiding = attrs.get("vertrouwelijkheidaanduiding")
+        reden = attrs.get("reden")
 
         if (
             not reden
@@ -849,12 +888,12 @@ class UpdateZaakDetailSerializer(APIModelSerializer):
                 "'reden' is required when 'vertrouwelijkheidaanduiding' is changed"
             )
 
-        return validated_data
+        return attrs
 
 
 class StatusTypeSerializer(APIModelSerializer):
     class Meta:
-        model = StatusType
+        dataclass = StatusType
         fields = (
             "url",
             "omschrijving",
@@ -871,7 +910,38 @@ class StatusTypeSerializer(APIModelSerializer):
             "is_eindstatus": {"read_only": True},
         }
 
+    def to_internal_value(self, data):
+        """
+        For input deserialization, only extract and validate the URL.
+
+        When creating a Status, the client sends {"statustype": {"url": "..."}}.
+        We validate the URL and return it as a dict for the view to access.
+        """
+        # If data is already a string (URL), wrap it in a dict
+        if isinstance(data, str):
+            url = data
+        else:
+            # Extract URL from dict: {"url": "..."}
+            url = data.get("url", "")
+
+        # Validate the URL using field validator
+        url = self.fields["url"].run_validation(url)
+
+        # Validate the URL against allowed statustypen for this zaaktype
+        try:
+            url = self.validate_url(url)
+        except serializers.ValidationError as e:
+            # Re-raise with proper field nesting so error appears as "statustype.url"
+            raise serializers.ValidationError({"url": e.detail})
+
+        # Return a dict with the validated URL
+        # This allows the view to access serializer.validated_data["statustype"]["url"]
+        return {"url": url}
+
     def validate_url(self, url: str) -> str:
+        """
+        Validate that the statustype URL is allowed for this zaaktype.
+        """
         zaaktype = self.context["zaaktype"]
         if not isinstance(zaaktype, ZaakType):
             zaaktype = fetch_zaaktype(zaaktype)
@@ -882,11 +952,33 @@ class StatusTypeSerializer(APIModelSerializer):
         return url
 
 
+class CreateZaakStatusSerializer(serializers.Serializer):
+    """
+    Serializer for creating a new Status (input only).
+
+    This is a plain Serializer because it's only used for input validation,
+    not for serializing Status instances. The client sends partial data
+    (statustype URL and optional toelichting), which doesn't match the
+    full Status dataclass structure.
+    """
+
+    statustype = StatusTypeSerializer()
+    statustoelichting = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text=_("Explanation of the status."),
+    )
+
+
 class ZaakStatusSerializer(APIModelSerializer):
+    """
+    Serializer for reading Status instances (output only).
+    """
+
     statustype = StatusTypeSerializer()
 
     class Meta:
-        model = Status
+        dataclass = Status
         fields = (
             "url",
             "datum_status_gezet",
@@ -907,7 +999,7 @@ class EigenschapSpecificatieSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = EigenschapSpecificatie
+        dataclass = EigenschapSpecificatie
         fields = (
             "groep",
             "formaat",
@@ -921,7 +1013,7 @@ class EigenschapSerializer(APIModelSerializer):
     specificatie = EigenschapSpecificatieSerializer(label=_("EIGENSCHAP definition"))
 
     class Meta:
-        model = Eigenschap
+        dataclass = Eigenschap
         fields = (
             "url",
             "naam",
@@ -938,7 +1030,7 @@ class CharValueSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ZaakEigenschap
+        dataclass = ZaakEigenschap
         fields = ("waarde",)
 
 
@@ -954,7 +1046,7 @@ class NumberValueSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ZaakEigenschap
+        dataclass = ZaakEigenschap
         fields = ("waarde",)
 
 
@@ -966,7 +1058,7 @@ class DateValueSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ZaakEigenschap
+        dataclass = ZaakEigenschap
         fields = ("waarde",)
 
 
@@ -978,7 +1070,7 @@ class DateTimeValueSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ZaakEigenschap
+        dataclass = ZaakEigenschap
         fields = ("waarde",)
 
 
@@ -1004,7 +1096,7 @@ class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
     eigenschap = EigenschapSerializer(read_only=True)
 
     class Meta:
-        model = ZaakEigenschap
+        dataclass = ZaakEigenschap
         fields = (
             "url",
             "formaat",
@@ -1034,27 +1126,9 @@ class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
     waarde = serializers.CharField(
         help_text=_(
             "Value of ZAAKEIGENSCHAP. Must be formatted as defined by the EIGENSCHAP spec."
-        )
+        ),
+        validators=(EigenschapKeuzeWaardeValidator(),),
     )
-
-    def validate_waarde(self, waarde):
-        zaak = get_zaak(zaak_url=self.instance.zaak_url)
-        zaaktype = fetch_zaaktype(zaak.zaaktype)
-        zt_attrs = {
-            data["naam"]: data
-            for data in fetch_zaaktypeattributen_objects_for_zaaktype(zaaktype=zaaktype)
-        }
-        if self.instance.naam in zt_attrs:
-            if enum := zt_attrs[self.instance.naam].get("enum"):
-                if waarde not in enum:
-                    raise serializers.ValidationError(
-                        _(
-                            "Invalid `waarde`: `{waarde}`. Zaakeigenschap with `naam`: `{naam}` must take value from: `{choices}`.".format(
-                                waarde=waarde, naam=self.instance.naam, choices=enum
-                            )
-                        )
-                    )
-        return waarde
 
 
 class RelatedZaakDetailSerializer(APIModelSerializer):
@@ -1063,7 +1137,7 @@ class RelatedZaakDetailSerializer(APIModelSerializer):
     resultaat = ResultaatSerializer(help_text=_("Expanded RESULTAAT of ZAAK."))
 
     class Meta:
-        model = Zaak
+        dataclass = Zaak
         fields = (
             "bronorganisatie",
             "identificatie",
@@ -1084,7 +1158,7 @@ class RelatedZaakSerializer(serializers.Serializer):
 
 class RolTypeSerializer(APIModelSerializer):
     class Meta:
-        model = RolType
+        dataclass = RolType
         fields = ("url", "omschrijving", "omschrijving_generiek")
 
 
@@ -1104,7 +1178,7 @@ class ReadRolSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = Rol
+        dataclass = Rol
         fields = (
             "url",
             "betrokkene_type",
@@ -1323,14 +1397,17 @@ class RolSerializer(PolymorphicSerializer):
         return data
 
 
-class DestroyRolSerializer(APIModelSerializer):
+class DestroyRolSerializer(serializers.Serializer):
+    """
+    Serializer for deleting a ROL (input validation only).
+
+    This is a plain Serializer because it's only used for input validation
+    (just the URL), not for creating Rol dataclass instances.
+    """
+
     url = serializers.URLField(
         required=True, help_text=_("URL-reference to ROL itself.")
     )
-
-    class Meta:
-        model = Rol
-        fields = ("url",)
 
     def validate_url(self, url):
         if not (zaak := self.context.get("zaak")):
@@ -1382,13 +1459,13 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ZaakObjectGroup
+        dataclass = ZaakObjectGroup
         fields = ("object_type", "label", "items")
 
 
 class CatalogusSerializer(APIModelSerializer):
     class Meta:
-        model = Catalogus
+        dataclass = Catalogus
         fields = ("domein", "url")
 
 
@@ -1396,7 +1473,7 @@ class ZaakTypeAggregateSerializer(APIModelSerializer):
     catalogus = CatalogusSerializer(help_text=_("CATALOGUS that ZAAKTYPE belongs to."))
 
     class Meta:
-        model = ZaakType
+        dataclass = ZaakType
         fields = ("catalogus", "omschrijving", "identificatie", "url")
         extra_kwargs = {
             "url": {
@@ -1481,7 +1558,7 @@ class VertrouwelijkheidsAanduidingSerializer(APIModelSerializer):
     value = serializers.CharField(help_text=_("Value of classication."))
 
     class Meta:
-        model = VertrouwelijkheidsAanduidingData
+        dataclass = VertrouwelijkheidsAanduidingData
         fields = ("label", "value")
 
 
@@ -1596,6 +1673,9 @@ class ZaakObjectProxySerializer(ProxySerializer):
         return self.initial_data
 
     def create(self, validated_data):
+        import requests
+        from rest_framework.exceptions import APIException
+
         if validated_data.get("object_type", "") == "overige":
             obj = fetch_object(self.initial_data["object"])
             if not validated_data.get("object_type_overige"):
@@ -1611,7 +1691,21 @@ class ZaakObjectProxySerializer(ProxySerializer):
                 validated_data["relatieomschrijving"] = (
                     f"{obj['type']['name']} van de ZAAK."
                 )
-        related_object = relate_object_to_zaak(validated_data)
+
+        try:
+            related_object = relate_object_to_zaak(validated_data)
+        except (ClientError, requests.HTTPError) as exc:
+            # Convert HTTP errors to DRF APIException (500 error)
+            if isinstance(exc, requests.HTTPError):
+                # Try to extract detail from JSON response
+                try:
+                    detail = exc.response.json().get("detail", str(exc))
+                except (ValueError, AttributeError):
+                    detail = str(exc)
+            else:
+                detail = exc.args[0].get("detail", str(exc))
+            raise APIException(detail=detail)
+
         return related_object
 
 

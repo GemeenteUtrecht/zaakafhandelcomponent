@@ -136,7 +136,7 @@ class FlattenedNestedAggregationSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = FlattenedNestedAggregation
+        dataclass = FlattenedNestedAggregation
         fields = (
             "zaaktype_omschrijving",
             "zaaktype_catalogus",
@@ -162,7 +162,7 @@ class SummaryManagementDashboardSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ParentAggregation
+        dataclass = ParentAggregation
         fields = ("catalogus", "zaaktypen", "count")
 
     def to_representation(self, instance):

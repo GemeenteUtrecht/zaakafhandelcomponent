@@ -21,7 +21,6 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 import zac.core.camunda.start_process.serializers as start_serializers
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
@@ -41,6 +40,7 @@ from zac.core.models import CoreConfig
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -98,12 +98,12 @@ class GetUserTaskContextViewTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory.create()
-        Service.objects.create(
+        ServiceFactory.create(
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
         )
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -685,7 +685,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         cls.user = UserFactory.create()
 
-        drc = Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        drc = ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         config = CoreConfig.get_solo()
         config.primary_drc = drc
         config.save()
@@ -696,7 +696,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
         )
 
         cls.document = factory(Document, cls.document_dict)
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
@@ -734,7 +734,7 @@ class PutUserTaskViewTests(ClearCachesMixin, APITestCase):
             ],
         )
         cls.zaaktype_obj = factory(ZaakType, cls.zaaktype)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",

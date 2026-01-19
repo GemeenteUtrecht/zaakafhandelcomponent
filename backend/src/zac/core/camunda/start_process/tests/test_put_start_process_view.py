@@ -11,7 +11,6 @@ from zgw_consumers.api_models.catalogi import Eigenschap, RolType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.api.context import ZaakContext
@@ -19,6 +18,7 @@ from zac.camunda.data import Task
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.rollen import Rol
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -51,13 +51,13 @@ class PutCamundaZaakProcessUserTaskViewTests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
         cls.user = SuperUserFactory.create()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        objecttypes_service = Service.objects.create(
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
-        objects_service = Service.objects.create(
+        objects_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
 

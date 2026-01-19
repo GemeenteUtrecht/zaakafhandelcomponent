@@ -51,7 +51,7 @@ class CreatedProcessInstanceSerializer(serializers.Serializer):
 
 class ProcessEigenschapChoiceSerializer(APIModelSerializer):
     class Meta:
-        model = ProcessEigenschapChoice
+        dataclass = ProcessEigenschapChoice
         fields = ("label", "value")
 
 
@@ -66,7 +66,7 @@ class ProcessEigenschapSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ProcessEigenschap
+        dataclass = ProcessEigenschap
         fields = ("choices", "eigenschap", "label", "default", "required", "order")
 
 
@@ -82,7 +82,7 @@ class ProcessInformatieObjectSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ProcessInformatieObject
+        dataclass = ProcessInformatieObject
         fields = (
             "already_uploaded_informatieobjecten",
             "allow_multiple",
@@ -99,7 +99,7 @@ class ProcessRolSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ProcessRol
+        dataclass = ProcessRol
         fields = ("betrokkene_type", "label", "roltype", "required", "order")
 
 
@@ -129,7 +129,7 @@ class CamundaZaakProcessContextSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = StartProcessFormContext
+        dataclass = StartProcessFormContext
         fields = (
             "benodigde_bijlagen",
             "benodigde_rollen",

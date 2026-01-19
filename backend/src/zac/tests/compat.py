@@ -4,11 +4,14 @@ Compatibility utilities for testing with zgw-consumers 1.x
 This module provides compatibility shims for testing utilities that moved
 between zgw-consumers versions.
 
-In zgw-consumers 1.x, test utilities moved from zgw_consumers.test to
-zgw_consumers_oas package.
+In zgw-consumers 1.x:
+- Test utilities moved from zgw_consumers.test to zgw_consumers_oas package
+- APIModelSerializer was removed with suggestion to use djangorestframework-dataclasses
+
+We follow the official recommendation and use djangorestframework-dataclasses.
 """
 
-from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers_oas import generate_oas_component, read_schema
 from zgw_consumers_oas.mocks import mock_service_oas_get
 
@@ -19,16 +22,6 @@ __all__ = [
     "APIModelSerializer",
 ]
 
-
-class APIModelSerializer(serializers.Serializer):
-    """
-    Backward compatibility shim for zgw_consumers.drf.serializers.APIModelSerializer.
-
-    In zgw-consumers <1.0, this was a serializer that could work with API models
-    (dataclasses with type hints). In zgw-consumers 1.x, this class was removed.
-
-    This is a simple replacement that just extends DRF's Serializer. Subclasses
-    must define their fields explicitly.
-    """
-
-    pass
+# Backward compatibility alias: APIModelSerializer -> DataclassSerializer
+# Usage: Change Meta.model to Meta.dataclass in your serializers
+APIModelSerializer = DataclassSerializer

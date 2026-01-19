@@ -9,7 +9,6 @@ from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
@@ -27,6 +26,7 @@ from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.documents import ZaakDocument, ZaakTypeDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 
 from ..data import ActivityGroup
 
@@ -68,8 +68,8 @@ class SummaryTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_summary_permission(self, m):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         user = UserFactory.create()
         group_1 = GroupFactory.create()

@@ -257,7 +257,7 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
 
 class BPMNSerializer(APIModelSerializer):
     class Meta:
-        model = BPMN
+        dataclass = BPMN
         fields = (
             "id",
             "bpmn20_xml",
@@ -306,7 +306,7 @@ class HistoricUserTaskSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = HistoricUserTask
+        dataclass = HistoricUserTask
         fields = (
             "assignee",
             "completed",

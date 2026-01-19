@@ -11,11 +11,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterUniqueTogether(
-            name="boarditem",
+            name="boardcolumn",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name="boarditem",
+            model_name="boardcolumn",
             constraint=models.UniqueConstraint(
                 fields=["board", "slug"], name="unique_board_slug"
             ),
