@@ -6,10 +6,10 @@ import requests_mock
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -188,8 +188,8 @@ class ReIndexZaakElasticsearchAPITests(
 
     def setUp(self):
         super().setUp()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
     def test_permissions_not_token_authenticated(self, m):
         response = self.client.post(self.endpoint)

@@ -9,28 +9,15 @@ ZGWClient from zgw-consumers <1.0. It builds on ape_pie's APIClient and adds:
 - OAS schema support for operation resolution
 """
 
+import logging
 from typing import Any, Union
-from urllib.parse import urljoin
 
 import yaml
 from ape_pie import APIClient
-from furl import furl
 from requests import PreparedRequest
-from zds_client.log import Log
 from zgw_consumers.models import Service
 
-
-class DisabledLog(Log):
-    """
-    Do not log any requests in memory.
-
-    * this prevents memory leaking
-    * the default implementation is not thread-safe, yet we use this client in thread
-      pools
-    * we're not visualizing this anywhere anyway
-    """
-
-    pass
+logger = logging.getLogger(__name__)
 
 
 class NoService(Exception):
@@ -80,9 +67,6 @@ class ZGWClient(APIClient):
         response = client.post("zaken", json={...})
     """
 
-    # Class-level descriptor for logging (disabled by default for ZAC)
-    _log = DisabledLog()
-
     def __init__(
         self,
         base_url: str,
@@ -103,6 +87,30 @@ class ZGWClient(APIClient):
         self.service = service
         self._schema = None  # Lazy-loaded OAS schema
 
+        # Add credentials() method to auth object for backward compatibility
+        # In zgw-consumers <1.0, auth had a credentials() method
+        # In zgw-consumers 1.x, auth objects are AuthBase subclasses without this method
+        if self.auth and not hasattr(self.auth, "credentials"):
+            self._wrap_auth_with_credentials()
+
+    def _wrap_auth_with_credentials(self):
+        """
+        Add a credentials() method to the auth object for backward compatibility.
+
+        Legacy code calls client.auth.credentials() to get auth headers.
+        In zgw-consumers 1.x, auth objects don't have this method, so we add it.
+        """
+
+        def credentials():
+            """Extract auth headers from the auth object."""
+            req = PreparedRequest()
+            req.headers = {}
+            self.auth(req)
+            return dict(req.headers)
+
+        # Monkey-patch the credentials method onto the auth object
+        self.auth.credentials = credentials
+
     def _load_schema(self):
         """
         Lazy-load the OAS schema for this service.
@@ -122,16 +130,47 @@ class ZGWClient(APIClient):
 
         # Try to load from test schemas first (during testing)
         try:
+            from zgw_consumers.constants import APITypes
             from zgw_consumers_oas import read_schema
 
             # Map API types to schema file names
             api_type = getattr(self.service, "api_type", None)
+            api_root = getattr(self.service, "api_root", "").lower()
+            schema_name = None
+
             if api_type:
-                schema_bytes = read_schema(api_type)
-                self._schema = yaml.safe_load(schema_bytes)
-                return self._schema
-        except Exception:
+                # First check URL patterns for non-standard ZGW APIs
+                # This handles cases where api_type is incorrectly set (e.g., ztc for objecttypes)
+                if "objecttype" in api_root:
+                    # Covers both objecttype.nl and objecttypes in path
+                    schema_name = "objecttypes"
+                elif "object" in api_root:
+                    # Must come after objecttype check
+                    schema_name = "objects"
+                elif "kownsl" in api_root:
+                    schema_name = "kownsl"
+                elif "zac" in api_root:
+                    schema_name = "zac"
+                # If no URL pattern matched, use api_type directly
+                elif api_type == APITypes.orc:
+                    # Unknown orc-type API, can't determine schema
+                    logger.debug(
+                        f"Cannot infer schema name for APITypes.orc service with api_root: {api_root}"
+                    )
+                    return None
+                else:
+                    # Use api_type as schema name (standard ZGW APIs like zrc, ztc, drc)
+                    schema_name = api_type
+
+            if not schema_name:
+                return None
+
+            schema_bytes = read_schema(schema_name)
+            self._schema = yaml.safe_load(schema_bytes)
+            return self._schema
+        except Exception as e:
             # Schema loading from files failed - try remote or fall back to None
+            logger.debug(f"Could not load OAS schema for {self.service}: {e}")
             pass
 
         # In production, we don't fetch schemas from remote services
@@ -203,7 +242,7 @@ class ZGWClient(APIClient):
         resource, action = parts
 
         # Apply pluralization rules for Dutch ZGW APIs
-        resource_plural = resource  # self._pluralize(resource)
+        resource_plural = self._pluralize(resource)
 
         method_map = {
             "list": ("GET", f"{resource_plural}"),
@@ -356,63 +395,28 @@ class ZGWClient(APIClient):
 
     def request(self, method: str, url: str, *args, **kwargs):
         """
-        Override request to add logging functionality.
+        Make HTTP request using the parent APIClient.
 
-        This intercepts all HTTP requests and logs them via the _log descriptor.
+        ZAC doesn't use task-based logging, so this simply delegates to the parent.
         """
-        # Call the parent request method
-        response = super().request(method, url, *args, **kwargs)
+        return super().request(method, url, *args, **kwargs)
 
-        # Log the request/response if logging is enabled
-        if self._log.task is not None:
-            # Extract request data
-            request_data = kwargs.get("json") or kwargs.get("data")
-            request_params = kwargs.get("params")
+    def refresh_auth(self):
+        """
+        Re-generate a JWT with the given credentials.
 
-            # Get the auth headers
-            auth_headers = self.auth_header.copy()
+        If a client instance is long-lived, the JWT may expire leading to 403 errors.
+        This method regenerates a new JWT with the same credentials.
 
-            # Build the complete request headers
-            request_headers = {
-                "Accept": "application/json",
-                "Accept-Crs": "EPSG:4326",
-                "Content-Crs": "EPSG:4326",
-                "Content-Type": "application/json",
-            }
-            request_headers.update(auth_headers)
+        This is particularly useful in long-running processes like elasticsearch indexing
+        that may run for hours.
+        """
+        if not self.auth:
+            return
 
-            # Extract response data
-            try:
-                response_data = response.json()
-            except Exception:
-                response_data = response.text
-
-            # Extract just scheme + netloc from base_url for logging
-            # Extract just scheme + netloc from base_url for logging
-            base_furl = furl(self.base_url)
-            service_base_url = f"{base_furl.scheme}://{base_furl.netloc}"
-
-            # Construct the full request URL for logging
-            # The url parameter is a relative path, so we need to combine it with base_url
-            full_request_url = urljoin(self.base_url, url)
-
-            # Log the request/response
-            # Ensure response headers is a plain dict for consistent logging
-            response_headers_dict = dict(response.headers) if response.headers else {}
-
-            self._log.add(
-                service=service_base_url,
-                url=full_request_url,
-                method=method.upper(),
-                request_headers=request_headers,
-                request_data=request_data,
-                response_status=response.status_code,
-                response_headers=response_headers_dict,
-                response_data=response_data,
-                params=request_params,
-            )
-
-        return response
+        # For JWT auth, clear the cached credentials to force regeneration
+        if hasattr(self.auth, "_credentials"):
+            delattr(self.auth, "_credentials")
 
     # API convenience methods for ZGW resources
     # These provide a higher-level API on top of the HTTP methods
@@ -427,7 +431,7 @@ class ZGWClient(APIClient):
         Args:
             operation_id: The OAS operation ID (e.g., "catalogus_list", "zaak_create")
             data: Optional data to send with the request
-            **kwargs: Additional parameters (uuid, path params, etc.)
+            **kwargs: Additional parameters (uuid, path params, url, etc.)
 
         Returns:
             Response JSON as a dictionary
@@ -435,14 +439,100 @@ class ZGWClient(APIClient):
         Example:
             result = client.operation("catalogus_list", params={"domein": "ABR"})
             doc = client.operation("enkelvoudiginformatieobject_lock", uuid="123", data={})
+            doc = client.operation("enkelvoudiginformatieobject_lock", data={}, url="https://api.nl/doc/123/lock")
         """
         # Separate path kwargs from request kwargs
         request_kwargs = kwargs.pop("request_kwargs", {})
         params = kwargs.pop("params", None) or request_kwargs.get("params")
         headers = request_kwargs.get("headers")
 
+        # Check if explicit URL is provided (for backward compatibility)
+        explicit_url = kwargs.pop("url", None)
+
         # Get the path and method for this operation
-        path, method = self._get_operation_url(operation_id, **kwargs)
+        if explicit_url:
+            # Use explicit URL - make it relative to base_url
+            # The URL might be a full URL or already relative
+            if explicit_url.startswith("http://") or explicit_url.startswith(
+                "https://"
+            ):
+                # It's a full URL - make it relative to base_url
+                # Remove the base_url prefix to get the path
+                base_url = self.base_url.rstrip("/")
+                if explicit_url.startswith(base_url):
+                    path = explicit_url[len(base_url) :].lstrip("/")
+                else:
+                    # URL doesn't match base_url - extract just the path
+                    from urllib.parse import urlparse
+
+                    parsed = urlparse(explicit_url)
+                    path = parsed.path.lstrip("/")
+            else:
+                # Already a relative path - but might include the server base path from OAS schema
+                # The OAS schema's servers section (e.g., /api/v2) is already in base_url,
+                # so we need to strip it from the path if present
+                from urllib.parse import parse_qs, urlparse
+
+                # Parse to separate path from query string
+                # Even if it's a relative path, it might have query parameters
+                if "?" in explicit_url:
+                    path_part, query_part = explicit_url.split("?", 1)
+                    path = path_part.lstrip("/")
+                    # Extract query parameters to merge with req_kwargs params later
+                    query_from_url = parse_qs(query_part)
+                    # Flatten query params (parse_qs returns lists)
+                    if not params:
+                        params = {}
+                    for key, values in query_from_url.items():
+                        params[key] = values[0] if len(values) == 1 else values
+                else:
+                    path = explicit_url.lstrip("/")
+
+                # Extract the base path from base_url to strip from the path
+                base_parsed = urlparse(self.base_url)
+                base_path = base_parsed.path.strip("/")
+
+                # If the path starts with the base path, strip it
+                if base_path and path.startswith(base_path + "/"):
+                    path = path[len(base_path) + 1 :]
+                elif base_path and path == base_path:
+                    path = ""
+
+            # Determine the HTTP method for this operation
+            # Try to get it from the schema first
+            method = None
+            schema = self._load_schema()
+            if schema and "paths" in schema:
+                # Search for the operation in the schema to get the correct method
+                for schema_path, path_item in schema["paths"].items():
+                    for http_method, operation in path_item.items():
+                        if http_method.lower() in [
+                            "get",
+                            "post",
+                            "put",
+                            "patch",
+                            "delete",
+                        ]:
+                            if operation.get("operationId") == operation_id:
+                                method = http_method.upper()
+                                break
+                    if method:
+                        break
+
+            # Fallback to inferring method from operation_id if not found in schema
+            if not method:
+                if "_lock" in operation_id or "_unlock" in operation_id:
+                    method = "POST"
+                elif "_update" in operation_id:
+                    method = "PATCH" if "partial" in operation_id else "PUT"
+                elif "_create" in operation_id:
+                    method = "POST"
+                elif "_delete" in operation_id:
+                    method = "DELETE"
+                else:
+                    method = "GET"
+        else:
+            path, method = self._get_operation_url(operation_id, **kwargs)
 
         # Build request kwargs
         req_kwargs = {}
@@ -514,7 +604,7 @@ class ZGWClient(APIClient):
             zaak = client.retrieve("zaak", url="...", request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}})
         """
         # Extract request_kwargs for headers/params
-        request_kwargs = kwargs.pop("request_kwargs", {})
+        request_kwargs = kwargs.pop("request_kwargs", {}) or {}
 
         if url:
             # URL provided directly - extract path from full URL
@@ -615,18 +705,20 @@ class ZGWClient(APIClient):
         response.raise_for_status()
         return response.json()
 
-    def partial_update(self, resource: str, **kwargs) -> dict:
+    def partial_update(self, resource: str, data: dict | None = None, **kwargs) -> dict:
         """
         Partially update a resource via PATCH.
 
         Args:
             resource: The resource type
+            data: Optional dict of fields to update (can also be passed as **kwargs)
             **kwargs: Fields to update, plus url or uuid and optional request_kwargs
 
         Returns:
             Response JSON with the updated resource
 
         Example:
+            zaak = client.partial_update("zaak", {"locked": True}, url="https://...")
             zaak = client.partial_update("enkelvoudiginformatieobject",
                                         url="https://...",
                                         locked=True)
@@ -636,6 +728,13 @@ class ZGWClient(APIClient):
         uuid = kwargs.pop("uuid", None)
         request_kwargs = kwargs.pop("request_kwargs", {})
         zaak_uuid = kwargs.pop("zaak_uuid", None)
+
+        # Merge data dict with kwargs (kwargs take precedence for backward compatibility)
+        if data:
+            json_data = {**data, **kwargs}
+        else:
+            json_data = kwargs
+        kwargs = json_data  # Use merged data for the rest of the function
 
         # Build the request URL using operation resolution
         if request_url is None:
@@ -671,6 +770,11 @@ class ZGWClient(APIClient):
 
         response = self.patch(request_url, **patch_kwargs)
         response.raise_for_status()
+
+        # Handle responses with no content (204, etc.) or empty bodies
+        if not response.content:
+            return {}
+
         return response.json()
 
     def delete(self, resource: str, **kwargs) -> None:

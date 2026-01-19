@@ -1,4 +1,4 @@
-from zac.zgw_client import DisabledLog, ZGWClient
+from zac.zgw_client import ZGWClient
 
 try:
     from zgw_consumers.nlx import NLXClientMixin
@@ -13,12 +13,11 @@ except ImportError:
 
 class Client(NLXClientMixin, ZGWClient):
     """
-    ZAC's custom ZGW API client with NLX support and disabled logging.
+    ZAC's custom ZGW API client with NLX support.
 
-    Uses DisabledLog to prevent memory leaks in thread pools.
+    Extends the base ZGWClient with NLX URL rewriting capabilities
+    and JWT refresh functionality for long-lived client instances.
     """
-
-    _log = DisabledLog()
 
     def refresh_auth(self):
         """

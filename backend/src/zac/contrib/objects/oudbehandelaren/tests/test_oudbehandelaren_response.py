@@ -6,11 +6,11 @@ import requests_mock
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 from zgw.models import Zaak
@@ -41,10 +41,10 @@ class ApiResponseTests(ClearCachesMixin, APITestCase):
         cls.maxDiff = None
         super().setUpTestData()
 
-        objects_service = Service.objects.create(
+        objects_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        objecttypes_service = Service.objects.create(
+        objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
         config = CoreConfig.get_solo()

@@ -8,12 +8,12 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.models import User
 from zac.core.services import _find_zaken
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
@@ -56,8 +56,8 @@ class ZaakCreatedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
-        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        cls.ztc = ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.zrc = ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()

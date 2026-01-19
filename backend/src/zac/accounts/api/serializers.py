@@ -244,7 +244,7 @@ class UpdateGrantPermissionSerializer(GrantPermissionSerializer):
 
 class ZaakShortSerializer(APIModelSerializer):
     class Meta:
-        model = Zaak
+        dataclass = Zaak
         fields = ("url", "identificatie", "bronorganisatie")
         extra_kwargs = {"url": {"read_only": True}}
 
@@ -370,7 +370,7 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        model = AccessRequest
+        dataclass = AccessRequest
         fields = (
             "url",
             "requester",
@@ -684,7 +684,7 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
         )
 
         if hasattr(self, "instance") and self.instance:
-            model = self.instance
+            dataclass = self.instance
 
         # In case of post where there should have been a patch/put
         # deactivate duplicate.

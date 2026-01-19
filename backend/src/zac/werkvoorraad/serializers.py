@@ -70,7 +70,7 @@ class WorkStackAccessRequestsSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = AccessRequestGroup
+        dataclass = AccessRequestGroup
         fields = (
             "access_requests",
             "zaak",
@@ -101,7 +101,7 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
     zaak = SummaryZaakDocumentSerializer(help_text=_("ZAAK that activity belongs to."))
 
     class Meta:
-        model = ActivityGroup
+        dataclass = ActivityGroup
         fields = (
             "activities",
             "zaak",
@@ -117,7 +117,7 @@ class WorkStackTaskSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = TaskAndCase
+        dataclass = TaskAndCase
         fields = (
             "task",
             "zaak",
@@ -126,7 +126,7 @@ class WorkStackTaskSerializer(APIModelSerializer):
 
 class SummaryChecklistAnswerSerializer(APIModelSerializer):
     class Meta:
-        model = ChecklistAnswer
+        dataclass = ChecklistAnswer
         fields = ("question",)
 
 
@@ -141,7 +141,7 @@ class WorkStackChecklistAnswerSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ChecklistAnswerGroup
+        dataclass = ChecklistAnswerGroup
         fields = (
             "checklist_questions",
             "zaak",
@@ -150,7 +150,7 @@ class WorkStackChecklistAnswerSerializer(APIModelSerializer):
 
 class WorkStackAdviceSerializer(AdviceSerializer):
     class Meta:
-        model = AdviceSerializer.Meta.model
+        dataclass = AdviceSerializer.Meta.dataclass
         fields = ("created", "author", "advice", "group")
         extra_kwargs = {
             "created": {"help_text": _("Date review request was created.")},

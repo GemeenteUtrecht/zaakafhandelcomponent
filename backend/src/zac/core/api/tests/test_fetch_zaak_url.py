@@ -3,11 +3,11 @@ from django.urls import reverse
 import requests_mock
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import ApplicationTokenFactory
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -25,8 +25,8 @@ class ZaakDetailURLResponseTests(ClearCachesMixin, ESMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.zaaktype = generate_oas_component(
             "ztc",
@@ -104,8 +104,8 @@ class ZaakDetailURLPermissionsTests(ClearCachesMixin, ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.zaaktype = generate_oas_component(
             "ztc",

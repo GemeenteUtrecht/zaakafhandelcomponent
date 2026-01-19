@@ -14,7 +14,6 @@ from zgw_consumers.api_models.catalogi import ResultaatType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import Resultaat
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
@@ -34,13 +33,14 @@ from zac.core.permissions import (
 )
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -55,8 +55,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
 
         cls.user = SuperUserFactory.create()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         catalogus_url = (
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
@@ -292,7 +292,8 @@ class ZaakDetailResponseTests(ESMixin, ClearCachesMixin, APITestCase):
             m.last_request.json(),
             {
                 "einddatum": "2021-01-01",
-                "vertrouwelijkheidaanduiding": VertrouwelijkheidsAanduidingen.zeer_geheim,
+                "einddatum_gepland": None,
+                "vertrouwelijkheidaanduiding": "zeer_geheim",  # String value, not enum
                 "zaakgeometrie": {
                     "type": "Point",
                     "coordinates": [4.4683077, 51.9236739],
@@ -769,8 +770,8 @@ class ZaakDetailPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",

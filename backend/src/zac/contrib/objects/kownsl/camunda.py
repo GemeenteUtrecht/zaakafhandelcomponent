@@ -35,7 +35,7 @@ from .fields import SelectZaakEigenschappenKownslField
 
 class ZaakInformatieTaskSerializer(APIModelSerializer):
     class Meta:
-        model = Zaak
+        dataclass = Zaak
         fields = (
             "omschrijving",
             "toelichting",
@@ -71,7 +71,7 @@ class CamundaAssignedUsersSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = AssignedUsers
+        dataclass = AssignedUsers
         fields = [
             "user_assignees",
             "group_assignees",
@@ -95,7 +95,7 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
     )
 
     class Meta:
-        model = CamundaAssignedUsersSerializer.Meta.model
+        dataclass = CamundaAssignedUsersSerializer.Meta.dataclass
         fields = CamundaAssignedUsersSerializer.Meta.fields + [
             "email_notification",
             "deadline",
@@ -135,7 +135,7 @@ class ZaakEigenschapReviewContextSerializer(APIModelSerializer):
     naam = serializers.CharField(source="eigenschap.naam")
 
     class Meta:
-        model = ZaakEigenschap
+        dataclass = ZaakEigenschap
         fields = ("naam", "waarde", "url")
 
 
@@ -171,7 +171,7 @@ class ReviewContextSerializer(APIModelSerializer):
     zaak_informatie = ZaakInformatieTaskSerializer()
 
     class Meta:
-        model = ReviewContext
+        dataclass = ReviewContext
         fields = (
             "camunda_assigned_users",
             "documents_link",
@@ -243,7 +243,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewRequest
+        dataclass = ReviewRequest
         fields = [
             "assigned_users",
             "created",

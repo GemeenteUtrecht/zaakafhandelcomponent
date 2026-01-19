@@ -4,9 +4,9 @@ import requests_mock
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import RolOmschrijving, RolTypes
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.contrib.brp.models import BRPConfig
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -54,9 +54,9 @@ class ZGWServiceTests(ClearCachesMixin, TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        brp_service = Service.objects.create(
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        brp_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=BRP_API_ROOT
         )
 

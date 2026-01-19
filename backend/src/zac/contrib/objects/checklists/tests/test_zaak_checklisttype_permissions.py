@@ -7,7 +7,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     AtomicPermissionFactory,
@@ -16,6 +15,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -46,10 +46,10 @@ class RetrieveChecklistTypesPermissionTests(ESMixin, ClearCachesMixin, APITestCa
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(
+        ServiceFactory.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,

@@ -11,10 +11,10 @@ from django_camunda.utils import serialize_variable
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
@@ -62,7 +62,7 @@ class ProcessInstanceTests(ClearCachesMixin, APITestCase):
             self.addCleanup(patcher.stop)
 
     def test_fetch_zaak_url_from_process_instance(self, m_messages, m_request):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         mock_service_oas_get(m_request, ZAKEN_ROOT, "zrc")
 
         zaak = generate_oas_component(
