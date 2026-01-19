@@ -7,7 +7,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -16,6 +15,7 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -29,7 +29,7 @@ class ZaaktypenPermissiontests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
@@ -205,7 +205,7 @@ class ZaaktypenResponseTests(ClearCachesMixin, APITestCase):
 
         cls.user = SuperUserFactory.create()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.endpoint = reverse("zaaktypen")
 

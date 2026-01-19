@@ -4,13 +4,13 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.constants import PermissionReason
 from zac.accounts.models import AtomicPermission
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
@@ -27,7 +27,7 @@ class GrantActivityPermissionTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(
+        ServiceFactory.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
         cls.zaak = generate_oas_component(

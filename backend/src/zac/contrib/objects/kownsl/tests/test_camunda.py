@@ -16,7 +16,6 @@ from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.api.context import ZaakContext
@@ -25,6 +24,7 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.objects.kownsl.data import KownslTypes, ReviewRequest, Reviews
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -81,9 +81,9 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -473,9 +473,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.users_1 = UserFactory.create_batch(3)
         cls.group = GroupFactory.create()
         cls.users_2 = UserFactory.create_batch(3)
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         site = Site.objects.get_current()
         site.domain = "example"

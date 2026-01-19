@@ -39,7 +39,7 @@ from ..data import (
 
 class KownslZaakEigenschapSerializer(APIModelSerializer):
     class Meta:
-        model = KownslZaakEigenschap
+        dataclass = KownslZaakEigenschap
         fields = ("url", "naam", "waarde")
 
 
@@ -76,7 +76,7 @@ class ReviewDocumentSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewDocument
+        dataclass = ReviewDocument
         fields = (
             "review_url",
             "review_version",
@@ -169,7 +169,7 @@ class ApprovalSerializer(APIModelSerializer):
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True)
 
     class Meta:
-        model = Approval
+        dataclass = Approval
         fields = (
             "author",
             "created",
@@ -211,7 +211,7 @@ class AdviceSerializer(APIModelSerializer):
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True)
 
     class Meta:
-        model = Advice
+        dataclass = Advice
         fields = (
             "advice",
             "author",
@@ -253,7 +253,7 @@ class OpenReviewSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = OpenReview
+        dataclass = OpenReview
         fields = (
             "deadline",
             "groups",
@@ -287,7 +287,7 @@ class SubmitReviewDocumentSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewDocument
+        dataclass = ReviewDocument
         fields = (
             "document",
             "edited_document",
@@ -382,7 +382,7 @@ class SubmitApprovalSerializer(APIModelSerializer):
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True, required=False)
 
     class Meta:
-        model = Approval
+        dataclass = Approval
         fields = (
             "author",
             "created",
@@ -435,7 +435,7 @@ class SubmitAdviceSerializer(APIModelSerializer):
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True, required=False)
 
     class Meta:
-        model = Advice
+        dataclass = Advice
         fields = (
             "advice",
             "author",
@@ -535,7 +535,7 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewRequest
+        dataclass = ReviewRequest
         fields = (
             "can_lock",
             "completed",
@@ -570,7 +570,7 @@ class UpdateZaakReviewRequestSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewRequest
+        dataclass = ReviewRequest
         fields = ("lock_reason", "update_users")
         extra_kwargs = {
             "lock_reason": {

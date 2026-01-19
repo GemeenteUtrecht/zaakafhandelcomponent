@@ -5,11 +5,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 
@@ -26,7 +26,7 @@ class NoServiceConfigTests(ESMixin, ClearCachesMixin, APITestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_get_zaak_no_catalogi_service(self, m):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",

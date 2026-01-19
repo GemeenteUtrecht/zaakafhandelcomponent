@@ -8,7 +8,6 @@ from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.core.cache import (
     invalidate_document_other_cache,
@@ -16,6 +15,7 @@ from zac.core.cache import (
 )
 from zac.core.services import _fetch_document, find_document, get_document
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
@@ -36,7 +36,7 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
     )
 
     def test_fetch_document_sets_cache(self, m):
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         mock_resource_get(m, self.document)
 
@@ -70,7 +70,7 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         self.assertTrue(isinstance(response, Response))
 
     def test_invalidate_cache(self, m):
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         mock_resource_get(m, self.document)
 
@@ -106,7 +106,7 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
 
     @patch("zac.core.services.cache")
     def test_fetch_document_cached(self, m, mock_cache):
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         mock_resource_get(m, self.document)
         _fetch_document(DOCUMENT_URL)
@@ -121,7 +121,7 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         mock_cache.get.assert_called_with(f"document:{DOCUMENT_URL}")
 
     def test_find_document_cached_latest_version(self, m):
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
         m.get(
             f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten?bronorganisatie=123456782&identificatie=DOC-2020-007",
@@ -166,7 +166,7 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(result.inhoud, document_2["inhoud"])
 
     def test_find_document_cached_without_candidate(self, m):
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         mock_service_oas_get(m, DOCUMENTS_ROOT, "drc")
 
         # Return "results" but without the specified version so that candidates will be an empty list.
@@ -199,7 +199,7 @@ class TestCacheDocuments(ClearCachesMixin, APITransactionTestCase):
         self.assertTrue(f"document:{DOCUMENT_URL}?versie=100" in cache)
 
     def test_no_cache_document_404(self, m):
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         m.get(DOCUMENT_URL, json={"some-error": None}, status_code=404)
 
         # Cache is empty

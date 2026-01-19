@@ -9,7 +9,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
@@ -20,6 +19,7 @@ from zac.accounts.tests.factories import (
 from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
@@ -40,8 +40,8 @@ class BoardItemPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory.create()
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         # data for ES documents
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -337,8 +337,8 @@ class BoardItemAPITests(ESMixin, ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.user = SuperUserFactory.create()
         # data for ES documents

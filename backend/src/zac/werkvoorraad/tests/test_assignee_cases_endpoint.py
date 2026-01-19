@@ -8,12 +8,12 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Rol
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zgw.models.zrc import Zaak
 
@@ -32,12 +32,17 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
     )
 
     def test_cases_endpoint(self, m, *mocks):
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
+            slug="catalogi-api",
         )
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(
+            api_type=APITypes.zrc,
+            api_root=ZAKEN_ROOT,
+            slug="zaken-api",
+        )
 
         zaaktype = generate_oas_component(
             "ztc",
@@ -134,12 +139,17 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         self.assertEqual(urls[1], zaak_1["url"])
 
     def test_cases_ordering_endpoint(self, m, *mocks):
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
+            slug="catalogi-api-2",
         )
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(
+            api_type=APITypes.zrc,
+            api_root=ZAKEN_ROOT,
+            slug="zaken-api-2",
+        )
 
         zaaktype = generate_oas_component(
             "ztc",

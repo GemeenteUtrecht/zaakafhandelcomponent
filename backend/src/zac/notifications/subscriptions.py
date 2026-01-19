@@ -74,7 +74,11 @@ def subscribe(service: Service, token: str, domain: str) -> List[Subscription]:
     # fetch existing subs
     abonnementen = []
     for subscription in Subscription.objects.all():
-        _client = Service.get_client(subscription.url)
+        # zgw-consumers 1.x: get_client() removed, use get_service() + build_client()
+        _service = Service.get_service(subscription.url)
+        if not _service:
+            continue  # Skip subscriptions without a configured service
+        _client = _service.build_client()
         abonnementen.append(_client.retrieve("abonnement", url=subscription.url))
 
     to_create = []

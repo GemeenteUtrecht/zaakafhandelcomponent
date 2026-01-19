@@ -8,7 +8,6 @@ from elasticsearch_dsl import Index
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
@@ -23,6 +22,7 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_related_zaak_document
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
@@ -63,7 +63,7 @@ class QuickSearchTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         self.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",

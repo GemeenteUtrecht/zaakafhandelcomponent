@@ -11,12 +11,12 @@ from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.core.models import CoreConfig
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
@@ -71,7 +71,7 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -91,7 +91,7 @@ class GetSelectDocumentContextSerializersTests(APITestCase):
             f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         documenttype = generate_oas_component(
             "ztc",
             "schemas/InformatieObjectType",
@@ -159,7 +159,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        drc = Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        drc = ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         cls.drc_client = drc.build_client()
         config = CoreConfig.get_solo()
         config.primary_drc = drc
@@ -194,7 +194,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
             InformatieObjectType, cls.documenttype
         )
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -255,7 +255,7 @@ class SelectDocumentsTaskSerializerTests(APITestCase):
         return_value=None,
     )
     def test_document_select_task_serializer(self, m, *mocks):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         data = {
             "selected_documents": [
                 {
@@ -355,7 +355,7 @@ class GetZaaktypeFromIdentificatieTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         catalogus_url = (
             f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )

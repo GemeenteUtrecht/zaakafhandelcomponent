@@ -5,11 +5,11 @@ from furl import furl
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import UserFactory
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -24,7 +24,7 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.objecttypes_service = Service.objects.create(
+        cls.objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
 
@@ -140,7 +140,7 @@ class ObjecttypesListTests(ClearCachesMixin, APITestCase):
         )
 
     def test_retrieve_objecttypes_filter_zaaktype(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(m, OBJECTTYPES_ROOT, "objecttypes")
         zaaktype = generate_oas_component(
@@ -211,7 +211,7 @@ class ObjecttypeVersionTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.objecttypes_service = Service.objects.create(
+        cls.objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
 
@@ -307,10 +307,10 @@ class ObjectSearchTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.objects_service = Service.objects.create(
+        cls.objects_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        cls.objecttypes_service = Service.objects.create(
+        cls.objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
         config = CoreConfig.get_solo()

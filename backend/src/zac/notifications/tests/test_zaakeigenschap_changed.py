@@ -12,7 +12,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.models import User
 from zac.core.services import get_zaak
@@ -29,6 +28,7 @@ from zac.elasticsearch.documents import (
     ZaakDocument,
 )
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -83,8 +83,8 @@ NOTIFICATION_DESTROY = {
 @requests_mock.Mocker()
 class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITestCase):
     def test_zaakeigenschap_created_indexed_in_es(self, rm, *mocks):
-        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
-        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)
@@ -144,8 +144,8 @@ class ZaakEigenschapChangedTests(ClearCachesMixin, ESMixin, APITestCase):
         )
 
     def test_zaakeigenschap_destroyed_indexed_in_es(self, rm, *mocks):
-        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
-        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
         mock_service_oas_get(rm, CATALOGI_ROOT, "ztc")
         mock_service_oas_get(rm, ZAKEN_ROOT, "zrc")
         mock_resource_get(rm, ZAAK_RESPONSE)

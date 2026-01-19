@@ -12,7 +12,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import RolType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -22,6 +21,7 @@ from zac.accounts.tests.factories import (
 from zac.core.models import CoreConfig
 from zac.core.permissions import zaken_aanmaken, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -42,7 +42,7 @@ class CreateZaakPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -143,12 +143,12 @@ class CreateZaakResponseTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        objects_service = Service.objects.create(
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        objects_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        objecttypes_service = Service.objects.create(
+        objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
         config = CoreConfig.get_solo()

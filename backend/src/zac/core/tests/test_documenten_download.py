@@ -9,12 +9,12 @@ from django_webtest import WebTest
 from rest_framework import status
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
 from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -71,8 +71,8 @@ class DocumentenDownloadViewTests(ClearCachesMixin, WebTest):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         document_data = generate_oas_component(
             "drc",

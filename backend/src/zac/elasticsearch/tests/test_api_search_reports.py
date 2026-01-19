@@ -10,7 +10,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import (
@@ -21,6 +20,7 @@ from zac.accounts.tests.factories import (
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 
 from ..documents import ZaakDocument, ZaakTypeDocument
@@ -192,7 +192,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_list_reports_user_only_has_one_zaaktype(self, m):
         # Mock the zaaktypen that user is allowed to see
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -265,7 +265,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @requests_mock.Mocker()
     def test_search_report_detail_all_fields(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -424,7 +424,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @requests_mock.Mocker()
     def test_search_report_detail_all_fields_one_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -547,7 +547,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @requests_mock.Mocker()
     def test_view_report_detail_some_fields_one_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -714,7 +714,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     @requests_mock.Mocker()
     def test_get_report_logged_in_with_permission(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         catalogus = generate_oas_component(
             "ztc",

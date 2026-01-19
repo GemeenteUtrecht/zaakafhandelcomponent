@@ -9,11 +9,11 @@ from django.utils.translation import gettext_lazy as _
 import requests_mock
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.checklists.models import ChecklistLock
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get
@@ -39,7 +39,7 @@ class UnlockChecklists(FreezeTimeMixin, ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(
+        ServiceFactory.create(
             label="Zaken API", api_type=APITypes.zrc, api_root=ZAKEN_ROOT
         )
 
