@@ -42,17 +42,10 @@ def get_client() -> HalClient:
 
     assert service, "A service must be configured first"
 
-    _uuid = uuid.uuid4()
-    api_root = (
-        service.api_root.replace(service.api_root, service.nlx, 1)
-        if service.nlx
-        else service.api_root
-    )
-    client = HalClient.from_url(f"{api_root}dummy/{_uuid}")
-    client.schema_url = service.oas
+    # Use zgw-consumers 1.x build_client pattern
+    from zgw_consumers.client import build_client
 
-    if service.auth_type == AuthTypes.api_key:
-        client.auth_value = {service.header_key: service.header_value}
+    client = build_client(service, client_factory=HalClient)
 
     return client
 

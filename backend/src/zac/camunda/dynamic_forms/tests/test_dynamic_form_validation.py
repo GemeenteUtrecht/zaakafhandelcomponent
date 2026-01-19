@@ -10,11 +10,11 @@ from django_camunda.utils import underscoreize
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.camunda.data import Task
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 
@@ -83,7 +83,7 @@ class ReadDynamicFormContextTests(ClearCachesMixin, APITestCase):
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -412,7 +412,7 @@ class WriteDynamicFormContextTests(ClearCachesMixin, APITestCase):
             "user-task-data", kwargs={"task_id": TASK_DATA["id"]}
         )
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",

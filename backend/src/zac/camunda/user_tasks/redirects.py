@@ -22,7 +22,7 @@ class RedirectContext(Context):
 @usertask_context_serializer
 class RedirectContextSerializer(APIModelSerializer):
     class Meta:
-        model = RedirectContext
+        dataclass = RedirectContext
         fields = ("redirect_to", "open_in_new_window", "end_task")
 
 

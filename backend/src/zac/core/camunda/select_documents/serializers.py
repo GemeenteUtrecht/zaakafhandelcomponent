@@ -36,7 +36,7 @@ class DocumentSelectContextSerializer(APIModelSerializer):
     informatieobjecttypen = InformatieObjectTypeSerializer(many=True)
 
     class Meta:
-        model = DocumentSelectContext
+        dataclass = DocumentSelectContext
         fields = (
             "documents_link",
             "informatieobjecttypen",

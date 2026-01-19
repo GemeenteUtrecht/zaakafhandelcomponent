@@ -14,7 +14,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
@@ -30,6 +29,7 @@ from zac.elasticsearch.documents import (
     ZaakInformatieObjectDocument,
 )
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak, ZaakInformatieObject
@@ -101,9 +101,9 @@ class ZaakInformatieObjectChangedTests(
 
     def setUp(self):
         super().setUp()
-        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
-        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
-        Service.objects.create(api_root=DRC_ROOT, api_type=APITypes.drc)
+        ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        ServiceFactory.create(api_root=DRC_ROOT, api_type=APITypes.drc)
         user = UserFactory.create()
         self.client.force_authenticate(user=user)
 

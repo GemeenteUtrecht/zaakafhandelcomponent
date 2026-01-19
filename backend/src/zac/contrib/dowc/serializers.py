@@ -18,7 +18,7 @@ class DowcResponseSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = DowcResponse
+        dataclass = DowcResponse
         fields = (
             "drc_url",
             "purpose",

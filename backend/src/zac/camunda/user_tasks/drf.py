@@ -30,7 +30,7 @@ def usertask_context_serializer(serializer_cls: SerializerCls) -> SerializerCls:
         )
 
         class Meta:
-            model = UserTaskData
+            dataclass = UserTaskData
             fields = ("context",)
 
     name = f"{name}TaskDataSerializer"

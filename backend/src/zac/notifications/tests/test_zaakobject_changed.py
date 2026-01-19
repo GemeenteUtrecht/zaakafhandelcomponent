@@ -10,7 +10,6 @@ from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
@@ -24,6 +23,7 @@ from zac.elasticsearch.api import (
 )
 from zac.elasticsearch.documents import ObjectDocument, ZaakObjectDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -83,12 +83,12 @@ class ZaakObjectChangedTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def setUp(self):
         super().setUp()
-        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
-        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
-        objects_service = Service.objects.create(
+        ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        objects_service = ServiceFactory.create(
             api_root=OBJECTS_ROOT, api_type=APITypes.orc
         )
-        objecttypes_service = Service.objects.create(
+        objecttypes_service = ServiceFactory.create(
             api_root=OBJECTTYPES_ROOT, api_type=APITypes.orc
         )
         config = CoreConfig.get_solo()

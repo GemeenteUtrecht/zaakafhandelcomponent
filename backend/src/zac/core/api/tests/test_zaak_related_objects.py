@@ -11,7 +11,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -22,6 +21,7 @@ from zac.core.models import CoreConfig
 from zac.core.permissions import zaken_geforceerd_bijwerken, zaken_wijzigen
 from zac.core.services import get_zaakobjecten
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
@@ -123,7 +123,7 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.zrc_service = Service.objects.create(
+        cls.zrc_service = ServiceFactory.create(
             api_type=APITypes.zrc, api_root=ZRC_ROOT
         )
         cls.zaak = generate_oas_component(
@@ -279,8 +279,8 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         # call to populate cache
         get_zaakobjecten(factory(Zaak, self.zaak))
         self.assertEqual(
-            m.call_count, 2
-        )  # one request for schema, one for the actual request
+            m.call_count, 1
+        )  # Schema loaded from filesystem (zgw-consumers 1.x), only data request via HTTP
 
         response = self.client.post(
             reverse(
@@ -295,7 +295,7 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
             },
         )
         self.assertEqual(
-            m.call_count, 4
+            m.call_count, 3
         )  # one get request for zaak, one post request for zaakobject
 
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
@@ -303,9 +303,9 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         # second get_zaakobjecten call should not hit the cache
         get_zaakobjecten(factory(Zaak, self.zaak))
         self.assertEqual(
-            m.call_count, 5
-        )  # one get request for zaak, one post request for zaakobject
-        self.assertEqual(m.request_history[1].url, m.request_history[4].url)
+            m.call_count, 4
+        )  # one additional get request for zaakobjecten (cache invalidated)
+        self.assertEqual(m.request_history[0].url, m.request_history[3].url)
 
     @patch.dict(os.environ, {"DEBUG": "False"})
     def test_create_object_relation_invalid_data(self, m):
@@ -374,14 +374,14 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         # call to populate cache
         get_zaakobjecten(factory(Zaak, self.zaak))
         self.assertEqual(
-            m.call_count, 2
-        )  # one request for schema, one for the actual request
+            m.call_count, 1
+        )  # Schema loaded from filesystem (zgw-consumers 1.x), only data request via HTTP
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.assertEqual(
-            m.call_count, 5
+            m.call_count, 4
         )  # one get request for fetch_zaakobject, one get request for get_zaak, one delete request for zaakobject
 
         self.assertEqual(m.request_history[-1].method, "DELETE")
@@ -390,9 +390,9 @@ class RelateObjectsToZaakTests(ClearCachesMixin, APITestCase):
         # second get_zaakobjecten call should not hit the cache
         get_zaakobjecten(factory(Zaak, self.zaak))
         self.assertEqual(
-            m.call_count, 6
-        )  # one get request for zaak, one post request for zaakobject
-        self.assertEqual(m.request_history[1].url, m.request_history[5].url)
+            m.call_count, 5
+        )  # one additional get request for zaakobjecten (cache invalidated)
+        self.assertEqual(m.request_history[0].url, m.request_history[4].url)
 
 
 class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
@@ -400,8 +400,8 @@ class RelateObjectsToZaakPermissionTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -718,11 +718,11 @@ class ZaakObjectTests(APITransactionTestCase):
     def test_relation_object_api(self, m, mock_get_zaakobjects, mock_zaak):
         user = SuperUserFactory.create()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
-        object_service = Service.objects.create(
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
+        object_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        objecttype_service = Service.objects.create(
+        objecttype_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
 

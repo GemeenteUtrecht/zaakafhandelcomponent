@@ -5,7 +5,6 @@ from django.conf import settings
 import django.contrib.postgres.fields
 from django.db import migrations, models
 import django.db.models.deletion
-from django.utils.timezone import utc
 import django.utils.timezone
 import uuid
 import zac.accounts.managers
@@ -416,7 +415,9 @@ class Migration(migrations.Migration):
                 (
                     "end",
                     models.DateTimeField(
-                        default=datetime.datetime(2999, 12, 31, 0, 0, tzinfo=utc),
+                        default=datetime.datetime(
+                            2999, 12, 31, 0, 0, tzinfo=datetime.timezone.utc
+                        ),
                         verbose_name="end",
                     ),
                 ),
