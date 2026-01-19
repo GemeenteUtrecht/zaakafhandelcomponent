@@ -370,7 +370,7 @@ class HandleAccessRequestSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        dataclass = AccessRequest
+        model = AccessRequest
         fields = (
             "url",
             "requester",
@@ -656,6 +656,8 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
         model = BaseUserAuthProfileSerializer.Meta.model
         fields = BaseUserAuthProfileSerializer.Meta.fields
         extra_kwargs = {"is_active": {"default": True}}
+        # Disable automatic unique validation since we handle it in save()
+        validators = []
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -684,24 +686,22 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
         )
 
         if hasattr(self, "instance") and self.instance:
-            dataclass = self.instance
+            # Update existing instance
+            return super().save(**kwargs)
 
         # In case of post where there should have been a patch/put
         # deactivate duplicate.
-        elif (
-            qs := UserAuthorizationProfile.objects.filter(
-                user=self.validated_data["user"],
-                auth_profile=self.validated_data["auth_profile"],
-                is_active=True,
-            )
-        ) and qs.exists():
-            for obj in qs:
-                obj.is_active = False
-                obj.save()
-            model = self.Meta.model()
-        else:
-            model = self.Meta.model()
+        qs = UserAuthorizationProfile.objects.filter(
+            user=self.validated_data["user"],
+            auth_profile=self.validated_data["auth_profile"],
+            is_active=True,
+        )
+        if qs.exists():
+            # Deactivate all existing active profiles using update to avoid constraint issues
+            qs.update(is_active=False)
 
+        # Create new instance
+        model = self.Meta.model()
         for field, value in self.validated_data.items():
             setattr(model, field, value)
 
@@ -711,7 +711,9 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
         except DJValidationError as exc:
             raise serializers.ValidationError(detail=exc.args[0])
 
-        return super().save(**kwargs)
+        model.save()
+        self.instance = model
+        return model
 
 
 class ReadUserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):

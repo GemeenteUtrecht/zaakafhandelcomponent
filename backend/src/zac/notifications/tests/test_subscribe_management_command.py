@@ -35,8 +35,8 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
         result = subscribe_all("https://zac.example.com")
         # 5 kanalen total (zaaktypen, informatieobjecttypen, zaken, objecten, documenten)
         self.assertEqual(len(result), 5)
-        # 1 OAS + 5 POSTs
-        self.assertEqual(len(m.request_history), 6)
+        # 5 POSTs (OAS schema is cached/preloaded in zgw-consumers 1.x)
+        self.assertEqual(len(m.request_history), 5)
         self.assertEqual(Subscription.objects.count(), 5)
 
     @requests_mock.Mocker()
@@ -73,8 +73,8 @@ class SubscribeCommandTests(ClearCachesMixin, TestCase):
 
         # 5 total; 1 already exists -> 4 created now
         self.assertEqual(len(result), 4)
-        # 1 OAS + 1 GET existing + 4 POSTs
-        self.assertEqual(len(m.request_history), 6)
+        # 1 GET existing + 4 POSTs (OAS schema is cached/preloaded in zgw-consumers 1.x)
+        self.assertEqual(len(m.request_history), 5)
 
         token = Token.objects.get()
         self.assertEqual(

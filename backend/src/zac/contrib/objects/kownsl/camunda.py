@@ -85,6 +85,22 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
 
     """
 
+    user_assignees = MetaObjectUserSerializerSlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_("Users assigned to the review request from within the ZAC."),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    group_assignees = MetaObjectGroupSerializerSlugRelatedField(
+        slug_field="name",
+        queryset=Group.objects.all(),
+        help_text=_("Groups assigned to the review request from within the ZAC."),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
     email_notification = serializers.BooleanField(
         default=True,
         help_text=_("Send an email notification about the review request."),
@@ -100,18 +116,6 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
             "email_notification",
             "deadline",
         ]
-        extra_kwargs = {
-            "user_assignees": {
-                "help_text": _(
-                    "Users assigned to the review request from within the ZAC."
-                )
-            },
-            "group_assignees": {
-                "help_text": _(
-                    "Groups assigned to the review request from within the ZAC."
-                )
-            },
-        }
 
     def validate_user_assignees(self, user_assignees):
         if len(user_assignees) > len(set(user_assignees)):
