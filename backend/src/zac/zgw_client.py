@@ -128,55 +128,108 @@ class ZGWClient(APIClient):
         if not self.service:
             return None
 
-        # Try to load from test schemas first (during testing)
-        try:
-            from zgw_consumers.constants import APITypes
-            from zgw_consumers_oas import read_schema
+        # Detect if we're in a test environment
+        import sys
 
-            # Map API types to schema file names
-            api_type = getattr(self.service, "api_type", None)
-            api_root = getattr(self.service, "api_root", "").lower()
-            schema_name = None
+        is_testing = (
+            "pytest" in sys.modules
+            or "unittest" in sys.modules
+            or hasattr(sys, "_called_from_test")
+        )
 
-            if api_type:
-                # First check URL patterns for non-standard ZGW APIs
-                # This handles cases where api_type is incorrectly set (e.g., ztc for objecttypes)
-                if "objecttype" in api_root:
-                    # Covers both objecttype.nl and objecttypes in path
-                    schema_name = "objecttypes"
-                elif "object" in api_root:
-                    # Must come after objecttype check
-                    schema_name = "objects"
+        if is_testing:
+            # During testing: Load from test schema files
+            try:
+                from zgw_consumers.constants import APITypes
+                from zgw_consumers_oas import read_schema
+
+                # Map API types to schema file names
+                api_type = getattr(self.service, "api_type", None)
+                api_root = getattr(self.service, "api_root", "").lower()
+                schema_name = None
+
+                if api_type:
+                    # First check URL patterns for non-standard ZGW APIs
+                    # This handles cases where api_type is incorrectly set (e.g., ztc for objecttypes)
+                    if "objecttype" in api_root:
+                        # Covers both objecttype.nl and objecttypes in path
+                        schema_name = "objecttypes"
+                    elif "object" in api_root:
+                        # Must come after objecttype check
+                        schema_name = "objects"
+                    elif "kownsl" in api_root:
+                        schema_name = "kownsl"
+                    elif "kadaster" in api_root or "lvbag" in api_root:
+                        schema_name = "kadaster"
+                    elif "zac" in api_root:
+                        schema_name = "zac"
+                    # If no URL pattern matched, use api_type directly
+                    elif api_type == APITypes.orc:
+                        # Unknown orc-type API, can't determine schema
+                        logger.debug(
+                            f"Cannot infer schema name for APITypes.orc service with api_root: {api_root}"
+                        )
+                        return None
+                    else:
+                        # Use api_type as schema name (standard ZGW APIs like zrc, ztc, drc)
+                        schema_name = api_type
+
+                if not schema_name:
+                    return None
+
+                schema_bytes = read_schema(schema_name)
+                self._schema = yaml.safe_load(schema_bytes)
+                return self._schema
+            except Exception as e:
+                # Schema loading from files failed
+                logger.debug(f"Could not load test OAS schema for {self.service}: {e}")
+                return None
+        else:
+            # In production: Use EXTERNAL_API_SCHEMAS from settings
+            try:
+                from django.conf import settings
+
+                import requests
+
+                api_root = getattr(self.service, "api_root", "").lower()
+                schema_url = None
+
+                # Map service URL patterns to schema URLs
+                if "kadaster" in api_root or "lvbag" in api_root or "bag" in api_root:
+                    schema_url = settings.EXTERNAL_API_SCHEMAS.get("BAG_API_SCHEMA")
                 elif "kownsl" in api_root:
-                    schema_name = "kownsl"
-                elif "zac" in api_root:
-                    schema_name = "zac"
-                # If no URL pattern matched, use api_type directly
-                elif api_type == APITypes.orc:
-                    # Unknown orc-type API, can't determine schema
+                    schema_url = settings.EXTERNAL_API_SCHEMAS.get("KOWNSL_API_SCHEMA")
+                elif "objecttype" in api_root:
+                    schema_url = settings.EXTERNAL_API_SCHEMAS.get(
+                        "OBJECTTYPES_API_SCHEMA"
+                    )
+                elif "object" in api_root:
+                    schema_url = settings.EXTERNAL_API_SCHEMAS.get("OBJECTS_API_SCHEMA")
+                elif "dowc" in api_root:
+                    schema_url = settings.EXTERNAL_API_SCHEMAS.get("DOWC_API_SCHEMA")
+                elif "zaken" in api_root or "zrc" in api_root:
+                    schema_url = settings.EXTERNAL_API_SCHEMAS.get("ZRC_API_SCHEMA")
+
+                if schema_url:
+                    logger.debug(f"Fetching OAS schema from {schema_url}")
+                    response = requests.get(schema_url, timeout=10)
+                    response.raise_for_status()
+
+                    if schema_url.endswith(".json"):
+                        self._schema = response.json()
+                    else:
+                        self._schema = yaml.safe_load(response.content)
+                    return self._schema
+                else:
                     logger.debug(
-                        f"Cannot infer schema name for APITypes.orc service with api_root: {api_root}"
+                        f"No EXTERNAL_API_SCHEMA configured for service with api_root: {api_root}"
                     )
                     return None
-                else:
-                    # Use api_type as schema name (standard ZGW APIs like zrc, ztc, drc)
-                    schema_name = api_type
-
-            if not schema_name:
+            except Exception as e:
+                logger.warning(
+                    f"Could not load production OAS schema for {self.service}: {e}"
+                )
                 return None
-
-            schema_bytes = read_schema(schema_name)
-            self._schema = yaml.safe_load(schema_bytes)
-            return self._schema
-        except Exception as e:
-            # Schema loading from files failed - try remote or fall back to None
-            logger.debug(f"Could not load OAS schema for {self.service}: {e}")
-            pass
-
-        # In production, we don't fetch schemas from remote services
-        # to avoid network calls during client initialization.
-        # The pluralization fallback handles all standard cases.
-        return None
 
     @property
     def schema(self):

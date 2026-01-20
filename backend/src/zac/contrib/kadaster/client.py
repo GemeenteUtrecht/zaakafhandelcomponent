@@ -45,24 +45,14 @@ def bag_request(
     if self.auth:
         headers.update(self.auth.credentials())
     kwargs["headers"] = headers
-    pre_id = self.pre_request(method, url, **kwargs)
+
+    # pre_request, post_response, and _log were removed in zgw-consumers 1.x
+    # API logging is now handled at a different level in zgw-consumers 1.x
     response = requests.request(method, url, **kwargs)
     try:
         response_json = response.json()
     except Exception:
         response_json = None
-    self.post_response(pre_id, response_json)
-    self._log.add(
-        self.service,
-        url,
-        method,
-        dict(headers),
-        copy.deepcopy(kwargs.get("data", kwargs.get("json", None))),
-        response.status_code,
-        dict(response.headers),
-        response_json,
-        params=kwargs.get("params"),
-    )
     try:
         response.raise_for_status()
     except requests.HTTPError as exc:

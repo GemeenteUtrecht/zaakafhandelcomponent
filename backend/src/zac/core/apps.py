@@ -32,6 +32,23 @@ class CoreConfig(AppConfig):
 
         Service.build_client = build_client
 
+        # Patch zgw-consumers Document model for zgw-consumers 1.x compatibility
+        # Fix broken get_vertrouwelijkheidaanduiding_display method
+        from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+        from zgw_consumers.api_models.documenten import Document
+
+        def _fixed_get_vertrouwelijkheidaanduiding_display(self):
+            """Fixed version that works with zgw-consumers 1.x where values is a list."""
+            # In Django choices, use the choices tuple to look up the label
+            for choice_value, choice_label in VertrouwelijkheidsAanduidingen.choices:
+                if choice_value == self.vertrouwelijkheidaanduiding:
+                    return choice_label
+            return self.vertrouwelijkheidaanduiding
+
+        Document.get_vertrouwelijkheidaanduiding_display = (
+            _fixed_get_vertrouwelijkheidaanduiding_display
+        )
+
 
 def clear_request_cache(sender, **kwargs):
     cache = caches["request"]
