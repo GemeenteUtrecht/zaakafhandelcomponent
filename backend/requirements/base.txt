@@ -36,6 +36,7 @@ cryptography==40.0.2
     # via
     #   -r requirements/base.in
     #   django-simple-certmanager
+    #   josepy
     #   mozilla-django-oidc
     #   pyopenssl
 defusedxml==0.7.1
@@ -164,6 +165,8 @@ inflection==0.5.1
     #   django-camunda
     #   drf-spectacular
 isodate==0.7.2
+    # via -r requirements/base.in
+josepy==2.2.0
     # via -r requirements/base.in
 jsonschema==4.26.0
     # via drf-spectacular

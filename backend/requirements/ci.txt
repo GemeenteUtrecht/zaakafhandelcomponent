@@ -63,6 +63,7 @@ cryptography==40.0.2
     #   -c requirements/base.txt
     #   -r requirements/base.txt
     #   django-simple-certmanager
+    #   josepy
     #   mozilla-django-oidc
     #   pyopenssl
 cssselect==1.3.0
@@ -292,6 +293,10 @@ isodate==0.7.2
     #   -r requirements/base.txt
 isort==7.0.0
     # via -r requirements/test-tools.in
+josepy==2.2.0
+    # via
+    #   -c requirements/base.txt
+    #   -r requirements/base.txt
 jsonschema==4.26.0
     # via
     #   -c requirements/base.txt

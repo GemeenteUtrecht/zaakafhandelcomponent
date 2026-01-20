@@ -45,6 +45,7 @@ django-sniplates
 django_jsonform
 mozilla-django-oidc
 mozilla-django-oidc-db<0.25
+josepy  # Required by mozilla-django-oidc-db for JWT handling
 django-reversion
 
 # Restful API
