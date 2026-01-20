@@ -22,7 +22,7 @@ from .factories import ActivityFactory
 
 ZAKEN_ROOT = "https://open-zaak.nl/zaken/api/v1/"
 CATALOGI_ROOT = "https://open-zaak.nl/catalogi/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 class ListActivitiesPermissionTests(ClearCachesMixin, APITestCase):

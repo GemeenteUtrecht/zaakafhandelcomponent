@@ -49,6 +49,20 @@ class CoreConfig(AppConfig):
             _fixed_get_vertrouwelijkheidaanduiding_display
         )
 
+        # Patch zgw-consumers Rol model for zgw-consumers 1.x compatibility
+        # Fix broken get_betrokkene_type_display method
+        from zgw_consumers.api_models.constants import RolTypes
+        from zgw_consumers.api_models.zaken import Rol
+
+        def _fixed_get_betrokkene_type_display(self):
+            """Fixed version that works with zgw-consumers 1.x where values is a list."""
+            for choice_value, choice_label in RolTypes.choices:
+                if choice_value == self.betrokkene_type:
+                    return choice_label
+            return self.betrokkene_type
+
+        Rol.get_betrokkene_type_display = _fixed_get_betrokkene_type_display
+
 
 def clear_request_cache(sender, **kwargs):
     cache = caches["request"]

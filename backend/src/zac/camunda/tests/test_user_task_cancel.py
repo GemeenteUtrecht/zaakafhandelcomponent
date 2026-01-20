@@ -239,7 +239,7 @@ class CancelTaskPermissionsTests(ClearCachesMixin, APITestCase):
         catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="DOME",
         )
         zaaktype = generate_oas_component(

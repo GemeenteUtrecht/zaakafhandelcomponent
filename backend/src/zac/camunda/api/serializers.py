@@ -351,15 +351,15 @@ class ChangeBehandelaarTasksSerializer(serializers.Serializer):
     def validate_zaak(self, zaak) -> Zaak:
         try:
             zaak = get_zaak(zaak_url=zaak)
-        except ClientError as exc:
+        except (ClientError, HTTPError) as exc:
             raise serializers.ValidationError(_("ZAAK was not found."))
         return zaak
 
     def validate_rol(self, rol) -> Rol:
         try:
             rol = fetch_rol(rol)
-        except ClientError as exc:
-            raise serializers.ValidationError(detail=exc.args)
+        except (ClientError, HTTPError) as exc:
+            raise serializers.ValidationError(detail=str(exc))
         return rol
 
     def perform(self):
