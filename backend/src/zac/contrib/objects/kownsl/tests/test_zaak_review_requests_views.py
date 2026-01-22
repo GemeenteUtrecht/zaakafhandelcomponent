@@ -43,7 +43,7 @@ from .factories import (
     reviews_factory,
 )
 
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()

@@ -205,7 +205,7 @@ class CreateChecklistPermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="UTRE",
         )
         cls.zaaktype = generate_oas_component(
@@ -587,7 +587,7 @@ class UpdatePermissionTests(ESMixin, ClearCachesMixin, APITestCase):
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="UTRE",
         )
         cls.zaaktype = generate_oas_component(
@@ -979,7 +979,7 @@ class LockAndUnlockChecklistPermissionTests(
     catalogus = generate_oas_component(
         "ztc",
         "schemas/Catalogus",
-        url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+        url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
         domein="UTRE",
     )
     zaaktype = generate_oas_component(

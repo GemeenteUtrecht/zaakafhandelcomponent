@@ -88,7 +88,7 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="DOME",
         )
         cls.informatieobjecttype = generate_oas_component(
@@ -484,7 +484,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="DOME",
         )
         cls.informatieobjecttype = generate_oas_component(
@@ -575,21 +575,12 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         }
         serializer = AssignedUsersSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
-        self.assertEqual(
-            sorted(list(serializer.validated_data.keys())),
-            sorted(
-                ["user_assignees", "group_assignees", "deadline", "email_notification"]
-            ),
-        )
-        self.assertEqual(
-            serializer.validated_data,
-            {
-                "user_assignees": self.users_1,
-                "group_assignees": [self.group],
-                "email_notification": False,
-                "deadline": date(2020, 1, 1),
-            },
-        )
+        # AssignedUsersSerializer returns AssignedUsers dataclass
+        validated = serializer.validated_data
+        self.assertEqual(validated.user_assignees, self.users_1)
+        self.assertEqual(validated.group_assignees, [self.group])
+        self.assertEqual(validated.email_notification, False)
+        self.assertEqual(validated.deadline, date(2020, 1, 1))
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_select_users_rev_req_serializer_duplicate_users(self):
@@ -664,23 +655,22 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             data=payload, context={"task": task}
         )
         self.assertTrue(serializer.is_valid(raise_exception=True))
-        self.assertEqual(
-            serializer.validated_data["assigned_users"],
-            [
-                {
-                    "user_assignees": self.users_1,
-                    "group_assignees": [self.group],
-                    "email_notification": False,
-                    "deadline": date(2020, 1, 1),
-                },
-                {
-                    "user_assignees": self.users_2,
-                    "group_assignees": [],
-                    "email_notification": False,
-                    "deadline": date(2020, 1, 2),
-                },
-            ],
-        )
+        # AssignedUsersSerializer returns AssignedUsers dataclass instances
+        validated_assigned_users = serializer.validated_data["assigned_users"]
+        self.assertEqual(len(validated_assigned_users), 2)
+
+        # Check first assigned users
+        self.assertEqual(validated_assigned_users[0].user_assignees, self.users_1)
+        self.assertEqual(validated_assigned_users[0].group_assignees, [self.group])
+        self.assertEqual(validated_assigned_users[0].email_notification, False)
+        self.assertEqual(validated_assigned_users[0].deadline, date(2020, 1, 1))
+
+        # Check second assigned users
+        self.assertEqual(validated_assigned_users[1].user_assignees, self.users_2)
+        self.assertEqual(validated_assigned_users[1].group_assignees, [])
+        self.assertEqual(validated_assigned_users[1].email_notification, False)
+        self.assertEqual(validated_assigned_users[1].deadline, date(2020, 1, 2))
+
         self.assertEqual(serializer.validated_data["documents"], [self.document.url])
         self.assertEqual(serializer.validated_data["toelichting"], "some-toelichting")
 

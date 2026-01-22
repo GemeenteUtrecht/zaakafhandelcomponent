@@ -25,15 +25,16 @@ from zac.core.utils import A_DAY
 class HalClient(ZGWClient):
     def pre_request(self, method, url, **kwargs):
         """
-        Add authorization header to requests for APIs without jwt.
+        Add HAL+JSON headers to requests for BRP API.
         """
+        kwargs = super().pre_request(method, url, **kwargs)
 
-        result = super().pre_request(method, url, **kwargs)
-
-        headers = kwargs.get("headers", {})
-        headers["Accept"] = "application/hal+json"
-        headers["Content-Type"] = "application/hal+json"
-        return result
+        # Ensure headers dict exists and add HAL+JSON headers
+        if "headers" not in kwargs:
+            kwargs["headers"] = {}
+        kwargs["headers"]["Accept"] = "application/hal+json"
+        kwargs["headers"]["Content-Type"] = "application/hal+json"
+        return kwargs
 
 
 def get_client() -> HalClient:

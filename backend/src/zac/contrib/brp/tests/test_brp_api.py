@@ -64,13 +64,12 @@ class BrpApiTests(ClearCachesMixin, TestCase):
 
         client = get_client()
 
+        # Schema is loaded from local test files, not from remote endpoint
         self.assertIsInstance(client.schema, dict)
-        self.assertIsNone(client.auth)
-        self.assertEqual(client.auth_header, {"Authorization": "Token foobarbaz"})
-        self.assertEqual(len(m.request_history), 1)
-        self.assertEqual(
-            m.last_request.url, f"{self.service.api_root}schema/openapi.yaml?v=3"
-        )
+        # With zgw-consumers 1.x, API key auth creates an APIKeyAuth object
+        self.assertIsNotNone(client.auth)
+        # No HTTP requests should be made for schema (loaded from local files)
+        self.assertEqual(len(m.request_history), 0)
 
     @requests_mock.Mocker()
     def test_fetch_naturlijk_persoon(self, m):

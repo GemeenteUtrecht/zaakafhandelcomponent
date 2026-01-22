@@ -280,6 +280,8 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         DataclassSerializer returns a dataclass instance, but we need a dict
         for backwards compatibility with how this serializer processes data.
         """
+        from rest_framework.fields import SkipField
+
         # Get field values from parent, but don't instantiate dataclass
         ret = {}
         errors = {}
@@ -288,6 +290,9 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             primitive_value = field.get_value(data)
             try:
                 validated_value = field.run_validation(primitive_value)
+            except SkipField:
+                # Field should be skipped (no value provided and no default)
+                continue
             except serializers.ValidationError as exc:
                 errors[field.field_name] = exc.detail
             else:

@@ -37,7 +37,7 @@ from .factories import (
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()

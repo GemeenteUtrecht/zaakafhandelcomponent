@@ -385,7 +385,9 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
         response = self.client.get(url.url)
         hits = len(m.request_history)
-        self.assertEqual(hits, 4)
+        # Expecting 3 requests: location lookup, kadaster adressen, kadaster panden
+        # (OAS schema is loaded from local files during testing, not from remote)
+        self.assertEqual(hits, 3)
 
         # Make sure cache gets hit afterwards instead of kadaster
         response = self.client.get(url.url)

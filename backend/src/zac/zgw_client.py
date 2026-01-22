@@ -15,6 +15,8 @@ from typing import Any, Union
 import yaml
 from ape_pie import APIClient
 from requests import PreparedRequest
+from requests.exceptions import HTTPError
+from zds_client.client import ClientError
 from zgw_consumers.models import Service
 
 logger = logging.getLogger(__name__)
@@ -86,6 +88,17 @@ class ZGWClient(APIClient):
         super().__init__(base_url, request_kwargs, **kwargs)
         self.service = service
         self._schema = None  # Lazy-loaded OAS schema
+
+        # Operation suffix mapping for backward compatibility with zds-client
+        # Maps HTTP method names to operation ID suffixes used in OAS schemas
+        self.operation_suffix_mapping = {
+            "list": "_list",
+            "retrieve": "_read",
+            "create": "_create",
+            "update": "_update",
+            "partial_update": "_partial_update",
+            "delete": "_delete",
+        }
 
         # Add credentials() method to auth object for backward compatibility
         # In zgw-consumers <1.0, auth had a credentials() method
@@ -161,6 +174,10 @@ class ZGWClient(APIClient):
                         schema_name = "kownsl"
                     elif "kadaster" in api_root or "lvbag" in api_root:
                         schema_name = "kadaster"
+                    elif "brp" in api_root:
+                        schema_name = "brp"
+                    elif "dowc" in api_root:
+                        schema_name = "dowc"
                     elif "zac" in api_root:
                         schema_name = "zac"
                     # If no URL pattern matched, use api_type directly
@@ -446,12 +463,30 @@ class ZGWClient(APIClient):
         """
         return []
 
+    def pre_request(self, method: str, url: str, **kwargs) -> dict:
+        """
+        Hook for subclasses to modify requests before they are sent.
+
+        This is a backwards-compatibility hook for old zds-client API.
+        Subclasses can override this to add headers or modify kwargs.
+
+        Args:
+            method: The HTTP method
+            url: The request URL
+            **kwargs: Request kwargs
+
+        Returns:
+            The (possibly modified) kwargs dict
+        """
+        return kwargs
+
     def request(self, method: str, url: str, *args, **kwargs):
         """
         Make HTTP request using the parent APIClient.
 
-        ZAC doesn't use task-based logging, so this simply delegates to the parent.
+        Calls pre_request hook before delegating to parent.
         """
+        kwargs = self.pre_request(method, url, **kwargs)
         return super().request(method, url, *args, **kwargs)
 
     def refresh_auth(self):
@@ -723,7 +758,12 @@ class ZGWClient(APIClient):
             post_kwargs["headers"] = headers
 
         response = self.post(path, **post_kwargs)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except HTTPError as e:
+            # Wrap HTTPError in ClientError for backwards compatibility
+            # Old zds-client raised ClientError on HTTP errors
+            raise ClientError(response.json() if response.content else None) from e
         return response.json()
 
     def update(self, resource: str, data: dict, **kwargs) -> dict:
