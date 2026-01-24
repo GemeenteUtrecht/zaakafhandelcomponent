@@ -643,7 +643,12 @@ class ZGWClient(APIClient):
         else:
             raise ValueError(f"Unsupported HTTP method: {method}")
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except HTTPError as e:
+            # Wrap HTTPError in ClientError for backwards compatibility
+            # Old zds-client raised ClientError on HTTP errors
+            raise ClientError(response.json() if response.content else None) from e
 
         # Handle responses with no content (204, etc.) or empty bodies
         if not response.content:

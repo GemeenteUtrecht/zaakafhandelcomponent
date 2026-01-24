@@ -27,7 +27,7 @@ from ..serializers import WorkStackAdhocActivitiesSerializer
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGI_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGI_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()

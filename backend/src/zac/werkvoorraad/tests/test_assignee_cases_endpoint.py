@@ -48,7 +48,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            catalogus=f"{CATALOGI_ROOT}/catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
         )
 
         zaak_1 = generate_oas_component(
@@ -155,7 +155,7 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            catalogus=f"{CATALOGI_ROOT}/catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
         )
 
         zaak_1 = generate_oas_component(

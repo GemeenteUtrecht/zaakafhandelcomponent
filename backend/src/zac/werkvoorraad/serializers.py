@@ -152,10 +152,10 @@ class WorkStackAdviceSerializer(AdviceSerializer):
     class Meta:
         dataclass = AdviceSerializer.Meta.dataclass
         fields = ("created", "author", "advice", "group")
+        # Note: created, author, and group are declared as fields in the parent class,
+        # so we can't set extra_kwargs for them with DataclassSerializer
         extra_kwargs = {
-            "created": {"help_text": _("Date review request was created.")},
             "advice": {"help_text": _("Advice given for review request.")},
-            "group": {"help_text": _("Group that advice was given by.")},
         }
 
 

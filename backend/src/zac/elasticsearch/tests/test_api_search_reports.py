@@ -12,6 +12,7 @@ from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 
 from zac.accounts.constants import PermissionObjectTypeChoices
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -60,7 +61,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="123456",
             omschrijving="Some zaak description",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
-            va_order=16,
+            va_order=VA_ORDER["beperkt_openbaar"],
             rollen=[
                 {
                     "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -102,7 +103,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="7890",
             omschrijving="Other description",
             vertrouwelijkheidaanduiding="confidentieel",
-            va_order=20,
+            va_order=VA_ORDER["confidentieel"],
             rollen=[],
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
             deadline="2021-12-31",
@@ -357,7 +358,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "7890",
                         "omschrijving": "Other description",
                         "vertrouwelijkheidaanduiding": "confidentieel",
-                        "vaOrder": 20,
+                        "vaOrder": VA_ORDER["confidentieel"],
                         "rollen": [],
                         "startdatum": None,
                         "einddatum": None,
@@ -386,7 +387,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "123456",
                         "omschrijving": "Some zaak description",
                         "vertrouwelijkheidaanduiding": "beperkt_openbaar",
-                        "vaOrder": 16,
+                        "vaOrder": VA_ORDER["beperkt_openbaar"],
                         "rollen": [
                             {
                                 "url": "https://api.zaken.nl/api/v1/rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -509,7 +510,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "123456",
                         "omschrijving": "Some zaak description",
                         "vertrouwelijkheidaanduiding": "beperkt_openbaar",
-                        "vaOrder": 16,
+                        "vaOrder": VA_ORDER["beperkt_openbaar"],
                         "rollen": [
                             {
                                 "url": "https://api.zaken.nl/api/v1/rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -745,7 +746,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="123456",
             omschrijving="Some zaak description",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
-            va_order=16,
+            va_order=VA_ORDER["beperkt_openbaar"],
             rollen=[
                 {
                     "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -795,7 +796,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="7890",
             omschrijving="Other description",
             vertrouwelijkheidaanduiding="confidentieel",
-            va_order=20,
+            va_order=VA_ORDER["confidentieel"],
             rollen=[],
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
             deadline="2021-12-31",

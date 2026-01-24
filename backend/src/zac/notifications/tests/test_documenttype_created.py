@@ -58,9 +58,9 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
         # second call should re-fetch (cache invalidated)
         get_informatieobjecttypen(catalogus=CATALOGUS)
 
-        # 1 call for API spec + 2 identical list calls (before and after invalidation)
-        self.assertEqual(m.call_count, 3)
+        # Schema is now loaded from local files, so only 2 list calls
+        self.assertEqual(m.call_count, 2)
         self.assertEqual(
+            m.request_history[0].url,
             m.request_history[1].url,
-            m.request_history[2].url,
         )

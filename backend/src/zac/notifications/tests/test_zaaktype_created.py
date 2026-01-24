@@ -58,10 +58,11 @@ class ZaakTypeCreatedTests(ClearCachesMixin, APITestCase):
 
         # second call should not hit the cache
         get_zaaktypen(catalogus=CATALOGUS)
-        self.assertEqual(m.call_count, 3)  # 1 call for API spec
+        # Schema is now loaded from local files, so no API spec call
+        self.assertEqual(m.call_count, 2)
         self.assertEqual(
+            m.request_history[0].url,
             m.request_history[1].url,
-            m.request_history[2].url,
         )
 
     def test_zaaktype_created_invalidated_catalogusless_cache(self, m, *mocks):
@@ -80,8 +81,9 @@ class ZaakTypeCreatedTests(ClearCachesMixin, APITestCase):
 
         # second call should not hit the cache
         get_zaaktypen()
-        self.assertEqual(m.call_count, 3)  # 1 call for API spec
+        # Schema is now loaded from local files, so no API spec call
+        self.assertEqual(m.call_count, 2)
         self.assertEqual(
+            m.request_history[0].url,
             m.request_history[1].url,
-            m.request_history[2].url,
         )

@@ -10,6 +10,7 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     AccessRequestFactory,
     BlueprintPermissionFactory,
@@ -92,7 +93,7 @@ class SummaryTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="123456",
             omschrijving="Some zaak description",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
-            va_order=16,
+            va_order=VA_ORDER["beperkt_openbaar"],
             rollen=[
                 {
                     "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",

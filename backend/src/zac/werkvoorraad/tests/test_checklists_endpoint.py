@@ -30,7 +30,7 @@ from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get
 
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
