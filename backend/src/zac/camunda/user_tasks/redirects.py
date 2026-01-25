@@ -5,8 +5,7 @@ User tasks of the type zac:doRedirect.
 from dataclasses import dataclass
 
 from furl import furl
-
-from zac.tests.compat import APIModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from ..data import Task
 from . import Context, register, usertask_context_serializer
@@ -20,7 +19,7 @@ class RedirectContext(Context):
 
 
 @usertask_context_serializer
-class RedirectContextSerializer(APIModelSerializer):
+class RedirectContextSerializer(DataclassSerializer):
     class Meta:
         dataclass = RedirectContext
         fields = ("redirect_to", "open_in_new_window", "end_task")

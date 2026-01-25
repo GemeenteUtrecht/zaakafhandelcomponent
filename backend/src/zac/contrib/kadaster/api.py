@@ -3,7 +3,6 @@ from typing import List, Optional
 from django.utils.translation import gettext_lazy as _
 
 from furl import furl
-from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory

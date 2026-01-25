@@ -1,5 +1,4 @@
 import uuid
-from copy import deepcopy
 from pathlib import Path
 from unittest.mock import PropertyMock, patch
 
@@ -19,16 +18,13 @@ from zgw_consumers.api_models.catalogi import (
 )
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.api_models.zaken import ZaakEigenschap
 from zgw_consumers.constants import APITypes
 
 import zac.core.camunda.start_process.serializers as start_serializers
 from zac.accounts.tests.factories import BlueprintPermissionFactory, UserFactory
-from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
-from zac.contrib.dowc.data import OpenDowc
 from zac.contrib.objects.checklists.tests.factories import checklist_object_factory
 from zac.contrib.objects.kownsl.constants import KownslTypes
 from zac.contrib.objects.kownsl.tests.factories import (

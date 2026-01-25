@@ -1,5 +1,3 @@
-from datetime import date
-
 from django.urls import reverse
 
 import requests_mock

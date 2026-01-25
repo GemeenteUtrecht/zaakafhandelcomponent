@@ -6,7 +6,6 @@ from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 
 from furl import furl
 from zgw_consumers.api_models.base import Model, factory

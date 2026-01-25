@@ -1,7 +1,5 @@
 from copy import deepcopy
-from typing import Dict, Optional
 
-import factory
 import yaml
 
 from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT

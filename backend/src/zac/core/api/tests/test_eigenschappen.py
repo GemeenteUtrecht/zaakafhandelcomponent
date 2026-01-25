@@ -1,4 +1,3 @@
-from re import M
 from unittest.mock import patch
 
 from django.urls import reverse

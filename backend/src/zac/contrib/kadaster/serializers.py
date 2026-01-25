@@ -2,9 +2,9 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.api.proxy import ProxySerializer
-from zac.tests.compat import APIModelSerializer
 
 from .data import (
     Address,
@@ -21,7 +21,7 @@ from .data import (
 )
 
 
-class SpellSuggestionsSerializer(APIModelSerializer):
+class SpellSuggestionsSerializer(DataclassSerializer):
     suggestion = serializers.ListField(
         help_text=_("Alternative suggestions for search term."),
         child=serializers.CharField(),
@@ -52,7 +52,7 @@ class SpellSuggestionsSerializer(APIModelSerializer):
         }
 
 
-class SpellCheckSerializer(APIModelSerializer):
+class SpellCheckSerializer(DataclassSerializer):
     suggestions = SpellSuggestionsSerializer(
         help_text=_("Potentially misspelled searches and spelling suggestions."),
         many=True,
@@ -63,7 +63,7 @@ class SpellCheckSerializer(APIModelSerializer):
         fields = ("suggestions",)
 
 
-class SuggestResultSerializer(APIModelSerializer):
+class SuggestResultSerializer(DataclassSerializer):
     class Meta:
         dataclass = SuggestResult
         fields = (
@@ -86,7 +86,7 @@ class SuggestResultSerializer(APIModelSerializer):
         }
 
 
-class BagLocationSerializer(APIModelSerializer):
+class BagLocationSerializer(DataclassSerializer):
     docs = SuggestResultSerializer(
         help_text=_("Suggestions made by the suggest service."),
         many=True,
@@ -107,7 +107,7 @@ class BagLocationSerializer(APIModelSerializer):
         }
 
 
-class AddressSearchResponseSerializer(APIModelSerializer):
+class AddressSearchResponseSerializer(DataclassSerializer):
     response = BagLocationSerializer(
         required=False,
     )
@@ -124,7 +124,7 @@ class AddressSearchResponseSerializer(APIModelSerializer):
         )
 
 
-class AddressSerializer(APIModelSerializer):
+class AddressSerializer(DataclassSerializer):
     class Meta:
         dataclass = Address
         fields = (
@@ -146,7 +146,7 @@ class AddressSerializer(APIModelSerializer):
         }
 
 
-class BaseBagDataSerializer(APIModelSerializer):
+class BaseBagDataSerializer(DataclassSerializer):
     geometrie = serializers.JSONField(help_text=_("GeoJSON of BAG object geometry."))
 
     class Meta:
@@ -186,7 +186,7 @@ class VerblijfsobjectDataSerializer(BaseBagDataSerializer):
         }
 
 
-class FindPandSerializer(APIModelSerializer):
+class FindPandSerializer(DataclassSerializer):
     adres = AddressSerializer(help_text=_("Address of pand."))
     bag_object = PandBagDataSerializer(help_text=_("Meta data of BAG object."))
 
@@ -198,7 +198,7 @@ class FindPandSerializer(APIModelSerializer):
         )
 
 
-class VerblijfsobjectSerializer(APIModelSerializer):
+class VerblijfsobjectSerializer(DataclassSerializer):
     adres = AddressSerializer(help_text=_("Address of verblijfsobject."))
     bag_object = VerblijfsobjectDataSerializer(help_text=_("Meta data of BAG object."))
 

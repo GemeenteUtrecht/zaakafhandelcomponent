@@ -1,12 +1,10 @@
 import logging
-import uuid
 from typing import Optional
 
 import requests
 from zds_client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.constants import AuthTypes
 
 from zac.utils.decorators import cache as cache_result
 from zac.zgw_client import ZGWClient

@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 import requests_mock

@@ -1,14 +1,14 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.accounts.api.serializers import UserSerializer
-from zac.tests.compat import APIModelSerializer
 
 from ..data import Oudbehandelaar, Oudbehandelaren
 
 
-class OudbehandelaarSerializer(APIModelSerializer):
+class OudbehandelaarSerializer(DataclassSerializer):
     email = serializers.EmailField(
         help_text=_("Email address related to `oudbehandelaar`.")
     )
@@ -30,7 +30,7 @@ class OudbehandelaarSerializer(APIModelSerializer):
         }
 
 
-class OudbehandelarenSerializer(APIModelSerializer):
+class OudbehandelarenSerializer(DataclassSerializer):
     oudbehandelaren = OudbehandelaarSerializer(
         many=True, help_text=_("Array of `oudbehandelaren`.")
     )

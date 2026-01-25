@@ -16,6 +16,7 @@ from furl import furl
 from requests.exceptions import HTTPError
 from rest_framework import serializers
 from rest_framework.utils import formatting
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zds_client.client import ClientError
 from zgw_consumers.api_models.catalogi import (
     EIGENSCHAP_FORMATEN,
@@ -53,17 +54,13 @@ from zac.camunda.constants import AssigneeTypeChoices
 from zac.camunda.variable_instances import get_camunda_variable_instances
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.fields import DowcUrlField
-from zac.contrib.objects.services import (
-    fetch_start_camunda_process_form_for_zaaktype,
-    fetch_zaaktypeattributen_objects_for_zaaktype,
-)
+from zac.contrib.objects.services import fetch_start_camunda_process_form_for_zaaktype
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.fields import DownloadDocumentURLField
 from zac.core.models import MetaObjectTypesConfig
 from zac.core.rollen import Rol
 from zac.core.services import (
     fetch_object,
-    fetch_objecttype,
     fetch_objecttypes,
     fetch_rol,
     fetch_zaaktype,
@@ -81,7 +78,6 @@ from zac.core.services import (
 )
 from zac.core.utils import build_absolute_url
 from zac.elasticsearch.searches import search_informatieobjects
-from zac.tests.compat import APIModelSerializer
 from zgw.models.zrc import Zaak
 
 from ..zaakobjecten import ZaakObjectGroup
@@ -99,7 +95,7 @@ from .validators import EigenschapKeuzeWaardeValidator, ZaakFileValidator
 logger = logging.getLogger(__name__)
 
 
-class InformatieObjectTypeSerializer(APIModelSerializer):
+class InformatieObjectTypeSerializer(DataclassSerializer):
     class Meta:
         dataclass = InformatieObjectType
         fields = (
@@ -108,7 +104,7 @@ class InformatieObjectTypeSerializer(APIModelSerializer):
         )
 
 
-class GetZaakDocumentSerializer(APIModelSerializer):
+class GetZaakDocumentSerializer(DataclassSerializer):
     delete_url = serializers.SerializerMethodField(
         help_text=_(
             "The URL required to save edits and delete the DOWC object related to the INFORMATIEOBJECT."
@@ -629,7 +625,7 @@ class ZaakSerializer(serializers.Serializer):
     url = serializers.URLField(required=True)
 
 
-class ZaakTypeSerializer(APIModelSerializer):
+class ZaakTypeSerializer(DataclassSerializer):
     class Meta:
         dataclass = ZaakType
         fields = (
@@ -640,13 +636,13 @@ class ZaakTypeSerializer(APIModelSerializer):
         )
 
 
-class ResultaatTypeSerializer(APIModelSerializer):
+class ResultaatTypeSerializer(DataclassSerializer):
     class Meta:
         dataclass = ResultaatType
         fields = ("url", "omschrijving")
 
 
-class ResultaatSerializer(APIModelSerializer):
+class ResultaatSerializer(DataclassSerializer):
     resultaattype = ResultaatTypeSerializer()
 
     class Meta:
@@ -669,7 +665,7 @@ class FetchZaakDetailUrlSerializer(serializers.Serializer):
         return build_absolute_url(path, request=self.context["request"])
 
 
-class ZaakDetailSerializer(APIModelSerializer):
+class ZaakDetailSerializer(DataclassSerializer):
     zaaktype = ZaakTypeSerializer(help_text=_("Expanded ZAAKTYPE of ZAAK."))
     deadline = serializers.DateField(read_only=True)
     deadline_progress = serializers.FloatField(
@@ -801,7 +797,7 @@ class UpdateZaakDetailSerializer(serializers.Serializer):
     """
     Serializer for updating ZAAK details.
 
-    This is a plain Serializer (not APIModelSerializer/DataclassSerializer) because:
+    This is a plain Serializer (not DataclassSerializer/DataclassSerializer) because:
     1. It's only used for input validation, not for serializing Zaak instances
     2. It only handles a subset of Zaak fields (partial update)
     3. It includes 'reden' which isn't part of the Zaak dataclass
@@ -891,7 +887,7 @@ class UpdateZaakDetailSerializer(serializers.Serializer):
         return attrs
 
 
-class StatusTypeSerializer(APIModelSerializer):
+class StatusTypeSerializer(DataclassSerializer):
     class Meta:
         dataclass = StatusType
         fields = (
@@ -970,7 +966,7 @@ class CreateZaakStatusSerializer(serializers.Serializer):
     )
 
 
-class ZaakStatusSerializer(APIModelSerializer):
+class ZaakStatusSerializer(DataclassSerializer):
     """
     Serializer for reading Status instances (output only).
     """
@@ -991,7 +987,7 @@ class ZaakStatusSerializer(APIModelSerializer):
         }
 
 
-class EigenschapSpecificatieSerializer(APIModelSerializer):
+class EigenschapSpecificatieSerializer(DataclassSerializer):
     waardenverzameling = serializers.ListField(child=serializers.CharField())
     formaat = serializers.ChoiceField(
         choices=list(EIGENSCHAP_FORMATEN.keys()),
@@ -1009,7 +1005,7 @@ class EigenschapSpecificatieSerializer(APIModelSerializer):
         )
 
 
-class EigenschapSerializer(APIModelSerializer):
+class EigenschapSerializer(DataclassSerializer):
     specificatie = EigenschapSpecificatieSerializer(label=_("EIGENSCHAP definition"))
 
     class Meta:
@@ -1022,7 +1018,7 @@ class EigenschapSerializer(APIModelSerializer):
         )
 
 
-class CharValueSerializer(APIModelSerializer):
+class CharValueSerializer(DataclassSerializer):
     waarde = serializers.CharField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
@@ -1034,7 +1030,7 @@ class CharValueSerializer(APIModelSerializer):
         fields = ("waarde",)
 
 
-class NumberValueSerializer(APIModelSerializer):
+class NumberValueSerializer(DataclassSerializer):
     # TODO: Ideally this should be dynamic based on eigenschapsspecificatie
     waarde = serializers.DecimalField(
         label=_("EIGENSCHAP value"),
@@ -1050,7 +1046,7 @@ class NumberValueSerializer(APIModelSerializer):
         fields = ("waarde",)
 
 
-class DateValueSerializer(APIModelSerializer):
+class DateValueSerializer(DataclassSerializer):
     waarde = serializers.DateField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
@@ -1062,7 +1058,7 @@ class DateValueSerializer(APIModelSerializer):
         fields = ("waarde",)
 
 
-class DateTimeValueSerializer(APIModelSerializer):
+class DateTimeValueSerializer(DataclassSerializer):
     waarde = serializers.DateTimeField(
         label=_("EIGENSCHAP value"),
         source="get_waarde",
@@ -1074,7 +1070,7 @@ class DateTimeValueSerializer(APIModelSerializer):
         fields = ("waarde",)
 
 
-class ZaakEigenschapSerializer(PolymorphicSerializer, APIModelSerializer):
+class ZaakEigenschapSerializer(PolymorphicSerializer, DataclassSerializer):
     serializer_mapping = {
         "tekst": CharValueSerializer,
         "getal": NumberValueSerializer,
@@ -1131,7 +1127,7 @@ class UpdateZaakEigenschapWaardeSerializer(serializers.Serializer):
     )
 
 
-class RelatedZaakDetailSerializer(APIModelSerializer):
+class RelatedZaakDetailSerializer(DataclassSerializer):
     status = ZaakStatusSerializer(help_text=_("Expanded STATUS of ZAAK."))
     zaaktype = ZaakTypeSerializer(help_text=_("Expanded ZAAKTYPE of ZAAK."))
     resultaat = ResultaatSerializer(help_text=_("Expanded RESULTAAT of ZAAK."))
@@ -1156,13 +1152,13 @@ class RelatedZaakSerializer(serializers.Serializer):
     zaak = RelatedZaakDetailSerializer()
 
 
-class RolTypeSerializer(APIModelSerializer):
+class RolTypeSerializer(DataclassSerializer):
     class Meta:
         dataclass = RolType
         fields = ("url", "omschrijving", "omschrijving_generiek")
 
 
-class ReadRolSerializer(APIModelSerializer):
+class ReadRolSerializer(DataclassSerializer):
     name = serializers.CharField(source="get_name")
     identificatie = serializers.CharField(source="get_identificatie")
     betrokkene_type = serializers.ChoiceField(
@@ -1446,7 +1442,7 @@ class DestroyRolSerializer(serializers.Serializer):
         return url
 
 
-class ZaakObjectGroupSerializer(APIModelSerializer):
+class ZaakObjectGroupSerializer(DataclassSerializer):
     items = serializers.ListField(
         child=serializers.JSONField(),
         help_text=_(
@@ -1463,13 +1459,13 @@ class ZaakObjectGroupSerializer(APIModelSerializer):
         fields = ("object_type", "label", "items")
 
 
-class CatalogusSerializer(APIModelSerializer):
+class CatalogusSerializer(DataclassSerializer):
     class Meta:
         dataclass = Catalogus
         fields = ("domein", "url")
 
 
-class ZaakTypeAggregateSerializer(APIModelSerializer):
+class ZaakTypeAggregateSerializer(DataclassSerializer):
     catalogus = CatalogusSerializer(help_text=_("CATALOGUS that ZAAKTYPE belongs to."))
 
     class Meta:
@@ -1553,7 +1549,7 @@ class SearchEigenschapSerializer(serializers.Serializer):
     )
 
 
-class VertrouwelijkheidsAanduidingSerializer(APIModelSerializer):
+class VertrouwelijkheidsAanduidingSerializer(DataclassSerializer):
     label = serializers.CharField(help_text=_("Human readable label of classication."))
     value = serializers.CharField(help_text=_("Value of classication."))
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Union
+from typing import Dict
 
 from django.contrib.auth.models import Group
 from django.urls import reverse_lazy
@@ -7,16 +7,14 @@ from django.utils.translation import gettext as _
 
 from furl import furl
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
-from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import Group, User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url_from_obj
-from zac.core.api.fields import SerializerSlugRelatedField
 from zac.core.api.serializers import ZaakEigenschapSerializer, ZaakSerializer
 from zac.elasticsearch.drf_api.serializers import ESListZaakDocumentSerializer
-from zac.tests.compat import APIModelSerializer
 
 from ...serializers import (
     MetaObjectGroupSerializerSlugRelatedField,
@@ -37,13 +35,13 @@ from ..data import (
 ###################################################
 
 
-class KownslZaakEigenschapSerializer(APIModelSerializer):
+class KownslZaakEigenschapSerializer(DataclassSerializer):
     class Meta:
         dataclass = KownslZaakEigenschap
         fields = ("url", "naam", "waarde")
 
 
-class ReviewDocumentSerializer(APIModelSerializer):
+class ReviewDocumentSerializer(DataclassSerializer):
     review_url = serializers.SerializerMethodField(
         help_text=_("URL to read the review version of the document on the DoWC.")
     )
@@ -141,7 +139,7 @@ class ReviewDocumentSerializer(APIModelSerializer):
         )
 
 
-class ApprovalSerializer(APIModelSerializer):
+class ApprovalSerializer(DataclassSerializer):
     author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -185,7 +183,7 @@ class ApprovalSerializer(APIModelSerializer):
         }
 
 
-class AdviceSerializer(APIModelSerializer):
+class AdviceSerializer(DataclassSerializer):
     author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -233,7 +231,7 @@ class ApprovalReviewsSerializer(serializers.Serializer):
     approvals = ApprovalSerializer(many=True, source="get_reviews")
 
 
-class OpenReviewSerializer(APIModelSerializer):
+class OpenReviewSerializer(DataclassSerializer):
     deadline = serializers.DateField(
         help_text=_("Deadline date of open review request."), required=True
     )
@@ -507,7 +505,7 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
     )
 
 
-class ZaakRevReqSummarySerializer(APIModelSerializer):
+class ZaakRevReqSummarySerializer(DataclassSerializer):
     can_lock = serializers.SerializerMethodField(
         label=_("can lock request"), help_text=_("User can lock the review request.")
     )

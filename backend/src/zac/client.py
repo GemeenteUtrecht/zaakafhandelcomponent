@@ -8,8 +8,6 @@ except ImportError:
     class NLXClientMixin:
         """Placeholder for NLX support if zgw-consumers 1.x removed it."""
 
-        pass
-
 
 class Client(NLXClientMixin, ZGWClient):
     """

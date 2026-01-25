@@ -1,6 +1,7 @@
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
@@ -16,7 +17,6 @@ from zac.elasticsearch.drf_api.serializers import (
     StatusDocumentSerializer,
     ZaakTypeDocumentSerializer,
 )
-from zac.tests.compat import APIModelSerializer
 
 from .data import AccessRequestGroup, ActivityGroup, ChecklistAnswerGroup, TaskAndCase
 
@@ -61,7 +61,7 @@ class AccessRequestSerializer(serializers.ModelSerializer):
         )
 
 
-class WorkStackAccessRequestsSerializer(APIModelSerializer):
+class WorkStackAccessRequestsSerializer(DataclassSerializer):
     access_requests = AccessRequestSerializer(
         many=True, help_text=_("Access requests for requester to ZAAKen.")
     )
@@ -94,7 +94,7 @@ class SummaryActivitySerializer(serializers.ModelSerializer):
         fields = ("name", "group_assignee", "user_assignee")
 
 
-class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
+class WorkStackAdhocActivitiesSerializer(DataclassSerializer):
     activities = SummaryActivitySerializer(
         many=True, help_text=_("Summary of the activities.")
     )
@@ -108,7 +108,7 @@ class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
         )
 
 
-class WorkStackTaskSerializer(APIModelSerializer):
+class WorkStackTaskSerializer(DataclassSerializer):
     task = serializers.CharField(
         help_text=_("Camunda task for the user."), source="task.name"
     )
@@ -124,13 +124,13 @@ class WorkStackTaskSerializer(APIModelSerializer):
         )
 
 
-class SummaryChecklistAnswerSerializer(APIModelSerializer):
+class SummaryChecklistAnswerSerializer(DataclassSerializer):
     class Meta:
         dataclass = ChecklistAnswer
         fields = ("question",)
 
 
-class WorkStackChecklistAnswerSerializer(APIModelSerializer):
+class WorkStackChecklistAnswerSerializer(DataclassSerializer):
     checklist_questions = SummaryChecklistAnswerSerializer(
         many=True,
         help_text=_("Questions to be answered by assignee."),

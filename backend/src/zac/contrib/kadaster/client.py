@@ -1,9 +1,6 @@
-import copy
 import types
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
-
-from django.utils.translation import gettext_lazy as _
 
 import requests
 from requests.structures import CaseInsensitiveDict

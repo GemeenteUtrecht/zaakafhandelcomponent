@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 from django.test import override_settings
 from django.urls import reverse, reverse_lazy
-from django.utils.translation import gettext_lazy as _
 
 import requests_mock
 from django_camunda.client import get_client
@@ -13,7 +12,7 @@ from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
-from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.core.tests.utils import ClearCachesMixin
 from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get

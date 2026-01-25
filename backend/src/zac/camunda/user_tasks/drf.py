@@ -1,9 +1,9 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.utils import formatting
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.api.polymorphism import SerializerCls
-from zac.tests.compat import APIModelSerializer
 
 
 def usertask_context_serializer(serializer_cls: SerializerCls) -> SerializerCls:
@@ -19,7 +19,7 @@ def usertask_context_serializer(serializer_cls: SerializerCls) -> SerializerCls:
     name = formatting.remove_trailing_string(name, "Serializer")
     name = formatting.remove_trailing_string(name, "Context")
 
-    class TaskDataSerializer(APIModelSerializer):
+    class TaskDataSerializer(DataclassSerializer):
         context = serializer_cls(
             label=_("User task context"),
             help_text=_(

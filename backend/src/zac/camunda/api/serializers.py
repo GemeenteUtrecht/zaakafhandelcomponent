@@ -6,8 +6,8 @@ from django.utils.translation import gettext_lazy as _
 
 from requests.exceptions import HTTPError
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zds_client.client import ClientError
-from zgw_consumers.api_models.constants import RolOmschrijving
 from zgw_consumers.concurrent import parallel
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
@@ -28,7 +28,6 @@ from zac.camunda.user_tasks.context import REGISTRY
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.rollen import Rol
 from zac.core.services import fetch_rol, get_zaak
-from zac.tests.compat import APIModelSerializer
 from zgw.models.zrc import Zaak
 
 
@@ -255,7 +254,7 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
         return delegate
 
 
-class BPMNSerializer(APIModelSerializer):
+class BPMNSerializer(DataclassSerializer):
     class Meta:
         dataclass = BPMN
         fields = (
@@ -290,7 +289,7 @@ class HistoricActivityInstanceDetailSerializer(serializers.Serializer):
         return obj.get("value")
 
 
-class HistoricUserTaskSerializer(APIModelSerializer):
+class HistoricUserTaskSerializer(DataclassSerializer):
     assignee = serializers.SerializerMethodField(
         help_text=_("Full name of user or group assigned to user task."),
     )

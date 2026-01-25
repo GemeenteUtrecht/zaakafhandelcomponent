@@ -2,21 +2,13 @@ import logging
 from collections import OrderedDict
 from typing import Dict, Optional, Union
 
-from django.conf import settings
-
 from django_camunda.client import get_client
 from django_camunda.interface import Variable
 from django_camunda.utils import serialize_variable
 from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize
 
-from zac.camunda.process_instances import (
-    delete_process_instance,
-    get_process_definitions,
-    get_process_instances,
-)
 from zac.camunda.utils import ordered_dict_to_dict
-from zgw.models.zrc import Zaak
 
 logger = logging.getLogger(__name__)
 

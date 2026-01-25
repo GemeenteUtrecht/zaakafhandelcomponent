@@ -28,7 +28,7 @@ from zac.tests.utils import mock_resource_get
 
 from ..api import check_document_status, get_client
 from ..constants import DocFileTypes
-from ..data import DowcResponse, OpenDowc
+from ..data import OpenDowc
 from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"

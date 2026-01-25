@@ -1,7 +1,4 @@
-from copy import deepcopy
-
 from django.conf import settings
-from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 

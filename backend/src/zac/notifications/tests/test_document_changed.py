@@ -14,7 +14,6 @@ from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
 
-from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import UserFactory
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.elasticsearch.api import create_informatieobject_document

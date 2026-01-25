@@ -1,22 +1,17 @@
 from unittest.mock import patch
 
 from django.test import override_settings
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 import requests_mock
 from django_camunda.client import get_client
 from django_camunda.models import CamundaConfig
-from django_camunda.utils import serialize_variable
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
 
-from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
+from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
-from zac.tests.compat import generate_oas_component, mock_service_oas_get
-from zac.tests.utils import mock_resource_get
 
 ZAKEN_ROOT = "https://some.zrc.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/a955573e-ce3f-4cf3-8ae0-87853d61f47a"

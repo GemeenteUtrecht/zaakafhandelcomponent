@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 from django_camunda.client import get_client
 from django_camunda.types import CamundaId
 from django_camunda.utils import deserialize_variable, serialize_variable
-from django_filters.utils import translate_validation
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import HTTPError

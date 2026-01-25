@@ -24,7 +24,7 @@ from zac.accounts.tests.factories import (
     UserFactory,
 )
 from zac.contrib.dowc.constants import DocFileTypes
-from zac.contrib.dowc.data import DowcResponse, OpenDowc
+from zac.contrib.dowc.data import OpenDowc
 from zac.core.api.data import AuditTrailData
 from zac.core.tests.utils import ClearCachesMixin
 from zac.tests import ServiceFactory

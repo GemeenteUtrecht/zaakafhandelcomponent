@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.base import factory
 
 from zac.accounts.api.fields import UserSlugRelatedField
@@ -18,23 +19,16 @@ from zac.contrib.objects.services import (
     fetch_checklisttype,
 )
 from zac.core.services import update_object_record_data
-from zac.tests.compat import APIModelSerializer
 
 from ...serializers import (
     MetaObjectGroupSerializerSlugRelatedField,
     MetaObjectUserSerializerSlugRelatedField,
 )
-from ..data import (
-    Checklist,
-    ChecklistAnswer,
-    ChecklistQuestion,
-    ChecklistType,
-    QuestionChoice,
-)
+from ..data import Checklist, ChecklistQuestion, ChecklistType, QuestionChoice
 from ..models import ChecklistLock
 
 
-class QuestionChoiceSerializer(APIModelSerializer):
+class QuestionChoiceSerializer(DataclassSerializer):
     class Meta:
         dataclass = QuestionChoice
         fields = ("name", "value")
@@ -52,7 +46,7 @@ class QuestionChoiceSerializer(APIModelSerializer):
         }
 
 
-class ChecklistQuestionSerializer(APIModelSerializer):
+class ChecklistQuestionSerializer(DataclassSerializer):
     choices = QuestionChoiceSerializer(many=True, required=False)
     is_multiple_choice = serializers.SerializerMethodField(source="choices")
 
@@ -75,7 +69,7 @@ class ChecklistQuestionSerializer(APIModelSerializer):
         return bool(obj.choices)
 
 
-class ChecklistTypeSerializer(APIModelSerializer):
+class ChecklistTypeSerializer(DataclassSerializer):
     questions = ChecklistQuestionSerializer(many=True, required=True)
 
     class Meta:

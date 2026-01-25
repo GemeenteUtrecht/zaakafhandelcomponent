@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 from django.urls import reverse_lazy

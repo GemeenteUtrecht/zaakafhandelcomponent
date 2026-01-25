@@ -9,9 +9,6 @@ from django.utils import timezone
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import StatusType, ZaakType
-from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.constants import APITypes
 
 from zac.accounts.models import User
@@ -21,7 +18,6 @@ from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests import ServiceFactory
 from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
-from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,

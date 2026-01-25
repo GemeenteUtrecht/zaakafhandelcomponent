@@ -13,8 +13,6 @@ class MissingVariable(Exception):
     Taken from BPTL.tasks.base.py
     """
 
-    pass
-
 
 def check_variable(variables: dict, name: str, empty_allowed=False):
     """

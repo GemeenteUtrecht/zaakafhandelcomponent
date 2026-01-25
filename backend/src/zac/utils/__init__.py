@@ -1,1 +1,0 @@
-from .schema_extensions import SerializerSlugRelatedFieldExtension

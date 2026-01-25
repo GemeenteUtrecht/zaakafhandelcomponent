@@ -25,19 +25,13 @@ logger = logging.getLogger(__name__)
 class NoService(Exception):
     """Raised when no service is configured for a given task."""
 
-    pass
-
 
 class MultipleServices(Exception):
     """Raised when multiple services are configured for a single task."""
 
-    pass
-
 
 class NoAuth(Exception):
     """Raised when authentication is required but not configured."""
-
-    pass
 
 
 class ZGWClient(APIClient):

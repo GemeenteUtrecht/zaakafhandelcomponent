@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.zaken import ZaakEigenschap
 
 from zac.accounts.models import User
@@ -18,7 +19,6 @@ from zac.core.api.fields import SelectDocumentsCamundaField
 from zac.core.camunda.utils import resolve_assignee
 from zac.core.services import get_zaakeigenschappen
 from zac.elasticsearch.searches import search_informatieobjects
-from zac.tests.compat import APIModelSerializer
 from zgw.models.zrc import Zaak
 
 from ..serializers import (
@@ -33,7 +33,7 @@ from .data import AssignedUsers, ReviewContext, ReviewRequest
 from .fields import SelectZaakEigenschappenKownslField
 
 
-class ZaakInformatieTaskSerializer(APIModelSerializer):
+class ZaakInformatieTaskSerializer(DataclassSerializer):
     class Meta:
         dataclass = Zaak
         fields = (
@@ -42,7 +42,7 @@ class ZaakInformatieTaskSerializer(APIModelSerializer):
         )
 
 
-class CamundaAssignedUsersSerializer(APIModelSerializer):
+class CamundaAssignedUsersSerializer(DataclassSerializer):
     """
     Select users or groups and assign deadlines to those users in the configuration of
     review requests such as the advice and approval review requests.
@@ -144,7 +144,7 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
         return attrs
 
 
-class ZaakEigenschapReviewContextSerializer(APIModelSerializer):
+class ZaakEigenschapReviewContextSerializer(DataclassSerializer):
     naam = serializers.CharField(source="eigenschap.naam")
 
     class Meta:
@@ -153,7 +153,7 @@ class ZaakEigenschapReviewContextSerializer(APIModelSerializer):
 
 
 @usertask_context_serializer
-class ReviewContextSerializer(APIModelSerializer):
+class ReviewContextSerializer(DataclassSerializer):
     camunda_assigned_users = CamundaAssignedUsersSerializer(
         help_text=_("Users or groups assigned from within the camunda process.")
     )
@@ -200,7 +200,7 @@ class ReviewContextSerializer(APIModelSerializer):
         )
 
 
-class ConfigureReviewRequestSerializer(APIModelSerializer):
+class ConfigureReviewRequestSerializer(DataclassSerializer):
     """
     This serializes configure review requests such as
     advice and approval review requests.

@@ -1,32 +1,19 @@
 from unittest.mock import patch
 
-from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
 import requests_mock
-from elasticsearch_dsl import Index
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
-from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
 
 from zac.accounts.models import User
-from zac.core.services import get_zaak
 from zac.core.tests.utils import ClearCachesMixin
-from zac.elasticsearch.api import (
-    create_object_document,
-    create_related_zaak_document,
-    create_zaak_document,
-)
-from zac.elasticsearch.documents import (
-    InformatieObjectDocument,
-    ObjectDocument,
-    RolDocument,
-    ZaakDocument,
-)
+from zac.elasticsearch.api import create_zaak_document
+from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
 from zac.tests import ServiceFactory
 from zac.tests.compat import mock_service_oas_get
@@ -37,7 +24,6 @@ from .utils import (
     BRONORGANISATIE,
     CATALOGI_ROOT,
     CATALOGUS_RESPONSE,
-    OBJECT_RESPONSE,
     STATUS_RESPONSE,
     STATUSTYPE_RESPONSE,
     ZAAK,

@@ -32,9 +32,5 @@ __all__ = [
     "generate_oas_component",
     "mock_service_oas_get",
     "read_schema",
-    "APIModelSerializer",
+    "DataclassSerializer",
 ]
-
-# Backward compatibility alias: APIModelSerializer -> DataclassSerializer
-# Usage: Change Meta.model to Meta.dataclass in your serializers
-APIModelSerializer = DataclassSerializer

@@ -34,7 +34,7 @@ from zac.core.tests.utils import ClearCachesMixin, mock_parallel
 from zac.tests import ServiceFactory
 from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ...services import (

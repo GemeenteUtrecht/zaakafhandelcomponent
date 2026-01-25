@@ -7,6 +7,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
@@ -16,7 +17,6 @@ from zac.camunda.user_tasks import Context, usertask_context_serializer
 from zac.core.api.serializers import InformatieObjectTypeSerializer
 from zac.core.api.validators import validate_zaak_documents
 from zac.core.services import create_document, download_document, get_document
-from zac.tests.compat import APIModelSerializer
 from zgw.models import Zaak
 
 from .utils import get_zaaktype_from_identificatie
@@ -29,7 +29,7 @@ class DocumentSelectContext(Context):
 
 
 @usertask_context_serializer
-class DocumentSelectContextSerializer(APIModelSerializer):
+class DocumentSelectContextSerializer(DataclassSerializer):
     documents_link = serializers.URLField(
         help_text=_("URL-reference to paginated documents endpoint.")
     )

@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.elasticsearch.data import FlattenedNestedAggregation, ParentAggregation
 from zac.elasticsearch.drf_api.fields import OrderedMultipleChoiceField
@@ -9,7 +10,6 @@ from zac.elasticsearch.drf_api.serializers import (
     SearchZaaktypeSerializer,
     ZaakDocumentSerializer,
 )
-from zac.tests.compat import APIModelSerializer
 from zac.utils.validators import ImmutableFieldValidator
 
 from ..models import Board, BoardColumn, BoardItem
@@ -120,7 +120,7 @@ class ManagementDashboardSerializer(serializers.Serializer):
         return sorted(fields)
 
 
-class FlattenedNestedAggregationSerializer(APIModelSerializer):
+class FlattenedNestedAggregationSerializer(DataclassSerializer):
     zaaktype_omschrijving = serializers.SerializerMethodField(
         help_text=_("Description of ZAAKTYPE.")
     )
@@ -148,7 +148,7 @@ class FlattenedNestedAggregationSerializer(APIModelSerializer):
         return self.context["zaaktypen"].get(obj.parent_key, {}).get(obj.child_key, "")
 
 
-class SummaryManagementDashboardSerializer(APIModelSerializer):
+class SummaryManagementDashboardSerializer(DataclassSerializer):
     catalogus = serializers.CharField(
         help_text=_("URL-reference of CATALOGUS related to ZAAKTYPE."), source="key"
     )
