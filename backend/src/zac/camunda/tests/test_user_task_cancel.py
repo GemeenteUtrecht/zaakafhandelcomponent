@@ -8,8 +8,6 @@ from django_camunda.utils import serialize_variable
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -18,6 +16,8 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaakproces_usertasks
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
 from .factories import KillableTaskFactory
@@ -137,7 +137,7 @@ class CancelTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CAMUNDA_URL}process-instance/134fa43d-b03e-11ec-a5f0-32fe9303dc32/modification",
             status_code=204,
         )
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         zaak = generate_oas_component(
             "zrc",
@@ -180,7 +180,7 @@ class CancelTaskViewTests(ClearCachesMixin, APITestCase):
             f"{CAMUNDA_URL}process-instance/134fa43d-b03e-11ec-a5f0-32fe9303dc32/modification",
             status_code=204,
         )
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         zaak = generate_oas_component(
             "zrc",
@@ -233,13 +233,13 @@ class CancelTaskPermissionsTests(ClearCachesMixin, APITestCase):
 
     @requests_mock.Mocker()
     def test_user_logged_in_with_permission(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="DOME",
         )
         zaaktype = generate_oas_component(

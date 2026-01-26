@@ -8,13 +8,13 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.zaken import Rol
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.elasticsearch.api import create_rol_document
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zgw.models.zrc import Zaak
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
@@ -32,18 +32,23 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
     )
 
     def test_cases_endpoint(self, m, *mocks):
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
+            slug="catalogi-api",
         )
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(
+            api_type=APITypes.zrc,
+            api_root=ZAKEN_ROOT,
+            slug="zaken-api",
+        )
 
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            catalogus=f"{CATALOGI_ROOT}/catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
         )
 
         zaak_1 = generate_oas_component(
@@ -134,18 +139,23 @@ class AssigneeCasesTests(ESMixin, APITransactionTestCase):
         self.assertEqual(urls[1], zaak_1["url"])
 
     def test_cases_ordering_endpoint(self, m, *mocks):
-        Service.objects.create(
+        ServiceFactory.create(
             label="Catalogi API",
             api_type=APITypes.ztc,
             api_root=CATALOGI_ROOT,
+            slug="catalogi-api-2",
         )
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(
+            api_type=APITypes.zrc,
+            api_root=ZAKEN_ROOT,
+            slug="zaken-api-2",
+        )
 
         zaaktype = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
             url=f"{CATALOGI_ROOT}zaaktypen/17e08a91-67ff-401d-aae1-69b1beeeff06",
-            catalogus=f"{CATALOGI_ROOT}/catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
+            catalogus=f"{CATALOGI_ROOT}catalogussen/c25a4e4b-c19c-4ab9-a51b-1e9a65890383",
         )
 
         zaak_1 = generate_oas_component(

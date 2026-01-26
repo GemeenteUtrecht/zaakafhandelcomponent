@@ -9,12 +9,12 @@ from elasticsearch_dsl import Index
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import paginated_response
 
 from ..documents import ObjectDocument, ZaakDocument, ZaakObjectDocument
@@ -43,8 +43,8 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def setUp(self):
         super().setUp()
-        objects = Service.objects.create(api_type=APITypes.orc, api_root=OBJECTS_ROOT)
-        objecttypes = Service.objects.create(
+        objects = ServiceFactory.create(api_type=APITypes.orc, api_root=OBJECTS_ROOT)
+        objecttypes = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
         config = CoreConfig.get_solo()
@@ -194,7 +194,7 @@ class IndexObjectsTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                     "bronorganisatie": "some-bronorganisatie",
                     "omschrijving": "some-omschrijving",
                     "identificatie": "some-identificatie",
-                    "va_order": 27,
+                    "va_order": VA_ORDER[VertrouwelijkheidsAanduidingen.openbaar],
                 }
             ],
         )

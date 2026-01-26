@@ -122,6 +122,8 @@ class EigenschapKeuzeWaardeValidator:
     )
 
     def _validate_waarde_from_spec_or_camunda_forms(self, eigenschap, waarde):
+        from decimal import Decimal
+
         zt_attrs = {
             attr["naam"]: attr
             for attr in fetch_zaaktypeattributen_objects_for_zaaktype(
@@ -131,11 +133,18 @@ class EigenschapKeuzeWaardeValidator:
         if zt_attr := zt_attrs.get(eigenschap.naam):
             if enum := zt_attr.get("enum"):
                 if waarde not in enum:
+                    # Format waarde for display - if it's a number, format with 2 decimal places
+                    display_waarde = waarde
+                    try:
+                        display_waarde = "{:.2f}".format(Decimal(waarde))
+                    except (ValueError, TypeError):
+                        pass
+
                     raise serializers.ValidationError(
                         self.message.format(
                             naam=eigenschap.naam,
                             choices=enum,
-                            waarde=waarde,
+                            waarde=display_waarde,
                         )
                     )
         else:
@@ -143,11 +152,18 @@ class EigenschapKeuzeWaardeValidator:
                 eigenschap.specificatie.waardenverzameling
                 and waarde not in eigenschap.specificatie.waardenverzameling
             ):
+                # Format waarde for display - if it's a number, format with 2 decimal places
+                display_waarde = waarde
+                try:
+                    display_waarde = "{:.2f}".format(Decimal(waarde))
+                except (ValueError, TypeError):
+                    pass
+
                 raise serializers.ValidationError(
                     self.message.format(
                         naam=eigenschap.naam,
                         choices=eigenschap.specificatie.waardenverzameling,
-                        waarde=waarde,
+                        waarde=display_waarde,
                     )
                 )
 
@@ -191,6 +207,32 @@ class EigenschapKeuzeWaardeValidator:
                 else eigenschap.zaaktype
             )
 
+        # Validate format (getal, tekst, datum, datum_tijd)
+        self._validate_format(eigenschap, value)
+
+        # Validate enum/waardenverzameling
         self._validate_waarde_from_spec_or_camunda_forms(eigenschap, value)
 
         return value
+
+    def _validate_format(self, eigenschap, waarde):
+        """Validate that waarde matches the expected format (getal, tekst, datum, datum_tijd)"""
+        from decimal import InvalidOperation
+
+        try:
+            # Use eigenschap.to_python() to validate the format
+            eigenschap.to_python(waarde)
+        except (ValueError, AssertionError, AttributeError, InvalidOperation) as e:
+            formaat = eigenschap.specificatie.formaat
+            if formaat == "getal":
+                raise serializers.ValidationError(_("Een geldig nummer is vereist."))
+            elif formaat == "datum":
+                raise serializers.ValidationError(_("Voer een geldige datum in."))
+            elif formaat == "datum_tijd":
+                raise serializers.ValidationError(_("Voer een geldige datum/tijd in."))
+            else:
+                raise serializers.ValidationError(
+                    _(
+                        "Waarde voldoet niet aan het verwachte formaat: {formaat}"
+                    ).format(formaat=formaat)
+                )

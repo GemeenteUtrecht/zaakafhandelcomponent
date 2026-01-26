@@ -113,7 +113,6 @@ class TaskFormMixin:
         """
         Hook for forms that do need to persist data.
         """
-        pass
 
     def get_process_variables(self) -> Dict[str, Any]:
         assert self.is_valid(), "Form does not pass validation"
@@ -154,7 +153,6 @@ class TaskFormSetMixin:
         """
         Hook for forms that do need to persist data.
         """
-        pass
 
     def get_process_variables(self) -> Dict[str, Any]:
         raise NotImplementedError

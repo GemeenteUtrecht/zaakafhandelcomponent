@@ -2,7 +2,8 @@ import os
 
 from requests_mock import Mocker
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
-from zgw_consumers.test import generate_oas_component
+
+from zac.tests.compat import generate_oas_component
 
 MOCK_FILES_DIR = os.path.join(
     os.path.abspath(os.path.dirname(__file__)),

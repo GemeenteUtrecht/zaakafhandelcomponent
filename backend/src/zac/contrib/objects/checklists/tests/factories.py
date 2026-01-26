@@ -1,10 +1,10 @@
 import factory
 import yaml
 from faker import Faker
-from zgw_consumers.test import generate_oas_component, read_schema
 
 from zac.accounts.tests.factories import UserFactory
 from zac.contrib.objects.tests.utils import OBJECTS_ROOT, OBJECTTYPES_ROOT
+from zac.tests.compat import generate_oas_component, read_schema
 from zac.tests.utils import update_dictionary_from_kwargs
 
 fake = Faker()

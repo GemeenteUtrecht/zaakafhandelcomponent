@@ -1,5 +1,4 @@
 import datetime
-from unittest.mock import patch
 
 from django.conf import settings
 from django.urls import reverse
@@ -13,8 +12,6 @@ from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.zaken import ZaakObject
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     ApplicationTokenFactory,
@@ -31,6 +28,8 @@ from zac.elasticsearch.api import (
     update_rollen_in_zaak_document,
 )
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak
 
@@ -87,8 +86,8 @@ class SearchPermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         self.zaak_model = factory(Zaak, self.zaak)
         self.zaak_model.zaaktype = factory(ZaakType, self.zaaktype)
@@ -297,8 +296,8 @@ class SearchResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
         self.user = SuperUserFactory.create()
         self.client.force_authenticate(user=self.user)
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         self.endpoint = reverse("search")
 

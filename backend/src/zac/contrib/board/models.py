@@ -73,7 +73,12 @@ class BoardColumn(models.Model):
     class Meta:
         verbose_name = _("board column")
         verbose_name_plural = _("board columns")
-        unique_together = ("board", "slug")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["board", "slug"],
+                name="unique_board_slug",
+            ),
+        ]
         ordering = ("board", "order", "slug")
 
     def __str__(self):

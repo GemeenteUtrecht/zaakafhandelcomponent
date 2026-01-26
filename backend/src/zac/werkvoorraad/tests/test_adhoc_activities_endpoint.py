@@ -6,8 +6,6 @@ import requests_mock
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -19,6 +17,8 @@ from zac.activities.tests.factories import ActivityFactory, EventFactory
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get
 
@@ -27,7 +27,7 @@ from ..serializers import WorkStackAdhocActivitiesSerializer
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGI_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGI_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -41,8 +41,8 @@ class AdhocActivitiesTests(FreezeTimeMixin, ClearCachesMixin, ESMixin, APITestCa
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         cls.user = UserFactory.create()
         cls.group_1 = GroupFactory.create()
         cls.group_2 = GroupFactory.create()

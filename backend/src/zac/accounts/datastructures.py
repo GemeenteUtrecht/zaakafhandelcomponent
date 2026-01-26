@@ -1,6 +1,8 @@
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 
+# Map each VA value to its order (position in the enum definition)
+# This is used for permission checking - higher order = more confidential
 VA_ORDER = {
-    value: VertrouwelijkheidsAanduidingen.get_choice(value).order
-    for value, _ in VertrouwelijkheidsAanduidingen.choices
+    value: index
+    for index, (value, _) in enumerate(VertrouwelijkheidsAanduidingen.choices)
 }

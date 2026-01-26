@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Union
+from typing import Dict
 
 from django.contrib.auth.models import Group
 from django.urls import reverse_lazy
@@ -7,14 +7,12 @@ from django.utils.translation import gettext as _
 
 from furl import furl
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
-from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import Group, User
 from zac.api.polymorphism import PolymorphicSerializer
 from zac.contrib.dowc.constants import DocFileTypes
 from zac.contrib.dowc.utils import get_dowc_url_from_obj
-from zac.core.api.fields import SerializerSlugRelatedField
 from zac.core.api.serializers import ZaakEigenschapSerializer, ZaakSerializer
 from zac.elasticsearch.drf_api.serializers import ESListZaakDocumentSerializer
 
@@ -37,13 +35,13 @@ from ..data import (
 ###################################################
 
 
-class KownslZaakEigenschapSerializer(APIModelSerializer):
+class KownslZaakEigenschapSerializer(DataclassSerializer):
     class Meta:
-        model = KownslZaakEigenschap
+        dataclass = KownslZaakEigenschap
         fields = ("url", "naam", "waarde")
 
 
-class ReviewDocumentSerializer(APIModelSerializer):
+class ReviewDocumentSerializer(DataclassSerializer):
     review_url = serializers.SerializerMethodField(
         help_text=_("URL to read the review version of the document on the DoWC.")
     )
@@ -76,7 +74,7 @@ class ReviewDocumentSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewDocument
+        dataclass = ReviewDocument
         fields = (
             "review_url",
             "review_version",
@@ -141,7 +139,7 @@ class ReviewDocumentSerializer(APIModelSerializer):
         )
 
 
-class ApprovalSerializer(APIModelSerializer):
+class ApprovalSerializer(DataclassSerializer):
     author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -169,7 +167,7 @@ class ApprovalSerializer(APIModelSerializer):
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True)
 
     class Meta:
-        model = Approval
+        dataclass = Approval
         fields = (
             "author",
             "created",
@@ -185,7 +183,7 @@ class ApprovalSerializer(APIModelSerializer):
         }
 
 
-class AdviceSerializer(APIModelSerializer):
+class AdviceSerializer(DataclassSerializer):
     author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -211,7 +209,7 @@ class AdviceSerializer(APIModelSerializer):
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True)
 
     class Meta:
-        model = Advice
+        dataclass = Advice
         fields = (
             "advice",
             "author",
@@ -233,7 +231,7 @@ class ApprovalReviewsSerializer(serializers.Serializer):
     approvals = ApprovalSerializer(many=True, source="get_reviews")
 
 
-class OpenReviewSerializer(APIModelSerializer):
+class OpenReviewSerializer(DataclassSerializer):
     deadline = serializers.DateField(
         help_text=_("Deadline date of open review request."), required=True
     )
@@ -253,7 +251,7 @@ class OpenReviewSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = OpenReview
+        dataclass = OpenReview
         fields = (
             "deadline",
             "groups",
@@ -266,7 +264,15 @@ class OpenReviewSerializer(APIModelSerializer):
 ###################################################
 
 
-class SubmitReviewDocumentSerializer(APIModelSerializer):
+class SubmitReviewDocumentSerializer(serializers.Serializer):
+    """
+    Serializer for submitting review documents.
+
+    This uses plain Serializer instead of DataclassSerializer because:
+    - edited_document is a virtual field not in ReviewDocument dataclass
+    - source_version and review_version are derived from document URLs, not from input
+    """
+
     document = serializers.URLField(
         help_text=_(
             "URL-reference to document in DRC API,  including `?versie=` parameter"
@@ -285,15 +291,6 @@ class SubmitReviewDocumentSerializer(APIModelSerializer):
     review_version = serializers.SerializerMethodField(
         help_text=_("The version of the document after review is given")
     )
-
-    class Meta:
-        model = ReviewDocument
-        fields = (
-            "document",
-            "edited_document",
-            "review_version",
-            "source_version",
-        )
 
     def get_source_version(self, obj: Dict) -> int:
         return int(furl(obj["document"]).args.get("versie"))
@@ -353,7 +350,15 @@ class SubmitReviewDocumentSerializer(APIModelSerializer):
         return data
 
 
-class SubmitApprovalSerializer(APIModelSerializer):
+class SubmitApprovalSerializer(serializers.Serializer):
+    """
+    Serializer for submitting approval.
+
+    This uses plain Serializer instead of DataclassSerializer because:
+    - review_documents uses SubmitReviewDocumentSerializer which returns dicts
+    - We need flexibility in how validated_data is structured
+    """
+
     author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -373,6 +378,8 @@ class SubmitApprovalSerializer(APIModelSerializer):
         allow_null=True,
         default=None,
     )
+    approved = serializers.BooleanField(required=True)
+    toelichting = serializers.CharField(required=False, allow_blank=True, default="")
     review_documents = SubmitReviewDocumentSerializer(
         label=_("review documents"),
         help_text=_("Documents relevant to the review."),
@@ -380,22 +387,6 @@ class SubmitApprovalSerializer(APIModelSerializer):
         required=False,
     )
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True, required=False)
-
-    class Meta:
-        model = Approval
-        fields = (
-            "author",
-            "created",
-            "group",
-            "approved",
-            "toelichting",
-            "review_documents",
-            "zaakeigenschappen",
-        )
-        extra_kwargs = {
-            "approved": {"required": True},
-            "toelichting": {"required": False},
-        }
 
     def validate(self, data):
         if not data.get("zaakeigenschappen") and not data.get("review_documents"):
@@ -408,7 +399,16 @@ class SubmitApprovalSerializer(APIModelSerializer):
         return super().validate(data)
 
 
-class SubmitAdviceSerializer(APIModelSerializer):
+class SubmitAdviceSerializer(serializers.Serializer):
+    """
+    Serializer for submitting advice.
+
+    This uses plain Serializer instead of DataclassSerializer because:
+    - review_documents uses SubmitReviewDocumentSerializer which returns dicts
+    - We need flexibility in how validated_data is structured
+    """
+
+    advice = serializers.CharField(help_text=_("Advice given for review request."))
     author = MetaObjectUserSerializerSlugRelatedField(
         slug_field="username",
         queryset=User.objects.all(),
@@ -433,20 +433,6 @@ class SubmitAdviceSerializer(APIModelSerializer):
         required=False,
     )
     zaakeigenschappen = KownslZaakEigenschapSerializer(many=True, required=False)
-
-    class Meta:
-        model = Advice
-        fields = (
-            "advice",
-            "author",
-            "created",
-            "group",
-            "review_documents",
-            "zaakeigenschappen",
-        )
-        extra_kwargs = {
-            "advice": {"help_text": _("Advice given for review request.")},
-        }
 
     def validate(self, data):
         if not data.get("zaakeigenschappen") and not data.get("review_documents"):
@@ -519,7 +505,7 @@ class ZaakRevReqDetailSerializer(PolymorphicSerializer):
     )
 
 
-class ZaakRevReqSummarySerializer(APIModelSerializer):
+class ZaakRevReqSummarySerializer(DataclassSerializer):
     can_lock = serializers.SerializerMethodField(
         label=_("can lock request"), help_text=_("User can lock the review request.")
     )
@@ -535,7 +521,7 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewRequest
+        dataclass = ReviewRequest
         fields = (
             "can_lock",
             "completed",
@@ -561,26 +547,27 @@ class ZaakRevReqSummarySerializer(APIModelSerializer):
 ###################################################
 
 
-class UpdateZaakReviewRequestSerializer(APIModelSerializer):
+class UpdateZaakReviewRequestSerializer(serializers.Serializer):
+    """
+    Serializer for updating a review request.
+
+    This uses plain Serializer instead of DataclassSerializer because
+    update_users is a virtual field not present in the ReviewRequest dataclass.
+    """
+
+    lock_reason = serializers.CharField(
+        allow_blank=False,
+        required=False,
+        help_text=_(
+            "If the review request will be locked the users can not be updated."
+        ),
+    )
     update_users = serializers.BooleanField(
         required=False,
         help_text=_(
             "A boolean flag to indicate whether a change of users is requested in the review request. If review request is/will be locked - this will fail."
         ),
     )
-
-    class Meta:
-        model = ReviewRequest
-        fields = ("lock_reason", "update_users")
-        extra_kwargs = {
-            "lock_reason": {
-                "allow_blank": False,
-                "required": False,
-                "help_text": _(
-                    "If the review request will be locked the users can not be updated."
-                ),
-            }
-        }
 
     def validate(self, data):
         validated_data = super().validate(data)

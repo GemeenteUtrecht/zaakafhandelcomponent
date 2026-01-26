@@ -5,10 +5,10 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.tests.factories import UserFactory
+from zac.tests import ServiceFactory
+from zac.tests.compat import mock_service_oas_get
 
 
 @requests_mock.Mocker()
@@ -30,7 +30,7 @@ class InformatieobjecttypeViewTest(APITestCase):
         catalog_url = (
             "http://test.nl/api/v1/catalogussen/1b817d02-09dc-4e5f-9c98-cc9a991b81c6"
         )
-        Service.objects.create(api_type=APITypes.ztc, api_root=catalog_root)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=catalog_root)
         mock_service_oas_get(m, catalog_root, "ztc")
 
         m.get(

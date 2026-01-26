@@ -10,8 +10,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.permissions import (
     zaken_geforceerd_bijwerken,
@@ -19,6 +17,8 @@ from zac.core.permissions import (
     zaken_inzien,
 )
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -50,8 +50,8 @@ class HandleAccessRequestPermissionsTests(ClearCachesMixin, APITestCase):
         self.handler, self.requester = UserFactory.create_batch(2)
         self.client.force_authenticate(self.handler)
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         self.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
@@ -254,7 +254,7 @@ class HandleAccessRequestAPITests(FreezeTimeMixin, APITransactionTestCase):
         site.domain = "testserver"
         site.save()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         self.zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",

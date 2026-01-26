@@ -38,7 +38,7 @@ jobs:
           while IFS= read -r file
           do
             echo $file
-            if [[ $file != backend/doc/* ]]; then
+            if [[ $file != backend/* ]]; then
               echo "run_job=false" >> "$GITHUB_OUTPUT"
             else
               echo "run_job=true" >> "$GITHUB_OUTPUT"
@@ -58,7 +58,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:14
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: postgres
@@ -94,7 +94,7 @@ jobs:
           python-version: '3.10'
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
+          node-version: '20'
 
       - name: Install dependencies
         run: pip install -r requirements/dev.txt pytest
@@ -103,6 +103,8 @@ jobs:
         run: |
           npm ci
           npm run build --production
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
 
       - name: Wait for ES to become available
         run: |

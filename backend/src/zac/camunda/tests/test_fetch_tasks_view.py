@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
 
 import requests_mock
 from django_camunda.client import get_client

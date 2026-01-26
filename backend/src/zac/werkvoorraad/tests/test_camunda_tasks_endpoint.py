@@ -7,12 +7,12 @@ from django_camunda.utils import underscoreize
 from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, SuperUserFactory, UserFactory
 from zac.camunda.data import Task
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
 # Taken from https://docs.camunda.org/manual/7.13/reference/rest/task/get/
@@ -42,7 +42,7 @@ TASK_DATA = {
 
 ZAKEN_ROOT = "http://zaken.nl/api/v1/"
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGI_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGI_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 def _get_task(**overrides):
@@ -68,8 +68,8 @@ class CamundaTasksTests(ESMixin, APITestCase):
             "werkvoorraad:user-tasks",
         )
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",

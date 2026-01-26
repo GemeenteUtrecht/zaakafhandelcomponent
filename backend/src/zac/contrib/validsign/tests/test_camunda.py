@@ -8,13 +8,13 @@ from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component
 
 from zac.accounts.tests.factories import UserFactory
 from zac.api.context import ZaakContext
 from zac.camunda.data import Task
 from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component
 from zgw.models.zrc import Zaak
 
 from ..camunda import (
@@ -63,8 +63,8 @@ class GetValidSignContextSerializersTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -120,7 +120,7 @@ class ValidSignTaskSerializerTests(APITestCase):
             )
             cls.users.append(user)
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         zaak = generate_oas_component(
             "zrc",
             "schemas/Zaak",
@@ -145,7 +145,7 @@ class ValidSignTaskSerializerTests(APITestCase):
             return_value=cls.zaak_context,
         )
 
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         document = generate_oas_component(
             "drc",
             "schemas/EnkelvoudigInformatieObject",

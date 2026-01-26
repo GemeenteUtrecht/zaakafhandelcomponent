@@ -7,9 +7,8 @@ import requests_mock
 from elasticsearch_dsl import Index
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component
 
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     AtomicPermissionFactory,
     BlueprintPermissionFactory,
@@ -18,6 +17,8 @@ from zac.accounts.tests.factories import (
 )
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component
 
 from ..documents import ZaakDocument, ZaakTypeDocument
 from ..searches import search_zaken
@@ -46,7 +47,7 @@ class SearchZakenTests(ESMixin, TestCase):
             bronorganisatie="123456",
             omschrijving="Some zaak description",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
-            va_order=16,
+            va_order=VA_ORDER["beperkt_openbaar"],
             rollen=[
                 {
                     "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -89,7 +90,7 @@ class SearchZakenTests(ESMixin, TestCase):
             bronorganisatie="7890",
             omschrijving="Other description",
             vertrouwelijkheidaanduiding="confidentieel",
-            va_order=20,
+            va_order=VA_ORDER["confidentieel"],
             rollen=[],
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
             deadline="2021-12-31",
@@ -130,7 +131,7 @@ class SearchZakenTests(ESMixin, TestCase):
 
     @requests_mock.Mocker()
     def test_search_only_allowed_blueprint(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",

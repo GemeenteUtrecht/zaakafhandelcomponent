@@ -26,5 +26,3 @@ User story: TODO
 Technical issue: TODO
 
 """
-
-default_app_config = "zac.contrib.objects.checklists.apps.ChecklistsConfig"

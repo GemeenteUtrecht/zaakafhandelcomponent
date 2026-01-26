@@ -34,8 +34,6 @@ class Context(ABC):
     The user task context subclass is determined by the form_key.
     """
 
-    pass
-
 
 def get_registry_item(task: Task) -> RegistryItem:
     lookup = task.form_key

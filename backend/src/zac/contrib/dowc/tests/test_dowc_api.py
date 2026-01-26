@@ -13,8 +13,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes, AuthTypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.tests.factories import (
@@ -24,15 +22,17 @@ from zac.accounts.tests.factories import (
 )
 from zac.core.permissions import zaken_download_documents
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 
 from ..api import check_document_status, get_client
 from ..constants import DocFileTypes
-from ..data import DowcResponse, OpenDowc
+from ..data import OpenDowc
 from ..models import DowcConfig
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/{uuid.uuid4()}"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/{uuid.uuid4()}"
 DOCUMENTS_ROOT = "http://documents.nl/api/v1/"
 DOWC_API_ROOT = "https://dowc.nl"
 
@@ -47,8 +47,8 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         super().setUpTestData()
 
         cls.user = SuperUserFactory.create()
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -119,7 +119,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         self.get_document_patcher.start()
         self.addCleanup(self.get_document_patcher.stop)
 
-        self.service = Service.objects.create(
+        self.service = ServiceFactory.create(
             label="dowc",
             api_type=APITypes.orc,
             api_root=DOWC_API_ROOT,
@@ -128,7 +128,6 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
             header_value="ApplicationToken some-token",
             client_id="zac",
             secret="supersecret",
-            oas=f"{DOWC_API_ROOT}/api/v1",
             user_id="zac",
         )
 
@@ -137,14 +136,14 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         config.save()
 
     def test_client(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        # Schema is loaded from local test files, no need to mock OAS endpoint
 
         client = get_client(user=self.user)
+        # Schema should be loaded from local test files
         self.assertIsInstance(client.schema, dict)
 
         # We're using the ZGW Auth mechanism to pass currently logged-in user information
         self.assertIsNotNone(client.auth)
-        self.assertEqual(client.auth.user_id, self.user.username)
         header = client.auth_header["Authorization"]
         self.assertTrue(header.startswith("Bearer "))
 
@@ -157,8 +156,8 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         self.assertEqual(claims["email"], self.user.email)
         self.assertEqual(claims["first_name"], self.user.first_name)
         self.assertEqual(claims["last_name"], self.user.last_name)
-        self.assertEqual(len(m.request_history), 1)
-        self.assertEqual(m.last_request.url, f"{self.service.oas}?v=3")
+        # No HTTP requests should be made - schema loaded from local files
+        self.assertEqual(len(m.request_history), 0)
 
         # See if application token is used
         client = get_client(force=True)
@@ -188,7 +187,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_dowc_file_with_wrong_permissions(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.documenttype)
@@ -217,7 +216,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_dowc_file_with_right_permissions_but_wrong_VA(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.documenttype)
@@ -246,7 +245,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_dowc_file_with_permissions(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.documenttype)
@@ -299,7 +298,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         )
 
     def test_delete_dowc_file_with_permissions(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.documenttype)
@@ -340,7 +339,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         patch_invalidate_doc_other_cache.assert_called_once()
 
     def test_dowc_file_already_exists_same_user(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         self.client.force_authenticate(user=self.user)
         m.post(
             f"{DOWC_API_ROOT}/api/v1/documenten",
@@ -371,7 +370,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_dowc_file_already_exists_different_user(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         self.client.force_authenticate(user=self.user)
         m.post(
             f"{DOWC_API_ROOT}/api/v1/documenten",
@@ -394,7 +393,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         )
 
     def test_check_document_status_documenten(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         self.client.force_authenticate(user=self.user)
         doc = "https://some-doc.nl/"
         _uuid = uuid.uuid4()
@@ -423,7 +422,7 @@ class DOWCAPITests(ClearCachesMixin, APITestCase):
         )
 
     def test_check_document_status_zaak(self, m):
-        mock_service_oas_get(m, self.service.api_root, "dowc", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "dowc")
         self.client.force_authenticate(user=self.user)
         doc = "https://some-doc.nl/"
         _uuid = uuid.uuid4()

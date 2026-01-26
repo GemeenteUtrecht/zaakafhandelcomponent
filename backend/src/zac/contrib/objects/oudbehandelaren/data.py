@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
 
-from django.utils.translation import gettext_lazy as _
-
 from zgw_consumers.api_models.base import Model
 
 from zac.accounts.models import User

@@ -9,8 +9,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import StatusType
 from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.accounts.tests.factories import UserFactory
@@ -33,8 +31,10 @@ from zac.contrib.objects.kownsl.tests.factories import (
 )
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
-from zac.tests.utils import mock_resource_get, paginated_response
+from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
 from ...services import (
@@ -61,12 +61,12 @@ class KownslAPITests(FreezeTimeMixin, ClearCachesMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        objects_service = Service.objects.create(
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        objects_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTS_ROOT
         )
-        objecttypes_service = Service.objects.create(
+        objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root=OBJECTTYPES_ROOT
         )
         config = CoreConfig.get_solo()

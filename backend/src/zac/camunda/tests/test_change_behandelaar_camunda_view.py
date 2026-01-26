@@ -11,8 +11,6 @@ from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -21,6 +19,8 @@ from zac.accounts.tests.factories import (
 )
 from zac.camunda.data import ProcessInstance, Task
 from zac.core.tests.utils import ClearCachesMixin, mock_parallel
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..api.permissions import zaakproces_usertasks
@@ -84,8 +84,8 @@ class UpdateCamundaBehandelaarViewTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
-        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -305,8 +305,8 @@ class ChangeBehandelaarPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
-        Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/ZaakType",

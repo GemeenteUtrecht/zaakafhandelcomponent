@@ -16,8 +16,6 @@ from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import GroupFactory, UserFactory
 from zac.api.context import ZaakContext
@@ -26,6 +24,8 @@ from zac.camunda.user_tasks import UserTaskData, get_context as _get_context
 from zac.contrib.objects.kownsl.data import KownslTypes, ReviewRequest, Reviews
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.api import create_informatieobject_document
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 from zgw.models.zrc import Zaak
 
@@ -81,14 +81,14 @@ class GetConfigureReviewRequestContextSerializersTests(ClearCachesMixin, APITest
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="DOME",
         )
         cls.informatieobjecttype = generate_oas_component(
@@ -473,9 +473,9 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.users_1 = UserFactory.create_batch(3)
         cls.group = GroupFactory.create()
         cls.users_2 = UserFactory.create_batch(3)
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         site = Site.objects.get_current()
         site.domain = "example"
@@ -484,7 +484,7 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
-            url=f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
+            url=f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd",
             domein="DOME",
         )
         cls.informatieobjecttype = generate_oas_component(
@@ -575,21 +575,12 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
         }
         serializer = AssignedUsersSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
-        self.assertEqual(
-            sorted(list(serializer.validated_data.keys())),
-            sorted(
-                ["user_assignees", "group_assignees", "deadline", "email_notification"]
-            ),
-        )
-        self.assertEqual(
-            serializer.validated_data,
-            {
-                "user_assignees": self.users_1,
-                "group_assignees": [self.group],
-                "email_notification": False,
-                "deadline": date(2020, 1, 1),
-            },
-        )
+        # AssignedUsersSerializer returns AssignedUsers dataclass
+        validated = serializer.validated_data
+        self.assertEqual(validated.user_assignees, self.users_1)
+        self.assertEqual(validated.group_assignees, [self.group])
+        self.assertEqual(validated.email_notification, False)
+        self.assertEqual(validated.deadline, date(2020, 1, 1))
 
     @freeze_time("1999-12-31T23:59:59Z")
     def test_select_users_rev_req_serializer_duplicate_users(self):
@@ -664,23 +655,22 @@ class ConfigureReviewRequestSerializersTests(APITestCase):
             data=payload, context={"task": task}
         )
         self.assertTrue(serializer.is_valid(raise_exception=True))
-        self.assertEqual(
-            serializer.validated_data["assigned_users"],
-            [
-                {
-                    "user_assignees": self.users_1,
-                    "group_assignees": [self.group],
-                    "email_notification": False,
-                    "deadline": date(2020, 1, 1),
-                },
-                {
-                    "user_assignees": self.users_2,
-                    "group_assignees": [],
-                    "email_notification": False,
-                    "deadline": date(2020, 1, 2),
-                },
-            ],
-        )
+        # AssignedUsersSerializer returns AssignedUsers dataclass instances
+        validated_assigned_users = serializer.validated_data["assigned_users"]
+        self.assertEqual(len(validated_assigned_users), 2)
+
+        # Check first assigned users
+        self.assertEqual(validated_assigned_users[0].user_assignees, self.users_1)
+        self.assertEqual(validated_assigned_users[0].group_assignees, [self.group])
+        self.assertEqual(validated_assigned_users[0].email_notification, False)
+        self.assertEqual(validated_assigned_users[0].deadline, date(2020, 1, 1))
+
+        # Check second assigned users
+        self.assertEqual(validated_assigned_users[1].user_assignees, self.users_2)
+        self.assertEqual(validated_assigned_users[1].group_assignees, [])
+        self.assertEqual(validated_assigned_users[1].email_notification, False)
+        self.assertEqual(validated_assigned_users[1].deadline, date(2020, 1, 2))
+
         self.assertEqual(serializer.validated_data["documents"], [self.document.url])
         self.assertEqual(serializer.validated_data["toelichting"], "some-toelichting")
 

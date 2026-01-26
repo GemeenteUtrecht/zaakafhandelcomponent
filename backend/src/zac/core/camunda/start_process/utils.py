@@ -1,7 +1,5 @@
 from typing import List
 
-from django.utils.translation import gettext_lazy as _
-
 from zgw_consumers.api_models.base import factory
 
 from zac.api.context import ZaakContext

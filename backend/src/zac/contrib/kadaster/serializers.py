@@ -2,7 +2,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.api.proxy import ProxySerializer
 
@@ -21,14 +21,14 @@ from .data import (
 )
 
 
-class SpellSuggestionsSerializer(APIModelSerializer):
+class SpellSuggestionsSerializer(DataclassSerializer):
     suggestion = serializers.ListField(
         help_text=_("Alternative suggestions for search term."),
         child=serializers.CharField(),
     )
 
     class Meta:
-        model = SpellSuggestions
+        dataclass = SpellSuggestions
         fields = (
             "search_term",
             "num_found",
@@ -52,20 +52,20 @@ class SpellSuggestionsSerializer(APIModelSerializer):
         }
 
 
-class SpellCheckSerializer(APIModelSerializer):
+class SpellCheckSerializer(DataclassSerializer):
     suggestions = SpellSuggestionsSerializer(
         help_text=_("Potentially misspelled searches and spelling suggestions."),
         many=True,
     )
 
     class Meta:
-        model = SpellCheck
+        dataclass = SpellCheck
         fields = ("suggestions",)
 
 
-class SuggestResultSerializer(APIModelSerializer):
+class SuggestResultSerializer(DataclassSerializer):
     class Meta:
-        model = SuggestResult
+        dataclass = SuggestResult
         fields = (
             "type",
             "weergavenaam",
@@ -86,7 +86,7 @@ class SuggestResultSerializer(APIModelSerializer):
         }
 
 
-class BagLocationSerializer(APIModelSerializer):
+class BagLocationSerializer(DataclassSerializer):
     docs = SuggestResultSerializer(
         help_text=_("Suggestions made by the suggest service."),
         many=True,
@@ -94,7 +94,7 @@ class BagLocationSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = BagLocation
+        dataclass = BagLocation
         fields = ("num_found", "start", "max_score", "docs")
         extra_kwargs = {
             "num_found": {"help_text": _("Number of BAG objects found.")},
@@ -107,7 +107,7 @@ class BagLocationSerializer(APIModelSerializer):
         }
 
 
-class AddressSearchResponseSerializer(APIModelSerializer):
+class AddressSearchResponseSerializer(DataclassSerializer):
     response = BagLocationSerializer(
         required=False,
     )
@@ -117,16 +117,16 @@ class AddressSearchResponseSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = AddressSearchResponse
+        dataclass = AddressSearchResponse
         fields = (
             "response",
             "spellcheck",
         )
 
 
-class AddressSerializer(APIModelSerializer):
+class AddressSerializer(DataclassSerializer):
     class Meta:
-        model = Address
+        dataclass = Address
         fields = (
             "straatnaam",
             "nummer",
@@ -146,11 +146,11 @@ class AddressSerializer(APIModelSerializer):
         }
 
 
-class BaseBagDataSerializer(APIModelSerializer):
+class BaseBagDataSerializer(DataclassSerializer):
     geometrie = serializers.JSONField(help_text=_("GeoJSON of BAG object geometry."))
 
     class Meta:
-        model = BaseBagData
+        dataclass = BaseBagData
         fields = [
             "url",
             "geometrie",
@@ -164,7 +164,7 @@ class BaseBagDataSerializer(APIModelSerializer):
 
 class PandBagDataSerializer(BaseBagDataSerializer):
     class Meta(BaseBagDataSerializer.Meta):
-        model = PandBagData
+        dataclass = PandBagData
         fields = BaseBagDataSerializer.Meta.fields + ["oorspronkelijk_bouwjaar"]
         extra_kwargs = {
             **BaseBagDataSerializer.Meta.extra_kwargs,
@@ -176,7 +176,7 @@ class PandBagDataSerializer(BaseBagDataSerializer):
 
 class VerblijfsobjectDataSerializer(BaseBagDataSerializer):
     class Meta(BaseBagDataSerializer.Meta):
-        model = VerblijfsobjectBagData
+        dataclass = VerblijfsobjectBagData
         fields = BaseBagDataSerializer.Meta.fields + ["oppervlakte"]
         extra_kwargs = {
             **BaseBagDataSerializer.Meta.extra_kwargs,
@@ -186,24 +186,24 @@ class VerblijfsobjectDataSerializer(BaseBagDataSerializer):
         }
 
 
-class FindPandSerializer(APIModelSerializer):
+class FindPandSerializer(DataclassSerializer):
     adres = AddressSerializer(help_text=_("Address of pand."))
     bag_object = PandBagDataSerializer(help_text=_("Meta data of BAG object."))
 
     class Meta:
-        model = Pand
+        dataclass = Pand
         fields = (
             "adres",
             "bag_object",
         )
 
 
-class VerblijfsobjectSerializer(APIModelSerializer):
+class VerblijfsobjectSerializer(DataclassSerializer):
     adres = AddressSerializer(help_text=_("Address of verblijfsobject."))
     bag_object = VerblijfsobjectDataSerializer(help_text=_("Meta data of BAG object."))
 
     class Meta:
-        model = Verblijfsobject
+        dataclass = Verblijfsobject
         fields = (
             "adres",
             "bag_object",

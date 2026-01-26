@@ -7,11 +7,11 @@ import requests_mock
 from furl import furl
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.constants import APITypes, AuthTypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import SuperUserFactory
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 
 from ..models import KadasterConfig
 
@@ -24,14 +24,13 @@ LOCATION_SERVER_ROOT = "https://location-server-kadaster.nl/"
 class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
-        service = Service.objects.create(
+        service = ServiceFactory.create(
             label="kadaster",
             api_type=APITypes.orc,
             api_root=KADASTER_API_ROOT,
             auth_type=AuthTypes.api_key,
             header_key="x-api-key",
             header_value="some-secret-key",
-            oas=f"{KADASTER_API_ROOT}schema/openapi.yaml",
         )
 
         config = KadasterConfig.get_solo()
@@ -386,7 +385,9 @@ class KadasterAPITests(ClearCachesMixin, APITransactionTestCase):
 
         response = self.client.get(url.url)
         hits = len(m.request_history)
-        self.assertEqual(hits, 4)
+        # Expecting 3 requests: location lookup, kadaster adressen, kadaster panden
+        # (OAS schema is loaded from local files during testing, not from remote)
+        self.assertEqual(hits, 3)
 
         # Make sure cache gets hit afterwards instead of kadaster
         response = self.client.get(url.url)

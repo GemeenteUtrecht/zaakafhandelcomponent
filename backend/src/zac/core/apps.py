@@ -15,6 +15,54 @@ class CoreConfig(AppConfig):
 
         request_finished.connect(clear_request_cache)
 
+        # Patch zgw-consumers Service model for backward compatibility with 1.x
+        from zgw_consumers.client import build_client as _build_client
+        from zgw_consumers.models import Service
+
+        from zac.zgw_client import ZGWClient
+
+        def build_client(self, **kwargs):
+            """
+            Build a ZGWClient for this Service.
+
+            Provides backward compatibility with zgw-consumers <1.0 by using
+            our custom ZGWClient instead of the default client.
+            """
+            return _build_client(self, client_factory=ZGWClient, **kwargs)
+
+        Service.build_client = build_client
+
+        # Patch zgw-consumers Document model for zgw-consumers 1.x compatibility
+        # Fix broken get_vertrouwelijkheidaanduiding_display method
+        from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
+        from zgw_consumers.api_models.documenten import Document
+
+        def _fixed_get_vertrouwelijkheidaanduiding_display(self):
+            """Fixed version that works with zgw-consumers 1.x where values is a list."""
+            # In Django choices, use the choices tuple to look up the label
+            for choice_value, choice_label in VertrouwelijkheidsAanduidingen.choices:
+                if choice_value == self.vertrouwelijkheidaanduiding:
+                    return choice_label
+            return self.vertrouwelijkheidaanduiding
+
+        Document.get_vertrouwelijkheidaanduiding_display = (
+            _fixed_get_vertrouwelijkheidaanduiding_display
+        )
+
+        # Patch zgw-consumers Rol model for zgw-consumers 1.x compatibility
+        # Fix broken get_betrokkene_type_display method
+        from zgw_consumers.api_models.constants import RolTypes
+        from zgw_consumers.api_models.zaken import Rol
+
+        def _fixed_get_betrokkene_type_display(self):
+            """Fixed version that works with zgw-consumers 1.x where values is a list."""
+            for choice_value, choice_label in RolTypes.choices:
+                if choice_value == self.betrokkene_type:
+                    return choice_label
+            return self.betrokkene_type
+
+        Rol.get_betrokkene_type_display = _fixed_get_betrokkene_type_display
+
 
 def clear_request_cache(sender, **kwargs):
     cache = caches["request"]

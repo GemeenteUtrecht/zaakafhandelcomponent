@@ -1,21 +1,21 @@
-from zds_client.log import Log
-from zgw_consumers.client import ZGWClient
-from zgw_consumers.nlx import NLXClientMixin
+from zac.zgw_client import ZGWClient
 
-
-class DisabledLog(Log):
-    """
-    Do not log any requests in memory.
-
-    * this prevents memory leaking
-    * the default implementation is not thread-safe, yet we use this client in thread
-      pools
-    * we're not visualizing this anywhere anyway
-    """
+try:
+    from zgw_consumers.nlx import NLXClientMixin
+except ImportError:
+    # zgw-consumers 1.x may have moved or removed NLXClientMixin
+    # For now, use a no-op mixin for compatibility
+    class NLXClientMixin:
+        """Placeholder for NLX support if zgw-consumers 1.x removed it."""
 
 
 class Client(NLXClientMixin, ZGWClient):
-    _log = DisabledLog()
+    """
+    ZAC's custom ZGW API client with NLX support.
+
+    Extends the base ZGWClient with NLX URL rewriting capabilities
+    and JWT refresh functionality for long-lived client instances.
+    """
 
     def refresh_auth(self):
         """

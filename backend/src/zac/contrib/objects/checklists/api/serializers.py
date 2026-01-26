@@ -7,8 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from djangorestframework_camel_case.settings import api_settings
 from djangorestframework_camel_case.util import camelize
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.fields import UserSlugRelatedField
 from zac.accounts.api.serializers import UserSerializer
@@ -24,19 +24,13 @@ from ...serializers import (
     MetaObjectGroupSerializerSlugRelatedField,
     MetaObjectUserSerializerSlugRelatedField,
 )
-from ..data import (
-    Checklist,
-    ChecklistAnswer,
-    ChecklistQuestion,
-    ChecklistType,
-    QuestionChoice,
-)
+from ..data import Checklist, ChecklistQuestion, ChecklistType, QuestionChoice
 from ..models import ChecklistLock
 
 
-class QuestionChoiceSerializer(APIModelSerializer):
+class QuestionChoiceSerializer(DataclassSerializer):
     class Meta:
-        model = QuestionChoice
+        dataclass = QuestionChoice
         fields = ("name", "value")
         extra_kwargs = {
             "name": {
@@ -52,12 +46,12 @@ class QuestionChoiceSerializer(APIModelSerializer):
         }
 
 
-class ChecklistQuestionSerializer(APIModelSerializer):
+class ChecklistQuestionSerializer(DataclassSerializer):
     choices = QuestionChoiceSerializer(many=True, required=False)
     is_multiple_choice = serializers.SerializerMethodField(source="choices")
 
     class Meta:
-        model = ChecklistQuestion
+        dataclass = ChecklistQuestion
         fields = ("question", "order", "choices", "is_multiple_choice")
         extra_kwargs = {
             "question": {
@@ -75,15 +69,50 @@ class ChecklistQuestionSerializer(APIModelSerializer):
         return bool(obj.choices)
 
 
-class ChecklistTypeSerializer(APIModelSerializer):
+class ChecklistTypeSerializer(DataclassSerializer):
     questions = ChecklistQuestionSerializer(many=True, required=True)
 
     class Meta:
-        model = ChecklistType
+        dataclass = ChecklistType
         fields = ("questions",)
 
 
-class ChecklistAnswerSerializer(APIModelSerializer):
+class ChecklistAnswerSerializer(serializers.Serializer):
+    """
+    Serializer for checklist answers.
+
+    This uses plain Serializer instead of DataclassSerializer because:
+    - created is read_only but required in the dataclass
+    - Parent serializers expect validated_data as dicts
+    """
+
+    question = serializers.CharField(
+        required=True,
+        min_length=1,
+        help_text=_("The question related to the answer."),
+    )
+    answer = serializers.CharField(
+        min_length=0,
+        help_text=_("Answer to the question."),
+        allow_blank=True,
+        default="",
+    )
+    created = serializers.DateTimeField(
+        help_text=_("Datetime answer was given."),
+        read_only=True,
+    )
+    remarks = serializers.CharField(
+        help_text=_("Remarks in addition to the answer."),
+        allow_blank=True,
+        default="",
+        required=False,
+    )
+    document = serializers.CharField(
+        help_text=_("URL-reference to document related to answer."),
+        allow_blank=True,
+        default="",
+        required=False,
+    )
     group_assignee = MetaObjectGroupSerializerSlugRelatedField(
         slug_field="name",
         queryset=Group.objects.all(),
@@ -98,48 +127,17 @@ class ChecklistAnswerSerializer(APIModelSerializer):
         allow_null=True,
         default=None,
     )
-    created = serializers.DateTimeField(
-        help_text=_("Datetime answer was given."),
-        read_only=True,
-    )
-
-    class Meta:
-        model = ChecklistAnswer
-        fields = (
-            "question",
-            "answer",
-            "created",
-            "remarks",
-            "document",
-            "group_assignee",
-            "user_assignee",
-        )
-        extra_kwargs = {
-            "question": {
-                "required": True,
-                "min_length": 1,
-                "help_text": _("The question related to the answer."),
-            },
-            "remarks": {
-                "help_text": _("Remarks in addition to the answer."),
-                "allow_blank": True,
-                "default": "",
-            },
-            "document": {
-                "help_text": _("URL-reference to document related to answer."),
-                "allow_blank": True,
-                "default": "",
-            },
-            "answer": {
-                "min_length": 0,
-                "help_text": _("Answer to the question."),
-                "allow_blank": True,
-                "default": "",
-            },
-        }
 
 
-class ChecklistSerializer(APIModelSerializer):
+class ChecklistSerializer(serializers.Serializer):
+    """
+    Serializer for checklists.
+
+    This uses plain Serializer instead of DataclassSerializer because:
+    - zaak and locked are read_only but required in the Checklist dataclass
+    - validate() method expects validated_data as a dict
+    """
+
     answers = ChecklistAnswerSerializer(
         many=True,
     )
@@ -152,11 +150,7 @@ class ChecklistSerializer(APIModelSerializer):
     zaak = serializers.URLField(
         read_only=True, help_text=_("URL-reference of ZAAK checklist belongs to.")
     )
-
-    class Meta:
-        model = Checklist
-        fields = ("answers", "locked_by", "zaak", "locked")
-        extra_kwargs = {"locked": {"read_only": True}}
+    locked = serializers.BooleanField(read_only=True)
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)

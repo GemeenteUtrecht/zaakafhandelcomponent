@@ -8,11 +8,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.permissions import zaakproces_send_message, zaken_handle_access
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ...models import AtomicPermission, UserAtomicPermission
@@ -36,8 +36,8 @@ IDENTIFICATIE = "ZAAK-001"
 class DeleteAccessPermissionTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         cls.catalogus = generate_oas_component(
             "ztc",
             "schemas/Catalogus",
@@ -239,7 +239,7 @@ class DeleteAccessAPITests(APITransactionTestCase):
         site.domain = "testserver"
         site.save()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         self.client.force_authenticate(self.handler)
 
     @requests_mock.Mocker()

@@ -1,7 +1,6 @@
 from itertools import groupby
 from typing import List, Optional
 
-from django.contrib.auth.models import Group
 from django.db import models
 
 from zac.accounts.models import User

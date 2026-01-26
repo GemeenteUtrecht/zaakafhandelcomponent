@@ -6,11 +6,11 @@ from django.urls import reverse
 import requests_mock
 from rest_framework.test import APIClient, APITestCase
 from zgw_consumers.constants import APITypes, AuthTypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import mock_service_oas_get
 
 from ..api import fetch_extrainfo_np, fetch_natuurlijkpersoon, get_client
 from ..models import BRPConfig
@@ -21,14 +21,13 @@ PERSOON_URL = f"{BRP_API_ROOT}ingeschrevenpersonen/{BSN}"
 
 
 def setup_BRP_service():
-    service = Service.objects.create(
+    service = ServiceFactory.create(
         label="BRP",
         api_type=APITypes.orc,
         api_root=BRP_API_ROOT,
         auth_type=AuthTypes.api_key,
         header_key="Authorization",
         header_value="Token foobarbaz",
-        oas=f"{BRP_API_ROOT}schema",
     )
     config = BRPConfig.get_solo()
     config.service = service
@@ -56,7 +55,7 @@ class BrpApiTests(ClearCachesMixin, TestCase):
             },
             "_links": {},
         }
-        mock_service_oas_get(m, self.service.api_root, "brp", oas_url=self.service.oas)
+        mock_service_oas_get(m, self.service.api_root, "brp")
         m.get(PERSOON_URL, json=naturlijk_persoon)
 
     @requests_mock.Mocker()
@@ -65,11 +64,12 @@ class BrpApiTests(ClearCachesMixin, TestCase):
 
         client = get_client()
 
+        # Schema is loaded from local test files, not from remote endpoint
         self.assertIsInstance(client.schema, dict)
-        self.assertIsNone(client.auth)
-        self.assertEqual(client.auth_header, {"Authorization": "Token foobarbaz"})
-        self.assertEqual(len(m.request_history), 1)
-        self.assertEqual(m.last_request.url, f"{self.service.oas}?v=3")
+        # With zgw-consumers 1.x, API key auth creates an APIKeyAuth object
+        self.assertIsNotNone(client.auth)
+        # No HTTP requests should be made for schema (loaded from local files)
+        self.assertEqual(len(m.request_history), 0)
 
     @requests_mock.Mocker()
     def test_fetch_naturlijk_persoon(self, m):

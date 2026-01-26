@@ -4,7 +4,7 @@ from typing import Dict, Optional
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.accounts.models import User
 from zac.api.context import get_zaak_context
@@ -19,13 +19,13 @@ class ValidSignContext(Context):
 
 
 @usertask_context_serializer
-class ValidSignContextSerializer(APIModelSerializer):
+class ValidSignContextSerializer(DataclassSerializer):
     documents_link = serializers.URLField(
         help_text=_("URL-reference to paginated documents endpoint.")
     )
 
     class Meta:
-        model = ValidSignContext
+        dataclass = ValidSignContext
         fields = ("documents_link",)
 
 
