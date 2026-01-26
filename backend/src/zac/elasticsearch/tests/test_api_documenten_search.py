@@ -14,8 +14,6 @@ from zgw_consumers.api_models.catalogi import InformatieObjectType, ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.constants import APITypes, AuthTypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -33,6 +31,8 @@ from zac.elasticsearch.api import (
 )
 from zac.elasticsearch.documents import InformatieObjectDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak, ZaakInformatieObject
 
@@ -88,8 +88,8 @@ class ESZaakDocumentsPermissionTests(ClearCachesMixin, APITransactionTestCase):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
 
         self.patch_find_zaak.start()
         self.addCleanup(self.patch_find_zaak.stop)
@@ -322,10 +322,10 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
-        Service.objects.create(api_type=APITypes.drc, api_root=DRC_ROOT)
-        self.dowc_service = Service.objects.create(
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZRC_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DRC_ROOT)
+        self.dowc_service = ServiceFactory.create(
             label="dowc",
             api_type=APITypes.orc,
             api_root=DOWC_API_ROOT,
@@ -334,7 +334,6 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
             header_value="ApplicationToken some-token",
             client_id="zac",
             secret="supersecret",
-            oas=f"{DOWC_API_ROOT}/api/v1",
             user_id="zac",
         )
 
@@ -356,7 +355,7 @@ class ESZaakDocumentsResponseTests(ClearCachesMixin, ESMixin, APITransactionTest
         Index(settings.ES_INDEX_DOCUMENTEN).refresh()
         mock_service_oas_get(m, ZTC_ROOT, "ztc")
         mock_service_oas_get(m, ZRC_ROOT, "zrc")
-        mock_service_oas_get(m, DOWC_API_ROOT, "dowc", oas_url=self.dowc_service.oas)
+        mock_service_oas_get(m, DOWC_API_ROOT, "dowc")
 
         mock_resource_get(m, self.catalogus)
         mock_resource_get(m, self.zaaktype)

@@ -60,7 +60,7 @@
 ///   The name of the modifier to apply.
 @mixin modifier($modifier) {
   $selector: null;
-  $bits: str-split(quote(&), " ");
+  $bits: str-split(inspect(&), " ");
 
   @if ( length($bits) == 1 ) {
     // block
@@ -85,7 +85,7 @@
   }
 }
 
-@mixin --m($m) {
+@mixin _m($m) {
   @include modifier($m) {
     @content;
   }

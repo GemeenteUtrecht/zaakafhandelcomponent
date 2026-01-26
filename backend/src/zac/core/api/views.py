@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
+import requests
 from djangorestframework_camel_case.parser import CamelCaseMultiPartParser
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -24,7 +25,7 @@ from rest_framework import (
     status,
     views,
 )
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -402,21 +403,27 @@ class ZaakStatusesView(GetZaakMixin, views.APIView):
 
     @extend_schema(summary=_("Add STATUS to ZAAK."))
     def post(self, request, *args, **kwargs):
+        from .serializers import CreateZaakStatusSerializer
+
         zaak = self.get_object()
-        serializer = self.serializer_class(
+        # Use CreateZaakStatusSerializer for input validation
+        input_serializer = CreateZaakStatusSerializer(
             data=request.data, context={"zaaktype": zaak.zaaktype}
         )
-        serializer.is_valid(raise_exception=True)
-        statustype = get_statustype(serializer.validated_data["statustype"]["url"])
+        input_serializer.is_valid(raise_exception=True)
+        statustype = get_statustype(
+            input_serializer.validated_data["statustype"]["url"]
+        )
         new_status = zet_status(
             zaak,
             statustype,
-            toelichting=serializer.validated_data["statustoelichting"],
+            toelichting=input_serializer.validated_data.get("statustoelichting", ""),
         )
-        serializer = self.serializer_class(
+        # Use ZaakStatusSerializer for output serialization
+        output_serializer = self.serializer_class(
             instance=new_status, context={"zaaktype": zaak.zaaktype}
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ZaakEigenschappenView(GetZaakMixin, views.APIView):
@@ -459,7 +466,7 @@ class ZaakEigenschapDetailView(views.APIView):
 
         try:
             zaak_eigenschap = fetch_zaak_eigenschap(url)
-        except ClientError as exc:
+        except (ClientError, requests.HTTPError) as exc:
             raise Http404("No ZAAKEIGENSCHAP matches the given url.")
 
         # check permissions
@@ -510,11 +517,15 @@ class ZaakEigenschapDetailView(views.APIView):
         request=UpdateZaakEigenschapWaardeSerializer,
     )
     def patch(self, request, *args, **kwargs):
+        from .serializers import UpdateZaakEigenschapWaardeSerializer
+
         zaak_eigenschap = self.get_object()
-        serializer = self.serializer_class(
+        # Use UpdateZaakEigenschapWaardeSerializer for input validation (plain Serializer)
+        # instead of ZaakEigenschapSerializer (polymorphic DataclassSerializer)
+        input_serializer = UpdateZaakEigenschapWaardeSerializer(
             instance=zaak_eigenschap, data=request.data, partial=True
         )
-        serializer.is_valid(raise_exception=True)
+        input_serializer.is_valid(raise_exception=True)
         updated_zaak_eigenschap = update_zaak_eigenschap(
             zaak_eigenschap, request.data, request=request
         )
@@ -586,7 +597,11 @@ class ZaakRelationView(views.APIView):
         return mapping[self.request.method](*args, **kwargs)
 
     def update_in_open_zaak(self, hoofdzaak: Zaak, bijdragezaak: Zaak):
-        client = Service.get_client(hoofdzaak.url)
+        # zgw-consumers 1.x: get_client() removed, use get_service() + build_client()
+        service = Service.get_service(hoofdzaak.url)
+        client = service.build_client() if service else None
+        if not client:
+            raise ValueError(f"No service configured for URL: {hoofdzaak.url}")
         client.partial_update(
             "zaak",
             {"relevanteAndereZaken": hoofdzaak.relevante_andere_zaken},
@@ -940,6 +955,8 @@ class ZaakDocumentView(views.APIView):
         """
         Patch an already uploaded document on the Documenten API.
         """
+        from rest_framework.exceptions import APIException
+
         serializer = self.get_serializer(
             data=request.data,
         )
@@ -951,7 +968,20 @@ class ZaakDocumentView(views.APIView):
 
         zaak = get_zaak(zaak_url=serializer.validated_data["zaak"])
         document_data = self.get_document_data(serializer.validated_data, zaak)
-        document = update_document(document_url, document_data, audit_line)
+
+        try:
+            document = update_document(document_url, document_data, audit_line)
+        except (ClientError, requests.HTTPError) as exc:
+            # Convert HTTP errors to DRF APIException (500 error)
+            if isinstance(exc, requests.HTTPError):
+                # Try to extract detail from JSON response
+                try:
+                    detail = str(exc.response.json())
+                except (ValueError, AttributeError):
+                    detail = str(exc)
+            else:
+                detail = str(exc.args[0]) if exc.args else str(exc)
+            raise APIException(detail=detail)
 
         document.informatieobjecttype = get_informatieobjecttype(
             document.informatieobjecttype

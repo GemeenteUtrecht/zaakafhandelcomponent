@@ -16,9 +16,12 @@ RUN pip install pip 'setuptools' -U
 RUN pip install -r requirements/production.txt
 
 # Stage 2 - build frontend
-FROM node:10-buster AS frontend-build
+FROM node:20-bookworm AS frontend-build
 
 WORKDIR /app
+
+# Enable legacy OpenSSL provider for Webpack 4 compatibility with Node.js 20
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 COPY ./*.json ./*.js ./.babelrc /app/
 RUN npm ci

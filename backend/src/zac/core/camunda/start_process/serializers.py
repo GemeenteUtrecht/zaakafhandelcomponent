@@ -1,15 +1,13 @@
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
-from functools import partial
 from typing import Dict, List, Union
 
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from zgw_consumers.api_models.documenten import Document
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.zaken import Rol, ZaakEigenschap
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
 from zac.camunda.data import Task
@@ -21,8 +19,7 @@ from zac.core.api.serializers import (
     RolTypeSerializer,
     ZaakEigenschapSerializer,
 )
-from zac.core.services import get_rollen, get_roltypen, get_zaakeigenschappen
-from zac.elasticsearch.searches import count_by_iot_in_zaak
+from zac.core.services import get_roltypen
 
 from .data import (
     ProcessEigenschap,
@@ -49,13 +46,13 @@ class CreatedProcessInstanceSerializer(serializers.Serializer):
     )
 
 
-class ProcessEigenschapChoiceSerializer(APIModelSerializer):
+class ProcessEigenschapChoiceSerializer(DataclassSerializer):
     class Meta:
-        model = ProcessEigenschapChoice
+        dataclass = ProcessEigenschapChoice
         fields = ("label", "value")
 
 
-class ProcessEigenschapSerializer(APIModelSerializer):
+class ProcessEigenschapSerializer(DataclassSerializer):
     choices = ProcessEigenschapChoiceSerializer(
         many=True,
         required=True,
@@ -66,11 +63,11 @@ class ProcessEigenschapSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ProcessEigenschap
+        dataclass = ProcessEigenschap
         fields = ("choices", "eigenschap", "label", "default", "required", "order")
 
 
-class ProcessInformatieObjectSerializer(APIModelSerializer):
+class ProcessInformatieObjectSerializer(DataclassSerializer):
     already_uploaded_informatieobjecten = serializers.IntegerField(
         help_text=_("Count of already uploaded documents of INFORMATIEOBJECTTYPE."),
         default=0,
@@ -82,7 +79,7 @@ class ProcessInformatieObjectSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ProcessInformatieObject
+        dataclass = ProcessInformatieObject
         fields = (
             "already_uploaded_informatieobjecten",
             "allow_multiple",
@@ -93,13 +90,13 @@ class ProcessInformatieObjectSerializer(APIModelSerializer):
         )
 
 
-class ProcessRolSerializer(APIModelSerializer):
+class ProcessRolSerializer(DataclassSerializer):
     roltype = RolTypeSerializer(
         _("roltype"), required=True, help_text=_("The ROLTYPE related to the ROL.")
     )
 
     class Meta:
-        model = ProcessRol
+        dataclass = ProcessRol
         fields = ("betrokkene_type", "label", "roltype", "required", "order")
 
 
@@ -111,7 +108,7 @@ class StartProcessFormContext(Context):
 
 
 @usertask_context_serializer
-class CamundaZaakProcessContextSerializer(APIModelSerializer):
+class CamundaZaakProcessContextSerializer(DataclassSerializer):
     benodigde_bijlagen = ProcessInformatieObjectSerializer(
         many=True,
         required=False,
@@ -129,7 +126,7 @@ class CamundaZaakProcessContextSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = StartProcessFormContext
+        dataclass = StartProcessFormContext
         fields = (
             "benodigde_bijlagen",
             "benodigde_rollen",

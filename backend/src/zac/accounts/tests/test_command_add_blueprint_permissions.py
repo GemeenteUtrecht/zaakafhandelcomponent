@@ -4,10 +4,10 @@ from django.test import TransactionTestCase
 import requests_mock
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..models import BlueprintPermission
@@ -22,7 +22,7 @@ class AddBlueprintPermissionCommandTests(ClearCachesMixin, TransactionTestCase):
     def setUp(self):
         super().setUp()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         self.role = RoleFactory.create()
         self.user = UserFactory.create(username="test_user")
 

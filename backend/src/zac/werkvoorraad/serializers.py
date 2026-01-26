@@ -1,7 +1,7 @@
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.accounts.models import AccessRequest, User
 from zac.activities.models import Activity
@@ -61,7 +61,7 @@ class AccessRequestSerializer(serializers.ModelSerializer):
         )
 
 
-class WorkStackAccessRequestsSerializer(APIModelSerializer):
+class WorkStackAccessRequestsSerializer(DataclassSerializer):
     access_requests = AccessRequestSerializer(
         many=True, help_text=_("Access requests for requester to ZAAKen.")
     )
@@ -70,7 +70,7 @@ class WorkStackAccessRequestsSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = AccessRequestGroup
+        dataclass = AccessRequestGroup
         fields = (
             "access_requests",
             "zaak",
@@ -94,21 +94,21 @@ class SummaryActivitySerializer(serializers.ModelSerializer):
         fields = ("name", "group_assignee", "user_assignee")
 
 
-class WorkStackAdhocActivitiesSerializer(APIModelSerializer):
+class WorkStackAdhocActivitiesSerializer(DataclassSerializer):
     activities = SummaryActivitySerializer(
         many=True, help_text=_("Summary of the activities.")
     )
     zaak = SummaryZaakDocumentSerializer(help_text=_("ZAAK that activity belongs to."))
 
     class Meta:
-        model = ActivityGroup
+        dataclass = ActivityGroup
         fields = (
             "activities",
             "zaak",
         )
 
 
-class WorkStackTaskSerializer(APIModelSerializer):
+class WorkStackTaskSerializer(DataclassSerializer):
     task = serializers.CharField(
         help_text=_("Camunda task for the user."), source="task.name"
     )
@@ -117,20 +117,20 @@ class WorkStackTaskSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = TaskAndCase
+        dataclass = TaskAndCase
         fields = (
             "task",
             "zaak",
         )
 
 
-class SummaryChecklistAnswerSerializer(APIModelSerializer):
+class SummaryChecklistAnswerSerializer(DataclassSerializer):
     class Meta:
-        model = ChecklistAnswer
+        dataclass = ChecklistAnswer
         fields = ("question",)
 
 
-class WorkStackChecklistAnswerSerializer(APIModelSerializer):
+class WorkStackChecklistAnswerSerializer(DataclassSerializer):
     checklist_questions = SummaryChecklistAnswerSerializer(
         many=True,
         help_text=_("Questions to be answered by assignee."),
@@ -141,7 +141,7 @@ class WorkStackChecklistAnswerSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ChecklistAnswerGroup
+        dataclass = ChecklistAnswerGroup
         fields = (
             "checklist_questions",
             "zaak",
@@ -150,12 +150,12 @@ class WorkStackChecklistAnswerSerializer(APIModelSerializer):
 
 class WorkStackAdviceSerializer(AdviceSerializer):
     class Meta:
-        model = AdviceSerializer.Meta.model
+        dataclass = AdviceSerializer.Meta.dataclass
         fields = ("created", "author", "advice", "group")
+        # Note: created, author, and group are declared as fields in the parent class,
+        # so we can't set extra_kwargs for them with DataclassSerializer
         extra_kwargs = {
-            "created": {"help_text": _("Date review request was created.")},
             "advice": {"help_text": _("Advice given for review request.")},
-            "group": {"help_text": _("Group that advice was given by.")},
         }
 
 

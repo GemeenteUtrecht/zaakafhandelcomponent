@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from djangorestframework_camel_case.render import CamelCaseJSONRenderer
-from djangorestframework_camel_case.settings import api_settings
 from rest_framework import parsers
 
 from ..data import Task

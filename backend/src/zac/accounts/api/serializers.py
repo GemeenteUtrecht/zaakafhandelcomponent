@@ -7,11 +7,11 @@ from django.core.exceptions import (
     ValidationError as DJValidationError,
 )
 from django.db import transaction
-from django.utils.timezone import make_aware, now
+from django.utils.timezone import make_aware
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from zac.accounts.utils import permissions_related_to_user
 from zac.api.polymorphism import GroupPolymorphicSerializer
@@ -242,9 +242,9 @@ class UpdateGrantPermissionSerializer(GrantPermissionSerializer):
         return attrs
 
 
-class ZaakShortSerializer(APIModelSerializer):
+class ZaakShortSerializer(DataclassSerializer):
     class Meta:
-        model = Zaak
+        dataclass = Zaak
         fields = ("url", "identificatie", "bronorganisatie")
         extra_kwargs = {"url": {"read_only": True}}
 
@@ -656,6 +656,8 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
         model = BaseUserAuthProfileSerializer.Meta.model
         fields = BaseUserAuthProfileSerializer.Meta.fields
         extra_kwargs = {"is_active": {"default": True}}
+        # Disable automatic unique validation since we handle it in save()
+        validators = []
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -684,24 +686,22 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
         )
 
         if hasattr(self, "instance") and self.instance:
-            model = self.instance
+            # Update existing instance
+            return super().save(**kwargs)
 
         # In case of post where there should have been a patch/put
         # deactivate duplicate.
-        elif (
-            qs := UserAuthorizationProfile.objects.filter(
-                user=self.validated_data["user"],
-                auth_profile=self.validated_data["auth_profile"],
-                is_active=True,
-            )
-        ) and qs.exists():
-            for obj in qs:
-                obj.is_active = False
-                obj.save()
-            model = self.Meta.model()
-        else:
-            model = self.Meta.model()
+        qs = UserAuthorizationProfile.objects.filter(
+            user=self.validated_data["user"],
+            auth_profile=self.validated_data["auth_profile"],
+            is_active=True,
+        )
+        if qs.exists():
+            # Deactivate all existing active profiles using update to avoid constraint issues
+            qs.update(is_active=False)
 
+        # Create new instance
+        model = self.Meta.model()
         for field, value in self.validated_data.items():
             setattr(model, field, value)
 
@@ -711,7 +711,9 @@ class UserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):
         except DJValidationError as exc:
             raise serializers.ValidationError(detail=exc.args[0])
 
-        return super().save(**kwargs)
+        model.save()
+        self.instance = model
+        return model
 
 
 class ReadUserAuthorizationProfileSerializer(BaseUserAuthProfileSerializer):

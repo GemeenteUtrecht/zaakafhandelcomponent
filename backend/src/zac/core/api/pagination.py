@@ -1,7 +1,5 @@
 from collections import OrderedDict
 
-from django.utils.translation import gettext_lazy as _
-
 from furl import furl
 from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response

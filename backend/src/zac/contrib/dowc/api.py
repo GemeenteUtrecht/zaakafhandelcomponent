@@ -1,15 +1,18 @@
 import logging
+import time
 from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.http import Http404
 
+import jwt
 from furl import furl
 from rest_framework import status
 from zds_client.client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.documenten import Document
+from zgw_consumers.client import ZGWAuth
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import AuthTypes
 
@@ -27,6 +30,30 @@ from .models import DowcConfig
 logger = logging.getLogger(__name__)
 
 
+def _regenerate_token_with_extra_claims(auth: ZGWAuth, extra_claims: dict) -> None:
+    """
+    Regenerate the JWT token with extra claims.
+
+    zgw-consumers 1.x ZGWAuth doesn't support extra claims out of the box,
+    so we regenerate the token with the additional claims.
+    """
+    service = auth.service
+    iat = int(time.time())
+    payload = {
+        # standard claims
+        "iss": service.client_id,
+        "iat": iat,
+        "exp": iat + service.jwt_valid_for,
+        # custom claims from service
+        "client_id": service.client_id,
+        "user_id": service.user_id,
+        "user_representation": service.user_representation,
+        # extra claims
+        **extra_claims,
+    }
+    auth._token = jwt.encode(payload, service.secret, algorithm="HS256")
+
+
 def get_client(user: Optional[User] = None, force: bool = False) -> Client:
     config = DowcConfig.get_solo()
     assert config.service, "The DoWC service must be configured first"
@@ -34,12 +61,12 @@ def get_client(user: Optional[User] = None, force: bool = False) -> Client:
 
     # override the actual logged in user in the `user_id` claim, so that Do.W.C. is
     # aware of the actual end user
-    claims = {}
+    extra_claims = {}
     if user:
         service.user_id = user.username
-        claims["email"] = user.email
-        claims["first_name"] = user.first_name
-        claims["last_name"] = user.last_name
+        extra_claims["email"] = user.email
+        extra_claims["first_name"] = user.first_name
+        extra_claims["last_name"] = user.last_name
 
     if force:
         assert (
@@ -47,7 +74,12 @@ def get_client(user: Optional[User] = None, force: bool = False) -> Client:
         ), "ApplicationToken must be configured in header value."
         service.auth_type = AuthTypes.api_key
 
-    client = service.build_client(**claims)
+    client = service.build_client()
+
+    # Add extra claims to the JWT token if using ZGW auth
+    if extra_claims and isinstance(client.auth, ZGWAuth):
+        _regenerate_token_with_extra_claims(client.auth, extra_claims)
+
     client.operation_suffix_mapping = {
         **client.operation_suffix_mapping,
         "delete": "_destroy",
@@ -110,10 +142,10 @@ def get_open_documenten_for_user(user: User) -> List[Optional[DowcResponse]]:
         }
     )
     try:
-        response = client.request(
-            url.url, operation_id, method="GET", expected_status=200
-        )
-        return factory(DowcResponse, response)
+        response = client.get(url.url)
+        if response.status_code != 200:
+            raise ClientError(response.json() if response.content else None)
+        return factory(DowcResponse, response.json())
     except ClientError:
         return []
 
@@ -129,7 +161,10 @@ def patch_and_destroy_doc(
     url = get_operation_url(client.schema, operation_id, uuid=uuid)
 
     try:
-        return client.request(url, operation_id, method="DELETE", expected_status=201)
+        response = client.request("DELETE", url)
+        if response.status_code != 201:
+            raise ClientError(response.json() if response.content else None)
+        return response.json() if response.content else {}
 
     except ClientError:
         raise Http404(f"DocumentFile with id {uuid} does not exist.")
@@ -151,14 +186,10 @@ def check_document_status(
     if zaak:
         payload["zaak"] = zaak
     try:
-        response = client.request(
-            url,
-            operation_id,
-            method="POST",
-            expected_status=200,
-            json=payload,
-        )
-        return factory(OpenDowc, response)
+        response = client.post(url, json=payload)
+        if response.status_code != 200:
+            raise ClientError(response.json() if response.content else None)
+        return factory(OpenDowc, response.json())
     except ClientError:
         return []
 
@@ -171,13 +202,10 @@ def get_supported_extensions() -> Optional[List[str]]:
     url = get_operation_url(client.schema, operation_id)
 
     try:
-        response = client.request(
-            url,
-            operation_id,
-            method="GET",
-            expected_status=200,
-        )
-        return response["extensions"]
+        response = client.get(url)
+        if response.status_code != 200:
+            raise ClientError(response.json() if response.content else None)
+        return response.json()["extensions"]
     except ClientError:
         return []
 

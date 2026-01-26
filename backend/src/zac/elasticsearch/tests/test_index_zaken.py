@@ -8,12 +8,12 @@ from django.core.management import call_command
 import requests_mock
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..documents import ZaakDocument
@@ -50,8 +50,8 @@ class IndexZakenTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     def setUp(self):
         super().setUp()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
     def test_index_zaken_without_rollen(self, m):
         # mock API requests

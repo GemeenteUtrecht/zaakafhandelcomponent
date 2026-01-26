@@ -32,11 +32,9 @@ from zgw_consumers.api_models.catalogi import (
 from zgw_consumers.api_models.constants import RolTypes
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.api_models.zaken import Resultaat, Status, ZaakEigenschap, ZaakObject
-from zgw_consumers.client import ZGWClient
 from zgw_consumers.concurrent import parallel
 from zgw_consumers.constants import APITypes
 from zgw_consumers.models import Service
-from zgw_consumers.service import get_paginated_results
 
 from zac.accounts.constants import PermissionObjectTypeChoices
 from zac.accounts.datastructures import VA_ORDER
@@ -50,6 +48,7 @@ from zac.core.models import ApiSchemaConfig
 from zac.elasticsearch.searches import search_informatieobjects, search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
+from zac.zgw_client import ZGWClient, get_paginated_results
 from zgw.models import Zaak
 from zgw.models.zrc import ZaakInformatieObject
 
@@ -1269,12 +1268,10 @@ def update_document(url: str, data: dict, audit_line: str) -> Document:
     document = factory(Document, response)
 
     # unlock
-    client.request(
-        f"{url}/unlock",
+    client.operation(
         "enkelvoudiginformatieobject_unlock",
-        "POST",
-        expected_status=204,
-        json={"lock": lock},
+        data={"lock": lock},
+        url=f"{url}/unlock",
     )
     # invalid cache
     invalidate_document_url_cache(document.url)
@@ -1290,7 +1287,7 @@ def relate_document_to_zaak(document_url: str, zaak_url: str) -> Dict[str, str]:
     Relate a document to a case.
 
     """
-    zrc_client = Service.get_client(zaak_url)
+    zrc_client = client_from_url(zaak_url)
     response = zrc_client.create(
         "zaakinformatieobject",
         {
@@ -1593,7 +1590,7 @@ def fetch_objects_all_paginated(
 
 
 def relate_object_to_zaak(relation_data: dict) -> dict:
-    zrc_client = Service.get_client(relation_data["zaak"])
+    zrc_client = client_from_url(relation_data["zaak"])
     assert zrc_client is not None, "ZRC client not found"
 
     response = zrc_client.create(

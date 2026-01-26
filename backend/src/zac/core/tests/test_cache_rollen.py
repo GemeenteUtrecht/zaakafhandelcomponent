@@ -7,12 +7,12 @@ from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.zaken import Zaak
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.cache import invalidate_rollen_cache
 from zac.core.services import fetch_rol
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 
 ZAKEN_ROOT = "https://api.zaken.nl/api/v1/"
 ZAAK_URL = f"{ZAKEN_ROOT}zaken/482de5b2-4779-4b29-b84f-add888352182"
@@ -21,7 +21,7 @@ ZAAK_URL = f"{ZAKEN_ROOT}zaken/482de5b2-4779-4b29-b84f-add888352182"
 @requests_mock.Mocker()
 class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
     def test_fetch_rol_cache(self, m):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         rol = generate_oas_component(
             "zrc",
@@ -48,7 +48,7 @@ class TestCacheRollen(ClearCachesMixin, APITransactionTestCase):
         self.assertEqual(fetched_rol, cache.get(f"rol:{rol['url']}"))
 
     def test_invalidate_fetch_rol_cache(self, m):
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         rol = generate_oas_component(
             "zrc",

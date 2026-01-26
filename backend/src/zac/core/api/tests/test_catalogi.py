@@ -4,11 +4,11 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import SuperUserFactory, UserFactory
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -21,7 +21,7 @@ class CatalogiPermissiontests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.catalogus = generate_oas_component(
             "ztc", "schemas/Catalogus", url=CATALOGUS_URL, domein="some-domein"
@@ -59,7 +59,7 @@ class CatalogiResponseTests(ClearCachesMixin, APITestCase):
 
         cls.user = SuperUserFactory.create()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
         cls.endpoint = reverse("catalogi")
 

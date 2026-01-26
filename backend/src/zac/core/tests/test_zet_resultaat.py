@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 import requests_mock
@@ -9,8 +8,6 @@ from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory, APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.constants import APITypes, AuthTypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.activities.constants import ActivityStatuses
 from zac.activities.tests.factories import ActivityFactory
@@ -22,6 +19,8 @@ from zac.contrib.objects.kownsl.tests.factories import (
     review_request_factory,
     reviews_factory,
 )
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 
@@ -83,14 +82,14 @@ class GetZetResultaatContextSerializersTests(
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         camunda_config = CamundaConfig.get_solo()
         camunda_config.root_url = CAMUNDA_ROOT
         camunda_config.rest_api_path = CAMUNDA_API_PATH
         camunda_config.save()
 
-        cls.dowc_service = Service.objects.create(
+        cls.dowc_service = ServiceFactory.create(
             label="dowc",
             api_type=APITypes.orc,
             api_root=DOWC_API_ROOT,
@@ -99,7 +98,6 @@ class GetZetResultaatContextSerializersTests(
             header_key="Authorization",
             client_id="zac",
             secret="supersecret",
-            oas=f"{DOWC_API_ROOT}/api/v1",
             user_id="zac",
         )
 
@@ -108,7 +106,7 @@ class GetZetResultaatContextSerializersTests(
         dowc_config.save()
 
         catalogus_url = (
-            f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+            f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
         )
         cls.catalogus = generate_oas_component(
             "ztc",
@@ -178,7 +176,7 @@ class GetZetResultaatContextSerializersTests(
     def test_zet_resultaat_context_serializer(self, m):
         mock_service_oas_get(m, ZAKEN_ROOT, "zrc")
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        mock_service_oas_get(m, DOWC_API_ROOT, "dowc", oas_url=self.dowc_service.oas)
+        mock_service_oas_get(m, DOWC_API_ROOT, "dowc")
         mock_resource_get(m, self.catalogus)
         m.get(
             f"{DOWC_API_ROOT}documenten/count?zaak={self.zaak['url']}",

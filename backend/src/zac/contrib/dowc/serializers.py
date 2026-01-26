@@ -2,13 +2,13 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from zgw_consumers.drf.serializers import APIModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
 from .constants import DocFileTypes
 from .data import DowcResponse
 
 
-class DowcResponseSerializer(APIModelSerializer):
+class DowcResponseSerializer(DataclassSerializer):
     delete_url = serializers.SerializerMethodField(
         label=_("deletion url"),
         help_text=_(
@@ -17,7 +17,7 @@ class DowcResponseSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = DowcResponse
+        dataclass = DowcResponse
         fields = (
             "drc_url",
             "purpose",

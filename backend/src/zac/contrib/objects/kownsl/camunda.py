@@ -5,8 +5,8 @@ from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.zaken import ZaakEigenschap
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.models import User
 from zac.accounts.permission_loaders import add_permissions_for_advisors
@@ -33,16 +33,16 @@ from .data import AssignedUsers, ReviewContext, ReviewRequest
 from .fields import SelectZaakEigenschappenKownslField
 
 
-class ZaakInformatieTaskSerializer(APIModelSerializer):
+class ZaakInformatieTaskSerializer(DataclassSerializer):
     class Meta:
-        model = Zaak
+        dataclass = Zaak
         fields = (
             "omschrijving",
             "toelichting",
         )
 
 
-class CamundaAssignedUsersSerializer(APIModelSerializer):
+class CamundaAssignedUsersSerializer(DataclassSerializer):
     """
     Select users or groups and assign deadlines to those users in the configuration of
     review requests such as the advice and approval review requests.
@@ -71,7 +71,7 @@ class CamundaAssignedUsersSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = AssignedUsers
+        dataclass = AssignedUsers
         fields = [
             "user_assignees",
             "group_assignees",
@@ -85,6 +85,22 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
 
     """
 
+    user_assignees = MetaObjectUserSerializerSlugRelatedField(
+        slug_field="username",
+        queryset=User.objects.all(),
+        help_text=_("Users assigned to the review request from within the ZAC."),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
+    group_assignees = MetaObjectGroupSerializerSlugRelatedField(
+        slug_field="name",
+        queryset=Group.objects.all(),
+        help_text=_("Groups assigned to the review request from within the ZAC."),
+        many=True,
+        allow_null=True,
+        required=True,
+    )
     email_notification = serializers.BooleanField(
         default=True,
         help_text=_("Send an email notification about the review request."),
@@ -95,23 +111,11 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
     )
 
     class Meta:
-        model = CamundaAssignedUsersSerializer.Meta.model
+        dataclass = CamundaAssignedUsersSerializer.Meta.dataclass
         fields = CamundaAssignedUsersSerializer.Meta.fields + [
             "email_notification",
             "deadline",
         ]
-        extra_kwargs = {
-            "user_assignees": {
-                "help_text": _(
-                    "Users assigned to the review request from within the ZAC."
-                )
-            },
-            "group_assignees": {
-                "help_text": _(
-                    "Groups assigned to the review request from within the ZAC."
-                )
-            },
-        }
 
     def validate_user_assignees(self, user_assignees):
         if len(user_assignees) > len(set(user_assignees)):
@@ -124,23 +128,32 @@ class AssignedUsersSerializer(CamundaAssignedUsersSerializer):
         return group_assignees
 
     def validate(self, attrs):
-        if not attrs["group_assignees"] and not attrs["user_assignees"]:
+        # attrs can be a dict or a dataclass depending on the serializer parent
+        if isinstance(attrs, dict):
+            group_assignees = attrs.get("group_assignees")
+            user_assignees = attrs.get("user_assignees")
+        else:
+            # Dataclass object - use attribute access
+            group_assignees = getattr(attrs, "group_assignees", None)
+            user_assignees = getattr(attrs, "user_assignees", None)
+
+        if not group_assignees and not user_assignees:
             raise serializers.ValidationError(
                 "You need to select either a user or a group."
             )
         return attrs
 
 
-class ZaakEigenschapReviewContextSerializer(APIModelSerializer):
+class ZaakEigenschapReviewContextSerializer(DataclassSerializer):
     naam = serializers.CharField(source="eigenschap.naam")
 
     class Meta:
-        model = ZaakEigenschap
+        dataclass = ZaakEigenschap
         fields = ("naam", "waarde", "url")
 
 
 @usertask_context_serializer
-class ReviewContextSerializer(APIModelSerializer):
+class ReviewContextSerializer(DataclassSerializer):
     camunda_assigned_users = CamundaAssignedUsersSerializer(
         help_text=_("Users or groups assigned from within the camunda process.")
     )
@@ -171,7 +184,7 @@ class ReviewContextSerializer(APIModelSerializer):
     zaak_informatie = ZaakInformatieTaskSerializer()
 
     class Meta:
-        model = ReviewContext
+        dataclass = ReviewContext
         fields = (
             "camunda_assigned_users",
             "documents_link",
@@ -187,7 +200,7 @@ class ReviewContextSerializer(APIModelSerializer):
         )
 
 
-class ConfigureReviewRequestSerializer(APIModelSerializer):
+class ConfigureReviewRequestSerializer(DataclassSerializer):
     """
     This serializes configure review requests such as
     advice and approval review requests.
@@ -243,7 +256,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ReviewRequest
+        dataclass = ReviewRequest
         fields = [
             "assigned_users",
             "created",
@@ -257,6 +270,44 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
             "zaak",
             "zaakeigenschappen",
         ]
+
+    def to_internal_value(self, data):
+        """
+        Override to return a dict instead of dataclass instance.
+
+        This serializer uses SerializerMethodFields for read-only data and
+        expects validated_data to be a dict in validate() and other methods.
+        DataclassSerializer returns a dataclass instance, but we need a dict
+        for backwards compatibility with how this serializer processes data.
+        """
+        from rest_framework.fields import SkipField
+
+        # Get field values from parent, but don't instantiate dataclass
+        ret = {}
+        errors = {}
+        for field in self._writable_fields:
+            validate_method = getattr(self, "validate_" + field.field_name, None)
+            primitive_value = field.get_value(data)
+            try:
+                validated_value = field.run_validation(primitive_value)
+            except SkipField:
+                # Field should be skipped (no value provided and no default)
+                continue
+            except serializers.ValidationError as exc:
+                errors[field.field_name] = exc.detail
+            else:
+                if validate_method is not None:
+                    try:
+                        validated_value = validate_method(validated_value)
+                    except serializers.ValidationError as exc:
+                        errors[field.field_name] = exc.detail
+                        continue
+                ret[field.field_name] = validated_value
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return ret
 
     def _get_review_request(self, obj) -> Optional[ReviewRequest]:
         if not hasattr(self, "_review_request"):
@@ -288,22 +339,22 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         return MetaObjectUserSerializer(instance=self.context["request"].user).data
 
     def get_user_deadlines(self, obj) -> Dict[str, str]:
-        return {
-            assignee: str(data["deadline"])
-            for data in obj["assigned_users"]
-            for assignee in (
-                [
-                    f"{AssigneeTypeChoices.user}:{user}"
-                    for user in data["user_assignees"]
-                ]
-            )
-            + (
-                [
-                    f"{AssigneeTypeChoices.group}:{group}"
-                    for group in data["group_assignees"]
-                ]
-            )
-        }
+        def get_attr(o, key, default=None):
+            if isinstance(o, dict):
+                return o.get(key, default)
+            return getattr(o, key, default)
+
+        assigned_users = get_attr(obj, "assigned_users", [])
+        result = {}
+        for data in assigned_users:
+            deadline = str(get_attr(data, "deadline", ""))
+            user_assignees = get_attr(data, "user_assignees", []) or []
+            group_assignees = get_attr(data, "group_assignees", []) or []
+            for user in user_assignees:
+                result[f"{AssigneeTypeChoices.user}:{user}"] = deadline
+            for group in group_assignees:
+                result[f"{AssigneeTypeChoices.group}:{group}"] = deadline
+        return result
 
     def get_num_reviews_given_before_change(self, obj) -> int:
         if rr := self._get_review_request(obj):
@@ -318,32 +369,42 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
     def validate_assigned_users(self, assigned_users):
         users_list = []
         groups_list = []
+
+        def get_attr(obj, key):
+            """Helper to access attribute from dict or dataclass."""
+            if isinstance(obj, dict):
+                return obj.get(key)
+            return getattr(obj, key, None)
+
         for data in assigned_users:
-            if not data["user_assignees"] and not data["group_assignees"]:
+            user_assignees = get_attr(data, "user_assignees") or []
+            group_assignees = get_attr(data, "group_assignees") or []
+
+            if not user_assignees and not group_assignees:
                 raise serializers.ValidationError(
                     _("Please select at least 1 user or group."),
                     code="empty-assignees",
                 )
-            if any([user in users_list for user in data["user_assignees"]]):
+            if any([user in users_list for user in user_assignees]):
                 raise serializers.ValidationError(
                     _(
                         "Users in a serial review request process need to be unique. Please select unique users."
                     ),
                     code="unique-users",
                 )
-            if any([group in groups_list for group in data["group_assignees"]]):
+            if any([group in groups_list for group in group_assignees]):
                 raise serializers.ValidationError(
                     _(
                         "Groups in a serial review request process need to be unique. Please select unique groups."
                     ),
                     code="unique-groups",
                 )
-            users_list.extend(data["user_assignees"])
-            groups_list.extend(data["group_assignees"])
+            users_list.extend(user_assignees)
+            groups_list.extend(group_assignees)
 
         deadline_old = date.today() - timedelta(days=1)
         for data in assigned_users:
-            deadline_new = data["deadline"]
+            deadline_new = get_attr(data, "deadline")
             if deadline_new and not deadline_new > deadline_old:
                 raise serializers.ValidationError(
                     _(
@@ -358,9 +419,16 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
 
     def validate(self, data):
         validated_data = super().validate(data)
+
+        def get_attr(obj, key, default=None):
+            """Helper to access attribute from dict or dataclass."""
+            if isinstance(obj, dict):
+                return obj.get(key, default)
+            return getattr(obj, key, default)
+
         # Make sure either a document or zaakeigenschap is selected
-        if not validated_data.get("documents", []) and not validated_data.get(
-            "zaakeigenschappen", []
+        if not get_attr(validated_data, "documents", []) and not get_attr(
+            validated_data, "zaakeigenschappen", []
         ):
             raise serializers.ValidationError(
                 _("Select either documents or ZAAKEIGENSCHAPs.")
@@ -369,7 +437,7 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
         # Make sure new assignees haven't already reviewed
         if review_request := (
             self._get_review_request(validated_data)
-            if validated_data.get("id")
+            if get_attr(validated_data, "id")
             else None
         ):
             already_reviewed = []
@@ -382,13 +450,11 @@ class ConfigureReviewRequestSerializer(APIModelSerializer):
                     else given_review.author["username"]
                 )
             assignees = []
-            for review in validated_data["assigned_users"]:
-                assignees.extend(
-                    [f"{user}" for user in review.get("user_assignees", [])]
-                )
-                assignees.extend(
-                    [f"{group}" for group in review.get("group_assignees", [])]
-                )
+            for review in get_attr(validated_data, "assigned_users", []):
+                user_assignees = get_attr(review, "user_assignees", []) or []
+                group_assignees = get_attr(review, "group_assignees", []) or []
+                assignees.extend([f"{user}" for user in user_assignees])
+                assignees.extend([f"{group}" for group in group_assignees])
             for reviewed in already_reviewed:
                 if reviewed in assignees:
                     raise serializers.ValidationError(

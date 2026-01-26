@@ -5,12 +5,12 @@ import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.core.services import get_informatieobjecttypen
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import paginated_response
 
 from .utils import CATALOGI_ROOT, CATALOGUS
@@ -35,7 +35,7 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.ztc = ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
 
     def setUp(self):
         super().setUp()
@@ -58,9 +58,9 @@ class informatieobjecttypeCreatedTests(ClearCachesMixin, APITestCase):
         # second call should re-fetch (cache invalidated)
         get_informatieobjecttypen(catalogus=CATALOGUS)
 
-        # 1 call for API spec + 2 identical list calls (before and after invalidation)
-        self.assertEqual(m.call_count, 3)
+        # Schema is now loaded from local files, so only 2 list calls
+        self.assertEqual(m.call_count, 2)
         self.assertEqual(
+            m.request_history[0].url,
             m.request_history[1].url,
-            m.request_history[2].url,
         )

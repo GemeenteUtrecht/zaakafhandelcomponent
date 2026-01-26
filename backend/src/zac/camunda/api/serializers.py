@@ -6,10 +6,9 @@ from django.utils.translation import gettext_lazy as _
 
 from requests.exceptions import HTTPError
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zds_client.client import ClientError
-from zgw_consumers.api_models.constants import RolOmschrijving
 from zgw_consumers.concurrent import parallel
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.accounts.api.serializers import GroupSerializer, UserSerializer
 from zac.accounts.models import User
@@ -255,9 +254,9 @@ class SetTaskAssigneeSerializer(serializers.Serializer):
         return delegate
 
 
-class BPMNSerializer(APIModelSerializer):
+class BPMNSerializer(DataclassSerializer):
     class Meta:
-        model = BPMN
+        dataclass = BPMN
         fields = (
             "id",
             "bpmn20_xml",
@@ -290,7 +289,7 @@ class HistoricActivityInstanceDetailSerializer(serializers.Serializer):
         return obj.get("value")
 
 
-class HistoricUserTaskSerializer(APIModelSerializer):
+class HistoricUserTaskSerializer(DataclassSerializer):
     assignee = serializers.SerializerMethodField(
         help_text=_("Full name of user or group assigned to user task."),
     )
@@ -306,7 +305,7 @@ class HistoricUserTaskSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = HistoricUserTask
+        dataclass = HistoricUserTask
         fields = (
             "assignee",
             "completed",
@@ -351,15 +350,15 @@ class ChangeBehandelaarTasksSerializer(serializers.Serializer):
     def validate_zaak(self, zaak) -> Zaak:
         try:
             zaak = get_zaak(zaak_url=zaak)
-        except ClientError as exc:
+        except (ClientError, HTTPError) as exc:
             raise serializers.ValidationError(_("ZAAK was not found."))
         return zaak
 
     def validate_rol(self, rol) -> Rol:
         try:
             rol = fetch_rol(rol)
-        except ClientError as exc:
-            raise serializers.ValidationError(detail=exc.args)
+        except (ClientError, HTTPError) as exc:
+            raise serializers.ValidationError(detail=str(exc))
         return rol
 
     def perform(self):

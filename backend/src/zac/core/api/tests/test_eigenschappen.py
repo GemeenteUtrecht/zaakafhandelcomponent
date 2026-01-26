@@ -1,4 +1,3 @@
-from re import M
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -8,8 +7,6 @@ from rest_framework import status
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
@@ -19,6 +16,8 @@ from zac.accounts.tests.factories import (
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
 CATALOGI_ROOT = "http://catalogus.nl/api/v1/"
@@ -62,7 +61,7 @@ class EigenschappenPermissionTests(ClearCachesMixin, APITransactionTestCase):
 
     def setUp(self):
         super().setUp()
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
     def test_not_authenticated(self, m, *mocks):
         response = self.client.get(self.endpoint)
@@ -206,7 +205,7 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         # ensure that we have a user with all permissions
         self.user = SuperUserFactory.create()
         self.client.force_authenticate(user=self.user)
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
 
     @patch(
         "zac.core.api.views.fetch_zaaktypeattributen_objects_for_zaaktype",
@@ -672,10 +671,10 @@ class EigenschappenResponseTests(ClearCachesMixin, APITransactionTestCase):
         m.get(catalogus["url"], json=catalogus)
 
         core_config = CoreConfig.get_solo()
-        objects_service = Service.objects.create(
+        objects_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root="http://object.nl/api/v1/"
         )
-        objecttypes_service = Service.objects.create(
+        objecttypes_service = ServiceFactory.create(
             api_type=APITypes.orc, api_root="http://objecttypes.nl/api/v2/"
         )
         core_config.primary_objects_api = objects_service

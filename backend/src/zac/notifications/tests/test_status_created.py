@@ -9,19 +9,15 @@ from django.utils import timezone
 import requests_mock
 from rest_framework import status
 from rest_framework.test import APITestCase
-from zgw_consumers.api_models.base import factory
-from zgw_consumers.api_models.catalogi import StatusType, ZaakType
-from zgw_consumers.api_models.zaken import Status
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import User
 from zac.activities.tests.factories import ActivityFactory, ActivityStatuses
 from zac.core.services import find_zaak, get_zaak
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
-from zgw.models.zrc import Zaak
 
 from .utils import (
     BRONORGANISATIE,
@@ -63,8 +59,8 @@ class StatusCreatedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username="notifs")
-        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
-        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        cls.ztc = ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.zrc = ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()

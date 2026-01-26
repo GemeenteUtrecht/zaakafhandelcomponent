@@ -31,7 +31,6 @@ from zac.core.services import (
     fetch_rol,
     fetch_zaak_informatieobject,
     fetch_zaakobject,
-    get_document,
     get_statustype,
     update_medewerker_identificatie_rol,
 )

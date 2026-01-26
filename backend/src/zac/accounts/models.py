@@ -286,7 +286,12 @@ class AtomicPermission(models.Model):
     class Meta:
         verbose_name = _("atomic permission")
         verbose_name_plural = _("atomic permissions")
-        unique_together = ("permission", "object_url")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["permission", "object_url"],
+                name="unique_permission_object_url",
+            ),
+        ]
 
     @property
     def object_uuid(self):
@@ -371,7 +376,12 @@ class BlueprintPermission(models.Model):
         verbose_name = _("blueprint permission")
         verbose_name_plural = _("blueprint permissions")
         ordering = ("role", "object_type", "policy__zaaktype_omschrijving")
-        unique_together = ("role", "policy", "object_type")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["role", "policy", "object_type"],
+                name="unique_role_policy_object_type",
+            ),
+        ]
 
     def __str__(self):
         if not self.policy:

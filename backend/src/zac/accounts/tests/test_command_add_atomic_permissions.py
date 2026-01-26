@@ -1,4 +1,3 @@
-from copy import deepcopy
 from unittest.mock import patch
 
 from django.core.management import call_command
@@ -6,13 +5,13 @@ from django.test import TestCase
 
 import requests_mock
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.contrib.objects.kownsl.tests.factories import review_request_factory
 from zac.contrib.objects.services import factory_review_request
 from zac.core.permissions import zaakproces_usertasks, zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import paginated_response
 
 from ..constants import PermissionObjectTypeChoices
@@ -29,8 +28,8 @@ class AddPermissionCommandTests(ClearCachesMixin, TestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         cls.user = UserFactory.create(username="test_user")
 

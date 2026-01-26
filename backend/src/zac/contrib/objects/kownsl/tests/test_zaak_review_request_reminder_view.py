@@ -11,8 +11,6 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.tests.factories import (
     AtomicPermissionFactory,
@@ -23,6 +21,8 @@ from zac.accounts.tests.factories import (
 from zac.contrib.objects.kownsl.data import ReviewRequest
 from zac.core.permissions import zaken_wijzigen
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
@@ -37,7 +37,7 @@ from .factories import (
 CAMUNDA_ROOT = "https://some.camunda.nl/"
 CAMUNDA_API_PATH = "engine-rest/"
 CAMUNDA_URL = f"{CAMUNDA_ROOT}{CAMUNDA_API_PATH}"
-CATALOGUS_URL = f"{CATALOGI_ROOT}/catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
+CATALOGUS_URL = f"{CATALOGI_ROOT}catalogussen/e13e72de-56ba-42b6-be36-5c280e9b30cd"
 
 
 @requests_mock.Mocker()
@@ -50,7 +50,7 @@ class ZaakReviewRequestsReminderResponseTests(APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.superuser = SuperUserFactory.create()
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
 
         config = CamundaConfig.get_solo()
         config.root_url = CAMUNDA_ROOT
@@ -143,9 +143,9 @@ class ZaakReviewRequestsReminderPermissionsTests(ClearCachesMixin, APITestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
-        Service.objects.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
-        Service.objects.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.zrc, api_root=ZAKEN_ROOT)
+        ServiceFactory.create(api_type=APITypes.drc, api_root=DOCUMENTS_ROOT)
         config = CamundaConfig.get_solo()
         config.root_url = CAMUNDA_ROOT
         config.rest_api_path = CAMUNDA_API_PATH

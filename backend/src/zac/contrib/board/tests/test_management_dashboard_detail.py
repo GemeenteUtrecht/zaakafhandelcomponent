@@ -4,8 +4,6 @@ import requests_mock
 from rest_framework.test import APITransactionTestCase
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
@@ -19,6 +17,8 @@ from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
 from zac.elasticsearch.documents import ZaakDocument, ZaakTypeDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.utils import mock_resource_get, paginated_response
 
 from ..api.permissions import management_dashboard_inzien
@@ -116,7 +116,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
 
     @requests_mock.Mocker()
     def test_management_dashboard_detail_superuser(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         zt = generate_oas_component(
@@ -196,7 +196,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
 
     @requests_mock.Mocker()
     def test_management_dashboard_detail_blueprint(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         zt = generate_oas_component(
@@ -296,7 +296,7 @@ class ManagementDashboardDetailTests(ClearCachesMixin, ESMixin, APITransactionTe
 
     @requests_mock.Mocker()
     def test_management_dashboard_detail_atomic(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         mock_resource_get(m, self.catalogus)
         zt = generate_oas_component(

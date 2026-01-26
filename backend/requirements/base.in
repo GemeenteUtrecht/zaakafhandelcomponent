@@ -22,10 +22,11 @@ defusedxml
 
 # zgw-integration
 gemma-zds-client<2.0
-zgw-consumers[drf]<=0.23.2
+zgw-consumers[drf]>=1.0,<2.0
+zgw-consumers-oas  # OAS utilities that were removed from zgw-consumers 1.x
 
 # Framework libraries
-Django>=4.2,<4.3
+Django>=5.1,<5.3
 django-admin-index < 4.0.0
 django-axes[ipware]
 django-better-admin-arrayfield
@@ -44,12 +45,14 @@ django-sniplates
 django_jsonform
 mozilla-django-oidc
 mozilla-django-oidc-db<0.25
+josepy  # Required by mozilla-django-oidc-db for JWT handling
 django-reversion
 
 # Restful API
-djangorestframework>=3.14,<3.15
+djangorestframework>=3.16
 djangorestframework-camel-case>=1.4.2
-drf-spectacular>=0.28,<0.29
+djangorestframework-dataclasses  # For serializing zgw-consumers dataclasses
+drf-spectacular>=0.28
 
 # monitoring
 elastic-apm

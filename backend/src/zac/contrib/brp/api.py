@@ -1,15 +1,13 @@
 import logging
-import uuid
 from typing import Optional
 
 import requests
 from zds_client import ClientError
 from zds_client.schema import get_operation_url
 from zgw_consumers.api_models.base import factory
-from zgw_consumers.client import ZGWClient
-from zgw_consumers.constants import AuthTypes
 
 from zac.utils.decorators import cache as cache_result
+from zac.zgw_client import ZGWClient
 
 from .data import (
     ExtraInformatieIngeschrevenNatuurlijkPersoon,
@@ -25,15 +23,16 @@ from zac.core.utils import A_DAY
 class HalClient(ZGWClient):
     def pre_request(self, method, url, **kwargs):
         """
-        Add authorization header to requests for APIs without jwt.
+        Add HAL+JSON headers to requests for BRP API.
         """
+        kwargs = super().pre_request(method, url, **kwargs)
 
-        result = super().pre_request(method, url, **kwargs)
-
-        headers = kwargs.get("headers", {})
-        headers["Accept"] = "application/hal+json"
-        headers["Content-Type"] = "application/hal+json"
-        return result
+        # Ensure headers dict exists and add HAL+JSON headers
+        if "headers" not in kwargs:
+            kwargs["headers"] = {}
+        kwargs["headers"]["Accept"] = "application/hal+json"
+        kwargs["headers"]["Content-Type"] = "application/hal+json"
+        return kwargs
 
 
 def get_client() -> HalClient:
@@ -42,17 +41,10 @@ def get_client() -> HalClient:
 
     assert service, "A service must be configured first"
 
-    _uuid = uuid.uuid4()
-    api_root = (
-        service.api_root.replace(service.api_root, service.nlx, 1)
-        if service.nlx
-        else service.api_root
-    )
-    client = HalClient.from_url(f"{api_root}dummy/{_uuid}")
-    client.schema_url = service.oas
+    # Use zgw-consumers 1.x build_client pattern
+    from zgw_consumers.client import build_client
 
-    if service.auth_type == AuthTypes.api_key:
-        client.auth_value = {service.header_key: service.header_value}
+    client = build_client(service, client_factory=HalClient)
 
     return client
 

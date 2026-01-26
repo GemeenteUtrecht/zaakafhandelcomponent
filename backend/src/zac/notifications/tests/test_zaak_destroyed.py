@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.urls import reverse
 from django.utils import timezone
 
@@ -9,8 +7,6 @@ from rest_framework.test import APITestCase
 from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import mock_service_oas_get
 
 from zac.accounts.models import AccessRequest
 from zac.accounts.tests.factories import AccessRequestFactory, UserFactory
@@ -21,6 +17,8 @@ from zac.contrib.board.tests.factories import BoardItemFactory
 from zac.elasticsearch.api import create_zaak_document
 from zac.elasticsearch.documents import ZaakDocument
 from zac.elasticsearch.tests.utils import ESMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import mock_service_oas_get
 from zac.tests.utils import mock_resource_get
 from zgw.models.zrc import Zaak
 
@@ -61,8 +59,8 @@ class ZaakDestroyedTests(ESMixin, APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory.create(username="notifs")
-        cls.ztc = Service.objects.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
-        cls.zrc = Service.objects.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
+        cls.ztc = ServiceFactory.create(api_root=CATALOGI_ROOT, api_type=APITypes.ztc)
+        cls.zrc = ServiceFactory.create(api_root=ZAKEN_ROOT, api_type=APITypes.zrc)
 
     def setUp(self):
         super().setUp()

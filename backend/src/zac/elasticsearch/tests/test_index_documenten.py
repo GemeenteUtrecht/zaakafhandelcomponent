@@ -9,11 +9,11 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.core.models import CoreConfig
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 from zac.tests.mixins import FreezeTimeMixin
 from zac.tests.utils import mock_resource_get, paginated_response
 from zgw.models.zrc import Zaak, ZaakInformatieObject
@@ -81,11 +81,11 @@ class IndexDocumentsTests(
 
     def setUp(self):
         super().setUp()
-        drc = Service.objects.create(api_type=APITypes.drc, api_root=DRC_ROOT)
+        drc = ServiceFactory.create(api_type=APITypes.drc, api_root=DRC_ROOT)
         config = CoreConfig.get_solo()
         config.primary_drc = drc
         config.save()
-        Service.objects.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=ZTC_ROOT)
 
     def test_index_documenten_no_zaken_index(self, m):
         self.clear_index(init=False)

@@ -4,9 +4,9 @@ from typing import Dict, List, Optional
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.catalogi import ResultaatType
 from zgw_consumers.api_models.documenten import Document
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.activities.api.serializers import ReadActivitySerializer
 from zac.activities.models import Activity
@@ -34,7 +34,7 @@ class ZetResultaatContext(Context):
     open_documenten: List[Optional[Document]]
 
 
-class OpenDocumentSerializer(APIModelSerializer):
+class OpenDocumentSerializer(DataclassSerializer):
     url = serializers.CharField(
         source="document",
         help_text=_("Unversioned URL-reference to INFORMATIEOBJECT in DRC API."),
@@ -44,12 +44,12 @@ class OpenDocumentSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = OpenDowc
+        dataclass = OpenDowc
         fields = ("url", "locked_by")
 
 
 @usertask_context_serializer
-class ZetResultaatContextSerializer(APIModelSerializer):
+class ZetResultaatContextSerializer(DataclassSerializer):
     activiteiten = ReadActivitySerializer(
         source="activities",
         many=True,
@@ -86,7 +86,7 @@ class ZetResultaatContextSerializer(APIModelSerializer):
     )
 
     class Meta:
-        model = ZetResultaatContext
+        dataclass = ZetResultaatContext
         fields = (
             "activiteiten",
             "checklist_vragen",

@@ -10,10 +10,9 @@ from zgw_consumers.api_models.base import factory
 from zgw_consumers.api_models.catalogi import ZaakType
 from zgw_consumers.api_models.constants import VertrouwelijkheidsAanduidingen
 from zgw_consumers.constants import APITypes
-from zgw_consumers.models import Service
-from zgw_consumers.test import generate_oas_component, mock_service_oas_get
 
 from zac.accounts.constants import PermissionObjectTypeChoices
+from zac.accounts.datastructures import VA_ORDER
 from zac.accounts.tests.factories import (
     BlueprintPermissionFactory,
     SuperUserFactory,
@@ -22,6 +21,8 @@ from zac.accounts.tests.factories import (
 from zac.camunda.constants import AssigneeTypeChoices
 from zac.core.permissions import zaken_inzien
 from zac.core.tests.utils import ClearCachesMixin
+from zac.tests import ServiceFactory
+from zac.tests.compat import generate_oas_component, mock_service_oas_get
 
 from ..documents import ZaakDocument, ZaakTypeDocument
 from ..drf_api.serializers import DEFAULT_ES_ZAAKDOCUMENT_FIELDS
@@ -60,7 +61,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="123456",
             omschrijving="Some zaak description",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
-            va_order=16,
+            va_order=VA_ORDER["beperkt_openbaar"],
             rollen=[
                 {
                     "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -102,7 +103,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="7890",
             omschrijving="Other description",
             vertrouwelijkheidaanduiding="confidentieel",
-            va_order=20,
+            va_order=VA_ORDER["confidentieel"],
             rollen=[],
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
             deadline="2021-12-31",
@@ -192,7 +193,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     def test_list_reports_user_only_has_one_zaaktype(self, m):
         # Mock the zaaktypen that user is allowed to see
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -265,7 +266,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @requests_mock.Mocker()
     def test_search_report_detail_all_fields(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -357,7 +358,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "7890",
                         "omschrijving": "Other description",
                         "vertrouwelijkheidaanduiding": "confidentieel",
-                        "vaOrder": 20,
+                        "vaOrder": VA_ORDER["confidentieel"],
                         "rollen": [],
                         "startdatum": None,
                         "einddatum": None,
@@ -386,7 +387,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "123456",
                         "omschrijving": "Some zaak description",
                         "vertrouwelijkheidaanduiding": "beperkt_openbaar",
-                        "vaOrder": 16,
+                        "vaOrder": VA_ORDER["beperkt_openbaar"],
                         "rollen": [
                             {
                                 "url": "https://api.zaken.nl/api/v1/rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -424,7 +425,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @requests_mock.Mocker()
     def test_search_report_detail_all_fields_one_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -509,7 +510,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
                         "bronorganisatie": "123456",
                         "omschrijving": "Some zaak description",
                         "vertrouwelijkheidaanduiding": "beperkt_openbaar",
-                        "vaOrder": 16,
+                        "vaOrder": VA_ORDER["beperkt_openbaar"],
                         "rollen": [
                             {
                                 "url": "https://api.zaken.nl/api/v1/rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -547,7 +548,7 @@ class ResponseTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
     @requests_mock.Mocker()
     def test_view_report_detail_some_fields_one_zaaktype(self, m):
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         zaaktype_1 = generate_oas_component(
             "ztc",
             "schemas/ZaakType",
@@ -714,7 +715,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
 
     @requests_mock.Mocker()
     def test_get_report_logged_in_with_permission(self, m):
-        Service.objects.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
+        ServiceFactory.create(api_type=APITypes.ztc, api_root=CATALOGI_ROOT)
         mock_service_oas_get(m, CATALOGI_ROOT, "ztc")
         catalogus = generate_oas_component(
             "ztc",
@@ -745,7 +746,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="123456",
             omschrijving="Some zaak description",
             vertrouwelijkheidaanduiding="beperkt_openbaar",
-            va_order=16,
+            va_order=VA_ORDER["beperkt_openbaar"],
             rollen=[
                 {
                     "url": f"{ZAKEN_ROOT}rollen/b80022cf-6084-4cf6-932b-799effdcdb26",
@@ -795,7 +796,7 @@ class PermissionTests(ClearCachesMixin, ESMixin, APITransactionTestCase):
             bronorganisatie="7890",
             omschrijving="Other description",
             vertrouwelijkheidaanduiding="confidentieel",
-            va_order=20,
+            va_order=VA_ORDER["confidentieel"],
             rollen=[],
             eigenschappen={"tekst": {"Beleidsveld": "Integratie"}},
             deadline="2021-12-31",

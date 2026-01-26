@@ -7,10 +7,10 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_dataclasses.serializers import DataclassSerializer
 from zgw_consumers.api_models.catalogi import InformatieObjectType
 from zgw_consumers.api_models.documenten import Document
 from zgw_consumers.concurrent import parallel
-from zgw_consumers.drf.serializers import APIModelSerializer
 
 from zac.api.context import get_zaak_context
 from zac.camunda.user_tasks import Context, usertask_context_serializer
@@ -29,14 +29,14 @@ class DocumentSelectContext(Context):
 
 
 @usertask_context_serializer
-class DocumentSelectContextSerializer(APIModelSerializer):
+class DocumentSelectContextSerializer(DataclassSerializer):
     documents_link = serializers.URLField(
         help_text=_("URL-reference to paginated documents endpoint.")
     )
     informatieobjecttypen = InformatieObjectTypeSerializer(many=True)
 
     class Meta:
-        model = DocumentSelectContext
+        dataclass = DocumentSelectContext
         fields = (
             "documents_link",
             "informatieobjecttypen",
