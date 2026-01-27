@@ -1571,8 +1571,13 @@ def search_objects(
     url = get_operation_url(client.schema, operation_id, base_url=client.base_url)
     query_params = query_params if query_params else dict()
     url = furl(url).set(query_params).url
+    request_kwargs = {"headers": {"Content-Crs": "EPSG:4326"}}
     response = add_string_representation(client.operation)(
-        url=url, operation_id=operation_id, query_params=query_params, data=filters
+        url=url,
+        operation_id=operation_id,
+        query_params=query_params,
+        data=filters,
+        request_kwargs=request_kwargs,
     )
 
     query_params = fetch_next_url_pagination(response, query_params=query_params)
