@@ -64,12 +64,12 @@
 
   @if ( length($bits) == 1 ) {
     // block
-    $selector: selector-append(&, "#{&}--#{$modifier}");
+    $selector: "#{&}#{&}--#{$modifier}";
   } @else {
     // block__element
     $block: nth($bits, 1);  // block, possibly with a modifier
     $element: nth($bits, 2);
-    $element_with_modifier: selector-append($element, "#{$element}--#{$modifier}");;
+    $element_with_modifier: "#{$element}#{$element}--#{$modifier}";
     $selector: "#{$block} #{$element_with_modifier}";
   }
 
