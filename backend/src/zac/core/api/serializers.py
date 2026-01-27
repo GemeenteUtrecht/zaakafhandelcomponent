@@ -1317,11 +1317,11 @@ EmptySerializer = betrokkene_identificatie_serializer(serializers.JSONField)
 
 class RolSerializer(PolymorphicSerializer):
     serializer_mapping = {
-        RolTypes.natuurlijk_persoon: RolNatuurlijkPersoonSerializer,
-        RolTypes.niet_natuurlijk_persoon: RolNietNatuurlijkPersoonSerializer,
-        RolTypes.vestiging: RolVestigingSerializer,
-        RolTypes.organisatorische_eenheid: RolOrganisatorischeEenheidSerializer,
-        RolTypes.medewerker: RolMedewerkerSerializer,
+        RolTypes.natuurlijk_persoon.value: RolNatuurlijkPersoonSerializer,
+        RolTypes.niet_natuurlijk_persoon.value: RolNietNatuurlijkPersoonSerializer,
+        RolTypes.vestiging.value: RolVestigingSerializer,
+        RolTypes.organisatorische_eenheid.value: RolOrganisatorischeEenheidSerializer,
+        RolTypes.medewerker.value: RolMedewerkerSerializer,
         "": EmptySerializer,
     }
     discriminator_field = "betrokkene_type"

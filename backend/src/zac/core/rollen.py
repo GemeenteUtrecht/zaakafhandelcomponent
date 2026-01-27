@@ -128,13 +128,13 @@ def get_identificatie_organisatorische_eenheid(rol: Rol) -> str:
 
 
 GET_NAME = {
-    RolTypes.natuurlijk_persoon: get_naam_natuurlijkpersoon,
-    RolTypes.medewerker: get_naam_medewerker,
-    RolTypes.organisatorische_eenheid: get_naam_organisatorische_eenheid,
+    RolTypes.natuurlijk_persoon.value: get_naam_natuurlijkpersoon,
+    RolTypes.medewerker.value: get_naam_medewerker,
+    RolTypes.organisatorische_eenheid.value: get_naam_organisatorische_eenheid,
 }
 
 GET_IDENTIFICATIE = {
-    RolTypes.natuurlijk_persoon: get_bsn,
-    RolTypes.medewerker: get_medewerker_username,
-    RolTypes.organisatorische_eenheid: get_identificatie_organisatorische_eenheid,
+    RolTypes.natuurlijk_persoon.value: get_bsn,
+    RolTypes.medewerker.value: get_medewerker_username,
+    RolTypes.organisatorische_eenheid.value: get_identificatie_organisatorische_eenheid,
 }
