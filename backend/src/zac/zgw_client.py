@@ -472,6 +472,11 @@ class ZGWClient(APIClient):
         Returns:
             The (possibly modified) kwargs dict
         """
+        if "headers" not in kwargs:
+            kwargs["headers"] = {}
+        # Set CRS headers for ZGW API compatibility (EPSG:4326 is WGS84, the standard)
+        kwargs["headers"].setdefault("Accept-Crs", "EPSG:4326")
+        kwargs["headers"].setdefault("Content-Crs", "EPSG:4326")
         return kwargs
 
     def request(self, method: str, url: str, *args, **kwargs):
@@ -688,7 +693,6 @@ class ZGWClient(APIClient):
         Example:
             zaak = client.retrieve("zaak", url="https://zaken.nl/api/v1/zaken/123")
             zaak = client.retrieve("zaak", uuid="12345678-...")
-            zaak = client.retrieve("zaak", url="...", request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}})
         """
         # Extract request_kwargs for headers/params
         request_kwargs = kwargs.pop("request_kwargs", {}) or {}

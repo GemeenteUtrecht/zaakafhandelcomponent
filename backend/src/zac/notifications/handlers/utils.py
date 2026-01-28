@@ -21,7 +21,6 @@ def retrieve_zaak(zaak_url: str) -> Zaak:
     zaak_dict: dict[str, Any] = zrc_client.retrieve(
         "zaak",
         url=zaak_url,
-        request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
     )
     zaak = factory(Zaak, zaak_dict)
 
