@@ -368,10 +368,9 @@ class ZaakDetailView(GetZaakMixin, views.APIView):
         # If no errors are raised - data is valid too.
         data = deepcopy(serializer.data)
         reden = data.pop("reden", None)
-        headers = {"Accept-Crs": "EPSG:4326", "Content-Crs": "EPSG:4326"}
+        request_kwargs = {}
         if reden:
-            headers["X-Audit-Toelichting"] = reden
-        request_kwargs = {"headers": headers}
+            request_kwargs = {"headers": {"X-Audit-Toelichting": reden}}
 
         client.partial_update(
             "zaak",
@@ -606,13 +605,11 @@ class ZaakRelationView(views.APIView):
             "zaak",
             {"relevanteAndereZaken": hoofdzaak.relevante_andere_zaken},
             url=hoofdzaak.url,
-            request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
         )
         client.partial_update(
             "zaak",
             {"relevanteAndereZaken": bijdragezaak.relevante_andere_zaken},
             url=bijdragezaak.url,
-            request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
         )
         # Invalidate cache immediately
         invalidate_zaak_cache(hoofdzaak)

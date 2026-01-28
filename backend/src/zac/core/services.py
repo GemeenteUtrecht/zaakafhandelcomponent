@@ -442,7 +442,7 @@ def _find_zaken(
     _zaken = get_paginated_results(
         client,
         "zaak",
-        request_kwargs={"params": query, "headers": {"Accept-Crs": "EPSG:4326"}},
+        request_kwargs={"params": query},
         minimum=minimum,
     )
     return _zaken
@@ -460,7 +460,6 @@ def get_zaken_all_paginated(
     response = client.list(
         "zaak",
         query_params=query_params,
-        request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
     )
     zaken = factory(Zaak, response["results"])
     query_params = fetch_next_url_pagination(response, query_params=query_params)
@@ -485,10 +484,7 @@ def get_zaken_all(
         return get_paginated_results(
             client,
             "zaak",
-            request_kwargs={
-                "params": query_params,
-                "headers": {"Accept-Crs": "EPSG:4326"},
-            },
+            request_kwargs={"params": query_params},
         )
 
     with parallel(max_workers=settings.MAX_WORKERS) as executor:
@@ -599,10 +595,7 @@ def find_zaak(bronorganisatie: str, identificatie: str) -> Zaak:
             results = get_paginated_results(
                 client,
                 "zaak",
-                request_kwargs={
-                    "params": query,
-                    "headers": {"Accept-Crs": "EPSG:4326"},
-                },
+                request_kwargs={"params": query},
             )
 
             if not results:
@@ -792,7 +785,6 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
                 "zaak",
                 url=zaak_url,
                 uuid=zaak_uuid,
-                request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
             )
 
             if not result:
@@ -802,7 +794,6 @@ def get_zaak(zaak_uuid=None, zaak_url=None, client=None) -> Zaak:
             "zaak",
             url=zaak_url,
             uuid=zaak_uuid,
-            request_kwargs={"headers": {"Accept-Crs": "EPSG:4326"}},
         )
 
     result = factory(Zaak, result)
@@ -1571,13 +1562,11 @@ def search_objects(
     url = get_operation_url(client.schema, operation_id, base_url=client.base_url)
     query_params = query_params if query_params else dict()
     url = furl(url).set(query_params).url
-    request_kwargs = {"headers": {"Content-Crs": "EPSG:4326"}}
     response = add_string_representation(client.operation)(
         url=url,
         operation_id=operation_id,
         query_params=query_params,
         data=filters,
-        request_kwargs=request_kwargs,
     )
 
     query_params = fetch_next_url_pagination(response, query_params=query_params)
