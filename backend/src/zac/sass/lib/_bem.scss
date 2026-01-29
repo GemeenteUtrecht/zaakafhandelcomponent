@@ -60,7 +60,7 @@
 ///   The name of the modifier to apply.
 @mixin modifier($modifier) {
   $selector: null;
-  $bits: str-split(inspect(&), " ");
+  $bits: str-split("#{&}", " ");
 
   @if ( length($bits) == 1 ) {
     // block
