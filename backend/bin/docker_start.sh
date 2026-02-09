@@ -28,7 +28,7 @@ python src/manage.py migrate
 
 >&2 echo "Starting server"
 cmd="uwsgi \
-    --http-socket :$uwsgi_port \
+    --http :$uwsgi_port \
     --module zac.wsgi \
     --static-map /static=/app/static \
     --static-map /media=/app/media  \
