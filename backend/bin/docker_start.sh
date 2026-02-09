@@ -13,6 +13,7 @@ uwsgi_threads=${UWSGI_THREADS:-8}
 uwsgi_buffer_size=${UWSGI_BUFFER_SIZE:-65536}
 uwsgi_max_requests=${UWSGI_MAX_REQUESTS:-5000}
 uwsgi_harakiri=${UWSGI_HARAKIRI:-30}
+uwsgi_listen=${UWSGI_LISTEN:-1024}
 
 until pg_isready; do
   >&2 echo "Waiting for database connection..."
@@ -27,7 +28,7 @@ python src/manage.py migrate
 
 >&2 echo "Starting server"
 cmd="uwsgi \
-    --http :$uwsgi_port \
+    --http-socket :$uwsgi_port \
     --module zac.wsgi \
     --static-map /static=/app/static \
     --static-map /media=/app/media  \
@@ -38,6 +39,8 @@ cmd="uwsgi \
     --enable-threads \
     --max-requests $uwsgi_max_requests \
     --harakiri $uwsgi_harakiri \
+    --listen ${uwsgi_listen:-1024} \
+
 "
 
 PY_AUTORELOAD=${AUTORELOAD:-false}
