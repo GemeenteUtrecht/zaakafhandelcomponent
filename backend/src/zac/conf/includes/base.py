@@ -545,7 +545,10 @@ if SENTRY_DSN:
     }
 
     sentry_sdk.init(
-        **SENTRY_CONFIG, integrations=get_sentry_integrations(), send_default_pii=True
+        **SENTRY_CONFIG,
+        integrations=get_sentry_integrations(),
+        send_default_pii=True,
+        traces_sample_rate=0.1,
     )
 
 #
