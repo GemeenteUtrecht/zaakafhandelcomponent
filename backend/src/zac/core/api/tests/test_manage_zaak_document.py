@@ -1404,6 +1404,44 @@ class ZaakDocumentResponseTests(ClearCachesMixin, APITransactionTestCase):
             ],
         )
 
+    def test_add_document_create_returns_non_json_error(self, m):
+        """Regression test: DRC returning non-JSON error body should not crash with JSONDecodeError."""
+        user = SuperUserFactory.create()
+        self.client.force_authenticate(user)
+        self._setupMocks(m)
+
+        m.post(
+            f"{DOCUMENTS_ROOT}enkelvoudiginformatieobjecten",
+            text="<html>Gateway Timeout</html>",
+            status_code=502,
+        )
+
+        file = BytesIO(b"foobar")
+        file.name = "some-name.txt"
+        post_data = {
+            "informatieobjecttype": f"{CATALOGI_ROOT}informatieobjecttypen/d1b0512c-cdda-4779-b0bb-7ec1ee516e1b",
+            "zaak": f"{ZAKEN_ROOT}zaken/456",
+            "file": file,
+        }
+
+        search_informatieobjects = MagicMock()
+        search_informatieobjects.count.return_value = 0
+        search_informatieobjects.return_value = []
+        with patch(
+            "zac.core.api.views.check_document_status",
+            return_value=[],
+        ):
+            with patch(
+                "zac.core.api.serializers.search_informatieobjects",
+                return_value=search_informatieobjects,
+            ):
+                response = self.client.post(
+                    self.endpoint, post_data, format="multipart"
+                )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("Gateway Timeout", response.json()["detail"])
+
     def test_add_document_with_unallowed_file_extension(self, m):
         user = SuperUserFactory.create()
         self.client.force_authenticate(user)

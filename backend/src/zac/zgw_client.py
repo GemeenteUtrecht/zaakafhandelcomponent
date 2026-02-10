@@ -15,7 +15,7 @@ from typing import Any, Union
 import yaml
 from ape_pie import APIClient
 from requests import PreparedRequest
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, JSONDecodeError as RequestsJSONDecodeError
 from zds_client.client import ClientError
 from zgw_consumers.models import Service
 
@@ -647,7 +647,11 @@ class ZGWClient(APIClient):
         except HTTPError as e:
             # Wrap HTTPError in ClientError for backwards compatibility
             # Old zds-client raised ClientError on HTTP errors
-            raise ClientError(response.json() if response.content else None) from e
+            try:
+                detail = response.json() if response.content else None
+            except (ValueError, RequestsJSONDecodeError):
+                detail = {"detail": response.text}
+            raise ClientError(detail) from e
 
         # Handle responses with no content (204, etc.) or empty bodies
         if not response.content:
@@ -766,7 +770,11 @@ class ZGWClient(APIClient):
         except HTTPError as e:
             # Wrap HTTPError in ClientError for backwards compatibility
             # Old zds-client raised ClientError on HTTP errors
-            raise ClientError(response.json() if response.content else None) from e
+            try:
+                detail = response.json() if response.content else None
+            except (ValueError, RequestsJSONDecodeError):
+                detail = {"detail": response.text}
+            raise ClientError(detail) from e
         return response.json()
 
     def update(self, resource: str, data: dict, **kwargs) -> dict:
