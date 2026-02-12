@@ -83,6 +83,12 @@ class ZGWClient(APIClient):
         self.service = service
         self._schema = None  # Lazy-loaded OAS schema
 
+        # Mount retry-enabled adapter with connection pooling.
+        # APIClient (ape_pie) is a requests.Session subclass, so mount() works.
+        from zac.utils.http import mount_retry_adapter
+
+        mount_retry_adapter(self)
+
         # Operation suffix mapping for backward compatibility with zds-client
         # Maps HTTP method names to operation ID suffixes used in OAS schemas
         self.operation_suffix_mapping = {
@@ -484,7 +490,12 @@ class ZGWClient(APIClient):
         Make HTTP request using the parent APIClient.
 
         Calls pre_request hook before delegating to parent.
+        Sets a default timeout if none is provided.
         """
+        if "timeout" not in kwargs:
+            from django.conf import settings
+
+            kwargs["timeout"] = getattr(settings, "REQUESTS_DEFAULT_TIMEOUT", (10, 30))
         kwargs = self.pre_request(method, url, **kwargs)
         return super().request(method, url, *args, **kwargs)
 

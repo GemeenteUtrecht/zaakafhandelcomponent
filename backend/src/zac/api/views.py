@@ -2,7 +2,6 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
-import requests
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.authentication import SessionAuthentication
@@ -23,11 +22,12 @@ from django.conf import settings
 
 from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
+from zac.utils.http import get_session
 
 
 @cache("remote_schema:{schema_url}", timeout=A_DAY)
 def get_schema_url(schema_url: str):
-    return requests.get(schema_url)
+    return get_session().get(schema_url, timeout=settings.REQUESTS_DEFAULT_TIMEOUT)
 
 
 def remote_schema_view(request):

@@ -555,6 +555,20 @@ if SENTRY_DSN:
 # ZGW-CONSUMERS
 #
 ZGW_CONSUMERS_CLIENT_CLASS = "zac.client.Client"
+
+# Default timeout (connect, read) in seconds for outbound HTTP requests.
+# Used by the ZGW client and all direct requests.get/post calls.
+REQUESTS_DEFAULT_TIMEOUT = (10, 30)
+
+# Retry configuration for outbound HTTP requests.
+# Retries on 502, 503, 504 with exponential backoff.
+REQUESTS_RETRY_TOTAL = config("REQUESTS_RETRY_TOTAL", default=3)
+REQUESTS_RETRY_BACKOFF_FACTOR = 0.5
+REQUESTS_RETRY_STATUS_FORCELIST = [502, 503, 504]
+
+# Connection pool size per host (urllib3 default is 10).
+REQUESTS_POOL_CONNECTIONS = config("REQUESTS_POOL_CONNECTIONS", default=20)
+REQUESTS_POOL_MAXSIZE = config("REQUESTS_POOL_MAXSIZE", default=20)
 ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
     os.path.join(DJANGO_PROJECT_DIR, "tests", "schemas"),
     os.path.join(DJANGO_PROJECT_DIR, "contrib", "objects", "tests", "schemas"),

@@ -50,7 +50,9 @@ class Command(BaseCommand):
         def make_request():
             reference = get_random_string(length=5)
             logger.info("Request %s start", reference)
-            response = requests.get(options["endpoint"], headers=headers)
+            response = requests.get(
+                options["endpoint"], headers=headers, timeout=(10, 30)
+            )
             logger.info(
                 "Request %s completed, elapsed: %fs",
                 reference,
