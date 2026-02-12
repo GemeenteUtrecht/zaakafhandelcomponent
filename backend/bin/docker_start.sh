@@ -12,8 +12,10 @@ uwsgi_processes=${UWSGI_PROCESSES:-16}
 uwsgi_threads=${UWSGI_THREADS:-8}
 uwsgi_buffer_size=${UWSGI_BUFFER_SIZE:-65536}
 uwsgi_max_requests=${UWSGI_MAX_REQUESTS:-5000}
+uwsgi_max_requests_delta=${UWSGI_MAX_REQUESTS_DELTA:-500}
 uwsgi_harakiri=${UWSGI_HARAKIRI:-30}
 uwsgi_listen=${UWSGI_LISTEN:-1024}
+uwsgi_reload_on_rss=${UWSGI_RELOAD_ON_RSS:-400}
 
 until pg_isready; do
   >&2 echo "Waiting for database connection..."
@@ -37,9 +39,12 @@ cmd="uwsgi \
     --threads $uwsgi_threads \
     --buffer-size $uwsgi_buffer_size \
     --enable-threads \
+    --py-call-uwsgi-fork-hooks \
     --max-requests $uwsgi_max_requests \
+    --max-requests-delta $uwsgi_max_requests_delta \
     --harakiri $uwsgi_harakiri \
     --listen ${uwsgi_listen:-1024} \
+    --reload-on-rss $uwsgi_reload_on_rss \
 
 "
 
