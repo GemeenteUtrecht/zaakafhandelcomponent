@@ -2,7 +2,10 @@ import types
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
 
+from django.conf import settings
+
 import requests
+from requests import Session
 from requests.structures import CaseInsensitiveDict
 from zds_client.client import ClientError
 from zds_client.schema import get_headers
@@ -42,10 +45,11 @@ def bag_request(
     if self.auth:
         headers.update(self.auth.credentials())
     kwargs["headers"] = headers
+    kwargs.setdefault("timeout", settings.REQUESTS_DEFAULT_TIMEOUT)
 
-    # pre_request, post_response, and _log were removed in zgw-consumers 1.x
-    # API logging is now handled at a different level in zgw-consumers 1.x
-    response = requests.request(method, url, **kwargs)
+    # Use the session's request method (self is a ZGWClient/Session subclass)
+    # to benefit from the retry adapter and connection pooling.
+    response = Session.request(self, method, url, **kwargs)
     try:
         response_json = response.json()
     except Exception:

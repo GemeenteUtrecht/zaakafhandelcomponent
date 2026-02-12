@@ -48,6 +48,7 @@ from zac.core.models import ApiSchemaConfig
 from zac.elasticsearch.searches import search_informatieobjects, search_zaken
 from zac.utils.decorators import cache as cache_result
 from zac.utils.exceptions import ServiceConfigError
+from zac.utils.http import get_session as _get_http_session
 from zac.zgw_client import ZGWClient, get_paginated_results
 from zgw.models import Zaak
 from zgw.models.zrc import ZaakInformatieObject
@@ -1065,7 +1066,9 @@ def _fetch_document(url: str) -> Response:
         return response
     client = client_from_url(url)
     headers = client.auth.credentials()
-    response = requests.get(url, headers=headers)
+    response = _get_http_session().get(
+        url, headers=headers, timeout=settings.REQUESTS_DEFAULT_TIMEOUT
+    )
     cache_document(url, response)
     return response
 
@@ -1224,7 +1227,11 @@ def get_document(url: str) -> Document:
 
 def download_document(document: Document) -> Tuple[Document, bytes]:
     client = _client_from_object(document)
-    response = requests.get(document.inhoud, headers=client.auth.credentials())
+    response = _get_http_session().get(
+        document.inhoud,
+        headers=client.auth.credentials(),
+        timeout=settings.REQUESTS_DEFAULT_TIMEOUT,
+    )
     response.raise_for_status()
     return document, response.content
 

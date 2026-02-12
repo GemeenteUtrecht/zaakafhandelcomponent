@@ -1,11 +1,19 @@
 from dataclasses import dataclass
 from typing import Iterator
 
-import requests
+from django.conf import settings
+
+from requests import Response
 from zgw_consumers.api_models.zaken import ZaakObject
 
 from zac.core.models import CoreConfig, MetaObjectTypesConfig
 from zac.core.services import fetch_objects
+from zac.utils.http import get_session
+
+
+def _requests_get_with_timeout(url: str, **kwargs) -> Response:
+    kwargs.setdefault("timeout", settings.REQUESTS_DEFAULT_TIMEOUT)
+    return get_session().get(url, **kwargs)
 
 
 def noop(url: str) -> str:
@@ -20,7 +28,7 @@ class ZaakObjectGroup:
 
     object_type: str
     label: str
-    retriever: callable = requests.get
+    retriever: callable = _requests_get_with_timeout
     template: str = "core/includes/zaakobjecten/default.html"
     items: list = None
 

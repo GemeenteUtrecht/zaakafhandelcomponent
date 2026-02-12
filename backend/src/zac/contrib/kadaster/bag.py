@@ -2,11 +2,11 @@ from typing import Any, Dict
 
 from django.conf import settings
 
-import requests
 from zgw_consumers.concurrent import parallel
 
 from zac.core.utils import A_DAY
 from zac.utils.decorators import cache
+from zac.utils.http import get_session
 
 from .models import KadasterConfig
 
@@ -16,15 +16,18 @@ class Bag:
         config = KadasterConfig.get_solo()
         self.url = config.service.api_root
         self.headers = config.service.get_auth_header(self.url)
+        self._session = get_session()
 
     def retrieve(self, url: str, *args, **kwargs):
-        response = requests.get(url, headers=self.headers, *args, **kwargs)
+        kwargs.setdefault("timeout", settings.REQUESTS_DEFAULT_TIMEOUT)
+        response = self._session.get(url, headers=self.headers, *args, **kwargs)
         response.raise_for_status()
         return response.json()
 
     def get(self, path: str, *args, **kwargs):
+        kwargs.setdefault("timeout", settings.REQUESTS_DEFAULT_TIMEOUT)
         full_url = f"{self.url}{path}"
-        response = requests.get(full_url, headers=self.headers, *args, **kwargs)
+        response = self._session.get(full_url, headers=self.headers, *args, **kwargs)
         response.raise_for_status()
         return response.json()
 
@@ -33,10 +36,12 @@ class LocationServer:
     def __init__(self):
         config = KadasterConfig.get_solo()
         self.url = config.locatieserver
+        self._session = get_session()
 
     def get(self, path: str, *args, **kwargs):
+        kwargs.setdefault("timeout", settings.REQUESTS_DEFAULT_TIMEOUT)
         full_url = f"{self.url}{path}"
-        response = requests.get(full_url, *args, **kwargs)
+        response = self._session.get(full_url, *args, **kwargs)
         response.raise_for_status()
         return response.json()
 

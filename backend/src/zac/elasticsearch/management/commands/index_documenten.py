@@ -7,7 +7,6 @@ from urllib.parse import urlsplit, urlunsplit
 from django.conf import settings
 from django.core.management import BaseCommand
 
-import requests
 from elasticsearch_dsl.query import Term, Terms
 from requests.models import Response
 from zgw_consumers.api_models.base import factory
@@ -58,7 +57,13 @@ class Command(IndexCommand, BaseCommand):
         return None
 
     def make_request(self, url_with_header: Tuple[Dict[str, str], str]) -> Response:
-        return requests.get(url_with_header[0], headers=url_with_header[1])
+        from zac.utils.http import get_session
+
+        return get_session().get(
+            url_with_header[0],
+            headers=url_with_header[1],
+            timeout=settings.REQUESTS_DEFAULT_TIMEOUT,
+        )
 
     def get_documenten(self, clients, eios: List[str]) -> List[Document]:
         requests_args = []

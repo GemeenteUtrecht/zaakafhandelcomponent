@@ -2,9 +2,10 @@ import logging
 from typing import Union
 from urllib.parse import urljoin
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-import requests
+from zac.utils.http import get_session
 
 from .models import FormsConfig
 
@@ -24,6 +25,7 @@ class OpenFormsClient:
         # just 'mocks' the schema with defaultdict?
         self.base_url = _client.base_url
         self.auth_header = _client.auth_header
+        self._session = get_session()
 
     def request(self, method: str, path: str, **kwargs) -> Union[list, dict]:
         kwargs.setdefault("headers", {})
@@ -34,7 +36,8 @@ class OpenFormsClient:
             path = path[1:]
 
         url = urljoin(self.base_url, path)
-        response = requests.request(method, url, **kwargs)
+        kwargs.setdefault("timeout", settings.REQUESTS_DEFAULT_TIMEOUT)
+        response = self._session.request(method, url, **kwargs)
         response.raise_for_status()
         return response.json()
 
