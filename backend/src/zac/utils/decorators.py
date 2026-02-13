@@ -1,6 +1,7 @@
 import functools
 import inspect
 import logging
+import pickle
 import time
 from functools import wraps
 
@@ -10,24 +11,71 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-
-import inspect
-import logging
-import pickle
-from functools import wraps
-
-from django.core.cache import caches
-
-logger = logging.getLogger(__name__)
+_STALE_SUFFIX = ":stale"
+_DEFAULT_STALE_TTL_MULTIPLIER = 10
 
 
-def cache(key: str, alias: str = "default", **set_options):
+class CircuitOpenError(Exception):
+    """Raised when a service circuit breaker is open."""
+
+    def __init__(self, service_name: str):
+        self.service_name = service_name
+        super().__init__(
+            f"Circuit breaker open for '{service_name}': refusing call."
+        )
+
+
+def _record_failure(cache_backend, cb_name, failure_window, failure_threshold, recovery_timeout):
+    """Record a failure and trip the circuit if threshold is exceeded."""
+    failures_key = f"cb:{cb_name}:failures"
+    open_key = f"cb:{cb_name}:open"
+    try:
+        try:
+            new_count = cache_backend.incr(failures_key)
+        except ValueError:
+            cache_backend.set(failures_key, 1, failure_window)
+            new_count = 1
+
+        if new_count >= failure_threshold:
+            cache_backend.set(open_key, 1, recovery_timeout)
+            logger.warning(
+                "Circuit breaker OPEN for '%s' after %d failures in %ds.",
+                cb_name,
+                new_count,
+                failure_window,
+            )
+    except Exception:
+        pass  # Redis unavailable — fail open
+
+
+def _reset_circuit(cache_backend, cb_name):
+    """Reset circuit breaker state after a successful call."""
+    try:
+        cache_backend.delete(f"cb:{cb_name}:failures")
+        cache_backend.delete(f"cb:{cb_name}:open")
+    except Exception:
+        pass
+
+
+def _is_circuit_open(cache_backend, cb_name):
+    """Check if the circuit is currently open."""
+    try:
+        return cache_backend.get(f"cb:{cb_name}:open") is not None
+    except Exception:
+        return False  # Redis unavailable — fail open
+
+
+def cache(key: str, alias: str = "default", stale_ttl: int = None, **set_options):
     """
     Cache decorator that safely caches function results using a formatted key.
 
     - Keeps your dynamic key templating logic intact.
     - Adds graceful handling for unpicklable objects (e.g. lxml.etree._Element).
     - Supports skip_cache=True kwarg to bypass caching.
+    - Stale-while-error: on failure, serves previously cached data from a
+      shadow key with a longer TTL.
+    - Circuit breaker: short-circuits calls to services that have failed
+      repeatedly, serving stale data or raising CircuitOpenError.
     """
 
     def decorator(func: callable):
@@ -39,8 +87,18 @@ def cache(key: str, alias: str = "default", **set_options):
         else:
             defaults = {}
 
+        # Compute stale TTL: explicit > 10x normal timeout > None (disabled)
+        _stale_ttl = stale_ttl
+        if _stale_ttl is None and "timeout" in set_options:
+            _stale_ttl = set_options["timeout"] * _DEFAULT_STALE_TTL_MULTIPLIER
+
+        # Circuit breaker identity
+        cb_name = func.__qualname__
+
         @wraps(func)
         def wrapped(*args, **kwargs):
+            from django.conf import settings
+
             skip_cache = kwargs.pop("skip_cache", False)
             if skip_cache:
                 return func(*args, **kwargs)
@@ -58,22 +116,58 @@ def cache(key: str, alias: str = "default", **set_options):
                 key_kwargs[argspec.varkw] = var_kwargs
 
             cache_key = key.format(**key_kwargs)
+            stale_key = cache_key + _STALE_SUFFIX
             _cache = caches[alias]
 
-            # Try to fetch from cache
+            # --- Primary cache hit ---
             result = _cache.get(cache_key)
             if result is not None:
                 logger.debug("Cache key '%s' hit", cache_key)
                 return result
 
-            # Compute the function result
-            result = func(*args, **kwargs)
+            # --- Circuit breaker check ---
+            cb_threshold = getattr(settings, "CB_FAILURE_THRESHOLD", 5)
+            cb_window = getattr(settings, "CB_FAILURE_WINDOW", 60)
+            cb_recovery = getattr(settings, "CB_RECOVERY_TIMEOUT", 30)
 
-            # Attempt to cache it safely
+            if _is_circuit_open(_cache, cb_name):
+                if _stale_ttl is not None:
+                    stale = _cache.get(stale_key)
+                    if stale is not None:
+                        logger.warning(
+                            "Circuit open for '%s', serving stale data for key '%s'.",
+                            cb_name,
+                            cache_key,
+                        )
+                        return stale
+                raise CircuitOpenError(cb_name)
+
+            # --- Primary cache miss: call the function ---
             try:
-                # Ensure picklable before caching
+                result = func(*args, **kwargs)
+            except Exception as exc:
+                _record_failure(_cache, cb_name, cb_window, cb_threshold, cb_recovery)
+
+                # Stale-while-error fallback
+                if _stale_ttl is not None:
+                    stale = _cache.get(stale_key)
+                    if stale is not None:
+                        logger.warning(
+                            "Service call failed for '%s', serving stale data. Error: %s",
+                            cache_key,
+                            exc,
+                        )
+                        return stale
+                raise
+
+            # --- Success: store result and reset circuit ---
+            _reset_circuit(_cache, cb_name)
+
+            try:
                 pickle.dumps(result)
                 _cache.set(cache_key, result, **set_options)
+                if _stale_ttl is not None:
+                    _cache.set(stale_key, result, _stale_ttl)
                 logger.debug("Cache key '%s' stored successfully", cache_key)
             except Exception as e:
                 logger.debug(
