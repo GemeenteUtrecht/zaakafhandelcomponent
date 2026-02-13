@@ -569,6 +569,14 @@ REQUESTS_RETRY_STATUS_FORCELIST = [502, 503, 504]
 # Connection pool size per host (urllib3 default is 10).
 REQUESTS_POOL_CONNECTIONS = config("REQUESTS_POOL_CONNECTIONS", default=20)
 REQUESTS_POOL_MAXSIZE = config("REQUESTS_POOL_MAXSIZE", default=20)
+
+# Circuit breaker for external API calls (used by @cache_result decorator).
+# After CB_FAILURE_THRESHOLD failures within CB_FAILURE_WINDOW seconds,
+# the circuit opens for CB_RECOVERY_TIMEOUT seconds.
+CB_FAILURE_THRESHOLD = config("CB_FAILURE_THRESHOLD", default=5)
+CB_FAILURE_WINDOW = config("CB_FAILURE_WINDOW", default=60)       # seconds
+CB_RECOVERY_TIMEOUT = config("CB_RECOVERY_TIMEOUT", default=30)  # seconds
+
 ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [
     os.path.join(DJANGO_PROJECT_DIR, "tests", "schemas"),
     os.path.join(DJANGO_PROJECT_DIR, "contrib", "objects", "tests", "schemas"),
