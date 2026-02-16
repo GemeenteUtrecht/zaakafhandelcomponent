@@ -574,7 +574,7 @@ REQUESTS_POOL_MAXSIZE = config("REQUESTS_POOL_MAXSIZE", default=20)
 # After CB_FAILURE_THRESHOLD failures within CB_FAILURE_WINDOW seconds,
 # the circuit opens for CB_RECOVERY_TIMEOUT seconds.
 CB_FAILURE_THRESHOLD = config("CB_FAILURE_THRESHOLD", default=5)
-CB_FAILURE_WINDOW = config("CB_FAILURE_WINDOW", default=60)       # seconds
+CB_FAILURE_WINDOW = config("CB_FAILURE_WINDOW", default=60)  # seconds
 CB_RECOVERY_TIMEOUT = config("CB_RECOVERY_TIMEOUT", default=30)  # seconds
 
 ZGW_CONSUMERS_TEST_SCHEMA_DIRS = [

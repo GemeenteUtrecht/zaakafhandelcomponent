@@ -20,12 +20,12 @@ class CircuitOpenError(Exception):
 
     def __init__(self, service_name: str):
         self.service_name = service_name
-        super().__init__(
-            f"Circuit breaker open for '{service_name}': refusing call."
-        )
+        super().__init__(f"Circuit breaker open for '{service_name}': refusing call.")
 
 
-def _record_failure(cache_backend, cb_name, failure_window, failure_threshold, recovery_timeout):
+def _record_failure(
+    cache_backend, cb_name, failure_window, failure_threshold, recovery_timeout
+):
     """Record a failure and trip the circuit if threshold is exceeded."""
     failures_key = f"cb:{cb_name}:failures"
     open_key = f"cb:{cb_name}:open"
