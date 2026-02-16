@@ -295,6 +295,8 @@ def vng_exception_handler(exc, context):
 
     Transform 4xx and 5xx errors into DSO-compliant shape.
     """
+    from zac.utils.decorators import CircuitOpenError
+
     response = drf_exception_handler(exc, context)
     if response is None:
         if os.getenv("DEBUG", "").lower() in ["yes", "1", "true"]:
@@ -304,7 +306,14 @@ def vng_exception_handler(exc, context):
         # make sure the exception still ends up in Sentry
         sentry_client.captureException()
 
-        if isinstance(exc, HTTPError):
+        if isinstance(exc, CircuitOpenError):
+            exc = ExternalAPIException(
+                detail=str(exc),
+                code="circuit_open",
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+            response = Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        elif isinstance(exc, HTTPError):
             status_code = getattr(
                 exc.response, "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR
             )
