@@ -26,19 +26,6 @@ done
 
 # Apply database migrations
 >&2 echo "Apply database migrations"
-if [ "${FAKE_OIDC_MIGRATION}" = "true" ]; then
-    >&2 echo "Dropping all mozilla_django_oidc_db tables and clearing migration history to allow a clean recreate..."
-    python src/manage.py shell -c "
-from django.db import connection
-
-with connection.cursor() as cursor:
-    cursor.execute('DROP TABLE IF EXISTS mozilla_django_oidc_db_oidcclient CASCADE;')
-    cursor.execute('DROP TABLE IF EXISTS mozilla_django_oidc_db_oidcprovider CASCADE;')
-    cursor.execute('DROP TABLE IF EXISTS mozilla_django_oidc_db_openidconnectconfig CASCADE;')
-    cursor.execute('DROP TABLE IF EXISTS mozilla_django_oidc_db_openidconnectconfig_default_groups CASCADE;')
-    cursor.execute(\"DELETE FROM django_migrations WHERE app = 'mozilla_django_oidc_db';\")
-" || true
-fi
 python src/manage.py migrate
 
 >&2 echo "Starting server"
