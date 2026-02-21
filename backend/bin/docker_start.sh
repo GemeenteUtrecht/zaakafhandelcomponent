@@ -28,14 +28,8 @@ done
 >&2 echo "Apply database migrations"
 if [ "${FAKE_OIDC_MIGRATION}" = "true" ]; then
     >&2 echo "Dropping all mozilla_django_oidc_db tables and clearing migration history to allow a clean recreate..."
-    python -c "
-import os
-import sys
-import django
+    python src/manage.py shell -c "
 from django.db import connection
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'zac.settings')
-django.setup()
 
 with connection.cursor() as cursor:
     cursor.execute('DROP TABLE IF EXISTS mozilla_django_oidc_db_oidcclient CASCADE;')
