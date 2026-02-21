@@ -27,8 +27,9 @@ done
 # Apply database migrations
 >&2 echo "Apply database migrations"
 if [ "${FAKE_OIDC_MIGRATION}" = "true" ]; then
-    >&2 echo "Faking mozilla_django_oidc_db migration 0001_initial_to_v023 to bypass DuplicateTable error..."
+    >&2 echo "Faking mozilla_django_oidc_db migration 0001_initial_to_v023 & 0006_oidcprovider_oidcclient to bypass DuplicateTable errors..."
     python src/manage.py migrate mozilla_django_oidc_db 0001_initial_to_v023 --fake || true
+    python src/manage.py migrate mozilla_django_oidc_db 0006_oidcprovider_oidcclient --fake || true
 fi
 python src/manage.py migrate
 
