@@ -1,6 +1,10 @@
 from django.urls import path
 
-from .views import IndexElasticsearchView, ReIndexZaakElasticsearchView
+from .views import (
+    IndexElasticsearchView,
+    ReIndexZaakElasticsearchView,
+    FixVAOrderView,
+)
 
 urls = [
     path("index", view=IndexElasticsearchView.as_view(), name="index-elasticsearch"),
@@ -9,4 +13,6 @@ urls = [
         ReIndexZaakElasticsearchView.as_view(),
         name="reindex-zaak-elasticsearch",
     ),
+    path("fix-va-order", view=FixVAOrderView.as_view(), name="fix-va-order-elasticsearch"),
 ]
+
