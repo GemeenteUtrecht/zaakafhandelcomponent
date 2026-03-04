@@ -13,3 +13,5 @@ urls = [
         "fix-va-order", view=FixVAOrderView.as_view(), name="fix-va-order-elasticsearch"
     ),
 ]
+
+# TODO: remove fix-va-order after running
