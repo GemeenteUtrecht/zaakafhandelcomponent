@@ -4,6 +4,7 @@ from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
+from rest_framework import serializers
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -14,6 +15,45 @@ from zac.core.services import find_zaak
 
 from .constants import IndexTypes
 from .serializers import ManageIndexSerializer, ReindexZaakSerializer
+
+class FixVAOrderSerializer(serializers.Serializer):
+    dry_run = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=_("Only show what would be updated without making changes."),
+    )
+
+class FixVAOrderView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (
+        IsAuthenticated,
+        IsAdminUser,
+    )
+
+    @extend_schema(
+        summary=_("Fix va_order mapping in Elasticsearch."),
+        description=_("Recalculates va_order in ES from vertrouwelijkheidaanduiding using update_by_query."),
+        request=FixVAOrderSerializer,
+        responses={200: serializers.ListField(child=serializers.CharField())},
+        tags=["management"],
+    )
+    def post(self, request):
+        import io
+        from django.core.management import call_command
+        
+        serializer = FixVAOrderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        out = io.StringIO()
+        args = ["fix_va_order"]
+        if serializer.validated_data.get("dry_run"):
+            args.append("--dry-run")
+            
+        call_command(*args, stdout=out)
+        
+        output_lines = [line for line in out.getvalue().split("\n") if line]
+        return Response(data=output_lines)
+
 
 
 class IndexElasticsearchView(APIView):
