@@ -30,6 +30,8 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", split=True)
 
 IS_HTTPS = config("IS_HTTPS", default=not DEBUG)
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 15000
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
