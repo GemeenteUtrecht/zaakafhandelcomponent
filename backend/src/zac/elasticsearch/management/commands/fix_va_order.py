@@ -8,6 +8,7 @@ No data is fetched from Open Zaak - this only updates ES in-place.
 For nested related_zaken documents (which don't store the VA string),
 the old integer values are mapped to new ones directly.
 """
+
 import logging
 
 from django.conf import settings
@@ -115,8 +116,7 @@ class Command(BaseCommand):
         noops = result.get("noops", 0)
         failures = result.get("failures", [])
         self.stdout.write(
-            "  Updated: %d, Noops: %d, Failures: %d\n"
-            % (updated, noops, len(failures))
+            "  Updated: %d, Noops: %d, Failures: %d\n" % (updated, noops, len(failures))
         )
         if failures:
             for f in failures[:5]:
@@ -157,9 +157,7 @@ class Command(BaseCommand):
                     "query": {
                         "nested": {
                             "path": "related_zaken",
-                            "query": {
-                                "exists": {"field": "related_zaken.va_order"}
-                            },
+                            "query": {"exists": {"field": "related_zaken.va_order"}},
                         }
                     },
                 },
@@ -185,9 +183,7 @@ class Command(BaseCommand):
                 "query": {
                     "nested": {
                         "path": "related_zaken",
-                        "query": {
-                            "exists": {"field": "related_zaken.va_order"}
-                        },
+                        "query": {"exists": {"field": "related_zaken.va_order"}},
                     }
                 },
             },
@@ -198,8 +194,7 @@ class Command(BaseCommand):
         noops = result.get("noops", 0)
         failures = result.get("failures", [])
         self.stdout.write(
-            "  Updated: %d, Noops: %d, Failures: %d\n"
-            % (updated, noops, len(failures))
+            "  Updated: %d, Noops: %d, Failures: %d\n" % (updated, noops, len(failures))
         )
         if failures:
             for f in failures[:5]:
