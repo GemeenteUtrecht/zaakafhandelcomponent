@@ -45,6 +45,7 @@ class FixVAOrderView(APIView):
         import io
 
         from django.core.management import call_command
+        import sys
 
         serializer = FixVAOrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -53,8 +54,13 @@ class FixVAOrderView(APIView):
         args = ["fix_va_order"]
         if serializer.validated_data.get("dry_run"):
             args.append("--dry-run")
-
-        call_command(*args, stdout=out)
+            
+        old_stdout = sys.stdout
+        sys.stdout = out
+        try:
+            call_command(*args, stdout=out, stderr=out)
+        finally:
+            sys.stdout = old_stdout
 
         output_lines = [line for line in out.getvalue().split("\n") if line]
         return Response(data=output_lines)
