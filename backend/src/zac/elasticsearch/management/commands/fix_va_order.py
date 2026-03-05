@@ -43,9 +43,9 @@ class Command(BaseCommand):
         es = self.get_es_client()
 
         if dry_run:
-            self.stdout.write("DRY RUN - no changes will be made\n")
+            logger.info("DRY RUN - no changes will be made")
 
-        self.stdout.write("VA_ORDER mapping: %s\n\n" % VA_ORDER)
+        logger.info("VA_ORDER mapping: %s", VA_ORDER)
 
         # Fix the main zaken index
         self.fix_zaken_index(es, dry_run)
@@ -56,7 +56,7 @@ class Command(BaseCommand):
         # Fix nested related_zaken in documenten index
         self.fix_nested_va_order(es, settings.ES_INDEX_DOCUMENTEN, dry_run)
 
-        self.stdout.write("\nDone.\n")
+        logger.info("Done.")
 
     def _build_va_painless_map(self):
         """Build Painless HashMap initialization for VA_ORDER."""
@@ -67,7 +67,7 @@ class Command(BaseCommand):
 
     def fix_zaken_index(self, es, dry_run):
         index = settings.ES_INDEX_ZAKEN
-        self.stdout.write("=== Fixing %s index ===\n" % index)
+        logger.info("=== Fixing %s index ===", index)
 
         painless_map = self._build_va_painless_map()
         script = (
@@ -80,7 +80,7 @@ class Command(BaseCommand):
 
         if dry_run:
             count = es.count(index=index)["count"]
-            self.stdout.write("  Total documents: %d\n" % count)
+            logger.info("  Total documents: %d", count)
 
             sample = es.search(
                 index=index,
@@ -94,9 +94,8 @@ class Command(BaseCommand):
                 va = src.get("vertrouwelijkheidaanduiding")
                 old = src.get("va_order")
                 new = VA_ORDER.get(va, "?")
-                self.stdout.write(
-                    "  Sample: va=%s, old va_order=%s, new va_order=%s\n"
-                    % (va, old, new)
+                logger.info(
+                    "  Sample: va=%s, old va_order=%s, new va_order=%s", va, old, new
                 )
             return
 
@@ -120,15 +119,13 @@ class Command(BaseCommand):
         )
         if failures:
             for f in failures[:5]:
-                self.stdout.write("  Failure: %s\n" % f)
+                logger.info("  Failure: %s", f)
 
     def fix_nested_va_order(self, es, index, dry_run):
-        self.stdout.write(
-            "\n=== Fixing nested related_zaken.va_order in %s ===\n" % index
-        )
+        logger.info("=== Fixing nested related_zaken.va_order in %s ===", index)
 
         if not es.indices.exists(index=index):
-            self.stdout.write("  Index %s does not exist, skipping\n" % index)
+            logger.info("  Index %s does not exist, skipping", index)
             return
 
         # RelatedZaakDocument does NOT have vertrouwelijkheidaanduiding string,
@@ -146,7 +143,7 @@ class Command(BaseCommand):
 
         if dry_run:
             count = es.count(index=index)["count"]
-            self.stdout.write("  Total documents: %d\n" % count)
+            logger.info("  Total documents: %d", count)
 
             # Sample a document with related_zaken
             sample = es.search(
@@ -167,9 +164,8 @@ class Command(BaseCommand):
                 for rz in rz_list[:3]:
                     old = rz.get("va_order")
                     new = old // 10 if old is not None and old > 7 else old
-                    self.stdout.write(
-                        "  Sample nested: old va_order=%s, new va_order=%s\n"
-                        % (old, new)
+                    logger.info(
+                        "  Sample nested: old va_order=%s, new va_order=%s", old, new
                     )
             return
 
@@ -198,4 +194,4 @@ class Command(BaseCommand):
         )
         if failures:
             for f in failures[:5]:
-                self.stdout.write("  Failure: %s\n" % f)
+                logger.info("  Failure: %s", f)

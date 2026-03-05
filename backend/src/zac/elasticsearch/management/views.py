@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.views import APIView
 
+from zac.accounts.api.permissions import HasTokenAuth
+from zac.accounts.authentication import ApplicationTokenAuthentication
 from zac.core.services import find_zaak
 
 from .constants import IndexTypes
@@ -26,9 +28,9 @@ class FixVAOrderSerializer(serializers.Serializer):
 
 
 class FixVAOrderView(APIView):
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (ApplicationTokenAuthentication, TokenAuthentication)
     permission_classes = (
-        IsAuthenticated,
+        HasTokenAuth | IsAuthenticated,
         IsAdminUser,
     )
 
@@ -43,6 +45,7 @@ class FixVAOrderView(APIView):
     )
     def post(self, request):
         import io
+        import sys
 
         from django.core.management import call_command
 
@@ -54,7 +57,12 @@ class FixVAOrderView(APIView):
         if serializer.validated_data.get("dry_run"):
             args.append("--dry-run")
 
-        call_command(*args, stdout=out)
+        old_stdout = sys.stdout
+        sys.stdout = out
+        try:
+            call_command(*args, stdout=out, stderr=out)
+        finally:
+            sys.stdout = old_stdout
 
         output_lines = [line for line in out.getvalue().split("\n") if line]
         return Response(data=output_lines)
