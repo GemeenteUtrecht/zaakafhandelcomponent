@@ -17,6 +17,9 @@ from .constants import IndexTypes
 from .serializers import ManageIndexSerializer, ReindexZaakSerializer
 
 
+from zac.accounts.api.permissions import HasTokenAuth
+from zac.accounts.authentication import ApplicationTokenAuthentication
+
 class FixVAOrderSerializer(serializers.Serializer):
     dry_run = serializers.BooleanField(
         required=False,
@@ -26,9 +29,9 @@ class FixVAOrderSerializer(serializers.Serializer):
 
 
 class FixVAOrderView(APIView):
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (ApplicationTokenAuthentication, TokenAuthentication)
     permission_classes = (
-        IsAuthenticated,
+        HasTokenAuth | IsAuthenticated,
         IsAdminUser,
     )
 
