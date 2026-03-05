@@ -95,8 +95,7 @@ class Command(BaseCommand):
                 old = src.get("va_order")
                 new = VA_ORDER.get(va, "?")
                 logger.info(
-                    "  Sample: va=%s, old va_order=%s, new va_order=%s",
-                    va, old, new
+                    "  Sample: va=%s, old va_order=%s, new va_order=%s", va, old, new
                 )
             return
 
@@ -123,9 +122,7 @@ class Command(BaseCommand):
                 logger.info("  Failure: %s", f)
 
     def fix_nested_va_order(self, es, index, dry_run):
-        logger.info(
-            "=== Fixing nested related_zaken.va_order in %s ===", index
-        )
+        logger.info("=== Fixing nested related_zaken.va_order in %s ===", index)
 
         if not es.indices.exists(index=index):
             logger.info("  Index %s does not exist, skipping", index)
@@ -168,8 +165,7 @@ class Command(BaseCommand):
                     old = rz.get("va_order")
                     new = old // 10 if old is not None and old > 7 else old
                     logger.info(
-                        "  Sample nested: old va_order=%s, new va_order=%s",
-                        old, new
+                        "  Sample nested: old va_order=%s, new va_order=%s", old, new
                     )
             return
 
