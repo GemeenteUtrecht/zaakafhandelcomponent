@@ -12,7 +12,8 @@ that are required to keep the system usable while in read-only mode:
   operational/config endpoints rather than primary-data mutations,
 - the activities app,
 - endpoints that are functionally read-only queries but exposed over a
-  non-GET HTTP verb (e.g. search/filter endpoints that take a request body).
+  non-GET HTTP verb (e.g. search/filter endpoints that take a request body,
+  or opening a document read-only via the dowc integration).
 
 Non-API paths (Django admin, OIDC, static/media, ...) are never touched, so
 the admin panel always stays reachable to toggle the flag back off.
@@ -59,6 +60,7 @@ _EXEMPT_RULES: Tuple[Tuple[Optional[Set[str]], str], ...] = (
     # activities app: any method
     (None, r"^/api/activities/"),
     # read-like endpoints exposed over a non-GET HTTP verb
+    ({"POST"}, rf"^/api/dowc/{_ID}/{_ID}/read$"),
     ({"PATCH"}, r"^/api/core/recently-viewed$"),
     ({"POST"}, r"^/api/core/rollen/medewerker/betrokkeneIdentificatie$"),
     ({"POST"}, r"^/api/dashboard/management$"),

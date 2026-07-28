@@ -98,6 +98,7 @@ class ReadOnlyModeMiddlewareTests(ClearCachesMixin, TestCase):
             ("post", "/api/search/vgu-reports/zaken"),
             ("post", "/api/search/zaken"),
             ("post", "/api/workstack/summary"),
+            ("post", "/api/dowc/123456789/ZAAK-01/read"),
         ]
 
         for method, path in allowlisted:
@@ -112,6 +113,7 @@ class ReadOnlyModeMiddlewareTests(ClearCachesMixin, TestCase):
             ("post", "/api/core/zaak-attachments"),
             ("delete", "/api/search/reports"),  # no trailing slash -> not allowlisted
             ("post", "/api/dashboard/boards"),
+            ("post", "/api/dowc/123456789/ZAAK-01/write"),  # only "read" is allowlisted
         ]
 
         for method, path in blocked:
