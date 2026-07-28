@@ -1,7 +1,10 @@
 import logging
 from typing import Dict
 
+from django.core.cache import cache
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
@@ -9,6 +12,11 @@ from solo.models import SingletonModel
 from zgw_consumers.constants import APITypes
 
 logger = logging.getLogger(__name__)
+
+READ_ONLY_MODE_CACHE_KEY = "zac:core:config:read-only-mode"
+# Fallback TTL in case cache invalidation on save is ever missed - keeps the
+# flag eventually consistent without hitting the database on every request.
+READ_ONLY_MODE_CACHE_TTL = 15
 
 
 class CoreConfig(SingletonModel):
@@ -64,12 +72,44 @@ class CoreConfig(SingletonModel):
         help_text=_("A flag that allows non-SSO login (True) or not (False)."),
         default=True,
     )
+    read_only_mode = models.BooleanField(
+        _("Read-only mode"),
+        help_text=_(
+            "If enabled, the ZAC API blocks all write requests (POST, PUT, PATCH, "
+            "DELETE) except for a fixed allowlist of endpoints required to keep the "
+            "system usable (e.g. logout, account/permission management, and search "
+            "endpoints that use a non-GET method for read-only queries). Users see "
+            "a warning banner while this is active. See "
+            "zac.core.middleware.ReadOnlyModeMiddleware for the allowlist."
+        ),
+        default=False,
+    )
 
     class Meta:
         verbose_name = _("global configuration")
 
     def __str__(self):
         return force_str(self._meta.verbose_name)
+
+
+@receiver(post_save, sender=CoreConfig)
+def _clear_read_only_mode_cache(sender, **kwargs):
+    cache.delete(READ_ONLY_MODE_CACHE_KEY)
+
+
+def read_only_mode_enabled() -> bool:
+    """
+    Fast, cached lookup of ``CoreConfig.read_only_mode``.
+
+    Called on every non-safe HTTP request, so this avoids a database hit by
+    caching the flag and invalidating it immediately on save (with a short TTL
+    as a safety net).
+    """
+    enabled = cache.get(READ_ONLY_MODE_CACHE_KEY)
+    if enabled is None:
+        enabled = CoreConfig.get_solo().read_only_mode
+        cache.set(READ_ONLY_MODE_CACHE_KEY, enabled, READ_ONLY_MODE_CACHE_TTL)
+    return enabled
 
 
 class WarningBanner(SingletonModel):

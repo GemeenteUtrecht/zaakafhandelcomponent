@@ -10,7 +10,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from zac.core.models import WarningBanner
+from zac.core.middleware import READ_ONLY_MODE_MESSAGE
+from zac.core.models import WarningBanner, read_only_mode_enabled
 
 HEADERS_TO_KEEP = (
     "api-version",
@@ -91,9 +92,17 @@ class PingView(APIView):
     )
     def get(self, request: Request, *args, **kwargs):
         response = {"pong": True}
-        warning = WarningBanner.get_solo()
-        if warning.warning:
-            response["warning"] = warning.warning
+        warnings = []
+
+        if read_only_mode_enabled():
+            warnings.append(str(READ_ONLY_MODE_MESSAGE))
+
+        banner = WarningBanner.get_solo()
+        if banner.warning:
+            warnings.append(banner.warning)
+
+        if warnings:
+            response["warning"] = "\n\n".join(warnings)
 
         return Response(response)
 
