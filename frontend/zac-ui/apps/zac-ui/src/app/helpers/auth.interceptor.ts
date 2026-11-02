@@ -28,7 +28,11 @@ export class AuthInterceptor implements HttpInterceptor {
       .pipe(
         catchError((error, caught) => {
           if (error instanceof HttpErrorResponse) {
-            if (this.checkAuthentication(error) || error.status === 0) {
+            if (error.status === 403 && error.error?.code === 'zac_decommissioned') {
+              // Django renders the decommissioned page for every non-API path.
+              window.location.href = '/';
+              return throwError(error);
+            } else if (this.checkAuthentication(error) || error.status === 0) {
               const currentPath = this.router.url;
               window.location.href = `/accounts/login/?next=/ui${currentPath}`;
               return throwError(error);

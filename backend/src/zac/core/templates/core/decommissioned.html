@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gemeente Utrecht</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #fff; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    img { height: 64px; margin-bottom: 32px; }
+    h1 { margin: 0; font-size: 26px; line-height: 1.2; color: #cc0000; }
+  </style>
+</head>
+<body>
+  <img src="{{ logo_url }}" alt="Gemeente Utrecht">
+  <h1>{{ message }}</h1>
+</body>
+</html>
