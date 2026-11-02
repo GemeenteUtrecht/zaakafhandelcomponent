@@ -17,6 +17,7 @@ READ_ONLY_MODE_CACHE_KEY = "zac:core:config:read-only-mode"
 # Fallback TTL in case cache invalidation on save is ever missed - keeps the
 # flag eventually consistent without hitting the database on every request.
 READ_ONLY_MODE_CACHE_TTL = 15
+DECOMMISSIONED_MODE_CACHE_KEY = "zac:core:config:decommissioned-mode"
 
 
 class CoreConfig(SingletonModel):
@@ -84,6 +85,16 @@ class CoreConfig(SingletonModel):
         ),
         default=False,
     )
+    decommissioned_mode = models.BooleanField(
+        _("Decommissioned mode"),
+        help_text=_(
+            "If enabled, every logged-in user except superusers only sees a page "
+            "stating that the ZAC has been decommissioned. Application tokens and "
+            "notifications keep working. See "
+            "zac.core.middleware.DecommissionedModeMiddleware."
+        ),
+        default=False,
+    )
 
     class Meta:
         verbose_name = _("global configuration")
@@ -93,8 +104,8 @@ class CoreConfig(SingletonModel):
 
 
 @receiver(post_save, sender=CoreConfig)
-def _clear_read_only_mode_cache(sender, **kwargs):
-    cache.delete(READ_ONLY_MODE_CACHE_KEY)
+def _clear_mode_caches(sender, **kwargs):
+    cache.delete_many([READ_ONLY_MODE_CACHE_KEY, DECOMMISSIONED_MODE_CACHE_KEY])
 
 
 def read_only_mode_enabled() -> bool:
@@ -109,6 +120,19 @@ def read_only_mode_enabled() -> bool:
     if enabled is None:
         enabled = CoreConfig.get_solo().read_only_mode
         cache.set(READ_ONLY_MODE_CACHE_KEY, enabled, READ_ONLY_MODE_CACHE_TTL)
+    return enabled
+
+
+def decommissioned_mode_enabled() -> bool:
+    """
+    Fast, cached lookup of ``CoreConfig.decommissioned_mode``.
+
+    Called on every HTTP request, see :func:`read_only_mode_enabled`.
+    """
+    enabled = cache.get(DECOMMISSIONED_MODE_CACHE_KEY)
+    if enabled is None:
+        enabled = CoreConfig.get_solo().decommissioned_mode
+        cache.set(DECOMMISSIONED_MODE_CACHE_KEY, enabled, READ_ONLY_MODE_CACHE_TTL)
     return enabled
 
 

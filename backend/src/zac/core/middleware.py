@@ -21,15 +21,27 @@ the admin panel always stays reachable to toggle the flag back off.
 The middleware is placed early in the MIDDLEWARE stack (right after
 CorsMiddleware) so blocked requests are rejected before session, auth and CSRF
 processing kick in - this keeps rejection cheap under a high volume of writes.
+
+Decommissioned mode middleware.
+
+When ``CoreConfig.decommissioned_mode`` is enabled, every logged-in user who is
+not a superuser is blocked: API calls get a 403 with ``DECOMMISSIONED_CODE``,
+which the UI turns into a white page, and any other path renders that page
+directly. Requests without a logged-in session pass through untouched, so
+application tokens and notifications keep working and superusers can still log
+in. The middleware needs ``request.user``, including ``is_hijacked``, so it sits
+after the auth and hijack middleware.
 """
 
 import re
 from typing import Optional, Pattern, Set, Tuple
 
+from django.conf import settings
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 
-from .models import read_only_mode_enabled
+from .models import decommissioned_mode_enabled, read_only_mode_enabled
 
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
@@ -110,3 +122,61 @@ class ReadOnlyModeMiddleware:
             return JsonResponse({"detail": str(READ_ONLY_MODE_MESSAGE)}, status=503)
 
         return self.get_response(request)
+
+
+DECOMMISSIONED_CODE = "zac_decommissioned"
+DECOMMISSIONED_MESSAGE = "Het zaakafhandelcomponent is uitgefaseerd."
+DECOMMISSIONED_LOGO_PATH = "/assets/images/gemeente-utrecht-logo.svg"
+
+# Needed to log in or out, and to reach the health check of the deployment.
+_DECOMMISSIONED_EXEMPT_PATHS: Tuple[str, ...] = (
+    "/accounts/logged_in/",
+    "/accounts/login/",
+    "/admin/login/",
+    "/admin/logout/",
+    "/api/_health/",
+    "/api/accounts/logout",
+    "/oidc/",
+    "/static/",
+)
+
+
+class DecommissionedModeMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if self._is_blocked(request):
+            if request.path.startswith("/api/"):
+                return JsonResponse(
+                    {"detail": DECOMMISSIONED_MESSAGE, "code": DECOMMISSIONED_CODE},
+                    status=403,
+                )
+            return render(
+                request,
+                "core/decommissioned.html",
+                {
+                    "message": DECOMMISSIONED_MESSAGE,
+                    "logo_url": f"{settings.UI_ROOT_URL}{DECOMMISSIONED_LOGO_PATH}",
+                },
+                status=403,
+            )
+
+        return self.get_response(request)
+
+    @staticmethod
+    def _is_blocked(request) -> bool:
+        if request.path.startswith(_DECOMMISSIONED_EXEMPT_PATHS):
+            return False
+
+        if not decommissioned_mode_enabled():
+            return False
+
+        user = request.user
+        # Only superusers can hijack. Without this exception they would end up on
+        # the white page, which has no way to release the hijacked user.
+        return (
+            user.is_authenticated
+            and not user.is_superuser
+            and not getattr(user, "is_hijacked", False)
+        )

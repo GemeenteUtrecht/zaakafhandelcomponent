@@ -183,6 +183,7 @@ MIDDLEWARE = [
     "mozilla_django_oidc_db.middleware.SessionRefresh",
     "zac.accounts.middleware.HijackUserMiddleware",
     "zac.accounts.middleware.HijackSessionRefresh",
+    "zac.core.middleware.DecommissionedModeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "zac.utils.middleware.ReleaseHeaderMiddleware",
